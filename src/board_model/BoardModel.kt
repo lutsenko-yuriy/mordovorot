@@ -19,7 +19,4 @@ public interface BoardModel {
 
     // Checking for correctness of board
     fun isCorrect(): Boolean
-
-    // Displaying board
-    fun boardState(): IntArray
 }
