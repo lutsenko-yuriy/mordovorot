@@ -13,6 +13,9 @@ MVP (Model-View-Presenter): board_model + presenter + view packages
 ```
 src/main/kotlin/
 ├── Main.kt              # Entry point — constructs ViewImpl and calls play()
+├── analytics/
+│   ├── AnalyticsService.kt      # Analytics abstraction — track(event, properties)
+│   └── NoopAnalyticsService.kt  # Default implementation; no SDK wired up yet
 ├── board_model/
 │   ├── BoardModel.kt    # Board interface (domain contract)
 │   └── BoardImpl.kt     # IntArray-backed board state + shift/reset/isCorrect logic
@@ -25,6 +28,7 @@ src/main/kotlin/
     └── ViewImpl.kt      # Console I/O implementation
 
 src/test/kotlin/
+├── analytics/            # NoopAnalyticsService coverage
 ├── board_model/         # BoardImpl coverage: reset/shuffle, isCorrect, all four shifts
 ├── presenter/            # PresenterImpl coverage: delegation + play() loop behavior
 └── testing/              # FakeBoardModel / FakeView test doubles shared across tests
