@@ -10,7 +10,13 @@ import view.View
  * exception handling. Running out of scripted commands throws, which bounds
  * every test to a finite number of play() iterations instead of risking a hang.
  */
-class FakeView(private val commands: MutableList<() -> Unit> = mutableListOf()) : View {
+class FakeView(
+    private val commands: MutableList<() -> Unit> = mutableListOf(),
+    /** Scripted return values for [confirmRestore], consumed in call order. */
+    private val confirmRestoreResponses: MutableList<Boolean> = mutableListOf(),
+    /** Scripted return values for [chooseSaveToRestore], consumed in call order. */
+    private val chooseSaveToRestoreResponses: MutableList<String?> = mutableListOf(),
+) : View {
 
     val displayBoardCalls = mutableListOf<Pair<IntArray, Int>>()
 
@@ -18,6 +24,10 @@ class FakeView(private val commands: MutableList<() -> Unit> = mutableListOf()) 
 
     var processCommandCallCount = 0
         private set
+
+    val confirmRestoreCalls = mutableListOf<String>()
+
+    val chooseSaveToRestoreCalls = mutableListOf<List<String>>()
 
     override fun displayBoard(boardState: IntArray, squareSide: Int) {
         displayBoardCalls.add(boardState.copyOf() to squareSide)
@@ -33,6 +43,22 @@ class FakeView(private val commands: MutableList<() -> Unit> = mutableListOf()) 
             throw IllegalStateException("FakeView ran out of scripted commands")
         }
         commands.removeAt(0).invoke()
+    }
+
+    override fun confirmRestore(saveName: String): Boolean {
+        confirmRestoreCalls.add(saveName)
+        if (confirmRestoreResponses.isEmpty()) {
+            throw IllegalStateException("FakeView ran out of scripted confirmRestore responses")
+        }
+        return confirmRestoreResponses.removeAt(0)
+    }
+
+    override fun chooseSaveToRestore(saveNames: List<String>): String? {
+        chooseSaveToRestoreCalls.add(saveNames)
+        if (chooseSaveToRestoreResponses.isEmpty()) {
+            throw IllegalStateException("FakeView ran out of scripted chooseSaveToRestore responses")
+        }
+        return chooseSaveToRestoreResponses.removeAt(0)
     }
 
     override fun play() {

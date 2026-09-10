@@ -80,6 +80,30 @@ class ViewImpl internal constructor(
         output.println()
     }
 
+    override fun confirmRestore(saveName: String): Boolean {
+        output.print("Restore save '$saveName'? [y/N] ")
+        val line = readLineOrNull() ?: return false
+        return line.trim().lowercase() in setOf("y", "yes")
+    }
+
+    override fun chooseSaveToRestore(saveNames: List<String>): String? {
+        output.print(
+            "Multiple saves found: ${saveNames.joinToString(", ")}. " +
+                "Type a name to restore, or press Enter to start a new game: "
+        )
+        val line = readLineOrNull() ?: return null
+        return line.trim().ifEmpty { null }
+    }
+
+    /** null on a clean EOF or a dead stream (IOException) - both mean "no more input". Unlike
+     *  [processCommand], the startup-restore prompts treat that as "decline"/"blank" rather
+     *  than throwing - see [presenter.PresenterImpl]'s restoreOnStartup. */
+    private fun readLineOrNull(): String? = try {
+        input.readLine()
+    } catch (e: IOException) {
+        null
+    }
+
     private fun oneBasedIndexArg(parts: List<String>): Int {
         requireArgCount(parts, 2)
         val value = parts[1].toIntOrNull() ?: throw IllegalArgumentException("Incorrect input")

@@ -41,7 +41,11 @@ class PresenterImpl(
         }
     }
 
-    override fun loadGame(name: String) {
+    override fun loadGame(name: String) = loadGame(name, trigger = "command")
+
+    /** [trigger] is `"command"` for the mid-game `load` console command, or `"startup_prompt"`
+     *  when called from [restoreOnStartup] - see `load_command_used` in docs/ANALYTICS_EVENTS.md. */
+    private fun loadGame(name: String, trigger: String) {
         // The whole body is guarded, not just saves.load - availableSavesMessage() (itself
         // saves.listSaves()) and board.restoreState can also throw, and WU4's startup restore
         // flow calls this before play()'s try/catch exists, so loadGame must not throw
@@ -49,12 +53,12 @@ class PresenterImpl(
         try {
             val saved = saves.load(name)
             if (saved == null) {
-                analytics.track("load_command_used", mapOf("trigger" to "command", "result" to "not_found"))
+                analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "not_found"))
                 view.showMessage("No save named '$name'. ${availableSavesMessage()}")
                 return
             }
             if (saved.squareSide != board.SQUARE_SIDE) {
-                analytics.track("load_command_used", mapOf("trigger" to "command", "result" to "size_mismatch"))
+                analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "size_mismatch"))
                 view.showMessage(
                     "Save '$name' is a ${saved.squareSide}x${saved.squareSide} board and can't be loaded onto " +
                         "this ${board.SQUARE_SIDE}x${board.SQUARE_SIDE} board."
@@ -62,10 +66,10 @@ class PresenterImpl(
                 return
             }
             board.restoreState(saved.state)
-            analytics.track("load_command_used", mapOf("trigger" to "command", "result" to "success"))
+            analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "success"))
             view.showMessage("Loaded '$name'.")
         } catch (e: Exception) {
-            analytics.track("load_command_used", mapOf("trigger" to "command", "result" to "error"))
+            analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "error"))
             view.showMessage(e.message ?: "Could not load '$name'.")
         }
     }
@@ -81,7 +85,52 @@ class PresenterImpl(
         return if (available.isEmpty()) "No saves available." else "Available saves: ${available.joinToString(", ")}"
     }
 
+    /**
+     * Offers to restore a previous game at startup, before the play loop begins. No-op if
+     * there are no saves. One save asks a yes/no question; two or more list names and let the
+     * user type one (blank/EOF -> new game; an unknown name re-prompts rather than silently
+     * falling back to a new game). Never throws - this runs before [play]'s own try/catch
+     * exists, mirroring [loadGame]/[saveGame]'s non-throwing contract.
+     */
+    private fun restoreOnStartup() {
+        try {
+            val saveNames = saves.listSaves()
+            if (saveNames.isEmpty()) return
+
+            analytics.track("startup_restore_prompt_shown", mapOf("save_file_count" to saveNames.size))
+
+            val nameToRestore = if (saveNames.size == 1) {
+                saveNames[0].takeIf { view.confirmRestore(it) }
+            } else {
+                var chosen: String? = null
+                while (chosen == null) {
+                    val typed = view.chooseSaveToRestore(saveNames) ?: break
+                    if (typed in saveNames) chosen = typed
+                    // else: unknown name - loop and re-prompt rather than falling back
+                }
+                chosen
+            }
+
+            if (nameToRestore != null) {
+                loadGame(nameToRestore, trigger = "startup_prompt")
+                analytics.track(
+                    "startup_restore_decision",
+                    mapOf("decision" to "restored", "save_file_count" to saveNames.size),
+                )
+            } else {
+                analytics.track(
+                    "startup_restore_decision",
+                    mapOf("decision" to "new_game", "save_file_count" to saveNames.size),
+                )
+            }
+        } catch (e: Exception) {
+            // Any failure here (unreadable saves dir, view I/O error) just means the game
+            // starts fresh instead of crashing at boot.
+        }
+    }
+
     override fun play() {
+        restoreOnStartup()
         while (!board.isCorrect()) {
             try {
                 view.displayBoard(board.boardArray, board.SQUARE_SIDE)
