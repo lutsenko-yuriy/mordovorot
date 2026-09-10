@@ -81,6 +81,26 @@ class PresenterImpl(
         }
     }
 
+    /**
+     * Ends the current [play] session on demand (the `exit`/`quit` command), asking whether to
+     * save first. `false` (or a blank/EOF name) skips saving rather than re-prompting - the user
+     * can always run `exit` again if they change their mind. Terminates the play loop via
+     * [ExitRequestedException], the same way [EndOfInputException] does for EOF.
+     */
+    override fun exitGame() {
+        val saved = if (view.confirmSaveBeforeExit()) {
+            view.promptSaveName()?.let { name -> saveGame(name); true } ?: false
+        } else {
+            false
+        }
+        analytics.track("exit_command_used", mapOf("save_choice" to (if (saved) "saved" else "declined")))
+        throw ExitRequestedException()
+    }
+
+    /** Signals [play] to stop, the same way [EndOfInputException] does - thrown by [exitGame]
+     *  after its save-before-quitting dialogue completes. */
+    private class ExitRequestedException : Exception()
+
     private fun availableSavesMessage(): String {
         // Guarded on its own - a failure here (e.g. an unreadable saves/ directory) shouldn't
         // change the load's actual result (it was still "not found"), just degrade the message.
@@ -141,6 +161,8 @@ class PresenterImpl(
                 view.displayBoard(board.boardArray, board.SQUARE_SIDE)
                 view.processCommand()
             } catch (e: EndOfInputException) {
+                return
+            } catch (e: ExitRequestedException) {
                 return
             } catch (e: Exception) {
                 view.showMessage(e.message ?: "Error") // not System.err - stays in sync with the board output

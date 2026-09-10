@@ -1,30 +1,92 @@
 package presenter
 
+import testing.FakeBoardModel
+import testing.FakeSaveRepository
+import testing.FakeView
+import testing.RecordingAnalyticsService
+import testing.RecordingAnalyticsService.Event
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
+/**
+ * Covers [PresenterImpl.exitGame] (the `exit`/`quit` command), exercised through
+ * [PresenterImpl.play] so that its play-loop-terminating behaviour is verified alongside its
+ * save-before-quitting dialogue. The `exit`/`quit` -> `presenter.exitGame()` dispatch itself is
+ * covered separately in ViewImplCommandTest - here the scripted [FakeView] command directly
+ * calls `exitGame()`, standing in for that dispatch. See the analytics plan on GH-12 for
+ * `exit_command_used`.
+ */
 class PresenterImplExitTest {
 
     @Test
     fun `exit, save declined - ends play without saving`() {
-        // TODO: 1. FakeView(confirmSaveBeforeExitResponses = [false]) scripted so processCommand triggers exitGame()
-        // TODO: 2. presenter.play()
-        // TODO: 3. Verify no save occurred (FakeSaveRepository received no save call)
-        // TODO: 4. Verify analytics.events == [Event("exit_command_used", {"save_choice": "declined"})]
+        val board = FakeBoardModel()
+        val saves = FakeSaveRepository()
+        val analytics = RecordingAnalyticsService()
+        lateinit var presenter: PresenterImpl
+        val view = FakeView(
+            commands = mutableListOf({ presenter.exitGame() }),
+            confirmSaveBeforeExitResponses = mutableListOf(false),
+        )
+        presenter = PresenterImpl(view, board, saves, analytics)
+
+        presenter.play()
+
+        assertEquals(emptyList(), saves.saveCalls)
+        assertEquals(
+            listOf(Event("exit_command_used", mapOf("save_choice" to "declined"))),
+            analytics.events,
+        )
     }
 
     @Test
     fun `exit, save confirmed with a name - saves then ends play`() {
-        // TODO: 1. FakeView(confirmSaveBeforeExitResponses = [true], promptSaveNameResponses = ["foo"]) scripted so processCommand triggers exitGame()
-        // TODO: 2. presenter.play()
-        // TODO: 3. Verify the save repository received a save for "foo"
-        // TODO: 4. Verify analytics.events == [Event("save_command_used", {...}), Event("exit_command_used", {"save_choice": "saved"})]
+        val board = FakeBoardModel()
+        val saves = FakeSaveRepository()
+        val analytics = RecordingAnalyticsService()
+        lateinit var presenter: PresenterImpl
+        val view = FakeView(
+            commands = mutableListOf({ presenter.exitGame() }),
+            confirmSaveBeforeExitResponses = mutableListOf(true),
+            promptSaveNameResponses = mutableListOf("foo"),
+        )
+        presenter = PresenterImpl(view, board, saves, analytics)
+
+        presenter.play()
+
+        assertEquals(1, saves.saveCalls.size)
+        val (name, state, squareSide) = saves.saveCalls[0]
+        assertEquals("foo", name)
+        assertEquals(board.boardArray.toList(), state.toList())
+        assertEquals(board.SQUARE_SIDE, squareSide)
+        assertEquals(
+            listOf(
+                Event("save_command_used", mapOf("result" to "success", "overwrote_existing" to false)),
+                Event("exit_command_used", mapOf("save_choice" to "saved")),
+            ),
+            analytics.events,
+        )
     }
 
     @Test
     fun `exit, save confirmed but a blank or EOF name - ends play without saving`() {
-        // TODO: 1. FakeView(confirmSaveBeforeExitResponses = [true], promptSaveNameResponses = [null]) scripted so processCommand triggers exitGame()
-        // TODO: 2. presenter.play()
-        // TODO: 3. Verify no save occurred
-        // TODO: 4. Verify analytics.events == [Event("exit_command_used", {"save_choice": "declined"})]
+        val board = FakeBoardModel()
+        val saves = FakeSaveRepository()
+        val analytics = RecordingAnalyticsService()
+        lateinit var presenter: PresenterImpl
+        val view = FakeView(
+            commands = mutableListOf({ presenter.exitGame() }),
+            confirmSaveBeforeExitResponses = mutableListOf(true),
+            promptSaveNameResponses = mutableListOf(null),
+        )
+        presenter = PresenterImpl(view, board, saves, analytics)
+
+        presenter.play()
+
+        assertEquals(emptyList(), saves.saveCalls)
+        assertEquals(
+            listOf(Event("exit_command_used", mapOf("save_choice" to "declined"))),
+            analytics.events,
+        )
     }
 }

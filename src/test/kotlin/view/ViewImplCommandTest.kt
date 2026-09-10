@@ -287,63 +287,91 @@ class ViewImplCommandTest {
 
     @Test
     fun `exit command delegates to presenter exitGame`() {
-        // TODO: viewWith("exit\n", presenter)
-        // TODO: view.processCommand()
-        // TODO: assertEquals(listOf("exitGame"), presenter.calls)
+        val presenter = FakePresenter()
+        val (view, _) = viewWith("exit\n", presenter)
+
+        view.processCommand()
+
+        assertEquals(listOf("exitGame"), presenter.calls)
     }
 
     @Test
     fun `quit command is an alias for exit`() {
-        // TODO: viewWith("quit\n", presenter)
-        // TODO: view.processCommand()
-        // TODO: assertEquals(listOf("exitGame"), presenter.calls)
+        val presenter = FakePresenter()
+        val (view, _) = viewWith("quit\n", presenter)
+
+        view.processCommand()
+
+        assertEquals(listOf("exitGame"), presenter.calls)
     }
 
     @Test
     fun `exit with a trailing argument is rejected rather than silently ignored`() {
-        // TODO: viewWith("exit foo\n", presenter)
-        // TODO: assertFailsWith<IllegalArgumentException> { view.processCommand() }
-        // TODO: assertEquals(emptyList(), presenter.calls)
+        val presenter = FakePresenter()
+        val (view, _) = viewWith("exit foo\n", presenter)
+
+        assertFailsWith<IllegalArgumentException> { view.processCommand() }
+        assertEquals(emptyList(), presenter.calls)
     }
 
     @Test
     fun `confirmSaveBeforeExit returns true for y or yes, case-insensitively`() {
-        // TODO: for each of "y", "Y", "yes", "YES", "Yes": viewWith("\$answer\n"), assertEquals(true, view.confirmSaveBeforeExit())
+        for (answer in listOf("y", "Y", "yes", "YES", "Yes")) {
+            val (view, _) = viewWith("$answer\n")
+            assertEquals(true, view.confirmSaveBeforeExit(), "expected '$answer' to confirm")
+        }
     }
 
     @Test
     fun `confirmSaveBeforeExit returns false for a blank line, a no, or garbage input`() {
-        // TODO: for each of "", "n", "no", "blah": viewWith("\$answer\n"), assertEquals(false, view.confirmSaveBeforeExit())
+        for (answer in listOf("", "n", "no", "blah")) {
+            val (view, _) = viewWith("$answer\n")
+            assertEquals(false, view.confirmSaveBeforeExit(), "expected '$answer' to decline")
+        }
     }
 
     @Test
     fun `confirmSaveBeforeExit returns false on EOF instead of throwing`() {
-        // TODO: viewWith(""), assertEquals(false, view.confirmSaveBeforeExit())
+        val (view, _) = viewWith("")
+
+        assertEquals(false, view.confirmSaveBeforeExit())
     }
 
     @Test
     fun `confirmSaveBeforeExit returns false when the input stream is dead, same as clean EOF`() {
-        // TODO: ViewImpl(BufferedReader(ThrowingReader()), ...), assertEquals(false, view.confirmSaveBeforeExit())
+        val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
+        view.presenter = FakePresenter()
+
+        assertEquals(false, view.confirmSaveBeforeExit())
     }
 
     @Test
     fun `promptSaveName returns the raw typed name unvalidated`() {
-        // TODO: viewWith("foo\n"), assertEquals("foo", view.promptSaveName())
+        val (view, _) = viewWith("foo\n")
+
+        assertEquals("foo", view.promptSaveName())
     }
 
     @Test
     fun `promptSaveName returns null on a blank line`() {
-        // TODO: viewWith("\n"), assertEquals(null, view.promptSaveName())
+        val (view, _) = viewWith("\n")
+
+        assertEquals(null, view.promptSaveName())
     }
 
     @Test
     fun `promptSaveName returns null on EOF instead of throwing`() {
-        // TODO: viewWith(""), assertEquals(null, view.promptSaveName())
+        val (view, _) = viewWith("")
+
+        assertEquals(null, view.promptSaveName())
     }
 
     @Test
     fun `promptSaveName returns null when the input stream is dead, same as clean EOF`() {
-        // TODO: ViewImpl(BufferedReader(ThrowingReader()), ...), assertEquals(null, view.promptSaveName())
+        val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
+        view.presenter = FakePresenter()
+
+        assertEquals(null, view.promptSaveName())
     }
 
     @Test

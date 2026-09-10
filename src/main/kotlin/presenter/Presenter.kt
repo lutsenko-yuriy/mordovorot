@@ -14,4 +14,6 @@ interface Presenter {
 
     fun saveGame(name: String)
     fun loadGame(name: String)
+
+    fun exitGame()
 }

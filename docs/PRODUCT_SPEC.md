@@ -50,7 +50,15 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
     this, or its lines will be consumed as restore-prompt answers instead of reaching the
     command loop.
 
+### Feature 5 — Exit command (GH-12)
+- `exit` or `quit` (case-insensitive, no arguments) ends the current session on demand, the
+  same as today's EOF (Ctrl+D) or board-solved exits.
+- Before quitting, it asks `Save before quitting? [y/N]`:
+  - `y`/`yes` — prompts for a save name and saves under it (same underlying flow as the `save`
+    command), then quits. A blank name or EOF at this second prompt quits without saving.
+  - Anything else (including EOF) — quits without saving.
+
 ## Known gaps
 
-- No documented win-condition message or exit command yet — see `src/main/kotlin/view/ViewImpl.kt`
-  for current behavior and treat it as the source of truth until this section is expanded.
+- No documented win-condition message yet — see `src/main/kotlin/view/ViewImpl.kt` for current
+  behavior and treat it as the source of truth until this section is expanded.

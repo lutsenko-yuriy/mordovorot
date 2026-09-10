@@ -42,4 +42,8 @@ class FakePresenter : Presenter {
     override fun loadGame(name: String) {
         calls.add("loadGame($name)")
     }
+
+    override fun exitGame() {
+        calls.add("exitGame")
+    }
 }

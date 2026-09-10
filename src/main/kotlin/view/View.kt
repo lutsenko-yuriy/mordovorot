@@ -19,5 +19,14 @@ interface View {
      *  re-prompts on an unknown name), or `null` on a blank answer or EOF. */
     fun chooseSaveToRestore(saveNames: List<String>): String?
 
+    /** Prompts "Save before quitting?" when the user runs `exit`/`quit`. `false` on a "no"
+     *  answer or EOF - same contract as [confirmRestore]. */
+    fun confirmSaveBeforeExit(): Boolean
+
+    /** Prompts for a save name after [confirmSaveBeforeExit] returns `true`. Returns the raw
+     *  typed name, or `null` on a blank answer or EOF (the caller treats that as "don't save"
+     *  rather than re-prompting). */
+    fun promptSaveName(): String?
+
     fun play()
 }
