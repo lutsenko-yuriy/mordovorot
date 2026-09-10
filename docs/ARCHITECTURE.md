@@ -21,17 +21,26 @@ src/main/kotlin/
 │   └── BoardImpl.kt     # IntArray-backed board state + shift/reset/isCorrect logic
 ├── presenter/
 │   ├── Presenter.kt     # Presenter interface — mediates view <-> model
-│   └── PresenterImpl.kt # Presenter implementation; board is a constructor param
-│                         # (defaulted to BoardImpl()) so it can be swapped for a fake
+│   └── PresenterImpl.kt # Presenter implementation; board/saves/analytics are constructor
+│                         # params (each defaulted to a real impl) so fakes can be injected
+├── storage/
+│   ├── SaveRepository.kt          # Persistence contract: list/exists/save/load
+│   ├── SavedBoard.kt              # Data carrier: square side + tile arrangement
+│   ├── FileSaveRepository.kt      # Plain-text file implementation (the only class
+│   │                                touching the filesystem); rejects unsafe file names
+│   └── SaveFileFormatException.kt # Thrown on a malformed save file
 └── view/
     ├── View.kt          # View interface — console display + command loop contract
-    └── ViewImpl.kt      # Console I/O implementation
+    └── ViewImpl.kt      # Console I/O implementation (BufferedReader-based input)
 
 src/test/kotlin/
 ├── analytics/            # NoopAnalyticsService coverage
-├── board_model/         # BoardImpl coverage: reset/shuffle, isCorrect, all four shifts
-├── presenter/            # PresenterImpl coverage: delegation + play() loop behavior
-└── testing/              # FakeBoardModel / FakeView test doubles shared across tests
+├── board_model/         # BoardImpl coverage: reset/shuffle, isCorrect, all four shifts, restoreState
+├── presenter/            # PresenterImpl coverage: delegation, play() loop, save/load, startup restore
+├── storage/               # FileSaveRepository coverage
+├── view/                  # ViewImpl command-parsing coverage
+└── testing/              # FakeBoardModel / FakeView / FakeSaveRepository /
+                            # RecordingAnalyticsService / FakePresenter test doubles
 ```
 
 Gradle's standard source-set convention (`src/main/kotlin`, `src/test/kotlin`) is used —
@@ -55,6 +64,16 @@ translates view commands into model calls.
 Console I/O only: reads commands from stdin, renders the board, and calls
 into the `Presenter`. Should not manipulate `board_model` directly.
 
+### storage
+File persistence for save games. `SaveRepository` is the contract `presenter`
+depends on; `FileSaveRepository` is the only class in the codebase that touches
+the filesystem. No dependency on `board_model`, `presenter`, or `view` — it
+deals in plain data (`SavedBoard`), not domain objects.
+
+### analytics
+Cross-cutting: `AnalyticsService` is injected into `presenter` (and any layer
+that needs to track an event), currently backed by `NoopAnalyticsService`.
+
 ## Dependencies
 
 - **Build tool:** Gradle (Kotlin DSL), via the wrapper (`./gradlew`) — pinned to 8.7.
@@ -63,3 +82,9 @@ into the `Presenter`. Should not manipulate `board_model` directly.
   No mocking library — hand-written fakes in `src/test/kotlin/testing/`.
 - Production code has no dependencies beyond the Kotlin standard library
   (board shuffling uses `kotlin.collections.shuffle()`, not a custom implementation).
+- **JLine considered and rejected (GH-6):** save/load filename tab-autocompletion
+  would require raw/cbreak terminal input, which only a library like JLine 3 provides.
+  Rejected as too heavyweight for this project's zero-third-party-dependency stance,
+  and JLine degrades to a dumb terminal anyway when stdin isn't a real TTY (exactly how
+  `./gradlew run` and the test suite invoke the app). Substitute: save-selection prompts
+  list the available save names so the user can always see and copy an exact name.
