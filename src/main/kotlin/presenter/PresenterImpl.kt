@@ -41,11 +41,16 @@ class PresenterImpl(
         }
     }
 
-    override fun loadGame(name: String) = loadGame(name, trigger = "command")
+    override fun loadGame(name: String) {
+        loadGame(name, trigger = "command")
+    }
 
     /** [trigger] is `"command"` for the mid-game `load` console command, or `"startup_prompt"`
-     *  when called from [restoreOnStartup] - see `load_command_used` in docs/ANALYTICS_EVENTS.md. */
-    private fun loadGame(name: String, trigger: String) {
+     *  when called from [restoreOnStartup] - see `load_command_used` in docs/ANALYTICS_EVENTS.md.
+     *  Returns whether the board was actually restored, so [restoreOnStartup] can report an
+     *  accurate `startup_restore_decision` instead of assuming success (audit on PR #14: a
+     *  corrupted/mismatched save offered at startup was being recorded as "restored"). */
+    private fun loadGame(name: String, trigger: String): Boolean {
         // The whole body is guarded, not just saves.load - availableSavesMessage() (itself
         // saves.listSaves()) and board.restoreState can also throw, and WU4's startup restore
         // flow calls this before play()'s try/catch exists, so loadGame must not throw
@@ -55,7 +60,7 @@ class PresenterImpl(
             if (saved == null) {
                 analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "not_found"))
                 view.showMessage("No save named '$name'. ${availableSavesMessage()}")
-                return
+                return false
             }
             if (saved.squareSide != board.SQUARE_SIDE) {
                 analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "size_mismatch"))
@@ -63,14 +68,16 @@ class PresenterImpl(
                     "Save '$name' is a ${saved.squareSide}x${saved.squareSide} board and can't be loaded onto " +
                         "this ${board.SQUARE_SIDE}x${board.SQUARE_SIDE} board."
                 )
-                return
+                return false
             }
             board.restoreState(saved.state)
             analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "success"))
             view.showMessage("Loaded '$name'.")
+            return true
         } catch (e: Exception) {
             analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "error"))
             view.showMessage(e.message ?: "Could not load '$name'.")
+            return false
         }
     }
 
@@ -105,24 +112,22 @@ class PresenterImpl(
                 var chosen: String? = null
                 while (chosen == null) {
                     val typed = view.chooseSaveToRestore(saveNames) ?: break
-                    if (typed in saveNames) chosen = typed
-                    // else: unknown name - loop and re-prompt rather than falling back
+                    if (typed in saveNames) {
+                        chosen = typed
+                    } else {
+                        view.showMessage("No save named '$typed'. Available saves: ${saveNames.joinToString(", ")}")
+                    }
                 }
                 chosen
             }
 
-            if (nameToRestore != null) {
-                loadGame(nameToRestore, trigger = "startup_prompt")
-                analytics.track(
-                    "startup_restore_decision",
-                    mapOf("decision" to "restored", "save_file_count" to saveNames.size),
-                )
-            } else {
-                analytics.track(
-                    "startup_restore_decision",
-                    mapOf("decision" to "new_game", "save_file_count" to saveNames.size),
-                )
-            }
+            // loadGame can still fail here (a save deleted or corrupted since listSaves() ran
+            // just above) - decision reflects what actually happened, not just what was picked.
+            val restored = nameToRestore?.let { loadGame(it, trigger = "startup_prompt") } ?: false
+            analytics.track(
+                "startup_restore_decision",
+                mapOf("decision" to (if (restored) "restored" else "new_game"), "save_file_count" to saveNames.size),
+            )
         } catch (e: Exception) {
             // Any failure here (unreadable saves dir, view I/O error) just means the game
             // starts fresh instead of crashing at boot.

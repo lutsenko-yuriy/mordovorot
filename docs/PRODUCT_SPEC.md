@@ -43,6 +43,9 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
   - Two or more saves — lists all save names and asks the user to type one to restore, or press
     Enter for a new game. An unrecognized name re-prompts rather than silently starting a new
     game; EOF is treated the same as pressing Enter.
+  - When saves exist, this prompt consumes the first line of stdin before the normal command
+    loop starts — a script feeding commands via a pipe (e.g. `printf "left 1\n" | app`) must
+    account for it, or its first line will be read as the restore answer instead of a move.
 
 ## Known gaps
 

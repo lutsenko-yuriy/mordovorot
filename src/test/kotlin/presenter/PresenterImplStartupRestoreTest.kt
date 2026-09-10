@@ -1,5 +1,6 @@
 package presenter
 
+import storage.SaveFileFormatException
 import storage.SavedBoard
 import testing.FakeBoardModel
 import testing.FakeSaveRepository
@@ -158,12 +159,17 @@ class PresenterImplStartupRestoreTest {
     }
 
     @Test
-    fun `EOF at the startup prompt starts a new game`() {
+    fun `EOF at the startup prompt starts a new game, same as a decline - real EOF translation is covered in ViewImplCommandTest`() {
+        // PresenterImpl only ever sees the sentinel View.confirmRestore/chooseSaveToRestore
+        // return for EOF (false/null) - identical to a clean decline/blank answer, since the
+        // actual EOF-vs-decline distinction is made inside ViewImpl (see
+        // `confirmRestore returns false on EOF instead of throwing` and its chooseSaveToRestore
+        // counterpart in ViewImplCommandTest). This test only confirms the presenter doesn't
+        // hang or throw when that sentinel comes back - it can't, by construction, tell EOF
+        // apart from a decline at this layer.
         val board = FakeBoardModel().apply { correct = true }
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, fourByFour)))
         val analytics = RecordingAnalyticsService()
-        // View.confirmRestore/chooseSaveToRestore return the same sentinel for EOF as for a
-        // clean decline/blank answer - see ViewImpl.readLineOrNull.
         val view = FakeView(confirmRestoreResponses = mutableListOf(false))
         val presenter = PresenterImpl(view, board, saves, analytics)
 
@@ -173,6 +179,51 @@ class PresenterImplStartupRestoreTest {
         assertEquals(
             Event("startup_restore_decision", mapOf("decision" to "new_game", "save_file_count" to 1)),
             analytics.events.last(),
+        )
+    }
+
+    @Test
+    fun `a save picked at startup that fails to load is reported as new_game, not restored`() {
+        // Simulates a save deleted or corrupted between listSaves() and load() - e.g. another
+        // process touched the saves/ directory between the two calls (audit finding on PR #14).
+        val board = FakeBoardModel().apply { correct = true }
+        val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, fourByFour)))
+        saves.loadException = SaveFileFormatException("foo", "corrupted save file")
+        val analytics = RecordingAnalyticsService()
+        val view = FakeView(confirmRestoreResponses = mutableListOf(true))
+        val presenter = PresenterImpl(view, board, saves, analytics)
+
+        presenter.play()
+
+        assertEquals(emptyList(), board.calls)
+        assertEquals(
+            listOf(
+                Event("startup_restore_prompt_shown", mapOf("save_file_count" to 1)),
+                Event("load_command_used", mapOf("trigger" to "startup_prompt", "result" to "error")),
+                Event("startup_restore_decision", mapOf("decision" to "new_game", "save_file_count" to 1)),
+            ),
+            analytics.events,
+        )
+    }
+
+    @Test
+    fun `an unknown name typed with two or more saves shows a message before re-prompting`() {
+        val board = FakeBoardModel().apply { correct = true }
+        val saves = FakeSaveRepository(
+            mutableMapOf(
+                "foo" to SavedBoard(4, fourByFour),
+                "bar" to SavedBoard(4, fourByFour),
+            ),
+        )
+        val analytics = RecordingAnalyticsService()
+        val view = FakeView(chooseSaveToRestoreResponses = mutableListOf("nope", null))
+        val presenter = PresenterImpl(view, board, saves, analytics)
+
+        presenter.play()
+
+        assertEquals(
+            listOf("No save named 'nope'. Available saves: bar, foo"),
+            view.shownMessages,
         )
     }
 }
