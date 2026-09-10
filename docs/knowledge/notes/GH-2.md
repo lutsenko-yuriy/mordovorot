@@ -35,3 +35,15 @@ Full `review` (architectural) and `audit` (runtime/migration) passes ran against
 - 🟢 *Deferred, tracked here:* `docs/BACKLOG.md`/`docs/CHANGELOG.md` attribute regeneration to a nonexistent "product-owner-merge" skill / "Product Owner agent" — the real owner is `ship`.
 
 ## Debrief summary
+
+### 2026-09-10
+
+**What went well**
+- The adoption landed quickly and cleanly despite the number of gaps found — the scaffolding itself is sound, and the mismatches were all shallow/mechanical rather than structural.
+- The `review` + `audit` loop worked as intended: it surfaced real, previously-invisible gaps (the notes validator failure, the stale Linear context, the false CI claim) that a straight read-through likely would have missed.
+
+**What was hard or surprising**
+- A bunch of the gaps found were things that should have been retrofitted specifically to this project (version file, test harness, PM provider assumptions) rather than genuine bugs — the cost of the upstream template trying to stay universal across stacks/PM tools.
+
+**What to change**
+- Adapt `yuriys-agentic-boyz` (the upstream template) itself to be more generic/adaptable, so future adoptions hit less of this per-project friction. Out of scope for this repo's own files — tracked as feedback for the upstream template, not a local fix.
