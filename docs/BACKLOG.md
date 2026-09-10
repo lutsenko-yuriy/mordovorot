@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-GH-6: Save and load game state to/from local files — WU4 (startup restore prompt) in progress. WU0-WU3 merged.
+_(nothing in progress)_
 
 ---
 
