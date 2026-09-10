@@ -30,3 +30,14 @@ Full `review` (architectural) and `audit` (runtime/migration) passes ran against
 Also flagged and removed during this ticket: the `yuriys-agentic-boyz` template had shipped a `LICENSE` file at the repo root during GH-2's adoption, which wasn't something the project owner asked for. Removed directly on `master`. Full finding and the framework-setup suggestion (ask explicitly about licensing during template setup instead of silently including a default) is logged in `docs/knowledge/notes/GH-2-adjust-1.md`.
 
 ## Debrief summary
+
+### 2026-09-10
+
+**What went well**
+- The full scope (Gradle adoption, testability seams, the off-by-one bugfix, 37 tests, CI, docs refresh) landed cleanly in one PR, and the app is now in noticeably better shape.
+
+**What was hard or surprising**
+- Nothing — the Gradle migration, test-writing, and bugfixes all went smoothly.
+
+**What to change**
+- Nothing this time.
