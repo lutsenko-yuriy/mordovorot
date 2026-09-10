@@ -1,13 +1,10 @@
 package presenter
 
 import board_model.BoardImpl
+import board_model.BoardModel
 import view.View
 
-import view.ViewImpl
-
-class PresenterImpl(var view: View) : Presenter {
-
-    var board = BoardImpl()
+class PresenterImpl(var view: View, var board: BoardModel = BoardImpl()) : Presenter {
 
     override fun shiftLeft(row: Int) = board.shiftLeft(row)
 
