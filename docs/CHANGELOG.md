@@ -19,6 +19,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - [wip] GH-6 (WU1/4): line-based console input reader with EOF termination for play mode.
 - [wip] GH-6 (WU2/4): storage package (SaveRepository/SavedBoard/FileSaveRepository/SaveFileFormatException) + BoardModel.restoreState — persistence layer, not yet wired to the UI.
 
+## [0.2.0] — 2026-09-10 (PR #11 merged)
+
+### Changed
+- [app] GH-10: 1-based tile values and row/column indices
+
 ## [0.1.1] — 2026-09-10 (PR #5 merged)
 
 ### Added
