@@ -4,7 +4,7 @@ public class BoardImpl constructor(override val SQUARE_SIDE: Int = 4) : BoardMod
 
     var counter: Int = 0
 
-    var boardArray: IntArray =
+    override var boardArray: IntArray =
             IntArray(SQUARE_SIDE * SQUARE_SIDE, { item -> item })
 
     init {
@@ -20,7 +20,7 @@ public class BoardImpl constructor(override val SQUARE_SIDE: Int = 4) : BoardMod
     }
 
     override fun shiftLeft(row: Int) {
-        if (row !in 0..SQUARE_SIDE) {
+        if (row !in 0 until SQUARE_SIDE) {
             throw IllegalArgumentException("Incorrect row")
         }
 
@@ -33,7 +33,7 @@ public class BoardImpl constructor(override val SQUARE_SIDE: Int = 4) : BoardMod
     }
 
     override fun shiftRight(row: Int) {
-        if (row !in 0..SQUARE_SIDE) {
+        if (row !in 0 until SQUARE_SIDE) {
             throw IllegalArgumentException("Incorrect row")
         }
 
@@ -45,7 +45,7 @@ public class BoardImpl constructor(override val SQUARE_SIDE: Int = 4) : BoardMod
     }
 
     override fun shiftUp(col: Int) {
-        if (col !in 0..SQUARE_SIDE) {
+        if (col !in 0 until SQUARE_SIDE) {
             throw IllegalArgumentException("Incorrect column")
         }
 
@@ -57,7 +57,7 @@ public class BoardImpl constructor(override val SQUARE_SIDE: Int = 4) : BoardMod
     }
 
     override fun shiftDown(col: Int) {
-        if (col !in 0..SQUARE_SIDE) {
+        if (col !in 0 until SQUARE_SIDE) {
             throw IllegalArgumentException("Incorrect column")
         }
 
