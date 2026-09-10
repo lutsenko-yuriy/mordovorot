@@ -34,6 +34,9 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
   instead of crashing.
 - Not yet implemented: the startup restore prompt (offering to resume an existing save when the
   app launches) — tracked as GH-6's remaining work unit.
+- Saves are stored as `.save` files in a `saves/` directory relative to wherever the app is
+  launched from (the process's current working directory) — running from a different directory
+  will not see saves made from another one.
 
 ## Known gaps
 
