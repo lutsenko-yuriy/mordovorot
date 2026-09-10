@@ -25,6 +25,11 @@ class FakeBoardModel(
         calls.add("resetGame")
     }
 
+    override fun restoreState(state: IntArray) {
+        calls.add("restoreState(${state.toList()})")
+        boardArray = state
+    }
+
     override fun shiftLeft(row: Int) {
         shiftLeftException?.let { throw it }
         calls.add("shiftLeft($row)")

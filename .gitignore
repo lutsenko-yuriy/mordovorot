@@ -12,6 +12,9 @@ __pycache__/
 build/
 !gradle/wrapper/gradle-wrapper.jar
 
+# Local save files (GH-6)
+saves/
+
 # Commit .claude/commands/ — that's the point of this template.
 # If you want commands to be local-only after setup, add:
 #   .claude/*
