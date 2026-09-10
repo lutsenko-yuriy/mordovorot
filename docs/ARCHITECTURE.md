@@ -64,6 +64,13 @@ translates view commands into model calls.
 Console I/O only: reads commands from stdin, renders the board, and calls
 into the `Presenter`. Should not manipulate `board_model` directly.
 
+**1-based console dialect (GH-10):** the console is 1-based (displayed tile
+values, `left`/`right`/`up`/`down` row/column input); `board_model` and
+`storage` stay 0-based. `ViewImpl`'s `DISPLAY_OFFSET` constant is the single
+translation point — `+1` when rendering, `-1` when parsing a shift argument.
+Range validation still lives in `board_model` (`BoardImpl`'s bounds check),
+not `view` — the view translates, it does not validate.
+
 ### storage
 File persistence for save games. `SaveRepository` is the contract `presenter`
 depends on; `FileSaveRepository` is the only class in the codebase that touches

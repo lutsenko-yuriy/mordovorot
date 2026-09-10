@@ -11,14 +11,14 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
 ## Features
 
 ### Feature 1 — Board
-- The game presents a square board of tiles laid out `SQUARE_SIDE × SQUARE_SIDE` (default 4×4), holding a shuffled permutation of the integers `0..SQUARE_SIDE²-1`.
+- The game presents a square board of tiles laid out `SQUARE_SIDE × SQUARE_SIDE` (default 4×4), holding a shuffled permutation of the integers `0..SQUARE_SIDE²-1` internally, **displayed to the player as `1..SQUARE_SIDE²`** (GH-10).
 - On starting a new game, the board is reshuffled via a Fisher-Yates shuffle.
 - The board is considered "correct" (solved) when its values are in ascending order.
 
 ### Feature 2 — Moves
 - The user can shift any row left or right, cyclically wrapping the value that falls off one end onto the other end.
 - The user can shift any column up or down, with the same cyclic wrap-around behavior.
-- Moves are addressed by row/column index.
+- Moves are addressed by a **1-based** row/column index (the first row/column is `1`, the last is `SQUARE_SIDE`); an index of `0` or greater than `SQUARE_SIDE` is rejected (GH-10).
 
 ### Feature 3 — Console interaction
 - The user issues commands through a console (stdin) loop.
