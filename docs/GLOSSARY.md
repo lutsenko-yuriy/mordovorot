@@ -11,6 +11,7 @@ When a new term is introduced during a `brief` session, add it here before creat
 | Shift | Cyclically rotating one row (left/right) or column (up/down) by one position | `shiftLeft`, `shiftRight`, `shiftUp`, `shiftDown` |
 | Square side | The board's edge length (default 4, giving a 4×4 board) | `SQUARE_SIDE` |
 | Correct / solved | The board state where all values are in ascending order | `isCorrect()` |
+| Save file | A local file storing a board's tile arrangement, created/updated via the `save` command and restored via `load` or the startup prompt | *(none yet — added by GH-6)* |
 
 ## Known aliases to avoid
 
