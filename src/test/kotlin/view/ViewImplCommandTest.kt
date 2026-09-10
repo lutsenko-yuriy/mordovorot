@@ -3,11 +3,20 @@ package view
 import testing.FakePresenter
 import java.io.BufferedReader
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.io.PrintStream
+import java.io.Reader
 import java.io.StringReader
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+
+/** A [Reader] that always fails, simulating a dead stream (e.g. the controlling
+ *  terminal disappearing) rather than a clean end-of-stream. */
+private class ThrowingReader : Reader() {
+    override fun read(cbuf: CharArray, off: Int, len: Int): Int = throw IOException("stream error")
+    override fun close() {}
+}
 
 class ViewImplCommandTest {
 
@@ -147,5 +156,28 @@ class ViewImplCommandTest {
         view.showMessage("save not found")
 
         assertEquals("save not found${System.lineSeparator()}", output.toString())
+    }
+
+    @Test
+    fun `IOException while reading input throws EndOfInputException instead of spinning forever`() {
+        val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
+        view.presenter = FakePresenter()
+
+        assertFailsWith<EndOfInputException> { view.processCommand() }
+    }
+
+    @Test
+    fun `create wires the injected input, output, and presenter together atomically`() {
+        val presenter = FakePresenter()
+        val outputBuffer = ByteArrayOutputStream()
+
+        val view = ViewImpl.create(
+            input = BufferedReader(StringReader("left 0\n")),
+            output = PrintStream(outputBuffer),
+        ) { presenter }
+
+        view.processCommand()
+
+        assertEquals(listOf("shiftLeft(0)"), presenter.calls)
     }
 }
