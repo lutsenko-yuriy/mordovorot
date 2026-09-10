@@ -34,4 +34,12 @@ class FakePresenter : Presenter {
     override fun resetGame() {
         calls.add("resetGame")
     }
+
+    override fun saveGame(name: String) {
+        calls.add("saveGame($name)")
+    }
+
+    override fun loadGame(name: String) {
+        calls.add("loadGame($name)")
+    }
 }

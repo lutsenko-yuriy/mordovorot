@@ -36,7 +36,7 @@ class FileSaveRepository(private val directory: Path = defaultDirectory()) : Sav
         requireSafeName(name)
         require(squareSide > 0) { "Square side must be positive" }
         require(state.size == squareSide * squareSide) { "Expected ${squareSide * squareSide} values, got ${state.size}" }
-        require(state.toSet() == (0 until state.size).toSet()) { "State must be a permutation of 0..${state.size - 1}" }
+        require(state.toSet() == (0 until state.size).toSet()) { "State must contain each of ${state.size} tile values exactly once" }
 
         directory.createDirectories()
         // Write to a temp file and move atomically so a crash or a rejected write
@@ -74,7 +74,7 @@ class FileSaveRepository(private val directory: Path = defaultDirectory()) : Sav
             throw SaveFileFormatException(name, "expected $expectedSize values, found ${state.size}")
         }
         if (state.toSet() != (0 until expectedSize).toSet()) {
-            throw SaveFileFormatException(name, "values are not a permutation of 0..${expectedSize - 1}")
+            throw SaveFileFormatException(name, "board values are not a valid arrangement (each tile must appear exactly once)")
         }
 
         return SavedBoard(squareSide, state)

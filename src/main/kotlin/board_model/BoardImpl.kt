@@ -21,7 +21,7 @@ public class BoardImpl constructor(override val SQUARE_SIDE: Int = 4) : BoardMod
 
     override fun restoreState(state: IntArray) {
         require(state.size == SQUARE_SIDE * SQUARE_SIDE) { "Expected ${SQUARE_SIDE * SQUARE_SIDE} values, got ${state.size}" }
-        require(state.toSet() == (0 until state.size).toSet()) { "Board state must be a permutation of 0..${state.size - 1}" }
+        require(state.toSet() == (0 until state.size).toSet()) { "Board state must contain each of ${state.size} tile values exactly once" }
 
         boardArray = state.copyOf()
         counter = 0

@@ -71,6 +71,9 @@ class ViewImpl internal constructor(
                 presenter.resetGame()
             }
 
+            "save" -> presenter.saveGame(nameArg(parts))
+            "load" -> presenter.loadGame(nameArg(parts))
+
             else -> throw IllegalArgumentException("Incorrect input")
         }
 
@@ -81,6 +84,13 @@ class ViewImpl internal constructor(
         requireArgCount(parts, 2)
         val value = parts[1].toIntOrNull() ?: throw IllegalArgumentException("Incorrect input")
         return value - DISPLAY_OFFSET
+    }
+
+    /** Save/load file names are free-form text, not a 1-based index - no [DISPLAY_OFFSET]
+     *  translation applies here. */
+    private fun nameArg(parts: List<String>): String {
+        requireArgCount(parts, 2)
+        return parts[1]
     }
 
     private fun requireArgCount(parts: List<String>, expected: Int) {

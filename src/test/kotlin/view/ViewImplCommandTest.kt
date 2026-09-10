@@ -89,6 +89,44 @@ class ViewImplCommandTest {
     }
 
     @Test
+    fun `save command delegates to presenter saveGame with the raw file name, untranslated`() {
+        val presenter = FakePresenter()
+        val (view, _) = viewWith("save foo\n", presenter)
+
+        view.processCommand()
+
+        assertEquals(listOf("saveGame(foo)"), presenter.calls)
+    }
+
+    @Test
+    fun `load command delegates to presenter loadGame with the raw file name, untranslated`() {
+        val presenter = FakePresenter()
+        val (view, _) = viewWith("load foo\n", presenter)
+
+        view.processCommand()
+
+        assertEquals(listOf("loadGame(foo)"), presenter.calls)
+    }
+
+    @Test
+    fun `save with a missing file name throws without delegating`() {
+        val presenter = FakePresenter()
+        val (view, _) = viewWith("save\n", presenter)
+
+        assertFailsWith<IllegalArgumentException> { view.processCommand() }
+        assertEquals(emptyList(), presenter.calls)
+    }
+
+    @Test
+    fun `save with a trailing extra token is rejected rather than silently ignored`() {
+        val presenter = FakePresenter()
+        val (view, _) = viewWith("save foo bar\n", presenter)
+
+        assertFailsWith<IllegalArgumentException> { view.processCommand() }
+        assertEquals(emptyList(), presenter.calls)
+    }
+
+    @Test
     fun `reset command delegates to presenter resetGame`() {
         val presenter = FakePresenter()
         val (view, _) = viewWith("reset\n", presenter)

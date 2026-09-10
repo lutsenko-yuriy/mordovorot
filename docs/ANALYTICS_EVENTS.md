@@ -24,7 +24,8 @@ Fired when the user runs `save <file-name>`. *(GH-6)*
 
 | Property | Type | Description |
 |---|---|---|
-| `overwrote_existing` | `boolean` | Whether a file with that name already existed. |
+| `result` | `string` | `success` or `error` (e.g. an unsafe name, or a filesystem failure such as a full disk). |
+| `overwrote_existing` | `boolean` | Whether a file with that name already existed. Only present when `result` is `success` - on `error` it may not be known (e.g. the name check itself failed). |
 
 ### `load_command_used`
 
@@ -33,7 +34,7 @@ Fired when the board is restored from a save file, either via the `load` command
 | Property | Type | Description |
 |---|---|---|
 | `trigger` | `string` | `command` or `startup_prompt`. |
-| `result` | `string` | `success` or `not_found`. |
+| `result` | `string` | `success`, `not_found`, `size_mismatch` (save's board size doesn't match the current board), or `error` (corrupted save file or a filesystem failure). |
 
 ### `startup_restore_prompt_shown`
 

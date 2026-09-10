@@ -57,8 +57,10 @@ Core game state and rules: board array, shifting, reset, and the win check
 (`isCorrect`). No dependency on `presenter` or `view`.
 
 ### presenter
-Mediates between `view` and `board_model`. Owns no UI or storage code itself;
-translates view commands into model calls.
+Mediates between `view`, `board_model`, and `storage`. `PresenterImpl` takes
+`board`/`saves`/`analytics` as constructor params (each defaulted to a real
+implementation), so tests can inject fakes without touching the filesystem
+or a real analytics SDK.
 
 ### view
 Console I/O only: reads commands from stdin, renders the board, and calls
@@ -71,13 +73,12 @@ translation point — `+1` when rendering, `-1` when parsing a shift argument.
 Range validation still lives in `board_model` (`BoardImpl`'s bounds check),
 not `view` — the view translates, it does not validate.
 
-**Note for GH-6 (paused):** exception *messages* are a second, untranslated
-0-based channel — `BoardImpl.restoreState` and `FileSaveRepository.load`
-embed 0-based ranges in their messages (e.g. "permutation of 0..15"), and
-`PresenterImpl.play` surfaces `e.message` verbatim via `showMessage`. Not
-reachable today (no console command hits those paths), but WU3/WU4's
-`save`/`load` commands will make it visible — translate those numbers, or
-reword the messages to omit the range, before shipping WU3.
+`BoardImpl.restoreState` and `FileSaveRepository`'s validation errors avoid
+stating an explicit numeric range (e.g. "contain each of N tile values
+exactly once" rather than "permutation of 0..N-1") specifically so they read
+correctly once surfaced through `PresenterImpl.play`'s `showMessage(e.message
+...)` to the 1-based console — GH-6's `save`/`load` commands are the first
+thing that makes these messages reachable.
 
 ### storage
 File persistence for save games. `SaveRepository` is the contract `presenter`
