@@ -27,20 +27,38 @@ class PresenterImpl(
     override fun resetGame() = board.resetGame()
 
     override fun saveGame(name: String) {
-        val existed = saves.exists(name)
-        saves.save(name, board.boardArray, board.SQUARE_SIDE)
-        analytics.track("save_command_used", mapOf("overwrote_existing" to existed))
-        view.showMessage("Saved as '$name'.")
+        // saves.exists/save can throw (bad name, IOException) - caught here rather than left to
+        // play()'s generic handler, so a failed save is still tracked and gets its own message
+        // instead of silently missing from save_command_used (audit finding on PR #13).
+        try {
+            val existed = saves.exists(name)
+            saves.save(name, board.boardArray, board.SQUARE_SIDE)
+            analytics.track("save_command_used", mapOf("result" to "success", "overwrote_existing" to existed))
+            view.showMessage("Saved as '$name'.")
+        } catch (e: Exception) {
+            analytics.track("save_command_used", mapOf("result" to "error"))
+            view.showMessage(e.message ?: "Could not save as '$name'.")
+        }
     }
 
     override fun loadGame(name: String) {
-        val saved = saves.load(name)
+        // Catches everything saves.load can throw (bad name, SaveFileFormatException,
+        // IOException), not just the null/not-found case - WU4's startup restore flow calls
+        // this before play()'s try/catch exists, so loadGame must not throw (audit on PR #13).
+        val saved = try {
+            saves.load(name)
+        } catch (e: Exception) {
+            analytics.track("load_command_used", mapOf("trigger" to "command", "result" to "error"))
+            view.showMessage(e.message ?: "Could not load '$name'.")
+            return
+        }
         if (saved == null) {
             analytics.track("load_command_used", mapOf("trigger" to "command", "result" to "not_found"))
             view.showMessage("No save named '$name'. ${availableSavesMessage()}")
             return
         }
         if (saved.squareSide != board.SQUARE_SIDE) {
+            analytics.track("load_command_used", mapOf("trigger" to "command", "result" to "size_mismatch"))
             view.showMessage(
                 "Save '$name' is a ${saved.squareSide}x${saved.squareSide} board and can't be loaded onto " +
                     "this ${board.SQUARE_SIDE}x${board.SQUARE_SIDE} board."

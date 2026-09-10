@@ -1,6 +1,7 @@
 package presenter
 
 import board_model.BoardImpl
+import storage.SaveFileFormatException
 import testing.FakeSaveRepository
 import testing.FakeView
 import testing.RecordingAnalyticsService
@@ -26,7 +27,12 @@ class PresenterImplSaveLoadTest {
         assertEquals(listOf(1, 0, 3, 2), state.toList())
         assertEquals(2, squareSide)
         assertEquals(
-            listOf(RecordingAnalyticsService.Event("save_command_used", mapOf("overwrote_existing" to false))),
+            listOf(
+                RecordingAnalyticsService.Event(
+                    "save_command_used",
+                    mapOf("result" to "success", "overwrote_existing" to false),
+                ),
+            ),
             analytics.events,
         )
     }
@@ -43,7 +49,29 @@ class PresenterImplSaveLoadTest {
 
         assertEquals(listOf(3, 2, 1, 0), saves.load("foo")!!.state.toList())
         assertEquals(
-            listOf(RecordingAnalyticsService.Event("save_command_used", mapOf("overwrote_existing" to true))),
+            listOf(
+                RecordingAnalyticsService.Event(
+                    "save_command_used",
+                    mapOf("result" to "success", "overwrote_existing" to true),
+                ),
+            ),
+            analytics.events,
+        )
+    }
+
+    @Test
+    fun `saveGame surfaces a message and tracks result=error instead of crashing when the repository throws`() {
+        val saves = FakeSaveRepository().apply { saveException = IllegalArgumentException("Save name must not be blank") }
+        val analytics = RecordingAnalyticsService()
+        val view = FakeView()
+        val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
+        val presenter = PresenterImpl(view, board, saves, analytics)
+
+        presenter.saveGame("..")
+
+        assertTrue(view.shownMessages.any { it.contains("Save name must not be blank") })
+        assertEquals(
+            listOf(RecordingAnalyticsService.Event("save_command_used", mapOf("result" to "error"))),
             analytics.events,
         )
     }
@@ -97,7 +125,7 @@ class PresenterImplSaveLoadTest {
     }
 
     @Test
-    fun `loadGame surfaces a message instead of crashing when the save's board size differs`() {
+    fun `loadGame surfaces a message and tracks result=size_mismatch when the save's board size differs`() {
         val saves = FakeSaveRepository()
         saves.save("small", intArrayOf(0, 1, 2, 3), 2)
         val analytics = RecordingAnalyticsService()
@@ -109,6 +137,29 @@ class PresenterImplSaveLoadTest {
 
         assertEquals((0..15).toList(), board.boardArray.toList())
         assertTrue(view.shownMessages.any { it.contains("small") })
-        assertTrue(analytics.events.isEmpty())
+        assertEquals(
+            listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "size_mismatch"))),
+            analytics.events,
+        )
+    }
+
+    @Test
+    fun `loadGame surfaces a message and tracks result=error instead of crashing on a corrupted save file`() {
+        val saves = FakeSaveRepository().apply {
+            loadException = SaveFileFormatException("corrupt", "missing board values")
+        }
+        val analytics = RecordingAnalyticsService()
+        val view = FakeView()
+        val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
+        val presenter = PresenterImpl(view, board, saves, analytics)
+
+        presenter.loadGame("corrupt")
+
+        assertEquals(listOf(0, 1, 2, 3), board.boardArray.toList())
+        assertTrue(view.shownMessages.any { it.contains("corrupt") })
+        assertEquals(
+            listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "error"))),
+            analytics.events,
+        )
     }
 }
