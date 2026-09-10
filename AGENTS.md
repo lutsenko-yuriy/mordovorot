@@ -54,10 +54,11 @@ Details and directory layout: @docs/ARCHITECTURE.md.
 
 ## Common Commands
 
-- **Run tests:** none yet — no test suite exists in the repo (see `docs/ARCHITECTURE.md`)
+- **Run tests:** `./gradlew test`
 - **Lint:** none configured
-- **Build:** no build tool is checked in; compile directly, e.g. `kotlinc src/**/*.kt -include-runtime -d mordovorot.jar && java -jar mordovorot.jar`
-- **Install dependencies:** none — no external dependencies, just the Kotlin standard library
+- **Build:** `./gradlew build`
+- **Run the game:** `./gradlew run`
+- **Install dependencies:** none to install manually — Gradle resolves everything (`kotlin("test")` on the JUnit 5 platform) on first run
 
 ## Code style
 

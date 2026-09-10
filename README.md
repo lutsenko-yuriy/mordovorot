@@ -8,12 +8,20 @@ cyclically wrapping around, until the board is back in ascending order.
 
 ## Running it
 
-No build tool is checked in yet. Compile and run directly with `kotlinc`:
+Built with Gradle (via the wrapper, no local Gradle install needed):
 
 ```bash
-kotlinc src/**/*.kt -include-runtime -d mordovorot.jar
-java -jar mordovorot.jar
+./gradlew run
 ```
+
+## Testing
+
+```bash
+./gradlew test
+```
+
+`board_model` and `presenter` have full unit test coverage, independent of any
+view/UI implementation. The `view` layer isn't covered yet — tracked separately.
 
 ## Architecture
 
