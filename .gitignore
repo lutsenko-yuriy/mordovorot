@@ -1,0 +1,14 @@
+# Claude Code local config — not committed
+CLAUDE.local.md
+.claude/settings.local.json
+.claude/worktrees/
+
+# Python
+__pycache__/
+*.pyc
+
+# Commit .claude/agents/ — that's the point of this template.
+# If you want agents to be local-only after setup, add:
+#   .claude/*
+#   !.claude/agents/
+# to your project's .gitignore instead.
