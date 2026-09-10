@@ -18,7 +18,8 @@ A record of all versioned releases. For planned work and known issues, see @docs
 ### Added
 - [wip] GH-6 (WU1/4): line-based console input reader with EOF termination for play mode.
 - [wip] GH-6 (WU2/4): storage package (SaveRepository/SavedBoard/FileSaveRepository/SaveFileFormatException) + BoardModel.restoreState — persistence layer, not yet wired to the UI.
-- [wip] GH-6 (WU3/4): `save <file-name>` / `load <file-name>` console commands, wired view → presenter → storage, with `save_command_used`/`load_command_used` analytics events. Startup restore prompt (WU4) still to come.
+- [wip] GH-6 (WU3/4): `save <file-name>` / `load <file-name>` console commands, wired view → presenter → storage, with `save_command_used`/`load_command_used` analytics events.
+- [app] GH-6 (WU4/4): startup restore prompt — on launch, offers to resume an existing save (a yes/no question for exactly one save, a name prompt for two or more, re-prompting on an unrecognized name), with `startup_restore_prompt_shown`/`startup_restore_decision` analytics events.
 
 ## [0.2.0] — 2026-09-10 (PR #11 merged)
 

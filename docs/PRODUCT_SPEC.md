@@ -32,14 +32,19 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
 - Loading an unknown file name, or a save whose board size doesn't match the current board,
   leaves the board untouched and shows a message (listing available saves, where relevant)
   instead of crashing.
-- Not yet implemented: the startup restore prompt (offering to resume an existing save when the
-  app launches) — tracked as GH-6's remaining work unit.
 - Saves are stored as `.save` files in a `saves/` directory relative to wherever the app is
   launched from (the process's current working directory) — running from a different directory
   will not see saves made from another one.
+- **Startup restore prompt:** on launch, before the first move, the app checks for existing
+  saves:
+  - No saves — starts a new game immediately, no prompt.
+  - Exactly one save — asks a yes/no question offering to restore it; declining (or EOF) starts
+    a new game.
+  - Two or more saves — lists all save names and asks the user to type one to restore, or press
+    Enter for a new game. An unrecognized name re-prompts rather than silently starting a new
+    game; EOF is treated the same as pressing Enter.
 
 ## Known gaps
 
 - No documented win-condition message or exit command yet — see `src/main/kotlin/view/ViewImpl.kt`
   for current behavior and treat it as the source of truth until this section is expanded.
-- No startup save/restore prompt yet (GH-6, in progress).
