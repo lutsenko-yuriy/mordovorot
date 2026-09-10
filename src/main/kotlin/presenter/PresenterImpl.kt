@@ -21,6 +21,9 @@ class PresenterImpl(var view: View, var board: BoardModel = BoardImpl()) : Prese
             try {
                 view.displayBoard(board.boardArray, board.SQUARE_SIDE)
                 view.processCommand()
+            } catch (e: java.io.EOFException) {
+                // No more input to read - stop instead of spinning on a closed stream.
+                return
             } catch (e: Exception) {
                 System.err.println(e.message)
             }

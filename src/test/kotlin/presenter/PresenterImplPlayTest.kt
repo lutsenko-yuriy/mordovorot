@@ -34,6 +34,18 @@ class PresenterImplPlayTest {
     }
 
     @Test
+    fun `play returns without looping when processCommand throws EOFException`() {
+        val board = FakeBoardModel()
+        val view = FakeView(mutableListOf({ throw java.io.EOFException() }))
+        val presenter = PresenterImpl(view, board)
+
+        presenter.play()
+
+        assertEquals(1, view.displayBoardCalls.size)
+        assertEquals(1, view.processCommandCallCount)
+    }
+
+    @Test
     fun `play swallows processCommand exceptions and keeps looping`() {
         val board = FakeBoardModel()
         val view = FakeView(
