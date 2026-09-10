@@ -43,3 +43,21 @@ instance of the pre-existing "no documented win-condition message" gap already l
 Not fixed as part of GH-6 (out of scope per FEATURE.md's scope-expansion guidance) — worth
 a small follow-up ticket for a win-condition message shown whenever `isCorrect()` becomes
 true (including immediately after any load, not just at startup).
+
+## Debrief summary
+
+### 2026-09-10
+
+**What went well**
+- Overall a smooth ticket - user's own words: "Quite smooth, especially considering that
+  we just started working on this project." No specific practice singled out as the
+  standout; the whole WU0→WU4 flow, including the two-track review loop, just worked.
+
+**What was hard or surprising**
+- Nothing - "everything just as I expected."
+
+**What to change**
+- GH-6 was interleaved with GH-10 (1-based tile values/indices, which paused GH-6 mid-WU)
+  and GH-12 got briefed while GH-6 was still in flight. User confirmed this slowed things
+  down slightly but is an accepted, expected cost of working this way - not something to
+  change process-wise. No action item.
