@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.4.0] — 2026-09-10 (PR #15 merged)
+
+### Added
+- [app] GH-12: `exit`/`quit` command, with a save-before-quitting prompt (`save_command_used`/`exit_command_used` analytics) that re-prompts on an unusable name and aborts the quit — rather than losing the session — if the save attempt itself fails.
+
 ## [0.3.0] — 2026-09-10 (PR #14 merged)
 
 ### Added
