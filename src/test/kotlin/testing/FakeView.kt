@@ -14,11 +14,17 @@ class FakeView(private val commands: MutableList<() -> Unit> = mutableListOf()) 
 
     val displayBoardCalls = mutableListOf<Pair<IntArray, Int>>()
 
+    val shownMessages = mutableListOf<String>()
+
     var processCommandCallCount = 0
         private set
 
     override fun displayBoard(boardState: IntArray, squareSide: Int) {
         displayBoardCalls.add(boardState.copyOf() to squareSide)
+    }
+
+    override fun showMessage(message: String) {
+        shownMessages.add(message)
     }
 
     override fun processCommand() {

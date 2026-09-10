@@ -25,7 +25,7 @@ tasks.test {
 
 tasks.named<JavaExec>("run") {
     // The application plugin doesn't wire stdin by default; ViewImpl reads
-    // console commands via Scanner(System.in), so without this the game
-    // hits EOF on its first read.
+    // console commands from a BufferedReader over System.in, so without this
+    // the game hits EOF on its first read.
     standardInput = System.`in`
 }

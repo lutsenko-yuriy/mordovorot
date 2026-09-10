@@ -1,41 +1,85 @@
 package view
 
-import presenter.PresenterImpl
-import java.util.*
+import presenter.Presenter
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
+import java.io.PrintStream
 
 /**
  * Created by yurich on 08.12.16.
  */
-class ViewImpl : View {
+class ViewImpl internal constructor(
+    private val input: BufferedReader = BufferedReader(InputStreamReader(System.`in`)),
+    private val output: PrintStream = System.out,
+) : View {
 
-    val presenter = PresenterImpl(this)
-    var scanner = Scanner(System.`in`)
+    /** Must be assigned before [play] or [processCommand] are called - use [create]. */
+    lateinit var presenter: Presenter
+        internal set
+
+    companion object {
+        /** The only public way to obtain a [ViewImpl] - wires [presenter] atomically. */
+        fun create(
+            input: BufferedReader = BufferedReader(InputStreamReader(System.`in`)),
+            output: PrintStream = System.out,
+            presenterFactory: (View) -> Presenter,
+        ): ViewImpl {
+            val view = ViewImpl(input, output)
+            view.presenter = presenterFactory(view)
+            return view
+        }
+    }
 
     override fun displayBoard(boardState: IntArray, squareSide: Int) {
-        for (i in 0..squareSide - 1) {
-            for (j in 0..squareSide - 1) {
-                System.out.print("${boardState[i * squareSide + j]}\t")
+        for (i in 0 until squareSide) {
+            for (j in 0 until squareSide) {
+                output.print("${boardState[i * squareSide + j]}\t")
             }
-            System.out.println()
+            output.println()
         }
-        System.out.println()
+        output.println()
+    }
+
+    override fun showMessage(message: String) {
+        output.println(message)
     }
 
     override fun processCommand() {
+        // null (clean EOF) or IOException (dead stream) both mean "no more input" -
+        // see GH-4's 651ca64 for the infinite-loop bug this closes.
+        val line = try {
+            input.readLine()
+        } catch (e: IOException) {
+            throw EndOfInputException(e)
+        } ?: throw EndOfInputException()
+        val parts = line.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
+        val command = parts.getOrNull(0)?.lowercase() ?: throw IllegalArgumentException("Incorrect input")
 
-        when (scanner.next().toLowerCase()) {
-            "left" -> presenter.shiftLeft(scanner.nextInt())
-            "right" -> presenter.shiftRight(scanner.nextInt())
-            "up" -> presenter.shiftUp(scanner.nextInt())
-            "down" -> presenter.shiftDown(scanner.nextInt())
+        when (command) {
+            "left" -> presenter.shiftLeft(intArg(parts))
+            "right" -> presenter.shiftRight(intArg(parts))
+            "up" -> presenter.shiftUp(intArg(parts))
+            "down" -> presenter.shiftDown(intArg(parts))
 
-            "reset" -> presenter.resetGame()
+            "reset" -> {
+                requireArgCount(parts, 1)
+                presenter.resetGame()
+            }
 
             else -> throw IllegalArgumentException("Incorrect input")
         }
 
-        System.out.println()
+        output.println()
+    }
 
+    private fun intArg(parts: List<String>): Int {
+        requireArgCount(parts, 2)
+        return parts[1].toIntOrNull() ?: throw IllegalArgumentException("Incorrect input")
+    }
+
+    private fun requireArgCount(parts: List<String>, expected: Int) {
+        if (parts.size != expected) throw IllegalArgumentException("Incorrect input")
     }
 
     override fun play() {

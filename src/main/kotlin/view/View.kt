@@ -6,6 +6,8 @@ package view
 interface View {
     fun displayBoard(boardState: IntArray, squareSide: Int)
 
+    fun showMessage(message: String)
+
     fun processCommand()
 
     fun play()

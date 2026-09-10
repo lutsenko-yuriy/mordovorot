@@ -2,6 +2,7 @@ package presenter
 
 import board_model.BoardImpl
 import board_model.BoardModel
+import view.EndOfInputException
 import view.View
 
 class PresenterImpl(var view: View, var board: BoardModel = BoardImpl()) : Presenter {
@@ -21,8 +22,10 @@ class PresenterImpl(var view: View, var board: BoardModel = BoardImpl()) : Prese
             try {
                 view.displayBoard(board.boardArray, board.SQUARE_SIDE)
                 view.processCommand()
+            } catch (e: EndOfInputException) {
+                return
             } catch (e: Exception) {
-                System.err.println(e.message)
+                view.showMessage(e.message ?: "Error") // not System.err - stays in sync with the board output
             }
         }
     }
