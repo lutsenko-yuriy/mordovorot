@@ -28,9 +28,9 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `left command delegates to presenter shiftLeft`() {
+    fun `left command delegates to presenter shiftLeft, translating the 1-based row to 0-based`() {
         val presenter = FakePresenter()
-        val (view, _) = viewWith("left 0\n", presenter)
+        val (view, _) = viewWith("left 1\n", presenter)
 
         view.processCommand()
 
@@ -38,9 +38,9 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `right command delegates to presenter shiftRight`() {
+    fun `right command delegates to presenter shiftRight, translating the 1-based row to 0-based`() {
         val presenter = FakePresenter()
-        val (view, _) = viewWith("right 2\n", presenter)
+        val (view, _) = viewWith("right 3\n", presenter)
 
         view.processCommand()
 
@@ -48,9 +48,9 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `up command delegates to presenter shiftUp`() {
+    fun `up command delegates to presenter shiftUp, translating the 1-based column to 0-based`() {
         val presenter = FakePresenter()
-        val (view, _) = viewWith("up 1\n", presenter)
+        val (view, _) = viewWith("up 2\n", presenter)
 
         view.processCommand()
 
@@ -58,13 +58,34 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `down command delegates to presenter shiftDown`() {
+    fun `down command delegates to presenter shiftDown, translating the 1-based column to 0-based`() {
         val presenter = FakePresenter()
-        val (view, _) = viewWith("down 3\n", presenter)
+        val (view, _) = viewWith("down 4\n", presenter)
 
         view.processCommand()
 
         assertEquals(listOf("shiftDown(3)"), presenter.calls)
+    }
+
+    @Test
+    fun `left 0 translates to -1, delegating to the board's own bounds check rather than validating in view`() {
+        val presenter = FakePresenter()
+        val (view, _) = viewWith("left 0\n", presenter)
+
+        view.processCommand()
+
+        assertEquals(listOf("shiftLeft(-1)"), presenter.calls)
+    }
+
+    @Test
+    fun `Int-MIN_VALUE argument wraps rather than crashing, and still lands outside any valid board range`() {
+        val presenter = FakePresenter()
+        val (view, _) = viewWith("left ${Int.MIN_VALUE}\n", presenter)
+
+        view.processCommand()
+
+        // Int.MIN_VALUE - 1 wraps to Int.MAX_VALUE - still far outside 0 until SQUARE_SIDE.
+        assertEquals(listOf("shiftLeft(${Int.MAX_VALUE})"), presenter.calls)
     }
 
     @Test
@@ -80,7 +101,7 @@ class ViewImplCommandTest {
     @Test
     fun `commands are case-insensitive`() {
         val presenter = FakePresenter()
-        val (view, _) = viewWith("LEFT 0\n", presenter)
+        val (view, _) = viewWith("LEFT 1\n", presenter)
 
         view.processCommand()
 
@@ -124,7 +145,7 @@ class ViewImplCommandTest {
     @Test
     fun `trailing extra token is rejected rather than silently ignored`() {
         val presenter = FakePresenter()
-        val (view, _) = viewWith("left 0 99\n", presenter)
+        val (view, _) = viewWith("left 1 99\n", presenter)
 
         assertFailsWith<IllegalArgumentException> { view.processCommand() }
         assertEquals(emptyList(), presenter.calls)
@@ -140,13 +161,13 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `displayBoard renders a tab-separated grid`() {
+    fun `displayBoard renders a tab-separated grid, offset to 1-based tile values`() {
         val (view, output) = viewWith("")
 
         view.displayBoard(intArrayOf(0, 1, 2, 3), 2)
 
         val nl = System.lineSeparator()
-        assertEquals("0\t1\t${nl}2\t3\t$nl$nl", output.toString())
+        assertEquals("1\t2\t${nl}3\t4\t$nl$nl", output.toString())
     }
 
     @Test
@@ -172,7 +193,7 @@ class ViewImplCommandTest {
         val outputBuffer = ByteArrayOutputStream()
 
         val view = ViewImpl.create(
-            input = BufferedReader(StringReader("left 0\n")),
+            input = BufferedReader(StringReader("left 1\n")),
             output = PrintStream(outputBuffer),
         ) { presenter }
 

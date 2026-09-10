@@ -19,6 +19,10 @@ class ViewImpl internal constructor(
         internal set
 
     companion object {
+        // The console is 1-based (row/column input, displayed tile values); board_model
+        // and storage stay 0-based. This is the only translation point (GH-10).
+        private const val DISPLAY_OFFSET = 1
+
         /** The only public way to obtain a [ViewImpl] - wires [presenter] atomically. */
         fun create(
             input: BufferedReader = BufferedReader(InputStreamReader(System.`in`)),
@@ -34,7 +38,7 @@ class ViewImpl internal constructor(
     override fun displayBoard(boardState: IntArray, squareSide: Int) {
         for (i in 0 until squareSide) {
             for (j in 0 until squareSide) {
-                output.print("${boardState[i * squareSide + j]}\t")
+                output.print("${boardState[i * squareSide + j] + DISPLAY_OFFSET}\t")
             }
             output.println()
         }
@@ -75,7 +79,8 @@ class ViewImpl internal constructor(
 
     private fun intArg(parts: List<String>): Int {
         requireArgCount(parts, 2)
-        return parts[1].toIntOrNull() ?: throw IllegalArgumentException("Incorrect input")
+        val value = parts[1].toIntOrNull() ?: throw IllegalArgumentException("Incorrect input")
+        return value - DISPLAY_OFFSET
     }
 
     private fun requireArgCount(parts: List<String>, expected: Int) {
