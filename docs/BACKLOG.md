@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-_(nothing in progress)_
+GH-6: Save and load game state to/from local files — multi-WU, see plan comment on the issue. Currently: WU0 (scenario stubs).
 
 ---
 
