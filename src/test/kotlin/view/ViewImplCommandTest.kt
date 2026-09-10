@@ -3,7 +3,6 @@ package view
 import testing.FakePresenter
 import java.io.BufferedReader
 import java.io.ByteArrayOutputStream
-import java.io.EOFException
 import java.io.PrintStream
 import java.io.StringReader
 import kotlin.test.Test
@@ -107,10 +106,28 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `EOF throws EOFException instead of looping forever - regression guard for GH-4's 651ca64`() {
+    fun `EOF throws EndOfInputException instead of looping forever - regression guard for GH-4's 651ca64`() {
         val (view, _) = viewWith("")
 
-        assertFailsWith<EOFException> { view.processCommand() }
+        assertFailsWith<EndOfInputException> { view.processCommand() }
+    }
+
+    @Test
+    fun `trailing extra token is rejected rather than silently ignored`() {
+        val presenter = FakePresenter()
+        val (view, _) = viewWith("left 0 99\n", presenter)
+
+        assertFailsWith<IllegalArgumentException> { view.processCommand() }
+        assertEquals(emptyList(), presenter.calls)
+    }
+
+    @Test
+    fun `reset with a trailing argument is rejected rather than silently ignored`() {
+        val presenter = FakePresenter()
+        val (view, _) = viewWith("reset foo\n", presenter)
+
+        assertFailsWith<IllegalArgumentException> { view.processCommand() }
+        assertEquals(emptyList(), presenter.calls)
     }
 
     @Test
@@ -119,6 +136,16 @@ class ViewImplCommandTest {
 
         view.displayBoard(intArrayOf(0, 1, 2, 3), 2)
 
-        assertEquals("0\t1\t\n2\t3\t\n\n", output.toString())
+        val nl = System.lineSeparator()
+        assertEquals("0\t1\t${nl}2\t3\t$nl$nl", output.toString())
+    }
+
+    @Test
+    fun `showMessage writes to the injected output`() {
+        val (view, output) = viewWith("")
+
+        view.showMessage("save not found")
+
+        assertEquals("save not found${System.lineSeparator()}", output.toString())
     }
 }

@@ -2,6 +2,7 @@ package presenter
 
 import board_model.BoardImpl
 import board_model.BoardModel
+import view.EndOfInputException
 import view.View
 
 class PresenterImpl(var view: View, var board: BoardModel = BoardImpl()) : Presenter {
@@ -21,11 +22,15 @@ class PresenterImpl(var view: View, var board: BoardModel = BoardImpl()) : Prese
             try {
                 view.displayBoard(board.boardArray, board.SQUARE_SIDE)
                 view.processCommand()
-            } catch (e: java.io.EOFException) {
+            } catch (e: EndOfInputException) {
                 // No more input to read - stop instead of spinning on a closed stream.
                 return
             } catch (e: Exception) {
-                System.err.println(e.message)
+                // Route through the view (not System.err) so this shares the same
+                // output stream displayBoard() uses - otherwise error text can
+                // interleave mid-grid, and tests capturing view output can't assert
+                // on it either (needed by GH-6's save/load-not-found messages).
+                view.showMessage(e.message ?: "Error")
             }
         }
     }

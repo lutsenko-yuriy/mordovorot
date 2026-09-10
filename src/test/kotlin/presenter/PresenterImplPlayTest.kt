@@ -2,6 +2,7 @@ package presenter
 
 import testing.FakeBoardModel
 import testing.FakeView
+import view.EndOfInputException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -34,9 +35,9 @@ class PresenterImplPlayTest {
     }
 
     @Test
-    fun `play returns without looping when processCommand throws EOFException`() {
+    fun `play returns without looping when processCommand throws EndOfInputException`() {
         val board = FakeBoardModel()
-        val view = FakeView(mutableListOf({ throw java.io.EOFException() }))
+        val view = FakeView(mutableListOf({ throw EndOfInputException() }))
         val presenter = PresenterImpl(view, board)
 
         presenter.play()
@@ -60,5 +61,21 @@ class PresenterImplPlayTest {
 
         assertEquals(2, view.displayBoardCalls.size)
         assertEquals(2, view.processCommandCallCount)
+    }
+
+    @Test
+    fun `play routes a swallowed exception's message through view showMessage, not System-err`() {
+        val board = FakeBoardModel()
+        val view = FakeView(
+            mutableListOf(
+                { throw IllegalArgumentException("bad command") },
+                { board.correct = true },
+            )
+        )
+        val presenter = PresenterImpl(view, board)
+
+        presenter.play()
+
+        assertEquals(listOf("bad command"), view.shownMessages)
     }
 }
