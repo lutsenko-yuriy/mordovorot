@@ -11,4 +11,7 @@ interface Presenter {
     fun shiftDown(col: Int)
 
     fun resetGame()
+
+    fun saveGame(name: String)
+    fun loadGame(name: String)
 }

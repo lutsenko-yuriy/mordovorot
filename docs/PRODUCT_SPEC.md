@@ -24,7 +24,19 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
 - The user issues commands through a console (stdin) loop.
 - After every command, the board is redisplayed and re-evaluated for the solved state.
 
+### Feature 4 — Save and load (GH-6)
+- `save <file-name>` stores the board's current tile arrangement to a local file, creating it
+  or overwriting an existing file of that name. Works both at the start of a session and mid-game.
+- `load <file-name>` restores the board's tile arrangement from an existing save file. Works
+  mid-game, not just at startup.
+- Loading an unknown file name, or a save whose board size doesn't match the current board,
+  leaves the board untouched and shows a message (listing available saves, where relevant)
+  instead of crashing.
+- Not yet implemented: the startup restore prompt (offering to resume an existing save when the
+  app launches) — tracked as GH-6's remaining work unit.
+
 ## Known gaps
 
-- No documented command syntax, win-condition message, or exit command yet — see `src/main/kotlin/view/ViewImpl.kt` for current behavior and treat it as the source of truth until this section is expanded.
-- No automated tests, build tool (Gradle/Maven), or CI exist yet.
+- No documented win-condition message or exit command yet — see `src/main/kotlin/view/ViewImpl.kt`
+  for current behavior and treat it as the source of truth until this section is expanded.
+- No startup save/restore prompt yet (GH-6, in progress).
