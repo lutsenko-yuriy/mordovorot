@@ -85,30 +85,51 @@ class PresenterImpl(
 
     /**
      * Ends the current [play] session on demand (the `exit`/`quit` command), asking whether to
-     * save first. `false` (or a blank/EOF name) skips saving rather than re-prompting - the user
-     * can always run `exit` again if they change their mind. Terminates the play loop via
-     * [ExitRequestedException], the same way [EndOfInputException] does for EOF.
+     * save first. Declining, or a blank/EOF name, ends the session unsaved. A save *attempt*
+     * that fails does **not** end the session (see below) - [exitGame] can return normally
+     * instead of always throwing [ExitRequestedException].
      */
     override fun exitGame() {
-        val saved = if (view.confirmSaveBeforeExit()) {
-            val name = view.promptSaveName()
-            when {
-                name == null -> false
-                // save/load's command-line parsing splits on whitespace and requires exactly
-                // one token for a name (see ViewImpl.nameArg) - a name typed here with spaces
-                // would be unloadable via `load <name>` (audit finding on PR #15). Declining
-                // still lets the user quit; only the save itself is skipped.
-                name.any { it.isWhitespace() } -> {
-                    view.showMessage("Save name can't contain spaces - quitting without saving.")
-                    false
-                }
-                else -> saveGame(name)
-            }
-        } else {
-            false
+        if (!view.confirmSaveBeforeExit()) {
+            analytics.track("exit_command_used", mapOf("save_choice" to "declined"))
+            throw ExitRequestedException()
         }
-        analytics.track("exit_command_used", mapOf("save_choice" to (if (saved) "saved" else "declined")))
+
+        val name = promptForValidSaveName()
+        if (name == null) {
+            analytics.track("exit_command_used", mapOf("save_choice" to "declined"))
+            throw ExitRequestedException()
+        }
+
+        if (!saveGame(name)) {
+            // saveGame already showed the error via its own catch block. Quitting anyway would
+            // compound a failed save with a lost session - instead, let the user try `exit`
+            // (or `save`) again once the underlying issue (e.g. a read-only saves/ directory)
+            // is resolved. No exit_command_used - the session didn't actually end, so
+            // "declined" would misrepresent an explicit save request as a decision not to save
+            // (audit round 2 on PR #15).
+            return
+        }
+
+        analytics.track("exit_command_used", mapOf("save_choice" to "saved"))
         throw ExitRequestedException()
+    }
+
+    /** Re-prompts until [View.promptSaveName] returns a name usable by the `save`/`load`
+     *  commands (no whitespace - their command-line parsing splits on it, see
+     *  [view.ViewImpl.nameArg]), or `null` on a blank answer or EOF, meaning the user doesn't
+     *  want to save. Re-prompting (rather than treating an invalid name as "don't save") avoids
+     *  silently discarding an explicit save request over a naming mistake (audit round 2 on
+     *  PR #15). */
+    private fun promptForValidSaveName(): String? {
+        while (true) {
+            val name = view.promptSaveName() ?: return null
+            if (name.any { it.isWhitespace() }) {
+                view.showMessage("Save name can't contain spaces - try again, or press Enter to skip saving.")
+            } else {
+                return name
+            }
+        }
     }
 
     /** Signals [play] to stop, the same way [EndOfInputException] does - thrown by [exitGame]
