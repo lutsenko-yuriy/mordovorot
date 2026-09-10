@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-- [GH-4](https://github.com/lutsenko-yuriy/mordovorot/issues/4): Automated test coverage for board_model and presenter
+_(nothing in progress — GH-4 is In Review, see PR #5)_
 
 ---
 
