@@ -14,6 +14,7 @@ class ViewImpl(
     private val output: PrintStream = System.out,
 ) : View {
 
+    /** Must be assigned before [play] or [processCommand] are called - see Main.kt. */
     lateinit var presenter: Presenter
 
     override fun displayBoard(boardState: IntArray, squareSide: Int) {
