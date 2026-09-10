@@ -55,8 +55,13 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
   same as today's EOF (Ctrl+D) or board-solved exits.
 - Before quitting, it asks `Save before quitting? [y/N]`:
   - `y`/`yes` — prompts for a save name and saves under it (same underlying flow as the `save`
-    command), then quits. A blank name or EOF at this second prompt quits without saving.
+    command), then quits. A blank name, EOF, or a name containing spaces (which the `load`
+    command's single-token parsing could never reach) at this second prompt quits without
+    saving instead.
   - Anything else (including EOF) — quits without saving.
+  - Like the startup restore prompt, these consume 1-2 extra stdin lines before the process
+    exits — a scripted run piping commands must account for the yes/no answer and, if given,
+    the save name.
 
 ## Known gaps
 

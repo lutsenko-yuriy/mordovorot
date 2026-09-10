@@ -12,7 +12,9 @@ interface Presenter {
 
     fun resetGame()
 
-    fun saveGame(name: String)
+    /** Returns whether the save actually succeeded - see [presenter.PresenterImpl.exitGame],
+     *  which needs the real outcome rather than assuming success. */
+    fun saveGame(name: String): Boolean
     fun loadGame(name: String)
 
     fun exitGame()

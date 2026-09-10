@@ -69,6 +69,62 @@ class PresenterImplExitTest {
     }
 
     @Test
+    fun `exit, save confirmed but the save itself fails - reports declined, not saved`() {
+        // A corrupted/unsafe name or filesystem failure - saveGame's own try/catch means this
+        // wouldn't otherwise be visible to exitGame() without saveGame returning a real result
+        // (audit finding on PR #15: save_choice was always "saved" once a name was typed).
+        val board = FakeBoardModel()
+        val saves = FakeSaveRepository()
+        saves.saveException = RuntimeException("disk full")
+        val analytics = RecordingAnalyticsService()
+        lateinit var presenter: PresenterImpl
+        val view = FakeView(
+            commands = mutableListOf({ presenter.exitGame() }),
+            confirmSaveBeforeExitResponses = mutableListOf(true),
+            promptSaveNameResponses = mutableListOf("foo"),
+        )
+        presenter = PresenterImpl(view, board, saves, analytics)
+
+        presenter.play()
+
+        assertEquals(
+            listOf(
+                Event("save_command_used", mapOf("result" to "error")),
+                Event("exit_command_used", mapOf("save_choice" to "declined")),
+            ),
+            analytics.events,
+        )
+    }
+
+    @Test
+    fun `exit, save confirmed with a name containing spaces - declines without saving, shows a message`() {
+        // A name with spaces would be unloadable via `load <name>` (its command-line parsing
+        // requires exactly one token) - audit finding on PR #15.
+        val board = FakeBoardModel()
+        val saves = FakeSaveRepository()
+        val analytics = RecordingAnalyticsService()
+        lateinit var presenter: PresenterImpl
+        val view = FakeView(
+            commands = mutableListOf({ presenter.exitGame() }),
+            confirmSaveBeforeExitResponses = mutableListOf(true),
+            promptSaveNameResponses = mutableListOf("my game"),
+        )
+        presenter = PresenterImpl(view, board, saves, analytics)
+
+        presenter.play()
+
+        assertEquals(emptyList(), saves.saveCalls)
+        assertEquals(
+            listOf("Save name can't contain spaces - quitting without saving."),
+            view.shownMessages,
+        )
+        assertEquals(
+            listOf(Event("exit_command_used", mapOf("save_choice" to "declined"))),
+            analytics.events,
+        )
+    }
+
+    @Test
     fun `exit, save confirmed but a blank or EOF name - ends play without saving`() {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository()

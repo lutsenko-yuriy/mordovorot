@@ -26,7 +26,7 @@ class PresenterImpl(
 
     override fun resetGame() = board.resetGame()
 
-    override fun saveGame(name: String) {
+    override fun saveGame(name: String): Boolean {
         // saves.exists/save can throw (bad name, IOException) - caught here rather than left to
         // play()'s generic handler, so a failed save is still tracked and gets its own message
         // instead of silently missing from save_command_used (audit finding on PR #13).
@@ -35,9 +35,11 @@ class PresenterImpl(
             saves.save(name, board.boardArray, board.SQUARE_SIDE)
             analytics.track("save_command_used", mapOf("result" to "success", "overwrote_existing" to existed))
             view.showMessage("Saved as '$name'.")
+            return true
         } catch (e: Exception) {
             analytics.track("save_command_used", mapOf("result" to "error"))
             view.showMessage(e.message ?: "Could not save as '$name'.")
+            return false
         }
     }
 
@@ -89,7 +91,19 @@ class PresenterImpl(
      */
     override fun exitGame() {
         val saved = if (view.confirmSaveBeforeExit()) {
-            view.promptSaveName()?.let { name -> saveGame(name); true } ?: false
+            val name = view.promptSaveName()
+            when {
+                name == null -> false
+                // save/load's command-line parsing splits on whitespace and requires exactly
+                // one token for a name (see ViewImpl.nameArg) - a name typed here with spaces
+                // would be unloadable via `load <name>` (audit finding on PR #15). Declining
+                // still lets the user quit; only the save itself is skipped.
+                name.any { it.isWhitespace() } -> {
+                    view.showMessage("Save name can't contain spaces - quitting without saving.")
+                    false
+                }
+                else -> saveGame(name)
+            }
         } else {
             false
         }
