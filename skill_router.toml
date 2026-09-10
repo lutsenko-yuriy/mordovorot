@@ -1,0 +1,16 @@
+[providers]
+# Map tool roles to provider implementations.
+# Skills use role names (pm, vcs, files) in their frontmatter — edit here to switch tools.
+# Built-in providers: linear, github, files
+# Add your own under scripts/skill_router/providers/<name>/provider.py
+#
+# pm: no skill_router provider implements GitHub Issues yet — PM operations go
+# straight through the `gh issue` CLI per skills/shared/pm-tool-mapping.md.
+# Point this at a provider name (e.g. "linear") if you add one later.
+vcs = "github"
+
+[llm]
+lmstudio_base = "http://localhost:1234/v1"
+
+[core]
+model_tiers_path = "docs/MODEL_TIERS.md"
