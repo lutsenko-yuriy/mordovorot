@@ -226,6 +226,66 @@ class ViewImplCommandTest {
     }
 
     @Test
+    fun `confirmRestore returns true for y or yes, case-insensitively`() {
+        for (answer in listOf("y", "Y", "yes", "YES", "Yes")) {
+            val (view, _) = viewWith("$answer\n")
+            assertEquals(true, view.confirmRestore("foo"), "expected '$answer' to confirm")
+        }
+    }
+
+    @Test
+    fun `confirmRestore returns false for a blank line, a no, or garbage input`() {
+        for (answer in listOf("", "n", "no", "blah")) {
+            val (view, _) = viewWith("$answer\n")
+            assertEquals(false, view.confirmRestore("foo"), "expected '$answer' to decline")
+        }
+    }
+
+    @Test
+    fun `confirmRestore returns false on EOF instead of throwing`() {
+        val (view, _) = viewWith("")
+
+        assertEquals(false, view.confirmRestore("foo"))
+    }
+
+    @Test
+    fun `confirmRestore returns false when the input stream is dead, same as clean EOF`() {
+        val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
+        view.presenter = FakePresenter()
+
+        assertEquals(false, view.confirmRestore("foo"))
+    }
+
+    @Test
+    fun `chooseSaveToRestore returns the raw typed name unvalidated`() {
+        val (view, _) = viewWith("bar\n")
+
+        assertEquals("bar", view.chooseSaveToRestore(listOf("foo", "bar")))
+    }
+
+    @Test
+    fun `chooseSaveToRestore returns null on a blank line`() {
+        val (view, _) = viewWith("\n")
+
+        assertEquals(null, view.chooseSaveToRestore(listOf("foo", "bar")))
+    }
+
+    @Test
+    fun `chooseSaveToRestore returns null on EOF instead of throwing`() {
+        val (view, _) = viewWith("")
+
+        assertEquals(null, view.chooseSaveToRestore(listOf("foo", "bar")))
+    }
+
+    @Test
+    fun `chooseSaveToRestore returns null when the input stream is dead, same as clean EOF`() {
+        val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
+        view.presenter = FakePresenter()
+
+        assertEquals(null, view.chooseSaveToRestore(listOf("foo", "bar")))
+    }
+
+    @Test
     fun `create wires the injected input, output, and presenter together atomically`() {
         val presenter = FakePresenter()
         val outputBuffer = ByteArrayOutputStream()
