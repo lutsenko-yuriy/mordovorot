@@ -53,6 +53,14 @@ Fired when the user resolves the startup restore prompt. *(GH-6)*
 | `decision` | `string` | `restored` or `new_game`. |
 | `save_file_count` | `number` | How many save files were on offer. |
 
+### `exit_command_used`
+
+Fired when the user runs `exit` or `quit` and the session ends. *(GH-12)*
+
+| Property | Type | Description |
+|---|---|---|
+| `save_choice` | `string` | `saved` or `declined` - whether the user accepted the save-before-quitting prompt. The save outcome itself (success/error/overwrite) is separately reported by `save_command_used`, since this reuses the `save` command's flow. |
+
 <!-- All events above are sent through `analytics.AnalyticsService`, currently backed by
      `analytics.NoopAnalyticsService` (no real SDK wired up yet). -->
 

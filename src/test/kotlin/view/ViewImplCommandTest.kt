@@ -286,6 +286,67 @@ class ViewImplCommandTest {
     }
 
     @Test
+    fun `exit command delegates to presenter exitGame`() {
+        // TODO: viewWith("exit\n", presenter)
+        // TODO: view.processCommand()
+        // TODO: assertEquals(listOf("exitGame"), presenter.calls)
+    }
+
+    @Test
+    fun `quit command is an alias for exit`() {
+        // TODO: viewWith("quit\n", presenter)
+        // TODO: view.processCommand()
+        // TODO: assertEquals(listOf("exitGame"), presenter.calls)
+    }
+
+    @Test
+    fun `exit with a trailing argument is rejected rather than silently ignored`() {
+        // TODO: viewWith("exit foo\n", presenter)
+        // TODO: assertFailsWith<IllegalArgumentException> { view.processCommand() }
+        // TODO: assertEquals(emptyList(), presenter.calls)
+    }
+
+    @Test
+    fun `confirmSaveBeforeExit returns true for y or yes, case-insensitively`() {
+        // TODO: for each of "y", "Y", "yes", "YES", "Yes": viewWith("\$answer\n"), assertEquals(true, view.confirmSaveBeforeExit())
+    }
+
+    @Test
+    fun `confirmSaveBeforeExit returns false for a blank line, a no, or garbage input`() {
+        // TODO: for each of "", "n", "no", "blah": viewWith("\$answer\n"), assertEquals(false, view.confirmSaveBeforeExit())
+    }
+
+    @Test
+    fun `confirmSaveBeforeExit returns false on EOF instead of throwing`() {
+        // TODO: viewWith(""), assertEquals(false, view.confirmSaveBeforeExit())
+    }
+
+    @Test
+    fun `confirmSaveBeforeExit returns false when the input stream is dead, same as clean EOF`() {
+        // TODO: ViewImpl(BufferedReader(ThrowingReader()), ...), assertEquals(false, view.confirmSaveBeforeExit())
+    }
+
+    @Test
+    fun `promptSaveName returns the raw typed name unvalidated`() {
+        // TODO: viewWith("foo\n"), assertEquals("foo", view.promptSaveName())
+    }
+
+    @Test
+    fun `promptSaveName returns null on a blank line`() {
+        // TODO: viewWith("\n"), assertEquals(null, view.promptSaveName())
+    }
+
+    @Test
+    fun `promptSaveName returns null on EOF instead of throwing`() {
+        // TODO: viewWith(""), assertEquals(null, view.promptSaveName())
+    }
+
+    @Test
+    fun `promptSaveName returns null when the input stream is dead, same as clean EOF`() {
+        // TODO: ViewImpl(BufferedReader(ThrowingReader()), ...), assertEquals(null, view.promptSaveName())
+    }
+
+    @Test
     fun `create wires the injected input, output, and presenter together atomically`() {
         val presenter = FakePresenter()
         val outputBuffer = ByteArrayOutputStream()
