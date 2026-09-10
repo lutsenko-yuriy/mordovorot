@@ -48,12 +48,12 @@ When setting up the project, fill in every `{{placeholder}}`. Skills stay unchan
 |---|---|
 | Version file | None yet — no manifest/version file exists; track releases via `docs/CHANGELOG.md` and git tags until one is added |
 | Version field | N/A |
-| Manual vs automated | Manual — no CI is configured yet |
+| Manual vs automated | Manual — CI (`.github/workflows/build.yml`) runs `./gradlew build` on push/PR but does not bump versions |
 
 ## In QA path patterns
 
 A merged PR moves to **In QA** (not Done directly) if it touches any of:
 
-- `src/view/` — console I/O behavior is hard to cover with automated tests; a human should play a session before sign-off
+- `src/main/kotlin/view/` — console I/O behavior is hard to cover with automated tests; a human should play a session before sign-off
 
 Move straight to **Done** if the PR touches only: pure logic with no runtime platform dependency, documentation, CI config, or pure refactors where automated tests fully own correctness. When in doubt, use **In QA**.

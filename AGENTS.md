@@ -67,7 +67,7 @@ Kotlin official style guide
 ## Versioning
 
 Update the version name whenever a new `CHANGELOG.md` entry is added — no separate approval needed.
-No CI is configured yet, and no version file exists in this repo (see `skills/shared/project-config.md`).
+CI (`.github/workflows/build.yml`) builds and tests on push/PR but does not bump versions; no version file exists in this repo (see `skills/shared/project-config.md`).
 Details: @docs/VERSIONING.md
 
 ## Session start

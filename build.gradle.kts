@@ -22,3 +22,10 @@ application {
 tasks.test {
     useJUnitPlatform()
 }
+
+tasks.named<JavaExec>("run") {
+    // The application plugin doesn't wire stdin by default; ViewImpl reads
+    // console commands via Scanner(System.in), so without this the game
+    // hits EOF on its first read.
+    standardInput = System.`in`
+}

@@ -26,5 +26,5 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
 
 ## Known gaps
 
-- No documented command syntax, win-condition message, or exit command yet — see `src/view/ViewImpl.kt` for current behavior and treat it as the source of truth until this section is expanded.
+- No documented command syntax, win-condition message, or exit command yet — see `src/main/kotlin/view/ViewImpl.kt` for current behavior and treat it as the source of truth until this section is expanded.
 - No automated tests, build tool (Gradle/Maven), or CI exist yet.

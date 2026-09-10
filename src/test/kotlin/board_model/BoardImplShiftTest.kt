@@ -165,6 +165,13 @@ class BoardImplShiftTest {
     }
 
     @Test
+    fun `shiftRight rejects a negative row`() {
+        val board = boardWith(*identity)
+
+        assertFailsWith<IllegalArgumentException> { board.shiftRight(-1) }
+    }
+
+    @Test
     fun `shiftUp rejects a column equal to SQUARE_SIDE`() {
         val board = boardWith(*identity)
 
@@ -172,9 +179,23 @@ class BoardImplShiftTest {
     }
 
     @Test
+    fun `shiftUp rejects a negative column`() {
+        val board = boardWith(*identity)
+
+        assertFailsWith<IllegalArgumentException> { board.shiftUp(-1) }
+    }
+
+    @Test
     fun `shiftDown rejects a column equal to SQUARE_SIDE`() {
         val board = boardWith(*identity)
 
         assertFailsWith<IllegalArgumentException> { board.shiftDown(4) }
+    }
+
+    @Test
+    fun `shiftDown rejects a negative column`() {
+        val board = boardWith(*identity)
+
+        assertFailsWith<IllegalArgumentException> { board.shiftDown(-1) }
     }
 }
