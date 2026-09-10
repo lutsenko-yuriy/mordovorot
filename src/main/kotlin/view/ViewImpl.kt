@@ -16,6 +16,7 @@ class ViewImpl internal constructor(
 
     /** Must be assigned before [play] or [processCommand] are called - use [create]. */
     lateinit var presenter: Presenter
+        internal set
 
     companion object {
         /**
@@ -65,7 +66,7 @@ class ViewImpl internal constructor(
         val line = try {
             input.readLine()
         } catch (e: IOException) {
-            null
+            throw EndOfInputException(e)
         } ?: throw EndOfInputException()
         val parts = line.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
         val command = parts.getOrNull(0)?.lowercase() ?: throw IllegalArgumentException("Incorrect input")

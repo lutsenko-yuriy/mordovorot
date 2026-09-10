@@ -9,4 +9,4 @@ package view
  * treated any `EOFException` as "stop the game", a corrupt save file would
  * silently exit the whole session instead of surfacing a recoverable error.
  */
-class EndOfInputException : Exception()
+class EndOfInputException(cause: Throwable? = null) : Exception(cause)
