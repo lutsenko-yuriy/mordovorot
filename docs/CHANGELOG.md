@@ -13,12 +13,16 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [Unreleased]
+
+### Added
+- [wip] GH-6 (WU1/4): line-based console input reader with EOF termination for play mode.
+
 ## [0.1.1] — 2026-09-10 (PR #5 merged)
 
 ### Added
 - [test] GH-4: automated test coverage for `board_model` and `presenter` (37 tests), independent of any view/UI implementation.
 - [ci] GH-4: GitHub Actions workflow running `./gradlew build` on push/PR.
-- [wip] GH-6 (WU1/4): line-based console input reader with EOF termination for play mode.
 
 ### Fixed
 - [app] GH-4: fix an off-by-one in the board shift bounds check (`shiftLeft`/`shiftRight`/`shiftUp`/`shiftDown`) that let an out-of-range index through and crashed instead of raising a clear error.
