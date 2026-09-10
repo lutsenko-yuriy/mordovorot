@@ -69,7 +69,7 @@ class PresenterImplExitTest {
     }
 
     @Test
-    fun `exit, save confirmed but the save itself fails - does not quit, so play keeps going`() {
+    fun `exit, save confirmed but the save itself fails - does not quit, and says so`() {
         // A failed save must not compound into a lost session on top of it (audit round 2 on
         // PR #15: quitting anyway after a failed save was strictly worse than not asking at
         // all). The second scripted command ends play() normally, standing in for whatever the
@@ -92,6 +92,17 @@ class PresenterImplExitTest {
         assertEquals(
             listOf(Event("save_command_used", mapOf("result" to "error"))),
             analytics.events,
+        )
+        // saveGame's own error message, then exitGame's explicit "your quit was cancelled" -
+        // without the second line the board redisplay is the only cue anything happened, easily
+        // misread as the save having worked (audit round 3 on PR #15).
+        assertEquals(
+            listOf(
+                "Could not save as 'foo': disk full",
+                "Not quitting - your game is still running. Fix the problem and try exit again, " +
+                    "or answer n to quit without saving.",
+            ),
+            view.shownMessages,
         )
     }
 
@@ -118,7 +129,8 @@ class PresenterImplExitTest {
         assertEquals("foo", saves.saveCalls[0].first)
         assertEquals(
             listOf(
-                "Save name can't contain spaces - try again, or press Enter to skip saving.",
+                "'my game' isn't a usable save name (no spaces, path separators, or '..') - " +
+                    "try again, or press Enter to skip saving.",
                 "Saved as 'foo'.",
             ),
             view.shownMessages,
@@ -150,6 +162,36 @@ class PresenterImplExitTest {
         assertEquals(emptyList(), saves.saveCalls)
         assertEquals(
             listOf(Event("exit_command_used", mapOf("save_choice" to "declined"))),
+            analytics.events,
+        )
+    }
+
+    @Test
+    fun `exit, a name with a path separator re-prompts rather than aborting the quit as a save failure`() {
+        // requireSafeName-style names ('/', '\', '..') are just as unusable as a name with
+        // spaces, and must get the same re-prompt treatment rather than falling through to
+        // saveGame() and being misclassified as a genuine save failure (audit round 3 on
+        // PR #15 - a slash previously took the "abort the quit" path meant for I/O failures).
+        val board = FakeBoardModel()
+        val saves = FakeSaveRepository()
+        val analytics = RecordingAnalyticsService()
+        lateinit var presenter: PresenterImpl
+        val view = FakeView(
+            commands = mutableListOf({ presenter.exitGame() }),
+            confirmSaveBeforeExitResponses = mutableListOf(true),
+            promptSaveNameResponses = mutableListOf("a/b", "foo"),
+        )
+        presenter = PresenterImpl(view, board, saves, analytics)
+
+        presenter.play()
+
+        assertEquals(1, saves.saveCalls.size)
+        assertEquals("foo", saves.saveCalls[0].first)
+        assertEquals(
+            listOf(
+                Event("save_command_used", mapOf("result" to "success", "overwrote_existing" to false)),
+                Event("exit_command_used", mapOf("save_choice" to "saved")),
+            ),
             analytics.events,
         )
     }

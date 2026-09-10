@@ -38,7 +38,12 @@ class PresenterImpl(
             return true
         } catch (e: Exception) {
             analytics.track("save_command_used", mapOf("result" to "error"))
-            view.showMessage(e.message ?: "Could not save as '$name'.")
+            // e.message alone can be uninformative or outright misleading here - e.g.
+            // AccessDeniedException's message is just the offending temp-file path, with no
+            // hint that a save failed at all (audit round 3 on GH-12/PR #15, surfaced by the
+            // exit-before-quitting flow where this is now the sole explanation for an aborted
+            // quit, not just one line among several after an explicit `save`).
+            view.showMessage("Could not save as '$name': ${e.message ?: e::class.simpleName}")
             return false
         }
     }
@@ -102,12 +107,17 @@ class PresenterImpl(
         }
 
         if (!saveGame(name)) {
-            // saveGame already showed the error via its own catch block. Quitting anyway would
-            // compound a failed save with a lost session - instead, let the user try `exit`
-            // (or `save`) again once the underlying issue (e.g. a read-only saves/ directory)
-            // is resolved. No exit_command_used - the session didn't actually end, so
-            // "declined" would misrepresent an explicit save request as a decision not to save
-            // (audit round 2 on PR #15).
+            // saveGame already showed the error via its own catch block, but that alone reads
+            // like ordinary game output, not "your quit was cancelled" - say so explicitly
+            // (audit round 3 on GH-12/PR #15). Quitting anyway would compound a failed save
+            // with a lost session - instead, let the user try `exit` (or `save`) again once
+            // the underlying issue (e.g. a read-only saves/ directory) is resolved. No
+            // exit_command_used - the session didn't actually end, so "declined" would
+            // misrepresent an explicit save request as a decision not to save (audit round 2).
+            view.showMessage(
+                "Not quitting - your game is still running. Fix the problem and try exit again, " +
+                    "or answer n to quit without saving."
+            )
             return
         }
 
@@ -116,16 +126,26 @@ class PresenterImpl(
     }
 
     /** Re-prompts until [View.promptSaveName] returns a name usable by the `save`/`load`
-     *  commands (no whitespace - their command-line parsing splits on it, see
-     *  [view.ViewImpl.nameArg]), or `null` on a blank answer or EOF, meaning the user doesn't
-     *  want to save. Re-prompting (rather than treating an invalid name as "don't save") avoids
-     *  silently discarding an explicit save request over a naming mistake (audit round 2 on
-     *  PR #15). */
+     *  commands, or `null` on a blank answer or EOF, meaning the user doesn't want to save.
+     *  Re-prompting on *any* invalid name (rather than treating it as "don't save" or letting
+     *  it fall through to [saveGame]'s failure path) avoids silently discarding an explicit
+     *  save request over a naming mistake, and keeps `save_command_used {result: error}`
+     *  meaning "the save attempt failed", not "the user mistyped" (audit rounds 2 and 3 on
+     *  PR #15). Checks both:
+     *  - no whitespace - `save`/`load`'s command-line parsing splits on it, see
+     *    [view.ViewImpl.nameArg], so a name with spaces could never be `load`ed back;
+     *  - [SaveRepository.isValidName] - blank, a path separator, or `..` would make
+     *    [saveGame] throw, which [promptForValidSaveName]'s caller must not confuse with a
+     *    genuine save failure (e.g. a read-only `saves/` directory).
+     */
     private fun promptForValidSaveName(): String? {
         while (true) {
             val name = view.promptSaveName() ?: return null
-            if (name.any { it.isWhitespace() }) {
-                view.showMessage("Save name can't contain spaces - try again, or press Enter to skip saving.")
+            if (name.any { it.isWhitespace() } || !saves.isValidName(name)) {
+                view.showMessage(
+                    "'$name' isn't a usable save name (no spaces, path separators, or '..') - " +
+                        "try again, or press Enter to skip saving."
+                )
             } else {
                 return name
             }

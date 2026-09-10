@@ -56,8 +56,9 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
 - Before quitting, it asks `Save before quitting? [y/N]`:
   - `y`/`yes` — prompts for a save name and saves under it (same underlying flow as the `save`
     command), then quits. A blank name or EOF at this second prompt quits without saving.
-  - A name containing spaces (unloadable via the `load` command's single-token parsing) is
-    rejected with a message and re-prompted, rather than silently discarding the save request.
+  - A name that isn't usable as a save identifier - containing spaces (unloadable via the
+    `load` command's single-token parsing), a path separator, or `..` - is rejected with a
+    message and re-prompted, rather than silently discarding the save request.
   - If the save itself fails (e.g. a read-only `saves/` directory), the session **does not
     quit** — the error is shown (same message as a failed `save` command) and play continues,
     so an explicit save request never costs the player their game.
