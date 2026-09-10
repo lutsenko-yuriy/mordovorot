@@ -71,6 +71,14 @@ translation point — `+1` when rendering, `-1` when parsing a shift argument.
 Range validation still lives in `board_model` (`BoardImpl`'s bounds check),
 not `view` — the view translates, it does not validate.
 
+**Note for GH-6 (paused):** exception *messages* are a second, untranslated
+0-based channel — `BoardImpl.restoreState` and `FileSaveRepository.load`
+embed 0-based ranges in their messages (e.g. "permutation of 0..15"), and
+`PresenterImpl.play` surfaces `e.message` verbatim via `showMessage`. Not
+reachable today (no console command hits those paths), but WU3/WU4's
+`save`/`load` commands will make it visible — translate those numbers, or
+reword the messages to omit the range, before shipping WU3.
+
 ### storage
 File persistence for save games. `SaveRepository` is the contract `presenter`
 depends on; `FileSaveRepository` is the only class in the codebase that touches
