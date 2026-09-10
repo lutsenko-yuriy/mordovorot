@@ -91,13 +91,46 @@ class FileSaveRepositoryTest {
     }
 
     @Test
+    fun `save rejects a non-positive squareSide`() {
+        val repo = newRepository()
+
+        assertFailsWith<IllegalArgumentException> { repo.save("foo", intArrayOf(0), 0) }
+        assertFailsWith<IllegalArgumentException> { repo.save("foo", intArrayOf(0), -3) }
+    }
+
+    @Test
+    fun `save rejects a state whose size doesn't match squareSide`() {
+        val repo = newRepository()
+
+        assertFailsWith<IllegalArgumentException> { repo.save("foo", intArrayOf(0, 1, 2), 4) }
+    }
+
+    @Test
+    fun `save rejects a state that isn't a permutation`() {
+        val repo = newRepository()
+
+        assertFailsWith<IllegalArgumentException> { repo.save("foo", intArrayOf(0, 0, 2, 3), 2) }
+    }
+
+    @Test
+    fun `save overwrite is atomic - a failed overwrite attempt leaves the previous save intact`() {
+        val repo = newRepository()
+        repo.save("foo", intArrayOf(0, 1, 2, 3), 2)
+
+        // An invalid second save must be rejected before any file is touched.
+        assertFailsWith<IllegalArgumentException> { repo.save("foo", intArrayOf(0, 1, 2), 4) }
+
+        assertEquals(SavedBoard(2, intArrayOf(0, 1, 2, 3)), repo.load("foo"))
+    }
+
+    @Test
     fun `the on-disk format is square side on line 1, values on line 2`() {
         val dir = createTempDirectory("mordovorot-saves")
         val repo = FileSaveRepository(dir)
 
-        repo.save("foo", intArrayOf(3, 0, 7, 1), 2)
+        repo.save("foo", intArrayOf(3, 0, 2, 1), 2)
 
-        assertEquals("2\n3 0 7 1", dir.resolve("foo.save").readText().trim())
+        assertEquals("2\n3 0 2 1", dir.resolve("foo.save").readText().trim())
     }
 
     @Test
@@ -143,5 +176,23 @@ class FileSaveRepositoryTest {
         dir.resolve("foo.save").writeText("2")
 
         assertFailsWith<SaveFileFormatException> { repo.load("foo") }
+    }
+
+    @Test
+    fun `load throws SaveFileFormatException on a non-positive square side`() {
+        val dir = createTempDirectory("mordovorot-saves")
+        val repo = FileSaveRepository(dir)
+        dir.resolve("foo.save").writeText("0\n")
+
+        assertFailsWith<SaveFileFormatException> { repo.load("foo") }
+    }
+
+    @Test
+    fun `listSaves ignores a bare extension file with no name`() {
+        val dir = createTempDirectory("mordovorot-saves")
+        val repo = FileSaveRepository(dir)
+        dir.resolve(".save").writeText("2\n0 1 2 3")
+
+        assertEquals(emptyList(), repo.listSaves())
     }
 }

@@ -1,7 +1,9 @@
 package storage
 
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
 import kotlin.io.path.listDirectoryEntries
@@ -21,6 +23,7 @@ class FileSaveRepository(private val directory: Path = defaultDirectory()) : Sav
         if (!directory.exists()) return emptyList()
         return directory.listDirectoryEntries("*$EXTENSION")
             .map { it.name.removeSuffix(EXTENSION) }
+            .filter { it.isNotBlank() }
             .sorted()
     }
 
@@ -31,8 +34,16 @@ class FileSaveRepository(private val directory: Path = defaultDirectory()) : Sav
 
     override fun save(name: String, state: IntArray, squareSide: Int) {
         requireSafeName(name)
+        require(squareSide > 0) { "Square side must be positive" }
+        require(state.size == squareSide * squareSide) { "Expected ${squareSide * squareSide} values, got ${state.size}" }
+        require(state.toSet() == (0 until state.size).toSet()) { "State must be a permutation of 0..${state.size - 1}" }
+
         directory.createDirectories()
-        pathFor(name).writeText("$squareSide\n${state.joinToString(" ")}\n")
+        // Write to a temp file and move atomically so a crash or a rejected write
+        // mid-flight can't truncate an existing save (findings from WU2's audit).
+        val temp = Files.createTempFile(directory, "$name-", ".tmp")
+        temp.writeText("$squareSide\n${state.joinToString(" ")}\n")
+        Files.move(temp, pathFor(name), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
     }
 
     override fun load(name: String): SavedBoard? {
@@ -46,6 +57,7 @@ class FileSaveRepository(private val directory: Path = defaultDirectory()) : Sav
 
         val squareSide = squareSideLine.trim().toIntOrNull()
             ?: throw SaveFileFormatException(name, "square side is not an integer")
+        if (squareSide <= 0) throw SaveFileFormatException(name, "square side must be positive")
 
         val tokens = valuesLine.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
         val state = IntArray(tokens.size) { i ->
