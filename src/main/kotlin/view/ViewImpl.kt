@@ -74,6 +74,11 @@ class ViewImpl internal constructor(
             "save" -> presenter.saveGame(nameArg(parts))
             "load" -> presenter.loadGame(nameArg(parts))
 
+            "exit", "quit" -> {
+                requireArgCount(parts, 1)
+                presenter.exitGame()
+            }
+
             else -> throw IllegalArgumentException("Incorrect input")
         }
 
@@ -95,9 +100,22 @@ class ViewImpl internal constructor(
         return line.trim().ifEmpty { null }
     }
 
+    override fun confirmSaveBeforeExit(): Boolean {
+        output.print("Save before quitting? [y/N] ")
+        val line = readLineOrNull() ?: return false
+        return line.trim().lowercase() in setOf("y", "yes")
+    }
+
+    override fun promptSaveName(): String? {
+        output.print("Save name: ")
+        val line = readLineOrNull() ?: return null
+        return line.trim().ifEmpty { null }
+    }
+
     /** null on a clean EOF or a dead stream (IOException) - both mean "no more input". Unlike
-     *  [processCommand], the startup-restore prompts treat that as "decline"/"blank" rather
-     *  than throwing - see [presenter.PresenterImpl]'s restoreOnStartup. */
+     *  [processCommand], the startup-restore and exit-before-quitting prompts treat that as
+     *  "decline"/"blank" rather than throwing - see [presenter.PresenterImpl]'s
+     *  restoreOnStartup/exitGame. */
     private fun readLineOrNull(): String? = try {
         input.readLine()
     } catch (e: IOException) {

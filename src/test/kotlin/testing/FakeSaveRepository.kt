@@ -44,4 +44,12 @@ class FakeSaveRepository(
         loadException?.let { throw it }
         return saves[name]
     }
+
+    /** Mirrors [storage.FileSaveRepository]'s real safety rule, so tests exercising name
+     *  validation (e.g. [presenter.PresenterImpl.exitGame]'s re-prompt loop) don't need the
+     *  real filesystem-backed repository. */
+    override fun isValidName(name: String): Boolean =
+        name.isNotBlank() &&
+            !name.contains('/') && !name.contains('\\') &&
+            name.split('/', '\\').none { it == ".." }
 }

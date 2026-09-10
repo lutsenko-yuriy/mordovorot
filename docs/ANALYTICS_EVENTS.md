@@ -53,6 +53,16 @@ Fired when the user resolves the startup restore prompt. *(GH-6)*
 | `decision` | `string` | `restored` or `new_game`. |
 | `save_file_count` | `number` | How many save files were on offer. |
 
+### `exit_command_used`
+
+Fired when the user runs `exit` or `quit` **and the session actually ends** - not fired if the
+user asked to save but the save attempt failed, since the session keeps running in that case
+instead of quitting (see Feature 5 in `docs/PRODUCT_SPEC.md`). *(GH-12)*
+
+| Property | Type | Description |
+|---|---|---|
+| `save_choice` | `string` | `saved` (the save-before-quitting prompt was accepted and the save succeeded) or `declined` (the user said no, or left the save name blank/EOF - never fired for a failed save attempt, which keeps the session open instead). The save outcome itself (success/error/overwrite) is separately reported by `save_command_used`, since this reuses the `save` command's flow. |
+
 <!-- All events above are sent through `analytics.AnalyticsService`, currently backed by
      `analytics.NoopAnalyticsService` (no real SDK wired up yet). -->
 

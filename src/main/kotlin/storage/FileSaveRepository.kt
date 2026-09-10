@@ -80,6 +80,8 @@ class FileSaveRepository(private val directory: Path = defaultDirectory()) : Sav
         return SavedBoard(squareSide, state)
     }
 
+    override fun isValidName(name: String): Boolean = isSafeName(name)
+
     private fun pathFor(name: String): Path = directory.resolve("$name$EXTENSION")
 
     /** User input goes straight into a path - this is a real traversal guard, not ceremony. */

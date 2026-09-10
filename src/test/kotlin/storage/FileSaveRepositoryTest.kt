@@ -17,6 +17,18 @@ class FileSaveRepositoryTest {
     private fun newRepository() = FileSaveRepository(createTempDirectory("mordovorot-saves"))
 
     @Test
+    fun `isValidName accepts ordinary names and rejects blank, path separators, and dot-dot`() {
+        val repo = newRepository()
+
+        for (name in listOf("foo", "my game", "save_1")) {
+            assertTrue(repo.isValidName(name), "expected '$name' to be valid")
+        }
+        for (name in listOf("", "  ", "a/b", "a\\b", "..", "a/../b")) {
+            assertTrue(!repo.isValidName(name), "expected '$name' to be invalid")
+        }
+    }
+
+    @Test
     fun `save then load round-trips the board state`() {
         val repo = newRepository()
         val state = intArrayOf(3, 0, 7, 1, 12, 5, 6, 4, 9, 8, 11, 10, 13, 2, 15, 14)

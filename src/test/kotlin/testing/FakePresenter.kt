@@ -35,11 +35,18 @@ class FakePresenter : Presenter {
         calls.add("resetGame")
     }
 
-    override fun saveGame(name: String) {
+    /** Always reports success - tests exercising a failed save use [testing.FakeSaveRepository]
+     *  directly against [presenter.PresenterImpl], not this fake. */
+    override fun saveGame(name: String): Boolean {
         calls.add("saveGame($name)")
+        return true
     }
 
     override fun loadGame(name: String) {
         calls.add("loadGame($name)")
+    }
+
+    override fun exitGame() {
+        calls.add("exitGame")
     }
 }

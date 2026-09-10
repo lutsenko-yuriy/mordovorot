@@ -17,6 +17,12 @@ interface SaveRepository {
 
     fun save(name: String, state: IntArray, squareSide: Int)
 
+    /** Whether [name] would be accepted by [save]/[load]/[exists] rather than throwing
+     *  [IllegalArgumentException] - lets a caller validate up front instead of relying on
+     *  catching the exception, e.g. to tell "the name was never valid" apart from "the save
+     *  itself failed" (audit round 3 on GH-12/PR #15). */
+    fun isValidName(name: String): Boolean
+
     /** `null` when there's no save named [name]. */
     fun load(name: String): SavedBoard?
 }
