@@ -1,6 +1,9 @@
 package storage
 
+import java.io.IOException
+import java.nio.file.Files
 import kotlin.io.path.createTempDirectory
+import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 import kotlin.test.Test
@@ -124,6 +127,18 @@ class FileSaveRepositoryTest {
     }
 
     @Test
+    fun `save cleans up its temp file when the atomic move fails`() {
+        val dir = createTempDirectory("mordovorot-saves")
+        val repo = FileSaveRepository(dir)
+        // Occupy the target path with a directory so the move can't complete.
+        Files.createDirectory(dir.resolve("foo.save"))
+
+        assertFailsWith<IOException> { repo.save("foo", intArrayOf(0, 1, 2, 3), 2) }
+
+        assertEquals(emptyList(), dir.listDirectoryEntries("*.tmp").toList())
+    }
+
+    @Test
     fun `the on-disk format is square side on line 1, values on line 2`() {
         val dir = createTempDirectory("mordovorot-saves")
         val repo = FileSaveRepository(dir)
@@ -192,6 +207,15 @@ class FileSaveRepositoryTest {
         val dir = createTempDirectory("mordovorot-saves")
         val repo = FileSaveRepository(dir)
         dir.resolve(".save").writeText("2\n0 1 2 3")
+
+        assertEquals(emptyList(), repo.listSaves())
+    }
+
+    @Test
+    fun `listSaves ignores a name that would be rejected as unsafe`() {
+        val dir = createTempDirectory("mordovorot-saves")
+        val repo = FileSaveRepository(dir)
+        dir.resolve("...save").writeText("2\n0 1 2 3") // strips to ".."
 
         assertEquals(emptyList(), repo.listSaves())
     }

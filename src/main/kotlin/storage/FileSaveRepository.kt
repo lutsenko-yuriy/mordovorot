@@ -23,7 +23,7 @@ class FileSaveRepository(private val directory: Path = defaultDirectory()) : Sav
         if (!directory.exists()) return emptyList()
         return directory.listDirectoryEntries("*$EXTENSION")
             .map { it.name.removeSuffix(EXTENSION) }
-            .filter { it.isNotBlank() }
+            .filter { isSafeName(it) }
             .sorted()
     }
 
@@ -42,8 +42,13 @@ class FileSaveRepository(private val directory: Path = defaultDirectory()) : Sav
         // Write to a temp file and move atomically so a crash or a rejected write
         // mid-flight can't truncate an existing save (findings from WU2's audit).
         val temp = Files.createTempFile(directory, "$name-", ".tmp")
-        temp.writeText("$squareSide\n${state.joinToString(" ")}\n")
-        Files.move(temp, pathFor(name), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+        try {
+            temp.writeText("$squareSide\n${state.joinToString(" ")}\n")
+            Files.move(temp, pathFor(name), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+        } catch (e: Exception) {
+            Files.deleteIfExists(temp)
+            throw e
+        }
     }
 
     override fun load(name: String): SavedBoard? {
@@ -79,8 +84,11 @@ class FileSaveRepository(private val directory: Path = defaultDirectory()) : Sav
 
     /** User input goes straight into a path - this is a real traversal guard, not ceremony. */
     private fun requireSafeName(name: String) {
-        require(name.isNotBlank()) { "Save name must not be blank" }
-        require(!name.contains('/') && !name.contains('\\')) { "Save name must not contain a path separator" }
-        require(name.split('/', '\\').none { it == ".." }) { "Save name must not contain '..'" }
+        require(isSafeName(name)) { "Save name must not be blank, contain a path separator, or contain '..'" }
     }
+
+    private fun isSafeName(name: String): Boolean =
+        name.isNotBlank() &&
+            !name.contains('/') && !name.contains('\\') &&
+            name.split('/', '\\').none { it == ".." }
 }
