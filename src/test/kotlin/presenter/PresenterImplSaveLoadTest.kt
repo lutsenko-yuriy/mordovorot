@@ -144,6 +144,30 @@ class PresenterImplSaveLoadTest {
     }
 
     @Test
+    fun `loadGame still reports not_found, with a degraded message, when listing available saves fails`() {
+        // Regression guard: the not_found branch's availableSavesMessage() call can throw
+        // (e.g. an unreadable saves/ directory) independently of saves.load() itself - that
+        // shouldn't turn an actual not_found result into a spurious second "error" event
+        // (audit on PR #13).
+        val saves = FakeSaveRepository().apply {
+            listSavesException = java.io.IOException("permission denied")
+        }
+        val analytics = RecordingAnalyticsService()
+        val view = FakeView()
+        val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
+        val presenter = PresenterImpl(view, board, saves, analytics)
+
+        presenter.loadGame("missing")
+
+        assertEquals(listOf(0, 1, 2, 3), board.boardArray.toList())
+        assertTrue(view.shownMessages.any { it.contains("Could not list available saves") })
+        assertEquals(
+            listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "not_found"))),
+            analytics.events,
+        )
+    }
+
+    @Test
     fun `loadGame surfaces a message and tracks result=error instead of crashing on a corrupted save file`() {
         val saves = FakeSaveRepository().apply {
             loadException = SaveFileFormatException("corrupt", "missing board values")

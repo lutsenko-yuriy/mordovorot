@@ -42,36 +42,42 @@ class PresenterImpl(
     }
 
     override fun loadGame(name: String) {
-        // Catches everything saves.load can throw (bad name, SaveFileFormatException,
-        // IOException), not just the null/not-found case - WU4's startup restore flow calls
-        // this before play()'s try/catch exists, so loadGame must not throw (audit on PR #13).
-        val saved = try {
-            saves.load(name)
+        // The whole body is guarded, not just saves.load - availableSavesMessage() (itself
+        // saves.listSaves()) and board.restoreState can also throw, and WU4's startup restore
+        // flow calls this before play()'s try/catch exists, so loadGame must not throw
+        // regardless of which step fails (audit on PR #13).
+        try {
+            val saved = saves.load(name)
+            if (saved == null) {
+                analytics.track("load_command_used", mapOf("trigger" to "command", "result" to "not_found"))
+                view.showMessage("No save named '$name'. ${availableSavesMessage()}")
+                return
+            }
+            if (saved.squareSide != board.SQUARE_SIDE) {
+                analytics.track("load_command_used", mapOf("trigger" to "command", "result" to "size_mismatch"))
+                view.showMessage(
+                    "Save '$name' is a ${saved.squareSide}x${saved.squareSide} board and can't be loaded onto " +
+                        "this ${board.SQUARE_SIDE}x${board.SQUARE_SIDE} board."
+                )
+                return
+            }
+            board.restoreState(saved.state)
+            analytics.track("load_command_used", mapOf("trigger" to "command", "result" to "success"))
+            view.showMessage("Loaded '$name'.")
         } catch (e: Exception) {
             analytics.track("load_command_used", mapOf("trigger" to "command", "result" to "error"))
             view.showMessage(e.message ?: "Could not load '$name'.")
-            return
         }
-        if (saved == null) {
-            analytics.track("load_command_used", mapOf("trigger" to "command", "result" to "not_found"))
-            view.showMessage("No save named '$name'. ${availableSavesMessage()}")
-            return
-        }
-        if (saved.squareSide != board.SQUARE_SIDE) {
-            analytics.track("load_command_used", mapOf("trigger" to "command", "result" to "size_mismatch"))
-            view.showMessage(
-                "Save '$name' is a ${saved.squareSide}x${saved.squareSide} board and can't be loaded onto " +
-                    "this ${board.SQUARE_SIDE}x${board.SQUARE_SIDE} board."
-            )
-            return
-        }
-        board.restoreState(saved.state)
-        analytics.track("load_command_used", mapOf("trigger" to "command", "result" to "success"))
-        view.showMessage("Loaded '$name'.")
     }
 
     private fun availableSavesMessage(): String {
-        val available = saves.listSaves()
+        // Guarded on its own - a failure here (e.g. an unreadable saves/ directory) shouldn't
+        // change the load's actual result (it was still "not found"), just degrade the message.
+        val available = try {
+            saves.listSaves()
+        } catch (e: Exception) {
+            return "Could not list available saves."
+        }
         return if (available.isEmpty()) "No saves available." else "Available saves: ${available.joinToString(", ")}"
     }
 

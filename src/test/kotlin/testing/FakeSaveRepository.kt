@@ -22,7 +22,15 @@ class FakeSaveRepository(
      *  corrupted save file ([storage.SaveFileFormatException]), or a filesystem failure. */
     var loadException: Throwable? = null
 
-    override fun listSaves(): List<String> = saves.keys.sorted()
+    /** When set, [listSaves] throws this instead of returning - simulates an unreadable
+     *  saves directory (e.g. permissions), which [storage.FileSaveRepository.listSaves]
+     *  can raise via [java.io.IOException]. */
+    var listSavesException: Throwable? = null
+
+    override fun listSaves(): List<String> {
+        listSavesException?.let { throw it }
+        return saves.keys.sorted()
+    }
 
     override fun exists(name: String): Boolean = saves.containsKey(name)
 
