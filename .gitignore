@@ -7,8 +7,8 @@ CLAUDE.local.md
 __pycache__/
 *.pyc
 
-# Commit .claude/agents/ — that's the point of this template.
-# If you want agents to be local-only after setup, add:
+# Commit .claude/commands/ — that's the point of this template.
+# If you want commands to be local-only after setup, add:
 #   .claude/*
-#   !.claude/agents/
+#   !.claude/commands/
 # to your project's .gitignore instead.

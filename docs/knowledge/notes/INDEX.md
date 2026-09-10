@@ -8,3 +8,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 
 
 ## By bookmark
+
+## Reviewed — nothing noteworthy
+
+- [GH-2: Adopt yuriys-agentic-boyz multi-skill workflow](GH-2.md)

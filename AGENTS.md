@@ -66,7 +66,7 @@ Kotlin official style guide
 ## Versioning
 
 Update the version name whenever a new `CHANGELOG.md` entry is added — no separate approval needed.
-CI handles build numbers automatically — do not touch.
+No CI is configured yet, and no version file exists in this repo (see `skills/shared/project-config.md`).
 Details: @docs/VERSIONING.md
 
 ## Session start
