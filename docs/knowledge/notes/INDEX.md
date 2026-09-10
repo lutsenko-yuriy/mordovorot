@@ -15,3 +15,4 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-2-adjust-2: Adopt yuriys-agentic-boyz multi-skill workflow — follow-up](GH-2-adjust-2.md)
 - [GH-2: Adopt yuriys-agentic-boyz multi-skill workflow](GH-2.md)
 - [GH-4: Automated test coverage for board_model and presenter](GH-4.md)
+- [GH-6: Save and load game state to/from local files](GH-6.md)

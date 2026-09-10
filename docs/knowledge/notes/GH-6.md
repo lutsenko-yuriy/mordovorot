@@ -18,3 +18,17 @@ forward: lead with the fix/verdict, keep justification to a short clause, drop r
 context the diff/commit already carries. Worth revisiting the `review`/`audit` skill
 files (or the `CONCISE` output style definition) to make this the default rather than
 something that has to be caught per-session.
+
+**MULTI_WU.md doesn't say where an intermediate WU's `[wip]` CHANGELOG entry goes**
+
+`ship`'s WU1 pass (delegated to a haiku subagent, per the routing rules) inserted the
+`[wip]` GH-6 bullet into the *already-released* `0.1.1` section (PR #5's entry) - my own
+orchestrating instructions to the subagent said "append ... under the existing
+unreleased/latest section context," which was ambiguous since no unreleased section
+existed. Fixed by introducing a `## [Unreleased]` section instead, which subsequent
+intermediate WUs append `[wip]` bullets to; the final WU's `ship` pass should convert it
+into the real `## [X.Y.Z] — date` entry. `docs/workflows/MULTI_WU.md`'s "CHANGELOG tags
+for intermediate WUs" section should say this explicitly (use/create an `## [Unreleased]`
+header) rather than leaving the target section implicit - a small gap, but it produced a
+genuinely wrong-looking changelog (an already-shipped release appearing to contain
+unfinished work) on the very first intermediate WU this project has shipped.
