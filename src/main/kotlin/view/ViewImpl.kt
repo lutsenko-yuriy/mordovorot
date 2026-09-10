@@ -19,12 +19,7 @@ class ViewImpl internal constructor(
         internal set
 
     companion object {
-        /**
-         * Constructs a [ViewImpl] with its [Presenter] wired atomically, avoiding a
-         * window where [presenter] is unset. This is the only public way to obtain
-         * a working [ViewImpl] - the constructor is internal, so `presenter`'s
-         * invariant can't be violated from outside the module.
-         */
+        /** The only public way to obtain a [ViewImpl] - wires [presenter] atomically. */
         fun create(
             input: BufferedReader = BufferedReader(InputStreamReader(System.`in`)),
             output: PrintStream = System.out,
@@ -51,18 +46,8 @@ class ViewImpl internal constructor(
     }
 
     override fun processCommand() {
-        // BufferedReader.readLine() returns null cleanly at EOF (unlike Scanner, which
-        // throws NoSuchElementException on exhausted input). Translating that into a
-        // dedicated EndOfInputException - rather than java.io.EOFException, which file
-        // APIs also throw on a truncated save file - lets PresenterImpl.play() tell
-        // "no more input" apart from a recoverable per-command error without also
-        // swallowing an unrelated file-read failure. See GH-4's 651ca64 for the bug
-        // this used to cause when EOF and per-command errors were conflated.
-        // A dead-but-not-EOF stream (e.g. the controlling terminal disappearing)
-        // makes readLine() throw IOException rather than return null - treat that
-        // the same as EOF instead of letting it fall into the recoverable-error
-        // branch below, which would re-enter this method forever consuming no
-        // input (the same "spin on a dead stream" failure this fix set out to close).
+        // null (clean EOF) or IOException (dead stream) both mean "no more input" -
+        // see GH-4's 651ca64 for the infinite-loop bug this closes.
         val line = try {
             input.readLine()
         } catch (e: IOException) {

@@ -23,14 +23,9 @@ class PresenterImpl(var view: View, var board: BoardModel = BoardImpl()) : Prese
                 view.displayBoard(board.boardArray, board.SQUARE_SIDE)
                 view.processCommand()
             } catch (e: EndOfInputException) {
-                // No more input to read - stop instead of spinning on a closed stream.
                 return
             } catch (e: Exception) {
-                // Route through the view (not System.err) so this shares the same
-                // output stream displayBoard() uses - otherwise error text can
-                // interleave mid-grid, and tests capturing view output can't assert
-                // on it either (needed by GH-6's save/load-not-found messages).
-                view.showMessage(e.message ?: "Error")
+                view.showMessage(e.message ?: "Error") // not System.err - stays in sync with the board output
             }
         }
     }
