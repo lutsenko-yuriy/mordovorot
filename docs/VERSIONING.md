@@ -12,4 +12,6 @@ Version bumps are manual and require user approval before any change.
 
 ## CI/CD
 
-<!-- Describe your CI/CD pipeline here. -->
+`.github/workflows/build.yml` runs `./gradlew build` (compile + test + assemble) on every
+push to `master` and on every pull request. It does not publish artifacts or bump versions —
+those remain manual.

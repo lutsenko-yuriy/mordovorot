@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-_(nothing in progress — GH-4 is In Review, see PR #5)_
+_(nothing in progress)_
 
 ---
 

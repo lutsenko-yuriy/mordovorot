@@ -13,7 +13,7 @@ When setting up the project, fill in every `{{placeholder}}`. Skills stay unchan
 
 | Layer | Technology |
 |---|---|
-| Framework | None — plain Kotlin, run via `kotlinc`/IDE, no build tool checked in yet |
+| Framework | Plain Kotlin/JVM, built with Gradle (Kotlin DSL, wrapper pinned to 8.7) |
 | State management | In-memory (`BoardImpl` holds an `IntArray` board state) |
 | Local persistence | None — state lives only for the process lifetime |
 
@@ -37,10 +37,10 @@ When setting up the project, fill in every `{{placeholder}}`. Skills stay unchan
 
 | Setting | Value |
 |---|---|
-| Integration test directory | None yet — no test suite exists in the repo |
-| Test harness file | N/A |
+| Integration test directory | `src/test/kotlin/` (unit tests only — no separate integration suite yet) |
+| Test harness file | N/A — no scripted end-to-end harness; `src/test/kotlin/testing/` holds shared fakes (`FakeBoardModel`, `FakeView`) |
 | Harness class / entry point | N/A |
-| Unit / integration test command | None yet — add one (e.g. `kotlin.test` + Gradle) before relying on automated verification |
+| Unit / integration test command | `./gradlew test` (or `./gradlew build` to also compile + assemble) |
 
 ## Version management
 
@@ -48,12 +48,12 @@ When setting up the project, fill in every `{{placeholder}}`. Skills stay unchan
 |---|---|
 | Version file | None yet — no manifest/version file exists; track releases via `docs/CHANGELOG.md` and git tags until one is added |
 | Version field | N/A |
-| Manual vs automated | Manual — no CI is configured yet |
+| Manual vs automated | Manual — CI (`.github/workflows/build.yml`) runs `./gradlew build` on push/PR but does not bump versions |
 
 ## In QA path patterns
 
 A merged PR moves to **In QA** (not Done directly) if it touches any of:
 
-- `src/view/` — console I/O behavior is hard to cover with automated tests; a human should play a session before sign-off
+- `src/main/kotlin/view/` — console I/O behavior is hard to cover with automated tests; a human should play a session before sign-off
 
 Move straight to **Done** if the PR touches only: pure logic with no runtime platform dependency, documentation, CI config, or pure refactors where automated tests fully own correctness. When in doubt, use **In QA**.

@@ -13,6 +13,19 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.1.1] — 2026-09-10 (PR #5 merged)
+
+### Added
+- [test] GH-4: automated test coverage for `board_model` and `presenter` (37 tests), independent of any view/UI implementation.
+- [ci] GH-4: GitHub Actions workflow running `./gradlew build` on push/PR.
+
+### Fixed
+- [app] GH-4: fix an off-by-one in the board shift bounds check (`shiftLeft`/`shiftRight`/`shiftUp`/`shiftDown`) that let an out-of-range index through and crashed instead of raising a clear error.
+- [app] GH-4: fix `./gradlew run` not receiving keyboard input (the `application` plugin doesn't wire stdin by default).
+
+### Changed
+- [meta] GH-4: adopt Gradle as the project's build tool; replace the hand-rolled board shuffle with Kotlin's stdlib `IntArray.shuffle()`.
+
 ## [0.1.0] — 2026-09-10 (PR #1 merged)
 
 ### Added

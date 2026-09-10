@@ -7,6 +7,11 @@ CLAUDE.local.md
 __pycache__/
 *.pyc
 
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
 # Commit .claude/commands/ — that's the point of this template.
 # If you want commands to be local-only after setup, add:
 #   .claude/*

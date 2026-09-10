@@ -6,6 +6,7 @@ package board_model
 public interface BoardModel {
 
     val SQUARE_SIDE: Int
+    val boardArray: IntArray
 
     // Create new game
     fun resetGame()
