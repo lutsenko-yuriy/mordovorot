@@ -19,6 +19,14 @@ public class BoardImpl constructor(override val SQUARE_SIDE: Int = 4) : BoardMod
         boardArray.shuffle()
     }
 
+    override fun restoreState(state: IntArray) {
+        require(state.size == SQUARE_SIDE * SQUARE_SIDE) { "Expected ${SQUARE_SIDE * SQUARE_SIDE} values, got ${state.size}" }
+        require(state.toSet() == (0 until state.size).toSet()) { "Board state must be a permutation of 0..${state.size - 1}" }
+
+        boardArray = state.copyOf()
+        counter = 0
+    }
+
     override fun shiftLeft(row: Int) {
         if (row !in 0 until SQUARE_SIDE) {
             throw IllegalArgumentException("Incorrect row")

@@ -11,6 +11,9 @@ public interface BoardModel {
     // Create new game
     fun resetGame()
 
+    // Replace the board with a previously saved arrangement
+    fun restoreState(state: IntArray)
+
     // Moving tiles across the board
     fun shiftLeft(row: Int)
     fun shiftRight(row: Int)
