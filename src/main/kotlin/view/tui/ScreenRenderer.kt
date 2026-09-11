@@ -3,11 +3,11 @@ package view.tui
 /** GH-10's console dialect: tiles are stored 0-based, displayed 1-based. */
 private const val DISPLAY_OFFSET = 1
 
-private const val DIM_ON = "[2m"
-private const val DIM_OFF = "[22m"
+private const val DIM_ON = "\u001B[2m"
+private const val DIM_OFF = "\u001B[22m"
 
 /** Clears the screen and homes the cursor - every frame is a full repaint. */
-private const val CLEAR_AND_HOME = "[2J[H"
+private const val CLEAR_AND_HOME = "\u001B[2J\u001B[H"
 
 /**
  * Pure [ScreenState] -> frame `String` renderer for GH-3's board screen: box-drawing borders,

@@ -59,9 +59,12 @@ class TuiView internal constructor(
                 }
             }
         } finally {
-            // Belt-and-braces alongside AnsiTerminal's own shutdown hook (which only covers
-            // abnormal termination) - a clean EndOfInput return restores promptly instead of
-            // leaving the terminal in alt-screen/raw mode until process exit.
+            // Belt-and-braces alongside AnsiTerminal's own shutdown hook. On a real TTY,
+            // EndOfInput in practice never fires today (cbreak's -icanon disables VEOF, so
+            // Ctrl+D arrives as a byte, not a stream close, and there's no dialog-driven exit
+            // yet - both land in WU4) - restoration currently rests on the shutdown hook. This
+            // branch exists for piped/scripted input (real EOF) and for WU4's exit dialog, which
+            // will make EndOfInput/return reachable on a live terminal too.
             terminal.restore()
         }
     }
@@ -79,7 +82,11 @@ class TuiView internal constructor(
 
     private fun repaint() {
         val terminalSize = terminal.size()
-        val state = ScreenState.forBoard(presenter.boardState().toList(), presenter.squareSide(), presenter.isSolved())
+        // presenter.isSolved() is deliberately not wired to arrowsEnabled yet: disabling the
+        // arrows the moment the board is solved, with no Congratulations screen or live toolbar
+        // to replace them (both WU4/5), would strand the player with nothing left to click
+        // (audit round 2 on PR #22). Arrows stay live until that UI exists to hand off to.
+        val state = ScreenState.forBoard(presenter.boardState().toList(), presenter.squareSide(), solved = false)
         layout = BoardLayout(terminalSize, state.squareSide, state.arrowsEnabled)
         terminal.write(renderer.render(state, terminalSize))
     }

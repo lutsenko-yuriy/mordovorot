@@ -99,6 +99,22 @@ class TuiViewBoardTest {
     }
 
     @Test
+    fun `a solved board still accepts shift clicks - the toolbar has no way out yet`() {
+        // WU3 has no Congratulations screen or live toolbar (WU4/5) - disabling the arrows on
+        // isSolved() the moment it flips true would strand the player with no interaction at
+        // all (audit round 2 on PR #22). Arrows stay live until that UI exists.
+        val presenter = FakePresenter()
+        presenter.solved = true
+        val layout = BoardLayout(terminalSize, presenter.side, arrowsEnabled = true)
+        val (lx, ly) = layout.leftArrowPosition(0)
+        val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.MouseClick(lx, ly)), terminalSize = terminalSize)
+
+        view(terminal, presenter).play()
+
+        assertTrue(presenter.calls.contains("shiftLeft(0)"))
+    }
+
+    @Test
     fun `play enters raw mode and mouse reporting before reading any event, and restores on the way out`() {
         val presenter = FakePresenter()
         val terminal = FakeTerminal(events = mutableListOf(), terminalSize = terminalSize)
