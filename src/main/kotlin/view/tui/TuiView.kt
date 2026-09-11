@@ -15,7 +15,11 @@ import view.View
  * [confirmRestore]/[chooseSaveToRestore] each run their own blocking modal loop over
  * [terminal], the same way [view.ViewImpl]'s console prompts block on `readLine()`. Confirmed
  * product decision: once solved, the arrows go dead ([ScreenState.arrowsEnabled] false) - see
- * [ScreenState]'s KDoc.
+ * [ScreenState]'s KDoc. WU5 adds the Congratulations screen itself: since every repaint asks
+ * [Presenter.isSolved] fresh rather than tracking a phase flag, the toolbar stays fully live and
+ * a load from the Congratulations screen that restores an unsolved board flips the title and
+ * arrows straight back - see [wasSolved] for the one bit of state analytics needs that the
+ * rendering doesn't.
  */
 class TuiView internal constructor(
     private val terminal: Terminal,
@@ -46,6 +50,13 @@ class TuiView internal constructor(
     /** Set by [showMessage] so the next dialog (the exit flow's invalid-name re-prompt) can
      *  surface it, since this view has no separate message line of its own. */
     private var pendingMessage: String? = null
+
+    /** Tracks whether the previous repaint saw the board solved, so `screen_congratulations`
+     *  (WU5) fires once on the *transition* into the solved state rather than on every repaint
+     *  while it stays solved. The screen itself has no separate phase flag - see the plan's
+     *  solved-state note - so this is the one piece of repaint-to-repaint memory the analytics
+     *  need that the rendering itself doesn't. */
+    private var wasSolved = false
 
     companion object {
         /** The only public way to obtain a [TuiView] - wires [presenter] atomically, same
@@ -249,8 +260,11 @@ class TuiView internal constructor(
         // own Dialog.message instead) - consumed here so a stale message can't leak into a
         // dialog opened by the very next click (audit finding on PR #24).
         val message = if (dialog == null) pendingMessage.also { pendingMessage = null } else null
+        val solved = presenter.isSolved()
+        if (solved && !wasSolved) analytics.track("screen_congratulations")
+        wasSolved = solved
         val state = ScreenState
-            .forBoard(presenter.boardState().toList(), presenter.squareSide(), presenter.isSolved())
+            .forBoard(presenter.boardState().toList(), presenter.squareSide(), solved)
             .copy(dialog = dialog, message = message)
         layout = BoardLayout(terminalSize, state.squareSide, state.arrowsEnabled)
         dialogLayout = dialog?.let { DialogLayout(it, terminalSize) }

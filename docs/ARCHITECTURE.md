@@ -52,7 +52,10 @@ src/main/kotlin/
         └── TuiView.kt   # Owns its own event loop (doesn't call PresenterImpl.play() - see
                           # the ticket's solved-state note). Save/Load/Exit and the startup
                           # restore prompt each run their own blocking modal loop over
-                          # Terminal (WU4) - the Congratulations screen lands in WU5.
+                          # Terminal (WU4). State-driven solved screen (WU5): every repaint asks
+                          # Presenter.isSolved() fresh rather than tracking a phase flag, so the
+                          # Congratulations title/dimmed arrows and a load back to an unsolved
+                          # board both fall out of the same repaint path with no extra branching.
 
 src/test/kotlin/
 ├── LaunchModeTest.kt      # LaunchMode resolution + app_launched tracking (GH-3)
@@ -62,8 +65,7 @@ src/test/kotlin/
 │                           # restore, the listSaves/saveExists/isSolved/boardState/squareSide
 │                           # query methods (GH-3)
 ├── storage/               # FileSaveRepository coverage
-├── view/                  # ViewImpl command-parsing coverage; view/tui/ scenario stubs (GH-3,
-│                           # filled in as WU2-WU5 land)
+├── view/                  # ViewImpl command-parsing coverage; view/tui/ coverage (GH-3, WU2-WU5)
 └── testing/              # FakeBoardModel / FakeView / FakeSaveRepository /
                             # RecordingAnalyticsService / FakePresenter test doubles
 ```
