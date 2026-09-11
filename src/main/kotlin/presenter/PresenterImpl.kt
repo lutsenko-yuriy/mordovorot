@@ -168,6 +168,10 @@ class PresenterImpl(
 
     override fun isSolved(): Boolean = board.isCorrect()
 
+    override fun boardState(): IntArray = board.boardArray
+
+    override fun squareSide(): Int = board.SQUARE_SIDE
+
     private fun availableSavesMessage(): String {
         // Guarded on its own - a failure here (e.g. an unreadable saves/ directory) shouldn't
         // change the load's actual result (it was still "not found"), just degrade the message.

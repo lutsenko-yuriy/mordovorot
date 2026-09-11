@@ -41,4 +41,12 @@ interface Presenter {
      *  Exposed (rather than private, as it started) so [view.tui.TuiView] (GH-3) can run it
      *  ahead of its own event loop, instead of [play]'s console-only loop. */
     fun restoreOnStartup()
+
+    /** Current board tile values (0-based, GH-10 dialect) - lets the mouse-driven TUI (GH-3)
+     *  render/re-render after every click, since it doesn't call [play]'s console-only loop
+     *  (the only place that otherwise pushes board state out via [view.View.displayBoard]). */
+    fun boardState(): IntArray
+
+    /** The board's square side (rows == columns), paired with [boardState] for TUI layout. */
+    fun squareSide(): Int
 }
