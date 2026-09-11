@@ -100,7 +100,19 @@ class TuiView internal constructor(
 
     private fun handleToolbarSave() {
         when (val outcome = runSaveDialog("toolbar")) {
-            is SaveOutcome.Confirm -> presenter.saveGame(outcome.name)
+            is SaveOutcome.Confirm -> {
+                // The exit flow's promptForValidSaveName rejects a whitespace name because
+                // console mode's save/load parsing splits on it (view.ViewImpl.nameArg) - a
+                // name saved with a space could never be `load`ed back from the console.
+                // Toolbar Save bypassed that check entirely, since it calls saveGame directly
+                // rather than going through PresenterImpl's exit-flow validation (audit round 5
+                // on PR #24).
+                if (outcome.name.any { it.isWhitespace() }) {
+                    showMessage("'${outcome.name}' isn't a usable save name (no spaces) - not saved.")
+                } else {
+                    presenter.saveGame(outcome.name)
+                }
+            }
             SaveOutcome.Cancel -> {}
         }
     }

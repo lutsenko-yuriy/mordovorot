@@ -59,6 +59,32 @@ class TuiViewDialogTest {
     }
 
     @Test
+    fun `a toolbar Save with a whitespace name is rejected instead of saved - console load could never split it back out`() {
+        // Round 5 audit finding on PR #24: the exit flow's promptForValidSaveName rejects a
+        // whitespace name specifically because console mode's save/load command parsing splits
+        // on it (view.ViewImpl.nameArg) - a name saved this way could never be `load`ed back
+        // from the console. Toolbar Save skipped that same check entirely.
+        val presenter = FakePresenter()
+        val (saveX, saveY) = boardLayout(presenter).saveButtonPosition()
+        val dialog = Dialog(Dialog.Kind.SAVE, "Save game", buttons = listOf(DialogButtonSpec("save", "Save"), DialogButtonSpec("cancel", "Cancel")))
+        val saveButton = DialogLayout(dialog, terminalSize).buttons().first { it.target == HitTarget.DialogButton("save") }
+        val terminal = FakeTerminal(
+            events = mutableListOf(
+                TerminalEvent.MouseClick(saveX, saveY),
+                TerminalEvent.KeyPress('m'), TerminalEvent.KeyPress('y'), TerminalEvent.KeyPress(' '),
+                TerminalEvent.KeyPress('g'), TerminalEvent.KeyPress('a'), TerminalEvent.KeyPress('m'), TerminalEvent.KeyPress('e'),
+                TerminalEvent.MouseClick(saveButton.x, DialogLayout(dialog, terminalSize).buttonsRow()),
+            ),
+            terminalSize = terminalSize,
+        )
+
+        view(terminal, presenter).play()
+
+        assertTrue(presenter.calls.none { it.startsWith("saveGame") })
+        assertTrue(terminal.frames.last().contains("isn't a usable save name"))
+    }
+
+    @Test
     fun `Save dialog shows the overwrite warning when the typed name matches an existing save`() {
         val presenter = FakePresenter()
         presenter.existingSaveNames = setOf("hi")
