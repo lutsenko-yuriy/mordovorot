@@ -4,6 +4,10 @@ package view.tui
  *  names, the overwrite warning, save-list rows). */
 internal const val DIALOG_WIDTH = 44
 
+/** Absolute floor for the terminal-width cap below - small enough to still fit inside a
+ *  pathologically narrow terminal rather than forcing overflow. */
+private const val MIN_WIDTH = 12
+
 /**
  * Pure geometry for GH-3's modal dialogs: given a [Dialog] and the terminal size, computes
  * where its title, message, text field, list rows, and buttons land, and resolves a click to a
@@ -15,8 +19,12 @@ class DialogLayout(private val dialog: Dialog, terminalSize: TerminalSize) {
     // Widens past the default to fit whatever the dialog is actually showing (a long overwrite
     // warning, a long typed name, a long save name) - a fixed width let content overflow past
     // the right border instead. left+2 is the fixed left margin every content line is drawn at
-    // (see ScreenRenderer.drawDialog); +2 more for the same margin on the right.
-    val width = maxOf(DIALOG_WIDTH, contentWidth(dialog) + 4).coerceAtMost((terminalSize.columns - 4).coerceAtLeast(DIALOG_WIDTH))
+    // (see ScreenRenderer.drawDialog); +2 more for the same margin on the right. The cap floors
+    // at a small constant, not DIALOG_WIDTH - flooring it at DIALOG_WIDTH defeated the cap
+    // entirely on any terminal narrower than DIALOG_WIDTH, which is exactly the terminal size
+    // this cap exists to protect (audit round 2 on PR #24: content was still overflowing the
+    // canvas on a 40-column terminal because the box was held at 44 regardless).
+    val width = maxOf(DIALOG_WIDTH, contentWidth(dialog) + 4).coerceAtMost((terminalSize.columns - 4).coerceAtLeast(MIN_WIDTH))
     private val hasList = dialog.kind == Dialog.Kind.LOAD
     private val listRows = if (hasList) dialog.listItems.size.coerceAtLeast(1) else 0
     private val hasTextField = dialog.kind == Dialog.Kind.SAVE

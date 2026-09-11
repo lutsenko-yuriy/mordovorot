@@ -395,4 +395,90 @@ class TuiViewDialogTest {
         assertTrue(terminal.frames.first().contains("real-name"))
         assertFalse(terminal.frames.first().contains("stale-name"))
     }
+
+    // --- Round 2 audit findings on PR #24. ---
+
+    @Test
+    fun `clicking Save with an empty name cancels, same as pressing Enter on an empty name`() {
+        val presenter = FakePresenter()
+        val (saveX, saveY) = boardLayout(presenter).saveButtonPosition()
+        val dialog = Dialog(Dialog.Kind.SAVE, "Save game", buttons = listOf(DialogButtonSpec("save", "Save"), DialogButtonSpec("cancel", "Cancel")))
+        val saveButton = DialogLayout(dialog, terminalSize).buttons().first { it.target == HitTarget.DialogButton("save") }
+        val terminal = FakeTerminal(
+            events = mutableListOf(TerminalEvent.MouseClick(saveX, saveY), TerminalEvent.MouseClick(saveButton.x, DialogLayout(dialog, terminalSize).buttonsRow())),
+            terminalSize = terminalSize,
+        )
+
+        view(terminal, presenter).play()
+
+        assertTrue(presenter.calls.none { it.startsWith("saveGame") })
+    }
+
+    @Test
+    fun `the exit flow's invalid-name explanation stays visible past the user's first corrective keystroke`() {
+        val saves = FakeSaveRepository()
+        val board = FakeBoardModel()
+        val (exitX, exitY) = BoardLayout(terminalSize, board.SQUARE_SIDE, arrowsEnabled = true).exitButtonPosition()
+        val exitDialog = Dialog(
+            Dialog.Kind.EXIT, "Save before quitting?",
+            buttons = listOf(DialogButtonSpec("yes", "Yes"), DialogButtonSpec("no", "No"), DialogButtonSpec("cancel", "Cancel")),
+        )
+        val yesButton = DialogLayout(exitDialog, terminalSize).buttons().first { it.target == HitTarget.DialogButton("yes") }
+        val saveDialog = Dialog(Dialog.Kind.SAVE, "Save game", buttons = listOf(DialogButtonSpec("save", "Save"), DialogButtonSpec("cancel", "Cancel")))
+        val saveButton = DialogLayout(saveDialog, terminalSize).buttons().first { it.target == HitTarget.DialogButton("save") }
+        // The re-prompted dialog is wider (it carries the invalid-name explanation as its
+        // message), which shifts the Save button's x - compute its real position against a
+        // Dialog matching that message, or the click below misses the button entirely.
+        val invalidNameMessage = "'a/b' isn't a usable save name (no spaces, path separators, or '..') - " +
+            "try again, or press Enter to skip saving."
+        val reprompDialog = saveDialog.copy(message = invalidNameMessage)
+        val reprompSaveButton = DialogLayout(reprompDialog, terminalSize).buttons().first { it.target == HitTarget.DialogButton("save") }
+        val terminal = FakeTerminal(
+            events = mutableListOf(
+                TerminalEvent.MouseClick(exitX, exitY),
+                TerminalEvent.MouseClick(yesButton.x, DialogLayout(exitDialog, terminalSize).buttonsRow()),
+                // "a/b" is an invalid name (path separator) - triggers PresenterImpl's
+                // re-prompt with an explanatory showMessage().
+                TerminalEvent.KeyPress('a'),
+                TerminalEvent.KeyPress('/'),
+                TerminalEvent.KeyPress('b'),
+                TerminalEvent.MouseClick(saveButton.x, DialogLayout(saveDialog, terminalSize).buttonsRow()),
+                // One corrective keystroke on the re-prompted dialog - the explanation must
+                // still be on screen after this, not just on the frame right after re-prompting.
+                TerminalEvent.KeyPress('h'),
+                TerminalEvent.MouseClick(reprompSaveButton.x, DialogLayout(reprompDialog, terminalSize).buttonsRow()),
+            ),
+            terminalSize = terminalSize,
+        )
+
+        viewWithRealPresenter(terminal, saves, board).play()
+
+        val explanationFrames = terminal.frames.filter { it.contains("isn't a usable save name") }
+        assertTrue(explanationFrames.size >= 2)
+        assertTrue(saves.saveCalls.any { it.first == "h" })
+    }
+
+    @Test
+    fun `dialog content is truncated to the box width instead of overflowing the border on a narrow terminal`() {
+        val narrow = TerminalSize(columns = 40, rows = 24)
+        val presenter = FakePresenter()
+        presenter.existingSaveNames = setOf("somesave")
+        val (saveX, saveY) = BoardLayout(narrow, presenter.side, arrowsEnabled = true).saveButtonPosition()
+        val terminal = FakeTerminal(
+            events = (listOf(TerminalEvent.MouseClick(saveX, saveY)) + "somesave".map { TerminalEvent.KeyPress(it) }).toMutableList(),
+            terminalSize = narrow,
+        )
+
+        view(terminal, presenter).play()
+
+        // The full warning ("'somesave' already exists - it will be overwritten.") is 51 chars -
+        // wider than the 40-column terminal - so the frame showing it (the one drawn right
+        // after the last keystroke, before EOF closes the dialog) must show it truncated (an
+        // ellipsis), not whole, and every rendered line must still fit the terminal's width.
+        val dialogFrame = terminal.frames[terminal.frames.size - 2]
+        assertTrue(dialogFrame.contains("…"))
+        // Row 0 carries the leading clear-screen escape sequence, not board content - every
+        // other row is a fixed-width canvas row and must fit the terminal exactly.
+        assertTrue(dialogFrame.lines().drop(1).all { it.length <= narrow.columns })
+    }
 }

@@ -146,14 +146,18 @@ class TuiView internal constructor(
      *  click. Shared by the toolbar's direct save and [promptSaveName] (the exit flow). */
     private fun runSaveDialog(openedFrom: String): SaveOutcome {
         analytics.track("screen_save_dialog", mapOf("opened_from" to openedFrom))
+        // Consumed once, then kept sticky for the whole dialog session (overridden by a live
+        // overwrite warning when one applies) - clearing it every iteration made the exit
+        // flow's invalid-name explanation vanish after the user's very first keystroke, before
+        // they'd typed a full corrected name (audit round 2 on PR #24).
+        val initialMessage = pendingMessage
+        pendingMessage = null
         var typed = ""
         while (true) {
-            val message = pendingMessage ?: overwriteWarning(typed)
-            pendingMessage = null
             val dialog = Dialog(
                 kind = Dialog.Kind.SAVE,
                 title = "Save game",
-                message = message,
+                message = overwriteWarning(typed) ?: initialMessage,
                 textFieldValue = typed,
                 buttons = listOf(DialogButtonSpec("save", "Save"), DialogButtonSpec("cancel", "Cancel")),
             )
@@ -161,14 +165,15 @@ class TuiView internal constructor(
             when (val event = terminal.readEvent()) {
                 is TerminalEvent.KeyPress -> typed += event.char
                 TerminalEvent.Backspace -> typed = typed.dropLast(1)
-                // An empty name on Enter is "skip saving" (matches the invalid-name re-prompt's
-                // own "press Enter to skip saving" instruction) rather than a Confirm(""), which
+                // An empty name is "skip saving" (matches the invalid-name re-prompt's own
+                // "press Enter to skip saving" instruction) rather than a Confirm(""), which
                 // would re-prompt forever - PresenterImpl.promptForValidSaveName only stops on
-                // null (audit finding on PR #24).
+                // null. Applies to both Enter and the Save button - round 1 only fixed Enter
+                // (audit round 2 on PR #24).
                 TerminalEvent.Enter -> return if (typed.isEmpty()) SaveOutcome.Cancel else SaveOutcome.Confirm(typed)
                 TerminalEvent.Escape -> { trackDialogCancelled("save"); return SaveOutcome.Cancel }
                 is TerminalEvent.MouseClick -> when (dialogHitTest(event.x, event.y)) {
-                    HitTarget.DialogButton("save") -> return SaveOutcome.Confirm(typed)
+                    HitTarget.DialogButton("save") -> return if (typed.isEmpty()) SaveOutcome.Cancel else SaveOutcome.Confirm(typed)
                     HitTarget.DialogButton("cancel") -> { trackDialogCancelled("save"); return SaveOutcome.Cancel }
                     else -> {}
                 }

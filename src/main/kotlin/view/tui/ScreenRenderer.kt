@@ -90,16 +90,23 @@ class ScreenRenderer {
 
     private fun drawDialog(canvas: Canvas, dialog: Dialog, terminalSize: TerminalSize) {
         val layout = DialogLayout(dialog, terminalSize)
+        // DialogLayout.width can be capped below what the content actually needs (a terminal
+        // too narrow to fit it in full) - truncating here is what keeps that content from
+        // overwriting the box's own right border (audit round 2 on PR #24).
+        val maxLineWidth = (layout.width - 4).coerceAtLeast(1)
         drawDialogBox(canvas, layout)
-        canvas.put(layout.left + 2, layout.titleRow(), dialog.title)
-        dialog.message?.let { canvas.put(layout.left + 2, layout.messageRow!!, it) }
-        layout.textFieldRow?.let { row -> canvas.put(layout.left + 2, row, "Name: ${dialog.textFieldValue}_") }
+        canvas.put(layout.left + 2, layout.titleRow(), truncate(dialog.title, maxLineWidth))
+        dialog.message?.let { canvas.put(layout.left + 2, layout.messageRow!!, truncate(it, maxLineWidth)) }
+        layout.textFieldRow?.let { row -> canvas.put(layout.left + 2, row, truncate("Name: ${dialog.textFieldValue}_", maxLineWidth)) }
         for (index in dialog.listItems.indices) {
             val marker = if (index == dialog.selectedIndex) "> " else "  "
-            canvas.put(layout.left + 2, layout.listRowPosition(index), "$marker${dialog.listItems[index]}")
+            canvas.put(layout.left + 2, layout.listRowPosition(index), truncate("$marker${dialog.listItems[index]}", maxLineWidth))
         }
         for (button in layout.buttons()) canvas.put(button.x, layout.buttonsRow(), button.text)
     }
+
+    private fun truncate(text: String, maxWidth: Int): String =
+        if (text.length <= maxWidth) text else text.take((maxWidth - 1).coerceAtLeast(0)) + "…"
 
     private fun drawDialogBox(canvas: Canvas, layout: DialogLayout) {
         val top = layout.titleRow() - 1

@@ -38,4 +38,22 @@ class DialogLayoutTest {
 
         assertTrue(layout.width == DIALOG_WIDTH)
     }
+
+    @Test
+    fun `the box never exceeds the terminal's own width, even on a terminal narrower than the default`() {
+        // Round 2 audit finding on PR #24: flooring the terminal-width cap at DIALOG_WIDTH
+        // defeated the cap on any terminal narrower than DIALOG_WIDTH, so the box (and its
+        // content) still overflowed the canvas instead of being capped/truncated to fit.
+        val narrow = TerminalSize(columns = 40, rows = 24)
+        val dialog = Dialog(
+            kind = Dialog.Kind.SAVE,
+            title = "Save game",
+            message = "'somesave' already exists - it will be overwritten.",
+            buttons = listOf(DialogButtonSpec("save", "Save"), DialogButtonSpec("cancel", "Cancel")),
+        )
+
+        val layout = DialogLayout(dialog, narrow)
+
+        assertTrue(layout.left + layout.width <= narrow.columns)
+    }
 }
