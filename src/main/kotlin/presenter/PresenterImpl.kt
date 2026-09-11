@@ -179,14 +179,24 @@ class PresenterImpl(
         return if (available.isEmpty()) "No saves available." else "Available saves: ${available.joinToString(", ")}"
     }
 
+    /** Set once [restoreOnStartup] has run, so a second call (now that it's a public part of
+     *  [Presenter], not just an internal step of [play] - GH-3) is a no-op instead of
+     *  re-prompting and double-emitting its analytics for what is still one launch (audit on
+     *  PR #20: [view.tui.TuiView] calling it directly, on top of [play] also calling it on the
+     *  console path, would otherwise restore/prompt twice). */
+    private var startupRestoreDone = false
+
     /**
      * Offers to restore a previous game at startup, before the play loop begins. No-op if
-     * there are no saves. One save asks a yes/no question; two or more list names and let the
-     * user type one (blank/EOF -> new game; an unknown name re-prompts rather than silently
-     * falling back to a new game). Never throws - this runs before [play]'s own try/catch
-     * exists, mirroring [loadGame]/[saveGame]'s non-throwing contract.
+     * there are no saves, or if this has already run once this session (see
+     * [startupRestoreDone]). One save asks a yes/no question; two or more list names and let
+     * the user type one (blank/EOF -> new game; an unknown name re-prompts rather than
+     * silently falling back to a new game). Never throws - this runs before [play]'s own
+     * try/catch exists, mirroring [loadGame]/[saveGame]'s non-throwing contract.
      */
     override fun restoreOnStartup() {
+        if (startupRestoreDone) return
+        startupRestoreDone = true
         try {
             val saveNames = saves.listSaves()
             if (saveNames.isEmpty()) return

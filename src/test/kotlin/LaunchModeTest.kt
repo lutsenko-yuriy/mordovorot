@@ -39,4 +39,27 @@ class LaunchModeTest {
         assertEquals(LaunchMode.CONSOLE, mode)
         assertEquals(listOf(Event("app_launched", mapOf("mode" to "console"))), analytics.events)
     }
+
+    @Test
+    fun `unrecognized arguments are reported instead of silently ignored`() {
+        // audit finding on PR #20: a typo like "-console" or "--Console" previously fell
+        // through to the MOUSE default with no feedback at all.
+        val analytics = RecordingAnalyticsService()
+        val warnings = mutableListOf<String>()
+
+        val mode = resolveLaunchMode(arrayOf("--console", "--bogus"), analytics, warnUnrecognizedArg = { warnings.add(it) })
+
+        assertEquals(LaunchMode.CONSOLE, mode)
+        assertEquals(listOf("--bogus"), warnings)
+    }
+
+    @Test
+    fun `--console alone reports no unrecognized arguments`() {
+        val analytics = RecordingAnalyticsService()
+        val warnings = mutableListOf<String>()
+
+        resolveLaunchMode(arrayOf("--console"), analytics, warnUnrecognizedArg = { warnings.add(it) })
+
+        assertEquals(emptyList(), warnings)
+    }
 }

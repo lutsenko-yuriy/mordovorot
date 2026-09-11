@@ -19,8 +19,16 @@ fun main(args: Array<String>) {
 }
 
 /** Resolves the launch mode and tracks `app_launched` - split out from [main] so it's
- *  unit-testable without running the whole game loop. */
-fun resolveLaunchMode(args: Array<String>, analytics: AnalyticsService): LaunchMode {
+ *  unit-testable without running the whole game loop. Reports any argument other than
+ *  `--console` via [warnUnrecognizedArg] instead of silently falling through to the default
+ *  mode (audit on PR #20 - a typo like `-console` previously left the user guessing why
+ *  `--console` "didn't work"). */
+fun resolveLaunchMode(
+    args: Array<String>,
+    analytics: AnalyticsService,
+    warnUnrecognizedArg: (String) -> Unit = { System.err.println("Unrecognized argument: '$it' - ignoring.") },
+): LaunchMode {
+    args.filter { it != "--console" }.forEach(warnUnrecognizedArg)
     val mode = LaunchMode.resolve(args)
     analytics.track("app_launched", mapOf("mode" to mode.name.lowercase()))
     return mode
