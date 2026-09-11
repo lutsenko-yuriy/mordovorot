@@ -1,0 +1,137 @@
+package view.tui
+
+private const val ESC = 0x1B
+
+/** A malformed/garbled escape sequence this long is given up on and resynced past, rather than
+ *  buffering forever waiting for a terminator that will never arrive. SGR-1006 reports are well
+ *  under this. */
+private const val MAX_ESCAPE_SEQUENCE_LENGTH = 32
+
+/**
+ * Pure byte-stream -> [TerminalEvent] decoder for GH-3's mouse TUI: SGR-1006 mouse reports
+ * (primary), the legacy X10 `ESC[M` fallback, and single-byte keys for the save-name field.
+ * No terminal I/O here - [AnsiTerminal] feeds it real bytes and tests feed it directly. A
+ * sequence split across two [feed] calls is buffered and completed on the next one.
+ */
+class TerminalInputParser {
+
+    private var pending = ByteArray(0)
+
+    fun feed(bytes: ByteArray): List<TerminalEvent> {
+        val data = pending + bytes
+        val events = mutableListOf<TerminalEvent>()
+        var i = 0
+        while (i < data.size) {
+            val consumed = decodeOne(data, i, events)
+            if (consumed == 0) break
+            i += consumed
+        }
+        pending = data.copyOfRange(i, data.size)
+        return events
+    }
+
+    fun endOfInput(): TerminalEvent = TerminalEvent.EndOfInput
+
+    /** Decodes the event starting at [from], appending it to [events]. Returns bytes consumed,
+     *  or 0 if [data] doesn't hold a complete sequence yet (more bytes needed). */
+    private fun decodeOne(data: ByteArray, from: Int, events: MutableList<TerminalEvent>): Int {
+        val b = data[from].toInt() and 0xFF
+        if (b != ESC) {
+            events += decodeSingleByte(b)
+            return 1
+        }
+
+        // A lone ESC with nothing else in the buffer is treated as a standalone Escape key,
+        // not a truncated sequence - real terminals send a full CSI/SS3 sequence in one write.
+        if (from + 1 >= data.size) {
+            events += TerminalEvent.Escape
+            return 1
+        }
+
+        return when (data[from + 1].toInt() and 0xFF) {
+            '['.code -> decodeCsi(data, from, events)
+            'O'.code -> decodeSs3(data, from) // SS3: ESC O <char> - arrow/function keys under DECCKM
+            else -> {
+                events += TerminalEvent.Escape
+                1
+            }
+        }
+    }
+
+    private fun decodeCsi(data: ByteArray, from: Int, events: MutableList<TerminalEvent>): Int {
+        if (from + 2 >= data.size) return 0
+        return when (data[from + 2].toInt() and 0xFF) {
+            '<'.code -> decodeSgr(data, from, events)
+            'M'.code -> decodeX10(data, from, events)
+            else -> decodeUnknownCsi(data, from)
+        }
+    }
+
+    /** `ESC O <char>` - SS3, used for arrow/function keys when the terminal is in application
+     *  cursor-key mode (tmux/screen, some terminals' default). Discarded whole, same as an
+     *  unrecognised CSI sequence. */
+    private fun decodeSs3(data: ByteArray, from: Int): Int {
+        if (from + 2 >= data.size) return 0
+        return 3
+    }
+
+    /** `ESC [ < Pb ; Px ; Py (M|m)`. `M` is a press (-> [TerminalEvent.MouseClick]), `m` a
+     *  release (no event). Returns 0 until the terminating `M`/`m` byte arrives. */
+    private fun decodeSgr(data: ByteArray, from: Int, events: MutableList<TerminalEvent>): Int {
+        val end = scanFor(data, from + 3, 'M', 'm') ?: return giveUpOrWait(data, from)
+
+        val press = data[end].toInt().toChar() == 'M'
+        val parts = String(data, from + 3, end - (from + 3), Charsets.US_ASCII).split(';')
+        val pb = parts.getOrNull(0)?.toIntOrNull()
+        val px = parts.getOrNull(1)?.toIntOrNull()
+        val py = parts.getOrNull(2)?.toIntOrNull()
+        val isWheel = pb != null && (pb and 0x40) != 0 // scroll notch, not a button - has no release report
+        if (press && !isWheel && px != null && py != null) events += TerminalEvent.MouseClick(px - 1, py - 1)
+        return end - from + 1
+    }
+
+    /** `ESC [ M Cb Cx Cy` - legacy X10, each of Cb/Cx/Cy a raw byte offset by 32. `Cb & 0x3 == 3`
+     *  is the release code (X10 has no per-button release, unlike SGR's M/m) - skipped so one
+     *  physical click doesn't produce a press *and* a release [TerminalEvent.MouseClick]. Same
+     *  inherent risk as the split-delivery caveat on [AnsiTerminal.readEvent]: if the report is
+     *  itself truncated (connection drop mid-report), the next 3 bytes typed - whatever they are
+     *  - get read as the missing Cb/Cx/Cy. SGR is the primary protocol; this fallback is legacy. */
+    private fun decodeX10(data: ByteArray, from: Int, events: MutableList<TerminalEvent>): Int {
+        if (from + 5 >= data.size) return 0
+        val cb = (data[from + 3].toInt() and 0xFF) - 32
+        val column = (data[from + 4].toInt() and 0xFF) - 32
+        val row = (data[from + 5].toInt() and 0xFF) - 32
+        if ((cb and 0x3) != 3) events += TerminalEvent.MouseClick(column - 1, row - 1)
+        return 6
+    }
+
+    /** Any other CSI sequence (Home/End, page keys, ...) - discarded whole rather than left to
+     *  leak its individual bytes out as bogus [TerminalEvent.KeyPress]es. */
+    private fun decodeUnknownCsi(data: ByteArray, from: Int): Int {
+        var i = from + 2 // the final byte can be immediately after '[' (e.g. arrow keys: ESC [ A)
+        while (i < data.size) {
+            if ((data[i].toInt() and 0xFF) in 0x40..0x7E) return i - from + 1 // CSI final byte
+            i++
+        }
+        return giveUpOrWait(data, from)
+    }
+
+    /** 0 (wait for more) while [data] since [from] is still under [MAX_ESCAPE_SEQUENCE_LENGTH];
+     *  past that, the whole buffered span is treated as garbage and discarded - not just the
+     *  `ESC` - so it isn't re-decoded byte-by-byte into a run of bogus [TerminalEvent.KeyPress]es. */
+    private fun giveUpOrWait(data: ByteArray, from: Int): Int {
+        val span = data.size - from
+        return if (span > MAX_ESCAPE_SEQUENCE_LENGTH) span else 0
+    }
+
+    private fun scanFor(data: ByteArray, from: Int, vararg terminators: Char): Int? {
+        for (i in from until data.size) if (data[i].toInt().toChar() in terminators) return i
+        return null
+    }
+
+    private fun decodeSingleByte(b: Int): TerminalEvent = when (b) {
+        8, 127 -> TerminalEvent.Backspace
+        10, 13 -> TerminalEvent.Enter
+        else -> TerminalEvent.KeyPress(b.toChar())
+    }
+}
