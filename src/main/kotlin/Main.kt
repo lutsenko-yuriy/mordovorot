@@ -18,11 +18,8 @@ fun main(args: Array<String>) {
     view.play()
 }
 
-/** Resolves the launch mode and tracks `app_launched` - split out from [main] so it's
- *  unit-testable without running the whole game loop. Reports any argument other than
- *  `--console` via [warnUnrecognizedArg] instead of silently falling through to the default
- *  mode (audit on PR #20 - a typo like `-console` previously left the user guessing why
- *  `--console` "didn't work"). */
+/** Resolves the launch mode, warns on any unrecognized argument, and tracks `app_launched` -
+ *  split out from [main] so it's unit-testable without running the whole game loop. */
 fun resolveLaunchMode(
     args: Array<String>,
     analytics: AnalyticsService,

@@ -8,19 +8,13 @@ enum class LaunchMode {
 
     companion object {
         /**
-         * Resolves the launch mode from CLI arguments. `--console` always selects [CONSOLE].
-         * Otherwise [MOUSE] is the default, unless [hasInteractiveTerminal] reports there is
-         * no real terminal to draw the mouse UI on (e.g. stdin is a pipe or redirected file,
-         * such as a scripted/piped run) - in that case it falls back to [CONSOLE]
-         * automatically rather than failing.
+         * `--console` always selects [CONSOLE]. Otherwise [MOUSE] is the default, unless
+         * [hasInteractiveTerminal] says there's no real terminal (e.g. a piped/scripted run)
+         * - then it falls back to [CONSOLE] automatically.
          *
-         * The default [hasInteractiveTerminal] (`System.console() != null`) is only a valid
-         * "no TTY" test through JDK 21 - build.gradle.kts pins `jvmToolchain(17)`, so it holds
-         * today. Since JDK 22 (JDK-8295803), `System.console()` returns a non-null `Console`
-         * even when stdin/stdout are redirected; the replacement check there is
-         * `System.console()?.isTerminal() == true`. Revisit this default before bumping the
-         * toolchain past 21, or every piped/CI run would silently resolve to MOUSE (audit on
-         * PR #20).
+         * Caveat: the default `System.console() != null` check breaks on JDK 22+ (it stops
+         * meaning "no TTY" - use `System.console()?.isTerminal() == true` there instead).
+         * Fine while `jvmToolchain(17)` is pinned in build.gradle.kts; revisit on a bump.
          */
         fun resolve(
             args: Array<String>,

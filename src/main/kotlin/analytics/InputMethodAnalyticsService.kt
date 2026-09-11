@@ -1,13 +1,9 @@
 package analytics
 
 /**
- * Decorates another [AnalyticsService], adding an `input_method` property (`console` or
- * `mouse`) to every event it forwards - so the presenter-side events (`save_command_used`,
- * `load_command_used`, `startup_restore_prompt_shown`, `startup_restore_decision`,
- * `exit_command_used`) become distinguishable by launch mode (GH-3) without touching any of
- * their existing `track(...)` call sites. Wrap the [Presenter][presenter.Presenter]'s
- * analytics service with this rather than modifying [PresenterImpl][presenter.PresenterImpl]
- * itself.
+ * Decorates another [AnalyticsService], adding an `input_method` (`console`/`mouse`)
+ * property to every forwarded event - lets [presenter.PresenterImpl]'s existing events be
+ * split by launch mode without touching its `track(...)` call sites.
  */
 class InputMethodAnalyticsService(
     private val delegate: AnalyticsService,
