@@ -12,7 +12,11 @@ internal const val DIALOG_WIDTH = 44
  */
 class DialogLayout(private val dialog: Dialog, terminalSize: TerminalSize) {
 
-    val width = DIALOG_WIDTH
+    // Widens past the default to fit whatever the dialog is actually showing (a long overwrite
+    // warning, a long typed name, a long save name) - a fixed width let content overflow past
+    // the right border instead. left+2 is the fixed left margin every content line is drawn at
+    // (see ScreenRenderer.drawDialog); +2 more for the same margin on the right.
+    val width = maxOf(DIALOG_WIDTH, contentWidth(dialog) + 4).coerceAtMost((terminalSize.columns - 4).coerceAtLeast(DIALOG_WIDTH))
     private val hasList = dialog.kind == Dialog.Kind.LOAD
     private val listRows = if (hasList) dialog.listItems.size.coerceAtLeast(1) else 0
     private val hasTextField = dialog.kind == Dialog.Kind.SAVE
@@ -63,3 +67,15 @@ class DialogLayout(private val dialog: Dialog, terminalSize: TerminalSize) {
 }
 
 internal data class DialogButtonLayout(val target: HitTarget, val text: String, val x: Int, val range: IntRange)
+
+/** The widest single line the dialog needs to show: title, message, the `Name: <value>_` text
+ *  field, the longest list row, or the button row - whichever is longest. */
+private fun contentWidth(dialog: Dialog): Int {
+    val lines = mutableListOf(dialog.title.length)
+    dialog.message?.let { lines += it.length }
+    if (dialog.kind == Dialog.Kind.SAVE) lines += "Name: ${dialog.textFieldValue}_".length
+    dialog.listItems.forEach { lines += "  $it".length }
+    val buttonsWidth = dialog.buttons.sumOf { "[ ${it.label} ]".length } + (dialog.buttons.size - 1)
+    lines += buttonsWidth
+    return lines.max()
+}
