@@ -26,6 +26,8 @@ class ScreenRenderer {
         drawGrid(canvas, layout, state)
         drawArrows(canvas, layout, state)
         drawToolbar(canvas, layout)
+        state.message?.let { canvas.put(2, layout.toolbarRow + 2, it) }
+        state.dialog?.let { drawDialog(canvas, it, terminalSize) }
 
         return CLEAR_AND_HOME + canvas.render()
     }
@@ -84,6 +86,40 @@ class ScreenRenderer {
 
     private fun drawToolbar(canvas: Canvas, layout: BoardLayout) {
         for (button in layout.toolbarButtons()) canvas.put(button.x, layout.toolbarRow, button.text)
+    }
+
+    private fun drawDialog(canvas: Canvas, dialog: Dialog, terminalSize: TerminalSize) {
+        val layout = DialogLayout(dialog, terminalSize)
+        // DialogLayout.width can be capped below what the content actually needs (a terminal
+        // too narrow to fit it in full) - truncating here is what keeps that content from
+        // overwriting the box's own right border (audit round 2 on PR #24).
+        val maxLineWidth = (layout.width - 4).coerceAtLeast(1)
+        drawDialogBox(canvas, layout)
+        canvas.put(layout.left + 2, layout.titleRow(), truncate(dialog.title, maxLineWidth))
+        // The message is already word-wrapped to fit maxLineWidth (DialogLayout.messageLines) -
+        // drawn one line per row, not truncated, so a long multi-clause message (e.g. the exit
+        // flow's invalid-name explanation) doesn't lose its actionable half (audit round 3 on
+        // PR #24).
+        layout.messageLines.forEachIndexed { index, line -> canvas.put(layout.left + 2, layout.messageRowPosition(index), line) }
+        layout.textFieldRow?.let { row -> canvas.put(layout.left + 2, row, truncate("Name: ${dialog.textFieldValue}_", maxLineWidth)) }
+        for (index in dialog.listItems.indices) {
+            val marker = if (index == dialog.selectedIndex) "> " else "  "
+            canvas.put(layout.left + 2, layout.listRowPosition(index), truncate("$marker${dialog.listItems[index]}", maxLineWidth))
+        }
+        for (button in layout.buttons()) canvas.put(button.x, layout.buttonsRow(), button.text)
+    }
+
+    private fun truncate(text: String, maxWidth: Int): String =
+        if (text.length <= maxWidth) text else text.take((maxWidth - 1).coerceAtLeast(0)) + "…"
+
+    private fun drawDialogBox(canvas: Canvas, layout: DialogLayout) {
+        val top = layout.titleRow() - 1
+        val bottom = layout.bottomRow() + 1
+        val left = layout.left - 1
+        val boxWidth = layout.width + 2
+        canvas.put(left, top, "┌" + "─".repeat(boxWidth - 2) + "┐")
+        for (row in (top + 1) until bottom) canvas.put(left, row, "│" + " ".repeat(boxWidth - 2) + "│")
+        canvas.put(left, bottom, "└" + "─".repeat(boxWidth - 2) + "┘")
     }
 }
 

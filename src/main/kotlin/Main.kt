@@ -14,10 +14,11 @@ fun main(args: Array<String>) {
     val mode = resolveLaunchMode(args, analytics)
     val decoratedAnalytics = InputMethodAnalyticsService(analytics, mode.name.lowercase())
 
-    // WU4/WU5 still owe MOUSE mode its dialogs (Save/Load/Exit) and the Congratulations
-    // screen - until then the toolbar is a no-op and the board just keeps accepting shifts.
+    // WU5 still owes MOUSE mode its Congratulations screen - until then a solved board just
+    // disables the arrows (see ScreenState's KDoc).
     when (mode) {
-        LaunchMode.MOUSE -> TuiView.create(AnsiTerminal()) { v -> PresenterImpl(v, analytics = decoratedAnalytics) }.play()
+        LaunchMode.MOUSE ->
+            TuiView.create(AnsiTerminal(), analytics = analytics) { v -> PresenterImpl(v, analytics = decoratedAnalytics) }.play()
         LaunchMode.CONSOLE -> ViewImpl.create { v -> PresenterImpl(v, analytics = decoratedAnalytics) }.play()
     }
 }

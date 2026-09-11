@@ -44,10 +44,15 @@ src/main/kotlin/
         ├── TerminalEvent.kt / TerminalInputParser.kt # Byte-stream -> event decoding (SGR-1006
         │                                               # and legacy X10 mouse reports, keys)
         ├── BoardLayout.kt / HitTarget.kt   # Pure board geometry + click hit-testing
-        ├── ScreenState.kt / ScreenRenderer.kt # Pure ScreenState -> frame String rendering
+        ├── Dialog.kt / DialogLayout.kt     # One model + one geometry class for all three
+        │                                     # modal dialogs (Save/Load/Exit) and the
+        │                                     # Load-shaped startup restore prompt (GH-3 WU4)
+        ├── ScreenState.kt / ScreenRenderer.kt # Pure ScreenState -> frame String rendering,
+        │                                        # including the dialog overlay
         └── TuiView.kt   # Owns its own event loop (doesn't call PresenterImpl.play() - see
-                          # the ticket's solved-state note); dialogs and the Congratulations
-                          # screen land in WU4/WU5 - the toolbar is currently a no-op.
+                          # the ticket's solved-state note). Save/Load/Exit and the startup
+                          # restore prompt each run their own blocking modal loop over
+                          # Terminal (WU4) - the Congratulations screen lands in WU5.
 
 src/test/kotlin/
 ├── LaunchModeTest.kt      # LaunchMode resolution + app_launched tracking (GH-3)

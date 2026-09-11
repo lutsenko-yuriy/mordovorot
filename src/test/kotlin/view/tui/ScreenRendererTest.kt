@@ -67,21 +67,51 @@ class ScreenRendererTest {
 
     @Test
     fun `the Save dialog overlay includes the overwrite warning only when the name conflicts`() {
-        // TODO (WU4): Render a ScreenState with a Save Dialog whose typed name matches an existing save
-        // TODO (WU4): Verify the frame string contains an overwrite-warning line
-        // TODO (WU4): Render the same dialog with a non-conflicting name
-        // TODO (WU4): Verify no warning line is present
+        val base = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false)
+        val saveButtons = listOf(DialogButtonSpec("save", "Save"), DialogButtonSpec("cancel", "Cancel"))
+
+        val conflicting = base.copy(
+            dialog = Dialog(
+                kind = Dialog.Kind.SAVE,
+                title = "Save game",
+                message = "'foo' already exists - it will be overwritten.",
+                textFieldValue = "foo",
+                buttons = saveButtons,
+            ),
+        )
+        assertTrue(renderer.render(conflicting, terminalSize).contains("already exists"))
+
+        val fresh = base.copy(dialog = Dialog(Dialog.Kind.SAVE, "Save game", textFieldValue = "bar", buttons = saveButtons))
+        assertFalse(renderer.render(fresh, terminalSize).contains("already exists"))
     }
 
     @Test
     fun `the Load dialog overlay shows No saves found when the save list is empty`() {
-        // TODO (WU4): Render a ScreenState with a Load Dialog and an empty save list
-        // TODO (WU4): Verify the frame string contains "No saves found."
+        val state = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false).copy(
+            dialog = Dialog(
+                kind = Dialog.Kind.LOAD,
+                title = "Load game",
+                message = "No saves found.",
+                buttons = listOf(DialogButtonSpec("load", "Load"), DialogButtonSpec("cancel", "Cancel")),
+            ),
+        )
+
+        assertTrue(renderer.render(state, terminalSize).contains("No saves found."))
     }
 
     @Test
     fun `the Exit dialog overlay shows all three buttons`() {
-        // TODO (WU4): Render a ScreenState with an Exit Dialog
-        // TODO (WU4): Verify the frame string contains Yes, No, and Cancel buttons
+        val state = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false).copy(
+            dialog = Dialog(
+                kind = Dialog.Kind.EXIT,
+                title = "Save before quitting?",
+                buttons = listOf(DialogButtonSpec("yes", "Yes"), DialogButtonSpec("no", "No"), DialogButtonSpec("cancel", "Cancel")),
+            ),
+        )
+
+        val frame = renderer.render(state, terminalSize)
+        assertTrue(frame.contains("Yes"))
+        assertTrue(frame.contains("No"))
+        assertTrue(frame.contains("Cancel"))
     }
 }

@@ -19,6 +19,7 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - [wip] GH-3 (WU1/5): launch-mode resolution (`--console` opt-in, default mouse TUI once it exists, automatic fallback to console with no interactive terminal) and its `app_launched`/`input_method` analytics plumbing — no user-visible behavior change yet, still runs the console UI either way until WU3.
 - [wip] GH-3 (WU2/5): terminal layer (`Terminal`, `AnsiTerminal`, `TerminalEvent`, `TerminalInputParser`, `FakeTerminal`) — decodes raw terminal bytes (SGR-1006 and legacy X10 mouse reports, single-byte keys) into events; not wired into the app yet, still unreachable until WU3 builds the board screen on top of it.
 - [wip] GH-3 (WU3/5): board screen (`BoardLayout`, `HitTarget`, `ScreenState`, `ScreenRenderer`, `TuiView`) — a mouse-playable 4x4 board with the 16 shift arrows, now wired as the default `LaunchMode.MOUSE` UI. Save/Load/Exit toolbar buttons render but are inert (no dialogs yet), and there's no Congratulations screen — both land in WU4/WU5.
+- [wip] GH-3 (WU4/5): Save/Load/Exit dialogs and the startup restore prompt (`Dialog`, `DialogLayout`, `TuiView`'s modal loops) — the mouse-driven TUI now has full feature parity with the console UI (save, load, exit with save-before-quitting, restoring a save at launch), plus their `dialog_cancelled`/`screen_*_dialog` analytics. Still no Congratulations screen — a solved board disables the arrows with nothing to hand off to yet; that lands in WU5.
 
 ## [0.4.0] — 2026-09-10 (PR #15 merged)
 

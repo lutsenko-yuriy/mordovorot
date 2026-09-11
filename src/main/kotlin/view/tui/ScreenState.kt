@@ -20,6 +20,11 @@ data class ScreenState(
     val board: List<Int>,
     val squareSide: Int,
     val arrowsEnabled: Boolean,
+    /** The modal overlay to draw on top of the board (WU4), or `null` for the plain board. */
+    val dialog: Dialog? = null,
+    /** A one-shot status line from the presenter (e.g. "Saved as 'x'.", "Not quitting - ...") -
+     *  board-only, since dialogs show their own [Dialog.message] instead (WU4). */
+    val message: String? = null,
 ) {
     companion object {
         /** Builds the board screen's [ScreenState] from the presenter's current query results. */
