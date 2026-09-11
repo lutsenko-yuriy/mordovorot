@@ -32,6 +32,12 @@ class TuiView internal constructor(
      *  what's clickable always matches what's on screen. Null only before the first repaint. */
     private var layout: BoardLayout? = null
 
+    /** The dialog geometry the most recent dialog repaint was drawn against - hit-tested on the
+     *  next click inside a dialog loop, same reasoning as [layout]. A fresh `terminal.size()`
+     *  read at click time could disagree with the size the frame was actually drawn at (audit
+     *  finding on PR #24). Null whenever no dialog is open. */
+    private var dialogLayout: DialogLayout? = null
+
     /** Set by a toolbar Exit click just before calling [presenter.exitGame], consumed once by
      *  [confirmSaveBeforeExit] - the dialog already collected the answer, so exitGame's
      *  callback doesn't prompt a second time. */
@@ -117,7 +123,7 @@ class TuiView internal constructor(
             repaintWithDialog(dialog)
             when (val event = terminal.readEvent()) {
                 TerminalEvent.Escape -> return trackDialogCancelled("exit")
-                is TerminalEvent.MouseClick -> when (DialogLayout(dialog, terminal.size()).hitTest(event.x, event.y)) {
+                is TerminalEvent.MouseClick -> when (dialogHitTest(event.x, event.y)) {
                     HitTarget.DialogButton("yes") -> { pendingExitAnswer = true; presenter.exitGame(); return }
                     HitTarget.DialogButton("no") -> { pendingExitAnswer = false; presenter.exitGame(); return }
                     HitTarget.DialogButton("cancel") -> return trackDialogCancelled("exit")
@@ -128,6 +134,8 @@ class TuiView internal constructor(
             }
         }
     }
+
+    private fun dialogHitTest(x: Int, y: Int): HitTarget = dialogLayout?.hitTest(x, y) ?: HitTarget.Nothing
 
     private sealed class SaveOutcome {
         data class Confirm(val name: String) : SaveOutcome()
@@ -153,9 +161,13 @@ class TuiView internal constructor(
             when (val event = terminal.readEvent()) {
                 is TerminalEvent.KeyPress -> typed += event.char
                 TerminalEvent.Backspace -> typed = typed.dropLast(1)
-                TerminalEvent.Enter -> return SaveOutcome.Confirm(typed)
+                // An empty name on Enter is "skip saving" (matches the invalid-name re-prompt's
+                // own "press Enter to skip saving" instruction) rather than a Confirm(""), which
+                // would re-prompt forever - PresenterImpl.promptForValidSaveName only stops on
+                // null (audit finding on PR #24).
+                TerminalEvent.Enter -> return if (typed.isEmpty()) SaveOutcome.Cancel else SaveOutcome.Confirm(typed)
                 TerminalEvent.Escape -> { trackDialogCancelled("save"); return SaveOutcome.Cancel }
-                is TerminalEvent.MouseClick -> when (DialogLayout(dialog, terminal.size()).hitTest(event.x, event.y)) {
+                is TerminalEvent.MouseClick -> when (dialogHitTest(event.x, event.y)) {
                     HitTarget.DialogButton("save") -> return SaveOutcome.Confirm(typed)
                     HitTarget.DialogButton("cancel") -> { trackDialogCancelled("save"); return SaveOutcome.Cancel }
                     else -> {}
@@ -176,9 +188,12 @@ class TuiView internal constructor(
 
     /** Runs a Load-shaped dialog's own blocking loop: click a list row to select, Load/Cancel
      *  via click. Shared by the toolbar's Load and the startup restore prompt (same shape for
-     *  any save count, per the plan). */
-    private fun runLoadDialog(title: String, openedFrom: String): LoadOutcome {
-        val saves = presenter.listSaves()
+     *  any save count, per the plan). [preloadedSaves], when given, is shown as-is instead of
+     *  a fresh [Presenter.listSaves] call - [confirmRestore]/[chooseSaveToRestore] already
+     *  receive the save list [presenter.PresenterImpl.restoreOnStartup] queried, and re-querying
+     *  instead risked disagreeing with it (audit finding on PR #24). */
+    private fun runLoadDialog(title: String, openedFrom: String, preloadedSaves: List<String>? = null): LoadOutcome {
+        val saves = preloadedSaves ?: presenter.listSaves()
         analytics.track("screen_load_dialog", mapOf("opened_from" to openedFrom, "save_file_count" to saves.size))
         var selected = if (saves.isNotEmpty()) 0 else -1
         while (true) {
@@ -193,7 +208,7 @@ class TuiView internal constructor(
             repaintWithDialog(dialog)
             when (val event = terminal.readEvent()) {
                 TerminalEvent.Escape -> { trackDialogCancelled("load"); return LoadOutcome.Cancel }
-                is TerminalEvent.MouseClick -> when (val target = DialogLayout(dialog, terminal.size()).hitTest(event.x, event.y)) {
+                is TerminalEvent.MouseClick -> when (val target = dialogHitTest(event.x, event.y)) {
                     is HitTarget.DialogListRow -> selected = target.index
                     HitTarget.DialogButton("load") -> if (selected in saves.indices) return LoadOutcome.Confirm(saves[selected])
                     HitTarget.DialogButton("cancel") -> { trackDialogCancelled("load"); return LoadOutcome.Cancel }
@@ -213,10 +228,15 @@ class TuiView internal constructor(
 
     private fun repaintWithDialog(dialog: Dialog?) {
         val terminalSize = terminal.size()
+        // The board-level status line is only shown once no dialog is up (dialogs show their
+        // own Dialog.message instead) - consumed here so a stale message can't leak into a
+        // dialog opened by the very next click (audit finding on PR #24).
+        val message = if (dialog == null) pendingMessage.also { pendingMessage = null } else null
         val state = ScreenState
             .forBoard(presenter.boardState().toList(), presenter.squareSide(), presenter.isSolved())
-            .copy(dialog = dialog)
+            .copy(dialog = dialog, message = message)
         layout = BoardLayout(terminalSize, state.squareSide, state.arrowsEnabled)
+        dialogLayout = dialog?.let { DialogLayout(it, terminalSize) }
         terminal.write(renderer.render(state, terminalSize))
     }
 
@@ -234,10 +254,10 @@ class TuiView internal constructor(
      *  other save count (per the plan, this is where the console's 1-save yes/no split
      *  disappears in the TUI). */
     override fun confirmRestore(saveName: String): Boolean =
-        runLoadDialog("Restore a saved game?", "startup") is LoadOutcome.Confirm
+        runLoadDialog("Restore a saved game?", "startup", preloadedSaves = listOf(saveName)) is LoadOutcome.Confirm
 
     override fun chooseSaveToRestore(saveNames: List<String>): String? =
-        (runLoadDialog("Restore a saved game?", "startup") as? LoadOutcome.Confirm)?.name
+        (runLoadDialog("Restore a saved game?", "startup", preloadedSaves = saveNames) as? LoadOutcome.Confirm)?.name
 
     /** Consumes the answer the Exit dialog's Yes/No click already collected - see
      *  [pendingExitAnswer]. */

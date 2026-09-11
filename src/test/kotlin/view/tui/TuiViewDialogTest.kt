@@ -286,4 +286,113 @@ class TuiViewDialogTest {
         assertTrue(analytics.events.any { it.name == "screen_load_dialog" && it.properties["opened_from"] == "toolbar" })
         assertTrue(analytics.events.any { it.name == "screen_exit_dialog" })
     }
+
+    // --- Audit round 1 on PR #24: presenter messages (save/load confirmations, the
+    // failed-exit-save explanation) were collected via showMessage but never actually shown -
+    // TuiView had no board-level status line to render them on. ---
+
+    @Test
+    fun `a successful toolbar Save shows the presenter's confirmation message on the board afterward`() {
+        val saves = FakeSaveRepository()
+        val board = FakeBoardModel()
+        val (saveX, saveY) = BoardLayout(terminalSize, board.SQUARE_SIDE, arrowsEnabled = true).saveButtonPosition()
+        val saveDialog = Dialog(Dialog.Kind.SAVE, "Save game", buttons = listOf(DialogButtonSpec("save", "Save"), DialogButtonSpec("cancel", "Cancel")))
+        val saveButton = DialogLayout(saveDialog, terminalSize).buttons().first { it.target == HitTarget.DialogButton("save") }
+        val terminal = FakeTerminal(
+            events = mutableListOf(
+                TerminalEvent.MouseClick(saveX, saveY),
+                TerminalEvent.KeyPress('h'),
+                TerminalEvent.MouseClick(saveButton.x, DialogLayout(saveDialog, terminalSize).buttonsRow()),
+            ),
+            terminalSize = terminalSize,
+        )
+
+        viewWithRealPresenter(terminal, saves, board).play()
+
+        assertTrue(terminal.frames.last().contains("Saved as 'h'."))
+    }
+
+    @Test
+    fun `a failed save during Exit Yes shows why the quit was aborted, and the session keeps running`() {
+        val saves = FakeSaveRepository()
+        saves.saveException = RuntimeException("disk full")
+        val board = FakeBoardModel()
+        val (exitX, exitY) = BoardLayout(terminalSize, board.SQUARE_SIDE, arrowsEnabled = true).exitButtonPosition()
+        val exitDialog = Dialog(
+            Dialog.Kind.EXIT, "Save before quitting?",
+            buttons = listOf(DialogButtonSpec("yes", "Yes"), DialogButtonSpec("no", "No"), DialogButtonSpec("cancel", "Cancel")),
+        )
+        val yesButton = DialogLayout(exitDialog, terminalSize).buttons().first { it.target == HitTarget.DialogButton("yes") }
+        val saveDialog = Dialog(Dialog.Kind.SAVE, "Save game", buttons = listOf(DialogButtonSpec("save", "Save"), DialogButtonSpec("cancel", "Cancel")))
+        val saveButton = DialogLayout(saveDialog, terminalSize).buttons().first { it.target == HitTarget.DialogButton("save") }
+        val terminal = FakeTerminal(
+            events = mutableListOf(
+                TerminalEvent.MouseClick(exitX, exitY),
+                TerminalEvent.MouseClick(yesButton.x, DialogLayout(exitDialog, terminalSize).buttonsRow()),
+                TerminalEvent.KeyPress('h'),
+                TerminalEvent.MouseClick(saveButton.x, DialogLayout(saveDialog, terminalSize).buttonsRow()),
+                TerminalEvent.EndOfInput,
+            ),
+            terminalSize = terminalSize,
+        )
+
+        viewWithRealPresenter(terminal, saves, board).play()
+
+        assertTrue(terminal.frames.any { it.contains("Not quitting") })
+        assertTrue(terminal.frames.last().contains("Mordovorot"))
+    }
+
+    @Test
+    fun `a board status message does not leak into a dialog opened afterward`() {
+        val saves = FakeSaveRepository(mutableMapOf("foo" to storage.SavedBoard(4, IntArray(16) { it })))
+        val board = FakeBoardModel()
+        val (loadX, loadY) = BoardLayout(terminalSize, board.SQUARE_SIDE, arrowsEnabled = true).loadButtonPosition()
+        val (saveX, saveY) = BoardLayout(terminalSize, board.SQUARE_SIDE, arrowsEnabled = true).saveButtonPosition()
+        val loadDialog = Dialog(Dialog.Kind.LOAD, "Load game", listItems = listOf("foo"), buttons = listOf(DialogButtonSpec("load", "Load"), DialogButtonSpec("cancel", "Cancel")))
+        val loadButton = DialogLayout(loadDialog, terminalSize).buttons().first { it.target == HitTarget.DialogButton("load") }
+        val terminal = FakeTerminal(
+            events = mutableListOf(
+                TerminalEvent.MouseClick(loadX, loadY),
+                TerminalEvent.MouseClick(loadButton.x, DialogLayout(loadDialog, terminalSize).buttonsRow()),
+                TerminalEvent.MouseClick(saveX, saveY),
+            ),
+            terminalSize = terminalSize,
+        )
+
+        viewWithRealPresenter(terminal, saves, board).play()
+
+        // Frame 0: initial board. Frame 1: Load dialog open. Frame 2: board repaint right after
+        // Load closes - this is where the message must show up. Frame 3: the freshly-opened
+        // Save dialog - it must NOT inherit the stale board message as its own.
+        assertTrue(terminal.frames[2].contains("Loaded 'foo'."))
+        assertTrue(terminal.frames[2].contains(TITLE_UNSOLVED))
+        assertTrue(terminal.frames[3].contains("Save game"))
+        assertFalse(terminal.frames[3].contains("Loaded 'foo'."))
+    }
+
+    @Test
+    fun `pressing Enter with an empty name in the Save dialog cancels instead of looping forever`() {
+        val presenter = FakePresenter()
+        val (saveX, saveY) = boardLayout(presenter).saveButtonPosition()
+        val terminal = FakeTerminal(
+            events = mutableListOf(TerminalEvent.MouseClick(saveX, saveY), TerminalEvent.Enter),
+            terminalSize = terminalSize,
+        )
+
+        view(terminal, presenter).play()
+
+        assertTrue(presenter.calls.none { it.startsWith("saveGame") })
+    }
+
+    @Test
+    fun `confirmRestore renders the presenter-provided save name even if listSaves would disagree`() {
+        val presenter = FakePresenter()
+        presenter.saveNames = listOf("stale-name")
+        val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.Escape), terminalSize = terminalSize)
+
+        view(terminal, presenter).confirmRestore("real-name")
+
+        assertTrue(terminal.frames.first().contains("real-name"))
+        assertFalse(terminal.frames.first().contains("stale-name"))
+    }
 }

@@ -26,6 +26,7 @@ class ScreenRenderer {
         drawGrid(canvas, layout, state)
         drawArrows(canvas, layout, state)
         drawToolbar(canvas, layout)
+        state.message?.let { canvas.put(2, layout.toolbarRow + 2, it) }
         state.dialog?.let { drawDialog(canvas, it, terminalSize) }
 
         return CLEAR_AND_HOME + canvas.render()
