@@ -3,15 +3,15 @@ package view.tui
 import java.io.InputStream
 import java.io.PrintStream
 
-private const val ENTER_ALT_SCREEN = "[?1049h"
-private const val EXIT_ALT_SCREEN = "[?1049l"
-private const val ENABLE_MOUSE = "[?1000h[?1006h"
-private const val DISABLE_MOUSE = "[?1006l[?1000l"
-private const val HIDE_CURSOR = "[?25l"
-private const val SHOW_CURSOR = "[?25h"
+private const val ENTER_ALT_SCREEN = "[?1049h"
+private const val EXIT_ALT_SCREEN = "[?1049l"
+private const val ENABLE_MOUSE = "[?1000h[?1006h"
+private const val DISABLE_MOUSE = "[?1006l[?1000l"
+private const val HIDE_CURSOR = "[?25l"
+private const val SHOW_CURSOR = "[?25h"
 
 /**
- * The one class in `view.tui` that touches a real terminal: `stty` for raw/cbreak mode, ANSI
+ * The one class in `view.tui` that touches a real terminal: `stty` for cbreak mode, ANSI
  * escapes for the alternate screen buffer and SGR-1006 mouse reporting, and a shutdown hook so
  * all of that is undone even on an abnormal exit (Ctrl+C, an uncaught exception). Everything
  * else in `view.tui` is pure or tested against [FakeTerminal] instead - this class is covered
@@ -23,23 +23,33 @@ class AnsiTerminal(
 ) : Terminal {
 
     private val parser = TerminalInputParser()
+    private val pendingEvents = ArrayDeque<TerminalEvent>()
     private var rawModeEntered = false
+    private var shutdownHookRegistered = false
 
     override fun enterRawMode() {
         if (rawModeEntered) return
-        ProcessBuilder("stty", "raw", "-echo").inheritIO().start().waitFor()
+        // -icanon -echo (cbreak), not `stty raw` - raw also disables ISIG, so Ctrl+C would stop
+        // generating SIGINT and never reach the shutdown hook below.
+        ProcessBuilder("stty", "-icanon", "-echo").inheritIO().start().waitFor()
         rawModeEntered = true
-        Runtime.getRuntime().addShutdownHook(Thread { restore() })
+        if (!shutdownHookRegistered) {
+            Runtime.getRuntime().addShutdownHook(Thread { restore() })
+            shutdownHookRegistered = true
+        }
         output.print(ENTER_ALT_SCREEN + HIDE_CURSOR)
         output.flush()
     }
 
     override fun restore() {
         if (!rawModeEntered) return
-        rawModeEntered = false
-        output.print(DISABLE_MOUSE + SHOW_CURSOR + EXIT_ALT_SCREEN)
-        output.flush()
-        ProcessBuilder("stty", "sane").inheritIO().start().waitFor()
+        try {
+            output.print(DISABLE_MOUSE + SHOW_CURSOR + EXIT_ALT_SCREEN)
+            output.flush()
+            ProcessBuilder("stty", "sane").inheritIO().start().waitFor()
+        } finally {
+            rawModeEntered = false
+        }
     }
 
     override fun enableMouseReporting() {
@@ -52,17 +62,41 @@ class AnsiTerminal(
         output.flush()
     }
 
+    /** Reads one full chunk per [InputStream.read] burst (not one byte at a time) before handing
+     *  it to [parser] - a real escape sequence arrives in a single burst, so this is what lets
+     *  [TerminalInputParser] tell a genuine standalone Escape key apart from the start of one.
+     *  Queues any extra decoded events instead of dropping them (a click plus a fast keystroke
+     *  can share a burst). */
     override fun readEvent(): TerminalEvent {
-        while (true) {
-            val b = input.read()
-            val event = if (b == -1) parser.endOfInput() else parser.feed(byteArrayOf(b.toByte())).firstOrNull()
-            if (event != null) return event
+        while (pendingEvents.isEmpty()) {
+            val first = input.read()
+            if (first == -1) return parser.endOfInput()
+            pendingEvents.addAll(parser.feed(byteArrayOf(first.toByte()) + readAvailable()))
         }
+        return pendingEvents.removeFirst()
     }
 
-    override fun size(): TerminalSize {
-        val columns = System.getenv("COLUMNS")?.toIntOrNull() ?: 80
-        val rows = System.getenv("LINES")?.toIntOrNull() ?: 24
-        return TerminalSize(columns, rows)
+    private fun readAvailable(): ByteArray {
+        val available = input.available()
+        if (available <= 0) return ByteArray(0)
+        val chunk = ByteArray(available)
+        var read = 0
+        while (read < available) {
+            val n = input.read(chunk, read, available - read)
+            if (n == -1) break
+            read += n
+        }
+        return if (read == available) chunk else chunk.copyOf(read)
     }
+
+    override fun size(): TerminalSize =
+        try {
+            val (rows, columns) = ProcessBuilder("stty", "size")
+                .redirectInput(ProcessBuilder.Redirect.INHERIT)
+                .start()
+                .inputStream.bufferedReader().readLine().trim().split(" ").map { it.toInt() }
+            TerminalSize(columns, rows)
+        } catch (e: Exception) {
+            TerminalSize(80, 24)
+        }
 }

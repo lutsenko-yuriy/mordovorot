@@ -79,4 +79,25 @@ class TerminalInputParserTest {
 
         assertEquals(TerminalEvent.EndOfInput, parser.endOfInput())
     }
+
+    @Test
+    fun `an unrecognised CSI sequence is discarded whole, not leaked as individual KeyPresses`() {
+        val parser = TerminalInputParser()
+
+        // ESC [ A - the arrow-key CSI form, unrelated to SGR/X10 mouse reports.
+        val events = parser.feed(byteArrayOf(ESC, '['.code.toByte(), 'A'.code.toByte()))
+
+        assertEquals(emptyList(), events)
+    }
+
+    @Test
+    fun `a truncated escape sequence past the length cap is resynced instead of wedging the parser`() {
+        val parser = TerminalInputParser()
+
+        // "ESC[<" followed by garbage that never reaches an M/m terminator.
+        parser.feed(csi("<") + ByteArray(40) { '9'.code.toByte() })
+        val events = parser.feed("a".toByteArray(Charsets.US_ASCII))
+
+        assertEquals(listOf(TerminalEvent.KeyPress('a')), events)
+    }
 }
