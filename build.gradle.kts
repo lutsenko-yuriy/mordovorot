@@ -28,4 +28,7 @@ tasks.named<JavaExec>("run") {
     // console commands from a BufferedReader over System.in, so without this
     // the game hits EOF on its first read.
     standardInput = System.`in`
+    // Gradle pipes this process's stdout through its own logger, so System.console() is
+    // always null here - the mouse TUI (GH-3) is unreachable via `./gradlew run`. Use
+    // `./gradlew installDist && ./build/install/mordovorot/bin/mordovorot` to launch it.
 }

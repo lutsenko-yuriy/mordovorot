@@ -12,10 +12,11 @@ import kotlin.test.assertEquals
 
 /**
  * Covers [PresenterImpl]'s startup restore flow (0/1/2+ save files), exercised through
- * [PresenterImpl.play] since the entry point ([PresenterImpl] private `restoreOnStartup`)
- * always runs first. Every board here starts already-solved ([FakeBoardModel.correct] = true)
- * so `play()` returns right after the startup restore step, without needing to script
- * `processCommand`. See the plan comment on GH-6 for the full branch matrix.
+ * [PresenterImpl.play] since the entry point ([PresenterImpl.restoreOnStartup], public since
+ * GH-3 so [view.tui.TuiView] can call it directly) always runs first. Every board here
+ * starts already-solved ([FakeBoardModel.correct] = true) so `play()` returns right after the
+ * startup restore step, without needing to script `processCommand`. See the plan comment on
+ * GH-6 for the full branch matrix.
  */
 class PresenterImplStartupRestoreTest {
 
@@ -201,6 +202,34 @@ class PresenterImplStartupRestoreTest {
                 Event("startup_restore_prompt_shown", mapOf("save_file_count" to 1)),
                 Event("load_command_used", mapOf("trigger" to "startup_prompt", "result" to "error")),
                 Event("startup_restore_decision", mapOf("decision" to "new_game", "save_file_count" to 1)),
+            ),
+            analytics.events,
+        )
+    }
+
+    @Test
+    fun `restoreOnStartup is a no-op on a second call - does not re-prompt or double-track`() {
+        // Now that restoreOnStartup is public (GH-3), view.tui.TuiView is expected to call it
+        // directly instead of going through play() - but play() still calls it too on the
+        // console path. A caller invoking it twice in one launch (e.g. by mistake, or two
+        // code paths both calling it defensively) must not re-prompt the user or double-emit
+        // startup_restore_prompt_shown/startup_restore_decision for what is still one launch
+        // (audit finding on PR #20).
+        val board = FakeBoardModel().apply { correct = true }
+        val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, fourByFour)))
+        val analytics = RecordingAnalyticsService()
+        val view = FakeView(confirmRestoreResponses = mutableListOf(true))
+        val presenter = PresenterImpl(view, board, saves, analytics)
+
+        presenter.restoreOnStartup()
+        presenter.restoreOnStartup()
+
+        assertEquals(listOf("foo"), view.confirmRestoreCalls)
+        assertEquals(
+            listOf(
+                Event("startup_restore_prompt_shown", mapOf("save_file_count" to 1)),
+                Event("load_command_used", mapOf("trigger" to "startup_prompt", "result" to "success")),
+                Event("startup_restore_decision", mapOf("decision" to "restored", "save_file_count" to 1)),
             ),
             analytics.events,
         )

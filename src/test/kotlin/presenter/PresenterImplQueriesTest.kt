@@ -1,45 +1,71 @@
 package presenter
 
+import storage.SavedBoard
+import testing.FakeBoardModel
+import testing.FakeSaveRepository
+import testing.FakeView
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /**
- * Scenario stubs for GH-3's additive, read-only `Presenter` query methods
- * (`listSaves`, `saveExists`, `isSolved`) that the mouse-driven TUI needs and the
- * console UI never had to ask for. Filled in by `implement` during WU1, once these
- * members exist on `Presenter`/`PresenterImpl`.
+ * Covers [PresenterImpl]'s additive, read-only query methods (`listSaves`, `saveExists`,
+ * `isSolved`) that the mouse-driven TUI needs and the console UI never had to ask for
+ * (GH-3). All three degrade to a safe default instead of throwing, mirroring the
+ * non-throwing discipline [PresenterImpl.saveGame]/[PresenterImpl.loadGame] already follow.
  */
 class PresenterImplQueriesTest {
 
     @Test
     fun `listSaves delegates to the save repository`() {
-        // TODO: Seed FakeSaveRepository with a few save names
-        // TODO: Call presenter.listSaves()
-        // TODO: Verify it returns exactly those names
+        val saves = FakeSaveRepository(
+            mutableMapOf(
+                "foo" to SavedBoard(4, IntArray(16) { it }),
+                "bar" to SavedBoard(4, IntArray(16) { it }),
+            ),
+        )
+        val presenter = PresenterImpl(FakeView(), FakeBoardModel(), saves)
+
+        assertEquals(listOf("bar", "foo"), presenter.listSaves())
     }
 
     @Test
     fun `listSaves degrades to an empty list on a repository failure`() {
-        // TODO: Script FakeSaveRepository.listSaves() to throw
-        // TODO: Call presenter.listSaves()
-        // TODO: Verify it returns an empty list rather than throwing
+        val saves = FakeSaveRepository()
+        saves.listSavesException = RuntimeException("unreadable saves dir")
+        val presenter = PresenterImpl(FakeView(), FakeBoardModel(), saves)
+
+        assertEquals(emptyList(), presenter.listSaves())
     }
 
     @Test
     fun `saveExists delegates to the save repository`() {
-        // TODO: Seed FakeSaveRepository so "foo" exists and "bar" does not
-        // TODO: Verify presenter.saveExists("foo") is true and presenter.saveExists("bar") is false
+        val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, IntArray(16) { it })))
+        val presenter = PresenterImpl(FakeView(), FakeBoardModel(), saves)
+
+        assertTrue(presenter.saveExists("foo"))
+        assertFalse(presenter.saveExists("bar"))
     }
 
     @Test
     fun `saveExists degrades to false on a repository failure`() {
-        // TODO: Script FakeSaveRepository.exists() to throw
-        // TODO: Call presenter.saveExists(name)
-        // TODO: Verify it returns false rather than throwing
+        val saves = FakeSaveRepository()
+        saves.existsException = RuntimeException("a/b")
+        val presenter = PresenterImpl(FakeView(), FakeBoardModel(), saves)
+
+        assertFalse(presenter.saveExists("a/b"))
     }
 
     @Test
     fun `isSolved delegates to board isCorrect`() {
-        // TODO: Seed FakeBoardModel so isCorrect() returns true, then false
-        // TODO: Verify presenter.isSolved() matches board.isCorrect() in both cases
+        val board = FakeBoardModel()
+        val presenter = PresenterImpl(FakeView(), board)
+
+        board.correct = false
+        assertFalse(presenter.isSolved())
+
+        board.correct = true
+        assertTrue(presenter.isSolved())
     }
 }

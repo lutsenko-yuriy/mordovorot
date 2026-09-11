@@ -22,6 +22,11 @@ class FakeSaveRepository(
      *  corrupted save file ([storage.SaveFileFormatException]), or a filesystem failure. */
     var loadException: Throwable? = null
 
+    /** When set, [exists] throws this instead of returning - simulates an unsafe name (e.g.
+     *  a path separator typed mid-name into the mouse-driven Save dialog, GH-3) or a
+     *  filesystem failure. */
+    var existsException: Throwable? = null
+
     /** When set, [listSaves] throws this instead of returning - simulates an unreadable
      *  saves directory (e.g. permissions), which [storage.FileSaveRepository.listSaves]
      *  can raise via [java.io.IOException]. */
@@ -32,7 +37,10 @@ class FakeSaveRepository(
         return saves.keys.sorted()
     }
 
-    override fun exists(name: String): Boolean = saves.containsKey(name)
+    override fun exists(name: String): Boolean {
+        existsException?.let { throw it }
+        return saves.containsKey(name)
+    }
 
     override fun save(name: String, state: IntArray, squareSide: Int) {
         saveException?.let { throw it }

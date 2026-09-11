@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [Unreleased]
+
+### Added
+- [wip] GH-3 (WU1/5): launch-mode resolution (`--console` opt-in, default mouse TUI once it exists, automatic fallback to console with no interactive terminal) and its `app_launched`/`input_method` analytics plumbing — no user-visible behavior change yet, still runs the console UI either way until WU3.
+
 ## [0.4.0] — 2026-09-10 (PR #15 merged)
 
 ### Added

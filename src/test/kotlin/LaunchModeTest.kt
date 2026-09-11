@@ -1,33 +1,65 @@
+import testing.RecordingAnalyticsService
+import testing.RecordingAnalyticsService.Event
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 /**
- * Scenario stubs for GH-3's launch-mode resolution: default mouse TUI, `--console` opt-in,
- * and the automatic fallback to console mode when there is no interactive terminal. Filled
- * in by `implement` during WU1, once `LaunchMode` exists.
+ * Covers [LaunchMode] resolution (default mouse TUI, `--console` opt-in, the automatic
+ * fallback to console mode when there is no interactive terminal - GH-3) and
+ * [resolveLaunchMode]'s `app_launched` tracking.
  */
 class LaunchModeTest {
 
     @Test
     fun `no arguments resolves to MOUSE`() {
-        // TODO: Resolve LaunchMode from an empty argument array, with a real-terminal check stubbed true
-        // TODO: Verify the result is LaunchMode.MOUSE
+        assertEquals(LaunchMode.MOUSE, LaunchMode.resolve(emptyArray(), hasInteractiveTerminal = { true }))
     }
 
     @Test
     fun `--console resolves to CONSOLE`() {
-        // TODO: Resolve LaunchMode from arrayOf("--console")
-        // TODO: Verify the result is LaunchMode.CONSOLE, regardless of the terminal check
+        assertEquals(LaunchMode.CONSOLE, LaunchMode.resolve(arrayOf("--console"), hasInteractiveTerminal = { true }))
     }
 
     @Test
     fun `MOUSE resolution falls back to CONSOLE when there is no interactive terminal`() {
-        // TODO: Resolve LaunchMode from an empty argument array, with the real-terminal check stubbed false
-        // TODO: Verify the result is LaunchMode.CONSOLE
+        assertEquals(LaunchMode.CONSOLE, LaunchMode.resolve(emptyArray(), hasInteractiveTerminal = { false }))
+    }
+
+    @Test
+    fun `--console wins even without an interactive terminal`() {
+        assertEquals(LaunchMode.CONSOLE, LaunchMode.resolve(arrayOf("--console"), hasInteractiveTerminal = { false }))
     }
 
     @Test
     fun `app_launched is tracked with the resolved mode`() {
-        // TODO: Resolve LaunchMode for each case above through Main's startup path
-        // TODO: Verify RecordingAnalyticsService recorded app_launched{mode} matching the resolution
+        val analytics = RecordingAnalyticsService()
+
+        val mode = resolveLaunchMode(arrayOf("--console"), analytics)
+
+        assertEquals(LaunchMode.CONSOLE, mode)
+        assertEquals(listOf(Event("app_launched", mapOf("mode" to "console"))), analytics.events)
+    }
+
+    @Test
+    fun `unrecognized arguments are reported instead of silently ignored`() {
+        // audit finding on PR #20: a typo like "-console" or "--Console" previously fell
+        // through to the MOUSE default with no feedback at all.
+        val analytics = RecordingAnalyticsService()
+        val warnings = mutableListOf<String>()
+
+        val mode = resolveLaunchMode(arrayOf("--console", "--bogus"), analytics, warnUnrecognizedArg = { warnings.add(it) })
+
+        assertEquals(LaunchMode.CONSOLE, mode)
+        assertEquals(listOf("--bogus"), warnings)
+    }
+
+    @Test
+    fun `--console alone reports no unrecognized arguments`() {
+        val analytics = RecordingAnalyticsService()
+        val warnings = mutableListOf<String>()
+
+        resolveLaunchMode(arrayOf("--console"), analytics, warnUnrecognizedArg = { warnings.add(it) })
+
+        assertEquals(emptyList(), warnings)
     }
 }
