@@ -26,8 +26,7 @@ enum class LaunchMode {
             args: Array<String>,
             hasInteractiveTerminal: () -> Boolean = { System.console() != null },
         ): LaunchMode {
-            if ("--console" in args) return CONSOLE
-            return if (hasInteractiveTerminal()) MOUSE else CONSOLE
+            return if (hasInteractiveTerminal() && "--console" !in args) MOUSE else CONSOLE
         }
     }
 }
