@@ -152,9 +152,21 @@ class PresenterImpl(
         }
     }
 
-    /** Signals [play] to stop, the same way [EndOfInputException] does - thrown by [exitGame]
-     *  after its save-before-quitting dialogue completes. */
-    private class ExitRequestedException : Exception()
+    override fun listSaves(): List<String> =
+        try {
+            saves.listSaves()
+        } catch (e: Exception) {
+            emptyList()
+        }
+
+    override fun saveExists(name: String): Boolean =
+        try {
+            saves.exists(name)
+        } catch (e: Exception) {
+            false
+        }
+
+    override fun isSolved(): Boolean = board.isCorrect()
 
     private fun availableSavesMessage(): String {
         // Guarded on its own - a failure here (e.g. an unreadable saves/ directory) shouldn't
@@ -174,7 +186,7 @@ class PresenterImpl(
      * falling back to a new game). Never throws - this runs before [play]'s own try/catch
      * exists, mirroring [loadGame]/[saveGame]'s non-throwing contract.
      */
-    private fun restoreOnStartup() {
+    override fun restoreOnStartup() {
         try {
             val saveNames = saves.listSaves()
             if (saveNames.isEmpty()) return

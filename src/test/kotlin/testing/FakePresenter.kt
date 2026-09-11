@@ -11,6 +11,15 @@ class FakePresenter : Presenter {
 
     val calls = mutableListOf<String>()
 
+    /** Scripts [listSaves]'s return value. */
+    var saveNames: List<String> = emptyList()
+
+    /** Scripts which names [saveExists] reports as already taken. */
+    var existingSaveNames: Set<String> = emptySet()
+
+    /** Scripts [isSolved]'s return value. */
+    var solved: Boolean = false
+
     override fun play() {
         calls.add("play")
     }
@@ -48,5 +57,24 @@ class FakePresenter : Presenter {
 
     override fun exitGame() {
         calls.add("exitGame")
+    }
+
+    override fun listSaves(): List<String> {
+        calls.add("listSaves")
+        return saveNames
+    }
+
+    override fun saveExists(name: String): Boolean {
+        calls.add("saveExists($name)")
+        return name in existingSaveNames
+    }
+
+    override fun isSolved(): Boolean {
+        calls.add("isSolved")
+        return solved
+    }
+
+    override fun restoreOnStartup() {
+        calls.add("restoreOnStartup")
     }
 }

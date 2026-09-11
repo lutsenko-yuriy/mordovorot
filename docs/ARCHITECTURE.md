@@ -12,17 +12,23 @@ MVP (Model-View-Presenter): board_model + presenter + view packages
 
 ```
 src/main/kotlin/
-├── Main.kt              # Entry point — constructs ViewImpl and calls play()
+├── Main.kt              # Entry point — resolves LaunchMode, then constructs ViewImpl and
+│                          # calls play() (GH-3: MOUSE will build view.tui.TuiView instead,
+│                          # once it exists — see the TODO in Main.kt)
+├── LaunchMode.kt        # MOUSE / CONSOLE — resolves from `--console` + terminal availability (GH-3)
 ├── analytics/
-│   ├── AnalyticsService.kt      # Analytics abstraction — track(event, properties)
-│   └── NoopAnalyticsService.kt  # Default implementation; no SDK wired up yet
+│   ├── AnalyticsService.kt             # Analytics abstraction — track(event, properties)
+│   ├── NoopAnalyticsService.kt         # Default implementation; no SDK wired up yet
+│   └── InputMethodAnalyticsService.kt  # Decorator adding `input_method` to every forwarded
+│                                         # event, without touching PresenterImpl's call sites (GH-3)
 ├── board_model/
 │   ├── BoardModel.kt    # Board interface (domain contract)
 │   └── BoardImpl.kt     # IntArray-backed board state + shift/reset/isCorrect logic
 ├── presenter/
 │   ├── Presenter.kt     # Presenter interface — mediates view <-> model
-│   └── PresenterImpl.kt # Presenter implementation; board/saves/analytics are constructor
-│                         # params (each defaulted to a real impl) so fakes can be injected
+│   ├── PresenterImpl.kt # Presenter implementation; board/saves/analytics are constructor
+│   │                     # params (each defaulted to a real impl) so fakes can be injected
+│   └── ExitRequestedException.kt # Signals play() (or view.tui.TuiView's own loop, GH-3) to stop
 ├── storage/
 │   ├── SaveRepository.kt          # Persistence contract: list/exists/save/load
 │   ├── SavedBoard.kt              # Data carrier: square side + tile arrangement
@@ -32,13 +38,18 @@ src/main/kotlin/
 └── view/
     ├── View.kt          # View interface — console display + command loop contract
     └── ViewImpl.kt      # Console I/O implementation (BufferedReader-based input)
+    # view/tui/ (GH-3, in progress) — a second View implementation for the mouse-driven TUI;
+    # not yet present, see the plan comment on GH-3 for its planned contents.
 
 src/test/kotlin/
-├── analytics/            # NoopAnalyticsService coverage
+├── LaunchModeTest.kt      # LaunchMode resolution + app_launched tracking (GH-3)
+├── analytics/            # NoopAnalyticsService, InputMethodAnalyticsService coverage
 ├── board_model/         # BoardImpl coverage: reset/shuffle, isCorrect, all four shifts, restoreState
-├── presenter/            # PresenterImpl coverage: delegation, play() loop, save/load, startup restore
+├── presenter/            # PresenterImpl coverage: delegation, play() loop, save/load, startup
+│                           # restore, the listSaves/saveExists/isSolved query methods (GH-3)
 ├── storage/               # FileSaveRepository coverage
-├── view/                  # ViewImpl command-parsing coverage
+├── view/                  # ViewImpl command-parsing coverage; view/tui/ scenario stubs (GH-3,
+│                           # filled in as WU2-WU5 land)
 └── testing/              # FakeBoardModel / FakeView / FakeSaveRepository /
                             # RecordingAnalyticsService / FakePresenter test doubles
 ```
@@ -89,6 +100,19 @@ deals in plain data (`SavedBoard`), not domain objects.
 ### analytics
 Cross-cutting: `AnalyticsService` is injected into `presenter` (and any layer
 that needs to track an event), currently backed by `NoopAnalyticsService`.
+`InputMethodAnalyticsService` (GH-3) decorates another `AnalyticsService`,
+adding an `input_method` (`console`/`mouse`) property to every forwarded
+event — the decorator pattern lets `Main` distinguish events by launch mode
+without `PresenterImpl` itself knowing which UI mode is running.
+
+### Launch mode (GH-3)
+`LaunchMode` (root package) resolves which `View` `Main` builds: `--console`
+always selects the console `ViewImpl`; otherwise the mouse-driven TUI
+(`view.tui`, in progress) is the default, unless no interactive terminal is
+available (`System.console() == null`, e.g. a piped/scripted run), in which
+case it falls back to console mode automatically. Resolution is pure and
+injectable (`hasInteractiveTerminal` is a constructor-style parameter), so
+it's unit-tested without a real terminal.
 
 ## Dependencies
 
