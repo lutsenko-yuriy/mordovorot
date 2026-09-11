@@ -19,14 +19,22 @@ src/main/kotlin/
 │   ├── AnalyticsService.kt             # Analytics abstraction — track(event, properties)
 │   ├── NoopAnalyticsService.kt         # Default implementation; no SDK wired up yet
 │   └── InputMethodAnalyticsService.kt  # Decorator adding `input_method` to every forwarded
-│                                         # event, without touching PresenterImpl's call sites (GH-3)
+│                                         # event, without touching BasePresenter's call sites (GH-3)
 ├── board_model/
 │   ├── BoardModel.kt    # Board interface (domain contract)
 │   └── BoardImpl.kt     # IntArray-backed board state + shift/reset/isCorrect logic
 ├── presenter/
-│   ├── Presenter.kt     # Presenter interface — mediates view <-> model
-│   ├── PresenterImpl.kt # Presenter implementation; board/saves/analytics are constructor
-│   │                     # params (each defaulted to a real impl) so fakes can be injected
+│   ├── Presenter.kt          # Shared core interface — shift/reset/save/load/exit (GH-23)
+│   ├── ConsolePresenter.kt   # Console-only interface — adds play() (GH-23)
+│   ├── TuiPresenter.kt       # TUI-only interface — adds the read-only query surface
+│   │                           # (listSaves/saveExists/isSolved/boardState/squareSide) and
+│   │                           # restoreOnStartup (GH-23)
+│   ├── BasePresenter.kt      # Abstract base implementing the shared core; board/saves/analytics
+│   │                           # are constructor params (each defaulted to a real impl) so fakes
+│   │                           # can be injected (GH-23)
+│   ├── ConsolePresenterImpl.kt # BasePresenter + ConsolePresenter — owns the line-based play() loop
+│   ├── TuiPresenterImpl.kt     # BasePresenter + TuiPresenter — owns the query surface, exposes
+│   │                             # restoreOnStartup() publicly for view.tui.TuiView (GH-23)
 │   └── ExitRequestedException.kt # Signals play() (or view.tui.TuiView's own loop, GH-3) to stop
 ├── storage/
 │   ├── SaveRepository.kt          # Persistence contract: list/exists/save/load
@@ -49,11 +57,11 @@ src/main/kotlin/
         │                                     # Load-shaped startup restore prompt (GH-3 WU4)
         ├── ScreenState.kt / ScreenRenderer.kt # Pure ScreenState -> frame String rendering,
         │                                        # including the dialog overlay
-        └── TuiView.kt   # Owns its own event loop (doesn't call PresenterImpl.play() - see
+        └── TuiView.kt   # Owns its own event loop (doesn't call ConsolePresenterImpl.play() - see
                           # the ticket's solved-state note). Save/Load/Exit and the startup
                           # restore prompt each run their own blocking modal loop over
                           # Terminal (WU4). State-driven solved screen (WU5): every repaint asks
-                          # Presenter.isSolved() fresh rather than tracking a phase flag, so the
+                          # TuiPresenter.isSolved() fresh rather than tracking a phase flag, so the
                           # Congratulations title/dimmed arrows and a load back to an unsolved
                           # board both fall out of the same repaint path with no extra branching.
 
@@ -61,9 +69,10 @@ src/test/kotlin/
 ├── LaunchModeTest.kt      # LaunchMode resolution + app_launched tracking (GH-3)
 ├── analytics/            # NoopAnalyticsService, InputMethodAnalyticsService coverage
 ├── board_model/         # BoardImpl coverage: reset/shuffle, isCorrect, all four shifts, restoreState
-├── presenter/            # PresenterImpl coverage: delegation, play() loop, save/load, startup
-│                           # restore, the listSaves/saveExists/isSolved/boardState/squareSide
-│                           # query methods (GH-3)
+├── presenter/            # BasePresenter/ConsolePresenterImpl/TuiPresenterImpl coverage:
+│                           # delegation, play() loop, save/load, startup restore, the
+│                           # listSaves/saveExists/isSolved/boardState/squareSide query
+│                           # methods (GH-3, split GH-23)
 ├── storage/               # FileSaveRepository coverage
 ├── view/                  # ViewImpl command-parsing coverage; view/tui/ coverage (GH-3, WU2-WU5)
 └── testing/              # FakeBoardModel / FakeView / FakeSaveRepository /
@@ -75,23 +84,31 @@ see "Dependencies" below.
 
 ## Layers
 
-Classic MVP. Each layer is an interface + one implementation; callers should
-depend on the interface (`BoardModel`, `Presenter`, `View`), not the `*Impl`
-class, to keep layers swappable.
+Classic MVP. `board_model` and `view` are each an interface + one implementation.
+`presenter` is an interface hierarchy (`Presenter` core + `ConsolePresenter`/`TuiPresenter`)
+with one implementation per UI (`ConsolePresenterImpl`/`TuiPresenterImpl`), split for GH-23
+so each `View` depends only on the presenter surface it actually needs. Callers should always
+depend on the interface, not the `*Impl` class, to keep layers swappable.
 
 ### board_model (Domain)
 Core game state and rules: board array, shifting, reset, and the win check
 (`isCorrect`). No dependency on `presenter` or `view`.
 
 ### presenter
-Mediates between `view`, `board_model`, and `storage`. `PresenterImpl` takes
-`board`/`saves`/`analytics` as constructor params (each defaulted to a real
-implementation), so tests can inject fakes without touching the filesystem
-or a real analytics SDK.
+Mediates between `view`, `board_model`, and `storage`. `Presenter` is the
+shared core (shift/reset/save/load/exit) both UIs use identically; `ConsolePresenter`
+and `TuiPresenter` extend it with their own UI-specific surface (`play()` for the
+console; the read-only query methods and `restoreOnStartup` for the TUI) so each
+`View` implementation depends only on the presenter surface it actually needs
+(GH-23). `BasePresenter` implements the shared core and takes `board`/`saves`/
+`analytics` as constructor params (each defaulted to a real implementation), so
+tests can inject fakes without touching the filesystem or a real analytics SDK.
+`ConsolePresenterImpl` and `TuiPresenterImpl` extend it with their respective
+UI-specific methods.
 
 ### view
 Console I/O only: reads commands from stdin, renders the board, and calls
-into the `Presenter`. Should not manipulate `board_model` directly.
+into the `ConsolePresenter`. Should not manipulate `board_model` directly.
 
 **1-based console dialect (GH-10):** the console is 1-based (displayed tile
 values, `left`/`right`/`up`/`down` row/column input); `board_model` and
@@ -103,7 +120,7 @@ not `view` — the view translates, it does not validate.
 `BoardImpl.restoreState` and `FileSaveRepository`'s validation errors avoid
 stating an explicit numeric range (e.g. "contain each of N tile values
 exactly once" rather than "permutation of 0..N-1") specifically so they read
-correctly once surfaced through `PresenterImpl.play`'s `showMessage(e.message
+correctly once surfaced through `ConsolePresenterImpl.play`'s `showMessage(e.message
 ...)` to the 1-based console — GH-6's `save`/`load` commands are the first
 thing that makes these messages reachable.
 
@@ -119,7 +136,7 @@ that needs to track an event), currently backed by `NoopAnalyticsService`.
 `InputMethodAnalyticsService` (GH-3) decorates another `AnalyticsService`,
 adding an `input_method` (`console`/`mouse`) property to every forwarded
 event — the decorator pattern lets `Main` distinguish events by launch mode
-without `PresenterImpl` itself knowing which UI mode is running.
+without `BasePresenter` itself knowing which UI mode is running.
 
 ### Launch mode (GH-3)
 `LaunchMode` (root package) resolves which `View` `Main` builds: `--console`

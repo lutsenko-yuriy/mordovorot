@@ -1,6 +1,8 @@
 package presenter
 
+import storage.SavedBoard
 import testing.FakeBoardModel
+import testing.FakeSaveRepository
 import testing.FakeView
 import view.EndOfInputException
 import kotlin.test.Test
@@ -12,7 +14,7 @@ class PresenterImplPlayTest {
     fun `play returns immediately when the board is already correct`() {
         val board = FakeBoardModel().apply { correct = true }
         val view = FakeView()
-        val presenter = PresenterImpl(view, board)
+        val presenter = ConsolePresenterImpl(view, board)
 
         presenter.play()
 
@@ -20,11 +22,32 @@ class PresenterImplPlayTest {
         assertEquals(0, view.processCommandCallCount)
     }
 
+    /** Console-side anchor for [BasePresenter.offerStartupRestore] - the flow's own branch
+     *  matrix (0/1/2+ saves, decline, unknown name, etc.) is covered against
+     *  [TuiPresenterImpl.restoreOnStartup] in [PresenterImplStartupRestoreTest]; this test just
+     *  pins that [ConsolePresenterImpl.play] still calls it as its first step (audit finding on
+     *  PR #26: splitting `offerStartupRestore` off into a `protected` method meant each concrete
+     *  subclass needed its own anchor, and the console side lost its coverage when every
+     *  startup-restore test moved onto the TUI entry point). */
+    @Test
+    fun `play offers startup restore before entering the loop`() {
+        val board = FakeBoardModel().apply { correct = true }
+        val savedState = intArrayOf(3, 2, 1, 0)
+        val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, savedState)))
+        val view = FakeView(confirmRestoreResponses = mutableListOf(true))
+        val presenter = ConsolePresenterImpl(view, board, saves)
+
+        presenter.play()
+
+        assertEquals(listOf("foo"), view.confirmRestoreCalls)
+        assertEquals(listOf("restoreState(${savedState.toList()})"), board.calls)
+    }
+
     @Test
     fun `play displays the board and processes one command before the board is solved`() {
         val board = FakeBoardModel()
         val view = FakeView(mutableListOf({ board.correct = true }))
-        val presenter = PresenterImpl(view, board)
+        val presenter = ConsolePresenterImpl(view, board)
 
         presenter.play()
 
@@ -38,7 +61,7 @@ class PresenterImplPlayTest {
     fun `play returns without looping when processCommand throws EndOfInputException`() {
         val board = FakeBoardModel()
         val view = FakeView(mutableListOf({ throw EndOfInputException() }))
-        val presenter = PresenterImpl(view, board)
+        val presenter = ConsolePresenterImpl(view, board)
 
         presenter.play()
 
@@ -55,7 +78,7 @@ class PresenterImplPlayTest {
                 { board.correct = true },
             )
         )
-        val presenter = PresenterImpl(view, board)
+        val presenter = ConsolePresenterImpl(view, board)
 
         presenter.play()
 
@@ -72,7 +95,7 @@ class PresenterImplPlayTest {
                 { board.correct = true },
             )
         )
-        val presenter = PresenterImpl(view, board)
+        val presenter = ConsolePresenterImpl(view, board)
 
         presenter.play()
 

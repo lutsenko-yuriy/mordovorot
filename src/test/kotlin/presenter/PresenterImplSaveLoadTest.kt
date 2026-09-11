@@ -17,7 +17,7 @@ class PresenterImplSaveLoadTest {
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(1, 0, 3, 2)) }
-        val presenter = PresenterImpl(FakeView(), board, saves, analytics)
+        val presenter = ConsolePresenterImpl(FakeView(), board, saves, analytics)
 
         presenter.saveGame("foo")
 
@@ -43,7 +43,7 @@ class PresenterImplSaveLoadTest {
         saves.save("foo", intArrayOf(0, 1, 2, 3), 2)
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(3, 2, 1, 0)) }
-        val presenter = PresenterImpl(FakeView(), board, saves, analytics)
+        val presenter = ConsolePresenterImpl(FakeView(), board, saves, analytics)
 
         presenter.saveGame("foo")
 
@@ -65,7 +65,7 @@ class PresenterImplSaveLoadTest {
         val analytics = RecordingAnalyticsService()
         val view = FakeView()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
-        val presenter = PresenterImpl(view, board, saves, analytics)
+        val presenter = ConsolePresenterImpl(view, board, saves, analytics)
 
         presenter.saveGame("..")
 
@@ -82,7 +82,7 @@ class PresenterImplSaveLoadTest {
         saves.save("foo", intArrayOf(3, 2, 1, 0), 2)
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
-        val presenter = PresenterImpl(FakeView(), board, saves, analytics)
+        val presenter = ConsolePresenterImpl(FakeView(), board, saves, analytics)
 
         presenter.loadGame("foo")
 
@@ -100,7 +100,7 @@ class PresenterImplSaveLoadTest {
         val analytics = RecordingAnalyticsService()
         val view = FakeView()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
-        val presenter = PresenterImpl(view, board, saves, analytics)
+        val presenter = ConsolePresenterImpl(view, board, saves, analytics)
 
         presenter.loadGame("missing")
 
@@ -117,7 +117,7 @@ class PresenterImplSaveLoadTest {
         val saves = FakeSaveRepository()
         val view = FakeView()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
-        val presenter = PresenterImpl(view, board, saves, RecordingAnalyticsService())
+        val presenter = ConsolePresenterImpl(view, board, saves, RecordingAnalyticsService())
 
         presenter.loadGame("missing")
 
@@ -131,7 +131,7 @@ class PresenterImplSaveLoadTest {
         val analytics = RecordingAnalyticsService()
         val view = FakeView()
         val board = BoardImpl(4).apply { restoreState((0..15).toList().toIntArray()) }
-        val presenter = PresenterImpl(view, board, saves, analytics)
+        val presenter = ConsolePresenterImpl(view, board, saves, analytics)
 
         presenter.loadGame("small")
 
@@ -155,7 +155,7 @@ class PresenterImplSaveLoadTest {
         val analytics = RecordingAnalyticsService()
         val view = FakeView()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
-        val presenter = PresenterImpl(view, board, saves, analytics)
+        val presenter = ConsolePresenterImpl(view, board, saves, analytics)
 
         presenter.loadGame("missing")
 
@@ -175,7 +175,7 @@ class PresenterImplSaveLoadTest {
         val analytics = RecordingAnalyticsService()
         val view = FakeView()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
-        val presenter = PresenterImpl(view, board, saves, analytics)
+        val presenter = ConsolePresenterImpl(view, board, saves, analytics)
 
         presenter.loadGame("corrupt")
 

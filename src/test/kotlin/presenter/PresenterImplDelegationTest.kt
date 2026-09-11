@@ -11,7 +11,7 @@ class PresenterImplDelegationTest {
     @Test
     fun `shiftLeft delegates to the board`() {
         val board = FakeBoardModel()
-        val presenter = PresenterImpl(FakeView(), board)
+        val presenter = ConsolePresenterImpl(FakeView(), board)
 
         presenter.shiftLeft(2)
 
@@ -21,7 +21,7 @@ class PresenterImplDelegationTest {
     @Test
     fun `shiftRight delegates to the board`() {
         val board = FakeBoardModel()
-        val presenter = PresenterImpl(FakeView(), board)
+        val presenter = ConsolePresenterImpl(FakeView(), board)
 
         presenter.shiftRight(1)
 
@@ -31,7 +31,7 @@ class PresenterImplDelegationTest {
     @Test
     fun `shiftUp delegates to the board`() {
         val board = FakeBoardModel()
-        val presenter = PresenterImpl(FakeView(), board)
+        val presenter = ConsolePresenterImpl(FakeView(), board)
 
         presenter.shiftUp(3)
 
@@ -41,7 +41,7 @@ class PresenterImplDelegationTest {
     @Test
     fun `shiftDown delegates to the board`() {
         val board = FakeBoardModel()
-        val presenter = PresenterImpl(FakeView(), board)
+        val presenter = ConsolePresenterImpl(FakeView(), board)
 
         presenter.shiftDown(0)
 
@@ -51,7 +51,7 @@ class PresenterImplDelegationTest {
     @Test
     fun `resetGame delegates to the board`() {
         val board = FakeBoardModel()
-        val presenter = PresenterImpl(FakeView(), board)
+        val presenter = ConsolePresenterImpl(FakeView(), board)
 
         presenter.resetGame()
 
@@ -62,7 +62,7 @@ class PresenterImplDelegationTest {
     fun `exceptions from the board propagate unchanged`() {
         val board = FakeBoardModel()
         board.shiftLeftException = IllegalArgumentException("Incorrect row")
-        val presenter = PresenterImpl(FakeView(), board)
+        val presenter = ConsolePresenterImpl(FakeView(), board)
 
         val exception = assertFailsWith<IllegalArgumentException> { presenter.shiftLeft(4) }
 

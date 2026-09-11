@@ -1,7 +1,8 @@
 import analytics.AnalyticsService
 import analytics.InputMethodAnalyticsService
 import analytics.NoopAnalyticsService
-import presenter.PresenterImpl
+import presenter.ConsolePresenterImpl
+import presenter.TuiPresenterImpl
 import view.ViewImpl
 import view.tui.AnsiTerminal
 import view.tui.TuiView
@@ -16,8 +17,8 @@ fun main(args: Array<String>) {
 
     when (mode) {
         LaunchMode.MOUSE ->
-            TuiView.create(AnsiTerminal(), analytics = analytics) { v -> PresenterImpl(v, analytics = decoratedAnalytics) }.play()
-        LaunchMode.CONSOLE -> ViewImpl.create { v -> PresenterImpl(v, analytics = decoratedAnalytics) }.play()
+            TuiView.create(AnsiTerminal(), analytics = analytics) { v -> TuiPresenterImpl(v, analytics = decoratedAnalytics) }.play()
+        LaunchMode.CONSOLE -> ViewImpl.create { v -> ConsolePresenterImpl(v, analytics = decoratedAnalytics) }.play()
     }
 }
 

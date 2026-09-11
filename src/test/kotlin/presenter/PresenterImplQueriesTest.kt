@@ -10,10 +10,10 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
- * Covers [PresenterImpl]'s additive, read-only query methods (`listSaves`, `saveExists`,
+ * Covers [TuiPresenterImpl]'s additive, read-only query methods (`listSaves`, `saveExists`,
  * `isSolved`) that the mouse-driven TUI needs and the console UI never had to ask for
  * (GH-3). All three degrade to a safe default instead of throwing, mirroring the
- * non-throwing discipline [PresenterImpl.saveGame]/[PresenterImpl.loadGame] already follow.
+ * non-throwing discipline [BasePresenter.saveGame]/[BasePresenter.loadGame] already follow.
  */
 class PresenterImplQueriesTest {
 
@@ -25,7 +25,7 @@ class PresenterImplQueriesTest {
                 "bar" to SavedBoard(4, IntArray(16) { it }),
             ),
         )
-        val presenter = PresenterImpl(FakeView(), FakeBoardModel(), saves)
+        val presenter = TuiPresenterImpl(FakeView(), FakeBoardModel(), saves)
 
         assertEquals(listOf("bar", "foo"), presenter.listSaves())
     }
@@ -34,7 +34,7 @@ class PresenterImplQueriesTest {
     fun `listSaves degrades to an empty list on a repository failure`() {
         val saves = FakeSaveRepository()
         saves.listSavesException = RuntimeException("unreadable saves dir")
-        val presenter = PresenterImpl(FakeView(), FakeBoardModel(), saves)
+        val presenter = TuiPresenterImpl(FakeView(), FakeBoardModel(), saves)
 
         assertEquals(emptyList(), presenter.listSaves())
     }
@@ -42,7 +42,7 @@ class PresenterImplQueriesTest {
     @Test
     fun `saveExists delegates to the save repository`() {
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, IntArray(16) { it })))
-        val presenter = PresenterImpl(FakeView(), FakeBoardModel(), saves)
+        val presenter = TuiPresenterImpl(FakeView(), FakeBoardModel(), saves)
 
         assertTrue(presenter.saveExists("foo"))
         assertFalse(presenter.saveExists("bar"))
@@ -52,7 +52,7 @@ class PresenterImplQueriesTest {
     fun `saveExists degrades to false on a repository failure`() {
         val saves = FakeSaveRepository()
         saves.existsException = RuntimeException("a/b")
-        val presenter = PresenterImpl(FakeView(), FakeBoardModel(), saves)
+        val presenter = TuiPresenterImpl(FakeView(), FakeBoardModel(), saves)
 
         assertFalse(presenter.saveExists("a/b"))
     }
@@ -60,7 +60,7 @@ class PresenterImplQueriesTest {
     @Test
     fun `isSolved delegates to board isCorrect`() {
         val board = FakeBoardModel()
-        val presenter = PresenterImpl(FakeView(), board)
+        val presenter = TuiPresenterImpl(FakeView(), board)
 
         board.correct = false
         assertFalse(presenter.isSolved())
@@ -72,7 +72,7 @@ class PresenterImplQueriesTest {
     @Test
     fun `boardState delegates to the board's current tile array`() {
         val board = FakeBoardModel(boardArray = intArrayOf(3, 1, 0, 2))
-        val presenter = PresenterImpl(FakeView(), board)
+        val presenter = TuiPresenterImpl(FakeView(), board)
 
         assertEquals(listOf(3, 1, 0, 2), presenter.boardState().toList())
     }
@@ -80,7 +80,7 @@ class PresenterImplQueriesTest {
     @Test
     fun `boardState returns a defensive copy - mutating it does not affect the board`() {
         val board = FakeBoardModel(boardArray = intArrayOf(3, 1, 0, 2))
-        val presenter = PresenterImpl(FakeView(), board)
+        val presenter = TuiPresenterImpl(FakeView(), board)
 
         presenter.boardState()[0] = 99
 
@@ -89,7 +89,7 @@ class PresenterImplQueriesTest {
 
     @Test
     fun `squareSide delegates to the board's square side`() {
-        val presenter = PresenterImpl(FakeView(), FakeBoardModel(SQUARE_SIDE = 4))
+        val presenter = TuiPresenterImpl(FakeView(), FakeBoardModel(SQUARE_SIDE = 4))
 
         assertEquals(4, presenter.squareSide())
     }

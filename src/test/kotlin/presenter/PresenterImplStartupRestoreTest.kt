@@ -11,12 +11,13 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * Covers [PresenterImpl]'s startup restore flow (0/1/2+ save files), exercised through
- * [PresenterImpl.play] since the entry point ([PresenterImpl.restoreOnStartup], public since
- * GH-3 so [view.tui.TuiView] can call it directly) always runs first. Every board here
- * starts already-solved ([FakeBoardModel.correct] = true) so `play()` returns right after the
- * startup restore step, without needing to script `processCommand`. See the plan comment on
- * GH-6 for the full branch matrix.
+ * Covers [BasePresenter]'s startup restore flow (0/1/2+ save files), exercised directly through
+ * [TuiPresenterImpl.restoreOnStartup] (public since GH-3 so [view.tui.TuiView] can call it
+ * ahead of its own event loop; GH-23 split it off [presenter.ConsolePresenterImpl.play], which
+ * calls the same shared [BasePresenter.offerStartupRestore] as its own first step - every board
+ * here starts already-solved ([FakeBoardModel.correct] = true), so exercising either entry
+ * point is equivalent for these assertions). See the plan comment on GH-6 for the full branch
+ * matrix.
  */
 class PresenterImplStartupRestoreTest {
 
@@ -28,9 +29,9 @@ class PresenterImplStartupRestoreTest {
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
         val view = FakeView()
-        val presenter = PresenterImpl(view, board, saves, analytics)
+        val presenter = TuiPresenterImpl(view, board, saves, analytics)
 
-        presenter.play()
+        presenter.restoreOnStartup()
 
         assertEquals(emptyList(), view.confirmRestoreCalls)
         assertEquals(emptyList(), view.chooseSaveToRestoreCalls)
@@ -45,9 +46,9 @@ class PresenterImplStartupRestoreTest {
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, savedState)))
         val analytics = RecordingAnalyticsService()
         val view = FakeView(confirmRestoreResponses = mutableListOf(true))
-        val presenter = PresenterImpl(view, board, saves, analytics)
+        val presenter = TuiPresenterImpl(view, board, saves, analytics)
 
-        presenter.play()
+        presenter.restoreOnStartup()
 
         assertEquals(listOf("foo"), view.confirmRestoreCalls)
         assertEquals(listOf("restoreState(${savedState.toList()})"), board.calls)
@@ -67,9 +68,9 @@ class PresenterImplStartupRestoreTest {
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, fourByFour)))
         val analytics = RecordingAnalyticsService()
         val view = FakeView(confirmRestoreResponses = mutableListOf(false))
-        val presenter = PresenterImpl(view, board, saves, analytics)
+        val presenter = TuiPresenterImpl(view, board, saves, analytics)
 
-        presenter.play()
+        presenter.restoreOnStartup()
 
         assertEquals(emptyList(), board.calls)
         assertEquals(
@@ -93,9 +94,9 @@ class PresenterImplStartupRestoreTest {
         )
         val analytics = RecordingAnalyticsService()
         val view = FakeView(chooseSaveToRestoreResponses = mutableListOf("bar"))
-        val presenter = PresenterImpl(view, board, saves, analytics)
+        val presenter = TuiPresenterImpl(view, board, saves, analytics)
 
-        presenter.play()
+        presenter.restoreOnStartup()
 
         assertEquals(listOf(listOf("bar", "foo")), view.chooseSaveToRestoreCalls)
         assertEquals(listOf("restoreState(${barState.toList()})"), board.calls)
@@ -120,9 +121,9 @@ class PresenterImplStartupRestoreTest {
         )
         val analytics = RecordingAnalyticsService()
         val view = FakeView(chooseSaveToRestoreResponses = mutableListOf(null))
-        val presenter = PresenterImpl(view, board, saves, analytics)
+        val presenter = TuiPresenterImpl(view, board, saves, analytics)
 
-        presenter.play()
+        presenter.restoreOnStartup()
 
         assertEquals(emptyList(), board.calls)
         assertEquals(
@@ -146,9 +147,9 @@ class PresenterImplStartupRestoreTest {
         )
         val analytics = RecordingAnalyticsService()
         val view = FakeView(chooseSaveToRestoreResponses = mutableListOf("nope", "bar"))
-        val presenter = PresenterImpl(view, board, saves, analytics)
+        val presenter = TuiPresenterImpl(view, board, saves, analytics)
 
-        presenter.play()
+        presenter.restoreOnStartup()
 
         assertEquals(2, view.chooseSaveToRestoreCalls.size)
         assertEquals(listOf("restoreState(${barState.toList()})"), board.calls)
@@ -161,7 +162,7 @@ class PresenterImplStartupRestoreTest {
 
     @Test
     fun `EOF at the startup prompt starts a new game, same as a decline - real EOF translation is covered in ViewImplCommandTest`() {
-        // PresenterImpl only ever sees the sentinel View.confirmRestore/chooseSaveToRestore
+        // BasePresenter only ever sees the sentinel View.confirmRestore/chooseSaveToRestore
         // return for EOF (false/null) - identical to a clean decline/blank answer, since the
         // actual EOF-vs-decline distinction is made inside ViewImpl (see
         // `confirmRestore returns false on EOF instead of throwing` and its chooseSaveToRestore
@@ -172,9 +173,9 @@ class PresenterImplStartupRestoreTest {
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, fourByFour)))
         val analytics = RecordingAnalyticsService()
         val view = FakeView(confirmRestoreResponses = mutableListOf(false))
-        val presenter = PresenterImpl(view, board, saves, analytics)
+        val presenter = TuiPresenterImpl(view, board, saves, analytics)
 
-        presenter.play()
+        presenter.restoreOnStartup()
 
         assertEquals(emptyList(), board.calls)
         assertEquals(
@@ -192,9 +193,9 @@ class PresenterImplStartupRestoreTest {
         saves.loadException = SaveFileFormatException("foo", "corrupted save file")
         val analytics = RecordingAnalyticsService()
         val view = FakeView(confirmRestoreResponses = mutableListOf(true))
-        val presenter = PresenterImpl(view, board, saves, analytics)
+        val presenter = TuiPresenterImpl(view, board, saves, analytics)
 
-        presenter.play()
+        presenter.restoreOnStartup()
 
         assertEquals(emptyList(), board.calls)
         assertEquals(
@@ -219,7 +220,7 @@ class PresenterImplStartupRestoreTest {
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, fourByFour)))
         val analytics = RecordingAnalyticsService()
         val view = FakeView(confirmRestoreResponses = mutableListOf(true))
-        val presenter = PresenterImpl(view, board, saves, analytics)
+        val presenter = TuiPresenterImpl(view, board, saves, analytics)
 
         presenter.restoreOnStartup()
         presenter.restoreOnStartup()
@@ -246,9 +247,9 @@ class PresenterImplStartupRestoreTest {
         )
         val analytics = RecordingAnalyticsService()
         val view = FakeView(chooseSaveToRestoreResponses = mutableListOf("nope", null))
-        val presenter = PresenterImpl(view, board, saves, analytics)
+        val presenter = TuiPresenterImpl(view, board, saves, analytics)
 
-        presenter.play()
+        presenter.restoreOnStartup()
 
         assertEquals(
             listOf("No save named 'nope'. Available saves: bar, foo"),

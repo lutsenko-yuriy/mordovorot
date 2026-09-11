@@ -3,7 +3,7 @@ package testing
 import view.View
 
 /**
- * A [View] test double for exercising [presenter.PresenterImpl.play] without any
+ * A [View] test double for exercising [presenter.ConsolePresenterImpl.play] without any
  * console I/O. Each call to [processCommand] pops and runs the next scripted
  * action from [commands] - typically a lambda that mutates a [FakeBoardModel]
  * (e.g. flips `correct = true`) or throws, to control loop termination and
