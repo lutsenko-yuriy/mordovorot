@@ -82,21 +82,26 @@ class TerminalInputParser {
 
         val press = data[end].toInt().toChar() == 'M'
         val parts = String(data, from + 3, end - (from + 3), Charsets.US_ASCII).split(';')
+        val pb = parts.getOrNull(0)?.toIntOrNull()
         val px = parts.getOrNull(1)?.toIntOrNull()
         val py = parts.getOrNull(2)?.toIntOrNull()
-        if (press && px != null && py != null) events += TerminalEvent.MouseClick(px - 1, py - 1)
+        val isWheel = pb != null && (pb and 0x40) != 0 // scroll notch, not a button - has no release report
+        if (press && !isWheel && px != null && py != null) events += TerminalEvent.MouseClick(px - 1, py - 1)
         return end - from + 1
     }
 
-    /** `ESC [ M Cb Cx Cy` - legacy X10, each of Cb/Cx/Cy a raw byte offset by 32. Same inherent
-     *  risk as the split-delivery caveat on [AnsiTerminal.readEvent]: if the report is itself
-     *  truncated (connection drop mid-report), the next 3 bytes typed - whatever they are - get
-     *  read as the missing coordinates. SGR is the primary protocol; this fallback is legacy. */
+    /** `ESC [ M Cb Cx Cy` - legacy X10, each of Cb/Cx/Cy a raw byte offset by 32. `Cb & 0x3 == 3`
+     *  is the release code (X10 has no per-button release, unlike SGR's M/m) - skipped so one
+     *  physical click doesn't produce a press *and* a release [TerminalEvent.MouseClick]. Same
+     *  inherent risk as the split-delivery caveat on [AnsiTerminal.readEvent]: if the report is
+     *  itself truncated (connection drop mid-report), the next 3 bytes typed - whatever they are
+     *  - get read as the missing Cb/Cx/Cy. SGR is the primary protocol; this fallback is legacy. */
     private fun decodeX10(data: ByteArray, from: Int, events: MutableList<TerminalEvent>): Int {
         if (from + 5 >= data.size) return 0
+        val cb = (data[from + 3].toInt() and 0xFF) - 32
         val column = (data[from + 4].toInt() and 0xFF) - 32
         val row = (data[from + 5].toInt() and 0xFF) - 32
-        events += TerminalEvent.MouseClick(column - 1, row - 1)
+        if ((cb and 0x3) != 3) events += TerminalEvent.MouseClick(column - 1, row - 1)
         return 6
     }
 

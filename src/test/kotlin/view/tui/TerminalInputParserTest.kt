@@ -35,6 +35,16 @@ class TerminalInputParserTest {
     }
 
     @Test
+    fun `an SGR wheel notch does not produce a MouseClick`() {
+        val parser = TerminalInputParser()
+
+        // Pb 64 (bit 0x40 set) - a scroll notch, not a button; wheel reports have no release.
+        val events = parser.feed(csi("<64;5;3M"))
+
+        assertEquals(emptyList(), events)
+    }
+
+    @Test
     fun `legacy X10 fallback event parses correctly`() {
         val parser = TerminalInputParser()
 
@@ -42,6 +52,17 @@ class TerminalInputParserTest {
         val events = parser.feed(byteArrayOf(ESC, '['.code.toByte(), 'M'.code.toByte(), 32, 37, 35))
 
         assertEquals(listOf(TerminalEvent.MouseClick(4, 2)), events)
+    }
+
+    @Test
+    fun `a legacy X10 release does not itself produce a second MouseClick`() {
+        val parser = TerminalInputParser()
+        parser.feed(byteArrayOf(ESC, '['.code.toByte(), 'M'.code.toByte(), 32, 37, 35))
+
+        // Cb 35 -> (35-32) & 0x3 == 3, the X10 release code, regardless of which button.
+        val events = parser.feed(byteArrayOf(ESC, '['.code.toByte(), 'M'.code.toByte(), 35, 37, 35))
+
+        assertEquals(emptyList(), events)
     }
 
     @Test
