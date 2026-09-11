@@ -42,22 +42,37 @@ class TerminalInputParser {
         }
 
         // A lone ESC with nothing else in the buffer is treated as a standalone Escape key,
-        // not a truncated sequence - real terminals send a full CSI sequence in one write.
+        // not a truncated sequence - real terminals send a full CSI/SS3 sequence in one write.
         if (from + 1 >= data.size) {
             events += TerminalEvent.Escape
             return 1
         }
-        if ((data[from + 1].toInt() and 0xFF) != '['.code) {
-            events += TerminalEvent.Escape
-            return 1
-        }
-        if (from + 2 >= data.size) return 0
 
+        return when (data[from + 1].toInt() and 0xFF) {
+            '['.code -> decodeCsi(data, from, events)
+            'O'.code -> decodeSs3(data, from) // SS3: ESC O <char> - arrow/function keys under DECCKM
+            else -> {
+                events += TerminalEvent.Escape
+                1
+            }
+        }
+    }
+
+    private fun decodeCsi(data: ByteArray, from: Int, events: MutableList<TerminalEvent>): Int {
+        if (from + 2 >= data.size) return 0
         return when (data[from + 2].toInt() and 0xFF) {
             '<'.code -> decodeSgr(data, from, events)
             'M'.code -> decodeX10(data, from, events)
             else -> decodeUnknownCsi(data, from)
         }
+    }
+
+    /** `ESC O <char>` - SS3, used for arrow/function keys when the terminal is in application
+     *  cursor-key mode (tmux/screen, some terminals' default). Discarded whole, same as an
+     *  unrecognised CSI sequence. */
+    private fun decodeSs3(data: ByteArray, from: Int): Int {
+        if (from + 2 >= data.size) return 0
+        return 3
     }
 
     /** `ESC [ < Pb ; Px ; Py (M|m)`. `M` is a press (-> [TerminalEvent.MouseClick]), `m` a
@@ -73,7 +88,10 @@ class TerminalInputParser {
         return end - from + 1
     }
 
-    /** `ESC [ M Cb Cx Cy` - legacy X10, each of Cb/Cx/Cy a raw byte offset by 32. */
+    /** `ESC [ M Cb Cx Cy` - legacy X10, each of Cb/Cx/Cy a raw byte offset by 32. Same inherent
+     *  risk as the split-delivery caveat on [AnsiTerminal.readEvent]: if the report is itself
+     *  truncated (connection drop mid-report), the next 3 bytes typed - whatever they are - get
+     *  read as the missing coordinates. SGR is the primary protocol; this fallback is legacy. */
     private fun decodeX10(data: ByteArray, from: Int, events: MutableList<TerminalEvent>): Int {
         if (from + 5 >= data.size) return 0
         val column = (data[from + 4].toInt() and 0xFF) - 32
@@ -82,7 +100,7 @@ class TerminalInputParser {
         return 6
     }
 
-    /** Any other CSI sequence (arrow keys, Home/End, ...) - discarded whole rather than left to
+    /** Any other CSI sequence (Home/End, page keys, ...) - discarded whole rather than left to
      *  leak its individual bytes out as bogus [TerminalEvent.KeyPress]es. */
     private fun decodeUnknownCsi(data: ByteArray, from: Int): Int {
         var i = from + 2 // the final byte can be immediately after '[' (e.g. arrow keys: ESC [ A)
@@ -94,9 +112,12 @@ class TerminalInputParser {
     }
 
     /** 0 (wait for more) while [data] since [from] is still under [MAX_ESCAPE_SEQUENCE_LENGTH];
-     *  past that it's treated as garbage and just the `ESC` is dropped, so a garbled/truncated
-     *  sequence can't wedge the parser forever. */
-    private fun giveUpOrWait(data: ByteArray, from: Int): Int = if (data.size - from > MAX_ESCAPE_SEQUENCE_LENGTH) 1 else 0
+     *  past that, the whole buffered span is treated as garbage and discarded - not just the
+     *  `ESC` - so it isn't re-decoded byte-by-byte into a run of bogus [TerminalEvent.KeyPress]es. */
+    private fun giveUpOrWait(data: ByteArray, from: Int): Int {
+        val span = data.size - from
+        return if (span > MAX_ESCAPE_SEQUENCE_LENGTH) span else 0
+    }
 
     private fun scanFor(data: ByteArray, from: Int, vararg terminators: Char): Int? {
         for (i in from until data.size) if (data[i].toInt().toChar() in terminators) return i

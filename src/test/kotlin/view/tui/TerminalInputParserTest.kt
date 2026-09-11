@@ -91,13 +91,24 @@ class TerminalInputParserTest {
     }
 
     @Test
-    fun `a truncated escape sequence past the length cap is resynced instead of wedging the parser`() {
+    fun `a truncated escape sequence past the length cap is discarded whole, not leaked byte-by-byte`() {
         val parser = TerminalInputParser()
 
         // "ESC[<" followed by garbage that never reaches an M/m terminator.
-        parser.feed(csi("<") + ByteArray(40) { '9'.code.toByte() })
-        val events = parser.feed("a".toByteArray(Charsets.US_ASCII))
+        val garbage = parser.feed(csi("<") + ByteArray(40) { '9'.code.toByte() })
+        assertEquals(emptyList(), garbage)
 
+        val events = parser.feed("a".toByteArray(Charsets.US_ASCII))
         assertEquals(listOf(TerminalEvent.KeyPress('a')), events)
+    }
+
+    @Test
+    fun `an SS3 sequence is discarded whole, not leaked as individual KeyPresses`() {
+        val parser = TerminalInputParser()
+
+        // ESC O A - the SS3 arrow-key form used under DECCKM (tmux/screen, some terminals).
+        val events = parser.feed(byteArrayOf(ESC, 'O'.code.toByte(), 'A'.code.toByte()))
+
+        assertEquals(emptyList(), events)
     }
 }

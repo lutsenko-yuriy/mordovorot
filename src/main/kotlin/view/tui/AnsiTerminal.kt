@@ -24,6 +24,9 @@ class AnsiTerminal(
 
     private val parser = TerminalInputParser()
     private val pendingEvents = ArrayDeque<TerminalEvent>()
+
+    // Read by the shutdown-hook thread, written by whichever thread calls enterRawMode/restore.
+    @Volatile
     private var rawModeEntered = false
     private var shutdownHookRegistered = false
 
@@ -43,13 +46,13 @@ class AnsiTerminal(
 
     override fun restore() {
         if (!rawModeEntered) return
-        try {
-            output.print(DISABLE_MOUSE + SHOW_CURSOR + EXIT_ALT_SCREEN)
-            output.flush()
-            ProcessBuilder("stty", "sane").inheritIO().start().waitFor()
-        } finally {
-            rawModeEntered = false
-        }
+        // Cleared only once the work below actually succeeds - if it throws, rawModeEntered
+        // stays true, so a later call (the shutdown hook included) retries instead of no-op'ing
+        // over a terminal that's still raw.
+        output.print(DISABLE_MOUSE + SHOW_CURSOR + EXIT_ALT_SCREEN)
+        output.flush()
+        ProcessBuilder("stty", "sane").inheritIO().start().waitFor()
+        rawModeEntered = false
     }
 
     override fun enableMouseReporting() {
@@ -63,10 +66,16 @@ class AnsiTerminal(
     }
 
     /** Reads one full chunk per [InputStream.read] burst (not one byte at a time) before handing
-     *  it to [parser] - a real escape sequence arrives in a single burst, so this is what lets
-     *  [TerminalInputParser] tell a genuine standalone Escape key apart from the start of one.
-     *  Queues any extra decoded events instead of dropping them (a click plus a fast keystroke
-     *  can share a burst). */
+     *  it to [parser] - a real escape sequence normally arrives in a single burst, so this is
+     *  what lets [TerminalInputParser] tell a genuine standalone Escape key apart from the start
+     *  of one. Queues any extra decoded events instead of dropping them (a click plus a fast
+     *  keystroke can share a burst).
+     *
+     *  Caveat: a sequence fragmented across two OS-level reads (a slow pipe, a laggy SSH hop)
+     *  still degrades to a stray Escape plus leftover keystrokes, same as the case this fixed -
+     *  the underlying ambiguity (is a lone ESC the whole input, or is more still coming?) needs
+     *  a read timeout to resolve properly, which this stdlib-only terminal layer doesn't have.
+     */
     override fun readEvent(): TerminalEvent {
         while (pendingEvents.isEmpty()) {
             val first = input.read()
@@ -91,10 +100,10 @@ class AnsiTerminal(
 
     override fun size(): TerminalSize =
         try {
-            val (rows, columns) = ProcessBuilder("stty", "size")
-                .redirectInput(ProcessBuilder.Redirect.INHERIT)
-                .start()
-                .inputStream.bufferedReader().readLine().trim().split(" ").map { it.toInt() }
+            val process = ProcessBuilder("stty", "size").redirectInput(ProcessBuilder.Redirect.INHERIT).start()
+            val line = process.inputStream.bufferedReader().use { it.readLine() }
+            process.waitFor()
+            val (rows, columns) = line.trim().split(" ").map { it.toInt() }
             TerminalSize(columns, rows)
         } catch (e: Exception) {
             TerminalSize(80, 24)
