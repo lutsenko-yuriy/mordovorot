@@ -82,11 +82,14 @@ class TuiView internal constructor(
 
     private fun repaint() {
         val terminalSize = terminal.size()
-        // presenter.isSolved() is deliberately not wired to arrowsEnabled yet: disabling the
-        // arrows the moment the board is solved, with no Congratulations screen or live toolbar
-        // to replace them (both WU4/5), would strand the player with nothing left to click
-        // (audit round 2 on PR #22). Arrows stay live until that UI exists to hand off to.
-        val state = ScreenState.forBoard(presenter.boardState().toList(), presenter.squareSide(), solved = false)
+        // forBoard(solved) drives both the title and arrowsEnabled from one flag. The title
+        // flip is real feedback the player should see; disabling the arrows on top of it isn't
+        // safe yet - there's no Congratulations screen or live toolbar (WU4/5) to hand off to,
+        // so it would strand the player with nothing left to click. Forcing arrowsEnabled back
+        // on after the fact keeps the title honest without reintroducing that dead end (audit
+        // round 3 on PR #22 - round 2's `solved = false` silently killed the title too).
+        val state = ScreenState.forBoard(presenter.boardState().toList(), presenter.squareSide(), presenter.isSolved())
+            .copy(arrowsEnabled = true)
         layout = BoardLayout(terminalSize, state.squareSide, state.arrowsEnabled)
         terminal.write(renderer.render(state, terminalSize))
     }

@@ -112,6 +112,10 @@ class TuiViewBoardTest {
         view(terminal, presenter).play()
 
         assertTrue(presenter.calls.contains("shiftLeft(0)"))
+        // The title still flips - solving isn't invisible, only the arrow-disabling is deferred
+        // (round-3 audit finding: hardcoding solved=false into ScreenState.forBoard silently
+        // dropped the title too, since forBoard drives both from one flag).
+        assertTrue(terminal.frames.last().contains("Congratulations ✓"))
     }
 
     @Test

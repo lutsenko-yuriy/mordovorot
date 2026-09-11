@@ -42,10 +42,15 @@ class ScreenRendererTest {
 
         assertTrue(frame.contains("Congratulations ✓"))
         assertFalse(frame.contains("Mordovorot"))
-        // Dimmed arrows are wrapped in the SGR "faint" escape - absent from the enabled frame.
-        assertTrue(frame.contains("[2m"))
+        // A dimmed arrow is wrapped in the SGR "faint on/off" pair around the actual glyph -
+        // asserting on that exact pairing (not just the dim-on code appearing anywhere) so a
+        // broken DIM_ON/DIM_OFF wrapping can't pass this test by accident (round-3 audit finding
+        // on PR #22: the previous assertions embedded a raw ESC byte and were vacuous - they'd
+        // have stayed green even with dimming completely broken).
+        val dimmedUpArrow = "[2m▲[22m"
+        assertTrue(frame.contains(dimmedUpArrow))
         val enabledFrame = renderer.render(state.copy(arrowsEnabled = true), terminalSize)
-        assertFalse(enabledFrame.contains("[2m"))
+        assertFalse(enabledFrame.contains(dimmedUpArrow))
     }
 
     @Test

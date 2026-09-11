@@ -104,7 +104,11 @@ class AnsiTerminal(
             val line = process.inputStream.bufferedReader().use { it.readLine() }
             process.waitFor()
             val (rows, columns) = line.trim().split(" ").map { it.toInt() }
-            TerminalSize(columns, rows)
+            // An unset winsize (some ptys) reports "0 0" with a successful exit - the catch
+            // below only guards a thrown exception, so a zero-but-valid result needs its own
+            // check, or the board renders as one blank space with every click hit-testing to
+            // Nothing (audit round 3 on PR #22).
+            if (rows <= 0 || columns <= 0) TerminalSize(80, 24) else TerminalSize(columns, rows)
         } catch (e: Exception) {
             TerminalSize(80, 24)
         }

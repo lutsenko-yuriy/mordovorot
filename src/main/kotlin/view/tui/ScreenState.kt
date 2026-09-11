@@ -3,15 +3,18 @@ package view.tui
 /** Default (unsolved) board title. */
 const val TITLE_UNSOLVED = "Mordovorot"
 
-/** Title shown once [ScreenState.arrowsEnabled] goes false (the board is solved). */
+/** Title shown once the board is solved. */
 const val TITLE_SOLVED = "Congratulations ✓"
 
 /**
  * Everything [ScreenRenderer] needs to draw one frame of the board screen: the title, the
  * board's current tile values (0-based, GH-10 dialect - [ScreenRenderer] applies the 1-based
- * display offset) and side, and whether the shift arrows are interactive. `arrowsEnabled = false`
- * is how [presenter.Presenter.isSolved] reaching the TUI shows up here - see the ticket's
- * solved-state note (dimmed, non-clickable arrows, live toolbar).
+ * display offset) and side, and whether the shift arrows are interactive. [forBoard] couples
+ * `arrowsEnabled` to `solved` as the ticket's solved-state note intends (dimmed, non-clickable
+ * arrows, live toolbar) - but [TuiView] currently forces `arrowsEnabled` back to `true` after
+ * calling [forBoard], since WU3 has no Congratulations screen or live toolbar yet to hand the
+ * player off to (round 2/3 audit findings on PR #22). The title still flips on solve; only the
+ * arrow-disabling half of `isSolved()` is deferred.
  */
 data class ScreenState(
     val title: String,
