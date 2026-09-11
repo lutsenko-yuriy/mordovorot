@@ -236,7 +236,7 @@ class TuiView internal constructor(
     /** Runs a Load-shaped dialog's own blocking loop: click a list row to select, Load/Cancel
      *  via click. Shared by the toolbar's Load and the startup restore prompt (same shape for
      *  any save count, per the plan). [preloadedSaves], when given, is shown as-is instead of
-     *  a fresh [Presenter.listSaves] call - [confirmRestore]/[chooseSaveToRestore] already
+     *  a fresh [TuiPresenter.listSaves] call - [confirmRestore]/[chooseSaveToRestore] already
      *  receive the save list [presenter.TuiPresenterImpl.restoreOnStartup] queried, and re-querying
      *  instead risked disagreeing with it (audit finding on PR #24). */
     private fun runLoadDialog(title: String, openedFrom: String, preloadedSaves: List<String>? = null): LoadOutcome {
