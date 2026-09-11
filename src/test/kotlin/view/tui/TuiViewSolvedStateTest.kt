@@ -67,33 +67,46 @@ class TuiViewSolvedStateTest {
     }
 
     @Test
-    fun `screen_congratulations fires exactly once on the transition into solved`() {
-        // isSolved() is queried once per repaint: once at startup, then once per click below.
-        // false, false, true, true mirrors: starts unsolved, still unsolved after a dead-space
-        // click, becomes solved after the next click, and stays solved after a third click -
-        // the event must fire on the third query (the transition), not the fourth (still solved).
-        val solvedSequence = mutableListOf(false, false, true, true)
+    fun `screen_congratulations fires exactly once when a shift solves the board`() {
+        // solved() flips to true only once shiftLeft(0) actually runs - a real transition
+        // reached by playing, not by loading an already-solved save (see the next test).
         val delegate = FakePresenter()
         val presenter = object : Presenter by delegate {
-            override fun isSolved(): Boolean {
-                delegate.calls.add("isSolved")
-                return solvedSequence.removeAt(0)
+            override fun shiftLeft(row: Int) {
+                delegate.shiftLeft(row)
+                delegate.solved = true
             }
         }
         val analytics = RecordingAnalyticsService()
-        val terminal = FakeTerminal(
-            events = mutableListOf(
-                TerminalEvent.MouseClick(-1, -1),
-                TerminalEvent.MouseClick(-1, -1),
-                TerminalEvent.MouseClick(-1, -1),
-            ),
-            terminalSize = terminalSize,
-        )
+        val (x, y) = boardLayout(delegate).leftArrowPosition(0)
+        val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.MouseClick(x, y)), terminalSize = terminalSize)
 
         view(terminal, presenter, analytics).play()
 
-        assertTrue(solvedSequence.isEmpty(), "expected exactly 4 isSolved() queries to be consumed")
+        assertTrue(delegate.calls.contains("shiftLeft(0)"))
         assertTrue(analytics.events.count { it.name == "screen_congratulations" } == 1)
+    }
+
+    @Test
+    fun `screen_congratulations does not fire when a startup restore loads an already-solved save`() {
+        // Audit finding on PR #25: gating solely on isSolved() at repaint time fired this event
+        // on every restore of a pre-solved save (startup or toolbar Load) - inflating a "board
+        // was solved by playing" metric with saves that were already solved before this session
+        // even started. The event now fires only from a shift that causes the transition.
+        val delegate = FakePresenter().apply { solved = true }
+        val presenter = object : Presenter by delegate {
+            override fun restoreOnStartup() {
+                delegate.restoreOnStartup()
+                delegate.loadGame("solved-save")
+            }
+        }
+        val analytics = RecordingAnalyticsService()
+        val terminal = FakeTerminal(terminalSize = terminalSize)
+
+        view(terminal, presenter, analytics).play()
+
+        assertTrue(terminal.frames.last().contains("Congratulations ✓"))
+        assertTrue(analytics.events.none { it.name == "screen_congratulations" })
     }
 
     @Test

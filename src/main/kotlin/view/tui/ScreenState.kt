@@ -11,9 +11,8 @@ const val TITLE_SOLVED = "Congratulations ✓"
  * board's current tile values (0-based, GH-10 dialect - [ScreenRenderer] applies the 1-based
  * display offset) and side, and whether the shift arrows are interactive. `arrowsEnabled = false`
  * is how [presenter.Presenter.isSolved] reaching the TUI shows up here - see the ticket's
- * solved-state note (dimmed, non-clickable arrows, live toolbar). Confirmed product decision:
- * WU3 has no live toolbar or Congratulations screen to hand the player off to yet, so once
- * solved, Ctrl+C is the only way out until WU4/5 land - this is accepted, not a dead-end bug.
+ * solved-state note (dimmed, non-clickable arrows, live toolbar, `Congratulations ✓` title -
+ * see [view.tui.TuiView]'s class KDoc for the full solved-state behavior).
  */
 data class ScreenState(
     val title: String,

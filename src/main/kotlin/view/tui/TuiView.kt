@@ -51,11 +51,10 @@ class TuiView internal constructor(
      *  surface it, since this view has no separate message line of its own. */
     private var pendingMessage: String? = null
 
-    /** Tracks whether the previous repaint saw the board solved, so `screen_congratulations`
-     *  (WU5) fires once on the *transition* into the solved state rather than on every repaint
-     *  while it stays solved. The screen itself has no separate phase flag - see the plan's
-     *  solved-state note - so this is the one piece of repaint-to-repaint memory the analytics
-     *  need that the rendering itself doesn't. */
+    /** Whether the previous repaint saw the board solved - synced on every repaint regardless
+     *  of cause (shift, Load, startup restore). [shift] reads this just before its own action to
+     *  decide whether `screen_congratulations` (WU5) fires - see its KDoc for why the firing
+     *  decision itself lives there instead of here. */
     private var wasSolved = false
 
     companion object {
@@ -98,15 +97,27 @@ class TuiView internal constructor(
 
     private fun handleClick(x: Int, y: Int) {
         when (val target = layout?.hitTest(x, y) ?: HitTarget.Nothing) {
-            is HitTarget.ShiftLeft -> presenter.shiftLeft(target.row)
-            is HitTarget.ShiftRight -> presenter.shiftRight(target.row)
-            is HitTarget.ShiftUp -> presenter.shiftUp(target.col)
-            is HitTarget.ShiftDown -> presenter.shiftDown(target.col)
+            is HitTarget.ShiftLeft -> shift { presenter.shiftLeft(target.row) }
+            is HitTarget.ShiftRight -> shift { presenter.shiftRight(target.row) }
+            is HitTarget.ShiftUp -> shift { presenter.shiftUp(target.col) }
+            is HitTarget.ShiftDown -> shift { presenter.shiftDown(target.col) }
             HitTarget.ToolbarSave -> handleToolbarSave()
             HitTarget.ToolbarLoad -> handleToolbarLoad()
             HitTarget.ToolbarExit -> handleToolbarExit()
             else -> {}
         }
+    }
+
+    /** Runs a shift and, only here, checks for the transition into solved -
+     *  `screen_congratulations` tracks a board solved *by playing*, not one that arrives
+     *  already solved via a toolbar/startup Load (audit finding on PR #25: gating on
+     *  [presenter.Presenter.isSolved] at repaint time alone fired the event on every restore of
+     *  a pre-solved save). [wasSolved] still reflects the last-drawn frame's true state either
+     *  way, via [repaintWithDialog] - so a shift that re-solves a board loaded unsolved still
+     *  fires exactly once. */
+    private fun shift(action: () -> Unit) {
+        action()
+        if (presenter.isSolved() && !wasSolved) analytics.track("screen_congratulations")
     }
 
     private fun handleToolbarSave() {
@@ -260,8 +271,9 @@ class TuiView internal constructor(
         // own Dialog.message instead) - consumed here so a stale message can't leak into a
         // dialog opened by the very next click (audit finding on PR #24).
         val message = if (dialog == null) pendingMessage.also { pendingMessage = null } else null
+        // Only syncs wasSolved here - the actual screen_congratulations firing decision lives
+        // in shift() so a Load doesn't count as the transition (see its KDoc).
         val solved = presenter.isSolved()
-        if (solved && !wasSolved) analytics.track("screen_congratulations")
         wasSolved = solved
         val state = ScreenState
             .forBoard(presenter.boardState().toList(), presenter.squareSide(), solved)
