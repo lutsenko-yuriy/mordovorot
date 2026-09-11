@@ -1,8 +1,9 @@
 package view.tui
 
 /** Interior character width of one board cell - wide enough for a 2-digit 1-based tile value
- *  plus a padding space on each side (` 12 `). */
-private const val CELL_WIDTH = 4
+ *  plus a padding space on each side (` 12 `). Internal (not private) so [ScreenRenderer] can
+ *  draw tile text at exactly the columns [BoardLayout] hit-tests against. */
+internal const val CELL_WIDTH = 4
 
 /**
  * Pure geometry for GH-3's board screen: given a terminal size and the board's square side,
@@ -36,16 +37,22 @@ class BoardLayout(
     val titleRow: Int get() = originY
     private val upArrowRow = originY + 2
     private val downArrowRow = gridTop + innerRows
-    private val toolbarRow = downArrowRow + 2
+    internal val toolbarRow = downArrowRow + 2
+
+    /** The grid's top-left corner and size, for [ScreenRenderer] to draw the box-drawing frame
+     *  and tile text at the same coordinates [hitTest] resolves clicks against. */
+    fun gridOrigin(): Pair<Int, Int> = gridLeft to gridTop
+    val gridWidth: Int get() = innerCols
+    val gridHeight: Int get() = innerRows
 
     fun leftArrowPosition(row: Int): Pair<Int, Int> = originX to contentRowY(row)
     fun rightArrowPosition(row: Int): Pair<Int, Int> = (gridLeft + innerCols + 1) to contentRowY(row)
     fun upArrowPosition(col: Int): Pair<Int, Int> = cellCenterX(col) to upArrowRow
     fun downArrowPosition(col: Int): Pair<Int, Int> = cellCenterX(col) to downArrowRow
 
-    fun saveButtonPosition(): Pair<Int, Int> = toolbarButtons()[0].second.first to toolbarRow
-    fun loadButtonPosition(): Pair<Int, Int> = toolbarButtons()[1].second.first to toolbarRow
-    fun exitButtonPosition(): Pair<Int, Int> = toolbarButtons()[2].second.first to toolbarRow
+    fun saveButtonPosition(): Pair<Int, Int> = toolbarButtons()[0].range.first to toolbarRow
+    fun loadButtonPosition(): Pair<Int, Int> = toolbarButtons()[1].range.first to toolbarRow
+    fun exitButtonPosition(): Pair<Int, Int> = toolbarButtons()[2].range.first to toolbarRow
 
     fun hitTest(x: Int, y: Int): HitTarget {
         if (arrowsEnabled) {
@@ -59,7 +66,7 @@ class BoardLayout(
             }
         }
         if (y == toolbarRow) {
-            for ((target, range) in toolbarButtons()) if (x in range) return target
+            for (button in toolbarButtons()) if (x in button.range) return button.target
         }
         return HitTarget.Nothing
     }
@@ -67,19 +74,21 @@ class BoardLayout(
     private fun contentRowY(row: Int) = gridTop + 1 + 2 * row
     private fun cellCenterX(col: Int) = gridLeft + 1 + col * (CELL_WIDTH + 1) + CELL_WIDTH / 2
 
-    /** The toolbar's three buttons, in order, as (target, x-range) - all share [toolbarRow]. */
-    private fun toolbarButtons(): List<Pair<HitTarget, IntRange>> {
-        val labels = listOf(HitTarget.ToolbarSave to " Save ", HitTarget.ToolbarLoad to " Load ", HitTarget.ToolbarExit to " Exit ")
-        val texts = labels.map { "[${it.second}]" }
-        val totalWidth = texts.sumOf { it.length } + (texts.size - 1)
+    /** The toolbar's three buttons in order - shared by [hitTest] (via [ToolbarButton.range])
+     *  and [ScreenRenderer] (via [ToolbarButton.text]), all on [toolbarRow]. Internal, not
+     *  private, so [ScreenRenderer] can draw exactly what's clickable. */
+    internal fun toolbarButtons(): List<ToolbarButton> {
+        val entries = listOf(HitTarget.ToolbarSave to "[ Save ]", HitTarget.ToolbarLoad to "[ Load ]", HitTarget.ToolbarExit to "[ Exit ]")
+        val totalWidth = entries.sumOf { it.second.length } + (entries.size - 1)
         var x = (originX + (fullWidth - totalWidth) / 2).coerceAtLeast(0)
-        return labels.mapIndexed { i, (target, _) ->
-            val text = texts[i]
-            val range = x until (x + text.length)
+        return entries.map { (target, text) ->
+            val button = ToolbarButton(target, text, x, x until (x + text.length))
             x += text.length + 1
-            target to range
+            button
         }
     }
+
+    internal data class ToolbarButton(val target: HitTarget, val text: String, val x: Int, val range: IntRange)
 
     private companion object {
         /** Arrow char + one gap column, on each side of the grid. */
