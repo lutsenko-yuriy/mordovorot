@@ -1,6 +1,6 @@
 package view
 
-import testing.FakePresenter
+import testing.FakeConsolePresenter
 import java.io.BufferedReader
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -20,7 +20,7 @@ private class ThrowingReader : Reader() {
 
 class ViewImplCommandTest {
 
-    private fun viewWith(input: String, presenter: FakePresenter = FakePresenter()): Pair<ViewImpl, ByteArrayOutputStream> {
+    private fun viewWith(input: String, presenter: FakeConsolePresenter = FakeConsolePresenter()): Pair<ViewImpl, ByteArrayOutputStream> {
         val outputBuffer = ByteArrayOutputStream()
         val view = ViewImpl(BufferedReader(StringReader(input)), PrintStream(outputBuffer))
         view.presenter = presenter
@@ -29,7 +29,7 @@ class ViewImplCommandTest {
 
     @Test
     fun `left command delegates to presenter shiftLeft, translating the 1-based row to 0-based`() {
-        val presenter = FakePresenter()
+        val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("left 1\n", presenter)
 
         view.processCommand()
@@ -39,7 +39,7 @@ class ViewImplCommandTest {
 
     @Test
     fun `right command delegates to presenter shiftRight, translating the 1-based row to 0-based`() {
-        val presenter = FakePresenter()
+        val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("right 3\n", presenter)
 
         view.processCommand()
@@ -49,7 +49,7 @@ class ViewImplCommandTest {
 
     @Test
     fun `up command delegates to presenter shiftUp, translating the 1-based column to 0-based`() {
-        val presenter = FakePresenter()
+        val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("up 2\n", presenter)
 
         view.processCommand()
@@ -59,7 +59,7 @@ class ViewImplCommandTest {
 
     @Test
     fun `down command delegates to presenter shiftDown, translating the 1-based column to 0-based`() {
-        val presenter = FakePresenter()
+        val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("down 4\n", presenter)
 
         view.processCommand()
@@ -69,7 +69,7 @@ class ViewImplCommandTest {
 
     @Test
     fun `left 0 translates to -1, delegating to the board's own bounds check rather than validating in view`() {
-        val presenter = FakePresenter()
+        val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("left 0\n", presenter)
 
         view.processCommand()
@@ -79,7 +79,7 @@ class ViewImplCommandTest {
 
     @Test
     fun `Int-MIN_VALUE argument wraps rather than crashing, and still lands outside any valid board range`() {
-        val presenter = FakePresenter()
+        val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("left ${Int.MIN_VALUE}\n", presenter)
 
         view.processCommand()
@@ -90,7 +90,7 @@ class ViewImplCommandTest {
 
     @Test
     fun `save command delegates to presenter saveGame with the raw file name, untranslated`() {
-        val presenter = FakePresenter()
+        val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("save foo\n", presenter)
 
         view.processCommand()
@@ -100,7 +100,7 @@ class ViewImplCommandTest {
 
     @Test
     fun `load command delegates to presenter loadGame with the raw file name, untranslated`() {
-        val presenter = FakePresenter()
+        val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("load foo\n", presenter)
 
         view.processCommand()
@@ -110,7 +110,7 @@ class ViewImplCommandTest {
 
     @Test
     fun `save with a missing file name throws without delegating`() {
-        val presenter = FakePresenter()
+        val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("save\n", presenter)
 
         assertFailsWith<IllegalArgumentException> { view.processCommand() }
@@ -119,7 +119,7 @@ class ViewImplCommandTest {
 
     @Test
     fun `save with a trailing extra token is rejected rather than silently ignored`() {
-        val presenter = FakePresenter()
+        val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("save foo bar\n", presenter)
 
         assertFailsWith<IllegalArgumentException> { view.processCommand() }
@@ -128,7 +128,7 @@ class ViewImplCommandTest {
 
     @Test
     fun `reset command delegates to presenter resetGame`() {
-        val presenter = FakePresenter()
+        val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("reset\n", presenter)
 
         view.processCommand()
@@ -138,7 +138,7 @@ class ViewImplCommandTest {
 
     @Test
     fun `commands are case-insensitive`() {
-        val presenter = FakePresenter()
+        val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("LEFT 1\n", presenter)
 
         view.processCommand()
@@ -148,7 +148,7 @@ class ViewImplCommandTest {
 
     @Test
     fun `missing numeric argument throws without delegating`() {
-        val presenter = FakePresenter()
+        val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("left\n", presenter)
 
         assertFailsWith<IllegalArgumentException> { view.processCommand() }
@@ -157,7 +157,7 @@ class ViewImplCommandTest {
 
     @Test
     fun `non-numeric argument throws without delegating`() {
-        val presenter = FakePresenter()
+        val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("left abc\n", presenter)
 
         assertFailsWith<IllegalArgumentException> { view.processCommand() }
@@ -166,7 +166,7 @@ class ViewImplCommandTest {
 
     @Test
     fun `unknown command throws without delegating`() {
-        val presenter = FakePresenter()
+        val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("teleport\n", presenter)
 
         assertFailsWith<IllegalArgumentException> { view.processCommand() }
@@ -182,7 +182,7 @@ class ViewImplCommandTest {
 
     @Test
     fun `trailing extra token is rejected rather than silently ignored`() {
-        val presenter = FakePresenter()
+        val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("left 1 99\n", presenter)
 
         assertFailsWith<IllegalArgumentException> { view.processCommand() }
@@ -191,7 +191,7 @@ class ViewImplCommandTest {
 
     @Test
     fun `reset with a trailing argument is rejected rather than silently ignored`() {
-        val presenter = FakePresenter()
+        val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("reset foo\n", presenter)
 
         assertFailsWith<IllegalArgumentException> { view.processCommand() }
@@ -220,7 +220,7 @@ class ViewImplCommandTest {
     @Test
     fun `IOException while reading input throws EndOfInputException instead of spinning forever`() {
         val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
-        view.presenter = FakePresenter()
+        view.presenter = FakeConsolePresenter()
 
         assertFailsWith<EndOfInputException> { view.processCommand() }
     }
@@ -251,7 +251,7 @@ class ViewImplCommandTest {
     @Test
     fun `confirmRestore returns false when the input stream is dead, same as clean EOF`() {
         val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
-        view.presenter = FakePresenter()
+        view.presenter = FakeConsolePresenter()
 
         assertEquals(false, view.confirmRestore("foo"))
     }
@@ -280,14 +280,14 @@ class ViewImplCommandTest {
     @Test
     fun `chooseSaveToRestore returns null when the input stream is dead, same as clean EOF`() {
         val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
-        view.presenter = FakePresenter()
+        view.presenter = FakeConsolePresenter()
 
         assertEquals(null, view.chooseSaveToRestore(listOf("foo", "bar")))
     }
 
     @Test
     fun `exit command delegates to presenter exitGame`() {
-        val presenter = FakePresenter()
+        val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("exit\n", presenter)
 
         view.processCommand()
@@ -297,7 +297,7 @@ class ViewImplCommandTest {
 
     @Test
     fun `quit command is an alias for exit`() {
-        val presenter = FakePresenter()
+        val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("quit\n", presenter)
 
         view.processCommand()
@@ -307,7 +307,7 @@ class ViewImplCommandTest {
 
     @Test
     fun `exit with a trailing argument is rejected rather than silently ignored`() {
-        val presenter = FakePresenter()
+        val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("exit foo\n", presenter)
 
         assertFailsWith<IllegalArgumentException> { view.processCommand() }
@@ -340,7 +340,7 @@ class ViewImplCommandTest {
     @Test
     fun `confirmSaveBeforeExit returns false when the input stream is dead, same as clean EOF`() {
         val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
-        view.presenter = FakePresenter()
+        view.presenter = FakeConsolePresenter()
 
         assertEquals(false, view.confirmSaveBeforeExit())
     }
@@ -369,14 +369,14 @@ class ViewImplCommandTest {
     @Test
     fun `promptSaveName returns null when the input stream is dead, same as clean EOF`() {
         val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
-        view.presenter = FakePresenter()
+        view.presenter = FakeConsolePresenter()
 
         assertEquals(null, view.promptSaveName())
     }
 
     @Test
     fun `create wires the injected input, output, and presenter together atomically`() {
-        val presenter = FakePresenter()
+        val presenter = FakeConsolePresenter()
         val outputBuffer = ByteArrayOutputStream()
 
         val view = ViewImpl.create(
