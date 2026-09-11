@@ -67,7 +67,38 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
     (or, on a failed save, before play resumes) — a scripted run piping commands must account
     for the yes/no answer and, if given, the save name(s).
 
+### Feature 6 — Mouse-driven TUI (GH-3)
+- On launch, the app runs a mouse-clickable terminal UI by default: a centered board with
+  `◀`/`▶`/`▲`/`▼` arrows at the ends of each row/column, and a toolbar (`[ Save ] [ Load ]
+  [ Exit ]`) below it. Clicking an arrow shifts that row/column the same as the console's
+  `left`/`right`/`up`/`down` commands; every click repaints the whole screen.
+- `--console` forces the line-based console interaction (Features 1-5) instead. Launching
+  without an interactive terminal (e.g. piped/scripted input) falls back to console mode
+  automatically, since mouse mode has no terminal to click in.
+- **Save/Load/Exit dialogs**, opened from the toolbar, replace the console's typed prompts with
+  clickable modals:
+  - **Save** — a typed name field; an existing name shows an inline "already exists - it will
+    be overwritten" warning before saving over it. A name containing spaces is rejected with an
+    on-screen message instead of being saved (the console's `load` command couldn't read it
+    back). An empty name (Enter, or clicking Save with nothing typed) cancels without saving.
+  - **Load** — a clickable list of save names (`No saves found.` when there are none, with the
+    Load button inert); selecting one and confirming restores it.
+  - **Exit** — `[ Yes ] [ No ] [ Cancel ]`; Cancel closes the dialog and keeps playing, Yes/No
+    behave like the console's `exit`/`quit` save-first prompt (Feature 5), including the
+    invalid-name re-prompt and the failed-save-keeps-playing behavior.
+  - Any dialog can also be dismissed with Escape, same effect as its Cancel button.
+- **Startup restore**, when saves exist, is the same Load-shaped dialog (titled "Restore a saved
+  game?") regardless of how many saves there are — the console's one-save-yes/no vs.
+  two-or-more-saves-list split (Feature 4) doesn't apply here; Cancel starts a new game.
+- **Solved state:** once the board is solved, the title switches to `Congratulations ✓`, the
+  shift arrows are shown dimmed and stop responding to clicks, and the toolbar (Save/Load/Exit)
+  stays fully clickable. Loading a different, unsolved save from the Congratulations screen
+  brings the arrows and title straight back — the screen doesn't need a fresh launch or a
+  separate "keep playing" action.
+
 ## Known gaps
 
-- No documented win-condition message yet — see `src/main/kotlin/view/ViewImpl.kt` for current
-  behavior and treat it as the source of truth until this section is expanded.
+- Console mode (`--console` or a non-interactive launch) has no documented win-condition
+  message — see `src/main/kotlin/view/ViewImpl.kt` for current behavior and treat it as the
+  source of truth until this section is expanded. The mouse-driven TUI's solved state (Feature
+  6) is unaffected — its Congratulations screen is documented above.

@@ -15,7 +15,11 @@ import view.View
  * [confirmRestore]/[chooseSaveToRestore] each run their own blocking modal loop over
  * [terminal], the same way [view.ViewImpl]'s console prompts block on `readLine()`. Confirmed
  * product decision: once solved, the arrows go dead ([ScreenState.arrowsEnabled] false) - see
- * [ScreenState]'s KDoc.
+ * [ScreenState]'s KDoc. WU5 adds the Congratulations screen itself: since every repaint asks
+ * [Presenter.isSolved] fresh rather than tracking a phase flag, the toolbar stays fully live and
+ * a load from the Congratulations screen that restores an unsolved board flips the title and
+ * arrows straight back - see [wasSolved] for the one bit of state analytics needs that the
+ * rendering doesn't.
  */
 class TuiView internal constructor(
     private val terminal: Terminal,
@@ -46,6 +50,12 @@ class TuiView internal constructor(
     /** Set by [showMessage] so the next dialog (the exit flow's invalid-name re-prompt) can
      *  surface it, since this view has no separate message line of its own. */
     private var pendingMessage: String? = null
+
+    /** Whether the previous repaint saw the board solved - synced on every repaint regardless
+     *  of cause (shift, Load, startup restore). [shift] reads this just before its own action to
+     *  decide whether `screen_congratulations` (WU5) fires - see its KDoc for why the firing
+     *  decision itself lives there instead of here. */
+    private var wasSolved = false
 
     companion object {
         /** The only public way to obtain a [TuiView] - wires [presenter] atomically, same
@@ -87,15 +97,35 @@ class TuiView internal constructor(
 
     private fun handleClick(x: Int, y: Int) {
         when (val target = layout?.hitTest(x, y) ?: HitTarget.Nothing) {
-            is HitTarget.ShiftLeft -> presenter.shiftLeft(target.row)
-            is HitTarget.ShiftRight -> presenter.shiftRight(target.row)
-            is HitTarget.ShiftUp -> presenter.shiftUp(target.col)
-            is HitTarget.ShiftDown -> presenter.shiftDown(target.col)
+            is HitTarget.ShiftLeft -> shift { presenter.shiftLeft(target.row) }
+            is HitTarget.ShiftRight -> shift { presenter.shiftRight(target.row) }
+            is HitTarget.ShiftUp -> shift { presenter.shiftUp(target.col) }
+            is HitTarget.ShiftDown -> shift { presenter.shiftDown(target.col) }
             HitTarget.ToolbarSave -> handleToolbarSave()
             HitTarget.ToolbarLoad -> handleToolbarLoad()
             HitTarget.ToolbarExit -> handleToolbarExit()
             else -> {}
         }
+    }
+
+    /** Runs a shift and, only here, checks for the transition into solved -
+     *  `screen_congratulations` tracks a board solved *by playing*, not one that arrives
+     *  already solved via a toolbar/startup Load (audit finding on PR #25: gating on
+     *  [presenter.Presenter.isSolved] at repaint time alone fired the event on every restore of
+     *  a pre-solved save).
+     *
+     *  Today, [wasSolved] is guaranteed `false` on every call here - [shift] is only reachable
+     *  through a click [BoardLayout.hitTest] resolves to a `HitTarget.Shift*`, which only
+     *  happens when the layout it was built against had `arrowsEnabled = true`, which
+     *  [repaintWithDialog] only sets when the same [wasSolved] sync came out `false`. The
+     *  "fires exactly once" property currently rests on that arrows-disabled gate, not on this
+     *  check (round 2 audit finding on PR #25). The check stays anyway as the one line standing
+     *  between a correct single fire and a silent double-count the day arrows stop going dead on
+     *  solve (e.g. a future "keep playing" affordance) - deleting it would save nothing today and
+     *  cost real correctness the day that assumption breaks. */
+    private fun shift(action: () -> Unit) {
+        action()
+        if (presenter.isSolved() && !wasSolved) analytics.track("screen_congratulations")
     }
 
     private fun handleToolbarSave() {
@@ -249,8 +279,12 @@ class TuiView internal constructor(
         // own Dialog.message instead) - consumed here so a stale message can't leak into a
         // dialog opened by the very next click (audit finding on PR #24).
         val message = if (dialog == null) pendingMessage.also { pendingMessage = null } else null
+        // Only syncs wasSolved here - the actual screen_congratulations firing decision lives
+        // in shift() so a Load doesn't count as the transition (see its KDoc).
+        val solved = presenter.isSolved()
+        wasSolved = solved
         val state = ScreenState
-            .forBoard(presenter.boardState().toList(), presenter.squareSide(), presenter.isSolved())
+            .forBoard(presenter.boardState().toList(), presenter.squareSide(), solved)
             .copy(dialog = dialog, message = message)
         layout = BoardLayout(terminalSize, state.squareSide, state.arrowsEnabled)
         dialogLayout = dialog?.let { DialogLayout(it, terminalSize) }
