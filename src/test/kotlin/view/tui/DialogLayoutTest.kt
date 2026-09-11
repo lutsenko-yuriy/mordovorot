@@ -72,4 +72,37 @@ class DialogLayoutTest {
         assertTrue(layout.messageLines.joinToString(" ") == message)
         assertTrue(layout.messageLines.all { it.length <= layout.width - 4 })
     }
+
+    @Test
+    fun `a multi-line message leaves no gap before the row that follows it`() {
+        // Audit round 4 on PR #24: the row math pointed one row past the last message line,
+        // leaving a spurious blank row between the message and the text field below it.
+        val message = "'a/b' isn't a usable save name (no spaces, path separators, or '..') - " +
+            "try again, or press Enter to skip saving."
+        val dialog = Dialog(Dialog.Kind.SAVE, "Save game", message = message, textFieldValue = "x", buttons = listOf(DialogButtonSpec("save", "Save")))
+
+        val layout = DialogLayout(dialog, TerminalSize(columns = 80, rows = 40))
+
+        assertTrue(layout.messageLines.size > 1)
+        assertTrue(layout.textFieldRow == layout.top + 2 + layout.messageLines.size)
+    }
+
+    @Test
+    fun `a word longer than the wrap width is hard-broken across lines instead of truncated`() {
+        val longWord = "a".repeat(100)
+        val dialog = Dialog(Dialog.Kind.SAVE, "Save game", message = longWord, buttons = listOf(DialogButtonSpec("save", "Save")))
+
+        val layout = DialogLayout(dialog, TerminalSize(columns = 80, rows = 40))
+
+        assertTrue(layout.messageLines.joinToString("") == longWord)
+    }
+
+    @Test
+    fun `an empty-string message produces no message lines, same as a null message`() {
+        val dialog = Dialog(Dialog.Kind.SAVE, "Save game", message = "", buttons = listOf(DialogButtonSpec("save", "Save")))
+
+        val layout = DialogLayout(dialog, terminalSize)
+
+        assertTrue(layout.messageLines.isEmpty())
+    }
 }

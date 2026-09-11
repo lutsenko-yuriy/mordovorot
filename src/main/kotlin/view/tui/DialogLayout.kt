@@ -33,7 +33,8 @@ class DialogLayout(private val dialog: Dialog, terminalSize: TerminalSize) {
 
     /** The message word-wrapped to fit the chosen [width] - possibly several lines, unlike
      *  every other content line. */
-    val messageLines: List<String> = dialog.message?.let { wordWrap(it, (width - 4).coerceAtLeast(1)) } ?: emptyList()
+    val messageLines: List<String> = dialog.message?.takeIf { it.isNotEmpty() }
+        ?.let { wordWrap(it, (width - 4).coerceAtLeast(1)) } ?: emptyList()
 
     private val height = 2 + // title + blank
         messageLines.size +
@@ -47,8 +48,12 @@ class DialogLayout(private val dialog: Dialog, terminalSize: TerminalSize) {
     // Rows below the title+blank are assigned sequentially: message (however many lines it
     // wrapped to), then text field, then the list - each only if the dialog actually has one.
     private val messageStartRow: Int? = if (messageLines.isNotEmpty()) top + 2 else null
-    val textFieldRow: Int? = if (hasTextField) (messageStartRow?.plus(messageLines.size) ?: top + 1) + 1 else null
-    private val listStartRow = (textFieldRow ?: messageStartRow?.plus(messageLines.size) ?: top + 1) + 1
+    // messageStartRow + messageLines.size - 1 is the *last* message row, matching the "last
+    // used row" the `?: top + 1` fallback beside it returns - the earlier `+ messageLines.size`
+    // (with no `- 1`) pointed one row past the last message line instead, leaving a spurious
+    // blank row before whatever follows (audit round 4 on PR #24).
+    val textFieldRow: Int? = if (hasTextField) (messageStartRow?.plus(messageLines.size - 1) ?: top + 1) + 1 else null
+    private val listStartRow = (textFieldRow ?: messageStartRow?.plus(messageLines.size - 1) ?: top + 1) + 1
     private val buttonsRow = listStartRow + listRows + 1
 
     fun titleRow(): Int = top
@@ -97,8 +102,9 @@ private fun structuralContentWidth(dialog: Dialog): Int {
 /** Greedy word-wrap: packs whole words onto a line up to [maxWidth], breaking to a new line
  *  rather than truncating - unlike every other content line, a message can be long enough that
  *  cutting it off would hide the actionable half of a multi-clause sentence. A single word
- *  longer than [maxWidth] is hard-broken (matches the truncation "clip, don't overflow" rule
- *  every other content line already follows). */
+ *  longer than [maxWidth] is hard-broken across as many lines as it needs (not truncated - the
+ *  same "don't hide content" reasoning applies to one long word, e.g. a save name in the
+ *  overwrite warning, as to the message overall). */
 private fun wordWrap(text: String, maxWidth: Int): List<String> {
     val lines = mutableListOf<String>()
     var current = StringBuilder()
@@ -108,7 +114,7 @@ private fun wordWrap(text: String, maxWidth: Int): List<String> {
             candidate.length <= maxWidth -> current = StringBuilder(candidate)
             word.length > maxWidth -> {
                 if (current.isNotEmpty()) lines += current.toString()
-                lines += word.take(maxWidth)
+                lines += word.chunked(maxWidth)
                 current = StringBuilder()
             }
             else -> {
