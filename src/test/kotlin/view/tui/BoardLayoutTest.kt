@@ -1,53 +1,90 @@
 package view.tui
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 /**
- * Scenario stubs for GH-3's board geometry: given a terminal size and the board's square
- * side, computing where the 16 shift arrows and 3 toolbar buttons land, and hit-testing a
- * click coordinate against them. Pure geometry, no terminal or presenter involved. Filled
- * in by `implement` during WU3, once `BoardLayout`/`HitTarget` exist.
+ * Covers GH-3's board geometry: given a terminal size and the board's square side, computing
+ * where the 16 shift arrows and 3 toolbar buttons land, and hit-testing a click coordinate
+ * against them. Pure geometry, no terminal or presenter involved. Coordinates are read back
+ * from the layout's own accessors rather than hardcoded, so the test stays valid across layout
+ * tweaks - only the hit-test contract (a click at that coordinate resolves to that target) is
+ * asserted.
  */
 class BoardLayoutTest {
 
+    private val ampleTerminal = TerminalSize(columns = 80, rows = 40)
+
     @Test
     fun `hit-tests each of the 16 shift arrows to its correct 0-based row or column`() {
-        // TODO: Build a BoardLayout for a 4x4 board on a terminal large enough to fit it
-        // TODO: For each of the 4 rows, hit-test the left-arrow coordinate -> HitTarget.ShiftLeft(row)
-        // TODO: For each of the 4 rows, hit-test the right-arrow coordinate -> HitTarget.ShiftRight(row)
-        // TODO: For each of the 4 columns, hit-test the up-arrow coordinate -> HitTarget.ShiftUp(col)
-        // TODO: For each of the 4 columns, hit-test the down-arrow coordinate -> HitTarget.ShiftDown(col)
+        val layout = BoardLayout(ampleTerminal, squareSide = 4)
+
+        for (row in 0 until 4) {
+            val (x, y) = layout.leftArrowPosition(row)
+            assertEquals(HitTarget.ShiftLeft(row), layout.hitTest(x, y))
+
+            val (rx, ry) = layout.rightArrowPosition(row)
+            assertEquals(HitTarget.ShiftRight(row), layout.hitTest(rx, ry))
+        }
+
+        for (col in 0 until 4) {
+            val (x, y) = layout.upArrowPosition(col)
+            assertEquals(HitTarget.ShiftUp(col), layout.hitTest(x, y))
+
+            val (dx, dy) = layout.downArrowPosition(col)
+            assertEquals(HitTarget.ShiftDown(col), layout.hitTest(dx, dy))
+        }
     }
 
     @Test
     fun `hit-tests each toolbar button`() {
-        // TODO: Hit-test the Save button's coordinate -> HitTarget.ToolbarSave
-        // TODO: Hit-test the Load button's coordinate -> HitTarget.ToolbarLoad
-        // TODO: Hit-test the Exit button's coordinate -> HitTarget.ToolbarExit
+        val layout = BoardLayout(ampleTerminal, squareSide = 4)
+
+        val (saveX, saveY) = layout.saveButtonPosition()
+        assertEquals(HitTarget.ToolbarSave, layout.hitTest(saveX, saveY))
+
+        val (loadX, loadY) = layout.loadButtonPosition()
+        assertEquals(HitTarget.ToolbarLoad, layout.hitTest(loadX, loadY))
+
+        val (exitX, exitY) = layout.exitButtonPosition()
+        assertEquals(HitTarget.ToolbarExit, layout.hitTest(exitX, exitY))
     }
 
     @Test
     fun `a click inside a tile cell returns Nothing`() {
-        // TODO: Hit-test a coordinate inside one of the 16 tile cells (not an arrow or toolbar)
-        // TODO: Verify HitTarget.Nothing
+        val layout = BoardLayout(ampleTerminal, squareSide = 4)
+
+        // One row below the row-0 left arrow, one column right of it: inside the grid body,
+        // not on any border or arrow.
+        val (arrowX, arrowY) = layout.leftArrowPosition(0)
+
+        assertEquals(HitTarget.Nothing, layout.hitTest(arrowX + 3, arrowY + 1))
     }
 
     @Test
     fun `off-board coordinates return Nothing`() {
-        // TODO: Hit-test a coordinate well outside the rendered frame
-        // TODO: Verify HitTarget.Nothing
+        val layout = BoardLayout(ampleTerminal, squareSide = 4)
+
+        assertEquals(HitTarget.Nothing, layout.hitTest(-1, -1))
+        assertEquals(HitTarget.Nothing, layout.hitTest(999, 999))
     }
 
     @Test
     fun `arrow regions return Nothing when arrows are disabled`() {
-        // TODO: Build a BoardLayout with arrowsEnabled = false
-        // TODO: Hit-test a coordinate that would normally be a shift arrow
-        // TODO: Verify HitTarget.Nothing instead of a Shift* target
+        val layout = BoardLayout(ampleTerminal, squareSide = 4, arrowsEnabled = false)
+
+        val (x, y) = layout.leftArrowPosition(0)
+
+        assertEquals(HitTarget.Nothing, layout.hitTest(x, y))
     }
 
     @Test
     fun `a terminal too small to fit the board still produces a layout without throwing`() {
-        // TODO: Build a BoardLayout for a terminal size smaller than the board needs
-        // TODO: Verify layout construction and hitTest calls do not throw
+        val layout = BoardLayout(TerminalSize(columns = 5, rows = 5), squareSide = 4)
+
+        layout.leftArrowPosition(0)
+        layout.saveButtonPosition()
+        layout.hitTest(0, 0)
+        layout.hitTest(1000, 1000)
     }
 }
