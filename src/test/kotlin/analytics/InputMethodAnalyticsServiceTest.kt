@@ -9,7 +9,7 @@ import kotlin.test.assertEquals
  * Covers [InputMethodAnalyticsService], the decorator that adds `input_method` to every
  * event it forwards (GH-3) - so `save_command_used`, `load_command_used`,
  * `startup_restore_prompt_shown`, `startup_restore_decision`, and `exit_command_used` all
- * gain the property with zero changes to `PresenterImpl`'s own `track(...)` call sites.
+ * gain the property with zero changes to `BasePresenter`'s own `track(...)` call sites.
  */
 class InputMethodAnalyticsServiceTest {
 

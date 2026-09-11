@@ -1,7 +1,7 @@
 package view
 
 import board_model.BoardImpl
-import presenter.PresenterImpl
+import presenter.ConsolePresenterImpl
 import java.io.BufferedReader
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
@@ -12,7 +12,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 /**
- * End-to-end guard through the real stack (ViewImpl + PresenterImpl + BoardImpl) - an
+ * End-to-end guard through the real stack (ViewImpl + ConsolePresenterImpl + BoardImpl) - an
  * off-by-one only shows up where the view's 1-based translation meets board_model's
  * 0-based validation, which ViewImplCommandTest's FakePresenter can't exercise (GH-10).
  */
@@ -26,7 +26,7 @@ class OneBasedConsoleTest {
         val view = ViewImpl.create(
             input = BufferedReader(StringReader(command)),
             output = PrintStream(outputBuffer),
-        ) { v -> PresenterImpl(v, board) }
+        ) { v -> ConsolePresenterImpl(v, board) }
         return Triple(view, board, outputBuffer)
     }
 

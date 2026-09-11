@@ -4,7 +4,7 @@ import board_model.BoardModel
 
 /**
  * A [BoardModel] test double that records every call it receives instead of
- * actually mutating a board. Used to verify [presenter.PresenterImpl]
+ * actually mutating a board. Used to verify [presenter.BasePresenter]
  * delegates correctly without depending on real board logic.
  */
 class FakeBoardModel(
@@ -18,7 +18,7 @@ class FakeBoardModel(
     var correct = false
 
     /** When set, [shiftLeft] throws this instead of recording the call - used to verify
-     *  PresenterImpl propagates board exceptions unchanged. */
+     *  BasePresenter propagates board exceptions unchanged. */
     var shiftLeftException: Throwable? = null
 
     override fun resetGame() {

@@ -12,7 +12,7 @@ class PresenterImplPlayTest {
     fun `play returns immediately when the board is already correct`() {
         val board = FakeBoardModel().apply { correct = true }
         val view = FakeView()
-        val presenter = PresenterImpl(view, board)
+        val presenter = ConsolePresenterImpl(view, board)
 
         presenter.play()
 
@@ -24,7 +24,7 @@ class PresenterImplPlayTest {
     fun `play displays the board and processes one command before the board is solved`() {
         val board = FakeBoardModel()
         val view = FakeView(mutableListOf({ board.correct = true }))
-        val presenter = PresenterImpl(view, board)
+        val presenter = ConsolePresenterImpl(view, board)
 
         presenter.play()
 
@@ -38,7 +38,7 @@ class PresenterImplPlayTest {
     fun `play returns without looping when processCommand throws EndOfInputException`() {
         val board = FakeBoardModel()
         val view = FakeView(mutableListOf({ throw EndOfInputException() }))
-        val presenter = PresenterImpl(view, board)
+        val presenter = ConsolePresenterImpl(view, board)
 
         presenter.play()
 
@@ -55,7 +55,7 @@ class PresenterImplPlayTest {
                 { board.correct = true },
             )
         )
-        val presenter = PresenterImpl(view, board)
+        val presenter = ConsolePresenterImpl(view, board)
 
         presenter.play()
 
@@ -72,7 +72,7 @@ class PresenterImplPlayTest {
                 { board.correct = true },
             )
         )
-        val presenter = PresenterImpl(view, board)
+        val presenter = ConsolePresenterImpl(view, board)
 
         presenter.play()
 

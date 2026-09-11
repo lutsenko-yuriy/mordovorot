@@ -1,6 +1,6 @@
 package view.tui
 
-import presenter.Presenter
+import presenter.TuiPresenter
 import testing.FakePresenter
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
@@ -12,14 +12,14 @@ import kotlin.test.assertTrue
  * Covers GH-3's solved-state view: disabled shift arrows, the "Congratulations ✓" title, the
  * live toolbar, `screen_congratulations` firing once per transition, and the transition back to
  * the normal board when a load restores an unsolved game. The state-driven design (no phase
- * flag - every repaint just asks [presenter.Presenter.isSolved] fresh) is what makes the
+ * flag - every repaint just asks [presenter.TuiPresenter.isSolved] fresh) is what makes the
  * "load from Congratulations" case fall out for free; see the plan's solved-state note.
  */
 class TuiViewSolvedStateTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
 
-    private fun view(terminal: FakeTerminal, presenter: Presenter, analytics: RecordingAnalyticsService = RecordingAnalyticsService()): TuiView =
+    private fun view(terminal: FakeTerminal, presenter: TuiPresenter, analytics: RecordingAnalyticsService = RecordingAnalyticsService()): TuiView =
         TuiView.create(terminal, analytics) { presenter }
 
     private fun boardLayout(presenter: FakePresenter) = BoardLayout(terminalSize, presenter.side, arrowsEnabled = true)
@@ -71,7 +71,7 @@ class TuiViewSolvedStateTest {
         // solved() flips to true only once shiftLeft(0) actually runs - a real transition
         // reached by playing, not by loading an already-solved save (see the next test).
         val delegate = FakePresenter()
-        val presenter = object : Presenter by delegate {
+        val presenter = object : TuiPresenter by delegate {
             override fun shiftLeft(row: Int) {
                 delegate.shiftLeft(row)
                 delegate.solved = true
@@ -94,7 +94,7 @@ class TuiViewSolvedStateTest {
         // was solved by playing" metric with saves that were already solved before this session
         // even started. The event now fires only from a shift that causes the transition.
         val delegate = FakePresenter().apply { solved = true }
-        val presenter = object : Presenter by delegate {
+        val presenter = object : TuiPresenter by delegate {
             override fun restoreOnStartup() {
                 delegate.restoreOnStartup()
                 delegate.loadGame("solved-save")
@@ -112,7 +112,7 @@ class TuiViewSolvedStateTest {
     @Test
     fun `loading an unsolved board from the Congratulations screen re-enables the arrows and title`() {
         val delegate = FakePresenter().apply { solved = true; saveNames = listOf("save1") }
-        val presenter = object : Presenter by delegate {
+        val presenter = object : TuiPresenter by delegate {
             override fun loadGame(name: String) {
                 delegate.loadGame(name)
                 delegate.solved = false

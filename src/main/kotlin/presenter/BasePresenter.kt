@@ -6,13 +6,16 @@ import board_model.BoardImpl
 import board_model.BoardModel
 import storage.FileSaveRepository
 import storage.SaveRepository
-import view.EndOfInputException
 import view.View
 
-class PresenterImpl(
-    var view: View,
-    var board: BoardModel = BoardImpl(),
-    private val saves: SaveRepository = FileSaveRepository(),
+/** Owns the domain-mutation flows [ConsolePresenter] and [TuiPresenter] use identically -
+ *  shift/reset/save/load/exit and their board/saves/analytics wiring. Console-only concerns
+ *  ([ConsolePresenter.play]) and TUI-only concerns (the read-only query surface) live on the
+ *  two concrete subclasses, [ConsolePresenterImpl] and [TuiPresenterImpl] (GH-23). */
+abstract class BasePresenter(
+    protected val view: View,
+    protected val board: BoardModel = BoardImpl(),
+    protected val saves: SaveRepository = FileSaveRepository(),
     private val analytics: AnalyticsService = NoopAnalyticsService(),
 ) : Presenter {
 
@@ -53,8 +56,8 @@ class PresenterImpl(
     }
 
     /** [trigger] is `"command"` for the mid-game `load` console command, or `"startup_prompt"`
-     *  when called from [restoreOnStartup] - see `load_command_used` in docs/ANALYTICS_EVENTS.md.
-     *  Returns whether the board was actually restored, so [restoreOnStartup] can report an
+     *  when called from [offerStartupRestore] - see `load_command_used` in docs/ANALYTICS_EVENTS.md.
+     *  Returns whether the board was actually restored, so [offerStartupRestore] can report an
      *  accurate `startup_restore_decision` instead of assuming success (audit on PR #14: a
      *  corrupted/mismatched save offered at startup was being recorded as "restored"). */
     private fun loadGame(name: String, trigger: String): Boolean {
@@ -89,7 +92,7 @@ class PresenterImpl(
     }
 
     /**
-     * Ends the current [play] session on demand (the `exit`/`quit` command), asking whether to
+     * Ends the current session on demand (the `exit`/`quit` command), asking whether to
      * save first. Declining, or a blank/EOF name, ends the session unsaved. A save *attempt*
      * that fails does **not** end the session (see below) - [exitGame] can return normally
      * instead of always throwing [ExitRequestedException].
@@ -152,29 +155,6 @@ class PresenterImpl(
         }
     }
 
-    override fun listSaves(): List<String> =
-        try {
-            saves.listSaves()
-        } catch (e: Exception) {
-            emptyList()
-        }
-
-    override fun saveExists(name: String): Boolean =
-        try {
-            saves.exists(name)
-        } catch (e: Exception) {
-            false
-        }
-
-    override fun isSolved(): Boolean = board.isCorrect()
-
-    // A defensive copy - board.boardArray is the live, mutable backing array; handing it out
-    // directly would let a caller (or a future one) mutate board state without going through
-    // shiftLeft/Right/Up/Down (audit finding on PR #22).
-    override fun boardState(): IntArray = board.boardArray.copyOf()
-
-    override fun squareSide(): Int = board.SQUARE_SIDE
-
     private fun availableSavesMessage(): String {
         // Guarded on its own - a failure here (e.g. an unreadable saves/ directory) shouldn't
         // change the load's actual result (it was still "not found"), just degrade the message.
@@ -186,17 +166,20 @@ class PresenterImpl(
         return if (available.isEmpty()) "No saves available." else "Available saves: ${available.joinToString(", ")}"
     }
 
-    /** Guards [restoreOnStartup] against running twice in one launch. */
+    /** Guards [offerStartupRestore] against running twice in one launch. */
     private var startupRestoreDone = false
 
     /**
-     * Offers to restore a previous game at startup, before the play loop begins. No-op if
-     * there are no saves, or on a repeat call. One save asks a yes/no question; two or more
-     * list names and let the user type one (blank/EOF -> new game; an unknown name re-prompts
-     * rather than silently falling back to a new game). Never throws - this runs before
-     * [play]'s own try/catch exists, mirroring [loadGame]/[saveGame]'s non-throwing contract.
+     * Offers to restore a previous game at startup, before play begins. No-op if there are no
+     * saves, or on a repeat call. One save asks a yes/no question; two or more list names and
+     * let the user type one (blank/EOF -> new game; an unknown name re-prompts rather than
+     * silently falling back to a new game). Never throws - this runs before either UI's own
+     * try/catch exists, mirroring [loadGame]/[saveGame]'s non-throwing contract. Protected
+     * rather than exposed directly on [Presenter] - [ConsolePresenterImpl.play] calls it as its
+     * first step, and [TuiPresenterImpl] re-exposes it publicly as [TuiPresenter.restoreOnStartup]
+     * so [view.tui.TuiView] can run it ahead of its own event loop (GH-3).
      */
-    override fun restoreOnStartup() {
+    protected fun offerStartupRestore() {
         if (startupRestoreDone) return
         startupRestoreDone = true
         try {
@@ -230,22 +213,6 @@ class PresenterImpl(
         } catch (e: Exception) {
             // Any failure here (unreadable saves dir, view I/O error) just means the game
             // starts fresh instead of crashing at boot.
-        }
-    }
-
-    override fun play() {
-        restoreOnStartup()
-        while (!board.isCorrect()) {
-            try {
-                view.displayBoard(board.boardArray, board.SQUARE_SIDE)
-                view.processCommand()
-            } catch (e: EndOfInputException) {
-                return
-            } catch (e: ExitRequestedException) {
-                return
-            } catch (e: Exception) {
-                view.showMessage(e.message ?: "Error") // not System.err - stays in sync with the board output
-            }
         }
     }
 }

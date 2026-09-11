@@ -5,7 +5,7 @@ import storage.SavedBoard
 
 /**
  * A [SaveRepository] test double backed by an in-memory map instead of the filesystem.
- * Used to exercise [presenter.PresenterImpl]'s save/load delegation without touching disk.
+ * Used to exercise [presenter.BasePresenter]'s save/load delegation without touching disk.
  */
 class FakeSaveRepository(
     private val saves: MutableMap<String, SavedBoard> = mutableMapOf(),
@@ -54,7 +54,7 @@ class FakeSaveRepository(
     }
 
     /** Mirrors [storage.FileSaveRepository]'s real safety rule, so tests exercising name
-     *  validation (e.g. [presenter.PresenterImpl.exitGame]'s re-prompt loop) don't need the
+     *  validation (e.g. [presenter.BasePresenter.exitGame]'s re-prompt loop) don't need the
      *  real filesystem-backed repository. */
     override fun isValidName(name: String): Boolean =
         name.isNotBlank() &&

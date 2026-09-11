@@ -1,6 +1,6 @@
 package view
 
-import presenter.Presenter
+import presenter.ConsolePresenter
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -15,7 +15,7 @@ class ViewImpl internal constructor(
 ) : View {
 
     /** Must be assigned before [play] or [processCommand] are called - use [create]. */
-    lateinit var presenter: Presenter
+    lateinit var presenter: ConsolePresenter
         internal set
 
     companion object {
@@ -27,7 +27,7 @@ class ViewImpl internal constructor(
         fun create(
             input: BufferedReader = BufferedReader(InputStreamReader(System.`in`)),
             output: PrintStream = System.out,
-            presenterFactory: (View) -> Presenter,
+            presenterFactory: (View) -> ConsolePresenter,
         ): ViewImpl {
             val view = ViewImpl(input, output)
             view.presenter = presenterFactory(view)
@@ -114,8 +114,8 @@ class ViewImpl internal constructor(
 
     /** null on a clean EOF or a dead stream (IOException) - both mean "no more input". Unlike
      *  [processCommand], the startup-restore and exit-before-quitting prompts treat that as
-     *  "decline"/"blank" rather than throwing - see [presenter.PresenterImpl]'s
-     *  restoreOnStartup/exitGame. */
+     *  "decline"/"blank" rather than throwing - see [presenter.BasePresenter]'s
+     *  offerStartupRestore/exitGame. */
     private fun readLineOrNull(): String? = try {
         input.readLine()
     } catch (e: IOException) {

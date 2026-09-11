@@ -1,6 +1,6 @@
 package view.tui
 
-import presenter.PresenterImpl
+import presenter.TuiPresenterImpl
 import testing.FakeBoardModel
 import testing.FakePresenter
 import testing.FakeSaveRepository
@@ -13,7 +13,7 @@ import kotlin.test.assertTrue
 /**
  * Covers GH-3's Save/Load/Exit dialogs and the startup restore prompt, plus their analytics.
  * Driven via `FakeTerminal` + `RecordingAnalyticsService`, and either `FakePresenter` (board
- * click dispatch, which doesn't need real presenter logic) or a real `PresenterImpl` over
+ * click dispatch, which doesn't need real presenter logic) or a real `TuiPresenterImpl` over
  * `FakeBoardModel`/`FakeSaveRepository` (the exit and startup-restore flows, which round-trip
  * through the presenter calling back into `TuiView`'s own `View` methods - a `FakePresenter`
  * doesn't do that).
@@ -30,7 +30,7 @@ class TuiViewDialogTest {
         saves: FakeSaveRepository = FakeSaveRepository(),
         board: FakeBoardModel = FakeBoardModel(),
         analytics: RecordingAnalyticsService = RecordingAnalyticsService(),
-    ): TuiView = TuiView.create(terminal, analytics) { v -> PresenterImpl(v, board, saves, analytics) }
+    ): TuiView = TuiView.create(terminal, analytics) { v -> TuiPresenterImpl(v, board, saves, analytics) }
 
     private fun boardLayout(presenter: FakePresenter) = BoardLayout(terminalSize, presenter.side, arrowsEnabled = true)
 
@@ -463,7 +463,7 @@ class TuiViewDialogTest {
             events = mutableListOf(
                 TerminalEvent.MouseClick(exitX, exitY),
                 TerminalEvent.MouseClick(yesButton.x, DialogLayout(exitDialog, terminalSize).buttonsRow()),
-                // "a/b" is an invalid name (path separator) - triggers PresenterImpl's
+                // "a/b" is an invalid name (path separator) - triggers BasePresenter's
                 // re-prompt with an explanatory showMessage().
                 TerminalEvent.KeyPress('a'),
                 TerminalEvent.KeyPress('/'),

@@ -9,8 +9,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * Covers [PresenterImpl.exitGame] (the `exit`/`quit` command), exercised through
- * [PresenterImpl.play] so that its play-loop-terminating behaviour is verified alongside its
+ * Covers [BasePresenter.exitGame] (the `exit`/`quit` command), exercised through
+ * [ConsolePresenterImpl.play] so that its play-loop-terminating behaviour is verified alongside its
  * save-before-quitting dialogue. The `exit`/`quit` -> `presenter.exitGame()` dispatch itself is
  * covered separately in ViewImplCommandTest - here the scripted [FakeView] command directly
  * calls `exitGame()`, standing in for that dispatch. See the analytics plan on GH-12 for
@@ -23,12 +23,12 @@ class PresenterImplExitTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
-        lateinit var presenter: PresenterImpl
+        lateinit var presenter: ConsolePresenterImpl
         val view = FakeView(
             commands = mutableListOf({ presenter.exitGame() }),
             confirmSaveBeforeExitResponses = mutableListOf(false),
         )
-        presenter = PresenterImpl(view, board, saves, analytics)
+        presenter = ConsolePresenterImpl(view, board, saves, analytics)
 
         presenter.play()
 
@@ -44,13 +44,13 @@ class PresenterImplExitTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
-        lateinit var presenter: PresenterImpl
+        lateinit var presenter: ConsolePresenterImpl
         val view = FakeView(
             commands = mutableListOf({ presenter.exitGame() }),
             confirmSaveBeforeExitResponses = mutableListOf(true),
             promptSaveNameResponses = mutableListOf("foo"),
         )
-        presenter = PresenterImpl(view, board, saves, analytics)
+        presenter = ConsolePresenterImpl(view, board, saves, analytics)
 
         presenter.play()
 
@@ -78,13 +78,13 @@ class PresenterImplExitTest {
         val saves = FakeSaveRepository()
         saves.saveException = RuntimeException("disk full")
         val analytics = RecordingAnalyticsService()
-        lateinit var presenter: PresenterImpl
+        lateinit var presenter: ConsolePresenterImpl
         val view = FakeView(
             commands = mutableListOf({ presenter.exitGame() }, { board.correct = true }),
             confirmSaveBeforeExitResponses = mutableListOf(true),
             promptSaveNameResponses = mutableListOf("foo"),
         )
-        presenter = PresenterImpl(view, board, saves, analytics)
+        presenter = ConsolePresenterImpl(view, board, saves, analytics)
 
         presenter.play()
 
@@ -115,13 +115,13 @@ class PresenterImplExitTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
-        lateinit var presenter: PresenterImpl
+        lateinit var presenter: ConsolePresenterImpl
         val view = FakeView(
             commands = mutableListOf({ presenter.exitGame() }),
             confirmSaveBeforeExitResponses = mutableListOf(true),
             promptSaveNameResponses = mutableListOf("my game", "foo"),
         )
-        presenter = PresenterImpl(view, board, saves, analytics)
+        presenter = ConsolePresenterImpl(view, board, saves, analytics)
 
         presenter.play()
 
@@ -149,13 +149,13 @@ class PresenterImplExitTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
-        lateinit var presenter: PresenterImpl
+        lateinit var presenter: ConsolePresenterImpl
         val view = FakeView(
             commands = mutableListOf({ presenter.exitGame() }),
             confirmSaveBeforeExitResponses = mutableListOf(true),
             promptSaveNameResponses = mutableListOf("my game", null),
         )
-        presenter = PresenterImpl(view, board, saves, analytics)
+        presenter = ConsolePresenterImpl(view, board, saves, analytics)
 
         presenter.play()
 
@@ -175,13 +175,13 @@ class PresenterImplExitTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
-        lateinit var presenter: PresenterImpl
+        lateinit var presenter: ConsolePresenterImpl
         val view = FakeView(
             commands = mutableListOf({ presenter.exitGame() }),
             confirmSaveBeforeExitResponses = mutableListOf(true),
             promptSaveNameResponses = mutableListOf("a/b", "foo"),
         )
-        presenter = PresenterImpl(view, board, saves, analytics)
+        presenter = ConsolePresenterImpl(view, board, saves, analytics)
 
         presenter.play()
 
@@ -201,13 +201,13 @@ class PresenterImplExitTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
-        lateinit var presenter: PresenterImpl
+        lateinit var presenter: ConsolePresenterImpl
         val view = FakeView(
             commands = mutableListOf({ presenter.exitGame() }),
             confirmSaveBeforeExitResponses = mutableListOf(true),
             promptSaveNameResponses = mutableListOf(null),
         )
-        presenter = PresenterImpl(view, board, saves, analytics)
+        presenter = ConsolePresenterImpl(view, board, saves, analytics)
 
         presenter.play()
 

@@ -1,13 +1,15 @@
 package testing
 
-import presenter.Presenter
+import presenter.ConsolePresenter
+import presenter.TuiPresenter
 
 /**
- * A [Presenter] test double that records every call it receives. Used to
- * verify [view.ViewImpl] parses console input and delegates correctly,
- * without depending on real presenter/board logic.
+ * A [presenter.Presenter] test double that records every call it receives. Used to verify
+ * [view.ViewImpl] and [view.tui.TuiView] parse input and delegate correctly, without depending
+ * on real presenter/board logic. Temporarily implements both [ConsolePresenter] and
+ * [TuiPresenter] (GH-23 WU1) - WU2 splits this into `FakeConsolePresenter`/`FakeTuiPresenter`.
  */
-class FakePresenter : Presenter {
+class FakePresenter : ConsolePresenter, TuiPresenter {
 
     val calls = mutableListOf<String>()
 
@@ -51,7 +53,7 @@ class FakePresenter : Presenter {
     }
 
     /** Always reports success - tests exercising a failed save use [testing.FakeSaveRepository]
-     *  directly against [presenter.PresenterImpl], not this fake. */
+     *  directly against [presenter.BasePresenter], not this fake. */
     override fun saveGame(name: String): Boolean {
         calls.add("saveGame($name)")
         return true
