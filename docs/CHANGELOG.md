@@ -13,10 +13,10 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
-## [Unreleased]
+## [0.5.1] — 2026-09-11 (PR #27 merged)
 
-### Added
-- [wip] GH-23 (WU1/2): splits `Presenter` into a shared core plus `ConsolePresenter`/`TuiPresenter` sub-interfaces, with `BasePresenter` (shared domain-mutation flows) and `ConsolePresenterImpl`/`TuiPresenterImpl` replacing the single `PresenterImpl` — `ViewImpl` now depends only on `ConsolePresenter`, `TuiView` only on `TuiPresenter`. Pure internal refactor, no user-visible behavior change. WU2 splits the presenter test doubles/test files to match.
+### Changed
+- [app] GH-23: splits `Presenter` into a shared core plus `ConsolePresenter`/`TuiPresenter` sub-interfaces, with `BasePresenter` (shared domain-mutation flows) and `ConsolePresenterImpl`/`TuiPresenterImpl` replacing the single `PresenterImpl` — `ViewImpl` now depends only on `ConsolePresenter`, `TuiView` only on `TuiPresenter`. Test doubles and presenter test files restructured to match (`FakePresenter` split into `FakeConsolePresenter`/`FakeTuiPresenter`; `PresenterImpl*Test.kt` renamed/split per production class). Pure internal refactor - no user-visible behavior change.
 
 ## [0.5.0] — 2026-09-11 (PR #25 merged)
 
