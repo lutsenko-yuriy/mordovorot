@@ -96,7 +96,11 @@ class ScreenRenderer {
         val maxLineWidth = (layout.width - 4).coerceAtLeast(1)
         drawDialogBox(canvas, layout)
         canvas.put(layout.left + 2, layout.titleRow(), truncate(dialog.title, maxLineWidth))
-        dialog.message?.let { canvas.put(layout.left + 2, layout.messageRow!!, truncate(it, maxLineWidth)) }
+        // The message is already word-wrapped to fit maxLineWidth (DialogLayout.messageLines) -
+        // drawn one line per row, not truncated, so a long multi-clause message (e.g. the exit
+        // flow's invalid-name explanation) doesn't lose its actionable half (audit round 3 on
+        // PR #24).
+        layout.messageLines.forEachIndexed { index, line -> canvas.put(layout.left + 2, layout.messageRowPosition(index), line) }
         layout.textFieldRow?.let { row -> canvas.put(layout.left + 2, row, truncate("Name: ${dialog.textFieldValue}_", maxLineWidth)) }
         for (index in dialog.listItems.indices) {
             val marker = if (index == dialog.selectedIndex) "> " else "  "

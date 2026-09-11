@@ -473,10 +473,11 @@ class TuiViewDialogTest {
 
         // The full warning ("'somesave' already exists - it will be overwritten.") is 51 chars -
         // wider than the 40-column terminal - so the frame showing it (the one drawn right
-        // after the last keystroke, before EOF closes the dialog) must show it truncated (an
-        // ellipsis), not whole, and every rendered line must still fit the terminal's width.
+        // after the last keystroke, before EOF closes the dialog) must show it wrapped across
+        // multiple lines, in full, rather than cut off or overflowing the border.
         val dialogFrame = terminal.frames[terminal.frames.size - 2]
-        assertTrue(dialogFrame.contains("…"))
+        assertTrue(dialogFrame.contains("already exists"))
+        assertTrue(dialogFrame.contains("overwritten"))
         // Row 0 carries the leading clear-screen escape sequence, not board content - every
         // other row is a fixed-width canvas row and must fit the terminal exactly.
         assertTrue(dialogFrame.lines().drop(1).all { it.length <= narrow.columns })

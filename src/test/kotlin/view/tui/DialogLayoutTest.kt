@@ -5,15 +5,16 @@ import kotlin.test.assertTrue
 
 /**
  * Covers GH-3's dialog geometry: the box must be wide enough to fit whatever it's asked to
- * show - a long overwrite warning, a long save name - rather than a fixed width that content
- * can overflow past the right border (reported against the Save dialog's overwrite warning).
+ * show - a long typed name, a long save name - rather than a fixed width content can overflow
+ * past the right border on. A long message wraps to multiple lines instead of widening the box
+ * or being truncated (see the dedicated word-wrap test below).
  */
 class DialogLayoutTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
 
     @Test
-    fun `the box widens to fit a message longer than the default width`() {
+    fun `a message longer than the box width wraps instead of overflowing the box`() {
         val longMessage = "'current_save' already exists - it will be overwritten."
         val dialog = Dialog(
             kind = Dialog.Kind.SAVE,
@@ -25,9 +26,8 @@ class DialogLayoutTest {
 
         val layout = DialogLayout(dialog, terminalSize)
 
-        // The message is drawn starting at left + 2 - the box's right edge (left + width) must
-        // clear the message's last column, or it renders past the border.
-        assertTrue(layout.left + 2 + longMessage.length <= layout.left + layout.width)
+        // Every wrapped line must fit inside the box - none may run past the right border.
+        assertTrue(layout.messageLines.all { layout.left + 2 + it.length <= layout.left + layout.width })
     }
 
     @Test
@@ -55,5 +55,21 @@ class DialogLayoutTest {
         val layout = DialogLayout(dialog, narrow)
 
         assertTrue(layout.left + layout.width <= narrow.columns)
+    }
+
+    @Test
+    fun `a long message wraps to multiple lines instead of being truncated`() {
+        // Round 3 audit finding on PR #24: truncating this exact message at 80 columns cut off
+        // "try again, or press Enter to skip saving" - the one instruction that tells the user
+        // how to get out of the loop they're stuck in.
+        val message = "'a/b' isn't a usable save name (no spaces, path separators, or '..') - " +
+            "try again, or press Enter to skip saving."
+        val dialog = Dialog(Dialog.Kind.SAVE, "Save game", message = message, buttons = listOf(DialogButtonSpec("save", "Save")))
+
+        val layout = DialogLayout(dialog, TerminalSize(columns = 80, rows = 40))
+
+        assertTrue(layout.messageLines.size > 1)
+        assertTrue(layout.messageLines.joinToString(" ") == message)
+        assertTrue(layout.messageLines.all { it.length <= layout.width - 4 })
     }
 }

@@ -1,7 +1,7 @@
 package view.tui
 
 /** Fixed interior width for every dialog box - wide enough for the widest content (typed save
- *  names, the overwrite warning, save-list rows). */
+ *  names, save-list rows) that isn't a free-form message. */
 internal const val DIALOG_WIDTH = 44
 
 /** Absolute floor for the terminal-width cap below - small enough to still fit inside a
@@ -16,22 +16,27 @@ private const val MIN_WIDTH = 12
  */
 class DialogLayout(private val dialog: Dialog, terminalSize: TerminalSize) {
 
-    // Widens past the default to fit whatever the dialog is actually showing (a long overwrite
-    // warning, a long typed name, a long save name) - a fixed width let content overflow past
-    // the right border instead. left+2 is the fixed left margin every content line is drawn at
-    // (see ScreenRenderer.drawDialog); +2 more for the same margin on the right. The cap floors
-    // at a small constant, not DIALOG_WIDTH - flooring it at DIALOG_WIDTH defeated the cap
-    // entirely on any terminal narrower than DIALOG_WIDTH, which is exactly the terminal size
-    // this cap exists to protect (audit round 2 on PR #24: content was still overflowing the
-    // canvas on a 40-column terminal because the box was held at 44 regardless).
-    val width = maxOf(DIALOG_WIDTH, contentWidth(dialog) + 4).coerceAtMost((terminalSize.columns - 4).coerceAtLeast(MIN_WIDTH))
+    // The box's width is driven by its "structural" content (title, text field, list rows,
+    // buttons) - not the free-form message, which wraps to fit instead of growing the box.
+    // Growing the box to a long message's raw length was still getting capped by the terminal
+    // width and truncated, which could cut off the actionable half of a multi-clause message
+    // (audit round 3 on PR #24: the exit flow's invalid-name explanation lost its "press Enter
+    // to skip saving" half at 80 columns). The cap floors at a small constant, not DIALOG_WIDTH -
+    // flooring it at DIALOG_WIDTH defeated the cap entirely on any terminal narrower than
+    // DIALOG_WIDTH, which is exactly the terminal size this cap exists to protect (audit round 2).
+    val width = maxOf(DIALOG_WIDTH, structuralContentWidth(dialog) + 4)
+        .coerceAtMost((terminalSize.columns - 4).coerceAtLeast(MIN_WIDTH))
+
     private val hasList = dialog.kind == Dialog.Kind.LOAD
     private val listRows = if (hasList) dialog.listItems.size.coerceAtLeast(1) else 0
     private val hasTextField = dialog.kind == Dialog.Kind.SAVE
-    private val hasMessage = dialog.message != null
+
+    /** The message word-wrapped to fit the chosen [width] - possibly several lines, unlike
+     *  every other content line. */
+    val messageLines: List<String> = dialog.message?.let { wordWrap(it, (width - 4).coerceAtLeast(1)) } ?: emptyList()
 
     private val height = 2 + // title + blank
-        (if (hasMessage) 1 else 0) +
+        messageLines.size +
         (if (hasTextField) 1 else 0) +
         listRows +
         2 // blank + buttons
@@ -39,16 +44,17 @@ class DialogLayout(private val dialog: Dialog, terminalSize: TerminalSize) {
     val left = ((terminalSize.columns - width) / 2).coerceAtLeast(0)
     val top = ((terminalSize.rows - height) / 2).coerceAtLeast(0)
 
-    // Rows below the title+blank are assigned sequentially: message, then text field, then
-    // the list - each only if the dialog actually has one.
-    val messageRow: Int? = if (hasMessage) top + 2 else null
-    val textFieldRow: Int? = if (hasTextField) (messageRow ?: top + 1) + 1 else null
-    private val listStartRow = (textFieldRow ?: messageRow ?: top + 1) + 1
+    // Rows below the title+blank are assigned sequentially: message (however many lines it
+    // wrapped to), then text field, then the list - each only if the dialog actually has one.
+    private val messageStartRow: Int? = if (messageLines.isNotEmpty()) top + 2 else null
+    val textFieldRow: Int? = if (hasTextField) (messageStartRow?.plus(messageLines.size) ?: top + 1) + 1 else null
+    private val listStartRow = (textFieldRow ?: messageStartRow?.plus(messageLines.size) ?: top + 1) + 1
     private val buttonsRow = listStartRow + listRows + 1
 
     fun titleRow(): Int = top
     fun bottomRow(): Int = buttonsRow
     fun buttonsRow(): Int = buttonsRow
+    fun messageRowPosition(index: Int): Int = (messageStartRow ?: top + 2) + index
     fun listRowPosition(index: Int): Int = listStartRow + index
 
     internal fun buttons(): List<DialogButtonLayout> {
@@ -76,14 +82,41 @@ class DialogLayout(private val dialog: Dialog, terminalSize: TerminalSize) {
 
 internal data class DialogButtonLayout(val target: HitTarget, val text: String, val x: Int, val range: IntRange)
 
-/** The widest single line the dialog needs to show: title, message, the `Name: <value>_` text
- *  field, the longest list row, or the button row - whichever is longest. */
-private fun contentWidth(dialog: Dialog): Int {
+/** The widest single line the dialog's non-message content needs: title, the `Name: <value>_`
+ *  text field, the longest list row, or the button row - whichever is longest. The message is
+ *  deliberately excluded - it wraps to fit [DialogLayout.width] instead of driving it. */
+private fun structuralContentWidth(dialog: Dialog): Int {
     val lines = mutableListOf(dialog.title.length)
-    dialog.message?.let { lines += it.length }
     if (dialog.kind == Dialog.Kind.SAVE) lines += "Name: ${dialog.textFieldValue}_".length
     dialog.listItems.forEach { lines += "  $it".length }
     val buttonsWidth = dialog.buttons.sumOf { "[ ${it.label} ]".length } + (dialog.buttons.size - 1)
     lines += buttonsWidth
     return lines.max()
+}
+
+/** Greedy word-wrap: packs whole words onto a line up to [maxWidth], breaking to a new line
+ *  rather than truncating - unlike every other content line, a message can be long enough that
+ *  cutting it off would hide the actionable half of a multi-clause sentence. A single word
+ *  longer than [maxWidth] is hard-broken (matches the truncation "clip, don't overflow" rule
+ *  every other content line already follows). */
+private fun wordWrap(text: String, maxWidth: Int): List<String> {
+    val lines = mutableListOf<String>()
+    var current = StringBuilder()
+    for (word in text.split(" ")) {
+        val candidate = if (current.isEmpty()) word else "$current $word"
+        when {
+            candidate.length <= maxWidth -> current = StringBuilder(candidate)
+            word.length > maxWidth -> {
+                if (current.isNotEmpty()) lines += current.toString()
+                lines += word.take(maxWidth)
+                current = StringBuilder()
+            }
+            else -> {
+                lines += current.toString()
+                current = StringBuilder(word)
+            }
+        }
+    }
+    if (current.isNotEmpty() || lines.isEmpty()) lines += current.toString()
+    return lines
 }
