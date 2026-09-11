@@ -3,6 +3,8 @@ import analytics.InputMethodAnalyticsService
 import analytics.NoopAnalyticsService
 import presenter.PresenterImpl
 import view.ViewImpl
+import view.tui.AnsiTerminal
+import view.tui.TuiView
 
 /**
  * Created by yurich on 02.12.16.
@@ -10,12 +12,14 @@ import view.ViewImpl
 fun main(args: Array<String>) {
     val analytics = NoopAnalyticsService()
     val mode = resolveLaunchMode(args, analytics)
+    val decoratedAnalytics = InputMethodAnalyticsService(analytics, mode.name.lowercase())
 
-    // TODO(GH-3 WU3): once view.tui.TuiView exists, LaunchMode.MOUSE builds and plays a
-    // mouse-driven TuiView instead of the console ViewImpl below. This WU only lands the
-    // mode-resolution/analytics plumbing, so both modes run the console UI for now.
-    val view = ViewImpl.create { v -> PresenterImpl(v, analytics = InputMethodAnalyticsService(analytics, mode.name.lowercase())) }
-    view.play()
+    // WU4/WU5 still owe MOUSE mode its dialogs (Save/Load/Exit) and the Congratulations
+    // screen - until then the toolbar is a no-op and the board just keeps accepting shifts.
+    when (mode) {
+        LaunchMode.MOUSE -> TuiView.create(AnsiTerminal()) { v -> PresenterImpl(v, analytics = decoratedAnalytics) }.play()
+        LaunchMode.CONSOLE -> ViewImpl.create { v -> PresenterImpl(v, analytics = decoratedAnalytics) }.play()
+    }
 }
 
 /** Resolves the launch mode, warns on any unrecognized argument, and tracks `app_launched` -
