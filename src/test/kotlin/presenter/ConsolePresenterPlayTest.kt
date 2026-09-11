@@ -70,6 +70,26 @@ class ConsolePresenterPlayTest {
         assertEquals(1, view.processCommandCallCount)
     }
 
+    /** Guards [ConsolePresenterImpl.play]'s `catch (e: ExitRequestedException) { return }` -
+     *  the only path that actually exercised it was `exitGame()` running inside `play()`, which
+     *  moved to [BasePresenterExitTest] with the split (audit finding on PR #27: the split left
+     *  this catch unexercised, since [BasePresenterExitTest] asserts the throw against
+     *  `TestPresenter` directly, with no loop to catch it). */
+    @Test
+    fun `play returns when exitGame requests an exit`() {
+        val board = FakeBoardModel()
+        lateinit var presenter: ConsolePresenterImpl
+        val view = FakeView(
+            commands = mutableListOf({ presenter.exitGame() }),
+            confirmSaveBeforeExitResponses = mutableListOf(false),
+        )
+        presenter = ConsolePresenterImpl(view, board)
+
+        presenter.play()
+
+        assertEquals(1, view.processCommandCallCount)
+    }
+
     @Test
     fun `play swallows processCommand exceptions and keeps looping`() {
         val board = FakeBoardModel()
