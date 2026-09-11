@@ -35,19 +35,34 @@ class TuiView internal constructor(
     }
 
     override fun play() {
-        presenter.restoreOnStartup()
-        repaint()
-        while (true) {
-            when (val event = terminal.readEvent()) {
-                is TerminalEvent.MouseClick -> {
-                    handleClick(event.x, event.y)
-                    repaint()
+        terminal.enterRawMode()
+        terminal.enableMouseReporting()
+        try {
+            // presenter.restoreOnStartup() is deliberately not called yet: it would fire
+            // startup_restore_prompt_shown/startup_restore_decision analytics for a prompt this
+            // WU can't actually show (confirmRestore/chooseSaveToRestore are still no-op stubs,
+            // see below) - misrepresenting every save-carrying launch as a declined restore, and
+            // latching startupRestoreDone so WU4 couldn't retry it once the real dialog lands.
+            // WU4 wires this in alongside the Load-dialog-shaped startup prompt (audit finding
+            // on PR #22).
+            repaint()
+            while (true) {
+                when (val event = terminal.readEvent()) {
+                    is TerminalEvent.MouseClick -> {
+                        handleClick(event.x, event.y)
+                        repaint()
+                    }
+                    TerminalEvent.EndOfInput -> return
+                    // Keys/Backspace/Enter/Escape/Resize are WU4 (dialog text field) territory -
+                    // the board screen itself is mouse-only.
+                    else -> {}
                 }
-                TerminalEvent.EndOfInput -> return
-                // Keys/Backspace/Enter/Escape/Resize are WU4 (dialog text field) territory -
-                // the board screen itself is mouse-only.
-                else -> {}
             }
+        } finally {
+            // Belt-and-braces alongside AnsiTerminal's own shutdown hook (which only covers
+            // abnormal termination) - a clean EndOfInput return restores promptly instead of
+            // leaving the terminal in alt-screen/raw mode until process exit.
+            terminal.restore()
         }
     }
 

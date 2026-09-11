@@ -97,4 +97,16 @@ class TuiViewBoardTest {
         // No click events were scripted - readEvent() falls straight through to EndOfInput.
         assertTrue(presenter.calls.none { it.startsWith("shift") })
     }
+
+    @Test
+    fun `play enters raw mode and mouse reporting before reading any event, and restores on the way out`() {
+        val presenter = FakePresenter()
+        val terminal = FakeTerminal(events = mutableListOf(), terminalSize = terminalSize)
+
+        view(terminal, presenter).play()
+
+        assertTrue(terminal.rawModeEntered)
+        assertTrue(terminal.mouseReportingEnabled)
+        assertTrue(terminal.restored)
+    }
 }
