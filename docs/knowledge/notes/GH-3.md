@@ -55,4 +55,6 @@ platforms this ships to.
 **Conclusion:** no new dependency needed; `Terminal`/`AnsiTerminal`/`TerminalInputParser` as
 scoped in the plan are buildable on the JVM stdlib alone. Proceeding to WU0 (scenario stubs).
 
+- 2026-09-11: Add a workflow step guideline — implementation-stage comments should be kept concise (essential sense only, ~3 lines as a soft target, optional).
+
 ## Debrief summary
