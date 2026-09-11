@@ -57,5 +57,23 @@ scoped in the plan are buildable on the JVM stdlib alone. Proceeding to WU0 (sce
 
 - 2026-09-11: Add a workflow step guideline — implementation-stage comments should be kept concise (essential sense only, ~3 lines as a soft target, optional).
 - 2026-09-11: WU4 (dialogs) took 5 rounds of review/audit before landing clean — the most of any WU/ticket so far. Root cause looks concentrated: dialog geometry/word-wrap row arithmetic (`DialogLayout`) was a repeated source of off-by-one regressions — round 3's fix for one bug (message truncation) introduced round 4's bug (row math off-by-one), which round 4's own fix then had to re-verify by hand across all kind × message-line-count combinations in round 5. User explicitly flagged this as worth improving: "it would be better if there were less rounds of such reviews." Worth discussing at debrief: whether a geometry-specific self-check step (e.g. hand-deriving row/column arithmetic across all structural combinations *before* requesting audit, the way round 5's audit did reactively) would catch this class of bug earlier and cut the round count, rather than relying on audit to find it each time.
+- 2026-09-11: WU5 token burn observation — user flagged that session token/usage budget burns much faster than expected in real elapsed time ("The tokens get wasted really quick (2h30m vs 4h)"), i.e. session limit reset was hit well before the wall-clock window it's nominally tied to. Worth surfacing at debrief: whether review-loop overhead (parallel review+audit subagent rounds, each a full-context Opus dispatch) is a disproportionate contributor, and whether the "fewer review rounds" feedback from WU4 and this token-burn-rate observation are the same underlying cost pressure viewed from two angles — process time vs. token budget — suggesting one combined discussion rather than two separate action items.
+- 2026-09-11: FEATURE.md step 10.4 proposal-vs.-decision threshold — in PR #25 round 2, cumulative changes were two small doc/comment clarifications (no logic change), and the agent decided unilaterally not to re-invoke review/audit. User pushed back: rather than the agent deciding silently to skip, it should surface borderline cases as a proposal ("this looks small enough to skip another round — agree?") and let the user decide. Worth resolving at debrief: reword step 10.4 so that small/borderline "non-trivial" calls are always surfaced to the user rather than the agent deciding, even when confident the changes don't warrant re-review.
 
 ## Debrief summary
+
+### 2026-09-11
+
+**What went well**
+- Everything besides token usage — the user described the rest of the ticket as "quite fine."
+
+**What was hard or surprising**
+- Token/usage budget burned much faster than expected relative to wall-clock time (session
+  limit reset hit well before its nominal window) — see the WU5 token-burn note above.
+
+**What to change**
+- Fewer review/audit rounds going forward, and only with the user's explicit confirmation
+  (with the agent's recommendation attached) — not the agent unilaterally deciding to launch
+  *or* skip a subsequent round. Applied: `docs/workflows/FEATURE.md` step 10.4 reworded to
+  require stating a recommendation and waiting for confirmation before the next round, in
+  either direction.
