@@ -8,7 +8,10 @@ import view.View
  * going through [presenter.PresenterImpl.play]'s console-only `while (!board.isCorrect())` loop
  * (see the ticket's solved-state note - this is what lets a Congratulations screen exist at
  * all). Every mouse gesture resolves to an existing [Presenter] call; this WU wires the board's
- * 16 shift arrows only - the toolbar (Save/Load/Exit) and dialogs are WU4.
+ * 16 shift arrows only - the toolbar (Save/Load/Exit) and dialogs are WU4. Confirmed product
+ * decision: once solved, the arrows go dead ([ScreenState.arrowsEnabled] false) and Ctrl+C is
+ * the only way to end the session until WU4/5 add a live toolbar/Congratulations screen -
+ * accepted, not a dead-end bug (see [ScreenState]'s KDoc).
  */
 class TuiView internal constructor(
     private val terminal: Terminal,
@@ -82,14 +85,7 @@ class TuiView internal constructor(
 
     private fun repaint() {
         val terminalSize = terminal.size()
-        // forBoard(solved) drives both the title and arrowsEnabled from one flag. The title
-        // flip is real feedback the player should see; disabling the arrows on top of it isn't
-        // safe yet - there's no Congratulations screen or live toolbar (WU4/5) to hand off to,
-        // so it would strand the player with nothing left to click. Forcing arrowsEnabled back
-        // on after the fact keeps the title honest without reintroducing that dead end (audit
-        // round 3 on PR #22 - round 2's `solved = false` silently killed the title too).
         val state = ScreenState.forBoard(presenter.boardState().toList(), presenter.squareSide(), presenter.isSolved())
-            .copy(arrowsEnabled = true)
         layout = BoardLayout(terminalSize, state.squareSide, state.arrowsEnabled)
         terminal.write(renderer.render(state, terminalSize))
     }

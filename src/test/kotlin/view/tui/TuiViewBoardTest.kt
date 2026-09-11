@@ -99,10 +99,11 @@ class TuiViewBoardTest {
     }
 
     @Test
-    fun `a solved board still accepts shift clicks - the toolbar has no way out yet`() {
-        // WU3 has no Congratulations screen or live toolbar (WU4/5) - disabling the arrows on
-        // isSolved() the moment it flips true would strand the player with no interaction at
-        // all (audit round 2 on PR #22). Arrows stay live until that UI exists.
+    fun `a solved board disables the shift arrows and shows the Congratulations title`() {
+        // Confirmed product decision: once solved, the arrows go dead - Ctrl+C is the only way
+        // out until WU4/5 add a live toolbar/Congratulations screen to replace them. An earlier
+        // audit-driven attempt to keep the arrows live instead (rounds 2/3 on PR #22) was a
+        // misreading of that trade-off - reverted per direct confirmation.
         val presenter = FakePresenter()
         presenter.solved = true
         val layout = BoardLayout(terminalSize, presenter.side, arrowsEnabled = true)
@@ -111,10 +112,7 @@ class TuiViewBoardTest {
 
         view(terminal, presenter).play()
 
-        assertTrue(presenter.calls.contains("shiftLeft(0)"))
-        // The title still flips - solving isn't invisible, only the arrow-disabling is deferred
-        // (round-3 audit finding: hardcoding solved=false into ScreenState.forBoard silently
-        // dropped the title too, since forBoard drives both from one flag).
+        assertTrue(presenter.calls.none { it.startsWith("shift") })
         assertTrue(terminal.frames.last().contains("Congratulations ✓"))
     }
 
