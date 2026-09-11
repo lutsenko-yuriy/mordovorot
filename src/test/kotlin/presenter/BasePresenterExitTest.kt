@@ -5,32 +5,31 @@ import testing.FakeSaveRepository
 import testing.FakeView
 import testing.RecordingAnalyticsService
 import testing.RecordingAnalyticsService.Event
+import testing.TestPresenter
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 /**
- * Covers [BasePresenter.exitGame] (the `exit`/`quit` command), exercised through
- * [ConsolePresenterImpl.play] so that its play-loop-terminating behaviour is verified alongside its
- * save-before-quitting dialogue. The `exit`/`quit` -> `presenter.exitGame()` dispatch itself is
- * covered separately in ViewImplCommandTest - here the scripted [FakeView] command directly
- * calls `exitGame()`, standing in for that dispatch. See the analytics plan on GH-12 for
- * `exit_command_used`.
+ * Covers [BasePresenter.exitGame] (the `exit`/`quit` command) directly against [TestPresenter],
+ * driven with no `play()` loop involved - [exitGame] itself never calls back into it. The one
+ * play-loop-specific assertion this used to carry ("a failed save doesn't end the session") is
+ * [ConsolePresenterPlayTest]'s `a failed save during exit does not quit - play keeps looping`
+ * instead (split GH-23 WU2, since that's a property of [ConsolePresenterImpl.play]'s loop, not
+ * of [exitGame] itself). The `exit`/`quit` -> `presenter.exitGame()` dispatch itself is covered
+ * separately in ViewImplCommandTest. See the analytics plan on GH-12 for `exit_command_used`.
  */
-class PresenterImplExitTest {
+class BasePresenterExitTest {
 
     @Test
     fun `exit, save declined - ends play without saving`() {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
-        lateinit var presenter: ConsolePresenterImpl
-        val view = FakeView(
-            commands = mutableListOf({ presenter.exitGame() }),
-            confirmSaveBeforeExitResponses = mutableListOf(false),
-        )
-        presenter = ConsolePresenterImpl(view, board, saves, analytics)
+        val view = FakeView(confirmSaveBeforeExitResponses = mutableListOf(false))
+        val presenter = TestPresenter(view, board, saves, analytics)
 
-        presenter.play()
+        assertFailsWith<ExitRequestedException> { presenter.exitGame() }
 
         assertEquals(emptyList(), saves.saveCalls)
         assertEquals(
@@ -44,15 +43,13 @@ class PresenterImplExitTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
-        lateinit var presenter: ConsolePresenterImpl
         val view = FakeView(
-            commands = mutableListOf({ presenter.exitGame() }),
             confirmSaveBeforeExitResponses = mutableListOf(true),
             promptSaveNameResponses = mutableListOf("foo"),
         )
-        presenter = ConsolePresenterImpl(view, board, saves, analytics)
+        val presenter = TestPresenter(view, board, saves, analytics)
 
-        presenter.play()
+        assertFailsWith<ExitRequestedException> { presenter.exitGame() }
 
         assertEquals(1, saves.saveCalls.size)
         val (name, state, squareSide) = saves.saveCalls[0]
@@ -69,26 +66,22 @@ class PresenterImplExitTest {
     }
 
     @Test
-    fun `exit, save confirmed but the save itself fails - does not quit, and says so`() {
+    fun `exit, save confirmed but the save itself fails - returns normally and says so, without quitting`() {
         // A failed save must not compound into a lost session on top of it (audit round 2 on
         // PR #15: quitting anyway after a failed save was strictly worse than not asking at
-        // all). The second scripted command ends play() normally, standing in for whatever the
-        // user does next (retry `exit`, fix the underlying issue, or just keep playing).
+        // all) - exitGame returns normally instead of throwing ExitRequestedException.
         val board = FakeBoardModel()
         val saves = FakeSaveRepository()
         saves.saveException = RuntimeException("disk full")
         val analytics = RecordingAnalyticsService()
-        lateinit var presenter: ConsolePresenterImpl
         val view = FakeView(
-            commands = mutableListOf({ presenter.exitGame() }, { board.correct = true }),
             confirmSaveBeforeExitResponses = mutableListOf(true),
             promptSaveNameResponses = mutableListOf("foo"),
         )
-        presenter = ConsolePresenterImpl(view, board, saves, analytics)
+        val presenter = TestPresenter(view, board, saves, analytics)
 
-        presenter.play()
+        presenter.exitGame()
 
-        assertEquals(2, view.processCommandCallCount)
         assertEquals(
             listOf(Event("save_command_used", mapOf("result" to "error"))),
             analytics.events,
@@ -115,15 +108,13 @@ class PresenterImplExitTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
-        lateinit var presenter: ConsolePresenterImpl
         val view = FakeView(
-            commands = mutableListOf({ presenter.exitGame() }),
             confirmSaveBeforeExitResponses = mutableListOf(true),
             promptSaveNameResponses = mutableListOf("my game", "foo"),
         )
-        presenter = ConsolePresenterImpl(view, board, saves, analytics)
+        val presenter = TestPresenter(view, board, saves, analytics)
 
-        presenter.play()
+        assertFailsWith<ExitRequestedException> { presenter.exitGame() }
 
         assertEquals(1, saves.saveCalls.size)
         assertEquals("foo", saves.saveCalls[0].first)
@@ -149,15 +140,13 @@ class PresenterImplExitTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
-        lateinit var presenter: ConsolePresenterImpl
         val view = FakeView(
-            commands = mutableListOf({ presenter.exitGame() }),
             confirmSaveBeforeExitResponses = mutableListOf(true),
             promptSaveNameResponses = mutableListOf("my game", null),
         )
-        presenter = ConsolePresenterImpl(view, board, saves, analytics)
+        val presenter = TestPresenter(view, board, saves, analytics)
 
-        presenter.play()
+        assertFailsWith<ExitRequestedException> { presenter.exitGame() }
 
         assertEquals(emptyList(), saves.saveCalls)
         assertEquals(
@@ -175,15 +164,13 @@ class PresenterImplExitTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
-        lateinit var presenter: ConsolePresenterImpl
         val view = FakeView(
-            commands = mutableListOf({ presenter.exitGame() }),
             confirmSaveBeforeExitResponses = mutableListOf(true),
             promptSaveNameResponses = mutableListOf("a/b", "foo"),
         )
-        presenter = ConsolePresenterImpl(view, board, saves, analytics)
+        val presenter = TestPresenter(view, board, saves, analytics)
 
-        presenter.play()
+        assertFailsWith<ExitRequestedException> { presenter.exitGame() }
 
         assertEquals(1, saves.saveCalls.size)
         assertEquals("foo", saves.saveCalls[0].first)
@@ -201,15 +188,13 @@ class PresenterImplExitTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
-        lateinit var presenter: ConsolePresenterImpl
         val view = FakeView(
-            commands = mutableListOf({ presenter.exitGame() }),
             confirmSaveBeforeExitResponses = mutableListOf(true),
             promptSaveNameResponses = mutableListOf(null),
         )
-        presenter = ConsolePresenterImpl(view, board, saves, analytics)
+        val presenter = TestPresenter(view, board, saves, analytics)
 
-        presenter.play()
+        assertFailsWith<ExitRequestedException> { presenter.exitGame() }
 
         assertEquals(emptyList(), saves.saveCalls)
         assertEquals(

@@ -8,7 +8,7 @@ import view.EndOfInputException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class PresenterImplPlayTest {
+class ConsolePresenterPlayTest {
 
     @Test
     fun `play returns immediately when the board is already correct`() {
@@ -23,10 +23,11 @@ class PresenterImplPlayTest {
     }
 
     /** Console-side anchor for [BasePresenter.offerStartupRestore] - the flow's own branch
-     *  matrix (0/1/2+ saves, decline, unknown name, etc.) is covered against
-     *  [TuiPresenterImpl.restoreOnStartup] in [PresenterImplStartupRestoreTest]; this test just
-     *  pins that [ConsolePresenterImpl.play] still calls it as its first step (audit finding on
-     *  PR #26: splitting `offerStartupRestore` off into a `protected` method meant each concrete
+     *  matrix (0/1/2+ saves, decline, unknown name, etc.) is covered against `play()` in
+     *  [ConsolePresenterStartupRestoreTest] and against [TuiPresenterImpl.restoreOnStartup]
+     *  directly in [TuiPresenterStartupRestoreTest]; this test just pins that
+     *  [ConsolePresenterImpl.play] still calls it as its first step (audit finding on PR #26:
+     *  splitting `offerStartupRestore` off into a `protected` method meant each concrete
      *  subclass needed its own anchor, and the console side lost its coverage when every
      *  startup-restore test moved onto the TUI entry point). */
     @Test
@@ -100,5 +101,27 @@ class PresenterImplPlayTest {
         presenter.play()
 
         assertEquals(listOf("bad command"), view.shownMessages)
+    }
+
+    /** Play-loop-specific half of `exit, save confirmed but the save itself fails` - moved here
+     *  (GH-23 WU2) because "does not quit" is a [play] loop-continuation assertion, not a
+     *  [BasePresenter.exitGame] behaviour; that method's own message/analytics contract is
+     *  covered directly, without a play() loop, in [BasePresenterExitTest]. */
+    @Test
+    fun `a failed save during exit does not quit - play keeps looping`() {
+        val board = FakeBoardModel()
+        val saves = FakeSaveRepository()
+        saves.saveException = RuntimeException("disk full")
+        lateinit var presenter: ConsolePresenterImpl
+        val view = FakeView(
+            commands = mutableListOf({ presenter.exitGame() }, { board.correct = true }),
+            confirmSaveBeforeExitResponses = mutableListOf(true),
+            promptSaveNameResponses = mutableListOf("foo"),
+        )
+        presenter = ConsolePresenterImpl(view, board, saves)
+
+        presenter.play()
+
+        assertEquals(2, view.processCommandCallCount)
     }
 }

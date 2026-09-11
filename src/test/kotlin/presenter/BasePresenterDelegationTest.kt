@@ -2,16 +2,17 @@ package presenter
 
 import testing.FakeBoardModel
 import testing.FakeView
+import testing.TestPresenter
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class PresenterImplDelegationTest {
+class BasePresenterDelegationTest {
 
     @Test
     fun `shiftLeft delegates to the board`() {
         val board = FakeBoardModel()
-        val presenter = ConsolePresenterImpl(FakeView(), board)
+        val presenter = TestPresenter(FakeView(), board)
 
         presenter.shiftLeft(2)
 
@@ -21,7 +22,7 @@ class PresenterImplDelegationTest {
     @Test
     fun `shiftRight delegates to the board`() {
         val board = FakeBoardModel()
-        val presenter = ConsolePresenterImpl(FakeView(), board)
+        val presenter = TestPresenter(FakeView(), board)
 
         presenter.shiftRight(1)
 
@@ -31,7 +32,7 @@ class PresenterImplDelegationTest {
     @Test
     fun `shiftUp delegates to the board`() {
         val board = FakeBoardModel()
-        val presenter = ConsolePresenterImpl(FakeView(), board)
+        val presenter = TestPresenter(FakeView(), board)
 
         presenter.shiftUp(3)
 
@@ -41,7 +42,7 @@ class PresenterImplDelegationTest {
     @Test
     fun `shiftDown delegates to the board`() {
         val board = FakeBoardModel()
-        val presenter = ConsolePresenterImpl(FakeView(), board)
+        val presenter = TestPresenter(FakeView(), board)
 
         presenter.shiftDown(0)
 
@@ -51,7 +52,7 @@ class PresenterImplDelegationTest {
     @Test
     fun `resetGame delegates to the board`() {
         val board = FakeBoardModel()
-        val presenter = ConsolePresenterImpl(FakeView(), board)
+        val presenter = TestPresenter(FakeView(), board)
 
         presenter.resetGame()
 
@@ -62,7 +63,7 @@ class PresenterImplDelegationTest {
     fun `exceptions from the board propagate unchanged`() {
         val board = FakeBoardModel()
         board.shiftLeftException = IllegalArgumentException("Incorrect row")
-        val presenter = ConsolePresenterImpl(FakeView(), board)
+        val presenter = TestPresenter(FakeView(), board)
 
         val exception = assertFailsWith<IllegalArgumentException> { presenter.shiftLeft(4) }
 

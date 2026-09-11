@@ -15,7 +15,7 @@ import kotlin.test.assertTrue
  * (GH-3). All three degrade to a safe default instead of throwing, mirroring the
  * non-throwing discipline [BasePresenter.saveGame]/[BasePresenter.loadGame] already follow.
  */
-class PresenterImplQueriesTest {
+class TuiPresenterQueriesTest {
 
     @Test
     fun `listSaves delegates to the save repository`() {
