@@ -25,4 +25,15 @@ noted in [[GH-2-adjust-1]]: during adoption, explicitly ask whether the project 
 analytics service, and if not, scaffold a no-op implementation so `analyze` isn't
 producing plans with no code to attach to until the first feature that happens to need it.
 
+### 2026-09-11
+
+**User-facing changenote generation seems to be skipped in a previous release**
+
+User flagged (during GH-3 work) that they noticed, in a previous release, that a
+user-facing changenote wasn't generated the way they expected. Not yet root-caused -
+worth checking during the next `/debrief` whether this is a `ship` skill gap (e.g. the
+"What's New" aggregation across `[wip]`-tagged entries mentioned in
+`docs/workflows/MULTI_WU.md`, or a step in `ship`'s CHANGELOG-entry logic) or a one-off.
+Flagging here rather than diagnosing now, since it surfaced as an aside mid-ticket.
+
 ## Debrief summary
