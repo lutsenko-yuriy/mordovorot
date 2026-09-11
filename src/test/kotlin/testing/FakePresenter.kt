@@ -20,6 +20,12 @@ class FakePresenter : Presenter {
     /** Scripts [isSolved]'s return value. */
     var solved: Boolean = false
 
+    /** Scripts [boardState]'s return value. */
+    var board: IntArray = IntArray(16) { it }
+
+    /** Scripts [squareSide]'s return value. */
+    var side: Int = 4
+
     override fun play() {
         calls.add("play")
     }
@@ -76,5 +82,15 @@ class FakePresenter : Presenter {
 
     override fun restoreOnStartup() {
         calls.add("restoreOnStartup")
+    }
+
+    override fun boardState(): IntArray {
+        calls.add("boardState")
+        return board
+    }
+
+    override fun squareSide(): Int {
+        calls.add("squareSide")
+        return side
     }
 }

@@ -68,4 +68,29 @@ class PresenterImplQueriesTest {
         board.correct = true
         assertTrue(presenter.isSolved())
     }
+
+    @Test
+    fun `boardState delegates to the board's current tile array`() {
+        val board = FakeBoardModel(boardArray = intArrayOf(3, 1, 0, 2))
+        val presenter = PresenterImpl(FakeView(), board)
+
+        assertEquals(listOf(3, 1, 0, 2), presenter.boardState().toList())
+    }
+
+    @Test
+    fun `boardState returns a defensive copy - mutating it does not affect the board`() {
+        val board = FakeBoardModel(boardArray = intArrayOf(3, 1, 0, 2))
+        val presenter = PresenterImpl(FakeView(), board)
+
+        presenter.boardState()[0] = 99
+
+        assertEquals(listOf(3, 1, 0, 2), board.boardArray.toList())
+    }
+
+    @Test
+    fun `squareSide delegates to the board's square side`() {
+        val presenter = PresenterImpl(FakeView(), FakeBoardModel(SQUARE_SIDE = 4))
+
+        assertEquals(4, presenter.squareSide())
+    }
 }

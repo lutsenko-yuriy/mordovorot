@@ -12,9 +12,8 @@ MVP (Model-View-Presenter): board_model + presenter + view packages
 
 ```
 src/main/kotlin/
-├── Main.kt              # Entry point — resolves LaunchMode, then constructs ViewImpl and
-│                          # calls play() (GH-3: MOUSE will build view.tui.TuiView instead,
-│                          # once it exists — see the TODO in Main.kt)
+├── Main.kt              # Entry point — resolves LaunchMode, then builds and plays either
+│                          # view.tui.TuiView (MOUSE) or ViewImpl (CONSOLE) (GH-3)
 ├── LaunchMode.kt        # MOUSE / CONSOLE — resolves from `--console` + terminal availability (GH-3)
 ├── analytics/
 │   ├── AnalyticsService.kt             # Analytics abstraction — track(event, properties)
@@ -37,16 +36,26 @@ src/main/kotlin/
 │   └── SaveFileFormatException.kt # Thrown on a malformed save file
 └── view/
     ├── View.kt          # View interface — console display + command loop contract
-    └── ViewImpl.kt      # Console I/O implementation (BufferedReader-based input)
-    # view/tui/ (GH-3, in progress) — a second View implementation for the mouse-driven TUI;
-    # not yet present, see the plan comment on GH-3 for its planned contents.
+    ├── ViewImpl.kt      # Console I/O implementation (BufferedReader-based input)
+    └── tui/             # GH-3: a second View implementation for the mouse-driven TUI
+        ├── Terminal.kt / AnsiTerminal.kt   # Raw-mode terminal I/O (stty via ProcessBuilder,
+        │                                     # xterm mouse-reporting escapes) - the one seam
+        │                                     # touching the real terminal
+        ├── TerminalEvent.kt / TerminalInputParser.kt # Byte-stream -> event decoding (SGR-1006
+        │                                               # and legacy X10 mouse reports, keys)
+        ├── BoardLayout.kt / HitTarget.kt   # Pure board geometry + click hit-testing
+        ├── ScreenState.kt / ScreenRenderer.kt # Pure ScreenState -> frame String rendering
+        └── TuiView.kt   # Owns its own event loop (doesn't call PresenterImpl.play() - see
+                          # the ticket's solved-state note); dialogs and the Congratulations
+                          # screen land in WU4/WU5 - the toolbar is currently a no-op.
 
 src/test/kotlin/
 ├── LaunchModeTest.kt      # LaunchMode resolution + app_launched tracking (GH-3)
 ├── analytics/            # NoopAnalyticsService, InputMethodAnalyticsService coverage
 ├── board_model/         # BoardImpl coverage: reset/shuffle, isCorrect, all four shifts, restoreState
 ├── presenter/            # PresenterImpl coverage: delegation, play() loop, save/load, startup
-│                           # restore, the listSaves/saveExists/isSolved query methods (GH-3)
+│                           # restore, the listSaves/saveExists/isSolved/boardState/squareSide
+│                           # query methods (GH-3)
 ├── storage/               # FileSaveRepository coverage
 ├── view/                  # ViewImpl command-parsing coverage; view/tui/ scenario stubs (GH-3,
 │                           # filled in as WU2-WU5 land)

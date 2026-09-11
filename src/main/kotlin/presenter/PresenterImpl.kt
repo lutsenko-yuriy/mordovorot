@@ -168,6 +168,13 @@ class PresenterImpl(
 
     override fun isSolved(): Boolean = board.isCorrect()
 
+    // A defensive copy - board.boardArray is the live, mutable backing array; handing it out
+    // directly would let a caller (or a future one) mutate board state without going through
+    // shiftLeft/Right/Up/Down (audit finding on PR #22).
+    override fun boardState(): IntArray = board.boardArray.copyOf()
+
+    override fun squareSide(): Int = board.SQUARE_SIDE
+
     private fun availableSavesMessage(): String {
         // Guarded on its own - a failure here (e.g. an unreadable saves/ directory) shouldn't
         // change the load's actual result (it was still "not found"), just degrade the message.

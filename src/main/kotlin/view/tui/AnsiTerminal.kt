@@ -3,12 +3,12 @@ package view.tui
 import java.io.InputStream
 import java.io.PrintStream
 
-private const val ENTER_ALT_SCREEN = "[?1049h"
-private const val EXIT_ALT_SCREEN = "[?1049l"
-private const val ENABLE_MOUSE = "[?1000h[?1006h"
-private const val DISABLE_MOUSE = "[?1006l[?1000l"
-private const val HIDE_CURSOR = "[?25l"
-private const val SHOW_CURSOR = "[?25h"
+private const val ENTER_ALT_SCREEN = "\u001B[?1049h"
+private const val EXIT_ALT_SCREEN = "\u001B[?1049l"
+private const val ENABLE_MOUSE = "\u001B[?1000h\u001B[?1006h"
+private const val DISABLE_MOUSE = "\u001B[?1006l\u001B[?1000l"
+private const val HIDE_CURSOR = "\u001B[?25l"
+private const val SHOW_CURSOR = "\u001B[?25h"
 
 /**
  * The one class in `view.tui` that touches a real terminal: `stty` for cbreak mode, ANSI
@@ -104,7 +104,11 @@ class AnsiTerminal(
             val line = process.inputStream.bufferedReader().use { it.readLine() }
             process.waitFor()
             val (rows, columns) = line.trim().split(" ").map { it.toInt() }
-            TerminalSize(columns, rows)
+            // An unset winsize (some ptys) reports "0 0" with a successful exit - the catch
+            // below only guards a thrown exception, so a zero-but-valid result needs its own
+            // check, or the board renders as one blank space with every click hit-testing to
+            // Nothing (audit round 3 on PR #22).
+            if (rows <= 0 || columns <= 0) TerminalSize(80, 24) else TerminalSize(columns, rows)
         } catch (e: Exception) {
             TerminalSize(80, 24)
         }
