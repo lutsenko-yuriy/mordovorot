@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
 /**
  * End-to-end guard through the real stack (ViewImpl + ConsolePresenterImpl + BoardImpl) - an
  * off-by-one only shows up where the view's 1-based translation meets board_model's
- * 0-based validation, which ViewImplCommandTest's FakePresenter can't exercise (GH-10).
+ * 0-based validation, which ViewImplCommandTest's FakeConsolePresenter can't exercise (GH-10).
  */
 class OneBasedConsoleTest {
 

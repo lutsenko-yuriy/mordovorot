@@ -2,9 +2,9 @@ package view.tui
 
 import presenter.TuiPresenterImpl
 import testing.FakeBoardModel
-import testing.FakePresenter
 import testing.FakeSaveRepository
 import testing.FakeTerminal
+import testing.FakeTuiPresenter
 import testing.RecordingAnalyticsService
 import kotlin.test.Test
 import kotlin.test.assertFalse
@@ -12,17 +12,17 @@ import kotlin.test.assertTrue
 
 /**
  * Covers GH-3's Save/Load/Exit dialogs and the startup restore prompt, plus their analytics.
- * Driven via `FakeTerminal` + `RecordingAnalyticsService`, and either `FakePresenter` (board
+ * Driven via `FakeTerminal` + `RecordingAnalyticsService`, and either `FakeTuiPresenter` (board
  * click dispatch, which doesn't need real presenter logic) or a real `TuiPresenterImpl` over
  * `FakeBoardModel`/`FakeSaveRepository` (the exit and startup-restore flows, which round-trip
- * through the presenter calling back into `TuiView`'s own `View` methods - a `FakePresenter`
+ * through the presenter calling back into `TuiView`'s own `View` methods - a `FakeTuiPresenter`
  * doesn't do that).
  */
 class TuiViewDialogTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
 
-    private fun view(terminal: FakeTerminal, presenter: FakePresenter, analytics: RecordingAnalyticsService = RecordingAnalyticsService()): TuiView =
+    private fun view(terminal: FakeTerminal, presenter: FakeTuiPresenter, analytics: RecordingAnalyticsService = RecordingAnalyticsService()): TuiView =
         TuiView.create(terminal, analytics) { presenter }
 
     private fun viewWithRealPresenter(
@@ -32,11 +32,11 @@ class TuiViewDialogTest {
         analytics: RecordingAnalyticsService = RecordingAnalyticsService(),
     ): TuiView = TuiView.create(terminal, analytics) { v -> TuiPresenterImpl(v, board, saves, analytics) }
 
-    private fun boardLayout(presenter: FakePresenter) = BoardLayout(terminalSize, presenter.side, arrowsEnabled = true)
+    private fun boardLayout(presenter: FakeTuiPresenter) = BoardLayout(terminalSize, presenter.side, arrowsEnabled = true)
 
     @Test
     fun `Save dialog happy path - typed name with no conflict saves and closes`() {
-        val presenter = FakePresenter()
+        val presenter = FakeTuiPresenter()
         val (saveX, saveY) = boardLayout(presenter).saveButtonPosition()
         // typing "hi" then clicking wherever the Save dialog's Save button lands - the dialog
         // is a fixed layout (DialogLayout), so its position is computed the same way here.
@@ -64,7 +64,7 @@ class TuiViewDialogTest {
         // whitespace name specifically because console mode's save/load command parsing splits
         // on it (view.ViewImpl.nameArg) - a name saved this way could never be `load`ed back
         // from the console. Toolbar Save skipped that same check entirely.
-        val presenter = FakePresenter()
+        val presenter = FakeTuiPresenter()
         val (saveX, saveY) = boardLayout(presenter).saveButtonPosition()
         val dialog = Dialog(Dialog.Kind.SAVE, "Save game", buttons = listOf(DialogButtonSpec("save", "Save"), DialogButtonSpec("cancel", "Cancel")))
         val saveButton = DialogLayout(dialog, terminalSize).buttons().first { it.target == HitTarget.DialogButton("save") }
@@ -86,7 +86,7 @@ class TuiViewDialogTest {
 
     @Test
     fun `Save dialog shows the overwrite warning when the typed name matches an existing save`() {
-        val presenter = FakePresenter()
+        val presenter = FakeTuiPresenter()
         presenter.existingSaveNames = setOf("hi")
         val (saveX, saveY) = boardLayout(presenter).saveButtonPosition()
         val terminal = FakeTerminal(
@@ -105,7 +105,7 @@ class TuiViewDialogTest {
 
     @Test
     fun `Save dialog Cancel closes without saving and tracks dialog_cancelled`() {
-        val presenter = FakePresenter()
+        val presenter = FakeTuiPresenter()
         val analytics = RecordingAnalyticsService()
         val (saveX, saveY) = boardLayout(presenter).saveButtonPosition()
         val dialog = Dialog(Dialog.Kind.SAVE, "Save game", buttons = listOf(DialogButtonSpec("save", "Save"), DialogButtonSpec("cancel", "Cancel")))
@@ -126,7 +126,7 @@ class TuiViewDialogTest {
 
     @Test
     fun `Load dialog lists existing saves and Load on a selected row restores the board`() {
-        val presenter = FakePresenter()
+        val presenter = FakeTuiPresenter()
         presenter.saveNames = listOf("foo", "bar")
         val (loadX, loadY) = boardLayout(presenter).loadButtonPosition()
         val dialog = Dialog(Dialog.Kind.LOAD, "Load game", listItems = listOf("foo", "bar"), buttons = listOf(DialogButtonSpec("load", "Load"), DialogButtonSpec("cancel", "Cancel")))
@@ -149,7 +149,7 @@ class TuiViewDialogTest {
 
     @Test
     fun `Load dialog with no saves shows No saves found and Load is inert`() {
-        val presenter = FakePresenter()
+        val presenter = FakeTuiPresenter()
         presenter.saveNames = emptyList()
         val (loadX, loadY) = boardLayout(presenter).loadButtonPosition()
         val dialog = Dialog(Dialog.Kind.LOAD, "Load game", buttons = listOf(DialogButtonSpec("load", "Load"), DialogButtonSpec("cancel", "Cancel")))
@@ -170,7 +170,7 @@ class TuiViewDialogTest {
 
     @Test
     fun `Load dialog Cancel closes without loading and tracks dialog_cancelled`() {
-        val presenter = FakePresenter()
+        val presenter = FakeTuiPresenter()
         presenter.saveNames = listOf("foo")
         val analytics = RecordingAnalyticsService()
         val (loadX, loadY) = boardLayout(presenter).loadButtonPosition()
@@ -246,7 +246,7 @@ class TuiViewDialogTest {
 
     @Test
     fun `Exit dialog Cancel closes the dialog and exitGame is never called`() {
-        val presenter = FakePresenter()
+        val presenter = FakeTuiPresenter()
         val analytics = RecordingAnalyticsService()
         val (exitX, exitY) = boardLayout(presenter).exitButtonPosition()
         val exitDialog = Dialog(
@@ -289,7 +289,7 @@ class TuiViewDialogTest {
 
     @Test
     fun `screen views fire with the right opened_from for each dialog entry point`() {
-        val presenter = FakePresenter()
+        val presenter = FakeTuiPresenter()
         val analytics = RecordingAnalyticsService()
         val (saveX, saveY) = boardLayout(presenter).saveButtonPosition()
         val (loadX, loadY) = boardLayout(presenter).loadButtonPosition()
@@ -398,7 +398,7 @@ class TuiViewDialogTest {
 
     @Test
     fun `pressing Enter with an empty name in the Save dialog cancels instead of looping forever`() {
-        val presenter = FakePresenter()
+        val presenter = FakeTuiPresenter()
         val (saveX, saveY) = boardLayout(presenter).saveButtonPosition()
         val terminal = FakeTerminal(
             events = mutableListOf(TerminalEvent.MouseClick(saveX, saveY), TerminalEvent.Enter),
@@ -412,7 +412,7 @@ class TuiViewDialogTest {
 
     @Test
     fun `confirmRestore renders the presenter-provided save name even if listSaves would disagree`() {
-        val presenter = FakePresenter()
+        val presenter = FakeTuiPresenter()
         presenter.saveNames = listOf("stale-name")
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.Escape), terminalSize = terminalSize)
 
@@ -426,7 +426,7 @@ class TuiViewDialogTest {
 
     @Test
     fun `clicking Save with an empty name cancels, same as pressing Enter on an empty name`() {
-        val presenter = FakePresenter()
+        val presenter = FakeTuiPresenter()
         val (saveX, saveY) = boardLayout(presenter).saveButtonPosition()
         val dialog = Dialog(Dialog.Kind.SAVE, "Save game", buttons = listOf(DialogButtonSpec("save", "Save"), DialogButtonSpec("cancel", "Cancel")))
         val saveButton = DialogLayout(dialog, terminalSize).buttons().first { it.target == HitTarget.DialogButton("save") }
@@ -487,7 +487,7 @@ class TuiViewDialogTest {
     @Test
     fun `dialog content is truncated to the box width instead of overflowing the border on a narrow terminal`() {
         val narrow = TerminalSize(columns = 40, rows = 24)
-        val presenter = FakePresenter()
+        val presenter = FakeTuiPresenter()
         presenter.existingSaveNames = setOf("somesave")
         val (saveX, saveY) = BoardLayout(narrow, presenter.side, arrowsEnabled = true).saveButtonPosition()
         val terminal = FakeTerminal(

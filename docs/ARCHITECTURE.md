@@ -69,14 +69,20 @@ src/test/kotlin/
 ├── LaunchModeTest.kt      # LaunchMode resolution + app_launched tracking (GH-3)
 ├── analytics/            # NoopAnalyticsService, InputMethodAnalyticsService coverage
 ├── board_model/         # BoardImpl coverage: reset/shuffle, isCorrect, all four shifts, restoreState
-├── presenter/            # BasePresenter/ConsolePresenterImpl/TuiPresenterImpl coverage:
-│                           # delegation, play() loop, save/load, startup restore, the
-│                           # listSaves/saveExists/isSolved/boardState/squareSide query
-│                           # methods (GH-3, split GH-23)
+├── presenter/            # One test file per production class (GH-3, split GH-23):
+│                           # BasePresenterDelegationTest / BasePresenterSaveLoadTest /
+│                           # BasePresenterExitTest drive testing.TestPresenter directly, no
+│                           # play() loop; ConsolePresenterPlayTest drives ConsolePresenterImpl.play()
+│                           # (incl. the loop-continuation half of the exit-save-failure case);
+│                           # ConsolePresenterStartupRestoreTest covers the startup-restore branch
+│                           # matrix through play(); TuiPresenterStartupRestoreTest covers the
+│                           # idempotence guard plus one cross-check against the TUI entry point;
+│                           # TuiPresenterQueriesTest covers TuiPresenterImpl's query surface
 ├── storage/               # FileSaveRepository coverage
 ├── view/                  # ViewImpl command-parsing coverage; view/tui/ coverage (GH-3, WU2-WU5)
-└── testing/              # FakeBoardModel / FakeView / FakeSaveRepository /
-                            # RecordingAnalyticsService / FakePresenter test doubles
+└── testing/              # FakeBoardModel / FakeView / FakeSaveRepository / RecordingAnalyticsService /
+                            # RecordingPresenter + FakeConsolePresenter/FakeTuiPresenter (recording
+                            # doubles, split GH-23) / TestPresenter (minimal concrete BasePresenter)
 ```
 
 Gradle's standard source-set convention (`src/main/kotlin`, `src/test/kotlin`) is used —
