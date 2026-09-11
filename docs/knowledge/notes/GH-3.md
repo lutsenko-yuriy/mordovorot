@@ -56,5 +56,6 @@ platforms this ships to.
 scoped in the plan are buildable on the JVM stdlib alone. Proceeding to WU0 (scenario stubs).
 
 - 2026-09-11: Add a workflow step guideline — implementation-stage comments should be kept concise (essential sense only, ~3 lines as a soft target, optional).
+- 2026-09-11: WU4 (dialogs) took 5 rounds of review/audit before landing clean — the most of any WU/ticket so far. Root cause looks concentrated: dialog geometry/word-wrap row arithmetic (`DialogLayout`) was a repeated source of off-by-one regressions — round 3's fix for one bug (message truncation) introduced round 4's bug (row math off-by-one), which round 4's own fix then had to re-verify by hand across all kind × message-line-count combinations in round 5. User explicitly flagged this as worth improving: "it would be better if there were less rounds of such reviews." Worth discussing at debrief: whether a geometry-specific self-check step (e.g. hand-deriving row/column arithmetic across all structural combinations *before* requesting audit, the way round 5's audit did reactively) would catch this class of bug earlier and cut the round count, rather than relying on audit to find it each time.
 
 ## Debrief summary
