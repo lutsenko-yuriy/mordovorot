@@ -104,4 +104,4 @@ Fired when the user clicks Cancel on the Save, Load, or Exit dialog in the mouse
 | `screen_save_dialog` | Save dialog opens in the mouse-driven TUI (toolbar click, or via the Exit dialog's "Yes"). Property `opened_from`: `toolbar` or `exit_flow`. *(GH-3)* |
 | `screen_load_dialog` | Load dialog opens in the mouse-driven TUI (toolbar click, or startup restore when saves exist). Properties `opened_from`: `toolbar` or `startup`; `save_file_count`: number. *(GH-3)* |
 | `screen_exit_dialog` | Exit button clicked in the mouse-driven TUI. *(GH-3)* |
-| `screen_congratulations` | Board becomes solved while the mouse-driven TUI is active. *(GH-3)* |
+| `screen_congratulations` | A shift click solves the board while the mouse-driven TUI is active - fires once on that transition. Does **not** fire when an already-solved save is restored (toolbar Load or startup restore); the Congratulations screen still renders, but nothing was solved *by playing* this session. *(GH-3)* |

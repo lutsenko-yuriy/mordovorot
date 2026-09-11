@@ -112,9 +112,17 @@ class TuiView internal constructor(
      *  `screen_congratulations` tracks a board solved *by playing*, not one that arrives
      *  already solved via a toolbar/startup Load (audit finding on PR #25: gating on
      *  [presenter.Presenter.isSolved] at repaint time alone fired the event on every restore of
-     *  a pre-solved save). [wasSolved] still reflects the last-drawn frame's true state either
-     *  way, via [repaintWithDialog] - so a shift that re-solves a board loaded unsolved still
-     *  fires exactly once. */
+     *  a pre-solved save).
+     *
+     *  Today, [wasSolved] is guaranteed `false` on every call here - [shift] is only reachable
+     *  through a click [BoardLayout.hitTest] resolves to a `HitTarget.Shift*`, which only
+     *  happens when the layout it was built against had `arrowsEnabled = true`, which
+     *  [repaintWithDialog] only sets when the same [wasSolved] sync came out `false`. The
+     *  "fires exactly once" property currently rests on that arrows-disabled gate, not on this
+     *  check (round 2 audit finding on PR #25). The check stays anyway as the one line standing
+     *  between a correct single fire and a silent double-count the day arrows stop going dead on
+     *  solve (e.g. a future "keep playing" affordance) - deleting it would save nothing today and
+     *  cost real correctness the day that assumption breaks. */
     private fun shift(action: () -> Unit) {
         action()
         if (presenter.isSolved() && !wasSolved) analytics.track("screen_congratulations")
