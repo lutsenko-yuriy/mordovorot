@@ -74,11 +74,11 @@ class TuiView internal constructor(
     }
 
     override fun play() {
-        terminal.enterRawMode()
-        // GH-18's input-strategy seam (WU3): mouse reporting is MouseInput's own business now,
-        // never turned on by a keyboard-only mode.
-        input.prepare(terminal)
         try {
+            terminal.enterRawMode()
+            // GH-18's input-strategy seam (WU3): mouse reporting is MouseInput's own business
+            // now, never turned on by a keyboard-only mode.
+            input.prepare(terminal)
             presenter.restoreOnStartup()
             repaint()
             while (true) {

@@ -6,6 +6,7 @@ import board_model.BoardModel
 import presenter.ConsolePresenterImpl
 import presenter.ModeSwitchRequestedException
 import presenter.ModeSwitcherImpl
+import presenter.SessionControlException
 import presenter.TuiPresenterImpl
 import storage.FileSaveRepository
 import storage.SaveRepository
@@ -44,16 +45,23 @@ class GameSession(
     fun run() {
         var isFirstSession = true
         while (true) {
-            // The undecorated service - defaultView decorates it per-mode itself, and keeps a
-            // plain reference for ModeSwitcher (input_mode_switched carries from_mode/to_mode
-            // already, no need for a duplicate input_method - see ModeSwitcher's KDoc).
-            val view = buildView(mode, board, saves, analytics, startupRestoreDone)
             try {
+                // The undecorated service - defaultView decorates it per-mode itself, and keeps
+                // a plain reference for ModeSwitcher (input_mode_switched carries from_mode/
+                // to_mode already, no need for a duplicate input_method - see ModeSwitcher's
+                // KDoc). buildView is inside this try too - a throw from the rebuild itself
+                // (e.g. a future terminalFactory failure) must fall back the same as a throw
+                // from play() (audit finding on PR #37).
+                val view = buildView(mode, board, saves, analytics, startupRestoreDone)
                 view.play()
                 return
             } catch (e: ModeSwitchRequestedException) {
                 mode = e.target
                 startupRestoreDone = true
+            } catch (e: SessionControlException) {
+                // Any other control-flow exception (ExitRequestedException) must reach main, not
+                // be treated as a failed rebuild - audit finding on PR #37.
+                throw e
             } catch (e: Exception) {
                 // A rebuild can fail for real (e.g. `stty` missing - audit finding on PR #37):
                 // unlike a startup failure, there's a live unsaved game to protect, so fall back

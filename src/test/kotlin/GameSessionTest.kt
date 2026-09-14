@@ -1,4 +1,5 @@
 import board_model.BoardModel
+import presenter.ExitRequestedException
 import presenter.ModeSwitchRequestedException
 import presenter.ModeSwitcherImpl
 import storage.SaveRepository
@@ -126,14 +127,14 @@ class GameSessionTest {
     }
 
     @Test
-    fun `a failed rebuild after a mode switch falls back to console instead of crashing`() {
-        val modesBuilt = mutableListOf<InputMode>()
+    fun `a failed rebuild after a mode switch falls back to console instead of crashing, skipping the restore prompt`() {
+        val calls = mutableListOf<BuildCall>()
         var built = 0
 
         val session = GameSession(
             initialMode = InputMode.CONSOLE,
-            buildView = { mode, _, _, _, _ ->
-                modesBuilt.add(mode)
+            buildView = { mode, b, s, _, restoreDone ->
+                calls.add(BuildCall(mode, b, s, restoreDone))
                 built++
                 when (built) {
                     1 -> ScriptedView { throw ModeSwitchRequestedException(InputMode.MOUSE) }
@@ -145,7 +146,9 @@ class GameSessionTest {
 
         session.run() // must not throw
 
-        assertEquals(listOf(InputMode.CONSOLE, InputMode.MOUSE, InputMode.CONSOLE), modesBuilt)
+        assertEquals(listOf(InputMode.CONSOLE, InputMode.MOUSE, InputMode.CONSOLE), calls.map { it.mode })
+        // The fallback build (3rd) must not re-show the startup restore prompt over a live board.
+        assertEquals(listOf(false, true, true), calls.map { it.startupRestoreDone })
     }
 
     @Test
@@ -159,21 +162,42 @@ class GameSessionTest {
     }
 
     @Test
-    fun `a failure while the fallback target (console) itself fails has nowhere safer to go, so it throws`() {
+    fun `a second consecutive failure, once already falling back to console, has nowhere safer to go - it throws`() {
+        val modesBuilt = mutableListOf<InputMode>()
         var built = 0
 
         val session = GameSession(
             initialMode = InputMode.MOUSE,
-            buildView = { _, _, _, _, _ ->
+            buildView = { mode, _, _, _, _ ->
+                modesBuilt.add(mode)
                 built++
                 when (built) {
-                    1 -> ScriptedView { throw ModeSwitchRequestedException(InputMode.CONSOLE) }
+                    // a real switch first (not a failure) so isFirstSession is already false
+                    // by the time the organic fallback-to-console path below is exercised.
+                    1 -> ScriptedView { throw ModeSwitchRequestedException(InputMode.KEYBOARD) }
+                    2 -> ScriptedView { throw RuntimeException("stty not found") }
                     else -> ScriptedView { throw RuntimeException("console broke too") }
                 }
             },
         )
 
         assertFailsWith<RuntimeException> { session.run() }
+        assertEquals(listOf(InputMode.MOUSE, InputMode.KEYBOARD, InputMode.CONSOLE), modesBuilt)
+    }
+
+    @Test
+    fun `ExitRequestedException escaping a rebuild reaches the caller, not swallowed as a failed switch`() {
+        val session = GameSession(
+            initialMode = InputMode.CONSOLE,
+            buildView = { mode, _, _, _, _ ->
+                ScriptedView {
+                    if (mode == InputMode.CONSOLE) throw ModeSwitchRequestedException(InputMode.MOUSE)
+                    throw ExitRequestedException()
+                }
+            },
+        )
+
+        assertFailsWith<ExitRequestedException> { session.run() }
     }
 
     @Test
