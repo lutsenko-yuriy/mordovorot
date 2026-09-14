@@ -165,6 +165,7 @@ class TuiView internal constructor(
 
     private fun handleToolbarExit() {
         analytics.track("screen_exit_dialog")
+        input.onDialogOpened()
         val dialog = Dialog(
             kind = Dialog.Kind.EXIT,
             title = "Save before quitting?",
@@ -195,6 +196,7 @@ class TuiView internal constructor(
      *  click. Shared by the toolbar's direct save and [promptSaveName] (the exit flow). */
     private fun runSaveDialog(openedFrom: String): SaveOutcome {
         analytics.track("screen_save_dialog", mapOf("opened_from" to openedFrom))
+        input.onDialogOpened()
         // Consumed once, then kept sticky for the whole dialog session (overridden by a live
         // overwrite warning when one applies) - clearing it every iteration made the exit
         // flow's invalid-name explanation vanish after the user's very first keystroke, before
@@ -249,6 +251,7 @@ class TuiView internal constructor(
     private fun runLoadDialog(title: String, openedFrom: String, preloadedSaves: List<String>? = null): LoadOutcome {
         val saves = preloadedSaves ?: presenter.listSaves()
         analytics.track("screen_load_dialog", mapOf("opened_from" to openedFrom, "save_file_count" to saves.size))
+        input.onDialogOpened()
         var selected = if (saves.isNotEmpty()) 0 else -1
         while (true) {
             val dialog = Dialog(

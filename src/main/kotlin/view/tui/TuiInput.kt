@@ -40,6 +40,12 @@ interface TuiInput {
     /** Translates one event read while a dialog's modal loop owns input. */
     fun onDialogEvent(event: TerminalEvent, dialog: Dialog, layout: DialogLayout): InputAction
 
+    /** Called once, right when a new modal dialog loop begins, so a stateful mode (GH-18's
+     *  `KeyboardInput`) can reset its per-session state (e.g. dialog focus) at a precise
+     *  boundary - including when one dialog opens another with no board repaint in between (the
+     *  exit flow's Yes -> Save handoff). Default no-op - [MouseInput] has no per-session state. */
+    fun onDialogOpened() {}
+
     /** Decorates a freshly-built board [ScreenState] with this mode's presentation (cursor,
      *  controls hint, toolbar shortcut labels) before it's rendered and laid out. Identity for
      *  [MouseInput]. */

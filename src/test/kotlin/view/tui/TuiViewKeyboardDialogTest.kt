@@ -1,13 +1,47 @@
 package view.tui
 
+import presenter.TuiPresenterImpl
+import testing.FakeBoardModel
+import testing.FakeSaveRepository
+import testing.FakeTerminal
 import kotlin.test.Test
+import kotlin.test.assertTrue
 
 /**
  * Covers GH-18's keyboard-driven Save/Load/Exit dialogs and the startup restore prompt, plus
- * their analytics. Mirrors `TuiViewDialogTest` (GH-3's mouse equivalent) but driven via F5/F6/F7,
- * Tab/arrow-key focus movement, and Enter/Escape instead of clicks.
+ * their analytics. Mirrors `TuiViewDialogTest` (GH-3's mouse equivalent) but driven via
+ * F5/F6/Escape, Tab/arrow-key focus movement, and Enter/Escape instead of clicks.
  */
 class TuiViewKeyboardDialogTest {
+
+    private val terminalSize = TerminalSize(columns = 80, rows = 40)
+
+    @Test
+    fun `the exit flow's Save re-prompt after a rejected name starts focus back on the text field`() {
+        // Regression: the Exit -> Save handoff chains into a new modal loop with no board
+        // repaint in between, so dialogFocusIndex used to carry over from the previous dialog.
+        val saves = FakeSaveRepository()
+        val board = FakeBoardModel()
+        val terminal = FakeTerminal(
+            events = mutableListOf(
+                TerminalEvent.Escape, // open the Exit dialog
+                TerminalEvent.Tab, // focus -> "no"
+                TerminalEvent.BackTab, // focus back -> "yes"
+                TerminalEvent.Enter, // Yes - the Save dialog opens directly, no board repaint first
+                TerminalEvent.KeyPress('a'), TerminalEvent.KeyPress(' '), TerminalEvent.KeyPress('b'), // invalid: a space
+                TerminalEvent.Tab, // focus -> the Save button
+                TerminalEvent.Enter, // rejected - re-prompts with an explanation
+                TerminalEvent.KeyPress('o'), TerminalEvent.KeyPress('k'),
+                TerminalEvent.Tab, // focus -> the Save button
+                TerminalEvent.Enter, // saves "ok"
+            ),
+            terminalSize = terminalSize,
+        )
+
+        TuiView.create(terminal, input = KeyboardInput()) { v -> TuiPresenterImpl(v, board, saves) }.play()
+
+        assertTrue(saves.saveCalls.any { it.first == "ok" })
+    }
 
     @Test
     fun `Save dialog happy path - typed name, Tab to the Save button, Enter saves and closes`() {
@@ -53,7 +87,8 @@ class TuiViewKeyboardDialogTest {
 
     @Test
     fun `Exit dialog Yes - Tab to Yes, Enter opens the Save dialog, then saving quits`() {
-        // TODO: 1. Script an F7 event, a Tab event to focus the Yes button, an Enter event.
+        // TODO: 1. Script an Escape event (opens the Exit dialog), a Tab event to focus the Yes
+        //          button, an Enter event.
         // TODO: 2. Script KeyPress('h') to type a save name, a Tab event, an Enter event.
         // TODO: 3. Play the view with a real TuiPresenterImpl over FakeSaveRepository and a
         //          RecordingAnalyticsService.
@@ -63,7 +98,8 @@ class TuiViewKeyboardDialogTest {
 
     @Test
     fun `Exit dialog Escape cancels and keeps playing`() {
-        // TODO: 1. Script an F7 event, then an Escape event.
+        // TODO: 1. Script an Escape event (opens the Exit dialog), then a second Escape event
+        //          (Cancel, once inside it).
         // TODO: 2. Play the view with a RecordingAnalyticsService.
         // TODO: 3. Verify presenter.calls has no exitGame call, the last frame shows
         //          "Mordovorot", and analytics.events contains dialog_cancelled with
