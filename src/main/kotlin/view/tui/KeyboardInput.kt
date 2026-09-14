@@ -23,11 +23,12 @@ class KeyboardInput : TuiInput {
     private var squareSide = DEFAULT_SQUARE_SIDE
     private var arrowsEnabled = true
 
-    /** The open dialog's focus index into its [DialogFocus] ring, or `null` between sessions -
-     *  initialized to `0` by the next [decorateBoard] call that sees a dialog, and cleared again
-     *  the moment [decorateBoard] sees none (the previous session just ended, whatever way it
-     *  ended) - so a freshly-opened dialog always starts focus at its first control. */
-    private var dialogFocusIndex: Int? = null
+    /** The open dialog's focus index into its [DialogFocus] ring - reset to `0` by
+     *  [onDialogOpened] at the start of every modal loop (see its KDoc for why that precise
+     *  boundary matters over inferring one from [decorateBoard]'s dialog presence) and again
+     *  defensively whenever [decorateBoard] sees no dialog at all, so a freshly-opened dialog
+     *  always starts focus at its first control. */
+    private var dialogFocusIndex = 0
 
     override fun prepare(terminal: Terminal) {
         // Keyboard mode never turns mouse reporting on - see MouseInput.prepare for the mouse
@@ -60,7 +61,7 @@ class KeyboardInput : TuiInput {
                 else -> InputAction.None
             }
         }
-        val index = (dialogFocusIndex ?: 0).mod(focus.size)
+        val index = dialogFocusIndex.mod(focus.size)
         return when (event) {
             TerminalEvent.Escape -> InputAction.Cancel
             TerminalEvent.EndOfInput -> InputAction.Quit
@@ -85,10 +86,9 @@ class KeyboardInput : TuiInput {
         // LEFT[0] (plan's solved-state note) - only on the disabled -> enabled transition, not
         // on every unsolved repaint, so an ordinary shift mid-game never resets it underfoot.
         if (arrowsEnabled && !wasEnabled) cursor = ArrowCursor(Edge.LEFT, 0)
-        // No dialog this repaint - whatever session dialogFocusIndex belonged to has ended
-        // (Cancel/Submit/a button click TuiView already acted on), however it ended. The next
-        // dialog to open starts its own session at index 0.
-        if (state.dialog == null) dialogFocusIndex = null
+        // Defensive fallback for [onDialogOpened]'s reset - no dialog this repaint means
+        // whatever session dialogFocusIndex belonged to has definitely ended.
+        if (state.dialog == null) dialogFocusIndex = 0
         return state.copy(
             cursor = if (arrowsEnabled) cursor else null,
             controlsHint = CONTROLS_HINT,
@@ -96,10 +96,14 @@ class KeyboardInput : TuiInput {
         )
     }
 
+    override fun onDialogOpened() {
+        dialogFocusIndex = 0
+    }
+
     override fun decorateDialog(dialog: Dialog): Dialog {
         val focus = DialogFocus(dialog)
         if (focus.size == 0) return dialog
-        val index = (dialogFocusIndex ?: 0).mod(focus.size)
+        val index = dialogFocusIndex.mod(focus.size)
         dialogFocusIndex = index
         return when (val target = focus.target(index)) {
             DialogFocusTarget.TextField -> dialog.copy(textFieldFocused = true)

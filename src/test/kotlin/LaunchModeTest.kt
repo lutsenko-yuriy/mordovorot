@@ -82,6 +82,34 @@ class LaunchModeTest {
     }
 
     @Test
+    fun `an explicit --keyboard silently downgraded to CONSOLE (no TTY) still warns, unlike before`() {
+        // Audit finding on GH-18 WU4 PR #33: only the --console/--keyboard conflict warned -
+        // an explicit --keyboard or --mouse falling back to CONSOLE for lack of a TTY got no
+        // feedback at all, which would read as the flag being silently ignored.
+        val analytics = RecordingAnalyticsService()
+        val warnings = mutableListOf<String>()
+
+        val mode = resolveLaunchMode(
+            arrayOf("--keyboard"), analytics,
+            warnNoInteractiveTerminal = { warnings.add(it) },
+            hasInteractiveTerminal = { false },
+        )
+
+        assertEquals(LaunchMode.CONSOLE, mode)
+        assertEquals(listOf("--keyboard"), warnings)
+    }
+
+    @Test
+    fun `--console alone falling back needs no such warning - it was the explicit request`() {
+        val analytics = RecordingAnalyticsService()
+        val warnings = mutableListOf<String>()
+
+        resolveLaunchMode(arrayOf("--console"), analytics, warnNoInteractiveTerminal = { warnings.add(it) }, hasInteractiveTerminal = { false })
+
+        assertEquals(emptyList(), warnings)
+    }
+
+    @Test
     fun `unrecognized arguments are reported instead of silently ignored`() {
         // audit finding on PR #20: a typo like "-console" or "--Console" previously fell
         // through to the MOUSE default with no feedback at all.

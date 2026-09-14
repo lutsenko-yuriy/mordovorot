@@ -1,6 +1,11 @@
 package view.tui
 
+import presenter.TuiPresenterImpl
+import testing.FakeBoardModel
+import testing.FakeSaveRepository
+import testing.FakeTerminal
 import kotlin.test.Test
+import kotlin.test.assertTrue
 
 /**
  * Covers GH-18's keyboard-driven Save/Load/Exit dialogs and the startup restore prompt, plus
@@ -8,6 +13,41 @@ import kotlin.test.Test
  * Tab/arrow-key focus movement, and Enter/Escape instead of clicks.
  */
 class TuiViewKeyboardDialogTest {
+
+    private val terminalSize = TerminalSize(columns = 80, rows = 40)
+
+    @Test
+    fun `the exit flow's Save re-prompt after a rejected name starts focus back on the text field`() {
+        // Regression test for the audit's 🔴 finding on GH-18 WU4 PR #33: KeyboardInput's
+        // dialogFocusIndex used to carry over from whichever control the *previous* dialog had
+        // focus on, since the exit flow's Yes -> Save handoff (and the Save dialog's own
+        // invalid-name re-prompt) chain straight into a new modal loop with no board repaint in
+        // between - the one boundary TuiInput.onDialogOpened now exists to signal explicitly.
+        // Mirrors TuiViewDialogTest's mouse-mode "invalid-name explanation stays visible" test.
+        val saves = FakeSaveRepository()
+        val board = FakeBoardModel()
+        val terminal = FakeTerminal(
+            events = mutableListOf(
+                TerminalEvent.FunctionKey(7), // open the Exit dialog
+                TerminalEvent.Tab, // focus -> "no"
+                TerminalEvent.BackTab, // focus back -> "yes"
+                TerminalEvent.Enter, // Yes - the Save dialog opens directly, no board repaint first
+                TerminalEvent.KeyPress('a'), TerminalEvent.KeyPress(' '), TerminalEvent.KeyPress('b'), // invalid: a space
+                TerminalEvent.Tab, // focus -> the Save button
+                TerminalEvent.Enter, // rejected - re-prompts with an explanation
+                // Without the fix, focus stays on the Save button here (carried over from the
+                // rejected attempt) and these keystrokes silently fall into InputAction.None.
+                TerminalEvent.KeyPress('o'), TerminalEvent.KeyPress('k'),
+                TerminalEvent.Tab, // focus -> the Save button
+                TerminalEvent.Enter, // saves "ok"
+            ),
+            terminalSize = terminalSize,
+        )
+
+        TuiView.create(terminal, input = KeyboardInput()) { v -> TuiPresenterImpl(v, board, saves) }.play()
+
+        assertTrue(saves.saveCalls.any { it.first == "ok" })
+    }
 
     @Test
     fun `Save dialog happy path - typed name, Tab to the Save button, Enter saves and closes`() {

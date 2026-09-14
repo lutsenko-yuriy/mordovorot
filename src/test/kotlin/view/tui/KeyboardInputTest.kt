@@ -164,4 +164,29 @@ class KeyboardInputTest {
         input.decorateBoard(unsolvedBoard().copy(dialog = reopened))
         assertEquals(true, input.decorateDialog(reopened).textFieldFocused)
     }
+
+    @Test
+    fun `onDialogOpened resets focus to the first control, even with no board repaint in between`() {
+        // Audit finding on GH-18 WU4 PR #33: the exit flow's Yes -> Save handoff, and a Save
+        // dialog's own invalid-name re-prompt, chain straight into a new dialog session with no
+        // decorateBoard(dialog = null) repaint in between - the state.dialog == null reset alone
+        // can't see that boundary, which is why onDialogOpened exists as an explicit signal.
+        val input = KeyboardInput()
+        val exitDialog = Dialog(
+            kind = Dialog.Kind.EXIT,
+            title = "Save before quitting?",
+            buttons = listOf(DialogButtonSpec("yes", "Yes"), DialogButtonSpec("no", "No"), DialogButtonSpec("cancel", "Cancel")),
+        )
+        input.decorateBoard(unsolvedBoard().copy(dialog = exitDialog))
+        input.onDialogEvent(TerminalEvent.Tab, exitDialog, dialogLayoutFor(exitDialog)) // focus -> "no"
+        input.onDialogEvent(TerminalEvent.Tab, exitDialog, dialogLayoutFor(exitDialog)) // focus -> "cancel"
+
+        // The Save dialog opens directly from here, with no intervening decorateBoard(dialog = null).
+        input.onDialogOpened()
+        val saveDialog = saveDialog()
+        input.decorateBoard(unsolvedBoard().copy(dialog = saveDialog))
+
+        assertEquals(true, input.decorateDialog(saveDialog).textFieldFocused)
+        assertEquals(InputAction.TextChar('o'), input.onDialogEvent(TerminalEvent.KeyPress('o'), saveDialog, dialogLayoutFor(saveDialog)))
+    }
 }
