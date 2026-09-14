@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.5.2] — 2026-09-14 (PR #29 merged)
+
+### Changed
+- [wip] GH-18 (WU1/5): decode arrow/Tab/BackTab/function keys in the TUI input parser — extends `TerminalInputParser` to recognize ESC sequences for arrow keys (`→`/`←`/`↑`/`↓`), Tab/BackTab, and function keys (F1–F12), converting them to `TerminalEvent.KeyPress` — not yet wired to the UI, still unreachable until WU2/3 routes these events through the board screen.
+
 ## [0.5.1] — 2026-09-11 (PR #27 merged)
 
 ### Changed

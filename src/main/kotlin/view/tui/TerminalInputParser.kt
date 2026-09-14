@@ -8,10 +8,11 @@ private const val ESC = 0x1B
 private const val MAX_ESCAPE_SEQUENCE_LENGTH = 32
 
 /**
- * Pure byte-stream -> [TerminalEvent] decoder for GH-3's mouse TUI: SGR-1006 mouse reports
- * (primary), the legacy X10 `ESC[M` fallback, and single-byte keys for the save-name field.
- * No terminal I/O here - [AnsiTerminal] feeds it real bytes and tests feed it directly. A
- * sequence split across two [feed] calls is buffered and completed on the next one.
+ * Pure byte-stream -> [TerminalEvent] decoder for GH-3's mouse TUI and GH-18's keyboard TUI:
+ * SGR-1006 mouse reports (primary), the legacy X10 `ESC[M` fallback, single-byte keys for the
+ * save-name field, and arrow/Tab/BackTab/function-key decoding for keyboard navigation. No
+ * terminal I/O here - [AnsiTerminal] feeds it real bytes and tests feed it directly. A sequence
+ * split across two [feed] calls is buffered and completed on the next one.
  */
 class TerminalInputParser {
 
@@ -50,7 +51,7 @@ class TerminalInputParser {
 
         return when (data[from + 1].toInt() and 0xFF) {
             '['.code -> decodeCsi(data, from, events)
-            'O'.code -> decodeSs3(data, from) // SS3: ESC O <char> - arrow/function keys under DECCKM
+            'O'.code -> decodeSs3(data, from, events) // SS3: ESC O <char> - arrow keys under DECCKM
             else -> {
                 events += TerminalEvent.Escape
                 1
@@ -63,15 +64,16 @@ class TerminalInputParser {
         return when (data[from + 2].toInt() and 0xFF) {
             '<'.code -> decodeSgr(data, from, events)
             'M'.code -> decodeX10(data, from, events)
-            else -> decodeUnknownCsi(data, from)
+            else -> decodeUnknownCsi(data, from, events)
         }
     }
 
-    /** `ESC O <char>` - SS3, used for arrow/function keys when the terminal is in application
-     *  cursor-key mode (tmux/screen, some terminals' default). Discarded whole, same as an
-     *  unrecognised CSI sequence. */
-    private fun decodeSs3(data: ByteArray, from: Int): Int {
+    /** `ESC O <char>` - SS3, used for arrow keys when the terminal is in application cursor-key
+     *  mode (tmux/screen, some terminals' default). Same direction mapping as the CSI form
+     *  decoded in [decodeUnknownCsi]; any other final byte is discarded whole. */
+    private fun decodeSs3(data: ByteArray, from: Int, events: MutableList<TerminalEvent>): Int {
         if (from + 2 >= data.size) return 0
+        arrowDirection(data[from + 2].toInt().toChar())?.let { events += TerminalEvent.Arrow(it) }
         return 3
     }
 
@@ -105,15 +107,47 @@ class TerminalInputParser {
         return 6
     }
 
-    /** Any other CSI sequence (Home/End, page keys, ...) - discarded whole rather than left to
-     *  leak its individual bytes out as bogus [TerminalEvent.KeyPress]es. */
-    private fun decodeUnknownCsi(data: ByteArray, from: Int): Int {
+    /** Arrow keys (`ESC [ A..D`), Tab-reverse (`ESC [ Z`), and the F5/F6/F7 function keys
+     *  (`ESC [ 15~` / `17~` / `18~`) decode here; any other CSI sequence (Home/End, page keys,
+     *  other function keys, ...) is discarded whole rather than left to leak its individual
+     *  bytes out as bogus [TerminalEvent.KeyPress]es. */
+    private fun decodeUnknownCsi(data: ByteArray, from: Int, events: MutableList<TerminalEvent>): Int {
         var i = from + 2 // the final byte can be immediately after '[' (e.g. arrow keys: ESC [ A)
         while (i < data.size) {
-            if ((data[i].toInt() and 0xFF) in 0x40..0x7E) return i - from + 1 // CSI final byte
+            if ((data[i].toInt() and 0xFF) in 0x40..0x7E) {
+                val finalByte = data[i].toInt().toChar()
+                val params = String(data, from + 2, i - (from + 2), Charsets.US_ASCII)
+                decodeCsiFinal(finalByte, params)?.let { events += it }
+                return i - from + 1 // CSI final byte
+            }
             i++
         }
         return giveUpOrWait(data, from)
+    }
+
+    /** Modifier-prefixed CSI sequences (`ESC[1;2A` = Shift+Up, `ESC[1;5A` = Ctrl+Up, ...) carry
+     *  a non-empty, non-"1" params string ahead of the final byte - those are left for the
+     *  terminal/multiplexer, not decoded as a plain key. */
+    private fun decodeCsiFinal(finalByte: Char, params: String): TerminalEvent? {
+        if (params.isEmpty() || params == "1") arrowDirection(finalByte)?.let { return TerminalEvent.Arrow(it) }
+        return when (finalByte) {
+            'Z' -> TerminalEvent.BackTab
+            '~' -> when (params.toIntOrNull()) {
+                15 -> TerminalEvent.FunctionKey(5)
+                17 -> TerminalEvent.FunctionKey(6)
+                18 -> TerminalEvent.FunctionKey(7)
+                else -> null
+            }
+            else -> null
+        }
+    }
+
+    private fun arrowDirection(finalByte: Char): Direction? = when (finalByte) {
+        'A' -> Direction.UP
+        'B' -> Direction.DOWN
+        'C' -> Direction.RIGHT
+        'D' -> Direction.LEFT
+        else -> null
     }
 
     /** 0 (wait for more) while [data] since [from] is still under [MAX_ESCAPE_SEQUENCE_LENGTH];
@@ -131,6 +165,7 @@ class TerminalInputParser {
 
     private fun decodeSingleByte(b: Int): TerminalEvent = when (b) {
         8, 127 -> TerminalEvent.Backspace
+        9 -> TerminalEvent.Tab
         10, 13 -> TerminalEvent.Enter
         else -> TerminalEvent.KeyPress(b.toChar())
     }
