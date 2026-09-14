@@ -69,8 +69,12 @@ src/main/kotlin/
         │                                        # cursor highlight, the controls hint, and
         │                                        # toolbar shortcut labels (GH-18)
         ├── TuiInput.kt      # Per-mode input strategy interface (prepare/onBoardEvent/
-        │                      # onDialogEvent/decorateBoard/decorateDialog) + InputAction
-        │                      # sum type, so TuiView is mode-agnostic (GH-18)
+        │                      # onDialogEvent/decorateBoard/decorateDialog/onDialogOpened) +
+        │                      # InputAction sum type, so TuiView is mode-agnostic. onDialogOpened
+        │                      # is called at the start of every modal loop so a stateful TuiInput
+        │                      # can reset per-session state at an explicit boundary, even when
+        │                      # one dialog opens another directly with no board repaint in
+        │                      # between (e.g. Exit -> Save) (GH-18)
         ├── MouseInput.kt    # TuiInput impl: today's click-driven behaviour, stateless. Used
         │                      # by both the default mouse mode and the explicit --mouse flag
         │                      # (GH-18)
