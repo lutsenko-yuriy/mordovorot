@@ -9,17 +9,11 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/**
- * Covers GH-30's session loop: `GameSession` rebuilding the View/presenter/analytics stack
- * around the same `BoardModel`/`SaveRepository` instances every time `play()` unwinds with a
- * `ModeSwitchRequestedException`, and ending cleanly when `play()` returns normally instead.
- */
+/** Covers GH-30's `GameSession`: rebuilds around the same board/saves on
+ *  `ModeSwitchRequestedException`, ends when `play()` returns normally. */
 class GameSessionTest {
 
-    /** A minimal [View] test double - every method but [play] is a no-op, [play] runs the
-     *  scripted [onPlay] (throw a [ModeSwitchRequestedException], or return normally to
-     *  simulate a clean exit). Lets these tests drive [GameSession.run]'s rebuild loop without
-     *  any real console/terminal I/O. */
+    /** [View] test double: only [play] does anything, running the scripted [onPlay]. */
     private class ScriptedView(private val onPlay: () -> Unit) : View {
         override fun displayBoard(boardState: IntArray, squareSide: Int) {}
         override fun showMessage(message: String) {}

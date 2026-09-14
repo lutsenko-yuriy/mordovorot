@@ -15,17 +15,10 @@ import view.tui.KeyboardInput
 import view.tui.Terminal
 import view.tui.TuiView
 
-/**
- * The session loop extracted out of [main] for GH-30: owns the one [BoardModel] and one
- * [SaveRepository] that survive every mode switch, builds a fresh `View` + presenter +
- * [InputMethodAnalyticsService] around them for the current [InputMode] on every iteration, runs
- * its `play()`, and - on [ModeSwitchRequestedException] - rebuilds for the requested mode instead
- * of ending the session. `play()` returning normally (an ordinary exit) ends [run] the same way.
- *
- * [buildView] is the one seam a test needs to drive this loop without any real console/terminal
- * I/O - it defaults to the production wiring ([defaultView]), which mirrors what `main` used to
- * do directly before GH-30.
- */
+/** The session loop extracted out of [main] for GH-30: owns the [BoardModel]/[SaveRepository]
+ *  that survive every mode switch, rebuilds `View`+presenter+analytics per [InputMode] on
+ *  [ModeSwitchRequestedException], and stops when `play()` returns normally. [buildView] is the
+ *  test seam; it defaults to [defaultView]'s real wiring. */
 class GameSession(
     initialMode: InputMode,
     private val board: BoardModel = BoardImpl(),
@@ -43,9 +36,8 @@ class GameSession(
 
     private var mode: InputMode = initialMode
 
-    /** `false` only for the very first `View` this session builds - every rebuild after a mode
-     *  switch passes `true`, so [presenter.BasePresenter.offerStartupRestore] never re-shows the
-     *  startup restore prompt on a mode switch (GH-30). */
+    /** `true` after the first `View` build, so a mode switch never re-shows the startup restore
+     *  prompt. */
     private var startupRestoreDone = false
 
     fun run() {
@@ -63,8 +55,7 @@ class GameSession(
     }
 }
 
-/** The production `View` wiring - one `View`/presenter/`TuiInput` combination per [InputMode],
- *  same as `main` built directly before GH-30 extracted this loop out into [GameSession]. */
+/** The production `View` wiring, one per [InputMode] - what `main` built directly before GH-30. */
 private fun defaultView(
     mode: InputMode,
     board: BoardModel,

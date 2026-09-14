@@ -30,12 +30,9 @@ class AnsiTerminal(
     private var rawModeEntered = false
 
     companion object {
-        // Companion-level, not instance-level: GH-30 builds a fresh AnsiTerminal on every mode
-        // switch (GameSession's defaultView), and one shutdown hook per instance would leak one
-        // extra Thread - and one extra restore() call racing the others - per switch. The hook
-        // itself is registered only once, ever, but always forwards to whichever instance is
-        // currently active - restore()ing a stale, already-abandoned instance on an abnormal
-        // exit (Ctrl+C) mid-session would leave the *live* terminal stuck in raw mode.
+        // Companion-level, not instance-level: a fresh AnsiTerminal per mode switch (GH-30)
+        // would otherwise register one leaked hook per switch. The single hook forwards to
+        // activeInstance so it always restores the live terminal, not a stale one.
         @Volatile
         private var shutdownHookRegistered = false
 

@@ -17,8 +17,7 @@ abstract class BasePresenter(
     protected val board: BoardModel = BoardImpl(),
     protected val saves: SaveRepository = FileSaveRepository(),
     private val analytics: AnalyticsService = NoopAnalyticsService(),
-    /** Seeded `true` by [GameSession] on every session after the first, so a mode switch never
-     *  re-shows the startup restore prompt that already ran once this launch (GH-30). */
+    /** Seeded `true` by `GameSession` after a mode switch, so the prompt doesn't re-show. */
     startupRestoreDone: Boolean = false,
 ) : Presenter {
 
@@ -169,8 +168,7 @@ abstract class BasePresenter(
         return if (available.isEmpty()) "No saves available." else "Available saves: ${available.joinToString(", ")}"
     }
 
-    /** Guards [offerStartupRestore] against running twice in one launch - or, from GH-30 on,
-     *  against running again after a mode switch (see the constructor param above). */
+    /** Guards [offerStartupRestore] against running twice - including across a mode switch. */
     private var startupRestoreDone = startupRestoreDone
 
     /**

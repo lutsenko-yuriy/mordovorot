@@ -7,13 +7,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-/**
- * Covers GH-30's `ModeSwitcher`/`ModeSwitcherImpl`: the single place that checks for an
- * interactive terminal, tracks `input_mode_switched`, and either throws
- * `ModeSwitchRequestedException` (success) or shows a rejection message and returns normally
- * (no interactive terminal for a mouse/keyboard target) - mirroring
- * `BasePresenter.exitGame`'s "usually throws, returns normally on failure" contract.
- */
+/** Covers GH-30's `ModeSwitcherImpl`: TTY check, `input_mode_switched` tracking, throw vs
+ *  reject-with-message vs same-mode no-op. */
 class ModeSwitcherTest {
 
     @Test

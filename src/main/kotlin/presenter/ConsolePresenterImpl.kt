@@ -30,10 +30,7 @@ class ConsolePresenterImpl(
             } catch (e: ExitRequestedException) {
                 return
             } catch (e: ModeSwitchRequestedException) {
-                // Unlike EndOfInputException/ExitRequestedException, this must reach GameSession,
-                // not be swallowed here - the generic catch-all just below would otherwise treat
-                // it as an ordinary command error and keep looping (GH-30).
-                throw e
+                throw e // must reach GameSession, not the catch-all below
             } catch (e: Exception) {
                 view.showMessage(e.message ?: "Error") // not System.err - stays in sync with the board output
             }

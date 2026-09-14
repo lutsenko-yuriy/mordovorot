@@ -12,8 +12,7 @@ fun main(args: Array<String>) {
 
 /** Resolves the starting input mode, warns on any unrecognized argument, and tracks
  *  `app_launched` - split out from [main] so it's unit-testable without running the whole game
- *  loop. Runs once per process, unlike [GameSession]'s mid-session mode switches (GH-30), which
- *  never re-fire `app_launched`. */
+ *  loop. */
 fun resolveInputMode(
     args: Array<String>,
     analytics: AnalyticsService,
