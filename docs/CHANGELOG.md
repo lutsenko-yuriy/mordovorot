@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.6.2] — 2026-09-15 (PR #37 merged)
+
+### Changed
+- [wip] GH-30 (WU2/4): console `mouse`/`keyboard` commands — lets the user switch from the line-based console UI to the mouse-driven or keyboard-driven TUI mid-game without losing the board, via `ViewImpl`'s new `mouse`/`keyboard` commands reaching an injected `ModeSwitcher`. If there's no interactive terminal to switch into, the command is rejected with an on-screen message and play continues in console mode. Also hardens `GameSession`'s mode-switch loop: a rebuild that fails outright (e.g. a missing `stty`) now falls back to console instead of crashing and losing the in-progress game.
+
 ## [0.6.1] — 2026-09-14 (PR #36 merged)
 
 ### Changed
