@@ -1,6 +1,11 @@
 package view.tui
 
+import presenter.TuiPresenter
+import testing.FakeTerminal
+import testing.FakeTuiPresenter
 import kotlin.test.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /**
  * Covers GH-18's keyboard-driven solved-state view: the cursor disappearing and arrow
@@ -10,31 +15,66 @@ import kotlin.test.Test
  */
 class TuiViewKeyboardSolvedStateTest {
 
+    private val terminalSize = TerminalSize(columns = 80, rows = 40)
+
+    private fun view(terminal: FakeTerminal, presenter: TuiPresenter): TuiView =
+        TuiView.create(terminal, input = KeyboardInput()) { presenter }
+
     @Test
     fun `once solved, no cursor is rendered and arrow keys and Enter are inert`() {
-        // TODO: 1. Build a FakeTuiPresenter with solved = true, in keyboard mode.
-        // TODO: 2. Script an Arrow event followed by an Enter event.
-        // TODO: 3. Play the view, then verify presenter.calls has no shift calls and the last
-        //          frame contains "Congratulations ✓".
+        val presenter = FakeTuiPresenter().apply { solved = true }
+        val terminal = FakeTerminal(
+            events = mutableListOf(TerminalEvent.Arrow(Direction.DOWN), TerminalEvent.Enter),
+            terminalSize = terminalSize,
+        )
+
+        view(terminal, presenter).play()
+
+        assertTrue(presenter.calls.none { it.startsWith("shift") })
+        assertTrue(terminal.frames.last().contains("Congratulations ✓"))
     }
 
     @Test
     fun `F5, F6, F7 still open their dialogs after solve`() {
-        // TODO: 1. Build a FakeTuiPresenter with solved = true.
-        // TODO: 2. In separate runs, script an F5, F6, and F7 event.
-        // TODO: 3. Verify each run's last frame contains "Save game", "Load game", and
-        //          "Save before quitting?" respectively.
+        // Any frame, not just the last one - see TuiViewKeyboardBoardTest's equivalent test for
+        // why (EndOfInput closing the dialog loop triggers one more board repaint before quitting).
+        fun framesFor(event: TerminalEvent): List<String> {
+            val presenter = FakeTuiPresenter().apply { solved = true }
+            val terminal = FakeTerminal(events = mutableListOf(event), terminalSize = terminalSize)
+            view(terminal, presenter).play()
+            return terminal.frames
+        }
+
+        assertTrue(framesFor(TerminalEvent.FunctionKey(5)).any { it.contains("Save game") })
+        assertTrue(framesFor(TerminalEvent.FunctionKey(6)).any { it.contains("Load game") })
+        assertTrue(framesFor(TerminalEvent.FunctionKey(7)).any { it.contains("Save before quitting?") })
     }
 
     @Test
     fun `loading an unsolved save from the Congratulations screen restores the cursor and re-enables navigation`() {
-        // TODO: 1. Build a presenter that starts solved = true with one save available, and
-        //          flips solved = false on loadGame (mirroring TuiViewSolvedStateTest's delegate
-        //          pattern).
-        // TODO: 2. Script an F6 event, a Down event, a Tab event, an Enter event to load the
-        //          unsolved save.
-        // TODO: 3. Script an Arrow event walking the cursor to LEFT[0], then an Enter event.
-        // TODO: 4. Play the view, then verify presenter.calls contains "loadGame(...)" and
-        //          "shiftLeft(0)", and the last frame shows "Mordovorot", not "Congratulations".
+        val delegate = FakeTuiPresenter().apply { solved = true; saveNames = listOf("save1") }
+        val presenter = object : TuiPresenter by delegate {
+            override fun loadGame(name: String) {
+                delegate.loadGame(name)
+                delegate.solved = false
+            }
+        }
+        val terminal = FakeTerminal(
+            events = mutableListOf(
+                TerminalEvent.FunctionKey(6), // open the Load dialog - focus starts on its only row
+                TerminalEvent.Tab, // move focus from the row to the Load button
+                TerminalEvent.Enter, // confirm - loads "save1", flipping solved to false
+                TerminalEvent.Enter, // the cursor reset to LEFT[0] on the transition - activate it
+            ),
+            terminalSize = terminalSize,
+        )
+
+        view(terminal, presenter).play()
+
+        assertTrue(delegate.calls.contains("loadGame(save1)"))
+        assertTrue(delegate.calls.contains("shiftLeft(0)"))
+        val boardFrame = terminal.frames.last()
+        assertTrue(boardFrame.contains("Mordovorot"))
+        assertFalse(boardFrame.contains("Congratulations"))
     }
 }
