@@ -1,10 +1,14 @@
 package view.tui
 
+import analytics.AnalyticsService
+import analytics.InputMethodAnalyticsService
 import presenter.TuiPresenterImpl
 import testing.FakeBoardModel
 import testing.FakeSaveRepository
 import testing.FakeTerminal
+import testing.RecordingAnalyticsService
 import kotlin.test.Test
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -15,6 +19,13 @@ import kotlin.test.assertTrue
 class TuiViewKeyboardDialogTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
+
+    private fun viewWithRealPresenter(
+        terminal: FakeTerminal,
+        saves: FakeSaveRepository = FakeSaveRepository(),
+        board: FakeBoardModel = FakeBoardModel(),
+        analytics: AnalyticsService = RecordingAnalyticsService(),
+    ): TuiView = TuiView.create(terminal, analytics, input = KeyboardInput()) { v -> TuiPresenterImpl(v, board, saves, analytics) }
 
     @Test
     fun `the exit flow's Save re-prompt after a rejected name starts focus back on the text field`() {
@@ -45,74 +56,155 @@ class TuiViewKeyboardDialogTest {
 
     @Test
     fun `Save dialog happy path - typed name, Tab to the Save button, Enter saves and closes`() {
-        // TODO: 1. Script an F5 event to open the Save dialog.
-        // TODO: 2. Script KeyPress('h'), KeyPress('i') to type a name.
-        // TODO: 3. Script a Tab event to move focus from the text field to the Save button.
-        // TODO: 4. Script an Enter event to activate it.
-        // TODO: 5. Play the view, then verify presenter.calls contains "saveGame(hi)" and the
-        //          last frame no longer shows "Save game".
+        val saves = FakeSaveRepository()
+        val board = FakeBoardModel()
+        val terminal = FakeTerminal(
+            events = mutableListOf(
+                TerminalEvent.FunctionKey(5),
+                TerminalEvent.KeyPress('h'), TerminalEvent.KeyPress('i'),
+                TerminalEvent.Tab,
+                TerminalEvent.Enter,
+            ),
+            terminalSize = terminalSize,
+        )
+
+        viewWithRealPresenter(terminal, saves, board).play()
+
+        assertTrue(saves.saveCalls.any { it.first == "hi" })
+        assertTrue(terminal.frames.last().contains("Saved as 'hi'."))
     }
 
     @Test
     fun `Save dialog Escape cancels and tracks dialog_cancelled with input_method keyboard`() {
-        // TODO: 1. Script an F5 event, then an Escape event.
-        // TODO: 2. Play the view with a RecordingAnalyticsService.
-        // TODO: 3. Verify presenter.calls has no saveGame call.
-        // TODO: 4. Verify analytics.events contains dialog_cancelled with dialog="save" and
-        //          input_method="keyboard".
+        val saves = FakeSaveRepository()
+        val recording = RecordingAnalyticsService()
+        val analytics = InputMethodAnalyticsService(recording, inputMethod = "keyboard")
+        val terminal = FakeTerminal(
+            events = mutableListOf(TerminalEvent.FunctionKey(5), TerminalEvent.Escape),
+            terminalSize = terminalSize,
+        )
+
+        viewWithRealPresenter(terminal, saves, analytics = analytics).play()
+
+        assertTrue(saves.saveCalls.isEmpty())
+        assertTrue(
+            recording.events.any {
+                it.name == "dialog_cancelled" && it.properties["dialog"] == "save" && it.properties["input_method"] == "keyboard"
+            },
+        )
     }
 
     @Test
     fun `pressing Enter with an empty name in the Save dialog cancels instead of looping forever`() {
-        // TODO: 1. Script an F5 event, then an Enter event with no typed name.
-        // TODO: 2. Play the view, then verify presenter.calls has no saveGame call.
+        // No Tab - focus stays on the text field, so Enter goes through the Submit path
+        // (as opposed to clicking the Save button with an empty field, already covered on the
+        // mouse side by TuiViewDialogTest).
+        val saves = FakeSaveRepository()
+        val terminal = FakeTerminal(
+            events = mutableListOf(TerminalEvent.FunctionKey(5), TerminalEvent.Enter),
+            terminalSize = terminalSize,
+        )
+
+        viewWithRealPresenter(terminal, saves).play()
+
+        assertTrue(saves.saveCalls.isEmpty())
     }
 
     @Test
-    fun `Load dialog - Down selects a row, Tab to Load, Enter restores that save`() {
-        // TODO: 1. Set presenter.saveNames = listOf("foo", "bar").
-        // TODO: 2. Script an F6 event, a Down event to move the list selection to "bar",
-        //          a Tab event to move focus to the Load button, and an Enter event.
-        // TODO: 3. Play the view, then verify presenter.calls contains "loadGame(bar)".
+    fun `Down on the Load dialog moves selection off the first (alphabetically first) row`() {
+        val fooBoard = storage.SavedBoard(4, IntArray(16) { it })
+        val barBoard = storage.SavedBoard(4, IntArray(16) { it + 1 })
+        // listSaves() returns names sorted, so "bar" is row 0 (selected by default) and "foo" is
+        // row 1 - Down must move onto "foo", not stay on "bar".
+        val saves = FakeSaveRepository(mutableMapOf("foo" to fooBoard, "bar" to barBoard))
+        val board = FakeBoardModel()
+        val terminal = FakeTerminal(
+            events = mutableListOf(
+                TerminalEvent.FunctionKey(6),
+                TerminalEvent.Arrow(Direction.DOWN), // selection: "bar" (row 0) -> "foo" (row 1)
+                TerminalEvent.Tab, // focus -> the Load button
+                TerminalEvent.Enter,
+            ),
+            terminalSize = terminalSize,
+        )
+
+        viewWithRealPresenter(terminal, saves, board).play()
+
+        assertTrue(board.calls.contains("restoreState(${fooBoard.state.toList()})"))
     }
 
     @Test
     fun `Load dialog with no saves can only be cancelled`() {
-        // TODO: 1. Set presenter.saveNames = emptyList().
-        // TODO: 2. Script an F6 event, then a Tab event (focus can only land on Cancel since
-        //          Load is inert), then an Enter event.
-        // TODO: 3. Play the view, then verify presenter.calls has no loadGame call and the
-        //          dialog is closed.
+        val saves = FakeSaveRepository()
+        val board = FakeBoardModel()
+        val terminal = FakeTerminal(
+            events = mutableListOf(TerminalEvent.FunctionKey(6), TerminalEvent.Tab, TerminalEvent.Enter),
+            terminalSize = terminalSize,
+        )
+
+        viewWithRealPresenter(terminal, saves, board).play()
+
+        assertTrue(board.calls.none { it.startsWith("restoreState") })
+        assertFalse(terminal.frames.last().contains("Load game"))
     }
 
     @Test
-    fun `Exit dialog Yes - Tab to Yes, Enter opens the Save dialog, then saving quits`() {
-        // TODO: 1. Script an Escape event (opens the Exit dialog), a Tab event to focus the Yes
-        //          button, an Enter event.
-        // TODO: 2. Script KeyPress('h') to type a save name, a Tab event, an Enter event.
-        // TODO: 3. Play the view with a real TuiPresenterImpl over FakeSaveRepository and a
-        //          RecordingAnalyticsService.
-        // TODO: 4. Verify saves.saveCalls contains the typed name and analytics.events contains
-        //          exit_command_used with save_choice="saved".
+    fun `Exit dialog Yes opens the Save dialog (focus starts there), then saving quits`() {
+        val saves = FakeSaveRepository()
+        val board = FakeBoardModel()
+        val analytics = RecordingAnalyticsService()
+        val terminal = FakeTerminal(
+            events = mutableListOf(
+                TerminalEvent.Escape, // open the Exit dialog - focus starts on Yes
+                TerminalEvent.Enter,
+                TerminalEvent.KeyPress('h'),
+                TerminalEvent.Tab,
+                TerminalEvent.Enter, // saves "h" and quits
+                // Left unconsumed if the quit actually happened - proves the loop didn't just
+                // run out of scripted input, it stopped reading before reaching these.
+                TerminalEvent.Arrow(Direction.DOWN),
+                TerminalEvent.Enter,
+            ),
+            terminalSize = terminalSize,
+        )
+
+        viewWithRealPresenter(terminal, saves, board, analytics).play()
+
+        assertTrue(saves.saveCalls.any { it.first == "h" })
+        assertTrue(analytics.events.any { it.name == "exit_command_used" && it.properties["save_choice"] == "saved" })
+        assertTrue(board.calls.none { it.startsWith("shift") })
     }
 
     @Test
     fun `Exit dialog Escape cancels and keeps playing`() {
-        // TODO: 1. Script an Escape event (opens the Exit dialog), then a second Escape event
-        //          (Cancel, once inside it).
-        // TODO: 2. Play the view with a RecordingAnalyticsService.
-        // TODO: 3. Verify presenter.calls has no exitGame call, the last frame shows
-        //          "Mordovorot", and analytics.events contains dialog_cancelled with
-        //          dialog="exit".
+        val analytics = RecordingAnalyticsService()
+        val terminal = FakeTerminal(
+            events = mutableListOf(TerminalEvent.Escape, TerminalEvent.Escape),
+            terminalSize = terminalSize,
+        )
+
+        viewWithRealPresenter(terminal, analytics = analytics).play()
+
+        assertFalse(terminal.frames.last().contains("Save before quitting?"))
+        assertTrue(terminal.frames.last().contains("Mordovorot"))
+        assertTrue(analytics.events.any { it.name == "dialog_cancelled" && it.properties["dialog"] == "exit" })
     }
 
     @Test
-    fun `startup restore dialog is navigable by keyboard - Down then Enter restores`() {
-        // TODO: 1. Seed a FakeSaveRepository with one save so the startup restore dialog opens
-        //          automatically.
-        // TODO: 2. Script a Down event to select the row, a Tab event to focus Load, an Enter
-        //          event.
-        // TODO: 3. Play the view with a real TuiPresenterImpl over a FakeBoardModel.
-        // TODO: 4. Verify board.calls contains a restoreState call.
+    fun `startup restore dialog - Tab to Load, Enter restores the one save on offer`() {
+        val saved = storage.SavedBoard(4, IntArray(16) { it })
+        val saves = FakeSaveRepository(mutableMapOf("foo" to saved))
+        val board = FakeBoardModel()
+        val terminal = FakeTerminal(
+            events = mutableListOf(
+                TerminalEvent.Tab, // focus: the one row -> the Load button
+                TerminalEvent.Enter,
+            ),
+            terminalSize = terminalSize,
+        )
+
+        viewWithRealPresenter(terminal, saves, board).play()
+
+        assertTrue(board.calls.contains("restoreState(${saved.state.toList()})"))
     }
 }

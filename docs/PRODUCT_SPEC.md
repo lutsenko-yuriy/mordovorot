@@ -96,6 +96,27 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
   brings the arrows and title straight back — the screen doesn't need a fresh launch or a
   separate "keep playing" action.
 
+### Feature 7 — Keyboard-only TUI (GH-18)
+- `--keyboard` runs the same TUI screens as Feature 6 (board, toolbar, dialogs, Congratulations
+  screen), but driven entirely from the keyboard instead of the mouse. `--console` still wins if
+  both are given, and no-interactive-terminal falls back to console mode the same as mouse mode;
+  an explicit `--keyboard`/`--mouse` that can't get a TTY warns about the fallback.
+- **Board navigation:** arrow keys move a highlighted cursor around the ring of shift arrows
+  (`◀`/`▶`/`▲`/`▼`); the cursored arrow is shown in yellow. Enter or Space activates whichever
+  arrow is highlighted, same effect as clicking it. Once solved, the cursor disappears and arrow
+  keys/Enter go inert, matching the mouse mode's dimmed-arrows behavior.
+- **Toolbar shortcuts**, shown in light blue on the toolbar buttons and always live regardless of
+  cursor position or solved state: **F5** opens Save, **F6** opens Load, **Escape** opens the Exit
+  dialog (replacing F7 from earlier iterations of this ticket). A controls-hint line below the
+  toolbar spells these out in plain text.
+- **Dialog navigation:** Tab/Shift+Tab (or the arrow keys) cycle focus between a dialog's
+  controls (text field, list rows, buttons); Enter activates whatever has focus; Escape cancels
+  the dialog, same as clicking Cancel. Typing and Backspace work on the focused text field as in
+  the mouse mode's Save dialog.
+- All other dialog and startup-restore behavior (validation, re-prompting) is identical to
+  Feature 6 — only the input method differs, which shows up in analytics as an `input_method`
+  property of `keyboard` instead of `mouse`.
+
 ## Known gaps
 
 - Console mode (`--console` or a non-interactive launch) has no documented win-condition

@@ -1,7 +1,7 @@
 package analytics
 
 /**
- * Decorates another [AnalyticsService], adding an `input_method` (`console`/`mouse`)
+ * Decorates another [AnalyticsService], adding an `input_method` (`console`/`mouse`/`keyboard`)
  * property to every forwarded event - lets [presenter.BasePresenter]'s existing events be
  * split by launch mode without touching its `track(...)` call sites.
  */
