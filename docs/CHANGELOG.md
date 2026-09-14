@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.6.1] — 2026-09-14 (PR #36 merged)
+
+### Changed
+- [wip] GH-30 (WU1/4): session loop + mode-switch plumbing — extracts `GameSession` out of `main()` so a running session can rebuild its View/presenter/analytics stack around a different `InputMode` mid-session instead of the process just ending; adds `ModeSwitchRequestedException`/`ModeSwitcher`/`ModeSwitcherImpl` (the single place that checks for an interactive terminal and tracks `input_mode_switched`), a shared `SessionControlException` marker base, and renames `LaunchMode` to `InputMode`. Not yet reachable from any UI — no `mouse`/`keyboard` console command (WU2), no TUI toolbar buttons (WU3), no F7/F8 shortcuts (WU4) call `ModeSwitcher.switchTo` yet.
+
 ## [0.6.0] — 2026-09-14 (PR #34 merged)
 
 ### Added

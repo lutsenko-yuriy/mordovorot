@@ -87,7 +87,7 @@ Fired when the user cancels the Save, Load, or Exit dialog in the mouse-driven o
 
 ### `input_mode_switched`
 
-Fired when the user switches input mode mid-session — toolbar button (mouse mode), keyboard shortcut (keyboard mode), or console command (console mode) — regardless of outcome. *(GH-30)*
+Fired when the user requests a switch to a *different* input mode mid-session — toolbar button (mouse mode), keyboard shortcut (keyboard mode), or console command (console mode) — regardless of outcome. Requesting the mode that's already active is a no-op instead: no event, no message, no exception (audit finding on PR #36). *(GH-30)*
 
 | Property | Type | Description |
 |---|---|---|

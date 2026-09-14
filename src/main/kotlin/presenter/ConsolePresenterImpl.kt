@@ -16,7 +16,8 @@ class ConsolePresenterImpl(
     board: BoardModel = BoardImpl(),
     saves: SaveRepository = FileSaveRepository(),
     analytics: AnalyticsService = NoopAnalyticsService(),
-) : BasePresenter(view, board, saves, analytics), ConsolePresenter {
+    startupRestoreDone: Boolean = false,
+) : BasePresenter(view, board, saves, analytics, startupRestoreDone), ConsolePresenter {
 
     override fun play() {
         offerStartupRestore()
@@ -28,6 +29,8 @@ class ConsolePresenterImpl(
                 return
             } catch (e: ExitRequestedException) {
                 return
+            } catch (e: SessionControlException) {
+                throw e // e.g. ModeSwitchRequestedException - must reach GameSession, not the catch-all below
             } catch (e: Exception) {
                 view.showMessage(e.message ?: "Error") // not System.err - stays in sync with the board output
             }
