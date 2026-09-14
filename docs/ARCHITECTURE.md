@@ -12,9 +12,24 @@ MVP (Model-View-Presenter): board_model + presenter + view packages
 
 ```
 src/main/kotlin/
-├── Main.kt              # Entry point — resolves LaunchMode, then builds and plays either
-│                          # view.tui.TuiView (MOUSE) or ViewImpl (CONSOLE) (GH-3)
-├── LaunchMode.kt        # MOUSE / CONSOLE — resolves from `--console` + terminal availability (GH-3)
+├── Main.kt              # Entry point — resolves the starting InputMode, then hands off to
+│                          # GameSession.run() (GH-3, GH-30)
+├── InputMode.kt         # MOUSE / CONSOLE / KEYBOARD — resolves the starting mode from
+│                          # `--console`/`--keyboard`/`--mouse` + terminal availability; also
+│                          # the type GameSession/ModeSwitcher pass around mid-session
+│                          # (GH-3, GH-18, renamed from LaunchMode for GH-30)
+├── GameSession.kt       # Session loop extracted out of Main: owns the one BoardImpl and
+│                          # one FileSaveRepository that survive every mode switch; builds a
+│                          # fresh View + presenter + InputMethodAnalyticsService per mode,
+│                          # runs play(), and re-enters on ModeSwitchRequestedException (GH-30)
+├── ModeSwitcher.kt      # ModeSwitcher / ModeSwitcherImpl / NoopModeSwitcher — checks for an
+│                          # interactive terminal, tracks input_mode_switched, and either
+│                          # throws ModeSwitchRequestedException (success) or shows a message
+│                          # and returns (rejected), mirroring BasePresenter.exitGame's
+│                          # contract (GH-30)
+├── ModeSwitchRequestedException.kt # Carries the requested InputMode; unwinds a running
+│                                     # session's play() back to GameSession's loop, the same
+│                                     # way ExitRequestedException unwinds it to quit (GH-30)
 ├── analytics/
 │   ├── AnalyticsService.kt             # Analytics abstraction — track(event, properties)
 │   ├── NoopAnalyticsService.kt         # Default implementation; no SDK wired up yet
@@ -31,7 +46,10 @@ src/main/kotlin/
 │   │                           # restoreOnStartup (GH-23)
 │   ├── BasePresenter.kt      # Abstract base implementing the shared core; board/saves/analytics
 │   │                           # are constructor params (each defaulted to a real impl) so fakes
-│   │                           # can be injected (GH-23)
+│   │                           # can be injected (GH-23). `startupRestoreDone` is also a
+│   │                           # constructor param (default false) so GameSession can seed it
+│   │                           # true on every session after the first, skipping a re-shown
+│   │                           # startup restore prompt after a mode switch (GH-30)
 │   ├── ConsolePresenterImpl.kt # BasePresenter + ConsolePresenter — owns the line-based play() loop
 │   ├── TuiPresenterImpl.kt     # BasePresenter + TuiPresenter — owns the query surface, exposes
 │   │                             # restoreOnStartup() publicly for view.tui.TuiView (GH-23)
@@ -52,8 +70,12 @@ src/main/kotlin/
         ├── TerminalEvent.kt / TerminalInputParser.kt # Byte-stream -> event decoding (SGR-1006
         │                                               # and legacy X10 mouse reports, keys,
         │                                               # arrow/Tab/BackTab/function-key
-        │                                               # decoding for keyboard mode) (GH-18)
-        ├── BoardLayout.kt / HitTarget.kt   # Pure board geometry + click hit-testing
+        │                                               # decoding for keyboard mode, incl.
+        │                                               # F7/F8 for the mode-switch shortcuts)
+        │                                               # (GH-18, GH-30)
+        ├── BoardLayout.kt / HitTarget.kt   # Pure board geometry + click hit-testing, incl. the
+        │                                     # toolbar's mode-switch buttons
+        │                                     # (HitTarget.ToolbarMode) (GH-30)
         ├── ArrowRing.kt     # Pure perimeter-ring cursor logic for keyboard board navigation:
         │                      # ArrowCursor(edge, index) + Edge{LEFT,RIGHT,TOP,BOTTOM}, one
         │                      # move per arrow key, wrapping at corners (GH-18)
@@ -91,7 +113,12 @@ src/main/kotlin/
                           # MouseInput()) so mouse and keyboard modes share one event loop (GH-18).
 
 src/test/kotlin/
-├── LaunchModeTest.kt      # LaunchMode resolution + app_launched tracking (GH-3)
+├── InputModeTest.kt       # InputMode resolution + app_launched tracking (GH-3, renamed
+│                            # from LaunchModeTest for GH-30)
+├── GameSessionTest.kt     # Session loop: switch rebuilds around the same BoardModel
+│                            # instance, startupRestoreDone seeding, multi-switch chains (GH-30)
+├── ModeSwitcherTest.kt    # TTY present/absent x target x trigger matrix; success vs
+│                            # rejected_no_tty; same-mode no-op (GH-30)
 ├── analytics/            # NoopAnalyticsService, InputMethodAnalyticsService coverage
 ├── board_model/         # BoardImpl coverage: reset/shuffle, isCorrect, all four shifts, restoreState
 ├── presenter/            # One test file per production class (GH-3, split GH-23):
@@ -107,7 +134,8 @@ src/test/kotlin/
 ├── view/                  # ViewImpl command-parsing coverage; view/tui/ coverage (GH-3, WU2-WU5)
 └── testing/              # FakeBoardModel / FakeView / FakeSaveRepository / RecordingAnalyticsService /
                             # RecordingPresenter + FakeConsolePresenter/FakeTuiPresenter (recording
-                            # doubles, split GH-23) / TestPresenter (minimal concrete BasePresenter)
+                            # doubles, split GH-23) / TestPresenter (minimal concrete BasePresenter) /
+                            # RecordingModeSwitcher (GH-30)
 ```
 
 Gradle's standard source-set convention (`src/main/kotlin`, `src/test/kotlin`) is used —
@@ -170,17 +198,33 @@ every forwarded event — the decorator pattern lets `Main` distinguish events
 by launch mode without `BasePresenter` itself knowing which UI mode is
 running.
 
-### Launch mode (GH-3, GH-18)
-`LaunchMode` (root package) resolves which `View` `Main` builds: `--console`
-always selects the console `ViewImpl`; `--keyboard` selects the TUI built
-with `KeyboardInput`; `--mouse` explicitly selects the TUI built with
-`MouseInput` (the same mode that already runs by default when no mode flag
-is given). Precedence when multiple flags are passed: `--console` beats
-`--keyboard` beats `--mouse`/default. `--keyboard` and `--mouse` fall back to
-`CONSOLE` when no interactive terminal is available (`System.console() ==
-null`, e.g. a piped/scripted run), same as the default does. Resolution is
-pure and injectable (`hasInteractiveTerminal` is a constructor-style
-parameter), so it's unit-tested without a real terminal.
+### Launch mode and runtime mode switching (GH-3, GH-18, GH-30)
+`InputMode` (root package, renamed from `LaunchMode` for GH-30) resolves
+which `View` `Main` builds at startup: `--console` always selects the
+console `ViewImpl`; `--keyboard` selects the TUI built with `KeyboardInput`;
+`--mouse` explicitly selects the TUI built with `MouseInput` (the same mode
+that already runs by default when no mode flag is given). Precedence when
+multiple flags are passed: `--console` beats `--keyboard` beats
+`--mouse`/default. `--keyboard` and `--mouse` fall back to `CONSOLE` when no
+interactive terminal is available (`System.console() == null`, e.g. a
+piped/scripted run), same as the default does. Resolution is pure and
+injectable (`hasInteractiveTerminal` is a constructor-style parameter), so
+it's unit-tested without a real terminal.
+
+`InputMode` no longer only decides where a session *begins* — `GameSession`
+lets it switch mid-session, driven by `ModeSwitcher`. Each `View`
+implementation exposes a way to request a switch (`ViewImpl`'s `mouse`/
+`keyboard` commands; `TuiView`'s toolbar buttons/F7/F8 shortcuts, reached
+via `HitTarget.ToolbarMode`/`ScreenState.modeButtons`), which
+`ModeSwitcherImpl` either turns into a `ModeSwitchRequestedException`
+(interactive terminal available for the target) or rejects with an
+on-screen message (no TTY — the same constraint `--mouse`/`--keyboard`
+already enforce at launch). `GameSession` catches the exception, rebuilds
+the `View`/presenter/analytics stack for the new mode around the *same*
+`BoardImpl`/`FileSaveRepository` instances, and re-enters `play()` — so
+switching preserves board state and never reshuffles. `app_launched` still
+fires exactly once, from the initial `InputMode` resolution in `Main`; each
+subsequent switch fires `input_mode_switched` instead (`docs/ANALYTICS_EVENTS.md`).
 
 ## Dependencies
 
