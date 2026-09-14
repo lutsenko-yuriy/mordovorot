@@ -50,13 +50,32 @@ src/main/kotlin/
         │                                     # xterm mouse-reporting escapes) - the one seam
         │                                     # touching the real terminal
         ├── TerminalEvent.kt / TerminalInputParser.kt # Byte-stream -> event decoding (SGR-1006
-        │                                               # and legacy X10 mouse reports, keys)
+        │                                               # and legacy X10 mouse reports, keys,
+        │                                               # arrow/Tab/BackTab/function-key
+        │                                               # decoding for keyboard mode) (GH-18)
         ├── BoardLayout.kt / HitTarget.kt   # Pure board geometry + click hit-testing
+        ├── ArrowRing.kt     # Pure perimeter-ring cursor logic for keyboard board navigation:
+        │                      # ArrowCursor(edge, index) + Edge{LEFT,RIGHT,TOP,BOTTOM}, one
+        │                      # move per arrow key, wrapping at corners (GH-18)
         ├── Dialog.kt / DialogLayout.kt     # One model + one geometry class for all three
         │                                     # modal dialogs (Save/Load/Exit) and the
-        │                                     # Load-shaped startup restore prompt (GH-3 WU4)
+        │                                     # Load-shaped startup restore prompt (GH-3 WU4);
+        │                                     # Dialog also carries keyboard focus state
+        │                                     # (focusedButtonId, textFieldFocused) (GH-18)
+        ├── DialogFocus.kt   # Pure focus ring over a dialog's controls (text field/list rows,
+        │                      # then buttons) for Tab/arrow-key dialog navigation (GH-18)
         ├── ScreenState.kt / ScreenRenderer.kt # Pure ScreenState -> frame String rendering,
-        │                                        # including the dialog overlay
+        │                                        # including the dialog overlay, the keyboard
+        │                                        # cursor highlight, the controls hint, and
+        │                                        # toolbar shortcut labels (GH-18)
+        ├── TuiInput.kt      # Per-mode input strategy interface (prepare/onBoardEvent/
+        │                      # onDialogEvent/decorateBoard/decorateDialog) + InputAction
+        │                      # sum type, so TuiView is mode-agnostic (GH-18)
+        ├── MouseInput.kt    # TuiInput impl: today's click-driven behaviour, stateless. Used
+        │                      # by both the default mouse mode and the explicit --mouse flag
+        │                      # (GH-18)
+        ├── KeyboardInput.kt # TuiInput impl: owns the board ArrowCursor and DialogFocus state
+        │                      # for --keyboard mode (GH-18)
         └── TuiView.kt   # Owns its own event loop (doesn't call ConsolePresenterImpl.play() - see
                           # the ticket's solved-state note). Save/Load/Exit and the startup
                           # restore prompt each run their own blocking modal loop over
@@ -64,6 +83,8 @@ src/main/kotlin/
                           # TuiPresenter.isSolved() fresh rather than tracking a phase flag, so the
                           # Congratulations title/dimmed arrows and a load back to an unsolved
                           # board both fall out of the same repaint path with no extra branching.
+                          # Delegates input handling to an injected TuiInput (default
+                          # MouseInput()) so mouse and keyboard modes share one event loop (GH-18).
 
 src/test/kotlin/
 ├── LaunchModeTest.kt      # LaunchMode resolution + app_launched tracking (GH-3)
@@ -140,18 +161,22 @@ deals in plain data (`SavedBoard`), not domain objects.
 Cross-cutting: `AnalyticsService` is injected into `presenter` (and any layer
 that needs to track an event), currently backed by `NoopAnalyticsService`.
 `InputMethodAnalyticsService` (GH-3) decorates another `AnalyticsService`,
-adding an `input_method` (`console`/`mouse`) property to every forwarded
-event — the decorator pattern lets `Main` distinguish events by launch mode
-without `BasePresenter` itself knowing which UI mode is running.
+adding an `input_method` (`console`/`mouse`/`keyboard`, GH-18) property to
+every forwarded event — the decorator pattern lets `Main` distinguish events
+by launch mode without `BasePresenter` itself knowing which UI mode is
+running.
 
-### Launch mode (GH-3)
+### Launch mode (GH-3, GH-18)
 `LaunchMode` (root package) resolves which `View` `Main` builds: `--console`
-always selects the console `ViewImpl`; otherwise the mouse-driven TUI
-(`view.tui`, in progress) is the default, unless no interactive terminal is
-available (`System.console() == null`, e.g. a piped/scripted run), in which
-case it falls back to console mode automatically. Resolution is pure and
-injectable (`hasInteractiveTerminal` is a constructor-style parameter), so
-it's unit-tested without a real terminal.
+always selects the console `ViewImpl`; `--keyboard` selects the TUI built
+with `KeyboardInput`; `--mouse` explicitly selects the TUI built with
+`MouseInput` (the same mode that already runs by default when no mode flag
+is given). Precedence when multiple flags are passed: `--console` beats
+`--keyboard` beats `--mouse`/default. `--keyboard` and `--mouse` fall back to
+`CONSOLE` when no interactive terminal is available (`System.console() ==
+null`, e.g. a piped/scripted run), same as the default does. Resolution is
+pure and injectable (`hasInteractiveTerminal` is a constructor-style
+parameter), so it's unit-tested without a real terminal.
 
 ## Dependencies
 
