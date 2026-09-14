@@ -6,6 +6,14 @@ private const val DISPLAY_OFFSET = 1
 private const val DIM_ON = "\u001B[2m"
 private const val DIM_OFF = "\u001B[22m"
 
+/** SGR reverse-video on/off - GH-18's keyboard-mode focus highlight (the cursor arrow, a
+ *  focused dialog button). */
+private const val REVERSE_ON = "\u001B[7m"
+private const val REVERSE_OFF = "\u001B[27m"
+
+/** Appended to the Save dialog's text field when keyboard focus (GH-18) is on it. */
+private const val TEXT_FIELD_FOCUS_MARKER = " ◀"
+
 /** Clears the screen and homes the cursor - every frame is a full repaint. */
 private const val CLEAR_AND_HOME = "\u001B[2J\u001B[H"
 
@@ -19,7 +27,7 @@ private const val CLEAR_AND_HOME = "\u001B[2J\u001B[H"
 class ScreenRenderer {
 
     fun render(state: ScreenState, terminalSize: TerminalSize): String {
-        val layout = BoardLayout(terminalSize, state.squareSide, state.arrowsEnabled)
+        val layout = BoardLayout(terminalSize, state.squareSide, state.arrowsEnabled, state.toolbarShortcuts)
         val canvas = Canvas(terminalSize.columns.coerceAtLeast(1), terminalSize.rows.coerceAtLeast(1))
 
         canvas.put(centeredX(state.title, terminalSize), layout.titleRow, state.title)
@@ -27,6 +35,7 @@ class ScreenRenderer {
         drawArrows(canvas, layout, state)
         drawToolbar(canvas, layout)
         state.message?.let { canvas.put(2, layout.toolbarRow + 2, it) }
+        state.controlsHint?.let { canvas.put(0, terminalSize.rows.coerceAtLeast(1) - 1, it) }
         state.dialog?.let { drawDialog(canvas, it, terminalSize) }
 
         return CLEAR_AND_HOME + canvas.render()
@@ -68,19 +77,26 @@ class ScreenRenderer {
     }
 
     private fun drawArrows(canvas: Canvas, layout: BoardLayout, state: ScreenState) {
-        fun glyph(g: String) = if (state.arrowsEnabled) g else "$DIM_ON$g$DIM_OFF"
+        // The keyboard-mode cursor (GH-18) always wins over dimming - state.cursor is only ever
+        // non-null when arrowsEnabled is true (ScreenState's own KDoc), so the two never compete
+        // for the same arrow.
+        fun glyph(g: String, isCursor: Boolean) = when {
+            isCursor -> "$REVERSE_ON$g$REVERSE_OFF"
+            state.arrowsEnabled -> g
+            else -> "$DIM_ON$g$DIM_OFF"
+        }
 
         for (row in 0 until state.squareSide) {
             val (lx, ly) = layout.leftArrowPosition(row)
-            canvas.putGlyph(lx, ly, glyph("◀"))
+            canvas.putGlyph(lx, ly, glyph("◀", state.cursor == ArrowCursor(Edge.LEFT, row)))
             val (rx, ry) = layout.rightArrowPosition(row)
-            canvas.putGlyph(rx, ry, glyph("▶"))
+            canvas.putGlyph(rx, ry, glyph("▶", state.cursor == ArrowCursor(Edge.RIGHT, row)))
         }
         for (col in 0 until state.squareSide) {
             val (ux, uy) = layout.upArrowPosition(col)
-            canvas.putGlyph(ux, uy, glyph("▲"))
+            canvas.putGlyph(ux, uy, glyph("▲", state.cursor == ArrowCursor(Edge.TOP, col)))
             val (dx, dy) = layout.downArrowPosition(col)
-            canvas.putGlyph(dx, dy, glyph("▼"))
+            canvas.putGlyph(dx, dy, glyph("▼", state.cursor == ArrowCursor(Edge.BOTTOM, col)))
         }
     }
 
@@ -101,12 +117,19 @@ class ScreenRenderer {
         // flow's invalid-name explanation) doesn't lose its actionable half (audit round 3 on
         // PR #24).
         layout.messageLines.forEachIndexed { index, line -> canvas.put(layout.left + 2, layout.messageRowPosition(index), line) }
-        layout.textFieldRow?.let { row -> canvas.put(layout.left + 2, row, truncate("Name: ${dialog.textFieldValue}_", maxLineWidth)) }
+        layout.textFieldRow?.let { row ->
+            val focusMarker = if (dialog.textFieldFocused) TEXT_FIELD_FOCUS_MARKER else ""
+            canvas.put(layout.left + 2, row, truncate("Name: ${dialog.textFieldValue}_$focusMarker", maxLineWidth))
+        }
         for (index in dialog.listItems.indices) {
             val marker = if (index == dialog.selectedIndex) "> " else "  "
             canvas.put(layout.left + 2, layout.listRowPosition(index), truncate("$marker${dialog.listItems[index]}", maxLineWidth))
         }
-        for (button in layout.buttons()) canvas.put(button.x, layout.buttonsRow(), button.text)
+        val focusedTarget = dialog.focusedButtonId?.let { HitTarget.DialogButton(it) }
+        for (button in layout.buttons()) {
+            if (button.target == focusedTarget) canvas.putHighlighted(button.x, layout.buttonsRow(), button.text)
+            else canvas.put(button.x, layout.buttonsRow(), button.text)
+        }
     }
 
     private fun truncate(text: String, maxWidth: Int): String =
@@ -132,7 +155,10 @@ class ScreenRenderer {
  * Each cell holds one display-width unit: [put] writes plain text one character per column
  * (grid lines, tile text, the title, toolbar labels - none of which contain escapes), while
  * [putGlyph] writes a whole escape-wrapped glyph (e.g. a dimmed arrow) into exactly one cell,
- * so wrapping it in ANSI codes never shifts surrounding columns.
+ * so wrapping it in ANSI codes never shifts surrounding columns. [putHighlighted] is the
+ * multi-character equivalent (e.g. a focused dialog button's `[ Save ]`): the reverse-video
+ * codes are folded into the first and last cell's content rather than spread across every
+ * column, for the same reason.
  */
 private class Canvas(private val width: Int, private val height: Int) {
     private val rows = Array(height) { arrayOfNulls<String>(width) }
@@ -147,6 +173,18 @@ private class Canvas(private val width: Int, private val height: Int) {
 
     fun putGlyph(x: Int, y: Int, content: String) {
         if (y in 0 until height && x in 0 until width) rows[y][x] = content
+    }
+
+    fun putHighlighted(x: Int, y: Int, text: String) {
+        if (text.isEmpty() || y !in 0 until height) return
+        val lastIndex = text.length - 1
+        for (i in text.indices) {
+            val col = x + i
+            if (col !in 0 until width) continue
+            val on = if (i == 0) REVERSE_ON else ""
+            val off = if (i == lastIndex) REVERSE_OFF else ""
+            rows[y][col] = "$on${text[i]}$off"
+        }
     }
 
     fun render(): String = rows.joinToString("\r\n") { row -> row.joinToString("") { it ?: " " } }

@@ -24,6 +24,16 @@ data class ScreenState(
     /** A one-shot status line from the presenter (e.g. "Saved as 'x'.", "Not quitting - ...") -
      *  board-only, since dialogs show their own [Dialog.message] instead (WU4). */
     val message: String? = null,
+    /** The highlighted shift arrow in keyboard mode (GH-18) - `null` in mouse mode and whenever
+     *  [arrowsEnabled] is false (the board is solved, so there's nothing for a cursor to land
+     *  on). Set by [view.tui.KeyboardInput.decorateBoard], never by [forBoard] itself. */
+    val cursor: ArrowCursor? = null,
+    /** A bottom-left reminder of the keyboard controls (GH-18), or `null` in mouse mode. */
+    val controlsHint: String? = null,
+    /** Whether the toolbar shows `[Save F5]`-style labels (keyboard mode) instead of
+     *  `[ Save ]` (mouse mode) - see [BoardLayout.toolbarButtons]'s KDoc for why this must be
+     *  carried on [ScreenState] rather than decided independently by each construction site. */
+    val toolbarShortcuts: Boolean = false,
 ) {
     companion object {
         /** Builds the board screen's [ScreenState] from the presenter's current query results. */

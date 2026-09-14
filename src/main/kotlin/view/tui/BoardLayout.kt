@@ -21,6 +21,11 @@ class BoardLayout(
     private val terminalSize: TerminalSize,
     private val squareSide: Int,
     private val arrowsEnabled: Boolean = true,
+    /** Keyboard mode's toolbar labels (`[Save F5]`) vs. mouse mode's (`[ Save ]`) - see
+     *  [toolbarButtons]. Must reach both [ScreenRenderer.render]'s and [TuiView]'s construction
+     *  sites from the same [ScreenState.toolbarShortcuts] flag, or the drawn and hit-tested
+     *  toolbars disagree (this class's own KDoc invariant). */
+    private val toolbarShortcuts: Boolean = false,
 ) {
     private val innerCols = squareSide * CELL_WIDTH + (squareSide + 1)
     private val innerRows = squareSide * 2 + 1
@@ -78,7 +83,11 @@ class BoardLayout(
      *  and [ScreenRenderer] (via [ToolbarButton.text]), all on [toolbarRow]. Internal, not
      *  private, so [ScreenRenderer] can draw exactly what's clickable. */
     internal fun toolbarButtons(): List<ToolbarButton> {
-        val entries = listOf(HitTarget.ToolbarSave to "[ Save ]", HitTarget.ToolbarLoad to "[ Load ]", HitTarget.ToolbarExit to "[ Exit ]")
+        val entries = if (toolbarShortcuts) {
+            listOf(HitTarget.ToolbarSave to "[Save F5]", HitTarget.ToolbarLoad to "[Load F6]", HitTarget.ToolbarExit to "[Exit F7]")
+        } else {
+            listOf(HitTarget.ToolbarSave to "[ Save ]", HitTarget.ToolbarLoad to "[ Load ]", HitTarget.ToolbarExit to "[ Exit ]")
+        }
         val totalWidth = entries.sumOf { it.second.length } + (entries.size - 1)
         var x = (originX + (fullWidth - totalWidth) / 2).coerceAtLeast(0)
         return entries.map { (target, text) ->

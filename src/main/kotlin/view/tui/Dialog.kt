@@ -14,6 +14,14 @@ data class Dialog(
     val listItems: List<String> = emptyList(),
     val selectedIndex: Int = -1,
     val buttons: List<DialogButtonSpec>,
+    /** The [DialogButtonSpec.id] of the button focus is currently on in keyboard mode (GH-18),
+     *  or `null` in mouse mode / whenever focus is elsewhere in the dialog. Drawn reverse video
+     *  by [ScreenRenderer.drawDialog]. */
+    val focusedButtonId: String? = null,
+    /** Whether keyboard focus (GH-18) is on the Save dialog's text field - drives the focus
+     *  marker [ScreenRenderer.drawDialog] appends after the field's caret. Always `false` for
+     *  non-Save dialogs and in mouse mode. */
+    val textFieldFocused: Boolean = false,
 ) {
     enum class Kind { SAVE, LOAD, EXIT }
 }

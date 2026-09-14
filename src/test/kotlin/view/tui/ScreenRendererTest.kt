@@ -1,6 +1,7 @@
 package view.tui
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -113,5 +114,84 @@ class ScreenRendererTest {
         assertTrue(frame.contains("Yes"))
         assertTrue(frame.contains("No"))
         assertTrue(frame.contains("Cancel"))
+    }
+
+    @Test
+    fun `the keyboard cursor highlights exactly its arrow, reverse video, and no other`() {
+        val state = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false)
+            .copy(cursor = ArrowCursor(Edge.TOP, 2))
+
+        val frame = renderer.render(state, terminalSize)
+
+        val reverseUpArrow = "[7m▲[27m"
+        assertTrue(frame.contains(reverseUpArrow))
+        // Only one arrow is reverse-video - count occurrences of the reverse-video wrapper
+        // against the total number of up-arrow glyphs, so a bug that highlights every arrow
+        // can't pass this test by accident.
+        assertEquals(1, Regex(Regex.escape(reverseUpArrow)).findAll(frame).count())
+        val plainFrame = renderer.render(state.copy(cursor = null), terminalSize)
+        assertFalse(plainFrame.contains(reverseUpArrow))
+    }
+
+    @Test
+    fun `toolbarShortcuts renders F-key labels instead of the plain ones`() {
+        val plain = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false)
+        val shortcuts = plain.copy(toolbarShortcuts = true)
+
+        assertTrue(renderer.render(plain, terminalSize).contains("[ Save ]"))
+        assertFalse(renderer.render(plain, terminalSize).contains("[Save F5]"))
+        assertTrue(renderer.render(shortcuts, terminalSize).contains("[Save F5]"))
+        assertTrue(renderer.render(shortcuts, terminalSize).contains("[Load F6]"))
+        assertTrue(renderer.render(shortcuts, terminalSize).contains("[Exit F7]"))
+    }
+
+    @Test
+    fun `the controls hint renders on the terminal's last row`() {
+        val state = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false)
+            .copy(controlsHint = "Arrows: move")
+
+        val frame = renderer.render(state, terminalSize)
+
+        val lastLine = frame.removePrefix("[2J[H").split("\r\n").last()
+        assertTrue(lastLine.startsWith("Arrows: move"))
+    }
+
+    @Test
+    fun `no controls hint is drawn when the state carries none`() {
+        val state = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false)
+
+        assertFalse(renderer.render(state, terminalSize).contains("Arrows: move"))
+    }
+
+    @Test
+    fun `a focused dialog button renders reverse video, and an unfocused one does not`() {
+        val base = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false)
+        val exitButtons = listOf(DialogButtonSpec("yes", "Yes"), DialogButtonSpec("no", "No"), DialogButtonSpec("cancel", "Cancel"))
+        val state = base.copy(
+            dialog = Dialog(Dialog.Kind.EXIT, "Save before quitting?", buttons = exitButtons, focusedButtonId = "no"),
+        )
+
+        val frame = renderer.render(state, terminalSize)
+
+        assertTrue(frame.contains("[7m[ No ][27m"))
+        assertFalse(frame.contains("[7m[ Yes ][27m"))
+        assertTrue(frame.contains("[ Yes ]")) // unfocused button still renders plainly
+    }
+
+    @Test
+    fun `the Save dialog's text field appends the focus marker only when focused`() {
+        val base = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false)
+        val saveButtons = listOf(DialogButtonSpec("save", "Save"), DialogButtonSpec("cancel", "Cancel"))
+
+        val focused = base.copy(
+            dialog = Dialog(Dialog.Kind.SAVE, "Save game", textFieldValue = "foo", buttons = saveButtons, textFieldFocused = true),
+        )
+        assertTrue(renderer.render(focused, terminalSize).contains("Name: foo_ ◀"))
+
+        val unfocused = base.copy(
+            dialog = Dialog(Dialog.Kind.SAVE, "Save game", textFieldValue = "foo", buttons = saveButtons, textFieldFocused = false),
+        )
+        assertFalse(renderer.render(unfocused, terminalSize).contains("Name: foo_ ◀"))
+        assertTrue(renderer.render(unfocused, terminalSize).contains("Name: foo_"))
     }
 }
