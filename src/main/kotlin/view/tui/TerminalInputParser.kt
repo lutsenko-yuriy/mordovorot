@@ -125,8 +125,11 @@ class TerminalInputParser {
         return giveUpOrWait(data, from)
     }
 
+    /** Modifier-prefixed CSI sequences (`ESC[1;2A` = Shift+Up, `ESC[1;5A` = Ctrl+Up, ...) carry
+     *  a non-empty, non-"1" params string ahead of the final byte - those are left for the
+     *  terminal/multiplexer, not decoded as a plain key. */
     private fun decodeCsiFinal(finalByte: Char, params: String): TerminalEvent? {
-        arrowDirection(finalByte)?.let { return TerminalEvent.Arrow(it) }
+        if (params.isEmpty() || params == "1") arrowDirection(finalByte)?.let { return TerminalEvent.Arrow(it) }
         return when (finalByte) {
             'Z' -> TerminalEvent.BackTab
             '~' -> when (params.toIntOrNull()) {

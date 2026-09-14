@@ -165,6 +165,17 @@ class TerminalInputParserTest {
     }
 
     @Test
+    fun `a modifier-prefixed arrow is discarded whole, not decoded as a plain arrow`() {
+        val parser = TerminalInputParser()
+
+        // ESC[1;2A - Shift+Up. Terminals/multiplexers that pass this through are not asking
+        // for plain cursor movement, so this must not fall through to a bare Arrow(UP).
+        val events = parser.feed(csi("1;2A"))
+
+        assertEquals(emptyList(), events)
+    }
+
+    @Test
     fun `Tab byte decodes to Tab, and CSI Z decodes to BackTab`() {
         val parser = TerminalInputParser()
 
