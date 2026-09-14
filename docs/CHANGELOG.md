@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.5.2] — 2026-09-14 (PR #33 merged)
+
+### Changed
+- [wip] GH-18 (WU4/5): `--keyboard` launch mode + board navigation — `KeyboardInput` driver wires arrow keys to `ArrowCursor`, Enter/Space activates shifts, F5/F6/Esc open dialogs; `LaunchMode` gains `KEYBOARD` with `--keyboard`/`--mouse` flags, fixes missing `input_method` property on view events, dialog focus driven by Tab/arrow keys
+
 ## [0.5.2] — 2026-09-14 (PR #32 merged)
 
 ### Changed
