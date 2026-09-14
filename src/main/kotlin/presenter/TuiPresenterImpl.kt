@@ -16,7 +16,8 @@ class TuiPresenterImpl(
     board: BoardModel = BoardImpl(),
     saves: SaveRepository = FileSaveRepository(),
     analytics: AnalyticsService = NoopAnalyticsService(),
-) : BasePresenter(view, board, saves, analytics), TuiPresenter {
+    startupRestoreDone: Boolean = false,
+) : BasePresenter(view, board, saves, analytics, startupRestoreDone), TuiPresenter {
 
     override fun restoreOnStartup() = offerStartupRestore()
 

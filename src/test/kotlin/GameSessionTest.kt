@@ -1,4 +1,12 @@
+import board_model.BoardModel
+import storage.SaveRepository
+import testing.FakeBoardModel
+import testing.FakeSaveRepository
+import view.View
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /**
  * Covers GH-30's session loop: `GameSession` rebuilding the View/presenter/analytics stack
@@ -7,37 +15,112 @@ import kotlin.test.Test
  */
 class GameSessionTest {
 
+    /** A minimal [View] test double - every method but [play] is a no-op, [play] runs the
+     *  scripted [onPlay] (throw a [ModeSwitchRequestedException], or return normally to
+     *  simulate a clean exit). Lets these tests drive [GameSession.run]'s rebuild loop without
+     *  any real console/terminal I/O. */
+    private class ScriptedView(private val onPlay: () -> Unit) : View {
+        override fun displayBoard(boardState: IntArray, squareSide: Int) {}
+        override fun showMessage(message: String) {}
+        override fun processCommand() {}
+        override fun confirmRestore(saveName: String): Boolean = false
+        override fun chooseSaveToRestore(saveNames: List<String>): String? = null
+        override fun confirmSaveBeforeExit(): Boolean = false
+        override fun promptSaveName(): String? = null
+        override fun play() = onPlay()
+    }
+
+    private data class BuildCall(val mode: InputMode, val board: BoardModel, val saves: SaveRepository, val startupRestoreDone: Boolean)
+
     @Test
     fun `switching modes preserves board state and does not reshuffle`() {
-        // TODO: 1. Build a GameSession with a FakeBoardModel seeded to a known non-solved arrangement.
-        // TODO: 2. Run the session starting in console mode; the console play() throws
-        //          ModeSwitchRequestedException(MOUSE) on its first call.
-        // TODO: 3. Verify the same FakeBoardModel instance is passed to the rebuilt mouse-mode presenter.
-        // TODO: 4. Verify board.calls contains no reset/shuffle call across the switch.
+        val board = FakeBoardModel(boardArray = intArrayOf(3, 2, 1, 0))
+        val calls = mutableListOf<BuildCall>()
+        var built = 0
+
+        val session = GameSession(
+            initialMode = InputMode.CONSOLE,
+            board = board,
+            buildView = { mode, b, s, _, restoreDone ->
+                calls.add(BuildCall(mode, b, s, restoreDone))
+                built++
+                ScriptedView {
+                    if (built == 1) throw ModeSwitchRequestedException(InputMode.MOUSE)
+                    // second build (mouse mode): end the session
+                }
+            },
+        )
+
+        session.run()
+
+        assertEquals(listOf(InputMode.CONSOLE, InputMode.MOUSE), calls.map { it.mode })
+        assertTrue(calls.all { it.board === board })
+        assertFalse(board.calls.contains("resetGame"))
     }
 
     @Test
     fun `switching modes skips the startup restore prompt on sessions after the first`() {
-        // TODO: 1. Seed a FakeSaveRepository with one save file.
-        // TODO: 2. Run GameSession starting in console mode with startupRestoreDone = false for
-        //          session 1; console play() immediately throws ModeSwitchRequestedException(KEYBOARD).
-        // TODO: 3. Verify the rebuilt keyboard-mode presenter is constructed with startupRestoreDone = true.
-        // TODO: 4. Verify the startup restore prompt view call fires at most once total, on session 1 only.
+        val saves = FakeSaveRepository(mutableMapOf("slot1" to storage.SavedBoard(4, IntArray(16) { it })))
+        val calls = mutableListOf<BuildCall>()
+        var built = 0
+
+        val session = GameSession(
+            initialMode = InputMode.CONSOLE,
+            saves = saves,
+            buildView = { mode, b, s, _, restoreDone ->
+                calls.add(BuildCall(mode, b, s, restoreDone))
+                built++
+                ScriptedView {
+                    if (built == 1) throw ModeSwitchRequestedException(InputMode.KEYBOARD)
+                }
+            },
+        )
+
+        session.run()
+
+        assertEquals(listOf(false, true), calls.map { it.startupRestoreDone })
     }
 
     @Test
     fun `three consecutive switches cycle through console, mouse, and keyboard, each rebuilding a fresh View-presenter`() {
-        // TODO: 1. Configure a view/presenter factory spy that records which mode it was asked to build.
-        // TODO: 2. Drive: console play() throws ModeSwitchRequestedException(MOUSE) -> mouse play()
-        //          throws ModeSwitchRequestedException(KEYBOARD) -> keyboard play() returns normally (exit).
-        // TODO: 3. Verify the factory was called exactly 3 times, in order [CONSOLE, MOUSE, KEYBOARD].
-        // TODO: 4. Verify GameSession.run() itself returns normally after the third call (no further rebuild).
+        val modesBuilt = mutableListOf<InputMode>()
+        var built = 0
+
+        val session = GameSession(
+            initialMode = InputMode.CONSOLE,
+            buildView = { mode, _, _, _, _ ->
+                modesBuilt.add(mode)
+                built++
+                ScriptedView {
+                    when (built) {
+                        1 -> throw ModeSwitchRequestedException(InputMode.MOUSE)
+                        2 -> throw ModeSwitchRequestedException(InputMode.KEYBOARD)
+                        else -> {} // third build (keyboard mode): return normally, exit
+                    }
+                }
+            },
+        )
+
+        session.run()
+
+        assertEquals(listOf(InputMode.CONSOLE, InputMode.MOUSE, InputMode.KEYBOARD), modesBuilt)
+        assertEquals(3, built)
     }
 
     @Test
     fun `play returning normally (exit) ends the session loop without another rebuild`() {
-        // TODO: 1. Run GameSession starting in mouse mode; play() returns normally (simulating exit).
-        // TODO: 2. Verify the view/presenter factory was invoked exactly once.
-        // TODO: 3. Verify GameSession.run() returns without throwing.
+        var built = 0
+
+        val session = GameSession(
+            initialMode = InputMode.MOUSE,
+            buildView = { _, _, _, _, _ ->
+                built++
+                ScriptedView {} // returns normally - simulates exit
+            },
+        )
+
+        session.run()
+
+        assertEquals(1, built)
     }
 }

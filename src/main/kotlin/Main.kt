@@ -1,12 +1,5 @@
 import analytics.AnalyticsService
-import analytics.InputMethodAnalyticsService
 import analytics.NoopAnalyticsService
-import presenter.ConsolePresenterImpl
-import presenter.TuiPresenterImpl
-import view.ViewImpl
-import view.tui.AnsiTerminal
-import view.tui.KeyboardInput
-import view.tui.TuiView
 
 /**
  * Created by yurich on 02.12.16.
@@ -14,22 +7,13 @@ import view.tui.TuiView
 fun main(args: Array<String>) {
     val analytics = NoopAnalyticsService()
     val mode = resolveInputMode(args, analytics)
-    val decoratedAnalytics = InputMethodAnalyticsService(analytics, mode.name.lowercase())
-
-    when (mode) {
-        // Both TUI modes pass decoratedAnalytics - the view needs input_method too, not just the presenter.
-        InputMode.MOUSE ->
-            TuiView.create(AnsiTerminal(), analytics = decoratedAnalytics) { v -> TuiPresenterImpl(v, analytics = decoratedAnalytics) }.play()
-        InputMode.KEYBOARD ->
-            TuiView.create(AnsiTerminal(), analytics = decoratedAnalytics, input = KeyboardInput()) { v ->
-                TuiPresenterImpl(v, analytics = decoratedAnalytics)
-            }.play()
-        InputMode.CONSOLE -> ViewImpl.create { v -> ConsolePresenterImpl(v, analytics = decoratedAnalytics) }.play()
-    }
+    GameSession(initialMode = mode, analytics = analytics).run()
 }
 
-/** Resolves the launch mode, warns on any unrecognized argument, and tracks `app_launched` -
- *  split out from [main] so it's unit-testable without running the whole game loop. */
+/** Resolves the starting input mode, warns on any unrecognized argument, and tracks
+ *  `app_launched` - split out from [main] so it's unit-testable without running the whole game
+ *  loop. Runs once per process, unlike [GameSession]'s mid-session mode switches (GH-30), which
+ *  never re-fire `app_launched`. */
 fun resolveInputMode(
     args: Array<String>,
     analytics: AnalyticsService,
