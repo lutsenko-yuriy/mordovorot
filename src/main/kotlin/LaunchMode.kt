@@ -9,15 +9,13 @@ enum class LaunchMode {
 
     companion object {
         /**
-         * `--console` always wins and selects [CONSOLE], even alongside `--keyboard` (the caller
-         * is expected to warn that `--keyboard` was ignored - see [resolveLaunchMode]). Otherwise
-         * `--keyboard` selects [KEYBOARD] and everything else (no flag, or the explicit `--mouse`)
-         * selects [MOUSE] - unless [hasInteractiveTerminal] says there's no real terminal (e.g. a
-         * piped/scripted run), which falls both back to [CONSOLE] automatically.
+         * `--console` always wins ([resolveLaunchMode] warns if `--keyboard` was also given).
+         * Otherwise `--keyboard` selects [KEYBOARD] and everything else selects [MOUSE], unless
+         * [hasInteractiveTerminal] says there's no real terminal - then [CONSOLE].
          *
-         * Caveat: the default `System.console() != null` check breaks on JDK 22+ (it stops
-         * meaning "no TTY" - use `System.console()?.isTerminal() == true` there instead).
-         * Fine while `jvmToolchain(17)` is pinned in build.gradle.kts; revisit on a bump.
+         * Caveat: the default `System.console() != null` check breaks on JDK 22+ - use
+         * `System.console()?.isTerminal() == true` there instead. Fine while `jvmToolchain(17)`
+         * is pinned; revisit on a bump.
          */
         fun resolve(
             args: Array<String>,

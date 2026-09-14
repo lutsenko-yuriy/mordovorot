@@ -36,8 +36,7 @@ class TuiViewKeyboardSolvedStateTest {
 
     @Test
     fun `F5, F6, and Escape still open their dialogs after solve`() {
-        // Any frame, not just the last one - see TuiViewKeyboardBoardTest's equivalent test for
-        // why (EndOfInput closing the dialog loop triggers one more board repaint before quitting).
+        // Any frame, not just the last - see TuiViewKeyboardBoardTest's equivalent test.
         fun framesFor(event: TerminalEvent): List<String> {
             val presenter = FakeTuiPresenter().apply { solved = true }
             val terminal = FakeTerminal(events = mutableListOf(event), terminalSize = terminalSize)

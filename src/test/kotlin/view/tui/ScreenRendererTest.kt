@@ -125,9 +125,7 @@ class ScreenRendererTest {
 
         val coloredUpArrow = "[93m▲[39m"
         assertTrue(frame.contains(coloredUpArrow))
-        // Only one arrow is colored - count occurrences of the color wrapper against the total
-        // number of up-arrow glyphs, so a bug that highlights every arrow can't pass this test
-        // by accident.
+        // Only one arrow is colored - a bug highlighting every arrow can't pass this by accident.
         assertEquals(1, Regex(Regex.escape(coloredUpArrow)).findAll(frame).count())
         val plainFrame = renderer.render(state.copy(cursor = null), terminalSize)
         assertFalse(plainFrame.contains(coloredUpArrow))
@@ -147,9 +145,7 @@ class ScreenRendererTest {
         assertTrue(shortcutFrame.contains("[Save F5]"))
         assertTrue(shortcutFrame.contains("[Load F6]"))
         assertTrue(shortcutFrame.contains("[Exit ESC]"))
-        // Every shortcut-colored span opens with the on-code and closes with the off-code,
-        // folded onto the label's first/last character (Canvas.putColored) - one matched pair
-        // per button.
+        // One matched on/off pair per button.
         assertEquals(3, Regex(Regex.escape("[96m")).findAll(shortcutFrame).count())
         assertEquals(3, Regex(Regex.escape("[39m")).findAll(shortcutFrame).count())
     }

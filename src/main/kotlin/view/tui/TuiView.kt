@@ -196,9 +196,6 @@ class TuiView internal constructor(
      *  click. Shared by the toolbar's direct save and [promptSaveName] (the exit flow). */
     private fun runSaveDialog(openedFrom: String): SaveOutcome {
         analytics.track("screen_save_dialog", mapOf("opened_from" to openedFrom))
-        // A fresh session, even when this call is itself the exit flow's invalid-name re-prompt
-        // chained straight from a *different* runSaveDialog call with no board repaint in
-        // between - see onDialogOpened's KDoc for why this precise a boundary matters.
         input.onDialogOpened()
         // Consumed once, then kept sticky for the whole dialog session (overridden by a live
         // overwrite warning when one applies) - clearing it every iteration made the exit

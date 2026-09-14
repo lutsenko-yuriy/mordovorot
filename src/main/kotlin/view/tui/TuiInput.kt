@@ -40,17 +40,10 @@ interface TuiInput {
     /** Translates one event read while a dialog's modal loop owns input. */
     fun onDialogEvent(event: TerminalEvent, dialog: Dialog, layout: DialogLayout): InputAction
 
-    /** Called once, right when a new modal dialog loop begins - before its first repaint or
-     *  [onDialogEvent] call - so a stateful mode (GH-18's `KeyboardInput`) can reset its own
-     *  per-session state (e.g. dialog focus) at a precise boundary instead of inferring one.
-     *  [TuiView] calls this at the top of [TuiView] each modal loop (`runSaveDialog`,
-     *  `runLoadDialog`, the exit dialog), including when one dialog opens another with no board
-     *  repaint in between (the exit flow's Yes -> Save handoff, or a Save dialog's own
-     *  invalid-name re-prompt) - a per-repaint "no dialog this frame" check alone can't see that
-     *  boundary (audit finding on GH-18 WU4 PR #33: the Save dialog's re-prompt after a rejected
-     *  name silently carried over whichever control the *previous* dialog had focus on, dropping
-     *  every subsequent keystroke into [InputAction.None] and turning Enter into an empty-name
-     *  cancel). Default no-op - [MouseInput] has no per-session state. */
+    /** Called once, right when a new modal dialog loop begins, so a stateful mode (GH-18's
+     *  `KeyboardInput`) can reset its per-session state (e.g. dialog focus) at a precise
+     *  boundary - including when one dialog opens another with no board repaint in between (the
+     *  exit flow's Yes -> Save handoff). Default no-op - [MouseInput] has no per-session state. */
     fun onDialogOpened() {}
 
     /** Decorates a freshly-built board [ScreenState] with this mode's presentation (cursor,

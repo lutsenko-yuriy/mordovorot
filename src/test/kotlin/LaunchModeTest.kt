@@ -83,9 +83,6 @@ class LaunchModeTest {
 
     @Test
     fun `an explicit --keyboard silently downgraded to CONSOLE (no TTY) still warns, unlike before`() {
-        // Audit finding on GH-18 WU4 PR #33: only the --console/--keyboard conflict warned -
-        // an explicit --keyboard or --mouse falling back to CONSOLE for lack of a TTY got no
-        // feedback at all, which would read as the flag being silently ignored.
         val analytics = RecordingAnalyticsService()
         val warnings = mutableListOf<String>()
 

@@ -176,10 +176,8 @@ class KeyboardInputTest {
 
     @Test
     fun `onDialogOpened resets focus to the first control, even with no board repaint in between`() {
-        // Audit finding on GH-18 WU4 PR #33: the exit flow's Yes -> Save handoff, and a Save
-        // dialog's own invalid-name re-prompt, chain straight into a new dialog session with no
-        // decorateBoard(dialog = null) repaint in between - the state.dialog == null reset alone
-        // can't see that boundary, which is why onDialogOpened exists as an explicit signal.
+        // Regression: the exit flow's Yes -> Save handoff chains straight into a new dialog
+        // session with no decorateBoard(dialog = null) repaint in between.
         val input = KeyboardInput()
         val exitDialog = Dialog(
             kind = Dialog.Kind.EXIT,

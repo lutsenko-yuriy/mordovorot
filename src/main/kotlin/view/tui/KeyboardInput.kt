@@ -1,24 +1,21 @@
 package view.tui
 
-/** The bottom-left reminder of keyboard mode's controls (GH-18), fixed regardless of board
- *  state - F5/F6/Esc stay live even when the arrows/cursor don't (see [KeyboardInput.decorateBoard]). */
+/** Bottom-left controls reminder (GH-18) - F5/F6/Esc stay live even when the arrows/cursor don't. */
 private const val CONTROLS_HINT = "Arrows: move · Enter/Space: shift · F5 Save · F6 Load · Esc Exit"
 
 /**
- * GH-18's keyboard-driven [TuiInput]: owns the board [ArrowCursor] (moved via [ArrowRing]) and
- * the current dialog's focus index into its [DialogFocus] ring - the only stateful [TuiInput].
- * Board: arrow keys move the cursor around the perimeter ring, Enter or Space activates
- * whichever arrow is highlighted, F5/F6 open the Save/Load dialogs and Escape opens the Exit
- * dialog, all regardless of cursor position and staying live even when the board is solved
- * (arrow keys/Enter go inert instead, and the cursor stops rendering - see [decorateBoard]).
- * Escape was chosen over a fourth function key (F7) for Exit specifically - it's the
- * conventional back/quit key, and reserving it board-level only never collides with its dialog
- * meaning (Cancel), since the two are mutually exclusive input contexts. Dialog: Tab/Down/Right
- * advance the focus ring, Shift-Tab/Up/Left go back, Enter activates the focused control
- * (submitting the text field, selecting a list row, or clicking a button - see
- * [activateFocus]), Escape cancels, and typing only ever edits the text field, never navigates
- * (a Load dialog's focused list row still can't be typed into). Space is always a text
- * character inside a dialog, never an activator, matching the plan's explicit call-out.
+ * GH-18's keyboard-driven [TuiInput] - the only stateful one, owning the board [ArrowCursor] and
+ * the dialog's focus index into its [DialogFocus] ring.
+ *
+ * Board: arrows move the cursor around the perimeter ring; Enter/Space activates the highlighted
+ * arrow; F5/F6 open Save/Load and Escape opens Exit, regardless of cursor position, staying live
+ * even when solved (arrows/Enter go inert instead, cursor stops rendering). Escape replaces a
+ * fourth function key for Exit - board and dialog events are mutually exclusive, so it can't
+ * collide with Escape's dialog-level Cancel.
+ *
+ * Dialog: Tab/Down/Right advance the focus ring, Shift-Tab/Up/Left go back, Enter activates
+ * whatever's focused (submit, select a row, or click a button), Escape cancels, typing only ever
+ * edits the text field. Space is always text inside a dialog, never an activator.
  */
 class KeyboardInput : TuiInput {
 
@@ -26,16 +23,12 @@ class KeyboardInput : TuiInput {
     private var squareSide = DEFAULT_SQUARE_SIDE
     private var arrowsEnabled = true
 
-    /** The open dialog's focus index into its [DialogFocus] ring - reset to `0` by
-     *  [onDialogOpened] at the start of every modal loop (see its KDoc for why that precise
-     *  boundary matters over inferring one from [decorateBoard]'s dialog presence) and again
-     *  defensively whenever [decorateBoard] sees no dialog at all, so a freshly-opened dialog
-     *  always starts focus at its first control. */
+    /** Reset to `0` by [onDialogOpened] at the start of every modal loop, and defensively
+     *  whenever [decorateBoard] sees no dialog. */
     private var dialogFocusIndex = 0
 
     override fun prepare(terminal: Terminal) {
-        // Keyboard mode never turns mouse reporting on - see MouseInput.prepare for the mouse
-        // equivalent this replaces.
+        // Keyboard mode never enables mouse reporting.
     }
 
     override fun onBoardEvent(event: TerminalEvent, layout: BoardLayout): InputAction = when {
@@ -43,16 +36,10 @@ class KeyboardInput : TuiInput {
             cursor = ArrowRing(squareSide).move(cursor, event.direction)
             InputAction.Redraw
         }
-        // Solved: the ring has nothing to land on (ScreenState's own KDoc) - arrow keys are a
-        // no-op rather than silently moving a cursor nobody can see.
-        event is TerminalEvent.Arrow -> InputAction.None
+        event is TerminalEvent.Arrow -> InputAction.None // solved: nothing to land on
         isActivateKey(event) ->
             if (arrowsEnabled) InputAction.Activate(ArrowRing(squareSide).toHitTarget(cursor)) else InputAction.None
-        // F5/F6/Escape are board-level only (a dialog's own onDialogEvent never sees this
-        // branch) and stay live regardless of arrowsEnabled - the toolbar never goes dead on
-        // solve. Escape opening Exit here can't collide with Escape's dialog-level Cancel
-        // meaning (onDialogEvent, below) - the board and a dialog are never both reading events
-        // at once.
+        // F5/F6/Escape stay live regardless of arrowsEnabled - the toolbar never goes dead.
         event is TerminalEvent.FunctionKey -> functionKeyAction(event.n)
         event == TerminalEvent.Escape -> InputAction.Activate(HitTarget.ToolbarExit)
         event == TerminalEvent.EndOfInput -> InputAction.Quit
@@ -89,12 +76,9 @@ class KeyboardInput : TuiInput {
         squareSide = state.squareSide
         val wasEnabled = arrowsEnabled
         arrowsEnabled = state.arrowsEnabled
-        // Loading an unsolved save from the Congratulations screen restores the cursor at
-        // LEFT[0] (plan's solved-state note) - only on the disabled -> enabled transition, not
-        // on every unsolved repaint, so an ordinary shift mid-game never resets it underfoot.
+        // Resets the cursor only on the disabled -> enabled transition (e.g. loading an unsolved
+        // save from the Congratulations screen), never on an ordinary mid-game repaint.
         if (arrowsEnabled && !wasEnabled) cursor = ArrowCursor(Edge.LEFT, 0)
-        // Defensive fallback for [onDialogOpened]'s reset - no dialog this repaint means
-        // whatever session dialogFocusIndex belonged to has definitely ended.
         if (state.dialog == null) dialogFocusIndex = 0
         return state.copy(
             cursor = if (arrowsEnabled) cursor else null,
@@ -121,12 +105,9 @@ class KeyboardInput : TuiInput {
 
     private fun moveFocus(focus: DialogFocus, newIndex: Int): InputAction {
         dialogFocusIndex = newIndex
-        // A list row's focus doubles as its selection (the plan's "Down selects a row") - the
-        // same HitTarget.DialogListRow a mouse click on that row would produce, so TuiView's
-        // existing `selected = target.index` handling picks it up for free. Anything else just
-        // moves the highlight; the loop's own per-iteration repaint (see TuiView.repaintWithDialog)
-        // is what actually redraws it - no InputAction.Redraw handling needed in the dialog
-        // loops themselves (audit finding on GH-18 WU3 PR #32).
+        // A list row's focus doubles as its selection - the same HitTarget.DialogListRow a click
+        // would produce. Anything else just moves the highlight; the dialog loop's own
+        // per-iteration repaint redraws it, no InputAction.Redraw handling needed there.
         return when (val target = focus.target(newIndex)) {
             is DialogFocusTarget.ListRow -> InputAction.Activate(HitTarget.DialogListRow(target.index))
             else -> InputAction.Redraw
@@ -134,9 +115,6 @@ class KeyboardInput : TuiInput {
     }
 
     private fun activateFocus(focus: DialogFocus, index: Int): InputAction = when (val target = focus.target(index)) {
-        // Enter on the text field submits the typed name, same as Enter always did in mouse
-        // mode - the field is only ever focusable in a Save dialog, where InputAction.Submit is
-        // exactly what "confirm this name" means.
         DialogFocusTarget.TextField -> InputAction.Submit
         is DialogFocusTarget.ListRow -> InputAction.Activate(HitTarget.DialogListRow(target.index))
         is DialogFocusTarget.Button -> InputAction.Activate(target.hitTarget)
@@ -149,9 +127,7 @@ class KeyboardInput : TuiInput {
     private fun functionKeyAction(n: Int): InputAction = when (n) {
         5 -> InputAction.Activate(HitTarget.ToolbarSave)
         6 -> InputAction.Activate(HitTarget.ToolbarLoad)
-        // F7 is decoded by TerminalInputParser but no longer means anything here - Escape is
-        // Exit's trigger now (see the class KDoc).
-        else -> InputAction.None
+        else -> InputAction.None // F7 is decoded upstream but means nothing here anymore
     }
 
     private companion object {

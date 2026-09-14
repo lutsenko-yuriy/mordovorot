@@ -17,10 +17,7 @@ fun main(args: Array<String>) {
     val decoratedAnalytics = InputMethodAnalyticsService(analytics, mode.name.lowercase())
 
     when (mode) {
-        // Both TUI modes pass decoratedAnalytics, not the bare analytics the presenter gets -
-        // otherwise every view-emitted event (dialog_cancelled, the screen_*_dialog views,
-        // screen_congratulations) ships without the input_method property
-        // docs/ANALYTICS_EVENTS.md documents for it (GH-18 WU4 fix).
+        // Both TUI modes pass decoratedAnalytics - the view needs input_method too, not just the presenter.
         LaunchMode.MOUSE ->
             TuiView.create(AnsiTerminal(), analytics = decoratedAnalytics) { v -> TuiPresenterImpl(v, analytics = decoratedAnalytics) }.play()
         LaunchMode.KEYBOARD ->
@@ -47,10 +44,8 @@ fun resolveLaunchMode(
     args.filter { it !in knownArgs }.forEach(warnUnrecognizedArg)
     if ("--console" in args && "--keyboard" in args) warnConsoleKeyboardConflict()
     val mode = LaunchMode.resolve(args, hasInteractiveTerminal)
-    // An explicit --keyboard or --mouse silently downgrading to CONSOLE (no TTY) got no feedback
-    // at all, unlike the --console/--keyboard conflict just above (audit finding on GH-18 WU4
-    // PR #33) - `./gradlew run --args="--keyboard"` piped through Gradle is the likely first
-    // encounter with this, and it would otherwise just look like the flag was ignored outright.
+    // An explicit --keyboard/--mouse silently downgrading to CONSOLE (no TTY) deserves the same
+    // feedback the --console/--keyboard conflict above gets.
     if (mode == LaunchMode.CONSOLE && "--console" !in args) {
         val requested = listOfNotNull("--keyboard".takeIf { it in args }, "--mouse".takeIf { it in args })
         requested.forEach(warnNoInteractiveTerminal)

@@ -10,8 +10,7 @@ import kotlin.test.assertTrue
 /**
  * Covers GH-18's keyboard-driven Save/Load/Exit dialogs and the startup restore prompt, plus
  * their analytics. Mirrors `TuiViewDialogTest` (GH-3's mouse equivalent) but driven via
- * F5/F6/Escape (opening a dialog from the board), Tab/arrow-key focus movement, and Enter/Escape
- * (Cancel, once inside one) instead of clicks.
+ * F5/F6/Escape, Tab/arrow-key focus movement, and Enter/Escape instead of clicks.
  */
 class TuiViewKeyboardDialogTest {
 
@@ -19,12 +18,8 @@ class TuiViewKeyboardDialogTest {
 
     @Test
     fun `the exit flow's Save re-prompt after a rejected name starts focus back on the text field`() {
-        // Regression test for the audit's 🔴 finding on GH-18 WU4 PR #33: KeyboardInput's
-        // dialogFocusIndex used to carry over from whichever control the *previous* dialog had
-        // focus on, since the exit flow's Yes -> Save handoff (and the Save dialog's own
-        // invalid-name re-prompt) chain straight into a new modal loop with no board repaint in
-        // between - the one boundary TuiInput.onDialogOpened now exists to signal explicitly.
-        // Mirrors TuiViewDialogTest's mouse-mode "invalid-name explanation stays visible" test.
+        // Regression: the Exit -> Save handoff chains into a new modal loop with no board
+        // repaint in between, so dialogFocusIndex used to carry over from the previous dialog.
         val saves = FakeSaveRepository()
         val board = FakeBoardModel()
         val terminal = FakeTerminal(
@@ -36,8 +31,6 @@ class TuiViewKeyboardDialogTest {
                 TerminalEvent.KeyPress('a'), TerminalEvent.KeyPress(' '), TerminalEvent.KeyPress('b'), // invalid: a space
                 TerminalEvent.Tab, // focus -> the Save button
                 TerminalEvent.Enter, // rejected - re-prompts with an explanation
-                // Without the fix, focus stays on the Save button here (carried over from the
-                // rejected attempt) and these keystrokes silently fall into InputAction.None.
                 TerminalEvent.KeyPress('o'), TerminalEvent.KeyPress('k'),
                 TerminalEvent.Tab, // focus -> the Save button
                 TerminalEvent.Enter, // saves "ok"

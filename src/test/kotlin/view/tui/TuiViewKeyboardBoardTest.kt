@@ -48,10 +48,8 @@ class TuiViewKeyboardBoardTest {
 
     @Test
     fun `F5, F6 open Save and Load, Escape opens Exit, all regardless of cursor position`() {
-        // Any frame, not just the last one - once the scripted events run out, EndOfInput closes
-        // the dialog loop and the outer board loop repaints once more before quitting too, so
-        // the dialog's own frame isn't necessarily the final one written (same as the mouse-mode
-        // equivalent test, TuiViewSolvedStateTest's "Save, Load, and Exit remain active").
+        // Any frame, not just the last - EndOfInput closing the dialog triggers one more board
+        // repaint before quitting.
         fun framesFor(event: TerminalEvent): List<String> {
             val presenter = FakeTuiPresenter()
             val terminal = FakeTerminal(

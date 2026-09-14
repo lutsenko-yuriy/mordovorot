@@ -6,25 +6,15 @@ private const val DISPLAY_OFFSET = 1
 private const val DIM_ON = "\u001B[2m"
 private const val DIM_OFF = "\u001B[22m"
 
-/** SGR reverse-video on/off - GH-18's keyboard-mode dialog focus highlight (a focused dialog
- *  button; the board cursor uses [CURSOR_COLOR_ON] instead, see its KDoc). */
+/** SGR reverse-video on/off - GH-18's dialog focus highlight (a focused button). */
 private const val REVERSE_ON = "\u001B[7m"
 private const val REVERSE_OFF = "\u001B[27m"
 
-/** SGR bright-yellow foreground on/off - GH-18's keyboard-mode board cursor (the highlighted
- *  shift arrow). A color rather than reverse video (unlike the dialog focus highlight above) so
- *  it reads as a distinct kind of signal from a focused dialog button - product decision on
- *  PR #33. [CURSOR_COLOR_OFF] returns to the terminal's default foreground rather than a full
- *  SGR reset, so it can't clobber an unrelated style (e.g. dimming) active elsewhere on the same
- *  row - though the cursor is only ever non-null when arrowsEnabled is true (ScreenState's own
- *  KDoc, the same condition that gates dimming off), so the two never actually compete for the
- *  same glyph. */
+/** SGR bright-yellow foreground on/off - GH-18's board cursor. */
 private const val CURSOR_COLOR_ON = "\u001B[93m"
 private const val CURSOR_COLOR_OFF = "\u001B[39m"
 
-/** SGR bright-cyan ("light blue") foreground on/off - GH-18's keyboard-mode toolbar shortcut
- *  labels ([Save F5], [Load F6], [Exit ESC]), so the keyboard-only affordances visually stand
- *  out from the plain [ Save ]-style labels mouse mode uses. Product decision on PR #33. */
+/** SGR bright-cyan foreground on/off - GH-18's F5/F6/Esc toolbar shortcut labels. */
 private const val SHORTCUT_COLOR_ON = "\u001B[96m"
 private const val SHORTCUT_COLOR_OFF = "\u001B[39m"
 
@@ -126,8 +116,6 @@ class ScreenRenderer {
 
     private fun drawToolbar(canvas: Canvas, layout: BoardLayout, toolbarShortcuts: Boolean) {
         for (button in layout.toolbarButtons()) {
-            // Only the F5/F6/ESC-labeled keyboard-mode buttons get the shortcut color - mouse
-            // mode's [ Save ]-style labels render plain, same as always.
             if (toolbarShortcuts) canvas.putColored(button.x, layout.toolbarRow, button.text, SHORTCUT_COLOR_ON, SHORTCUT_COLOR_OFF)
             else canvas.put(button.x, layout.toolbarRow, button.text)
         }
@@ -181,14 +169,11 @@ class ScreenRenderer {
  * thrown - [BoardLayout] can hand back coordinates past a too-small terminal (see its own
  * KDoc), and drawing must degrade gracefully, not crash.
  *
- * Each cell holds one display-width unit: [put] writes plain text one character per column
- * (grid lines, tile text, the title, plain toolbar labels - none of which contain escapes),
- * while [putGlyph] writes a whole escape-wrapped glyph (e.g. a dimmed or cursor-colored arrow)
- * into exactly one cell, so wrapping it in ANSI codes never shifts surrounding columns.
- * [putHighlighted]/[putColored] are the multi-character equivalent (e.g. a focused dialog
- * button's `[ Save ]`, or a keyboard-mode toolbar label's `[Save F5]`): the SGR codes are folded
- * into the first and last cell's content rather than spread across every column, for the same
- * reason.
+ * Each cell holds one display-width unit: [put] writes plain text one character per column,
+ * while [putGlyph] writes a whole escape-wrapped glyph (e.g. a colored arrow) into exactly one
+ * cell, so the ANSI codes never shift surrounding columns. [putHighlighted]/[putColored] are the
+ * multi-character equivalent (a focused dialog button, a keyboard-mode toolbar label): the SGR
+ * codes fold into the first and last cell only, for the same reason.
  */
 private class Canvas(private val width: Int, private val height: Int) {
     private val rows = Array(height) { arrayOfNulls<String>(width) }
@@ -211,11 +196,8 @@ private class Canvas(private val width: Int, private val height: Int) {
 
     private fun putStyled(x: Int, y: Int, text: String, onCode: String, offCode: String) {
         if (text.isEmpty() || y !in 0 until height) return
-        // onCode/offCode go on the first/last *visible* index, not the first/last index of
-        // `text` - if the span is clipped by the canvas edge, closing on text's own last index
-        // would never get written, leaking the style into every row/frame after this one
-        // (audit finding on GH-18 WU2 PR #31: a narrow terminal clipping a dialog button did
-        // exactly this).
+        // on/offCode go on the first/last *visible* index, not text's own - otherwise a span
+        // clipped by the canvas edge never writes its close code, leaking the style downstream.
         val visible = text.indices.filter { x + it in 0 until width }
         if (visible.isEmpty()) return
         val first = visible.first()
