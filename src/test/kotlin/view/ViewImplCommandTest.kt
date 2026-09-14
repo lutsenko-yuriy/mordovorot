@@ -1,6 +1,9 @@
 package view
 
+import InputMode
+import presenter.ModeSwitchRequestedException
 import testing.FakeConsolePresenter
+import testing.RecordingModeSwitcher
 import java.io.BufferedReader
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -375,6 +378,50 @@ class ViewImplCommandTest {
     }
 
     @Test
+    fun `mouse command requests a switch to MOUSE with trigger=command`() {
+        val switcher = RecordingModeSwitcher()
+        val (view, _) = viewWith("mouse\n")
+        view.modeSwitcher = switcher
+
+        view.processCommand()
+
+        assertEquals(listOf(RecordingModeSwitcher.Call(InputMode.MOUSE, "command")), switcher.calls)
+    }
+
+    @Test
+    fun `keyboard command requests a switch to KEYBOARD with trigger=command`() {
+        val switcher = RecordingModeSwitcher()
+        val (view, _) = viewWith("keyboard\n")
+        view.modeSwitcher = switcher
+
+        view.processCommand()
+
+        assertEquals(listOf(RecordingModeSwitcher.Call(InputMode.KEYBOARD, "command")), switcher.calls)
+    }
+
+    @Test
+    fun `mouse with a trailing argument is rejected rather than silently ignored`() {
+        val switcher = RecordingModeSwitcher()
+        val (view, _) = viewWith("mouse foo\n")
+        view.modeSwitcher = switcher
+
+        assertFailsWith<IllegalArgumentException> { view.processCommand() }
+        assertEquals(emptyList(), switcher.calls)
+    }
+
+    @Test
+    fun `a mode switch that throws unwinds out of processCommand`() {
+        val (view, _) = viewWith("keyboard\n")
+        view.modeSwitcher = object : presenter.ModeSwitcher {
+            override fun switchTo(target: InputMode, trigger: String) {
+                throw ModeSwitchRequestedException(target)
+            }
+        }
+
+        assertFailsWith<ModeSwitchRequestedException> { view.processCommand() }
+    }
+
+    @Test
     fun `create wires the injected input, output, and presenter together atomically`() {
         val presenter = FakeConsolePresenter()
         val outputBuffer = ByteArrayOutputStream()
@@ -387,5 +434,21 @@ class ViewImplCommandTest {
         view.processCommand()
 
         assertEquals(listOf("shiftLeft(0)"), presenter.calls)
+    }
+
+    @Test
+    fun `create wires the injected modeSwitcherFactory the same way, atomically`() {
+        val presenter = FakeConsolePresenter()
+        val switcher = RecordingModeSwitcher()
+
+        val view = ViewImpl.create(
+            input = BufferedReader(StringReader("mouse\n")),
+            output = PrintStream(ByteArrayOutputStream()),
+            modeSwitcherFactory = { switcher },
+        ) { presenter }
+
+        view.processCommand()
+
+        assertEquals(listOf(RecordingModeSwitcher.Call(InputMode.MOUSE, "command")), switcher.calls)
     }
 }

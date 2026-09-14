@@ -21,7 +21,10 @@ src/main/kotlin/
 ├── GameSession.kt       # Session loop extracted out of Main: owns the one BoardImpl and
 │                          # one FileSaveRepository that survive every mode switch; builds a
 │                          # fresh View + presenter + InputMethodAnalyticsService per mode,
-│                          # runs play(), and re-enters on ModeSwitchRequestedException (GH-30)
+│                          # runs play(), and re-enters on ModeSwitchRequestedException. A
+│                          # rebuild's play() throwing anything else falls back to console
+│                          # (unless console itself just failed) instead of crashing and losing
+│                          # the in-progress game - a first-session failure still throws (GH-30)
 ├── analytics/
 │   ├── AnalyticsService.kt             # Analytics abstraction — track(event, properties)
 │   ├── NoopAnalyticsService.kt         # Default implementation; no SDK wired up yet
@@ -64,7 +67,9 @@ src/main/kotlin/
 │   └── SaveFileFormatException.kt # Thrown on a malformed save file
 └── view/
     ├── View.kt          # View interface — console display + command loop contract
-    ├── ViewImpl.kt      # Console I/O implementation (BufferedReader-based input)
+    ├── ViewImpl.kt      # Console I/O implementation (BufferedReader-based input). `mouse`/
+    │                      # `keyboard` commands reach an injected ModeSwitcher, wired via
+    │                      # create()'s modeSwitcherFactory param (GH-30)
     └── tui/             # GH-3: a second View implementation for the mouse-driven TUI
         ├── Terminal.kt / AnsiTerminal.kt   # Raw-mode terminal I/O (stty via ProcessBuilder,
         │                                     # xterm mouse-reporting escapes) - the one seam

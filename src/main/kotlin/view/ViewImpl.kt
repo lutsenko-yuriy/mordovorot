@@ -1,6 +1,9 @@
 package view
 
+import InputMode
 import presenter.ConsolePresenter
+import presenter.ModeSwitcher
+import presenter.NoopModeSwitcher
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -18,18 +21,25 @@ class ViewImpl internal constructor(
     lateinit var presenter: ConsolePresenter
         internal set
 
+    /** Backs the `mouse`/`keyboard` commands (GH-30) - defaults to a no-op so existing call
+     *  sites/tests that don't care about mode switching need no change. */
+    var modeSwitcher: ModeSwitcher = NoopModeSwitcher()
+        internal set
+
     companion object {
         // The console is 1-based (row/column input, displayed tile values); board_model
         // and storage stay 0-based. This is the only translation point (GH-10).
         private const val DISPLAY_OFFSET = 1
 
-        /** The only public way to obtain a [ViewImpl] - wires [presenter] atomically. */
+        /** The only public way to obtain a [ViewImpl] - wires [presenter]/[modeSwitcher] atomically. */
         fun create(
             input: BufferedReader = BufferedReader(InputStreamReader(System.`in`)),
             output: PrintStream = System.out,
+            modeSwitcherFactory: (View) -> ModeSwitcher = { NoopModeSwitcher() },
             presenterFactory: (View) -> ConsolePresenter,
         ): ViewImpl {
             val view = ViewImpl(input, output)
+            view.modeSwitcher = modeSwitcherFactory(view)
             view.presenter = presenterFactory(view)
             return view
         }
@@ -77,6 +87,15 @@ class ViewImpl internal constructor(
             "exit", "quit" -> {
                 requireArgCount(parts, 1)
                 presenter.exitGame()
+            }
+
+            "mouse" -> {
+                requireArgCount(parts, 1)
+                modeSwitcher.switchTo(InputMode.MOUSE, trigger = "command")
+            }
+            "keyboard" -> {
+                requireArgCount(parts, 1)
+                modeSwitcher.switchTo(InputMode.KEYBOARD, trigger = "command")
             }
 
             else -> throw IllegalArgumentException("Incorrect input")
