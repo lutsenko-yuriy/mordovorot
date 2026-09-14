@@ -117,32 +117,41 @@ class ScreenRendererTest {
     }
 
     @Test
-    fun `the keyboard cursor highlights exactly its arrow, reverse video, and no other`() {
+    fun `the keyboard cursor highlights exactly its arrow, in the cursor color, and no other`() {
         val state = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false)
             .copy(cursor = ArrowCursor(Edge.TOP, 2))
 
         val frame = renderer.render(state, terminalSize)
 
-        val reverseUpArrow = "[7m▲[27m"
-        assertTrue(frame.contains(reverseUpArrow))
-        // Only one arrow is reverse-video - count occurrences of the reverse-video wrapper
-        // against the total number of up-arrow glyphs, so a bug that highlights every arrow
-        // can't pass this test by accident.
-        assertEquals(1, Regex(Regex.escape(reverseUpArrow)).findAll(frame).count())
+        val coloredUpArrow = "[93m▲[39m"
+        assertTrue(frame.contains(coloredUpArrow))
+        // Only one arrow is colored - count occurrences of the color wrapper against the total
+        // number of up-arrow glyphs, so a bug that highlights every arrow can't pass this test
+        // by accident.
+        assertEquals(1, Regex(Regex.escape(coloredUpArrow)).findAll(frame).count())
         val plainFrame = renderer.render(state.copy(cursor = null), terminalSize)
-        assertFalse(plainFrame.contains(reverseUpArrow))
+        assertFalse(plainFrame.contains(coloredUpArrow))
     }
 
     @Test
-    fun `toolbarShortcuts renders F-key labels instead of the plain ones`() {
+    fun `toolbarShortcuts renders F-key labels instead of the plain ones, in the shortcut color`() {
         val plain = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false)
         val shortcuts = plain.copy(toolbarShortcuts = true)
 
         assertTrue(renderer.render(plain, terminalSize).contains("[ Save ]"))
         assertFalse(renderer.render(plain, terminalSize).contains("[Save F5]"))
-        assertTrue(renderer.render(shortcuts, terminalSize).contains("[Save F5]"))
-        assertTrue(renderer.render(shortcuts, terminalSize).contains("[Load F6]"))
-        assertTrue(renderer.render(shortcuts, terminalSize).contains("[Exit ESC]"))
+        // Plain (mouse-mode) toolbar labels never carry the shortcut color.
+        assertFalse(renderer.render(plain, terminalSize).contains("[96m"))
+
+        val shortcutFrame = renderer.render(shortcuts, terminalSize)
+        assertTrue(shortcutFrame.contains("[Save F5]"))
+        assertTrue(shortcutFrame.contains("[Load F6]"))
+        assertTrue(shortcutFrame.contains("[Exit ESC]"))
+        // Every shortcut-colored span opens with the on-code and closes with the off-code,
+        // folded onto the label's first/last character (Canvas.putColored) - one matched pair
+        // per button.
+        assertEquals(3, Regex(Regex.escape("[96m")).findAll(shortcutFrame).count())
+        assertEquals(3, Regex(Regex.escape("[39m")).findAll(shortcutFrame).count())
     }
 
     @Test
