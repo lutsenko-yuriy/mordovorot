@@ -24,6 +24,7 @@ import view.View
 class TuiView internal constructor(
     private val terminal: Terminal,
     private val analytics: AnalyticsService = NoopAnalyticsService(),
+    private val input: TuiInput = MouseInput(),
 ) : View {
 
     /** Must be assigned before [play] is called - use [create]. */
@@ -60,8 +61,13 @@ class TuiView internal constructor(
     companion object {
         /** The only public way to obtain a [TuiView] - wires [presenter] atomically, same
          *  pattern as [view.ViewImpl.create]. */
-        fun create(terminal: Terminal, analytics: AnalyticsService = NoopAnalyticsService(), presenterFactory: (View) -> TuiPresenter): TuiView {
-            val view = TuiView(terminal, analytics)
+        fun create(
+            terminal: Terminal,
+            analytics: AnalyticsService = NoopAnalyticsService(),
+            input: TuiInput = MouseInput(),
+            presenterFactory: (View) -> TuiPresenter,
+        ): TuiView {
+            val view = TuiView(terminal, analytics, input)
             view.presenter = presenterFactory(view)
             return view
         }
@@ -69,23 +75,26 @@ class TuiView internal constructor(
 
     override fun play() {
         terminal.enterRawMode()
-        terminal.enableMouseReporting()
+        // GH-18's input-strategy seam (WU3): mouse reporting is MouseInput's own business now,
+        // never turned on by a keyboard-only mode.
+        input.prepare(terminal)
         try {
             presenter.restoreOnStartup()
             repaint()
             while (true) {
-                when (val event = terminal.readEvent()) {
-                    is TerminalEvent.MouseClick -> {
+                // layout is always non-null here - the repaint() call just above (or the one at
+                // the end of every loop iteration below) always runs before the next readEvent.
+                when (val action = input.onBoardEvent(terminal.readEvent(), checkNotNull(layout))) {
+                    is InputAction.Activate -> {
                         try {
-                            handleClick(event.x, event.y)
+                            handleTarget(action.target)
                         } catch (e: ExitRequestedException) {
                             return
                         }
                         repaint()
                     }
-                    TerminalEvent.EndOfInput -> return
-                    // Keys/Backspace/Enter/Escape/Resize only matter while a dialog's modal
-                    // loop is reading events directly - the board screen itself is mouse-only.
+                    InputAction.Redraw -> repaint()
+                    InputAction.Quit -> return
                     else -> {}
                 }
             }
@@ -95,8 +104,8 @@ class TuiView internal constructor(
         }
     }
 
-    private fun handleClick(x: Int, y: Int) {
-        when (val target = layout?.hitTest(x, y) ?: HitTarget.Nothing) {
+    private fun handleTarget(target: HitTarget) {
+        when (target) {
             is HitTarget.ShiftLeft -> shift { presenter.shiftLeft(target.row) }
             is HitTarget.ShiftRight -> shift { presenter.shiftRight(target.row) }
             is HitTarget.ShiftUp -> shift { presenter.shiftUp(target.col) }
@@ -163,21 +172,19 @@ class TuiView internal constructor(
         )
         while (true) {
             repaintWithDialog(dialog)
-            when (val event = terminal.readEvent()) {
-                TerminalEvent.Escape -> return trackDialogCancelled("exit")
-                is TerminalEvent.MouseClick -> when (dialogHitTest(event.x, event.y)) {
+            when (val action = input.onDialogEvent(terminal.readEvent(), dialog, checkNotNull(dialogLayout))) {
+                InputAction.Cancel -> return trackDialogCancelled("exit")
+                is InputAction.Activate -> when (action.target) {
                     HitTarget.DialogButton("yes") -> { pendingExitAnswer = true; presenter.exitGame(); return }
                     HitTarget.DialogButton("no") -> { pendingExitAnswer = false; presenter.exitGame(); return }
                     HitTarget.DialogButton("cancel") -> return trackDialogCancelled("exit")
                     else -> {}
                 }
-                TerminalEvent.EndOfInput -> return
+                InputAction.Quit -> return
                 else -> {}
             }
         }
     }
-
-    private fun dialogHitTest(x: Int, y: Int): HitTarget = dialogLayout?.hitTest(x, y) ?: HitTarget.Nothing
 
     private sealed class SaveOutcome {
         data class Confirm(val name: String) : SaveOutcome()
@@ -204,22 +211,22 @@ class TuiView internal constructor(
                 buttons = listOf(DialogButtonSpec("save", "Save"), DialogButtonSpec("cancel", "Cancel")),
             )
             repaintWithDialog(dialog)
-            when (val event = terminal.readEvent()) {
-                is TerminalEvent.KeyPress -> typed += event.char
-                TerminalEvent.Backspace -> typed = typed.dropLast(1)
+            when (val action = input.onDialogEvent(terminal.readEvent(), dialog, checkNotNull(dialogLayout))) {
+                is InputAction.TextChar -> typed += action.char
+                InputAction.EraseChar -> typed = typed.dropLast(1)
                 // An empty name is "skip saving" (matches the invalid-name re-prompt's own
                 // "press Enter to skip saving" instruction) rather than a Confirm(""), which
                 // would re-prompt forever - BasePresenter.promptForValidSaveName only stops on
-                // null. Applies to both Enter and the Save button - round 1 only fixed Enter
+                // null. Applies to both Submit and the Save button - round 1 only fixed Enter
                 // (audit round 2 on PR #24).
-                TerminalEvent.Enter -> return if (typed.isEmpty()) SaveOutcome.Cancel else SaveOutcome.Confirm(typed)
-                TerminalEvent.Escape -> { trackDialogCancelled("save"); return SaveOutcome.Cancel }
-                is TerminalEvent.MouseClick -> when (dialogHitTest(event.x, event.y)) {
+                InputAction.Submit -> return if (typed.isEmpty()) SaveOutcome.Cancel else SaveOutcome.Confirm(typed)
+                InputAction.Cancel -> { trackDialogCancelled("save"); return SaveOutcome.Cancel }
+                is InputAction.Activate -> when (action.target) {
                     HitTarget.DialogButton("save") -> return if (typed.isEmpty()) SaveOutcome.Cancel else SaveOutcome.Confirm(typed)
                     HitTarget.DialogButton("cancel") -> { trackDialogCancelled("save"); return SaveOutcome.Cancel }
                     else -> {}
                 }
-                TerminalEvent.EndOfInput -> return SaveOutcome.Cancel
+                InputAction.Quit -> return SaveOutcome.Cancel
                 else -> {}
             }
         }
@@ -253,15 +260,15 @@ class TuiView internal constructor(
                 buttons = listOf(DialogButtonSpec("load", "Load"), DialogButtonSpec("cancel", "Cancel")),
             )
             repaintWithDialog(dialog)
-            when (val event = terminal.readEvent()) {
-                TerminalEvent.Escape -> { trackDialogCancelled("load"); return LoadOutcome.Cancel }
-                is TerminalEvent.MouseClick -> when (val target = dialogHitTest(event.x, event.y)) {
+            when (val action = input.onDialogEvent(terminal.readEvent(), dialog, checkNotNull(dialogLayout))) {
+                InputAction.Cancel -> { trackDialogCancelled("load"); return LoadOutcome.Cancel }
+                is InputAction.Activate -> when (val target = action.target) {
                     is HitTarget.DialogListRow -> selected = target.index
                     HitTarget.DialogButton("load") -> if (selected in saves.indices) return LoadOutcome.Confirm(saves[selected])
                     HitTarget.DialogButton("cancel") -> { trackDialogCancelled("load"); return LoadOutcome.Cancel }
                     else -> {}
                 }
-                TerminalEvent.EndOfInput -> return LoadOutcome.Cancel
+                InputAction.Quit -> return LoadOutcome.Cancel
                 else -> {}
             }
         }
@@ -283,11 +290,19 @@ class TuiView internal constructor(
         // in shift() so a Load doesn't count as the transition (see its KDoc).
         val solved = presenter.isSolved()
         wasSolved = solved
-        val state = ScreenState
-            .forBoard(presenter.boardState().toList(), presenter.squareSide(), solved)
-            .copy(dialog = dialog, message = message)
-        layout = BoardLayout(terminalSize, state.squareSide, state.arrowsEnabled)
-        dialogLayout = dialog?.let { DialogLayout(it, terminalSize) }
+        // Both the state and dialog run through the active input's decoration (cursor, focus
+        // highlight, toolbar shortcut labels) before layout is built from them - draw and
+        // hit-test must always agree on the same geometry, same invariant every layout class in
+        // this package already keeps. MouseInput's decoration is the identity, so this is a
+        // no-op for mouse mode (WU3's "no behaviour change" requirement).
+        val decoratedDialog = dialog?.let { input.decorateDialog(it) }
+        val state = input.decorateBoard(
+            ScreenState
+                .forBoard(presenter.boardState().toList(), presenter.squareSide(), solved)
+                .copy(dialog = decoratedDialog, message = message),
+        )
+        layout = BoardLayout(terminalSize, state.squareSide, state.arrowsEnabled, state.toolbarShortcuts)
+        dialogLayout = decoratedDialog?.let { DialogLayout(it, terminalSize) }
         terminal.write(renderer.render(state, terminalSize))
     }
 
