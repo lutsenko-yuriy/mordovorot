@@ -28,7 +28,20 @@ class AnsiTerminal(
     // Read by the shutdown-hook thread, written by whichever thread calls enterRawMode/restore.
     @Volatile
     private var rawModeEntered = false
-    private var shutdownHookRegistered = false
+
+    companion object {
+        // Companion-level, not instance-level: GH-30 builds a fresh AnsiTerminal on every mode
+        // switch (GameSession's defaultView), and one shutdown hook per instance would leak one
+        // extra Thread - and one extra restore() call racing the others - per switch. The hook
+        // itself is registered only once, ever, but always forwards to whichever instance is
+        // currently active - restore()ing a stale, already-abandoned instance on an abnormal
+        // exit (Ctrl+C) mid-session would leave the *live* terminal stuck in raw mode.
+        @Volatile
+        private var shutdownHookRegistered = false
+
+        @Volatile
+        private var activeInstance: AnsiTerminal? = null
+    }
 
     override fun enterRawMode() {
         if (rawModeEntered) return
@@ -36,8 +49,9 @@ class AnsiTerminal(
         // generating SIGINT and never reach the shutdown hook below.
         ProcessBuilder("stty", "-icanon", "-echo").inheritIO().start().waitFor()
         rawModeEntered = true
+        activeInstance = this
         if (!shutdownHookRegistered) {
-            Runtime.getRuntime().addShutdownHook(Thread { restore() })
+            Runtime.getRuntime().addShutdownHook(Thread { activeInstance?.restore() })
             shutdownHookRegistered = true
         }
         output.print(ENTER_ALT_SCREEN + HIDE_CURSOR)
