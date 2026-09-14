@@ -26,7 +26,7 @@ Fired when the user runs `save <file-name>`. *(GH-6)*
 |---|---|---|
 | `result` | `string` | `success` or `error` (e.g. an unsafe name, or a filesystem failure such as a full disk). |
 | `overwrote_existing` | `boolean` | Whether a file with that name already existed. Only present when `result` is `success` - on `error` it may not be known (e.g. the name check itself failed). |
-| `input_method` | `string` | `console` or `mouse` — which UI mode the session was running in. *(GH-3)* |
+| `input_method` | `string` | `console`, `mouse`, or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* |
 
 ### `load_command_used`
 
@@ -36,7 +36,7 @@ Fired when the board is restored from a save file, either via the `load` command
 |---|---|---|
 | `trigger` | `string` | `command` or `startup_prompt`. |
 | `result` | `string` | `success`, `not_found`, `size_mismatch` (save's board size doesn't match the current board), or `error` (corrupted save file or a filesystem failure). |
-| `input_method` | `string` | `console` or `mouse` — which UI mode the session was running in. *(GH-3)* |
+| `input_method` | `string` | `console`, `mouse`, or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* |
 
 ### `startup_restore_prompt_shown`
 
@@ -45,7 +45,7 @@ Fired when the app boots and finds one or more save files. *(GH-6)*
 | Property | Type | Description |
 |---|---|---|
 | `save_file_count` | `number` | How many save files were found. |
-| `input_method` | `string` | `console` or `mouse` — which UI mode the session was running in. *(GH-3)* |
+| `input_method` | `string` | `console`, `mouse`, or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* |
 
 ### `startup_restore_decision`
 
@@ -55,7 +55,7 @@ Fired when the user resolves the startup restore prompt. *(GH-6)*
 |---|---|---|
 | `decision` | `string` | `restored` or `new_game`. |
 | `save_file_count` | `number` | How many save files were on offer. |
-| `input_method` | `string` | `console` or `mouse` — which UI mode the session was running in. *(GH-3)* |
+| `input_method` | `string` | `console`, `mouse`, or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* |
 
 ### `exit_command_used`
 
@@ -66,23 +66,24 @@ instead of quitting (see Feature 5 in `docs/PRODUCT_SPEC.md`). *(GH-12)*
 | Property | Type | Description |
 |---|---|---|
 | `save_choice` | `string` | `saved` (the save-before-quitting prompt was accepted and the save succeeded) or `declined` (the user said no, or left the save name blank/EOF - never fired for a failed save attempt, which keeps the session open instead). The save outcome itself (success/error/overwrite) is separately reported by `save_command_used`, since this reuses the `save` command's flow. |
-| `input_method` | `string` | `console` or `mouse` — which UI mode the session was running in. *(GH-3)* |
+| `input_method` | `string` | `console`, `mouse`, or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* |
 
 ### `app_launched`
 
-Fired once at startup, after the launch mode is resolved (default mouse TUI, or `--console`). *(GH-3)*
+Fired once at startup, after the launch mode is resolved (default mouse TUI, `--console`, or `--keyboard`). *(GH-3, GH-18)*
 
 | Property | Type | Description |
 |---|---|---|
-| `mode` | `string` | `mouse` or `console`. |
+| `mode` | `string` | `mouse`, `console`, or `keyboard`. |
 
 ### `dialog_cancelled`
 
-Fired when the user clicks Cancel on the Save, Load, or Exit dialog in the mouse-driven TUI without completing the action. *(GH-3)*
+Fired when the user cancels the Save, Load, or Exit dialog in the mouse-driven or keyboard-driven TUI (mouse click, or Escape/Cancel-control in keyboard mode) without completing the action. *(GH-3, GH-18)*
 
 | Property | Type | Description |
 |---|---|---|
 | `dialog` | `string` | `save`, `load`, or `exit`. |
+| `input_method` | `string` | `mouse` or `keyboard` — which TUI mode the session was running in. *(GH-18)* |
 
 <!-- All events above are sent through `analytics.AnalyticsService`, currently backed by
      `analytics.NoopAnalyticsService` (no real SDK wired up yet). -->
