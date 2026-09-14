@@ -23,6 +23,9 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
 ### Feature 3 — Console interaction
 - The user issues commands through a console (stdin) loop.
 - After every command, the board is redisplayed and re-evaluated for the solved state.
+- `mouse`/`keyboard` switch to that TUI mode without losing the current game (GH-30). If there's
+  no interactive terminal to switch into, the command is rejected with an on-screen message and
+  play continues in console mode.
 
 ### Feature 4 — Save and load (GH-6)
 - `save <file-name>` stores the board's current tile arrangement to a local file, creating it

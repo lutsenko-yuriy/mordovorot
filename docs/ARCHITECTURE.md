@@ -64,7 +64,9 @@ src/main/kotlin/
 │   └── SaveFileFormatException.kt # Thrown on a malformed save file
 └── view/
     ├── View.kt          # View interface — console display + command loop contract
-    ├── ViewImpl.kt      # Console I/O implementation (BufferedReader-based input)
+    ├── ViewImpl.kt      # Console I/O implementation (BufferedReader-based input). `mouse`/
+    │                      # `keyboard` commands reach an injected ModeSwitcher, wired via
+    │                      # create()'s modeSwitcherFactory param (GH-30)
     └── tui/             # GH-3: a second View implementation for the mouse-driven TUI
         ├── Terminal.kt / AnsiTerminal.kt   # Raw-mode terminal I/O (stty via ProcessBuilder,
         │                                     # xterm mouse-reporting escapes) - the one seam

@@ -5,6 +5,7 @@ import board_model.BoardImpl
 import board_model.BoardModel
 import presenter.ConsolePresenterImpl
 import presenter.ModeSwitchRequestedException
+import presenter.ModeSwitcherImpl
 import presenter.TuiPresenterImpl
 import storage.FileSaveRepository
 import storage.SaveRepository
@@ -42,8 +43,10 @@ class GameSession(
 
     fun run() {
         while (true) {
-            val decoratedAnalytics = InputMethodAnalyticsService(analytics, mode.name.lowercase())
-            val view = buildView(mode, board, saves, decoratedAnalytics, startupRestoreDone)
+            // The undecorated service - defaultView decorates it per-mode itself, and keeps a
+            // plain reference for ModeSwitcher (input_mode_switched carries from_mode/to_mode
+            // already, no need for a duplicate input_method - see ModeSwitcher's KDoc).
+            val view = buildView(mode, board, saves, analytics, startupRestoreDone)
             try {
                 view.play()
                 return
@@ -55,7 +58,9 @@ class GameSession(
     }
 }
 
-/** The production `View` wiring, one per [InputMode] - what `main` built directly before GH-30. */
+/** The production `View` wiring, one per [InputMode] - what `main` built directly before GH-30.
+ *  [analytics] is the undecorated service; decorated here per-mode for the presenter/View's own
+ *  tracked events. */
 private fun defaultView(
     mode: InputMode,
     board: BoardModel,
@@ -63,16 +68,20 @@ private fun defaultView(
     analytics: AnalyticsService,
     startupRestoreDone: Boolean,
     terminalFactory: () -> Terminal,
-): View =
-    when (mode) {
+): View {
+    val decoratedAnalytics = InputMethodAnalyticsService(analytics, mode.name.lowercase())
+    return when (mode) {
         InputMode.CONSOLE ->
-            ViewImpl.create { v -> ConsolePresenterImpl(v, board, saves, analytics, startupRestoreDone) }
+            ViewImpl.create(
+                modeSwitcherFactory = { v -> ModeSwitcherImpl(view = v, currentMode = mode, analytics = analytics) },
+            ) { v -> ConsolePresenterImpl(v, board, saves, decoratedAnalytics, startupRestoreDone) }
         InputMode.MOUSE ->
-            TuiView.create(terminalFactory(), analytics = analytics) { v ->
-                TuiPresenterImpl(v, board, saves, analytics, startupRestoreDone)
+            TuiView.create(terminalFactory(), analytics = decoratedAnalytics) { v ->
+                TuiPresenterImpl(v, board, saves, decoratedAnalytics, startupRestoreDone)
             }
         InputMode.KEYBOARD ->
-            TuiView.create(terminalFactory(), analytics = analytics, input = KeyboardInput()) { v ->
-                TuiPresenterImpl(v, board, saves, analytics, startupRestoreDone)
+            TuiView.create(terminalFactory(), analytics = decoratedAnalytics, input = KeyboardInput()) { v ->
+                TuiPresenterImpl(v, board, saves, decoratedAnalytics, startupRestoreDone)
             }
     }
+}
