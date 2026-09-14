@@ -92,7 +92,12 @@ internal data class DialogButtonLayout(val target: HitTarget, val text: String, 
  *  deliberately excluded - it wraps to fit [DialogLayout.width] instead of driving it. */
 private fun structuralContentWidth(dialog: Dialog): Int {
     val lines = mutableListOf(dialog.title.length)
-    if (dialog.kind == Dialog.Kind.SAVE) lines += "Name: ${dialog.textFieldValue}_".length
+    // Reserves room for TEXT_FIELD_FOCUS_MARKER unconditionally, not only while
+    // dialog.textFieldFocused - the box's width can't depend on a per-frame focus toggle (the
+    // dialog would visibly resize the moment focus lands on the field), and reserving less would
+    // let the marker overflow into truncate()'s "…", eating the caret along with it (audit
+    // finding on GH-18 WU2 PR #31).
+    if (dialog.kind == Dialog.Kind.SAVE) lines += "Name: ${dialog.textFieldValue}_$TEXT_FIELD_FOCUS_MARKER".length
     dialog.listItems.forEach { lines += "  $it".length }
     val buttonsWidth = dialog.buttons.sumOf { "[ ${it.label} ]".length } + (dialog.buttons.size - 1)
     lines += buttonsWidth

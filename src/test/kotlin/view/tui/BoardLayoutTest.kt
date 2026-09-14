@@ -2,6 +2,7 @@ package view.tui
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 
 /**
  * Covers GH-3's board geometry: given a terminal size and the board's square side, computing
@@ -86,5 +87,25 @@ class BoardLayoutTest {
         layout.saveButtonPosition()
         layout.hitTest(0, 0)
         layout.hitTest(1000, 1000)
+    }
+
+    @Test
+    fun `toolbarShortcuts hit-tests the wider F-key labels at the coordinates the renderer draws them`() {
+        val layout = BoardLayout(ampleTerminal, squareSide = 4, toolbarShortcuts = true)
+
+        val (saveX, saveY) = layout.saveButtonPosition()
+        assertEquals(HitTarget.ToolbarSave, layout.hitTest(saveX, saveY))
+
+        val (loadX, loadY) = layout.loadButtonPosition()
+        assertEquals(HitTarget.ToolbarLoad, layout.hitTest(loadX, loadY))
+
+        val (exitX, exitY) = layout.exitButtonPosition()
+        assertEquals(HitTarget.ToolbarExit, layout.hitTest(exitX, exitY))
+
+        // The wider "[Save F5]" label pushes the next button further right than "[ Save ]" does -
+        // asserting the coordinates actually differ, not just that hit-testing works at whatever
+        // they happen to be, is what would catch toolbarShortcuts being ignored by hitTest.
+        val plainLayout = BoardLayout(ampleTerminal, squareSide = 4, toolbarShortcuts = false)
+        assertNotEquals(plainLayout.loadButtonPosition(), layout.loadButtonPosition())
     }
 }
