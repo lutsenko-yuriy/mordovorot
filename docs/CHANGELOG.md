@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.5.2] — 2026-09-14 (PR #32 merged)
+
+### Changed
+- [wip] GH-18 (WU3/5): TuiInput strategy extraction in the TUI view layer (no behaviour change)
+
 ## [0.5.2] — 2026-09-14 (PR #31 merged)
 
 ### Changed
