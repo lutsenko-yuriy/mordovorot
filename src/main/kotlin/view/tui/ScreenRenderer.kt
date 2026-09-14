@@ -11,8 +11,10 @@ private const val DIM_OFF = "\u001B[22m"
 private const val REVERSE_ON = "\u001B[7m"
 private const val REVERSE_OFF = "\u001B[27m"
 
-/** Appended to the Save dialog's text field when keyboard focus (GH-18) is on it. */
-private const val TEXT_FIELD_FOCUS_MARKER = " ◀"
+/** Appended to the Save dialog's text field when keyboard focus (GH-18) is on it. Internal,
+ *  not private - [DialogLayout.structuralContentWidth] reserves room for it unconditionally so
+ *  the box doesn't resize (and truncate the caret) the moment focus lands on the field. */
+internal const val TEXT_FIELD_FOCUS_MARKER = " ◀"
 
 /** Clears the screen and homes the cursor - every frame is a full repaint. */
 private const val CLEAR_AND_HOME = "\u001B[2J\u001B[H"
@@ -35,7 +37,12 @@ class ScreenRenderer {
         drawArrows(canvas, layout, state)
         drawToolbar(canvas, layout)
         state.message?.let { canvas.put(2, layout.toolbarRow + 2, it) }
-        state.controlsHint?.let { canvas.put(0, terminalSize.rows.coerceAtLeast(1) - 1, it) }
+        // Anchored to layout.toolbarRow (one row below the status message), not the raw
+        // terminal's last row - the unconditional terminalSize.rows - 1 used to land on the
+        // toolbar or message row on a short-but-wide terminal, overwriting them (audit finding
+        // on GH-18 WU2 PR #31). Off-canvas is fine here, same as every other BoardLayout
+        // coordinate on a too-small terminal (see that class's KDoc) - canvas.put no-ops.
+        state.controlsHint?.let { canvas.put(0, layout.toolbarRow + 3, it) }
         state.dialog?.let { drawDialog(canvas, it, terminalSize) }
 
         return CLEAR_AND_HOME + canvas.render()
@@ -177,12 +184,19 @@ private class Canvas(private val width: Int, private val height: Int) {
 
     fun putHighlighted(x: Int, y: Int, text: String) {
         if (text.isEmpty() || y !in 0 until height) return
-        val lastIndex = text.length - 1
-        for (i in text.indices) {
+        // REVERSE_ON/REVERSE_OFF go on the first/last *visible* index, not the first/last index
+        // of `text` - if the span is clipped by the canvas edge, closing on text's own last index
+        // would never get written, leaking reverse video into every row/frame after this one
+        // (audit finding on GH-18 WU2 PR #31: a narrow terminal clipping a dialog button did
+        // exactly this).
+        val visible = text.indices.filter { x + it in 0 until width }
+        if (visible.isEmpty()) return
+        val first = visible.first()
+        val last = visible.last()
+        for (i in visible) {
             val col = x + i
-            if (col !in 0 until width) continue
-            val on = if (i == 0) REVERSE_ON else ""
-            val off = if (i == lastIndex) REVERSE_OFF else ""
+            val on = if (i == first) REVERSE_ON else ""
+            val off = if (i == last) REVERSE_OFF else ""
             rows[y][col] = "$on${text[i]}$off"
         }
     }
