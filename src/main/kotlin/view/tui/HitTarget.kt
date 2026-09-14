@@ -1,5 +1,7 @@
 package view.tui
 
+import InputMode
+
 /**
  * What a mouse click resolves to. Row/column indices here are 0-based model indices - the
  * `DISPLAY_OFFSET` 1-based dialect ([view.ViewImpl]'s GH-10 note) applies only to typed input
@@ -14,6 +16,10 @@ sealed class HitTarget {
     object ToolbarSave : HitTarget()
     object ToolbarLoad : HitTarget()
     object ToolbarExit : HitTarget()
+
+    /** A toolbar button requesting a switch to [mode] (GH-30) - one per entry in
+     *  [ScreenState.modeButtons], never the mode the view is already in. */
+    data class ToolbarMode(val mode: InputMode) : HitTarget()
 
     /** [id] identifies which dialog button was clicked (e.g. `"save"`, `"cancel"`, `"yes"`) -
      *  used by WU4's Save/Load/Exit dialogs. */

@@ -1,5 +1,6 @@
 package view.tui
 
+import InputMode
 import presenter.TuiPresenter
 import testing.FakeTuiPresenter
 import testing.FakeTerminal
@@ -22,7 +23,10 @@ class TuiViewSolvedStateTest {
     private fun view(terminal: FakeTerminal, presenter: TuiPresenter, analytics: RecordingAnalyticsService = RecordingAnalyticsService()): TuiView =
         TuiView.create(terminal, analytics) { presenter }
 
-    private fun boardLayout(presenter: FakeTuiPresenter) = BoardLayout(terminalSize, presenter.side, arrowsEnabled = true)
+    // Matches MouseInput.decorateBoard's GH-30 modeButtons - see TuiViewDialogTest's identical
+    // helper for why.
+    private fun boardLayout(presenter: FakeTuiPresenter) =
+        BoardLayout(terminalSize, presenter.side, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE))
 
     @Test
     fun `when the board becomes solved, arrow clicks make no presenter call`() {

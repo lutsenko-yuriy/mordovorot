@@ -73,8 +73,10 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
 ### Feature 6 — Mouse-driven TUI (GH-3)
 - On launch, the app runs a mouse-clickable terminal UI by default: a centered board with
   `◀`/`▶`/`▲`/`▼` arrows at the ends of each row/column, and a toolbar (`[ Save ] [ Load ]
-  [ Exit ]`) below it. Clicking an arrow shifts that row/column the same as the console's
-  `left`/`right`/`up`/`down` commands; every click repaints the whole screen.
+  [ Keyboard ] [ Console ] [ Exit ]`) below it. Clicking an arrow shifts that row/column the same
+  as the console's `left`/`right`/`up`/`down` commands; every click repaints the whole screen.
+  The `[ Keyboard ]`/`[ Console ]` buttons switch to that mode without losing the current game
+  (GH-30) - the same behavior as the console's `mouse`/`keyboard` commands.
 - `--console` forces the line-based console interaction (Features 1-5) instead. Launching
   without an interactive terminal (e.g. piped/scripted input) falls back to console mode
   automatically, since mouse mode has no terminal to click in.

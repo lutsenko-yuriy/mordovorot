@@ -1,5 +1,6 @@
 package view.tui
 
+import InputMode
 import testing.FakeTerminal
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -66,9 +67,9 @@ class MouseInputTest {
     }
 
     @Test
-    fun `decorateBoard and decorateDialog are the identity`() {
+    fun `decorateBoard offers Keyboard and Console on the toolbar (GH-30), decorateDialog stays the identity`() {
         val state = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false)
-        assertEquals(state, input.decorateBoard(state))
+        assertEquals(state.copy(modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE)), input.decorateBoard(state))
 
         val dialog = Dialog(Dialog.Kind.EXIT, "Save before quitting?", buttons = listOf(DialogButtonSpec("yes", "Yes")))
         assertEquals(dialog, input.decorateDialog(dialog))

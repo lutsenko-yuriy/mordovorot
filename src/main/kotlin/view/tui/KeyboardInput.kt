@@ -19,6 +19,8 @@ private const val CONTROLS_HINT = "Arrows: move · Enter/Space: shift · F5 Save
  */
 class KeyboardInput : TuiInput {
 
+    override val switchTrigger = "shortcut"
+
     private var cursor = ArrowCursor(Edge.LEFT, 0)
     private var squareSide = DEFAULT_SQUARE_SIDE
     private var arrowsEnabled = true

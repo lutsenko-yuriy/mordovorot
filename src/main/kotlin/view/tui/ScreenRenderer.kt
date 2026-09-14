@@ -36,7 +36,7 @@ private const val CLEAR_AND_HOME = "\u001B[2J\u001B[H"
 class ScreenRenderer {
 
     fun render(state: ScreenState, terminalSize: TerminalSize): String {
-        val layout = BoardLayout(terminalSize, state.squareSide, state.arrowsEnabled, state.toolbarShortcuts)
+        val layout = BoardLayout(terminalSize, state.squareSide, state.arrowsEnabled, state.toolbarShortcuts, state.modeButtons)
         val canvas = Canvas(terminalSize.columns.coerceAtLeast(1), terminalSize.rows.coerceAtLeast(1))
 
         canvas.put(centeredX(state.title, terminalSize), layout.titleRow, state.title)

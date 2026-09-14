@@ -3,6 +3,8 @@ package view.tui
 import analytics.AnalyticsService
 import analytics.NoopAnalyticsService
 import presenter.ExitRequestedException
+import presenter.ModeSwitcher
+import presenter.NoopModeSwitcher
 import presenter.TuiPresenter
 import view.View
 
@@ -29,6 +31,11 @@ class TuiView internal constructor(
 
     /** Must be assigned before [play] is called - use [create]. */
     lateinit var presenter: TuiPresenter
+        internal set
+
+    /** Wired atomically alongside [presenter] in [create] - defaults to a no-op so every
+     *  existing construction site keeps compiling unchanged (GH-30). */
+    var modeSwitcher: ModeSwitcher = NoopModeSwitcher()
         internal set
 
     private val renderer = ScreenRenderer()
@@ -65,9 +72,11 @@ class TuiView internal constructor(
             terminal: Terminal,
             analytics: AnalyticsService = NoopAnalyticsService(),
             input: TuiInput = MouseInput(),
+            modeSwitcherFactory: (View) -> ModeSwitcher = { NoopModeSwitcher() },
             presenterFactory: (View) -> TuiPresenter,
         ): TuiView {
             val view = TuiView(terminal, analytics, input)
+            view.modeSwitcher = modeSwitcherFactory(view)
             view.presenter = presenterFactory(view)
             return view
         }
@@ -113,6 +122,7 @@ class TuiView internal constructor(
             HitTarget.ToolbarSave -> handleToolbarSave()
             HitTarget.ToolbarLoad -> handleToolbarLoad()
             HitTarget.ToolbarExit -> handleToolbarExit()
+            is HitTarget.ToolbarMode -> modeSwitcher.switchTo(target.mode, trigger = input.switchTrigger)
             else -> {}
         }
     }
@@ -304,7 +314,7 @@ class TuiView internal constructor(
                 .forBoard(presenter.boardState().toList(), presenter.squareSide(), solved)
                 .copy(dialog = decoratedDialog, message = message),
         )
-        layout = BoardLayout(terminalSize, state.squareSide, state.arrowsEnabled, state.toolbarShortcuts)
+        layout = BoardLayout(terminalSize, state.squareSide, state.arrowsEnabled, state.toolbarShortcuts, state.modeButtons)
         // Built from state.dialog (post-decorateBoard), not decoratedDialog directly - the two
         // are the same object for MouseInput today, but a future decorateBoard that touches the
         // dialog (e.g. a keyboard mode collapsing decoration into one pass) must not be able to

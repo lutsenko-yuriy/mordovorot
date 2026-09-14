@@ -1,5 +1,6 @@
 package view.tui
 
+import InputMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -107,5 +108,40 @@ class BoardLayoutTest {
         // they happen to be, is what would catch toolbarShortcuts being ignored by hitTest.
         val plainLayout = BoardLayout(ampleTerminal, squareSide = 4, toolbarShortcuts = false)
         assertNotEquals(plainLayout.loadButtonPosition(), layout.loadButtonPosition())
+    }
+
+    @Test
+    fun `mode buttons sit between Load and Exit and hit-test to ToolbarMode`() {
+        val layout = BoardLayout(ampleTerminal, squareSide = 4, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE))
+
+        val buttons = layout.toolbarButtons()
+        assertEquals(
+            listOf(HitTarget.ToolbarSave, HitTarget.ToolbarLoad, HitTarget.ToolbarMode(InputMode.KEYBOARD), HitTarget.ToolbarMode(InputMode.CONSOLE), HitTarget.ToolbarExit),
+            buttons.map { it.target },
+        )
+        for (button in buttons) assertEquals(button.target, layout.hitTest(button.range.first, layout.toolbarRow))
+    }
+
+    @Test
+    fun `Save, Load, and Exit positions stay correct once mode buttons lengthen the toolbar`() {
+        val layout = BoardLayout(ampleTerminal, squareSide = 4, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE))
+
+        val (saveX, saveY) = layout.saveButtonPosition()
+        assertEquals(HitTarget.ToolbarSave, layout.hitTest(saveX, saveY))
+
+        val (loadX, loadY) = layout.loadButtonPosition()
+        assertEquals(HitTarget.ToolbarLoad, layout.hitTest(loadX, loadY))
+
+        val (exitX, exitY) = layout.exitButtonPosition()
+        assertEquals(HitTarget.ToolbarExit, layout.hitTest(exitX, exitY))
+    }
+
+    @Test
+    fun `mode button labels switch to F-key shortcuts under toolbarShortcuts`() {
+        val plain = BoardLayout(ampleTerminal, squareSide = 4, modeButtons = listOf(InputMode.MOUSE, InputMode.CONSOLE))
+        val shortcuts = BoardLayout(ampleTerminal, squareSide = 4, toolbarShortcuts = true, modeButtons = listOf(InputMode.MOUSE, InputMode.CONSOLE))
+
+        assertEquals(listOf("[ Mouse ]", "[ Console ]"), plain.toolbarButtons().map { it.text }.filter { it.contains("Mouse") || it.contains("Console") })
+        assertEquals(listOf("[Mouse F7]", "[Console F8]"), shortcuts.toolbarButtons().map { it.text }.filter { it.contains("Mouse") || it.contains("Console") })
     }
 }

@@ -1,5 +1,7 @@
 package view.tui
 
+import InputMode
+
 /** Interior character width of one board cell - wide enough for a 2-digit 1-based tile value
  *  plus a padding space on each side (` 12 `). Internal (not private) so [ScreenRenderer] can
  *  draw tile text at exactly the columns [BoardLayout] hit-tests against. */
@@ -26,6 +28,10 @@ class BoardLayout(
      *  sites from the same [ScreenState.toolbarShortcuts] flag, or the drawn and hit-tested
      *  toolbars disagree (this class's own KDoc invariant). */
     private val toolbarShortcuts: Boolean = false,
+    /** The other input modes offered on the toolbar (GH-30) - inserted between Load and Exit,
+     *  so `saveButtonPosition`/`loadButtonPosition`/`exitButtonPosition` must look their button
+     *  up by [HitTarget] rather than a fixed index once this is non-empty. */
+    private val modeButtons: List<InputMode> = emptyList(),
 ) {
     private val innerCols = squareSide * CELL_WIDTH + (squareSide + 1)
     private val innerRows = squareSide * 2 + 1
@@ -55,9 +61,14 @@ class BoardLayout(
     fun upArrowPosition(col: Int): Pair<Int, Int> = cellCenterX(col) to upArrowRow
     fun downArrowPosition(col: Int): Pair<Int, Int> = cellCenterX(col) to downArrowRow
 
-    fun saveButtonPosition(): Pair<Int, Int> = toolbarButtons()[0].range.first to toolbarRow
-    fun loadButtonPosition(): Pair<Int, Int> = toolbarButtons()[1].range.first to toolbarRow
-    fun exitButtonPosition(): Pair<Int, Int> = toolbarButtons()[2].range.first to toolbarRow
+    fun saveButtonPosition(): Pair<Int, Int> = buttonPosition(HitTarget.ToolbarSave)
+    fun loadButtonPosition(): Pair<Int, Int> = buttonPosition(HitTarget.ToolbarLoad)
+    fun exitButtonPosition(): Pair<Int, Int> = buttonPosition(HitTarget.ToolbarExit)
+
+    /** Looks a button up by target rather than a fixed index - a longer toolbar (GH-30's mode
+     *  buttons) must never silently shift what Save/Load/Exit resolve to. */
+    private fun buttonPosition(target: HitTarget): Pair<Int, Int> =
+        toolbarButtons().first { it.target == target }.range.first to toolbarRow
 
     fun hitTest(x: Int, y: Int): HitTarget {
         if (arrowsEnabled) {
@@ -79,14 +90,19 @@ class BoardLayout(
     private fun contentRowY(row: Int) = gridTop + 1 + 2 * row
     private fun cellCenterX(col: Int) = gridLeft + 1 + col * (CELL_WIDTH + 1) + CELL_WIDTH / 2
 
-    /** The toolbar's three buttons in order - shared by [hitTest] (via [ToolbarButton.range])
-     *  and [ScreenRenderer] (via [ToolbarButton.text]), all on [toolbarRow]. Internal, not
-     *  private, so [ScreenRenderer] can draw exactly what's clickable. */
+    /** The toolbar's buttons in order - Save, Load, one per [modeButtons], then Exit - shared by
+     *  [hitTest] (via [ToolbarButton.range]) and [ScreenRenderer] (via [ToolbarButton.text]), all
+     *  on [toolbarRow]. Internal, not private, so [ScreenRenderer] can draw exactly what's
+     *  clickable. */
     internal fun toolbarButtons(): List<ToolbarButton> {
         val entries = if (toolbarShortcuts) {
-            listOf(HitTarget.ToolbarSave to "[Save F5]", HitTarget.ToolbarLoad to "[Load F6]", HitTarget.ToolbarExit to "[Exit ESC]")
+            listOf(HitTarget.ToolbarSave to "[Save F5]", HitTarget.ToolbarLoad to "[Load F6]") +
+                modeButtons.map { HitTarget.ToolbarMode(it) to modeButtonLabel(it, shortcut = true) } +
+                listOf(HitTarget.ToolbarExit to "[Exit ESC]")
         } else {
-            listOf(HitTarget.ToolbarSave to "[ Save ]", HitTarget.ToolbarLoad to "[ Load ]", HitTarget.ToolbarExit to "[ Exit ]")
+            listOf(HitTarget.ToolbarSave to "[ Save ]", HitTarget.ToolbarLoad to "[ Load ]") +
+                modeButtons.map { HitTarget.ToolbarMode(it) to modeButtonLabel(it, shortcut = false) } +
+                listOf(HitTarget.ToolbarExit to "[ Exit ]")
         }
         val totalWidth = entries.sumOf { it.second.length } + (entries.size - 1)
         var x = (originX + (fullWidth - totalWidth) / 2).coerceAtLeast(0)
@@ -95,6 +111,20 @@ class BoardLayout(
             x += text.length + 1
             button
         }
+    }
+
+    /** `[ Keyboard ]`/`[ Console ]` (mouse mode) vs. `[Mouse F7]`/`[Console F8]` (keyboard mode,
+     *  WU4). Keyboard mode never offers switching to itself, so `InputMode.KEYBOARD`'s shortcut
+     *  key is never actually drawn. */
+    private fun modeButtonLabel(mode: InputMode, shortcut: Boolean): String {
+        val name = mode.name.lowercase().replaceFirstChar { it.uppercase() }
+        if (!shortcut) return "[ $name ]"
+        val key = when (mode) {
+            InputMode.MOUSE -> "F7"
+            InputMode.CONSOLE -> "F8"
+            InputMode.KEYBOARD -> ""
+        }
+        return "[$name $key]"
     }
 
     internal data class ToolbarButton(val target: HitTarget, val text: String, val x: Int, val range: IntRange)
