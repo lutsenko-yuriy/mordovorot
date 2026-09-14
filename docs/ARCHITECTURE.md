@@ -21,7 +21,10 @@ src/main/kotlin/
 ├── GameSession.kt       # Session loop extracted out of Main: owns the one BoardImpl and
 │                          # one FileSaveRepository that survive every mode switch; builds a
 │                          # fresh View + presenter + InputMethodAnalyticsService per mode,
-│                          # runs play(), and re-enters on ModeSwitchRequestedException (GH-30)
+│                          # runs play(), and re-enters on ModeSwitchRequestedException. A
+│                          # rebuild's play() throwing anything else falls back to console
+│                          # (unless console itself just failed) instead of crashing and losing
+│                          # the in-progress game - a first-session failure still throws (GH-30)
 ├── analytics/
 │   ├── AnalyticsService.kt             # Analytics abstraction — track(event, properties)
 │   ├── NoopAnalyticsService.kt         # Default implementation; no SDK wired up yet

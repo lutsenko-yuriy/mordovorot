@@ -1,12 +1,18 @@
 import board_model.BoardModel
 import presenter.ModeSwitchRequestedException
+import presenter.ModeSwitcherImpl
 import storage.SaveRepository
 import testing.FakeBoardModel
 import testing.FakeSaveRepository
+import testing.FakeTerminal
+import testing.RecordingAnalyticsService
 import view.View
+import view.ViewImpl
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 /** Covers GH-30's `GameSession`: rebuilds around the same board/saves on
@@ -117,5 +123,71 @@ class GameSessionTest {
         session.run()
 
         assertEquals(1, built)
+    }
+
+    @Test
+    fun `a failed rebuild after a mode switch falls back to console instead of crashing`() {
+        val modesBuilt = mutableListOf<InputMode>()
+        var built = 0
+
+        val session = GameSession(
+            initialMode = InputMode.CONSOLE,
+            buildView = { mode, _, _, _, _ ->
+                modesBuilt.add(mode)
+                built++
+                when (built) {
+                    1 -> ScriptedView { throw ModeSwitchRequestedException(InputMode.MOUSE) }
+                    2 -> ScriptedView { throw RuntimeException("stty not found") } // simulated terminal-setup failure
+                    else -> ScriptedView {} // recovered console session exits normally
+                }
+            },
+        )
+
+        session.run() // must not throw
+
+        assertEquals(listOf(InputMode.CONSOLE, InputMode.MOUSE, InputMode.CONSOLE), modesBuilt)
+    }
+
+    @Test
+    fun `a failure on the very first session still throws - no game in progress to protect`() {
+        val session = GameSession(
+            initialMode = InputMode.CONSOLE,
+            buildView = { _, _, _, _, _ -> ScriptedView { throw RuntimeException("stty not found") } },
+        )
+
+        assertFailsWith<RuntimeException> { session.run() }
+    }
+
+    @Test
+    fun `a failure while the fallback target (console) itself fails has nowhere safer to go, so it throws`() {
+        var built = 0
+
+        val session = GameSession(
+            initialMode = InputMode.MOUSE,
+            buildView = { _, _, _, _, _ ->
+                built++
+                when (built) {
+                    1 -> ScriptedView { throw ModeSwitchRequestedException(InputMode.CONSOLE) }
+                    else -> ScriptedView { throw RuntimeException("console broke too") }
+                }
+            },
+        )
+
+        assertFailsWith<RuntimeException> { session.run() }
+    }
+
+    @Test
+    fun `the production console View is wired with a real ModeSwitcher, not a silent no-op`() {
+        val view = defaultView(
+            InputMode.CONSOLE,
+            FakeBoardModel(),
+            FakeSaveRepository(),
+            RecordingAnalyticsService(),
+            startupRestoreDone = true,
+            terminalFactory = { FakeTerminal() },
+        )
+
+        assertIs<ViewImpl>(view)
+        assertIs<ModeSwitcherImpl>(view.modeSwitcher)
     }
 }

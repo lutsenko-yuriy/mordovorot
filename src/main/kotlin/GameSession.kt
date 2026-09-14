@@ -42,6 +42,7 @@ class GameSession(
     private var startupRestoreDone = false
 
     fun run() {
+        var isFirstSession = true
         while (true) {
             // The undecorated service - defaultView decorates it per-mode itself, and keeps a
             // plain reference for ModeSwitcher (input_mode_switched carries from_mode/to_mode
@@ -53,15 +54,29 @@ class GameSession(
             } catch (e: ModeSwitchRequestedException) {
                 mode = e.target
                 startupRestoreDone = true
+            } catch (e: Exception) {
+                // A rebuild can fail for real (e.g. `stty` missing - audit finding on PR #37):
+                // unlike a startup failure, there's a live unsaved game to protect, so fall back
+                // to console (the one mode with no terminal setup to fail) instead of crashing -
+                // unless console itself just failed, which leaves nowhere safer to go.
+                if (isFirstSession || mode == InputMode.CONSOLE) throw e
+                System.err.println(
+                    "Could not switch to ${mode.name.lowercase()} mode (${e.message ?: e::class.simpleName}) " +
+                        "- falling back to console."
+                )
+                mode = InputMode.CONSOLE
+                startupRestoreDone = true
             }
+            isFirstSession = false
         }
     }
 }
 
 /** The production `View` wiring, one per [InputMode] - what `main` built directly before GH-30.
  *  [analytics] is the undecorated service; decorated here per-mode for the presenter/View's own
- *  tracked events. */
-private fun defaultView(
+ *  tracked events. Internal, not private, so a test can verify the CONSOLE branch actually wires
+ *  a real `ModeSwitcher` rather than silently defaulting to a no-op (audit finding on PR #37). */
+internal fun defaultView(
     mode: InputMode,
     board: BoardModel,
     saves: SaveRepository,
