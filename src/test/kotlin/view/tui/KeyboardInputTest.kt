@@ -40,13 +40,21 @@ class KeyboardInputTest {
     }
 
     @Test
-    fun `F5, F6, F7 activate the matching toolbar target`() {
+    fun `F5 and F6 activate Save and Load, Escape activates Exit`() {
         val input = KeyboardInput()
         input.decorateBoard(unsolvedBoard())
 
         assertEquals(InputAction.Activate(HitTarget.ToolbarSave), input.onBoardEvent(TerminalEvent.FunctionKey(5), boardLayout))
         assertEquals(InputAction.Activate(HitTarget.ToolbarLoad), input.onBoardEvent(TerminalEvent.FunctionKey(6), boardLayout))
-        assertEquals(InputAction.Activate(HitTarget.ToolbarExit), input.onBoardEvent(TerminalEvent.FunctionKey(7), boardLayout))
+        assertEquals(InputAction.Activate(HitTarget.ToolbarExit), input.onBoardEvent(TerminalEvent.Escape, boardLayout))
+    }
+
+    @Test
+    fun `F7 is decoded but means nothing on the board - Escape is Exit's trigger now`() {
+        val input = KeyboardInput()
+        input.decorateBoard(unsolvedBoard())
+
+        assertEquals(InputAction.None, input.onBoardEvent(TerminalEvent.FunctionKey(7), boardLayout))
     }
 
     @Test
@@ -59,13 +67,14 @@ class KeyboardInputTest {
     }
 
     @Test
-    fun `once solved, arrow keys and Enter are None but the toolbar function keys stay live`() {
+    fun `once solved, arrow keys and Enter are None but the toolbar shortcuts stay live`() {
         val input = KeyboardInput()
         input.decorateBoard(solvedBoard())
 
         assertEquals(InputAction.None, input.onBoardEvent(TerminalEvent.Arrow(Direction.DOWN), boardLayout))
         assertEquals(InputAction.None, input.onBoardEvent(TerminalEvent.Enter, boardLayout))
         assertEquals(InputAction.Activate(HitTarget.ToolbarSave), input.onBoardEvent(TerminalEvent.FunctionKey(5), boardLayout))
+        assertEquals(InputAction.Activate(HitTarget.ToolbarExit), input.onBoardEvent(TerminalEvent.Escape, boardLayout))
     }
 
     @Test
@@ -78,7 +87,7 @@ class KeyboardInputTest {
         val solved = input.decorateBoard(solvedBoard())
         assertNull(solved.cursor)
         assertEquals(true, solved.toolbarShortcuts)
-        assertEquals("Arrows: move · Enter/Space: shift · F5 Save · F6 Load · F7 Exit", solved.controlsHint)
+        assertEquals("Arrows: move · Enter/Space: shift · F5 Save · F6 Load · Esc Exit", solved.controlsHint)
     }
 
     @Test

@@ -1,21 +1,24 @@
 package view.tui
 
 /** The bottom-left reminder of keyboard mode's controls (GH-18), fixed regardless of board
- *  state - F5/F6/F7 stay live even when the arrows/cursor don't (see [KeyboardInput.decorateBoard]). */
-private const val CONTROLS_HINT = "Arrows: move · Enter/Space: shift · F5 Save · F6 Load · F7 Exit"
+ *  state - F5/F6/Esc stay live even when the arrows/cursor don't (see [KeyboardInput.decorateBoard]). */
+private const val CONTROLS_HINT = "Arrows: move · Enter/Space: shift · F5 Save · F6 Load · Esc Exit"
 
 /**
  * GH-18's keyboard-driven [TuiInput]: owns the board [ArrowCursor] (moved via [ArrowRing]) and
  * the current dialog's focus index into its [DialogFocus] ring - the only stateful [TuiInput].
  * Board: arrow keys move the cursor around the perimeter ring, Enter or Space activates
- * whichever arrow is highlighted, F5/F6/F7 open the toolbar dialogs regardless of cursor
- * position and stay live even when the board is solved (arrow keys/Enter go inert instead, and
- * the cursor stops rendering - see [decorateBoard]). Dialog: Tab/Down/Right advance the focus
- * ring, Shift-Tab/Up/Left go back, Enter activates the focused control (submitting the text
- * field, selecting a list row, or clicking a button - see [activateFocus]), Escape cancels, and
- * typing only ever edits the text field, never navigates (a Load dialog's focused list row
- * still can't be typed into). Space is always a text character inside a dialog, never an
- * activator, matching the plan's explicit call-out.
+ * whichever arrow is highlighted, F5/F6 open the Save/Load dialogs and Escape opens the Exit
+ * dialog, all regardless of cursor position and staying live even when the board is solved
+ * (arrow keys/Enter go inert instead, and the cursor stops rendering - see [decorateBoard]).
+ * Escape was chosen over a fourth function key (F7) for Exit specifically - it's the
+ * conventional back/quit key, and reserving it board-level only never collides with its dialog
+ * meaning (Cancel), since the two are mutually exclusive input contexts. Dialog: Tab/Down/Right
+ * advance the focus ring, Shift-Tab/Up/Left go back, Enter activates the focused control
+ * (submitting the text field, selecting a list row, or clicking a button - see
+ * [activateFocus]), Escape cancels, and typing only ever edits the text field, never navigates
+ * (a Load dialog's focused list row still can't be typed into). Space is always a text
+ * character inside a dialog, never an activator, matching the plan's explicit call-out.
  */
 class KeyboardInput : TuiInput {
 
@@ -45,9 +48,13 @@ class KeyboardInput : TuiInput {
         event is TerminalEvent.Arrow -> InputAction.None
         isActivateKey(event) ->
             if (arrowsEnabled) InputAction.Activate(ArrowRing(squareSide).toHitTarget(cursor)) else InputAction.None
-        // F5/F6/F7 are board-level only (ignored inside a dialog's own onDialogEvent below) and
-        // stay live regardless of arrowsEnabled - the toolbar never goes dead on solve.
+        // F5/F6/Escape are board-level only (a dialog's own onDialogEvent never sees this
+        // branch) and stay live regardless of arrowsEnabled - the toolbar never goes dead on
+        // solve. Escape opening Exit here can't collide with Escape's dialog-level Cancel
+        // meaning (onDialogEvent, below) - the board and a dialog are never both reading events
+        // at once.
         event is TerminalEvent.FunctionKey -> functionKeyAction(event.n)
+        event == TerminalEvent.Escape -> InputAction.Activate(HitTarget.ToolbarExit)
         event == TerminalEvent.EndOfInput -> InputAction.Quit
         else -> InputAction.None
     }
@@ -142,7 +149,8 @@ class KeyboardInput : TuiInput {
     private fun functionKeyAction(n: Int): InputAction = when (n) {
         5 -> InputAction.Activate(HitTarget.ToolbarSave)
         6 -> InputAction.Activate(HitTarget.ToolbarLoad)
-        7 -> InputAction.Activate(HitTarget.ToolbarExit)
+        // F7 is decoded by TerminalInputParser but no longer means anything here - Escape is
+        // Exit's trigger now (see the class KDoc).
         else -> InputAction.None
     }
 

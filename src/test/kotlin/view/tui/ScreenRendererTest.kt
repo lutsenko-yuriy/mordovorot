@@ -142,7 +142,7 @@ class ScreenRendererTest {
         assertFalse(renderer.render(plain, terminalSize).contains("[Save F5]"))
         assertTrue(renderer.render(shortcuts, terminalSize).contains("[Save F5]"))
         assertTrue(renderer.render(shortcuts, terminalSize).contains("[Load F6]"))
-        assertTrue(renderer.render(shortcuts, terminalSize).contains("[Exit F7]"))
+        assertTrue(renderer.render(shortcuts, terminalSize).contains("[Exit ESC]"))
     }
 
     @Test

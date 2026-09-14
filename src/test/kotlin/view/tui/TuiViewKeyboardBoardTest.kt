@@ -47,7 +47,7 @@ class TuiViewKeyboardBoardTest {
     }
 
     @Test
-    fun `F5, F6, F7 open the Save, Load, and Exit dialogs regardless of cursor position`() {
+    fun `F5, F6 open Save and Load, Escape opens Exit, all regardless of cursor position`() {
         // Any frame, not just the last one - once the scripted events run out, EndOfInput closes
         // the dialog loop and the outer board loop repaints once more before quitting too, so
         // the dialog's own frame isn't necessarily the final one written (same as the mouse-mode
@@ -64,7 +64,7 @@ class TuiViewKeyboardBoardTest {
 
         assertTrue(framesFor(TerminalEvent.FunctionKey(5)).any { it.contains("Save game") })
         assertTrue(framesFor(TerminalEvent.FunctionKey(6)).any { it.contains("Load game") })
-        assertTrue(framesFor(TerminalEvent.FunctionKey(7)).any { it.contains("Save before quitting?") })
+        assertTrue(framesFor(TerminalEvent.Escape).any { it.contains("Save before quitting?") })
     }
 
     @Test

@@ -84,7 +84,7 @@ class BoardLayout(
      *  private, so [ScreenRenderer] can draw exactly what's clickable. */
     internal fun toolbarButtons(): List<ToolbarButton> {
         val entries = if (toolbarShortcuts) {
-            listOf(HitTarget.ToolbarSave to "[Save F5]", HitTarget.ToolbarLoad to "[Load F6]", HitTarget.ToolbarExit to "[Exit F7]")
+            listOf(HitTarget.ToolbarSave to "[Save F5]", HitTarget.ToolbarLoad to "[Load F6]", HitTarget.ToolbarExit to "[Exit ESC]")
         } else {
             listOf(HitTarget.ToolbarSave to "[ Save ]", HitTarget.ToolbarLoad to "[ Load ]", HitTarget.ToolbarExit to "[ Exit ]")
         }

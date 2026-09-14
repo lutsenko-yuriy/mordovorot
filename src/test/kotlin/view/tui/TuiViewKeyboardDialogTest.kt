@@ -9,8 +9,9 @@ import kotlin.test.assertTrue
 
 /**
  * Covers GH-18's keyboard-driven Save/Load/Exit dialogs and the startup restore prompt, plus
- * their analytics. Mirrors `TuiViewDialogTest` (GH-3's mouse equivalent) but driven via F5/F6/F7,
- * Tab/arrow-key focus movement, and Enter/Escape instead of clicks.
+ * their analytics. Mirrors `TuiViewDialogTest` (GH-3's mouse equivalent) but driven via
+ * F5/F6/Escape (opening a dialog from the board), Tab/arrow-key focus movement, and Enter/Escape
+ * (Cancel, once inside one) instead of clicks.
  */
 class TuiViewKeyboardDialogTest {
 
@@ -28,7 +29,7 @@ class TuiViewKeyboardDialogTest {
         val board = FakeBoardModel()
         val terminal = FakeTerminal(
             events = mutableListOf(
-                TerminalEvent.FunctionKey(7), // open the Exit dialog
+                TerminalEvent.Escape, // open the Exit dialog
                 TerminalEvent.Tab, // focus -> "no"
                 TerminalEvent.BackTab, // focus back -> "yes"
                 TerminalEvent.Enter, // Yes - the Save dialog opens directly, no board repaint first
@@ -93,7 +94,8 @@ class TuiViewKeyboardDialogTest {
 
     @Test
     fun `Exit dialog Yes - Tab to Yes, Enter opens the Save dialog, then saving quits`() {
-        // TODO: 1. Script an F7 event, a Tab event to focus the Yes button, an Enter event.
+        // TODO: 1. Script an Escape event (opens the Exit dialog), a Tab event to focus the Yes
+        //          button, an Enter event.
         // TODO: 2. Script KeyPress('h') to type a save name, a Tab event, an Enter event.
         // TODO: 3. Play the view with a real TuiPresenterImpl over FakeSaveRepository and a
         //          RecordingAnalyticsService.
@@ -103,7 +105,8 @@ class TuiViewKeyboardDialogTest {
 
     @Test
     fun `Exit dialog Escape cancels and keeps playing`() {
-        // TODO: 1. Script an F7 event, then an Escape event.
+        // TODO: 1. Script an Escape event (opens the Exit dialog), then a second Escape event
+        //          (Cancel, once inside it).
         // TODO: 2. Play the view with a RecordingAnalyticsService.
         // TODO: 3. Verify presenter.calls has no exitGame call, the last frame shows
         //          "Mordovorot", and analytics.events contains dialog_cancelled with

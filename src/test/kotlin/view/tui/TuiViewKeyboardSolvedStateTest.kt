@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 
 /**
  * Covers GH-18's keyboard-driven solved-state view: the cursor disappearing and arrow
- * keys/Enter/Space becoming inert once solved, the toolbar (and its F5/F6/F7 shortcuts) staying
+ * keys/Enter/Space becoming inert once solved, the toolbar (and its F5/F6/Esc shortcuts) staying
  * live, and the transition back to a navigable board when a load restores an unsolved game.
  * Mirrors `TuiViewSolvedStateTest` (GH-3's mouse equivalent).
  */
@@ -35,7 +35,7 @@ class TuiViewKeyboardSolvedStateTest {
     }
 
     @Test
-    fun `F5, F6, F7 still open their dialogs after solve`() {
+    fun `F5, F6, and Escape still open their dialogs after solve`() {
         // Any frame, not just the last one - see TuiViewKeyboardBoardTest's equivalent test for
         // why (EndOfInput closing the dialog loop triggers one more board repaint before quitting).
         fun framesFor(event: TerminalEvent): List<String> {
@@ -47,7 +47,7 @@ class TuiViewKeyboardSolvedStateTest {
 
         assertTrue(framesFor(TerminalEvent.FunctionKey(5)).any { it.contains("Save game") })
         assertTrue(framesFor(TerminalEvent.FunctionKey(6)).any { it.contains("Load game") })
-        assertTrue(framesFor(TerminalEvent.FunctionKey(7)).any { it.contains("Save before quitting?") })
+        assertTrue(framesFor(TerminalEvent.Escape).any { it.contains("Save before quitting?") })
     }
 
     @Test
