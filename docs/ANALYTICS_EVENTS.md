@@ -85,6 +85,17 @@ Fired when the user cancels the Save, Load, or Exit dialog in the mouse-driven o
 | `dialog` | `string` | `save`, `load`, or `exit`. |
 | `input_method` | `string` | `mouse` or `keyboard` — which TUI mode the session was running in. *(GH-18)* |
 
+### `input_mode_switched`
+
+Fired when the user switches input mode mid-session — toolbar button (mouse mode), keyboard shortcut (keyboard mode), or console command (console mode) — regardless of outcome. *(GH-30)*
+
+| Property | Type | Description |
+|---|---|---|
+| `from_mode` | `string` | `console`, `mouse`, or `keyboard` — mode active before the switch. |
+| `to_mode` | `string` | `console`, `mouse`, or `keyboard` — requested target mode. |
+| `trigger` | `string` | `toolbar`, `shortcut`, or `command`. |
+| `result` | `string` | `success` or `rejected_no_tty` (no interactive terminal available for a mouse/keyboard target). |
+
 <!-- All events above are sent through `analytics.AnalyticsService`, currently backed by
      `analytics.NoopAnalyticsService` (no real SDK wired up yet). -->
 
