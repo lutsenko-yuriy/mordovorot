@@ -1,3 +1,6 @@
+package presenter
+
+import InputMode
 import analytics.AnalyticsService
 import analytics.NoopAnalyticsService
 import view.View
@@ -7,9 +10,9 @@ import view.View
  * an interactive terminal, tracks `input_mode_switched` (docs/ANALYTICS_EVENTS.md), and either
  * throws [ModeSwitchRequestedException] (success) or shows a rejection message and returns
  * normally (no interactive terminal for a mouse/keyboard target), mirroring
- * [presenter.BasePresenter.exitGame]'s "usually throws, returns normally on failure" contract.
- * Reached from each `View`'s own mode-switch affordance: `view.ViewImpl`'s `mouse`/`keyboard`
- * commands, `view.tui.TuiView`'s toolbar buttons and F7/F8 shortcuts (GH-30).
+ * [BasePresenter.exitGame]'s "usually throws, returns normally on failure" contract. Reached
+ * from each `View`'s own mode-switch affordance: `view.ViewImpl`'s `mouse`/`keyboard` commands,
+ * `view.tui.TuiView`'s toolbar buttons and F7/F8 shortcuts (GH-30).
  */
 interface ModeSwitcher {
     /** [trigger] is `"toolbar"`, `"shortcut"`, or `"command"` - carried straight through into
@@ -19,7 +22,7 @@ interface ModeSwitcher {
 }
 
 /**
- * The real [ModeSwitcher]. [currentMode] is fixed for the lifetime of one instance - [GameSession]
+ * The real [ModeSwitcher]. [currentMode] is fixed for the lifetime of one instance - `GameSession`
  * builds a fresh one (alongside the View/presenter it wires it into) every time it rebuilds for a
  * new mode, so this never needs to track a mode change itself.
  */

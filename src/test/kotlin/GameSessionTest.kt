@@ -1,4 +1,5 @@
 import board_model.BoardModel
+import presenter.ModeSwitchRequestedException
 import storage.SaveRepository
 import testing.FakeBoardModel
 import testing.FakeSaveRepository

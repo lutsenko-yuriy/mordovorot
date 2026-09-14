@@ -1,3 +1,5 @@
+import presenter.ModeSwitchRequestedException
+import presenter.ModeSwitcherImpl
 import testing.FakeView
 import testing.RecordingAnalyticsService
 import testing.RecordingAnalyticsService.Event

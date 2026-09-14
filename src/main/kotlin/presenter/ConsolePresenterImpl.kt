@@ -1,6 +1,5 @@
 package presenter
 
-import ModeSwitchRequestedException
 import analytics.AnalyticsService
 import analytics.NoopAnalyticsService
 import board_model.BoardImpl

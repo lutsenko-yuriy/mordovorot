@@ -4,6 +4,7 @@ import analytics.NoopAnalyticsService
 import board_model.BoardImpl
 import board_model.BoardModel
 import presenter.ConsolePresenterImpl
+import presenter.ModeSwitchRequestedException
 import presenter.TuiPresenterImpl
 import storage.FileSaveRepository
 import storage.SaveRepository
