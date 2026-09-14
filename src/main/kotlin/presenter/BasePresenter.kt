@@ -41,6 +41,8 @@ abstract class BasePresenter(
             analytics.track("save_command_used", mapOf("result" to "success", "overwrote_existing" to existed))
             view.showMessage("Saved as '$name'.")
             return true
+        } catch (e: SessionControlException) {
+            throw e
         } catch (e: Exception) {
             analytics.track("save_command_used", mapOf("result" to "error"))
             // e.message alone can be uninformative or outright misleading here - e.g.
@@ -86,6 +88,8 @@ abstract class BasePresenter(
             analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "success"))
             view.showMessage("Loaded '$name'.")
             return true
+        } catch (e: SessionControlException) {
+            throw e
         } catch (e: Exception) {
             analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "error"))
             view.showMessage(e.message ?: "Could not load '$name'.")
@@ -212,6 +216,8 @@ abstract class BasePresenter(
                 "startup_restore_decision",
                 mapOf("decision" to (if (restored) "restored" else "new_game"), "save_file_count" to saveNames.size),
             )
+        } catch (e: SessionControlException) {
+            throw e
         } catch (e: Exception) {
             // Any failure here (unreadable saves dir, view I/O error) just means the game
             // starts fresh instead of crashing at boot.

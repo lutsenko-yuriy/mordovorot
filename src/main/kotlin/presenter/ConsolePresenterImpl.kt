@@ -29,8 +29,8 @@ class ConsolePresenterImpl(
                 return
             } catch (e: ExitRequestedException) {
                 return
-            } catch (e: ModeSwitchRequestedException) {
-                throw e // must reach GameSession, not the catch-all below
+            } catch (e: SessionControlException) {
+                throw e // e.g. ModeSwitchRequestedException - must reach GameSession, not the catch-all below
             } catch (e: Exception) {
                 view.showMessage(e.message ?: "Error") // not System.err - stays in sync with the board output
             }

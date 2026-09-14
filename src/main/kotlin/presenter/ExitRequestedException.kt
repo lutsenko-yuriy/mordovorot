@@ -6,4 +6,4 @@ package presenter
  * Public (rather than a private nested class of [presenter.BasePresenter]) so [view.tui.TuiView]
  * (GH-3) can catch it from its own event loop, since it doesn't call [ConsolePresenter.play].
  */
-class ExitRequestedException : Exception()
+class ExitRequestedException : SessionControlException()

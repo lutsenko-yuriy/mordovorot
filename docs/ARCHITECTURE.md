@@ -45,17 +45,17 @@ src/main/kotlin/
 │   ├── ConsolePresenterImpl.kt # BasePresenter + ConsolePresenter — owns the line-based play() loop
 │   ├── TuiPresenterImpl.kt     # BasePresenter + TuiPresenter — owns the query surface, exposes
 │   │                             # restoreOnStartup() publicly for view.tui.TuiView (GH-23)
+│   ├── SessionControlException.kt # Sealed marker base for control-flow exceptions that unwind
+│   │                                 # play() intentionally — lets a catch-all rethrow via this
+│   │                                 # one type instead of naming each subtype (GH-30)
 │   ├── ExitRequestedException.kt # Signals play() (or view.tui.TuiView's own loop, GH-3) to stop
 │   ├── ModeSwitcher.kt        # ModeSwitcher / ModeSwitcherImpl / NoopModeSwitcher — checks for
 │   │                             # an interactive terminal, tracks input_mode_switched, and
 │   │                             # either throws ModeSwitchRequestedException (success) or shows
 │   │                             # a message and returns (rejected), mirroring
-│   │                             # BasePresenter.exitGame's contract. Same package as
-│   │                             # ExitRequestedException, not root — both are thrown from and
-│   │                             # caught inside the presenter layer (GH-30)
+│   │                             # BasePresenter.exitGame's contract (GH-30)
 │   └── ModeSwitchRequestedException.kt # Carries the requested InputMode; unwinds a running
-│                                          # session's play() back to GameSession's loop, the same
-│                                          # way ExitRequestedException unwinds it to quit (GH-30)
+│                                          # session's play() back to GameSession's loop (GH-30)
 ├── storage/
 │   ├── SaveRepository.kt          # Persistence contract: list/exists/save/load
 │   ├── SavedBoard.kt              # Data carrier: square side + tile arrangement
