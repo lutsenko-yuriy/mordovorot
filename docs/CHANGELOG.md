@@ -13,21 +13,14 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
-## [0.5.2] — 2026-09-14 (PR #33 merged)
+## [0.6.0] — 2026-09-14 (PR #34 merged)
 
-### Changed
-- [wip] GH-18 (WU4/5): `--keyboard` launch mode + board navigation — `KeyboardInput` driver wires arrow keys to `ArrowCursor`, Enter/Space activates shifts, F5/F6/Esc open dialogs; `LaunchMode` gains `KEYBOARD` with `--keyboard`/`--mouse` flags, fixes missing `input_method` property on view events, dialog focus driven by Tab/arrow keys
-
-## [0.5.2] — 2026-09-14 (PR #32 merged)
-
-### Changed
-- [wip] GH-18 (WU3/5): TuiInput strategy extraction in the TUI view layer (no behaviour change)
-
-## [0.5.2] — 2026-09-14 (PR #31 merged)
-
-### Changed
-- [wip] GH-18 (WU2/5): cursor ring + dialog focus geometry and rendering in the TUI view layer
+### Added
 - [wip] GH-18 (WU1/5): decode arrow/Tab/BackTab/function keys in the TUI input parser — extends `TerminalInputParser` to recognize ESC sequences for arrow keys (`→`/`←`/`↑`/`↓`), Tab/BackTab, and function keys (F1–F12), converting them to `TerminalEvent.KeyPress` — not yet wired to the UI, still unreachable until WU2/3 routes these events through the board screen.
+- [wip] GH-18 (WU2/5): cursor ring + dialog focus geometry and rendering in the TUI view layer
+- [wip] GH-18 (WU3/5): TuiInput strategy extraction in the TUI view layer (no behaviour change)
+- [wip] GH-18 (WU4/5): `--keyboard` launch mode + board navigation — `KeyboardInput` driver wires arrow keys to `ArrowCursor`, Enter/Space activates shifts, F5/F6/Esc open dialogs; `LaunchMode` gains `KEYBOARD` with `--keyboard`/`--mouse` flags, fixes missing `input_method` property on view events, dialog focus driven by Tab/arrow keys
+- [app] GH-18 (WU5/5): keyboard dialog navigation test coverage, docs, and audit fixes — completes the keyboard-only TUI: Tab/arrow-key focus cycling and typing work across Save/Load/Exit dialogs and the startup restore prompt, with the yellow cursor and light-blue toolbar shortcuts (F5 Save, F6 Load, Esc Exit) documented in `docs/PRODUCT_SPEC.md` as Feature 7. This completes GH-18: `--keyboard` is now a fully playable alternative to the default mouse-driven TUI, with `--console` and a non-interactive terminal both still falling back to the line-based console UI.
 
 ## [0.5.1] — 2026-09-11 (PR #27 merged)
 
