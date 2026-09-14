@@ -302,7 +302,11 @@ class TuiView internal constructor(
                 .copy(dialog = decoratedDialog, message = message),
         )
         layout = BoardLayout(terminalSize, state.squareSide, state.arrowsEnabled, state.toolbarShortcuts)
-        dialogLayout = decoratedDialog?.let { DialogLayout(it, terminalSize) }
+        // Built from state.dialog (post-decorateBoard), not decoratedDialog directly - the two
+        // are the same object for MouseInput today, but a future decorateBoard that touches the
+        // dialog (e.g. a keyboard mode collapsing decoration into one pass) must not be able to
+        // desync what's hit-tested from what's actually drawn (audit finding on GH-18 WU3 PR #32).
+        dialogLayout = state.dialog?.let { DialogLayout(it, terminalSize) }
         terminal.write(renderer.render(state, terminalSize))
     }
 
