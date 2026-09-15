@@ -45,7 +45,7 @@ fun resolveBoardSize(
 fun resolveInputMode(
     args: Array<String>,
     analytics: AnalyticsService,
-    boardSize: Int = board_model.BoardSize.DEFAULT,
+    boardSize: Int = BoardSize.DEFAULT,
     warnUnrecognizedArg: (String) -> Unit = { System.err.println("Unrecognized argument: '$it' - ignoring.") },
     warnConsoleKeyboardConflict: () -> Unit = { System.err.println("'--keyboard' ignored - '--console' takes precedence.") },
     warnNoInteractiveTerminal: (String) -> Unit = { flag ->
