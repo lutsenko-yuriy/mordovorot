@@ -220,7 +220,10 @@ class ViewModelImpl(
 
     /** [SaveInfo.squareSide] for [name], `null` when the save can't be read (corrupted or an
      *  IO error) - a listing degrades to showing the name alone rather than dropping the save
-     *  or failing the whole listing (GH-44 WU4). */
+     *  or failing the whole listing (GH-44 WU4). No CancellationException guard needed here -
+     *  same reasoning as [availableSavesMessage]'s: [SaveRepository.load] isn't suspend, so this
+     *  catch-all can never observe one, even though this is reachable from suspend callers
+     *  (audit finding on PR #54). */
     private fun sizeOf(name: String): Int? =
         try {
             saves.load(name)?.squareSide
@@ -253,8 +256,12 @@ class ViewModelImpl(
                     var chosen: String? = null
                     while (chosen == null) {
                         val typed = ask(UiRequest.ChooseSaveToRestore(saveInfos)) ?: break
-                        if (typed in saveInfos.map { it.name }) {
-                            chosen = typed
+                        // Matches either the bare name or the "name (NxN)" the console prompt
+                        // now prints (GH-44 WU4, audit finding on PR #54) - a user typing back
+                        // exactly what they see must not get stuck re-prompted forever.
+                        val match = saveInfos.firstOrNull { it.name == typed || it.display() == typed }
+                        if (match != null) {
+                            chosen = match.name
                         } else {
                             showMessage("No save named '$typed'. Available saves: ${saveInfos.joinToString(", ") { it.display() }}")
                         }

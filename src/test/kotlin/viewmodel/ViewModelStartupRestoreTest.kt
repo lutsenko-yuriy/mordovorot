@@ -231,6 +231,27 @@ class ViewModelStartupRestoreTest {
         )
     }
 
+    /** Audit finding on PR #54 (GH-44 WU4): the console prompt now prints "name (NxN)" for each
+     *  save, so a user typing back exactly what they see must restore that save, not get stuck
+     *  re-prompted forever against a bare-name-only match. */
+    @Test
+    fun `typing back the displayed name-and-size form restores that save, same as typing the bare name`(): Unit = runBlocking {
+        val board = FakeBoardModel()
+        val saves = FakeSaveRepository(
+            mutableMapOf(
+                "foo" to SavedBoard(4, fourByFour),
+                "bar" to SavedBoard(4, fourByFour),
+            ),
+        )
+        val viewModel = ViewModelImpl(board, saves)
+        val ui = FakeViewModelUi(chooseSaveToRestoreResponses = mutableListOf("foo (4x4)"))
+
+        ui.drive(viewModel) { viewModel.restoreOnStartup() }
+
+        assertEquals(listOf("Loaded 'foo'."), ui.shownMessages)
+        assertEquals(listOf("restoreState(${fourByFour.toList()})"), board.calls)
+    }
+
     @Test
     fun `restoreOnStartup is a no-op on a second call - does not re-prompt or double-track`(): Unit = runBlocking {
         // A caller invoking it twice in one launch (e.g. by mistake, or two code paths both
