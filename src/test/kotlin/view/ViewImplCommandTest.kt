@@ -10,7 +10,7 @@ import java.io.IOException
 import java.io.PrintStream
 import java.io.Reader
 import java.io.StringReader
-import testing.runTestBlocking
+import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -32,7 +32,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `left command delegates to presenter shiftLeft, translating the 1-based row to 0-based`() = runTestBlocking {
+    fun `left command delegates to presenter shiftLeft, translating the 1-based row to 0-based`(): Unit = runBlocking {
         val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("left 1\n", presenter)
 
@@ -42,7 +42,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `right command delegates to presenter shiftRight, translating the 1-based row to 0-based`() = runTestBlocking {
+    fun `right command delegates to presenter shiftRight, translating the 1-based row to 0-based`(): Unit = runBlocking {
         val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("right 3\n", presenter)
 
@@ -52,7 +52,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `up command delegates to presenter shiftUp, translating the 1-based column to 0-based`() = runTestBlocking {
+    fun `up command delegates to presenter shiftUp, translating the 1-based column to 0-based`(): Unit = runBlocking {
         val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("up 2\n", presenter)
 
@@ -62,7 +62,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `down command delegates to presenter shiftDown, translating the 1-based column to 0-based`() = runTestBlocking {
+    fun `down command delegates to presenter shiftDown, translating the 1-based column to 0-based`(): Unit = runBlocking {
         val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("down 4\n", presenter)
 
@@ -72,7 +72,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `left 0 translates to -1, delegating to the board's own bounds check rather than validating in view`() = runTestBlocking {
+    fun `left 0 translates to -1, delegating to the board's own bounds check rather than validating in view`(): Unit = runBlocking {
         val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("left 0\n", presenter)
 
@@ -82,7 +82,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `Int-MIN_VALUE argument wraps rather than crashing, and still lands outside any valid board range`() = runTestBlocking {
+    fun `Int-MIN_VALUE argument wraps rather than crashing, and still lands outside any valid board range`(): Unit = runBlocking {
         val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("left ${Int.MIN_VALUE}\n", presenter)
 
@@ -93,7 +93,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `save command delegates to presenter saveGame with the raw file name, untranslated`() = runTestBlocking {
+    fun `save command delegates to presenter saveGame with the raw file name, untranslated`(): Unit = runBlocking {
         val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("save foo\n", presenter)
 
@@ -103,7 +103,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `load command delegates to presenter loadGame with the raw file name, untranslated`() = runTestBlocking {
+    fun `load command delegates to presenter loadGame with the raw file name, untranslated`(): Unit = runBlocking {
         val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("load foo\n", presenter)
 
@@ -113,7 +113,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `save with a missing file name throws without delegating`() = runTestBlocking {
+    fun `save with a missing file name throws without delegating`(): Unit = runBlocking {
         val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("save\n", presenter)
 
@@ -122,7 +122,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `save with a trailing extra token is rejected rather than silently ignored`() = runTestBlocking {
+    fun `save with a trailing extra token is rejected rather than silently ignored`(): Unit = runBlocking {
         val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("save foo bar\n", presenter)
 
@@ -131,7 +131,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `reset command delegates to presenter resetGame`() = runTestBlocking {
+    fun `reset command delegates to presenter resetGame`(): Unit = runBlocking {
         val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("reset\n", presenter)
 
@@ -141,7 +141,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `commands are case-insensitive`() = runTestBlocking {
+    fun `commands are case-insensitive`(): Unit = runBlocking {
         val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("LEFT 1\n", presenter)
 
@@ -151,7 +151,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `missing numeric argument throws without delegating`() = runTestBlocking {
+    fun `missing numeric argument throws without delegating`(): Unit = runBlocking {
         val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("left\n", presenter)
 
@@ -160,7 +160,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `non-numeric argument throws without delegating`() = runTestBlocking {
+    fun `non-numeric argument throws without delegating`(): Unit = runBlocking {
         val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("left abc\n", presenter)
 
@@ -169,7 +169,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `unknown command throws without delegating`() = runTestBlocking {
+    fun `unknown command throws without delegating`(): Unit = runBlocking {
         val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("teleport\n", presenter)
 
@@ -178,14 +178,14 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `EOF throws EndOfInputException instead of looping forever - regression guard for GH-4's 651ca64`() = runTestBlocking {
+    fun `EOF throws EndOfInputException instead of looping forever - regression guard for GH-4's 651ca64`(): Unit = runBlocking {
         val (view, _) = viewWith("")
 
         assertFailsWith<EndOfInputException> { view.processCommand() }
     }
 
     @Test
-    fun `trailing extra token is rejected rather than silently ignored`() = runTestBlocking {
+    fun `trailing extra token is rejected rather than silently ignored`(): Unit = runBlocking {
         val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("left 1 99\n", presenter)
 
@@ -194,7 +194,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `reset with a trailing argument is rejected rather than silently ignored`() = runTestBlocking {
+    fun `reset with a trailing argument is rejected rather than silently ignored`(): Unit = runBlocking {
         val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("reset foo\n", presenter)
 
@@ -203,7 +203,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `displayBoard renders a tab-separated grid, offset to 1-based tile values`() = runTestBlocking {
+    fun `displayBoard renders a tab-separated grid, offset to 1-based tile values`(): Unit = runBlocking {
         val (view, output) = viewWith("")
 
         view.displayBoard(intArrayOf(0, 1, 2, 3), 2)
@@ -213,7 +213,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `showMessage writes to the injected output`() = runTestBlocking {
+    fun `showMessage writes to the injected output`(): Unit = runBlocking {
         val (view, output) = viewWith("")
 
         view.showMessage("save not found")
@@ -222,7 +222,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `IOException while reading input throws EndOfInputException instead of spinning forever`() = runTestBlocking {
+    fun `IOException while reading input throws EndOfInputException instead of spinning forever`(): Unit = runBlocking {
         val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
         view.presenter = FakeConsolePresenter()
 
@@ -230,7 +230,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `confirmRestore returns true for y or yes, case-insensitively`() = runTestBlocking {
+    fun `confirmRestore returns true for y or yes, case-insensitively`(): Unit = runBlocking {
         for (answer in listOf("y", "Y", "yes", "YES", "Yes")) {
             val (view, _) = viewWith("$answer\n")
             assertEquals(true, view.confirmRestore("foo"), "expected '$answer' to confirm")
@@ -238,7 +238,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `confirmRestore returns false for a blank line, a no, or garbage input`() = runTestBlocking {
+    fun `confirmRestore returns false for a blank line, a no, or garbage input`(): Unit = runBlocking {
         for (answer in listOf("", "n", "no", "blah")) {
             val (view, _) = viewWith("$answer\n")
             assertEquals(false, view.confirmRestore("foo"), "expected '$answer' to decline")
@@ -246,14 +246,14 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `confirmRestore returns false on EOF instead of throwing`() = runTestBlocking {
+    fun `confirmRestore returns false on EOF instead of throwing`(): Unit = runBlocking {
         val (view, _) = viewWith("")
 
         assertEquals(false, view.confirmRestore("foo"))
     }
 
     @Test
-    fun `confirmRestore returns false when the input stream is dead, same as clean EOF`() = runTestBlocking {
+    fun `confirmRestore returns false when the input stream is dead, same as clean EOF`(): Unit = runBlocking {
         val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
         view.presenter = FakeConsolePresenter()
 
@@ -261,28 +261,28 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `chooseSaveToRestore returns the raw typed name unvalidated`() = runTestBlocking {
+    fun `chooseSaveToRestore returns the raw typed name unvalidated`(): Unit = runBlocking {
         val (view, _) = viewWith("bar\n")
 
         assertEquals("bar", view.chooseSaveToRestore(listOf("foo", "bar")))
     }
 
     @Test
-    fun `chooseSaveToRestore returns null on a blank line`() = runTestBlocking {
+    fun `chooseSaveToRestore returns null on a blank line`(): Unit = runBlocking {
         val (view, _) = viewWith("\n")
 
         assertEquals(null, view.chooseSaveToRestore(listOf("foo", "bar")))
     }
 
     @Test
-    fun `chooseSaveToRestore returns null on EOF instead of throwing`() = runTestBlocking {
+    fun `chooseSaveToRestore returns null on EOF instead of throwing`(): Unit = runBlocking {
         val (view, _) = viewWith("")
 
         assertEquals(null, view.chooseSaveToRestore(listOf("foo", "bar")))
     }
 
     @Test
-    fun `chooseSaveToRestore returns null when the input stream is dead, same as clean EOF`() = runTestBlocking {
+    fun `chooseSaveToRestore returns null when the input stream is dead, same as clean EOF`(): Unit = runBlocking {
         val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
         view.presenter = FakeConsolePresenter()
 
@@ -290,7 +290,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `exit command delegates to presenter exitGame`() = runTestBlocking {
+    fun `exit command delegates to presenter exitGame`(): Unit = runBlocking {
         val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("exit\n", presenter)
 
@@ -300,7 +300,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `quit command is an alias for exit`() = runTestBlocking {
+    fun `quit command is an alias for exit`(): Unit = runBlocking {
         val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("quit\n", presenter)
 
@@ -310,7 +310,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `exit with a trailing argument is rejected rather than silently ignored`() = runTestBlocking {
+    fun `exit with a trailing argument is rejected rather than silently ignored`(): Unit = runBlocking {
         val presenter = FakeConsolePresenter()
         val (view, _) = viewWith("exit foo\n", presenter)
 
@@ -319,7 +319,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `confirmSaveBeforeExit returns true for y or yes, case-insensitively`() = runTestBlocking {
+    fun `confirmSaveBeforeExit returns true for y or yes, case-insensitively`(): Unit = runBlocking {
         for (answer in listOf("y", "Y", "yes", "YES", "Yes")) {
             val (view, _) = viewWith("$answer\n")
             assertEquals(true, view.confirmSaveBeforeExit(), "expected '$answer' to confirm")
@@ -327,7 +327,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `confirmSaveBeforeExit returns false for a blank line, a no, or garbage input`() = runTestBlocking {
+    fun `confirmSaveBeforeExit returns false for a blank line, a no, or garbage input`(): Unit = runBlocking {
         for (answer in listOf("", "n", "no", "blah")) {
             val (view, _) = viewWith("$answer\n")
             assertEquals(false, view.confirmSaveBeforeExit(), "expected '$answer' to decline")
@@ -335,14 +335,14 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `confirmSaveBeforeExit returns false on EOF instead of throwing`() = runTestBlocking {
+    fun `confirmSaveBeforeExit returns false on EOF instead of throwing`(): Unit = runBlocking {
         val (view, _) = viewWith("")
 
         assertEquals(false, view.confirmSaveBeforeExit())
     }
 
     @Test
-    fun `confirmSaveBeforeExit returns false when the input stream is dead, same as clean EOF`() = runTestBlocking {
+    fun `confirmSaveBeforeExit returns false when the input stream is dead, same as clean EOF`(): Unit = runBlocking {
         val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
         view.presenter = FakeConsolePresenter()
 
@@ -350,28 +350,28 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `promptSaveName returns the raw typed name unvalidated`() = runTestBlocking {
+    fun `promptSaveName returns the raw typed name unvalidated`(): Unit = runBlocking {
         val (view, _) = viewWith("foo\n")
 
         assertEquals("foo", view.promptSaveName())
     }
 
     @Test
-    fun `promptSaveName returns null on a blank line`() = runTestBlocking {
+    fun `promptSaveName returns null on a blank line`(): Unit = runBlocking {
         val (view, _) = viewWith("\n")
 
         assertEquals(null, view.promptSaveName())
     }
 
     @Test
-    fun `promptSaveName returns null on EOF instead of throwing`() = runTestBlocking {
+    fun `promptSaveName returns null on EOF instead of throwing`(): Unit = runBlocking {
         val (view, _) = viewWith("")
 
         assertEquals(null, view.promptSaveName())
     }
 
     @Test
-    fun `promptSaveName returns null when the input stream is dead, same as clean EOF`() = runTestBlocking {
+    fun `promptSaveName returns null when the input stream is dead, same as clean EOF`(): Unit = runBlocking {
         val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
         view.presenter = FakeConsolePresenter()
 
@@ -379,7 +379,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `mouse command requests a switch to MOUSE with trigger=command`() = runTestBlocking {
+    fun `mouse command requests a switch to MOUSE with trigger=command`(): Unit = runBlocking {
         val switcher = RecordingModeSwitcher()
         val (view, _) = viewWith("mouse\n")
         view.modeSwitcher = switcher
@@ -390,7 +390,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `keyboard command requests a switch to KEYBOARD with trigger=command`() = runTestBlocking {
+    fun `keyboard command requests a switch to KEYBOARD with trigger=command`(): Unit = runBlocking {
         val switcher = RecordingModeSwitcher()
         val (view, _) = viewWith("keyboard\n")
         view.modeSwitcher = switcher
@@ -401,7 +401,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `mouse with a trailing argument is rejected rather than silently ignored`() = runTestBlocking {
+    fun `mouse with a trailing argument is rejected rather than silently ignored`(): Unit = runBlocking {
         val switcher = RecordingModeSwitcher()
         val (view, _) = viewWith("mouse foo\n")
         view.modeSwitcher = switcher
@@ -411,7 +411,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `a mode switch that throws unwinds out of processCommand`() = runTestBlocking {
+    fun `a mode switch that throws unwinds out of processCommand`(): Unit = runBlocking {
         val (view, _) = viewWith("keyboard\n")
         view.modeSwitcher = object : presenter.ModeSwitcher {
             override suspend fun switchTo(target: InputMode, trigger: String) {
@@ -423,7 +423,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `create wires the injected input, output, and presenter together atomically`() = runTestBlocking {
+    fun `create wires the injected input, output, and presenter together atomically`(): Unit = runBlocking {
         val presenter = FakeConsolePresenter()
         val outputBuffer = ByteArrayOutputStream()
 
@@ -438,7 +438,7 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `create wires the injected modeSwitcherFactory the same way, atomically`() = runTestBlocking {
+    fun `create wires the injected modeSwitcherFactory the same way, atomically`(): Unit = runBlocking {
         val presenter = FakeConsolePresenter()
         val switcher = RecordingModeSwitcher()
 

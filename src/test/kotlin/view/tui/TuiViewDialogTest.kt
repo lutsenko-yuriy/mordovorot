@@ -7,7 +7,7 @@ import testing.FakeSaveRepository
 import testing.FakeTerminal
 import testing.FakeTuiPresenter
 import testing.RecordingAnalyticsService
-import testing.runTestBlocking
+import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -41,7 +41,7 @@ class TuiViewDialogTest {
         BoardLayout(terminalSize, presenter.side, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE))
 
     @Test
-    fun `Save dialog happy path - typed name with no conflict saves and closes`() = runTestBlocking {
+    fun `Save dialog happy path - typed name with no conflict saves and closes`(): Unit = runBlocking {
         val presenter = FakeTuiPresenter()
         val (saveX, saveY) = boardLayout(presenter).saveButtonPosition()
         // typing "hi" then clicking wherever the Save dialog's Save button lands - the dialog
@@ -65,7 +65,7 @@ class TuiViewDialogTest {
     }
 
     @Test
-    fun `a toolbar Save with a whitespace name is rejected instead of saved - console load could never split it back out`() = runTestBlocking {
+    fun `a toolbar Save with a whitespace name is rejected instead of saved - console load could never split it back out`(): Unit = runBlocking {
         // Round 5 audit finding on PR #24: the exit flow's promptForValidSaveName rejects a
         // whitespace name specifically because console mode's save/load command parsing splits
         // on it (view.ViewImpl.nameArg) - a name saved this way could never be `load`ed back
@@ -91,7 +91,7 @@ class TuiViewDialogTest {
     }
 
     @Test
-    fun `Save dialog shows the overwrite warning when the typed name matches an existing save`() = runTestBlocking {
+    fun `Save dialog shows the overwrite warning when the typed name matches an existing save`(): Unit = runBlocking {
         val presenter = FakeTuiPresenter()
         presenter.existingSaveNames = setOf("hi")
         val (saveX, saveY) = boardLayout(presenter).saveButtonPosition()
@@ -110,7 +110,7 @@ class TuiViewDialogTest {
     }
 
     @Test
-    fun `Save dialog Cancel closes without saving and tracks dialog_cancelled`() = runTestBlocking {
+    fun `Save dialog Cancel closes without saving and tracks dialog_cancelled`(): Unit = runBlocking {
         val presenter = FakeTuiPresenter()
         val analytics = RecordingAnalyticsService()
         val (saveX, saveY) = boardLayout(presenter).saveButtonPosition()
@@ -131,7 +131,7 @@ class TuiViewDialogTest {
     }
 
     @Test
-    fun `Load dialog lists existing saves and Load on a selected row restores the board`() = runTestBlocking {
+    fun `Load dialog lists existing saves and Load on a selected row restores the board`(): Unit = runBlocking {
         val presenter = FakeTuiPresenter()
         presenter.saveNames = listOf("foo", "bar")
         val (loadX, loadY) = boardLayout(presenter).loadButtonPosition()
@@ -154,7 +154,7 @@ class TuiViewDialogTest {
     }
 
     @Test
-    fun `Load dialog with no saves shows No saves found and Load is inert`() = runTestBlocking {
+    fun `Load dialog with no saves shows No saves found and Load is inert`(): Unit = runBlocking {
         val presenter = FakeTuiPresenter()
         presenter.saveNames = emptyList()
         val (loadX, loadY) = boardLayout(presenter).loadButtonPosition()
@@ -175,7 +175,7 @@ class TuiViewDialogTest {
     }
 
     @Test
-    fun `Load dialog Cancel closes without loading and tracks dialog_cancelled`() = runTestBlocking {
+    fun `Load dialog Cancel closes without loading and tracks dialog_cancelled`(): Unit = runBlocking {
         val presenter = FakeTuiPresenter()
         presenter.saveNames = listOf("foo")
         val analytics = RecordingAnalyticsService()
@@ -197,7 +197,7 @@ class TuiViewDialogTest {
     }
 
     @Test
-    fun `Exit dialog Yes opens the Save dialog then quits after a successful save`() = runTestBlocking {
+    fun `Exit dialog Yes opens the Save dialog then quits after a successful save`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         val board = FakeBoardModel()
         val (exitX, exitY) = BoardLayout(terminalSize, board.SQUARE_SIDE, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE)).exitButtonPosition()
@@ -226,7 +226,7 @@ class TuiViewDialogTest {
     }
 
     @Test
-    fun `Exit dialog No quits without saving`() = runTestBlocking {
+    fun `Exit dialog No quits without saving`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         val board = FakeBoardModel()
         val (exitX, exitY) = BoardLayout(terminalSize, board.SQUARE_SIDE, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE)).exitButtonPosition()
@@ -251,7 +251,7 @@ class TuiViewDialogTest {
     }
 
     @Test
-    fun `Exit dialog Cancel closes the dialog and exitGame is never called`() = runTestBlocking {
+    fun `Exit dialog Cancel closes the dialog and exitGame is never called`(): Unit = runBlocking {
         val presenter = FakeTuiPresenter()
         val analytics = RecordingAnalyticsService()
         val (exitX, exitY) = boardLayout(presenter).exitButtonPosition()
@@ -276,7 +276,7 @@ class TuiViewDialogTest {
     }
 
     @Test
-    fun `startup restore dialog appears when saves exist and Cancel starts a new game`() = runTestBlocking {
+    fun `startup restore dialog appears when saves exist and Cancel starts a new game`(): Unit = runBlocking {
         val saves = FakeSaveRepository(mutableMapOf("foo" to storage.SavedBoard(4, IntArray(16) { it })))
         val board = FakeBoardModel()
         val dialog = Dialog(Dialog.Kind.LOAD, "Restore a saved game?", listItems = listOf("foo"), buttons = listOf(DialogButtonSpec("load", "Load"), DialogButtonSpec("cancel", "Cancel")))
@@ -294,7 +294,7 @@ class TuiViewDialogTest {
     }
 
     @Test
-    fun `screen views fire with the right opened_from for each dialog entry point`() = runTestBlocking {
+    fun `screen views fire with the right opened_from for each dialog entry point`(): Unit = runBlocking {
         val presenter = FakeTuiPresenter()
         val analytics = RecordingAnalyticsService()
         val (saveX, saveY) = boardLayout(presenter).saveButtonPosition()
@@ -324,7 +324,7 @@ class TuiViewDialogTest {
     // TuiView had no board-level status line to render them on. ---
 
     @Test
-    fun `a successful toolbar Save shows the presenter's confirmation message on the board afterward`() = runTestBlocking {
+    fun `a successful toolbar Save shows the presenter's confirmation message on the board afterward`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         val board = FakeBoardModel()
         val (saveX, saveY) = BoardLayout(terminalSize, board.SQUARE_SIDE, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE)).saveButtonPosition()
@@ -345,7 +345,7 @@ class TuiViewDialogTest {
     }
 
     @Test
-    fun `a failed save during Exit Yes shows why the quit was aborted, and the session keeps running`() = runTestBlocking {
+    fun `a failed save during Exit Yes shows why the quit was aborted, and the session keeps running`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         saves.saveException = RuntimeException("disk full")
         val board = FakeBoardModel()
@@ -375,7 +375,7 @@ class TuiViewDialogTest {
     }
 
     @Test
-    fun `a board status message does not leak into a dialog opened afterward`() = runTestBlocking {
+    fun `a board status message does not leak into a dialog opened afterward`(): Unit = runBlocking {
         val saves = FakeSaveRepository(mutableMapOf("foo" to storage.SavedBoard(4, IntArray(16) { it })))
         val board = FakeBoardModel()
         val (loadX, loadY) = BoardLayout(terminalSize, board.SQUARE_SIDE, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE)).loadButtonPosition()
@@ -403,7 +403,7 @@ class TuiViewDialogTest {
     }
 
     @Test
-    fun `pressing Enter with an empty name in the Save dialog cancels instead of looping forever`() = runTestBlocking {
+    fun `pressing Enter with an empty name in the Save dialog cancels instead of looping forever`(): Unit = runBlocking {
         val presenter = FakeTuiPresenter()
         val (saveX, saveY) = boardLayout(presenter).saveButtonPosition()
         val terminal = FakeTerminal(
@@ -417,7 +417,7 @@ class TuiViewDialogTest {
     }
 
     @Test
-    fun `confirmRestore renders the presenter-provided save name even if listSaves would disagree`() = runTestBlocking {
+    fun `confirmRestore renders the presenter-provided save name even if listSaves would disagree`(): Unit = runBlocking {
         val presenter = FakeTuiPresenter()
         presenter.saveNames = listOf("stale-name")
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.Escape), terminalSize = terminalSize)
@@ -431,7 +431,7 @@ class TuiViewDialogTest {
     // --- Round 2 audit findings on PR #24. ---
 
     @Test
-    fun `clicking Save with an empty name cancels, same as pressing Enter on an empty name`() = runTestBlocking {
+    fun `clicking Save with an empty name cancels, same as pressing Enter on an empty name`(): Unit = runBlocking {
         val presenter = FakeTuiPresenter()
         val (saveX, saveY) = boardLayout(presenter).saveButtonPosition()
         val dialog = Dialog(Dialog.Kind.SAVE, "Save game", buttons = listOf(DialogButtonSpec("save", "Save"), DialogButtonSpec("cancel", "Cancel")))
@@ -447,7 +447,7 @@ class TuiViewDialogTest {
     }
 
     @Test
-    fun `the exit flow's invalid-name explanation stays visible past the user's first corrective keystroke`() = runTestBlocking {
+    fun `the exit flow's invalid-name explanation stays visible past the user's first corrective keystroke`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         val board = FakeBoardModel()
         val (exitX, exitY) = BoardLayout(terminalSize, board.SQUARE_SIDE, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE)).exitButtonPosition()
@@ -491,7 +491,7 @@ class TuiViewDialogTest {
     }
 
     @Test
-    fun `dialog content is truncated to the box width instead of overflowing the border on a narrow terminal`() = runTestBlocking {
+    fun `dialog content is truncated to the box width instead of overflowing the border on a narrow terminal`(): Unit = runBlocking {
         val narrow = TerminalSize(columns = 40, rows = 24)
         val presenter = FakeTuiPresenter()
         presenter.existingSaveNames = setOf("somesave")

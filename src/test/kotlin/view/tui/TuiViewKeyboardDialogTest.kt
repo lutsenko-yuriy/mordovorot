@@ -7,7 +7,7 @@ import testing.FakeBoardModel
 import testing.FakeSaveRepository
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
-import testing.runTestBlocking
+import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -29,7 +29,7 @@ class TuiViewKeyboardDialogTest {
     ): TuiView = TuiView.create(terminal, analytics, input = KeyboardInput()) { v -> TuiPresenterImpl(v, board, saves, analytics) }
 
     @Test
-    fun `the exit flow's Save re-prompt after a rejected name starts focus back on the text field`() = runTestBlocking {
+    fun `the exit flow's Save re-prompt after a rejected name starts focus back on the text field`(): Unit = runBlocking {
         // Regression: the Exit -> Save handoff chains into a new modal loop with no board
         // repaint in between, so dialogFocusIndex used to carry over from the previous dialog.
         val saves = FakeSaveRepository()
@@ -56,7 +56,7 @@ class TuiViewKeyboardDialogTest {
     }
 
     @Test
-    fun `Save dialog happy path - typed name, Tab to the Save button, Enter saves and closes`() = runTestBlocking {
+    fun `Save dialog happy path - typed name, Tab to the Save button, Enter saves and closes`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         val board = FakeBoardModel()
         val terminal = FakeTerminal(
@@ -76,7 +76,7 @@ class TuiViewKeyboardDialogTest {
     }
 
     @Test
-    fun `Save dialog Escape cancels and tracks dialog_cancelled with input_method keyboard`() = runTestBlocking {
+    fun `Save dialog Escape cancels and tracks dialog_cancelled with input_method keyboard`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         val recording = RecordingAnalyticsService()
         val analytics = InputMethodAnalyticsService(recording, inputMethod = "keyboard")
@@ -96,7 +96,7 @@ class TuiViewKeyboardDialogTest {
     }
 
     @Test
-    fun `pressing Enter with an empty name in the Save dialog cancels instead of looping forever`() = runTestBlocking {
+    fun `pressing Enter with an empty name in the Save dialog cancels instead of looping forever`(): Unit = runBlocking {
         // No Tab - focus stays on the text field, so Enter goes through the Submit path
         // (as opposed to clicking the Save button with an empty field, already covered on the
         // mouse side by TuiViewDialogTest).
@@ -112,7 +112,7 @@ class TuiViewKeyboardDialogTest {
     }
 
     @Test
-    fun `Down on the Load dialog moves selection off the first (alphabetically first) row`() = runTestBlocking {
+    fun `Down on the Load dialog moves selection off the first (alphabetically first) row`(): Unit = runBlocking {
         val fooBoard = storage.SavedBoard(4, IntArray(16) { it })
         val barBoard = storage.SavedBoard(4, IntArray(16) { it + 1 })
         // listSaves() returns names sorted, so "bar" is row 0 (selected by default) and "foo" is
@@ -135,7 +135,7 @@ class TuiViewKeyboardDialogTest {
     }
 
     @Test
-    fun `Load dialog with no saves can only be cancelled`() = runTestBlocking {
+    fun `Load dialog with no saves can only be cancelled`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         val board = FakeBoardModel()
         val terminal = FakeTerminal(
@@ -150,7 +150,7 @@ class TuiViewKeyboardDialogTest {
     }
 
     @Test
-    fun `Exit dialog Yes opens the Save dialog (focus starts there), then saving quits`() = runTestBlocking {
+    fun `Exit dialog Yes opens the Save dialog (focus starts there), then saving quits`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         val board = FakeBoardModel()
         val analytics = RecordingAnalyticsService()
@@ -177,7 +177,7 @@ class TuiViewKeyboardDialogTest {
     }
 
     @Test
-    fun `Exit dialog Escape cancels and keeps playing`() = runTestBlocking {
+    fun `Exit dialog Escape cancels and keeps playing`(): Unit = runBlocking {
         val analytics = RecordingAnalyticsService()
         val terminal = FakeTerminal(
             events = mutableListOf(TerminalEvent.Escape, TerminalEvent.Escape),
@@ -192,7 +192,7 @@ class TuiViewKeyboardDialogTest {
     }
 
     @Test
-    fun `startup restore dialog - Tab to Load, Enter restores the one save on offer`() = runTestBlocking {
+    fun `startup restore dialog - Tab to Load, Enter restores the one save on offer`(): Unit = runBlocking {
         val saved = storage.SavedBoard(4, IntArray(16) { it })
         val saves = FakeSaveRepository(mutableMapOf("foo" to saved))
         val board = FakeBoardModel()

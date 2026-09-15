@@ -6,7 +6,7 @@ import testing.FakeSaveRepository
 import testing.FakeView
 import testing.RecordingAnalyticsService
 import testing.TestPresenter
-import testing.runTestBlocking
+import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -16,7 +16,7 @@ import kotlin.test.assertTrue
 class BasePresenterSaveLoadTest {
 
     @Test
-    fun `saveGame creates a new file when none exists`() = runTestBlocking {
+    fun `saveGame creates a new file when none exists`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(1, 0, 3, 2)) }
@@ -41,7 +41,7 @@ class BasePresenterSaveLoadTest {
     }
 
     @Test
-    fun `saveGame overwrites an existing file`() = runTestBlocking {
+    fun `saveGame overwrites an existing file`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         saves.save("foo", intArrayOf(0, 1, 2, 3), 2)
         val analytics = RecordingAnalyticsService()
@@ -63,7 +63,7 @@ class BasePresenterSaveLoadTest {
     }
 
     @Test
-    fun `saveGame surfaces a message and tracks result=error instead of crashing when the repository throws`() = runTestBlocking {
+    fun `saveGame surfaces a message and tracks result=error instead of crashing when the repository throws`(): Unit = runBlocking {
         val saves = FakeSaveRepository().apply { saveException = IllegalArgumentException("Save name must not be blank") }
         val analytics = RecordingAnalyticsService()
         val view = FakeView()
@@ -80,7 +80,7 @@ class BasePresenterSaveLoadTest {
     }
 
     @Test
-    fun `loadGame restores the board on a known save name`() = runTestBlocking {
+    fun `loadGame restores the board on a known save name`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         saves.save("foo", intArrayOf(3, 2, 1, 0), 2)
         val analytics = RecordingAnalyticsService()
@@ -97,7 +97,7 @@ class BasePresenterSaveLoadTest {
     }
 
     @Test
-    fun `loadGame leaves the board unchanged on an unknown save name`() = runTestBlocking {
+    fun `loadGame leaves the board unchanged on an unknown save name`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         saves.save("bar", intArrayOf(3, 2, 1, 0), 2)
         val analytics = RecordingAnalyticsService()
@@ -116,7 +116,7 @@ class BasePresenterSaveLoadTest {
     }
 
     @Test
-    fun `loadGame with no saves at all still messages cleanly`() = runTestBlocking {
+    fun `loadGame with no saves at all still messages cleanly`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         val view = FakeView()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
@@ -128,7 +128,7 @@ class BasePresenterSaveLoadTest {
     }
 
     @Test
-    fun `loadGame surfaces a message and tracks result=size_mismatch when the save's board size differs`() = runTestBlocking {
+    fun `loadGame surfaces a message and tracks result=size_mismatch when the save's board size differs`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         saves.save("small", intArrayOf(0, 1, 2, 3), 2)
         val analytics = RecordingAnalyticsService()
@@ -147,7 +147,7 @@ class BasePresenterSaveLoadTest {
     }
 
     @Test
-    fun `loadGame still reports not_found, with a degraded message, when listing available saves fails`() = runTestBlocking {
+    fun `loadGame still reports not_found, with a degraded message, when listing available saves fails`(): Unit = runBlocking {
         // Regression guard: the not_found branch's availableSavesMessage() call can throw
         // (e.g. an unreadable saves/ directory) independently of saves.load() itself - that
         // shouldn't turn an actual not_found result into a spurious second "error" event
@@ -171,7 +171,7 @@ class BasePresenterSaveLoadTest {
     }
 
     @Test
-    fun `loadGame surfaces a message and tracks result=error instead of crashing on a corrupted save file`() = runTestBlocking {
+    fun `loadGame surfaces a message and tracks result=error instead of crashing on a corrupted save file`(): Unit = runBlocking {
         val saves = FakeSaveRepository().apply {
             loadException = SaveFileFormatException("corrupt", "missing board values")
         }

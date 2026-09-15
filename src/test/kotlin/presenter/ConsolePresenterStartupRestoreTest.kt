@@ -7,7 +7,7 @@ import testing.FakeSaveRepository
 import testing.FakeView
 import testing.RecordingAnalyticsService
 import testing.RecordingAnalyticsService.Event
-import testing.runTestBlocking
+import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -25,7 +25,7 @@ class ConsolePresenterStartupRestoreTest {
     private val fourByFour = IntArray(16) { it }
 
     @Test
-    fun `no saves - starts a new game immediately, no prompt`() = runTestBlocking {
+    fun `no saves - starts a new game immediately, no prompt`(): Unit = runBlocking {
         val board = FakeBoardModel().apply { correct = true }
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
@@ -41,7 +41,7 @@ class ConsolePresenterStartupRestoreTest {
     }
 
     @Test
-    fun `exactly one save, user confirms - restores it`() = runTestBlocking {
+    fun `exactly one save, user confirms - restores it`(): Unit = runBlocking {
         val board = FakeBoardModel().apply { correct = true }
         val savedState = intArrayOf(3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12)
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, savedState)))
@@ -64,7 +64,7 @@ class ConsolePresenterStartupRestoreTest {
     }
 
     @Test
-    fun `exactly one save, user declines - starts a new game`() = runTestBlocking {
+    fun `exactly one save, user declines - starts a new game`(): Unit = runBlocking {
         val board = FakeBoardModel().apply { correct = true }
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, fourByFour)))
         val analytics = RecordingAnalyticsService()
@@ -84,7 +84,7 @@ class ConsolePresenterStartupRestoreTest {
     }
 
     @Test
-    fun `two or more saves, exact name typed - restores it`() = runTestBlocking {
+    fun `two or more saves, exact name typed - restores it`(): Unit = runBlocking {
         val board = FakeBoardModel().apply { correct = true }
         val barState = intArrayOf(3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12)
         val saves = FakeSaveRepository(
@@ -112,7 +112,7 @@ class ConsolePresenterStartupRestoreTest {
     }
 
     @Test
-    fun `two or more saves, blank input - starts a new game`() = runTestBlocking {
+    fun `two or more saves, blank input - starts a new game`(): Unit = runBlocking {
         val board = FakeBoardModel().apply { correct = true }
         val saves = FakeSaveRepository(
             mutableMapOf(
@@ -137,7 +137,7 @@ class ConsolePresenterStartupRestoreTest {
     }
 
     @Test
-    fun `two or more saves, unknown name re-prompts instead of falling back`() = runTestBlocking {
+    fun `two or more saves, unknown name re-prompts instead of falling back`(): Unit = runBlocking {
         val board = FakeBoardModel().apply { correct = true }
         val barState = intArrayOf(3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12)
         val saves = FakeSaveRepository(
@@ -162,7 +162,7 @@ class ConsolePresenterStartupRestoreTest {
     }
 
     @Test
-    fun `EOF at the startup prompt starts a new game, same as a decline - real EOF translation is covered in ViewImplCommandTest`() = runTestBlocking {
+    fun `EOF at the startup prompt starts a new game, same as a decline - real EOF translation is covered in ViewImplCommandTest`(): Unit = runBlocking {
         // BasePresenter only ever sees the sentinel View.confirmRestore/chooseSaveToRestore
         // return for EOF (false/null) - identical to a clean decline/blank answer, since the
         // actual EOF-vs-decline distinction is made inside ViewImpl (see
@@ -186,7 +186,7 @@ class ConsolePresenterStartupRestoreTest {
     }
 
     @Test
-    fun `a save picked at startup that fails to load is reported as new_game, not restored`() = runTestBlocking {
+    fun `a save picked at startup that fails to load is reported as new_game, not restored`(): Unit = runBlocking {
         // Simulates a save deleted or corrupted between listSaves() and load() - e.g. another
         // process touched the saves/ directory between the two calls (audit finding on PR #14).
         val board = FakeBoardModel().apply { correct = true }
@@ -210,7 +210,7 @@ class ConsolePresenterStartupRestoreTest {
     }
 
     @Test
-    fun `an unknown name typed with two or more saves shows a message before re-prompting`() = runTestBlocking {
+    fun `an unknown name typed with two or more saves shows a message before re-prompting`(): Unit = runBlocking {
         val board = FakeBoardModel().apply { correct = true }
         val saves = FakeSaveRepository(
             mutableMapOf(

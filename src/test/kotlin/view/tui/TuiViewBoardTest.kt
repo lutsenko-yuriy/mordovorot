@@ -2,7 +2,7 @@ package view.tui
 
 import testing.FakeTuiPresenter
 import testing.FakeTerminal
-import testing.runTestBlocking
+import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -23,7 +23,7 @@ class TuiViewBoardTest {
         TuiView.create(terminal) { presenter }
 
     @Test
-    fun `clicking a row's left or right arrow calls shiftLeft or shiftRight with the 0-based row`() = runTestBlocking {
+    fun `clicking a row's left or right arrow calls shiftLeft or shiftRight with the 0-based row`(): Unit = runBlocking {
         val presenter = FakeTuiPresenter()
         val layout = layoutFor(presenter)
         val (lx, ly) = layout.leftArrowPosition(1)
@@ -40,7 +40,7 @@ class TuiViewBoardTest {
     }
 
     @Test
-    fun `clicking a column's up or down arrow calls shiftUp or shiftDown with the 0-based column`() = runTestBlocking {
+    fun `clicking a column's up or down arrow calls shiftUp or shiftDown with the 0-based column`(): Unit = runBlocking {
         val presenter = FakeTuiPresenter()
         val layout = layoutFor(presenter)
         val (ux, uy) = layout.upArrowPosition(2)
@@ -57,7 +57,7 @@ class TuiViewBoardTest {
     }
 
     @Test
-    fun `the board repaints after every click`() = runTestBlocking {
+    fun `the board repaints after every click`(): Unit = runBlocking {
         val presenter = FakeTuiPresenter()
         val layout = layoutFor(presenter)
         val (lx, ly) = layout.leftArrowPosition(0)
@@ -73,7 +73,7 @@ class TuiViewBoardTest {
     }
 
     @Test
-    fun `a click on dead space makes no presenter call`() = runTestBlocking {
+    fun `a click on dead space makes no presenter call`(): Unit = runBlocking {
         val presenter = FakeTuiPresenter()
         val layout = layoutFor(presenter)
         val (lx, ly) = layout.leftArrowPosition(0)
@@ -89,7 +89,7 @@ class TuiViewBoardTest {
     }
 
     @Test
-    fun `EndOfInput from the terminal ends the loop cleanly`() = runTestBlocking {
+    fun `EndOfInput from the terminal ends the loop cleanly`(): Unit = runBlocking {
         val presenter = FakeTuiPresenter()
         val terminal = FakeTerminal(events = mutableListOf(), terminalSize = terminalSize)
 
@@ -100,7 +100,7 @@ class TuiViewBoardTest {
     }
 
     @Test
-    fun `a solved board disables the shift arrows and shows the Congratulations title`() = runTestBlocking {
+    fun `a solved board disables the shift arrows and shows the Congratulations title`(): Unit = runBlocking {
         // Confirmed product decision: once solved, the arrows go dead - Ctrl+C is the only way
         // out until WU4/5 add a live toolbar/Congratulations screen to replace them. An earlier
         // audit-driven attempt to keep the arrows live instead (rounds 2/3 on PR #22) was a
@@ -118,7 +118,7 @@ class TuiViewBoardTest {
     }
 
     @Test
-    fun `play enters raw mode and mouse reporting before reading any event, and restores on the way out`() = runTestBlocking {
+    fun `play enters raw mode and mouse reporting before reading any event, and restores on the way out`(): Unit = runBlocking {
         val presenter = FakeTuiPresenter()
         val terminal = FakeTerminal(events = mutableListOf(), terminalSize = terminalSize)
 
