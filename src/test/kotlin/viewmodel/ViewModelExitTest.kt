@@ -59,7 +59,7 @@ class ViewModelExitTest {
         val (name, state, squareSide) = saves.saveCalls[0]
         assertEquals("foo", name)
         assertEquals(board.boardArray.toList(), state.toList())
-        assertEquals(board.SQUARE_SIDE, squareSide)
+        assertEquals(board.squareSide, squareSide)
         assertEquals(
             listOf(
                 Event("save_command_used", mapOf("result" to "success", "overwrote_existing" to false)),

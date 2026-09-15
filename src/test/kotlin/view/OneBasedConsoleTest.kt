@@ -67,7 +67,7 @@ class OneBasedConsoleTest {
     }
 
     @Test
-    fun `left SQUARE_SIDE+1 leaves the board untouched and surfaces Incorrect row`(): Unit = runBlocking {
+    fun `left squareSide+1 leaves the board untouched and surfaces Incorrect row`(): Unit = runBlocking {
         val (view, board, _) = stackWith("left 5\n")
 
         val error = assertFailsWith<IllegalArgumentException> { view.processCommand() }
@@ -87,7 +87,7 @@ class OneBasedConsoleTest {
     }
 
     @Test
-    fun `up SQUARE_SIDE+1 surfaces Incorrect column`(): Unit = runBlocking {
+    fun `up squareSide+1 surfaces Incorrect column`(): Unit = runBlocking {
         val (view, board, _) = stackWith("up 5\n")
 
         val error = assertFailsWith<IllegalArgumentException> { view.processCommand() }
@@ -100,7 +100,7 @@ class OneBasedConsoleTest {
     fun `the rendered board and left 1's target row agree on the same first row`(): Unit = runBlocking {
         val (view, board, output) = stackWith("left 1\n")
 
-        view.displayBoard(board.boardArray, board.SQUARE_SIDE)
+        view.displayBoard(board.boardArray, board.squareSide)
         view.processCommand()
 
         val nl = System.lineSeparator()

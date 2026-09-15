@@ -67,7 +67,7 @@ class ViewModelImpl(
         // instead of silently missing from save_command_used (audit finding on PR #13).
         try {
             val existed = saves.exists(name)
-            saves.save(name, board.boardArray, board.SQUARE_SIDE)
+            saves.save(name, board.boardArray, board.squareSide)
             analytics.track("save_command_used", mapOf("result" to "success", "overwrote_existing" to existed))
             showMessage("Saved as '$name'.")
             return true
@@ -108,11 +108,11 @@ class ViewModelImpl(
                 showMessage("No save named '$name'. ${availableSavesMessage()}")
                 return false
             }
-            if (saved.squareSide != board.SQUARE_SIDE) {
+            if (saved.squareSide != board.squareSide) {
                 analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "size_mismatch"))
                 showMessage(
                     "Save '$name' is a ${saved.squareSide}x${saved.squareSide} board and can't be loaded onto " +
-                        "this ${board.SQUARE_SIDE}x${board.SQUARE_SIDE} board."
+                        "this ${board.squareSide}x${board.squareSide} board."
                 )
                 return false
             }
@@ -274,5 +274,5 @@ class ViewModelImpl(
     // shiftLeft/Right/Up/Down (audit finding on PR #22).
     override fun boardState(): IntArray = board.boardArray.copyOf()
 
-    override fun squareSide(): Int = board.SQUARE_SIDE
+    override fun squareSide(): Int = board.squareSide
 }

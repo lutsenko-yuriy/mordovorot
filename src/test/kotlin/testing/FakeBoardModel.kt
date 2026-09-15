@@ -8,12 +8,12 @@ import board_model.BoardModel
  * delegates correctly without depending on real board logic.
  */
 class FakeBoardModel(
-    squareSide: Int = 4,
-    override var boardArray: IntArray = IntArray(squareSide * squareSide) { it },
+    initialSquareSide: Int = 4,
+    override var boardArray: IntArray = IntArray(initialSquareSide * initialSquareSide) { it },
 ) : BoardModel {
 
     /** Settable, unlike the constructor param it starts from - [newGame] changes it (GH-44). */
-    override var SQUARE_SIDE: Int = squareSide
+    override var squareSide: Int = initialSquareSide
 
     val calls = mutableListOf<String>()
 
@@ -35,16 +35,16 @@ class FakeBoardModel(
     override fun newGame(side: Int) {
         newGameException?.let { throw it }
         calls.add("newGame($side)")
-        SQUARE_SIDE = side
+        squareSide = side
         boardArray = IntArray(side * side) { it }
     }
 
     override fun restoreState(state: IntArray) {
         // Mirrors BoardImpl's own validation (audit finding on PR #46) - without it, a
-        // mis-sized fixture leaves a fake board whose array doesn't match SQUARE_SIDE, and
+        // mis-sized fixture leaves a fake board whose array doesn't match squareSide, and
         // ViewImpl.play()'s displayBoard call throws every iteration with nothing consuming
         // input to ever reach EOF - an unbounded loop instead of a readable test failure.
-        require(state.size == SQUARE_SIDE * SQUARE_SIDE) { "Expected ${SQUARE_SIDE * SQUARE_SIDE} values, got ${state.size}" }
+        require(state.size == squareSide * squareSide) { "Expected ${squareSide * squareSide} values, got ${state.size}" }
         require(state.toSet() == (0 until state.size).toSet()) { "Board state must contain each of ${state.size} tile values exactly once" }
         calls.add("restoreState(${state.toList()})")
         boardArray = state

@@ -88,7 +88,7 @@ class ViewImplCommandTest {
 
         view.processCommand()
 
-        // Int.MIN_VALUE - 1 wraps to Int.MAX_VALUE - still far outside 0 until SQUARE_SIDE.
+        // Int.MIN_VALUE - 1 wraps to Int.MAX_VALUE - still far outside 0 until squareSide.
         assertEquals(listOf("shiftLeft(${Int.MAX_VALUE})"), viewModel.calls)
     }
 

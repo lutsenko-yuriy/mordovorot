@@ -13,7 +13,7 @@ class BoardImplNewGameTest {
 
         board.newGame(3)
 
-        assertEquals(3, board.SQUARE_SIDE)
+        assertEquals(3, board.squareSide)
         assertEquals(9, board.boardArray.size)
         assertEquals((0..8).toList(), board.boardArray.sorted())
     }
@@ -24,7 +24,7 @@ class BoardImplNewGameTest {
 
         board.newGame(5)
 
-        assertEquals(5, board.SQUARE_SIDE)
+        assertEquals(5, board.squareSide)
         assertEquals(25, board.boardArray.size)
         assertEquals((0..24).toList(), board.boardArray.sorted())
     }
@@ -46,7 +46,7 @@ class BoardImplNewGameTest {
 
         assertFailsWith<IllegalArgumentException> { board.newGame(2) }
 
-        assertEquals(4, board.SQUARE_SIDE)
+        assertEquals(4, board.squareSide)
         assertEquals(before, board.boardArray.toList())
     }
 
@@ -57,7 +57,7 @@ class BoardImplNewGameTest {
 
         assertFailsWith<IllegalArgumentException> { board.newGame(6) }
 
-        assertEquals(4, board.SQUARE_SIDE)
+        assertEquals(4, board.squareSide)
         assertEquals(before, board.boardArray.toList())
     }
 
@@ -68,7 +68,7 @@ class BoardImplNewGameTest {
 
         board.resetGame()
 
-        assertEquals(3, board.SQUARE_SIDE)
+        assertEquals(3, board.squareSide)
         assertEquals(9, board.boardArray.size)
     }
 
