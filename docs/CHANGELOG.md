@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.7.0] — 2026-09-15 (PR #40 merged)
+
+### Added
+- [app] GH-30 (WU4/4): keyboard mode's F7/F8 function keys request a runtime switch to mouse/console mode, mirroring the mouse toolbar's `[Mouse F7]`/`[Console F8]` row (added in WU3) and reaching the same injected `ModeSwitcher`. Both stay live even when solved, matching F5/F6/Escape. `TerminalInputParser` decodes `ESC[19~` as the new `FunctionKey(8)`. This completes GH-30: from console, mouse, or keyboard mode, the player can switch to any other mode mid-game — via console `mouse`/`keyboard` commands (WU2), the mouse toolbar's mode row (WU3), or keyboard F7/F8 (WU4) — without losing the board.
+
 ## [0.6.3] — 2026-09-15 (PR #38 merged)
 
 ### Changed
