@@ -42,6 +42,9 @@ class BoardLayoutTest {
     fun `hit-tests each toolbar button`() {
         val layout = BoardLayout(ampleTerminal, squareSide = 4)
 
+        val (newX, newY) = layout.newButtonPosition()
+        assertEquals(HitTarget.ToolbarNew, layout.hitTest(newX, newY))
+
         val (saveX, saveY) = layout.saveButtonPosition()
         assertEquals(HitTarget.ToolbarSave, layout.hitTest(saveX, saveY))
 
@@ -94,6 +97,9 @@ class BoardLayoutTest {
     fun `toolbarShortcuts hit-tests the wider F-key labels at the coordinates the renderer draws them`() {
         val layout = BoardLayout(ampleTerminal, squareSide = 4, toolbarShortcuts = true)
 
+        val (newX, newY) = layout.newButtonPosition()
+        assertEquals(HitTarget.ToolbarNew, layout.hitTest(newX, newY))
+
         val (saveX, saveY) = layout.saveButtonPosition()
         assertEquals(HitTarget.ToolbarSave, layout.hitTest(saveX, saveY))
 
@@ -116,13 +122,15 @@ class BoardLayoutTest {
 
         val buttons = layout.toolbarButtons()
         assertEquals(
-            listOf(HitTarget.ToolbarSave, HitTarget.ToolbarLoad, HitTarget.ToolbarExit, HitTarget.ToolbarMode(InputMode.KEYBOARD), HitTarget.ToolbarMode(InputMode.CONSOLE)),
+            listOf(HitTarget.ToolbarNew, HitTarget.ToolbarSave, HitTarget.ToolbarLoad, HitTarget.ToolbarExit, HitTarget.ToolbarMode(InputMode.KEYBOARD), HitTarget.ToolbarMode(InputMode.CONSOLE)),
             buttons.map { it.target },
         )
-        val (save, load, exit, keyboard, console) = buttons
+        val (new, save, load, exit) = buttons
+        assertEquals(layout.toolbarRow, new.y)
         assertEquals(layout.toolbarRow, save.y)
         assertEquals(layout.toolbarRow, load.y)
         assertEquals(layout.toolbarRow, exit.y)
+        val (keyboard, console) = buttons.drop(4)
         assertEquals(layout.modeRow, keyboard.y)
         assertEquals(layout.modeRow, console.y)
         for (button in buttons) assertEquals(button.target, layout.hitTest(button.range.first, button.y))

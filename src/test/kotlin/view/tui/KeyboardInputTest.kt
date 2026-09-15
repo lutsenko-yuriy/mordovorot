@@ -61,6 +61,14 @@ class KeyboardInputTest {
     }
 
     @Test
+    fun `F9 activates the New toolbar button (GH-44 WU3)`() {
+        val input = KeyboardInput()
+        input.decorateBoard(unsolvedBoard())
+
+        assertEquals(InputAction.Activate(HitTarget.ToolbarNew), input.onBoardEvent(TerminalEvent.FunctionKey(9), boardLayout))
+    }
+
+    @Test
     fun `EndOfInput quits, an unrelated key is None`() {
         val input = KeyboardInput()
         input.decorateBoard(unsolvedBoard())
@@ -81,6 +89,9 @@ class KeyboardInputTest {
         // F7/F8's mode-switch requests, unlike arrows/Enter, stay live even when solved (GH-30).
         assertEquals(InputAction.Activate(HitTarget.ToolbarMode(InputMode.MOUSE)), input.onBoardEvent(TerminalEvent.FunctionKey(7), boardLayout))
         assertEquals(InputAction.Activate(HitTarget.ToolbarMode(InputMode.CONSOLE)), input.onBoardEvent(TerminalEvent.FunctionKey(8), boardLayout))
+        // F9's New-game dialog also stays live once solved (GH-44 WU3) - it starts a fresh game,
+        // same reasoning as F5/F6/F7/F8 never going dead.
+        assertEquals(InputAction.Activate(HitTarget.ToolbarNew), input.onBoardEvent(TerminalEvent.FunctionKey(9), boardLayout))
     }
 
     @Test
@@ -93,7 +104,7 @@ class KeyboardInputTest {
         val solved = input.decorateBoard(solvedBoard())
         assertNull(solved.cursor)
         assertEquals(true, solved.toolbarShortcuts)
-        assertEquals("Arrows: move · Enter: shift · F5/F6 Save/Load · F7/F8 Mouse/Console · Esc Exit", solved.controlsHint)
+        assertEquals("Arrows: move · Enter: shift · F5/F6/F9 Save/Load/New · F7/F8 Mouse/Console · Esc", solved.controlsHint)
         assertEquals(listOf(InputMode.MOUSE, InputMode.CONSOLE), solved.modeButtons)
     }
 
@@ -116,6 +127,33 @@ class KeyboardInputTest {
         input.decorateBoard(solvedBoard())
 
         assertEquals(ArrowCursor(Edge.LEFT, 0), input.decorateBoard(unsolvedBoard()).cursor)
+    }
+
+    @Test
+    fun `the cursor resets to LEFT-0 when squareSide changes, even mid-game (GH-44 WU3)`() {
+        // A cursor left over from a larger board (e.g. LEFT[4] on a 5x5 board) is out of range
+        // the moment [ New ]/`size <N>` starts a fresh game at a smaller side (3x3 here) -
+        // unlike the solved/unsolved transition above, this can happen while arrowsEnabled never
+        // toggles at all.
+        val input = KeyboardInput()
+        input.decorateBoard(unsolvedBoard(squareSide = 5))
+        repeat(4) { input.onBoardEvent(TerminalEvent.Arrow(Direction.DOWN), boardLayout) } // LEFT[0] -> LEFT[4]
+        assertEquals(ArrowCursor(Edge.LEFT, 4), input.decorateBoard(unsolvedBoard(squareSide = 5)).cursor)
+
+        val decorated = input.decorateBoard(unsolvedBoard(squareSide = 3))
+
+        assertEquals(ArrowCursor(Edge.LEFT, 0), decorated.cursor)
+    }
+
+    @Test
+    fun `the cursor is left alone across an ordinary repaint at the same squareSide`() {
+        val input = KeyboardInput()
+        input.decorateBoard(unsolvedBoard())
+        input.onBoardEvent(TerminalEvent.Arrow(Direction.DOWN), boardLayout) // moves off LEFT[0]
+
+        val decorated = input.decorateBoard(unsolvedBoard())
+
+        assertEquals(ArrowCursor(Edge.LEFT, 1), decorated.cursor)
     }
 
     private fun saveDialog(typed: String = "") = Dialog(

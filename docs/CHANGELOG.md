@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.7.7] — 2026-09-16 (PR #53 merged)
+
+### Added
+- [wip] GH-44 (WU3/5): `size <N>` console command and the TUI `[ New ]` toolbar button/F9 shortcut - both start a fresh game at a chosen size (3-5) mid-session, opening the same size picker the startup prompt uses. Keyboard-mode arrow cursor now resets when the board's side changes mid-session. Still no save-size visibility in the restore/Load prompts, and a size-mismatched load still gets rejected rather than auto-resized - those land in WU4/WU5.
+
 ## [0.7.6] — 2026-09-15 (PR #52 merged)
 
 ### Added

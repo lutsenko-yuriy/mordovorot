@@ -151,10 +151,20 @@ class ViewImplPlayTest {
 
     @Test
     fun `size command with an out-of-range value shows a rejection message and the game keeps playing at the current size`(): Unit = runBlocking {
-        // TODO: Feed "size 9\nleft 1\n" to a real ViewImpl + ViewModelImpl (GH-44).
-        // TODO: Call play().
-        // TODO: Verify the output contains a rejection message.
-        // TODO: Verify the loop kept going - the subsequent "left 1" was still processed.
+        // FakeBoardModel itself doesn't validate the side - newGameException stands in for
+        // BoardImpl's real BoardSize.require throw (GH-44), same as shiftLeftException stands
+        // in for shiftLeft's own real out-of-range check elsewhere in this file.
+        val fakeBoard = FakeBoardModel()
+        fakeBoard.newGameException = IllegalArgumentException("Board size must be between 3 and 5, got 9")
+        val viewModel = ViewModelImpl(fakeBoard, sizeChosenAtLaunch = true)
+        val (view, output) = viewWith("size 9\nleft 1\n", viewModel)
+
+        view.play()
+
+        assertTrue(output.toString().contains("Board size must be between 3 and 5, got 9"))
+        // The loop kept going past the rejected size - the subsequent "left 1" still reached
+        // the board, at whatever size it was left at.
+        assertEquals(listOf("shiftLeft(0)"), fakeBoard.calls)
     }
 
     @Test

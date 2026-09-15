@@ -28,6 +28,27 @@ class ScreenRendererTest {
     }
 
     @Test
+    fun `a 3x3 and a 5x5 board render at their own grid width with the matching arrow count (GH-44)`() {
+        // The rendering geometry (BoardLayout/ScreenRenderer) is parametrized on squareSide
+        // already, but every other test in this file pins it at the 4x4 default - this is the
+        // one regression check that the 3-5 range promised by BoardSize actually renders.
+        for (side in listOf(3, 5)) {
+            val state = ScreenState.forBoard(board = (0 until side * side).toList(), squareSide = side, solved = false)
+            val layout = BoardLayout(terminalSize, side)
+
+            val frame = renderer.render(state, terminalSize)
+
+            for (value in 1..(side * side)) assertTrue(frame.contains(value.toString()), "expected tile value $value in the ${side}x$side frame")
+            // Grid width scales with squareSide (CELL_WIDTH=4 per column plus one border char).
+            assertEquals(side * CELL_WIDTH + (side + 1), layout.gridWidth)
+            for (row in 0 until side) {
+                assertEquals(HitTarget.ShiftLeft(row), layout.hitTest(layout.leftArrowPosition(row).first, layout.leftArrowPosition(row).second))
+                assertEquals(HitTarget.ShiftRight(row), layout.hitTest(layout.rightArrowPosition(row).first, layout.rightArrowPosition(row).second))
+            }
+        }
+    }
+
+    @Test
     fun `default title renders Mordovorot`() {
         val state = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false)
 
@@ -157,12 +178,13 @@ class ScreenRendererTest {
         assertFalse(renderer.render(plain, terminalSize).contains("[96m"))
 
         val shortcutFrame = renderer.render(shortcuts, terminalSize)
+        assertTrue(shortcutFrame.contains("[New F9]"))
         assertTrue(shortcutFrame.contains("[Save F5]"))
         assertTrue(shortcutFrame.contains("[Load F6]"))
         assertTrue(shortcutFrame.contains("[Exit ESC]"))
-        // One matched on/off pair per button.
-        assertEquals(3, Regex(Regex.escape("[96m")).findAll(shortcutFrame).count())
-        assertEquals(3, Regex(Regex.escape("[39m")).findAll(shortcutFrame).count())
+        // One matched on/off pair per button - New/Save/Load/Exit (GH-44 WU3 added New).
+        assertEquals(4, Regex(Regex.escape("[96m")).findAll(shortcutFrame).count())
+        assertEquals(4, Regex(Regex.escape("[39m")).findAll(shortcutFrame).count())
     }
 
     @Test

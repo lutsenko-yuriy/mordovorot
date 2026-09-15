@@ -68,6 +68,7 @@ class BoardLayout(
     fun saveButtonPosition(): Pair<Int, Int> = buttonPosition(HitTarget.ToolbarSave)
     fun loadButtonPosition(): Pair<Int, Int> = buttonPosition(HitTarget.ToolbarLoad)
     fun exitButtonPosition(): Pair<Int, Int> = buttonPosition(HitTarget.ToolbarExit)
+    fun newButtonPosition(): Pair<Int, Int> = buttonPosition(HitTarget.ToolbarNew)
 
     /** Looks a button up by target rather than a fixed index or row - defensive against either
      *  moving again (GH-30's mode buttons already moved once, off the toolbar row entirely). */
@@ -94,15 +95,25 @@ class BoardLayout(
     private fun contentRowY(row: Int) = gridTop + 1 + 2 * row
     private fun cellCenterX(col: Int) = gridLeft + 1 + col * (CELL_WIDTH + 1) + CELL_WIDTH / 2
 
-    /** [toolbarRow]'s Save/Load/Exit buttons plus [modeRow]'s mode-switch buttons, each row
+    /** [toolbarRow]'s New/Save/Load/Exit buttons plus [modeRow]'s mode-switch buttons, each row
      *  independently centered - shared by [hitTest] (via [ToolbarButton.range]/[ToolbarButton.y])
      *  and [ScreenRenderer] (via [ToolbarButton.text]). Internal, not private, so [ScreenRenderer]
      *  can draw exactly what's clickable. */
     internal fun toolbarButtons(): List<ToolbarButton> {
         val primary = if (toolbarShortcuts) {
-            listOf(HitTarget.ToolbarSave to "[Save F5]", HitTarget.ToolbarLoad to "[Load F6]", HitTarget.ToolbarExit to "[Exit ESC]")
+            listOf(
+                HitTarget.ToolbarNew to "[New F9]",
+                HitTarget.ToolbarSave to "[Save F5]",
+                HitTarget.ToolbarLoad to "[Load F6]",
+                HitTarget.ToolbarExit to "[Exit ESC]",
+            )
         } else {
-            listOf(HitTarget.ToolbarSave to "[ Save ]", HitTarget.ToolbarLoad to "[ Load ]", HitTarget.ToolbarExit to "[ Exit ]")
+            listOf(
+                HitTarget.ToolbarNew to "[ New ]",
+                HitTarget.ToolbarSave to "[ Save ]",
+                HitTarget.ToolbarLoad to "[ Load ]",
+                HitTarget.ToolbarExit to "[ Exit ]",
+            )
         }
         val modeEntries = modeButtons.map { HitTarget.ToolbarMode(it) to modeButtonLabel(it, toolbarShortcuts) }
         return layoutRow(primary, toolbarRow) + layoutRow(modeEntries, modeRow)

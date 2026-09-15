@@ -26,6 +26,11 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
 - `mouse`/`keyboard` switch to that TUI mode without losing the current game (GH-30). If there's
   no interactive terminal to switch into, the command is rejected with an on-screen message and
   play continues in console mode.
+- `size <N>` starts a fresh game at board side `N` (3-5), the same as the startup size prompt
+  but mid-session (GH-44). `N` is a plain integer, not the 1-based row/column dialect the shift
+  commands use. A missing or non-numeric argument is rejected the same way an out-of-range shift
+  index is; an out-of-range `N` (e.g. `size 9`) is rejected with a message naming the valid range
+  instead of starting a new game.
 
 ### Feature 4 — Save and load (GH-6)
 - `save <file-name>` stores the board's current tile arrangement to a local file, creating it
@@ -77,11 +82,13 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
 
 ### Feature 6 — Mouse-driven TUI (GH-3)
 - On launch, the app runs a mouse-clickable terminal UI by default: a centered board with
-  `◀`/`▶`/`▲`/`▼` arrows at the ends of each row/column, a toolbar (`[ Save ] [ Load ] [ Exit ]`)
-  below it, and a second row below that (`[ Keyboard ] [ Console ]`) for switching input mode
-  without losing the current game (GH-30) - the same behavior as the console's `mouse`/`keyboard`
-  commands. Clicking an arrow shifts that row/column the same as the console's
-  `left`/`right`/`up`/`down` commands; every click repaints the whole screen.
+  `◀`/`▶`/`▲`/`▼` arrows at the ends of each row/column, a toolbar
+  (`[ New ] [ Save ] [ Load ] [ Exit ]`) below it, and a second row below that
+  (`[ Keyboard ] [ Console ]`) for switching input mode without losing the current game (GH-30) -
+  the same behavior as the console's `mouse`/`keyboard` commands. Clicking an arrow shifts that
+  row/column the same as the console's `left`/`right`/`up`/`down` commands; every click repaints
+  the whole screen. `[ New ]` (GH-44) opens the same size-picker dialog as the startup prompt and
+  starts a fresh game at whichever size is chosen; Cancel leaves the current game untouched.
 - `--console` forces the line-based console interaction (Features 1-5) instead. Launching
   without an interactive terminal (e.g. piped/scripted input) falls back to console mode
   automatically, since mouse mode has no terminal to click in.
@@ -101,7 +108,7 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
   game?") regardless of how many saves there are — the console's one-save-yes/no vs.
   two-or-more-saves-list split (Feature 4) doesn't apply here; Cancel starts a new game.
 - **Solved state:** once the board is solved, the title switches to `Congratulations ✓`, the
-  shift arrows are shown dimmed and stop responding to clicks, and the toolbar (Save/Load/Exit)
+  shift arrows are shown dimmed and stop responding to clicks, and the toolbar (New/Save/Load/Exit)
   stays fully clickable. Loading a different, unsolved save from the Congratulations screen
   brings the arrows and title straight back — the screen doesn't need a fresh launch or a
   separate "keep playing" action.
@@ -116,11 +123,11 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
   arrow is highlighted, same effect as clicking it. Once solved, the cursor disappears and arrow
   keys/Enter go inert, matching the mouse mode's dimmed-arrows behavior.
 - **Toolbar shortcuts**, shown in light blue on the toolbar buttons — including a second row
-  below `[ Save ] [ Load ] [ Exit ]` for `[Mouse F7]`/`[Console F8]` (GH-30), mirroring the mouse
-  mode's `[ Keyboard ] [ Console ]` row — and always live regardless of cursor position or solved
-  state: **F5** opens Save, **F6** opens Load, **F7** switches to mouse mode, **F8** switches to
-  console mode, and **Escape** opens the Exit dialog. A controls-hint line below the toolbar
-  spells these out in plain text.
+  below `[ New ] [ Save ] [ Load ] [ Exit ]` for `[Mouse F7]`/`[Console F8]` (GH-30), mirroring
+  the mouse mode's `[ Keyboard ] [ Console ]` row — and always live regardless of cursor position
+  or solved state: **F5** opens Save, **F6** opens Load, **F9** opens the New-game size picker
+  (GH-44), **F7** switches to mouse mode, **F8** switches to console mode, and **Escape** opens
+  the Exit dialog. A controls-hint line below the toolbar spells these out in plain text.
 - **Dialog navigation:** Tab/Shift+Tab (or the arrow keys) cycle focus between a dialog's
   controls (text field, list rows, buttons); Enter activates whatever has focus; Escape cancels
   the dialog, same as clicking Cancel. Typing and Backspace work on the focused text field as in

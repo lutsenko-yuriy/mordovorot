@@ -187,21 +187,22 @@ class TerminalInputParserTest {
     }
 
     @Test
-    fun `F5, F6, F7, and F8 CSI sequences decode to their FunctionKey events`() {
+    fun `F5, F6, F7, F8, and F9 CSI sequences decode to their FunctionKey events`() {
         val parser = TerminalInputParser()
 
         assertEquals(listOf(TerminalEvent.FunctionKey(5)), parser.feed(csi("15~")))
         assertEquals(listOf(TerminalEvent.FunctionKey(6)), parser.feed(csi("17~")))
         assertEquals(listOf(TerminalEvent.FunctionKey(7)), parser.feed(csi("18~")))
         assertEquals(listOf(TerminalEvent.FunctionKey(8)), parser.feed(csi("19~")))
+        assertEquals(listOf(TerminalEvent.FunctionKey(9)), parser.feed(csi("20~"))) // GH-44 WU3
     }
 
     @Test
     fun `an unrecognised function-key number is discarded whole, not leaked as KeyPresses`() {
         val parser = TerminalInputParser()
 
-        // ESC[20~ - F9, which this parser has no meaning for.
-        val events = parser.feed(csi("20~"))
+        // ESC[21~ - F10, which this parser has no meaning for.
+        val events = parser.feed(csi("21~"))
 
         assertEquals(emptyList(), events)
     }
