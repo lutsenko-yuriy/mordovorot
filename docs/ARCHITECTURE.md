@@ -32,7 +32,12 @@ src/main/kotlin/
 │                                         # event, without touching ViewModelImpl's call sites (GH-3)
 ├── board_model/
 │   ├── BoardModel.kt    # Board interface (domain contract)
-│   └── BoardImpl.kt     # IntArray-backed board state + shift/reset/isCorrect logic
+│   ├── BoardSize.kt     # The valid board side range (MIN 3 / MAX 5 / DEFAULT 4) and its
+│   │                      # validation - the one place the range lives (GH-44)
+│   └── BoardImpl.kt     # IntArray-backed board state + shift/reset/newGame/isCorrect logic.
+│                          # `SQUARE_SIDE` is a read-only view over a private mutable field:
+│                          # `newGame(side)` is the only thing that ever changes it (GH-44),
+│                          # `resetGame()` reshuffles at the same size
 ├── viewmodel/
 │   ├── ViewModel.kt          # The one viewmodel interface (GH-42 WU3, collapsing GH-23's
 │   │                           # ConsoleViewModel/TuiViewModel split) — shift/reset/save/load/exit
@@ -46,9 +51,10 @@ src/main/kotlin/
 │   │                           # after the first, skipping a re-shown startup restore prompt after
 │   │                           # a mode switch (GH-30). Holds no `View` reference — see the
 │   │                           # "viewmodel" section below
-│   ├── UiRequest.kt          # Sealed request/response type for the five viewmodel→UI
+│   ├── UiRequest.kt          # Sealed request/response type for the six viewmodel→UI
 │   │                           # interactions (ShowMessage/ConfirmRestore/ChooseSaveToRestore/
-│   │                           # ConfirmSaveBeforeExit/PromptSaveName), sent on
+│   │                           # ConfirmSaveBeforeExit/PromptSaveName/ChooseBoardSize (GH-44)),
+│   │                           # sent on
 │   │                           # ViewModel.uiRequests (GH-42 WU2)
 │   ├── SessionControlException.kt # Sealed marker base for control-flow exceptions that unwind
 │   │                                 # play() intentionally — lets a catch-all rethrow via this
@@ -88,8 +94,10 @@ src/main/kotlin/
         ├── ArrowRing.kt     # Pure perimeter-ring cursor logic for keyboard board navigation:
         │                      # ArrowCursor(edge, index) + Edge{LEFT,RIGHT,TOP,BOTTOM}, one
         │                      # move per arrow key, wrapping at corners (GH-18)
-        ├── Dialog.kt / DialogLayout.kt     # One model + one geometry class for all three
-        │                                     # modal dialogs (Save/Load/Exit) and the
+        ├── Dialog.kt / DialogLayout.kt     # One model + one geometry class for all four
+        │                                     # modal dialogs (Save/Load/Exit/Size (GH-44, a
+        │                                     # buttons-only kind, so DialogLayout/DialogFocus
+        │                                     # need no per-kind branch for it)) and the
         │                                     # Load-shaped startup restore prompt (GH-3 WU4);
         │                                     # Dialog also carries keyboard focus state
         │                                     # (focusedButtonId, textFieldFocused) (GH-18)
@@ -164,6 +172,18 @@ should always depend on the interface, not `ViewModelImpl`, to keep layers swapp
 Core game state and rules: board array, shifting, reset, and the win check
 (`isCorrect`). No dependency on `viewmodel` or `view`.
 
+**Board size (GH-44):** the board stays square, with a side of 3–5 (default 4).
+`BoardSize` holds that range and its validation — the single place it lives, per
+this layer's "range validation lives in `board_model`, the view translates but
+does not validate" rule (see the 1-based console dialect note under `view`).
+`BoardImpl.newGame(side)` is the only operation that ever changes the side: it
+validates first, so an out-of-range value throws with the current board left
+untouched, then reallocates and shuffles. `resetGame()` keeps its older meaning —
+reshuffle at the same size. Nothing resizes an *in-progress* board: every
+size-setting surface starts a fresh game instead. The board instance itself is
+still the one `GameSession` holds across mode switches (GH-30) — the side mutates
+in place rather than the instance being swapped, so that invariant is unaffected.
+
 ### viewmodel (GH-42: ViewModel-style, no View reference)
 **Status: landed (WU4/4 of the GH-42 redesign — final WU).** Everything described below is
 real and in use; the `presenter` package/naming this superseded is gone.
@@ -229,6 +249,22 @@ adding an `input_method` (`console`/`mouse`/`keyboard`, GH-18) property to
 every forwarded event — the decorator pattern lets `Main` distinguish events
 by launch mode without `ViewModelImpl` itself knowing which UI mode is
 running.
+
+### Board-size surfaces (GH-44)
+Four entry points, all of which *start a fresh game* rather than resizing the
+running one: the `--size=N` launch flag (`Main.resolveBoardSize`, warning and
+falling back to 4 on anything invalid, and reported as `app_launched.board_size`);
+a startup prompt raised by `ViewModelImpl.restoreOnStartup` as
+`UiRequest.ChooseBoardSize`, shown only when `--size` wasn't given *and* nothing
+was restored — console answers it with a text prompt, the TUI with its
+`Dialog.Kind.SIZE` picker; the console `size <N>` command (a plain integer, *not*
+subject to `ViewImpl`'s 1-based `DISPLAY_OFFSET` — a size is not a row index); and
+the TUI's `[ New ]` toolbar button (`HitTarget.ToolbarNew`, F9 in keyboard mode),
+which opens the same picker. All of them funnel into
+`ViewModel.newGame(size, trigger)` → `BoardImpl.newGame`, which is also where
+`new_game_size_selected` is tracked (only on success). Save/load's size-mismatch
+rejection is unchanged — a save is never auto-resized onto a differently-sized
+board.
 
 ### Launch mode and runtime mode switching (GH-3, GH-18, GH-30)
 `InputMode` (root package, renamed from `LaunchMode` for GH-30) resolves
