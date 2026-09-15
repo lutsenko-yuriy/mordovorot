@@ -8,11 +8,18 @@ import board_model.BoardModel
  * delegates correctly without depending on real board logic.
  */
 class FakeBoardModel(
-    override val SQUARE_SIDE: Int = 4,
-    override var boardArray: IntArray = IntArray(SQUARE_SIDE * SQUARE_SIDE) { it },
+    squareSide: Int = 4,
+    override var boardArray: IntArray = IntArray(squareSide * squareSide) { it },
 ) : BoardModel {
 
+    /** Settable, unlike the constructor param it starts from - [newGame] changes it (GH-44). */
+    override var SQUARE_SIDE: Int = squareSide
+
     val calls = mutableListOf<String>()
+
+    /** When set, [newGame] throws this instead of recording the call - mirrors
+     *  [shiftLeftException] for the same purpose. */
+    var newGameException: Throwable? = null
 
     /** Controls [isCorrect]'s return value; flip it from a test to end a play() loop. */
     var correct = false
@@ -23,6 +30,13 @@ class FakeBoardModel(
 
     override fun resetGame() {
         calls.add("resetGame")
+    }
+
+    override fun newGame(side: Int) {
+        newGameException?.let { throw it }
+        calls.add("newGame($side)")
+        SQUARE_SIDE = side
+        boardArray = IntArray(side * side) { it }
     }
 
     override fun restoreState(state: IntArray) {

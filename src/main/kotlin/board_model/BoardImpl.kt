@@ -1,6 +1,9 @@
 package board_model
 
-public class BoardImpl constructor(override val SQUARE_SIDE: Int = 4) : BoardModel {
+public class BoardImpl constructor(initialSide: Int = BoardSize.DEFAULT) : BoardModel {
+
+    private var side: Int = BoardSize.require(initialSide)
+    override val SQUARE_SIDE: Int get() = side
 
     var counter: Int = 0
 
@@ -17,6 +20,12 @@ public class BoardImpl constructor(override val SQUARE_SIDE: Int = 4) : BoardMod
         counter = 0
 
         boardArray.shuffle()
+    }
+
+    override fun newGame(side: Int) {
+        BoardSize.require(side)
+        this.side = side
+        resetGame()
     }
 
     override fun restoreState(state: IntArray) {
