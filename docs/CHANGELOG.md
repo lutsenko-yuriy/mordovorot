@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.6.3] — 2026-09-15 (PR #38 merged)
+
+### Changed
+- [wip] GH-30 (WU3/4): TUI toolbar mode buttons — mouse mode's toolbar gains `[ Keyboard ]`/`[ Console ]` buttons on a row below `[ Save ] [ Load ] [ Exit ]`, switching mode without losing the current game (the TUI counterpart of WU2's console `mouse`/`keyboard` commands). Reached via an injected `ModeSwitcher`, mirroring `ViewImpl`'s WU2 wiring. `BoardLayout`'s Save/Load/Exit button positions now look themselves up by `HitTarget` instead of a fixed index.
+
 ## [0.6.2] — 2026-09-15 (PR #37 merged)
 
 ### Changed
