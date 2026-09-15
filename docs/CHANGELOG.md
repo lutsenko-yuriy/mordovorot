@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.7.4] — 2026-09-15 (PR #47 merged)
+
+### Changed
+- [app] GH-42 (WU4/4): mechanical rename closing the Presenter→ViewModel redesign: `presenter.Presenter`/`presenter.PresenterImpl` → `viewmodel.ViewModel`/`viewmodel.ViewModelImpl`, package rename `presenter` → `viewmodel`, and all references (classes, variables, KDoc, test doubles, test files, docs: AGENTS.md, README.md, docs/ARCHITECTURE.md) to match. Also replaced `MVP (Model-View-Presenter)` with `MVVM (Model-View-ViewModel)` in documentation. No user-visible behaviour change.
+
 ## [0.7.3] — 2026-09-15 (PR #46 merged)
 
 ### Changed
