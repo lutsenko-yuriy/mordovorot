@@ -151,26 +151,46 @@ see "Dependencies" below.
 ## Layers
 
 Classic MVP. `board_model` and `view` are each an interface + one implementation.
-`presenter` is an interface hierarchy (`Presenter` core + `ConsolePresenter`/`TuiPresenter`)
-with one implementation per UI (`ConsolePresenterImpl`/`TuiPresenterImpl`), split for GH-23
-so each `View` depends only on the presenter surface it actually needs. Callers should always
-depend on the interface, not the `*Impl` class, to keep layers swappable.
+`presenter` (GH-42) is a single `Presenter` interface + one `PresenterImpl`, holding
+no reference to any `View` — it communicates with whichever `View` is driving it
+through a request channel instead of a constructor-injected dependency. Callers
+should always depend on the interface, not `PresenterImpl`, to keep layers swappable.
 
 ### board_model (Domain)
 Core game state and rules: board array, shifting, reset, and the win check
 (`isCorrect`). No dependency on `presenter` or `view`.
 
-### presenter
-Mediates between `view`, `board_model`, and `storage`. `Presenter` is the
-shared core (shift/reset/save/load/exit) both UIs use identically; `ConsolePresenter`
-and `TuiPresenter` extend it with their own UI-specific surface (`play()` for the
-console; the read-only query methods and `restoreOnStartup` for the TUI) so each
-`View` implementation depends only on the presenter surface it actually needs
-(GH-23). `BasePresenter` implements the shared core and takes `board`/`saves`/
-`analytics` as constructor params (each defaulted to a real implementation), so
+### presenter (GH-42: ViewModel-style, no View reference)
+**Status: target state as of WU3/3 — WU1/3 has landed so far** (`suspend` propagation only;
+`Presenter`/`ConsolePresenter`/`TuiPresenter` and their impls still match the GH-23 split
+described in the code today, and `BasePresenter` still holds its `View`). The rest of this
+section describes where WU2-WU3 are heading, written ahead of the code per this ticket's
+approved plan - see `docs/knowledge/notes/GH-42.md`.
+
+Mediates between `view`, `board_model`, and `storage`, but never calls into `view`
+directly. `Presenter` is one interface (shift/reset/save/load/exit plus the
+query surface both UIs need — `isSolved`/`boardState`/`squareSide`/`listSaves`/
+`saveExists`), and `PresenterImpl` is its one implementation, taking `board`/`saves`/
+`analytics` as constructor params (each defaulted to a real implementation) so
 tests can inject fakes without touching the filesystem or a real analytics SDK.
-`ConsolePresenterImpl` and `TuiPresenterImpl` extend it with their respective
-UI-specific methods.
+Superseded GH-23's split (`ConsolePresenter`/`TuiPresenter` + `ConsolePresenterImpl`/
+`TuiPresenterImpl`) once `ConsolePresenterImpl.play()`'s console loop moved into
+`ViewImpl` — at that point both UIs needed the identical presenter surface, so the
+split no longer described anything real.
+
+Five interactions that used to be blocking calls into `View` (`showMessage`,
+`confirmRestore`, `chooseSaveToRestore`, `confirmSaveBeforeExit`, `promptSaveName`)
+are now `presenter.UiRequest<R>` values sent on `Presenter.uiRequests`, a
+`Channel.RENDEZVOUS` the owning `View` drains in a sibling coroutine and answers via
+`UiRequest.respond`. Rendezvous delivery (the channel has zero buffer, and `ask()`
+doesn't return until the View has actually handled the request) is what keeps
+message/prompt ordering identical to the old blocking-call behavior. The one
+invariant that keeps this deadlock-free: a View's request handler must never call
+a request-raising `Presenter` method (`saveGame`/`loadGame`/`exitGame`/
+`restoreOnStartup`) from inside itself — only the plain query methods are safe
+there. `saveGame`/`loadGame`/`exitGame`/`restoreOnStartup` are `suspend`; a
+cancelled coroutine resumes them with `CancellationException`, which each method's
+catch-all rethrows rather than swallows (ordinary structured-concurrency hygiene).
 
 ### view
 Console I/O only: reads commands from stdin, renders the board, and calls
@@ -239,7 +259,23 @@ subsequent switch fires `input_mode_switched` instead (`docs/ANALYTICS_EVENTS.md
   `kotlin("jvm")` + `application` plugins; JVM toolchain 17.
 - **Test framework:** `kotlin("test")` on the JUnit 5 platform (`useJUnitPlatform()`).
   No mocking library — hand-written fakes in `src/test/kotlin/testing/`.
-- Production code has no dependencies beyond the Kotlin standard library
+- **`kotlinx-coroutines-core` (GH-42) — the project's first third-party runtime
+  dependency.** Powers `presenter`'s View-request channel (see above): `Presenter`'s
+  suspend functions, `Channel`, and `runBlocking` at `Main`'s entry point. Unlike
+  JLine (below), this cleared the zero-third-party bar because it's the
+  JetBrains-maintained concurrency primitive the eventual KMP UI layer needs anyway,
+  not a terminal-handling convenience — and it's the multiplatform artifact, so the
+  same coordinate resolves per-target once other platforms are added, with no
+  declaration change. `kotlinx-coroutines-test` is a test-only addition alongside it,
+  added ahead of WU2 — unused by WU1 itself, which has no request-handler coroutine
+  yet for a test to launch/cancel/deadlock on; WU2's `runTest` will give a
+  timeout-failure instead of a silent hang, the failure mode that WU's request
+  channel actually risks. Run on a single `runBlocking` event loop with no
+  dispatcher — there's no
+  real concurrency to exploit here (every I/O call is blocking, single-consumer), so
+  a thread pool (`Dispatchers.Default`/`IO`) or `Dispatchers.Unconfined` would only
+  add nondeterminism to the request/response ordering for no benefit.
+- Beyond that, production code has no dependencies past the Kotlin standard library
   (board shuffling uses `kotlin.collections.shuffle()`, not a custom implementation).
 - **JLine considered and rejected (GH-6):** save/load filename tab-autocompletion
   would require raw/cbreak terminal input, which only a library like JLine 3 provides.

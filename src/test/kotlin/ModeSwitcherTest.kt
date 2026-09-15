@@ -3,6 +3,7 @@ import presenter.ModeSwitcherImpl
 import testing.FakeView
 import testing.RecordingAnalyticsService
 import testing.RecordingAnalyticsService.Event
+import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -12,7 +13,7 @@ import kotlin.test.assertFailsWith
 class ModeSwitcherTest {
 
     @Test
-    fun `switchTo a different mode with an interactive terminal throws ModeSwitchRequestedException and tracks success`() {
+    fun `switchTo a different mode with an interactive terminal throws ModeSwitchRequestedException and tracks success`(): Unit = runBlocking {
         val analytics = RecordingAnalyticsService()
         val switcher = ModeSwitcherImpl(
             view = FakeView(),
@@ -36,7 +37,7 @@ class ModeSwitcherTest {
     }
 
     @Test
-    fun `switchTo console always succeeds regardless of terminal availability`() {
+    fun `switchTo console always succeeds regardless of terminal availability`(): Unit = runBlocking {
         val switcher = ModeSwitcherImpl(
             view = FakeView(),
             currentMode = InputMode.MOUSE,
@@ -49,7 +50,7 @@ class ModeSwitcherTest {
     }
 
     @Test
-    fun `switchTo mouse or keyboard with no interactive terminal is rejected without throwing`() {
+    fun `switchTo mouse or keyboard with no interactive terminal is rejected without throwing`(): Unit = runBlocking {
         val analytics = RecordingAnalyticsService()
         val view = FakeView()
         val switcher = ModeSwitcherImpl(
@@ -83,7 +84,7 @@ class ModeSwitcherTest {
     }
 
     @Test
-    fun `switchTo the current mode is a no-op - no exception, no message, no event`() {
+    fun `switchTo the current mode is a no-op - no exception, no message, no event`(): Unit = runBlocking {
         val analytics = RecordingAnalyticsService()
         val view = FakeView()
         val switcher = ModeSwitcherImpl(view = view, currentMode = InputMode.MOUSE, analytics = analytics)
@@ -95,7 +96,7 @@ class ModeSwitcherTest {
     }
 
     @Test
-    fun `the trigger value is carried through unchanged for each caller`() {
+    fun `the trigger value is carried through unchanged for each caller`(): Unit = runBlocking {
         for (trigger in listOf("toolbar", "shortcut", "command")) {
             val analytics = RecordingAnalyticsService()
             val switcher = ModeSwitcherImpl(

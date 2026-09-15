@@ -16,8 +16,9 @@ import view.View
  * documented with an `input_method` property (same reasoning as `app_launched`).
  */
 interface ModeSwitcher {
-    /** [trigger]: `"toolbar"`, `"shortcut"`, or `"command"`. */
-    fun switchTo(target: InputMode, trigger: String)
+    /** [trigger]: `"toolbar"`, `"shortcut"`, or `"command"`. `suspend` (GH-42): calls
+     *  [View.showMessage] on rejection, which is itself `suspend`. */
+    suspend fun switchTo(target: InputMode, trigger: String)
 }
 
 /** [currentMode] is fixed per instance - `GameSession` builds a fresh one on every rebuild. */
@@ -28,7 +29,7 @@ class ModeSwitcherImpl(
     private val hasInteractiveTerminal: () -> Boolean = InputMode.Companion::systemHasInteractiveTerminal,
 ) : ModeSwitcher {
 
-    override fun switchTo(target: InputMode, trigger: String) {
+    override suspend fun switchTo(target: InputMode, trigger: String) {
         if (target == currentMode) return // already active - no event, no message
 
         if (target != InputMode.CONSOLE && !hasInteractiveTerminal()) {
@@ -58,5 +59,5 @@ class ModeSwitcherImpl(
 
 /** No-op [ModeSwitcher] - default for a `View` with no mode-switch affordance wired in yet. */
 class NoopModeSwitcher : ModeSwitcher {
-    override fun switchTo(target: InputMode, trigger: String) {}
+    override suspend fun switchTo(target: InputMode, trigger: String) {}
 }

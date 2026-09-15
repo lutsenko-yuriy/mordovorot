@@ -9,6 +9,7 @@ import testing.FakeTerminal
 import testing.RecordingAnalyticsService
 import view.View
 import view.ViewImpl
+import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -23,19 +24,19 @@ class GameSessionTest {
     /** [View] test double: only [play] does anything, running the scripted [onPlay]. */
     private class ScriptedView(private val onPlay: () -> Unit) : View {
         override fun displayBoard(boardState: IntArray, squareSide: Int) {}
-        override fun showMessage(message: String) {}
-        override fun processCommand() {}
-        override fun confirmRestore(saveName: String): Boolean = false
-        override fun chooseSaveToRestore(saveNames: List<String>): String? = null
-        override fun confirmSaveBeforeExit(): Boolean = false
-        override fun promptSaveName(): String? = null
-        override fun play() = onPlay()
+        override suspend fun showMessage(message: String) {}
+        override suspend fun processCommand() {}
+        override suspend fun confirmRestore(saveName: String): Boolean = false
+        override suspend fun chooseSaveToRestore(saveNames: List<String>): String? = null
+        override suspend fun confirmSaveBeforeExit(): Boolean = false
+        override suspend fun promptSaveName(): String? = null
+        override suspend fun play() = onPlay()
     }
 
     private data class BuildCall(val mode: InputMode, val board: BoardModel, val saves: SaveRepository, val startupRestoreDone: Boolean)
 
     @Test
-    fun `switching modes preserves board state and does not reshuffle`() {
+    fun `switching modes preserves board state and does not reshuffle`(): Unit = runBlocking {
         val board = FakeBoardModel(boardArray = intArrayOf(3, 2, 1, 0))
         val calls = mutableListOf<BuildCall>()
         var built = 0
@@ -61,7 +62,7 @@ class GameSessionTest {
     }
 
     @Test
-    fun `switching modes skips the startup restore prompt on sessions after the first`() {
+    fun `switching modes skips the startup restore prompt on sessions after the first`(): Unit = runBlocking {
         val saves = FakeSaveRepository(mutableMapOf("slot1" to storage.SavedBoard(4, IntArray(16) { it })))
         val calls = mutableListOf<BuildCall>()
         var built = 0
@@ -84,7 +85,7 @@ class GameSessionTest {
     }
 
     @Test
-    fun `three consecutive switches cycle through console, mouse, and keyboard, each rebuilding a fresh View-presenter`() {
+    fun `three consecutive switches cycle through console, mouse, and keyboard, each rebuilding a fresh View-presenter`(): Unit = runBlocking {
         val modesBuilt = mutableListOf<InputMode>()
         var built = 0
 
@@ -110,7 +111,7 @@ class GameSessionTest {
     }
 
     @Test
-    fun `play returning normally (exit) ends the session loop without another rebuild`() {
+    fun `play returning normally (exit) ends the session loop without another rebuild`(): Unit = runBlocking {
         var built = 0
 
         val session = GameSession(
@@ -127,7 +128,7 @@ class GameSessionTest {
     }
 
     @Test
-    fun `a failed rebuild after a mode switch falls back to console instead of crashing, skipping the restore prompt`() {
+    fun `a failed rebuild after a mode switch falls back to console instead of crashing, skipping the restore prompt`(): Unit = runBlocking {
         val calls = mutableListOf<BuildCall>()
         var built = 0
 
@@ -152,7 +153,7 @@ class GameSessionTest {
     }
 
     @Test
-    fun `a failure on the very first session still throws - no game in progress to protect`() {
+    fun `a failure on the very first session still throws - no game in progress to protect`(): Unit = runBlocking {
         val session = GameSession(
             initialMode = InputMode.CONSOLE,
             buildView = { _, _, _, _, _ -> ScriptedView { throw RuntimeException("stty not found") } },
@@ -162,7 +163,7 @@ class GameSessionTest {
     }
 
     @Test
-    fun `a second consecutive failure, once already falling back to console, has nowhere safer to go - it throws`() {
+    fun `a second consecutive failure, once already falling back to console, has nowhere safer to go - it throws`(): Unit = runBlocking {
         val modesBuilt = mutableListOf<InputMode>()
         var built = 0
 
@@ -186,7 +187,7 @@ class GameSessionTest {
     }
 
     @Test
-    fun `ExitRequestedException escaping a rebuild reaches the caller, not swallowed as a failed switch`() {
+    fun `ExitRequestedException escaping a rebuild reaches the caller, not swallowed as a failed switch`(): Unit = runBlocking {
         val session = GameSession(
             initialMode = InputMode.CONSOLE,
             buildView = { mode, _, _, _, _ ->
@@ -201,7 +202,7 @@ class GameSessionTest {
     }
 
     @Test
-    fun `the production console View is wired with a real ModeSwitcher, not a silent no-op`() {
+    fun `the production console View is wired with a real ModeSwitcher, not a silent no-op`(): Unit = runBlocking {
         val view = defaultView(
             InputMode.CONSOLE,
             FakeBoardModel(),

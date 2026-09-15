@@ -6,6 +6,7 @@ import java.io.BufferedReader
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import java.io.StringReader
+import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -31,7 +32,7 @@ class OneBasedConsoleTest {
     }
 
     @Test
-    fun `left 1 rotates the first row`() {
+    fun `left 1 rotates the first row`(): Unit = runBlocking {
         val (view, board, _) = stackWith("left 1\n")
 
         view.processCommand()
@@ -43,7 +44,7 @@ class OneBasedConsoleTest {
     }
 
     @Test
-    fun `left 4 rotates the last row on a 4x4 board, does not throw`() {
+    fun `left 4 rotates the last row on a 4x4 board, does not throw`(): Unit = runBlocking {
         val (view, board, _) = stackWith("left 4\n")
 
         view.processCommand()
@@ -55,7 +56,7 @@ class OneBasedConsoleTest {
     }
 
     @Test
-    fun `left 0 leaves the board untouched and surfaces Incorrect row`() {
+    fun `left 0 leaves the board untouched and surfaces Incorrect row`(): Unit = runBlocking {
         val (view, board, _) = stackWith("left 0\n")
 
         val error = assertFailsWith<IllegalArgumentException> { view.processCommand() }
@@ -65,7 +66,7 @@ class OneBasedConsoleTest {
     }
 
     @Test
-    fun `left SQUARE_SIDE+1 leaves the board untouched and surfaces Incorrect row`() {
+    fun `left SQUARE_SIDE+1 leaves the board untouched and surfaces Incorrect row`(): Unit = runBlocking {
         val (view, board, _) = stackWith("left 5\n")
 
         val error = assertFailsWith<IllegalArgumentException> { view.processCommand() }
@@ -75,7 +76,7 @@ class OneBasedConsoleTest {
     }
 
     @Test
-    fun `up 0 surfaces Incorrect column`() {
+    fun `up 0 surfaces Incorrect column`(): Unit = runBlocking {
         val (view, board, _) = stackWith("up 0\n")
 
         val error = assertFailsWith<IllegalArgumentException> { view.processCommand() }
@@ -85,7 +86,7 @@ class OneBasedConsoleTest {
     }
 
     @Test
-    fun `up SQUARE_SIDE+1 surfaces Incorrect column`() {
+    fun `up SQUARE_SIDE+1 surfaces Incorrect column`(): Unit = runBlocking {
         val (view, board, _) = stackWith("up 5\n")
 
         val error = assertFailsWith<IllegalArgumentException> { view.processCommand() }
@@ -95,7 +96,7 @@ class OneBasedConsoleTest {
     }
 
     @Test
-    fun `the rendered board and left 1's target row agree on the same first row`() {
+    fun `the rendered board and left 1's target row agree on the same first row`(): Unit = runBlocking {
         val (view, board, output) = stackWith("left 1\n")
 
         view.displayBoard(board.boardArray, board.SQUARE_SIDE)

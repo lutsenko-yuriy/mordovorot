@@ -33,16 +33,16 @@ abstract class RecordingPresenter : Presenter {
 
     /** Always reports success - tests exercising a failed save use [testing.FakeSaveRepository]
      *  directly against [presenter.BasePresenter], not this fake. */
-    override fun saveGame(name: String): Boolean {
+    override suspend fun saveGame(name: String): Boolean {
         calls.add("saveGame($name)")
         return true
     }
 
-    override fun loadGame(name: String) {
+    override suspend fun loadGame(name: String) {
         calls.add("loadGame($name)")
     }
 
-    override fun exitGame() {
+    override suspend fun exitGame() {
         calls.add("exitGame")
     }
 }

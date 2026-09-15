@@ -55,11 +55,11 @@ class ViewImpl internal constructor(
         output.println()
     }
 
-    override fun showMessage(message: String) {
+    override suspend fun showMessage(message: String) {
         output.println(message)
     }
 
-    override fun processCommand() {
+    override suspend fun processCommand() {
         // null (clean EOF) or IOException (dead stream) both mean "no more input" -
         // see GH-4's 651ca64 for the infinite-loop bug this closes.
         val line = try {
@@ -104,13 +104,13 @@ class ViewImpl internal constructor(
         output.println()
     }
 
-    override fun confirmRestore(saveName: String): Boolean {
+    override suspend fun confirmRestore(saveName: String): Boolean {
         output.print("Restore save '$saveName'? [y/N] ")
         val line = readLineOrNull() ?: return false
         return line.trim().lowercase() in setOf("y", "yes")
     }
 
-    override fun chooseSaveToRestore(saveNames: List<String>): String? {
+    override suspend fun chooseSaveToRestore(saveNames: List<String>): String? {
         output.print(
             "Multiple saves found: ${saveNames.joinToString(", ")}. " +
                 "Type a name to restore, or press Enter to start a new game: "
@@ -119,13 +119,13 @@ class ViewImpl internal constructor(
         return line.trim().ifEmpty { null }
     }
 
-    override fun confirmSaveBeforeExit(): Boolean {
+    override suspend fun confirmSaveBeforeExit(): Boolean {
         output.print("Save before quitting? [y/N] ")
         val line = readLineOrNull() ?: return false
         return line.trim().lowercase() in setOf("y", "yes")
     }
 
-    override fun promptSaveName(): String? {
+    override suspend fun promptSaveName(): String? {
         output.print("Save name: ")
         val line = readLineOrNull() ?: return null
         return line.trim().ifEmpty { null }
@@ -158,7 +158,7 @@ class ViewImpl internal constructor(
         if (parts.size != expected) throw IllegalArgumentException("Incorrect input")
     }
 
-    override fun play() {
+    override suspend fun play() {
         presenter.play()
     }
 }

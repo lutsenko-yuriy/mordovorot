@@ -4,5 +4,5 @@ package presenter
  *  directly, so it can never reach [TuiPresenter]'s TUI-only query methods (GH-23). */
 interface ConsolePresenter : Presenter {
 
-    fun play()
+    suspend fun play()
 }
