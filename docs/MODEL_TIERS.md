@@ -41,8 +41,8 @@ This project describes what each skill needs from a model using two axes: **Effo
 | Skill | Effort | Reasoning | Why |
 |---|---|---|---|
 | `plan` | THOROUGH | ARCHITECTURAL | Full codebase read, cross-file design decisions, long-horizon planning |
-| `audit` | THOROUGH | TACTICAL | Exhaustive runtime, migration, and edge-case analysis |
-| `review` | FOCUSED | ARCHITECTURAL | Targeted architectural review of a PR/MR diff |
+| `audit` | FOCUSED | TACTICAL | Targeted runtime, migration, and edge-case analysis of a PR/MR diff (downgraded from THOROUGH on GH-42's debrief - was the top token consumer) |
+| `review` | FOCUSED | TACTICAL | Targeted architectural review of a PR/MR diff (downgraded from ARCHITECTURAL to match `audit`'s tier on GH-42's debrief) |
 | `analyze` | FOCUSED | ARCHITECTURAL | Cross-cutting analytics reasoning scoped to one feature |
 | `experiment` | FOCUSED | ARCHITECTURAL | Design a product experiment: hypothesis, metrics, variant spec |
 | `brief` | FOCUSED | ARCHITECTURAL | Clarifying dialog scoping a new ticket |
