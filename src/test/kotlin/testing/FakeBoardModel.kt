@@ -1,6 +1,7 @@
 package testing
 
 import board_model.BoardModel
+import board_model.BoardSize
 
 /**
  * A [BoardModel] test double that records every call it receives instead of
@@ -48,6 +49,7 @@ class FakeBoardModel(
         val restoredSide = Math.sqrt(state.size.toDouble()).toInt()
         require(restoredSide * restoredSide == state.size) { "Board state size must be a perfect square, got ${state.size}" }
         require(state.toSet() == (0 until state.size).toSet()) { "Board state must contain each of ${state.size} tile values exactly once" }
+        BoardSize.require(restoredSide) // mirrors BoardImpl's own BoardSize check (audit finding on PR #55)
         calls.add("restoreState(${state.toList()})")
         squareSide = restoredSide
         boardArray = state
