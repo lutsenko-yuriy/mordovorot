@@ -8,6 +8,8 @@ description: Architectural review of a PR/MR. Checks for layer violations, depen
 
 The Git host is **GitHub**. The issue identifier prefix is **GH**.
 
+@skills/shared/git-cli-safety.md
+
 This skill produces reviews, not code.
 
 ---

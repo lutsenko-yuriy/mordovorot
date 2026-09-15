@@ -8,6 +8,8 @@ description: Post-merge housekeeping after a PR/MR is approved. Closes the linke
 
 The project management tool is **GitHub Issues**. The issue identifier prefix is **GH**.
 
+@skills/shared/git-cli-safety.md
+
 ---
 
 ## Steps
