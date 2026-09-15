@@ -54,16 +54,25 @@ class TuiViewModeSwitchTest {
 
     @Test
     fun `pressing F7 in keyboard mode requests a switch to mouse mode with trigger=shortcut, even when solved`() {
-        // TODO (WU4): Build a TuiView in keyboard mode (KeyboardInput) with a RecordingModeSwitcher,
-        //             on an already-solved FakeTuiPresenter, send FunctionKey(7), and verify the
-        //             switch reaches the switcher with trigger=shortcut regardless of solved state.
+        val switcher = RecordingModeSwitcher()
+        val presenter = FakeTuiPresenter().apply { solved = true }
+        val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.FunctionKey(7)))
+        val view = TuiView.create(terminal, input = KeyboardInput(), modeSwitcherFactory = { switcher }) { presenter }
+
+        view.play()
+
+        assertEquals(listOf(RecordingModeSwitcher.Call(InputMode.MOUSE, "shortcut")), switcher.calls)
     }
 
     @Test
     fun `pressing F8 in keyboard mode requests a switch to console mode with trigger=shortcut`() {
-        // TODO (WU4): Build a TuiView in keyboard mode (KeyboardInput) with a RecordingModeSwitcher,
-        //             send FunctionKey(8), and verify the switch reaches the switcher with
-        //             trigger=shortcut.
+        val switcher = RecordingModeSwitcher()
+        val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.FunctionKey(8)))
+        val view = TuiView.create(terminal, input = KeyboardInput(), modeSwitcherFactory = { switcher }) { FakeTuiPresenter() }
+
+        view.play()
+
+        assertEquals(listOf(RecordingModeSwitcher.Call(InputMode.CONSOLE, "shortcut")), switcher.calls)
     }
 
     @Test

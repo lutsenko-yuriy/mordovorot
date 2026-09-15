@@ -1,5 +1,6 @@
 package view.tui
 
+import InputMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -50,11 +51,12 @@ class KeyboardInputTest {
     }
 
     @Test
-    fun `F7 is decoded but means nothing on the board - Escape is Exit's trigger now`() {
+    fun `F7 and F8 request a switch to mouse and console mode`() {
         val input = KeyboardInput()
         input.decorateBoard(unsolvedBoard())
 
-        assertEquals(InputAction.None, input.onBoardEvent(TerminalEvent.FunctionKey(7), boardLayout))
+        assertEquals(InputAction.Activate(HitTarget.ToolbarMode(InputMode.MOUSE)), input.onBoardEvent(TerminalEvent.FunctionKey(7), boardLayout))
+        assertEquals(InputAction.Activate(HitTarget.ToolbarMode(InputMode.CONSOLE)), input.onBoardEvent(TerminalEvent.FunctionKey(8), boardLayout))
     }
 
     @Test
@@ -75,10 +77,13 @@ class KeyboardInputTest {
         assertEquals(InputAction.None, input.onBoardEvent(TerminalEvent.Enter, boardLayout))
         assertEquals(InputAction.Activate(HitTarget.ToolbarSave), input.onBoardEvent(TerminalEvent.FunctionKey(5), boardLayout))
         assertEquals(InputAction.Activate(HitTarget.ToolbarExit), input.onBoardEvent(TerminalEvent.Escape, boardLayout))
+        // F7/F8's mode-switch requests, unlike arrows/Enter, stay live even when solved (GH-30).
+        assertEquals(InputAction.Activate(HitTarget.ToolbarMode(InputMode.MOUSE)), input.onBoardEvent(TerminalEvent.FunctionKey(7), boardLayout))
+        assertEquals(InputAction.Activate(HitTarget.ToolbarMode(InputMode.CONSOLE)), input.onBoardEvent(TerminalEvent.FunctionKey(8), boardLayout))
     }
 
     @Test
-    fun `decorateBoard drops the cursor once solved and always sets the controls hint and toolbar shortcuts`() {
+    fun `decorateBoard drops the cursor once solved and always sets the controls hint, toolbar shortcuts, and mode buttons`() {
         val input = KeyboardInput()
 
         val unsolved = input.decorateBoard(unsolvedBoard())
@@ -87,7 +92,8 @@ class KeyboardInputTest {
         val solved = input.decorateBoard(solvedBoard())
         assertNull(solved.cursor)
         assertEquals(true, solved.toolbarShortcuts)
-        assertEquals("Arrows: move · Enter/Space: shift · F5 Save · F6 Load · Esc Exit", solved.controlsHint)
+        assertEquals("Arrows: move · Enter/Space: shift · F5 Save · F6 Load · F7 Mouse · F8 Console · Esc Exit", solved.controlsHint)
+        assertEquals(listOf(InputMode.MOUSE, InputMode.CONSOLE), solved.modeButtons)
     }
 
     @Test
