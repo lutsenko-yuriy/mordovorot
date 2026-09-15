@@ -37,14 +37,15 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
   or overwriting an existing file of that name. Works both at the start of a session and mid-game.
 - `load <file-name>` restores the board's tile arrangement from an existing save file. Works
   mid-game, not just at startup.
-- Loading an unknown file name, or a save whose board size doesn't match the current board,
-  leaves the board untouched and shows a message (listing available saves, where relevant)
-  instead of crashing.
+- Loading an unknown file name leaves the board untouched and shows a message (listing
+  available saves, where relevant) instead of crashing. Loading a save whose board size
+  differs from the current board resizes the board to match and restores its tiles - it is
+  never rejected for a size mismatch (GH-44).
 - Every place a save's name is listed - the startup restore prompts below, the `load`
   command's "no save named"/available-saves message, and the TUI's Load dialog (Feature 6) -
-  also shows that save's board size, e.g. `foo (5x5)`, so a mismatch (see above) is visible
-  before picking a save, not just after (GH-44). A save whose size can't be read (corrupted)
-  shows its name alone.
+  also shows that save's board size, e.g. `foo (5x5)`, so a player can tell up front what
+  size loading it will resize the board to (GH-44). A save whose size can't be read
+  (corrupted) shows its name alone.
 - Saves are stored as `.save` files in a `saves/` directory relative to wherever the app is
   launched from (the process's current working directory) — running from a different directory
   will not see saves made from another one.

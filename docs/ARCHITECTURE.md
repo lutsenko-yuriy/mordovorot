@@ -263,15 +263,18 @@ console `size <N>` command (a plain integer, *not* subject to `ViewImpl`'s
 toolbar button (`HitTarget.ToolbarNew`, F9 in keyboard mode), which opens the
 same picker. All of them funnel into `ViewModel.newGame(size, trigger)` →
 `BoardImpl.newGame`, which is also where `new_game_size_selected` is tracked
-(only on success). Save/load's size-mismatch rejection is unchanged — a save
-is never auto-resized onto a differently-sized board (WU4 only made the size
-visible ahead of that rejection; see below).
+(only on success). Save/load auto-resizes instead of rejecting a size
+mismatch (WU5) — `BoardModel.restoreState` is the second way (besides
+`newGame`) the board's side ever changes: it derives `squareSide` from the
+restored state's own length, so loading a save of a different size resizes
+the board to match rather than requiring a coincidental match. There is no
+`size_mismatch` outcome any more; every successful `saves.load()` restores.
 
 **Save size visibility (WU4).** Every surface that lists a save's name — the
 startup restore prompts (console single/multi-choice, the TUI's Load-shaped
 dialog), the mid-game `load`/Load-dialog listing, and the console's
 "not found"/"no save named" messages — also shows that save's board size, so a
-player can tell up front whether a save will hit the mismatch rejection above.
+player can tell up front what size loading it will resize the board to.
 `ViewModel.listSaves()` returns `List<SaveInfo>` (`name` + nullable
 `squareSide`, `viewmodel/SaveInfo.kt`) instead of bare names; `squareSide` is
 `null` when the save can't be read (corrupted/IO error) rather than dropping
