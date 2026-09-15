@@ -54,6 +54,10 @@ class FakeViewModel : ViewModel {
         calls.add("resetGame")
     }
 
+    override fun newGame(size: Int, trigger: String) {
+        calls.add("newGame($size, $trigger)")
+    }
+
     /** Always reports success - tests exercising a failed save use [testing.FakeSaveRepository]
      *  directly against a real [viewmodel.ViewModelImpl], not this fake. */
     override suspend fun saveGame(name: String): Boolean {

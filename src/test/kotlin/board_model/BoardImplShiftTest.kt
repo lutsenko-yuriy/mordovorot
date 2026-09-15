@@ -147,18 +147,18 @@ class BoardImplShiftTest {
     }
 
     @Test
-    fun `shiftLeft rejects a row equal to SQUARE_SIDE`() {
+    fun `shiftLeft rejects a row equal to squareSide`() {
         val board = boardWith(*identity)
 
-        // SQUARE_SIDE (4) is out of range for a 0-indexed 4-wide board -
+        // squareSide (4) is out of range for a 0-indexed 4-wide board -
         // valid rows are 0..3. Regression test for an off-by-one in the
-        // original bounds check (`row !in 0..SQUARE_SIDE`), which let this
+        // original bounds check (`row !in 0..squareSide`), which let this
         // through and threw ArrayIndexOutOfBoundsException instead.
         assertFailsWith<IllegalArgumentException> { board.shiftLeft(4) }
     }
 
     @Test
-    fun `shiftRight rejects a row equal to SQUARE_SIDE`() {
+    fun `shiftRight rejects a row equal to squareSide`() {
         val board = boardWith(*identity)
 
         assertFailsWith<IllegalArgumentException> { board.shiftRight(4) }
@@ -172,7 +172,7 @@ class BoardImplShiftTest {
     }
 
     @Test
-    fun `shiftUp rejects a column equal to SQUARE_SIDE`() {
+    fun `shiftUp rejects a column equal to squareSide`() {
         val board = boardWith(*identity)
 
         assertFailsWith<IllegalArgumentException> { board.shiftUp(4) }
@@ -186,7 +186,7 @@ class BoardImplShiftTest {
     }
 
     @Test
-    fun `shiftDown rejects a column equal to SQUARE_SIDE`() {
+    fun `shiftDown rejects a column equal to squareSide`() {
         val board = boardWith(*identity)
 
         assertFailsWith<IllegalArgumentException> { board.shiftDown(4) }

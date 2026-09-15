@@ -2,7 +2,6 @@ package board_model
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class BoardImplResetTest {
 
@@ -32,11 +31,4 @@ class BoardImplResetTest {
         assertEquals((0..8).toList(), board.boardArray.sorted())
     }
 
-    @Test
-    fun `a 1x1 board is always correct`() {
-        val board = BoardImpl(1)
-
-        assertTrue(board.isCorrect())
-        assertEquals(listOf(0), board.boardArray.toList())
-    }
 }

@@ -23,6 +23,13 @@ interface ViewModel {
 
     fun resetGame()
 
+    /** Starts a fresh shuffled game at [size] (GH-44) - throws (matching `shiftLeft`'s
+     *  "Incorrect row" contract) and tracks nothing if [size] is out of range, otherwise tracks
+     *  `new_game_size_selected {size, trigger}`. [trigger] is `"startup_prompt"`, `"command"`
+     *  (`size <N>`), or `"toolbar"` (`[ New ]` -> size-picker dialog) - see
+     *  docs/ANALYTICS_EVENTS.md. */
+    fun newGame(size: Int, trigger: String = "command")
+
     /** Returns whether the save actually succeeded - see [viewmodel.ViewModelImpl.exitGame],
      *  which needs the real outcome rather than assuming success. `suspend` (GH-42): asks the
      *  View for confirmation/messages instead of returning synchronously. */

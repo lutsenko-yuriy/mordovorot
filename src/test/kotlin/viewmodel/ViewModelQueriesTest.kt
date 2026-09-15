@@ -88,7 +88,7 @@ class ViewModelQueriesTest {
 
     @Test
     fun `squareSide delegates to the board's square side`() {
-        val viewModel = ViewModelImpl(FakeBoardModel(SQUARE_SIDE = 4))
+        val viewModel = ViewModelImpl(FakeBoardModel(initialSquareSide = 4))
 
         assertEquals(4, viewModel.squareSide())
     }

@@ -1,11 +1,14 @@
 package board_model
 
-public class BoardImpl constructor(override val SQUARE_SIDE: Int = 4) : BoardModel {
+public class BoardImpl(initialSide: Int = BoardSize.DEFAULT) : BoardModel {
+
+    private var side: Int = BoardSize.require(initialSide)
+    override val squareSide: Int get() = side
 
     var counter: Int = 0
 
     override var boardArray: IntArray =
-            IntArray(SQUARE_SIDE * SQUARE_SIDE, { item -> item })
+            IntArray(squareSide * squareSide, { item -> item })
 
     init {
         resetGame()
@@ -13,14 +16,20 @@ public class BoardImpl constructor(override val SQUARE_SIDE: Int = 4) : BoardMod
 
     override fun resetGame() {
         boardArray =
-                IntArray(SQUARE_SIDE * SQUARE_SIDE, { it })
+                IntArray(squareSide * squareSide, { it })
         counter = 0
 
         boardArray.shuffle()
     }
 
+    override fun newGame(side: Int) {
+        BoardSize.require(side)
+        this.side = side
+        resetGame()
+    }
+
     override fun restoreState(state: IntArray) {
-        require(state.size == SQUARE_SIDE * SQUARE_SIDE) { "Expected ${SQUARE_SIDE * SQUARE_SIDE} values, got ${state.size}" }
+        require(state.size == squareSide * squareSide) { "Expected ${squareSide * squareSide} values, got ${state.size}" }
         require(state.toSet() == (0 until state.size).toSet()) { "Board state must contain each of ${state.size} tile values exactly once" }
 
         boardArray = state.copyOf()
@@ -28,50 +37,50 @@ public class BoardImpl constructor(override val SQUARE_SIDE: Int = 4) : BoardMod
     }
 
     override fun shiftLeft(row: Int) {
-        if (row !in 0 until SQUARE_SIDE) {
+        if (row !in 0 until squareSide) {
             throw IllegalArgumentException("Incorrect row")
         }
 
-        val t = boardArray[row * SQUARE_SIDE]
-        for (i in 0..SQUARE_SIDE - 2) {
-            boardArray[i + row * SQUARE_SIDE] = boardArray[i + 1 + row * SQUARE_SIDE]
+        val t = boardArray[row * squareSide]
+        for (i in 0..squareSide - 2) {
+            boardArray[i + row * squareSide] = boardArray[i + 1 + row * squareSide]
         }
-        boardArray[(row + 1) * SQUARE_SIDE - 1] = t
+        boardArray[(row + 1) * squareSide - 1] = t
 
     }
 
     override fun shiftRight(row: Int) {
-        if (row !in 0 until SQUARE_SIDE) {
+        if (row !in 0 until squareSide) {
             throw IllegalArgumentException("Incorrect row")
         }
 
-        val t = boardArray[(row + 1) * SQUARE_SIDE - 1]
-        for (i in SQUARE_SIDE - 2 downTo 0) {
-            boardArray[i + 1 + row * SQUARE_SIDE] = boardArray[i + row * SQUARE_SIDE]
+        val t = boardArray[(row + 1) * squareSide - 1]
+        for (i in squareSide - 2 downTo 0) {
+            boardArray[i + 1 + row * squareSide] = boardArray[i + row * squareSide]
         }
-        boardArray[row * SQUARE_SIDE] = t
+        boardArray[row * squareSide] = t
     }
 
     override fun shiftUp(col: Int) {
-        if (col !in 0 until SQUARE_SIDE) {
+        if (col !in 0 until squareSide) {
             throw IllegalArgumentException("Incorrect column")
         }
 
         val t = boardArray[col]
-        for (i in 0..SQUARE_SIDE - 2) {
-            boardArray[col + i * SQUARE_SIDE] = boardArray[col + (i + 1) * SQUARE_SIDE]
+        for (i in 0..squareSide - 2) {
+            boardArray[col + i * squareSide] = boardArray[col + (i + 1) * squareSide]
         }
-        boardArray[col + (SQUARE_SIDE - 1) * SQUARE_SIDE] = t
+        boardArray[col + (squareSide - 1) * squareSide] = t
     }
 
     override fun shiftDown(col: Int) {
-        if (col !in 0 until SQUARE_SIDE) {
+        if (col !in 0 until squareSide) {
             throw IllegalArgumentException("Incorrect column")
         }
 
-        val t = boardArray[col + (SQUARE_SIDE - 1) * SQUARE_SIDE]
-        for (i in SQUARE_SIDE - 2 downTo 0) {
-            boardArray[col + (i + 1) * SQUARE_SIDE] = boardArray[col + i * SQUARE_SIDE]
+        val t = boardArray[col + (squareSide - 1) * squareSide]
+        for (i in squareSide - 2 downTo 0) {
+            boardArray[col + (i + 1) * squareSide] = boardArray[col + i * squareSide]
         }
         boardArray[col] = t
     }

@@ -21,7 +21,7 @@ class ViewModelSaveLoadTest {
     fun `saveGame creates a new file when none exists`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
-        val board = BoardImpl(2).apply { restoreState(intArrayOf(1, 0, 3, 2)) }
+        val board = BoardImpl(3).apply { restoreState(intArrayOf(1, 0, 2, 3, 4, 5, 6, 7, 8)) }
         val viewModel = ViewModelImpl(board, saves, analytics)
         val ui = FakeViewModelUi()
 
@@ -30,8 +30,8 @@ class ViewModelSaveLoadTest {
         assertEquals(1, saves.saveCalls.size)
         val (name, state, squareSide) = saves.saveCalls[0]
         assertEquals("foo", name)
-        assertEquals(listOf(1, 0, 3, 2), state.toList())
-        assertEquals(2, squareSide)
+        assertEquals(listOf(1, 0, 2, 3, 4, 5, 6, 7, 8), state.toList())
+        assertEquals(3, squareSide)
         assertEquals(
             listOf(
                 RecordingAnalyticsService.Event(
@@ -46,15 +46,15 @@ class ViewModelSaveLoadTest {
     @Test
     fun `saveGame overwrites an existing file`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
-        saves.save("foo", intArrayOf(0, 1, 2, 3), 2)
+        saves.save("foo", intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8), 3)
         val analytics = RecordingAnalyticsService()
-        val board = BoardImpl(2).apply { restoreState(intArrayOf(3, 2, 1, 0)) }
+        val board = BoardImpl(3).apply { restoreState(intArrayOf(8, 7, 6, 5, 4, 3, 2, 1, 0)) }
         val viewModel = ViewModelImpl(board, saves, analytics)
         val ui = FakeViewModelUi()
 
         ui.drive(viewModel) { viewModel.saveGame("foo") }
 
-        assertEquals(listOf(3, 2, 1, 0), saves.load("foo")!!.state.toList())
+        assertEquals(listOf(8, 7, 6, 5, 4, 3, 2, 1, 0), saves.load("foo")!!.state.toList())
         assertEquals(
             listOf(
                 RecordingAnalyticsService.Event(
@@ -70,7 +70,7 @@ class ViewModelSaveLoadTest {
     fun `saveGame surfaces a message and tracks result=error instead of crashing when the repository throws`(): Unit = runBlocking {
         val saves = FakeSaveRepository().apply { saveException = IllegalArgumentException("Save name must not be blank") }
         val analytics = RecordingAnalyticsService()
-        val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
+        val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }
         val viewModel = ViewModelImpl(board, saves, analytics)
         val ui = FakeViewModelUi()
 
@@ -86,15 +86,15 @@ class ViewModelSaveLoadTest {
     @Test
     fun `loadGame restores the board on a known save name`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
-        saves.save("foo", intArrayOf(3, 2, 1, 0), 2)
+        saves.save("foo", intArrayOf(8, 7, 6, 5, 4, 3, 2, 1, 0), 3)
         val analytics = RecordingAnalyticsService()
-        val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
+        val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }
         val viewModel = ViewModelImpl(board, saves, analytics)
         val ui = FakeViewModelUi()
 
         ui.drive(viewModel) { viewModel.loadGame("foo") }
 
-        assertEquals(listOf(3, 2, 1, 0), board.boardArray.toList())
+        assertEquals(listOf(8, 7, 6, 5, 4, 3, 2, 1, 0), board.boardArray.toList())
         assertEquals(
             listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "success"))),
             analytics.events,
@@ -104,15 +104,15 @@ class ViewModelSaveLoadTest {
     @Test
     fun `loadGame leaves the board unchanged on an unknown save name`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
-        saves.save("bar", intArrayOf(3, 2, 1, 0), 2)
+        saves.save("bar", intArrayOf(8, 7, 6, 5, 4, 3, 2, 1, 0), 3)
         val analytics = RecordingAnalyticsService()
-        val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
+        val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }
         val viewModel = ViewModelImpl(board, saves, analytics)
         val ui = FakeViewModelUi()
 
         ui.drive(viewModel) { viewModel.loadGame("missing") }
 
-        assertEquals(listOf(0, 1, 2, 3), board.boardArray.toList())
+        assertEquals(listOf(0, 1, 2, 3, 4, 5, 6, 7, 8), board.boardArray.toList())
         assertTrue(ui.shownMessages.any { it.contains("missing") && it.contains("bar") })
         assertEquals(
             listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "not_found"))),
@@ -123,7 +123,7 @@ class ViewModelSaveLoadTest {
     @Test
     fun `loadGame with no saves at all still messages cleanly`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
-        val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
+        val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }
         val viewModel = ViewModelImpl(board, saves, RecordingAnalyticsService())
         val ui = FakeViewModelUi()
 
@@ -161,13 +161,13 @@ class ViewModelSaveLoadTest {
             listSavesException = java.io.IOException("permission denied")
         }
         val analytics = RecordingAnalyticsService()
-        val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
+        val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }
         val viewModel = ViewModelImpl(board, saves, analytics)
         val ui = FakeViewModelUi()
 
         ui.drive(viewModel) { viewModel.loadGame("missing") }
 
-        assertEquals(listOf(0, 1, 2, 3), board.boardArray.toList())
+        assertEquals(listOf(0, 1, 2, 3, 4, 5, 6, 7, 8), board.boardArray.toList())
         assertTrue(ui.shownMessages.any { it.contains("Could not list available saves") })
         assertEquals(
             listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "not_found"))),
@@ -181,13 +181,13 @@ class ViewModelSaveLoadTest {
             loadException = SaveFileFormatException("corrupt", "missing board values")
         }
         val analytics = RecordingAnalyticsService()
-        val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
+        val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }
         val viewModel = ViewModelImpl(board, saves, analytics)
         val ui = FakeViewModelUi()
 
         ui.drive(viewModel) { viewModel.loadGame("corrupt") }
 
-        assertEquals(listOf(0, 1, 2, 3), board.boardArray.toList())
+        assertEquals(listOf(0, 1, 2, 3, 4, 5, 6, 7, 8), board.boardArray.toList())
         assertTrue(ui.shownMessages.any { it.contains("corrupt") })
         assertEquals(
             listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "error"))),
