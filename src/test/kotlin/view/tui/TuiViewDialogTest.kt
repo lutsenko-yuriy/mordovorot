@@ -158,6 +158,26 @@ class TuiViewDialogTest {
         assertTrue(viewModel.calls.contains("loadGame(bar)"))
     }
 
+    /** GH-44 WU4: the toolbar Load dialog's rows show each save's size - needs a real
+     *  [ViewModelImpl] (unlike the test above), since [FakeViewModel] never scripts one. */
+    @Test
+    fun `toolbar Load dialog rows show each save's size`(): Unit = runBlocking {
+        val saves = FakeSaveRepository(
+            mutableMapOf(
+                "foo" to storage.SavedBoard(4, IntArray(16) { it }),
+                "bar" to storage.SavedBoard(5, IntArray(25) { it }),
+            ),
+        )
+        val loadLayout = BoardLayout(terminalSize, squareSide = 4, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE))
+        val (loadX, loadY) = loadLayout.loadButtonPosition()
+        val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.MouseClick(loadX, loadY), TerminalEvent.Escape), terminalSize = terminalSize)
+
+        viewWithRealViewModel(terminal, saves, sizeChosenAtLaunch = true).play()
+
+        assertTrue(terminal.frames.any { it.contains("bar (5x5)") })
+        assertTrue(terminal.frames.any { it.contains("foo (4x4)") })
+    }
+
     @Test
     fun `Load dialog with no saves shows No saves found and Load is inert`(): Unit = runBlocking {
         val viewModel = FakeViewModel()
@@ -427,7 +447,7 @@ class TuiViewDialogTest {
         viewModel.saveNames = listOf("stale-name")
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.Escape), terminalSize = terminalSize)
 
-        view(terminal, viewModel).confirmRestore("real-name")
+        view(terminal, viewModel).confirmRestore(viewmodel.SaveInfo("real-name", null))
 
         assertTrue(terminal.frames.first().contains("real-name"))
         assertFalse(terminal.frames.first().contains("stale-name"))

@@ -2,6 +2,7 @@ package testing
 
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
+import viewmodel.SaveInfo
 import viewmodel.UiRequest
 import viewmodel.ViewModel
 
@@ -73,9 +74,11 @@ class FakeViewModel : ViewModel {
         calls.add("exitGame")
     }
 
-    override fun listSaves(): List<String> {
+    /** [SaveInfo.squareSide] is always `null` here - tests that care about size drive a real
+     *  [viewmodel.ViewModelImpl] instead, same as save failures (see [saveGame]'s KDoc). */
+    override fun listSaves(): List<SaveInfo> {
         calls.add("listSaves")
-        return saveNames
+        return saveNames.map { SaveInfo(it, null) }
     }
 
     override fun saveExists(name: String): Boolean {

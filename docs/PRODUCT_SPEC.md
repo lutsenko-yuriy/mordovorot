@@ -40,6 +40,11 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
 - Loading an unknown file name, or a save whose board size doesn't match the current board,
   leaves the board untouched and shows a message (listing available saves, where relevant)
   instead of crashing.
+- Every place a save's name is listed - the startup restore prompts below, the `load`
+  command's "no save named"/available-saves message, and the TUI's Load dialog (Feature 6) -
+  also shows that save's board size, e.g. `foo (5x5)`, so a mismatch (see above) is visible
+  before picking a save, not just after (GH-44). A save whose size can't be read (corrupted)
+  shows its name alone.
 - Saves are stored as `.save` files in a `saves/` directory relative to wherever the app is
   launched from (the process's current working directory) — running from a different directory
   will not see saves made from another one.
@@ -98,8 +103,9 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
     be overwritten" warning before saving over it. A name containing spaces is rejected with an
     on-screen message instead of being saved (the console's `load` command couldn't read it
     back). An empty name (Enter, or clicking Save with nothing typed) cancels without saving.
-  - **Load** — a clickable list of save names (`No saves found.` when there are none, with the
-    Load button inert); selecting one and confirming restores it.
+  - **Load** — a clickable list of save names and sizes (e.g. `foo (5x5)`, GH-44 - `No saves
+    found.` when there are none, with the Load button inert); selecting one and confirming
+    restores it.
   - **Exit** — `[ Yes ] [ No ] [ Cancel ]`; Cancel closes the dialog and keeps playing, Yes/No
     behave like the console's `exit`/`quit` save-first prompt (Feature 5), including the
     invalid-name re-prompt and the failed-save-keeps-playing behavior.

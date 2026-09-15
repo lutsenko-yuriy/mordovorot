@@ -1,5 +1,6 @@
 package viewmodel
 
+import storage.SaveFileFormatException
 import storage.SavedBoard
 import testing.FakeBoardModel
 import testing.FakeSaveRepository
@@ -17,16 +18,25 @@ import kotlin.test.assertTrue
 class ViewModelQueriesTest {
 
     @Test
-    fun `listSaves delegates to the save repository`() {
+    fun `listSaves delegates to the save repository, sorted by name`() {
         val saves = FakeSaveRepository(
             mutableMapOf(
                 "foo" to SavedBoard(4, IntArray(16) { it }),
-                "bar" to SavedBoard(4, IntArray(16) { it }),
+                "bar" to SavedBoard(5, IntArray(25) { it }),
             ),
         )
         val viewModel = ViewModelImpl(FakeBoardModel(), saves)
 
-        assertEquals(listOf("bar", "foo"), viewModel.listSaves())
+        assertEquals(listOf(SaveInfo("bar", 5), SaveInfo("foo", 4)), viewModel.listSaves())
+    }
+
+    @Test
+    fun `listSaves reports a null squareSide for a save whose size can't be read, rather than dropping it`() {
+        val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, IntArray(16) { it })))
+        saves.loadException = SaveFileFormatException("foo", "corrupted")
+        val viewModel = ViewModelImpl(FakeBoardModel(), saves)
+
+        assertEquals(listOf(SaveInfo("foo", null)), viewModel.listSaves())
     }
 
     @Test

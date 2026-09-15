@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.7.8] — 2026-09-16 (PR #54 merged)
+
+### Added
+- [wip] GH-44 (WU4/5): save size visibility — every save-listing surface (startup restore prompts, the console `load` not-found message, the TUI Load dialog) now shows each save's board size alongside its name, e.g. `foo (5x5)`, so a mismatch is visible before picking a save. `ViewModel.listSaves()` returns `SaveInfo` (name + nullable size) instead of bare names. A size-mismatched load still gets rejected rather than auto-resized - that lands in WU5, the final WU.
+
 ## [0.7.7] — 2026-09-16 (PR #53 merged)
 
 ### Added
