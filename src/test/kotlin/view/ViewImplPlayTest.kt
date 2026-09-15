@@ -3,6 +3,7 @@ package view
 import board_model.BoardModel
 import presenter.Presenter
 import presenter.PresenterImpl
+import storage.SavedBoard
 import testing.FakeBoardModel
 import testing.FakePresenter
 import testing.FakeSaveRepository
@@ -11,6 +12,7 @@ import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import java.io.StringReader
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -72,6 +74,25 @@ class ViewImplPlayTest {
         assertEquals("restoreOnStartup", presenter.calls.first())
         assertTrue(presenter.calls.contains("isSolved"))
         assertTrue(output.toString().isNotEmpty())
+    }
+
+    /** Pins the one ordering property [ViewImpl.play]'s shape actually depends on: the
+     *  `uiRequests` handler must be launched *before* `restoreOnStartup()`, not just called
+     *  before the loop - `FakePresenter` can't catch this (it never raises a `UiRequest`), so
+     *  this test drives a real [PresenterImpl] through the handler instead (audit finding on
+     *  PR #46). [withTimeout] turns a regression here into a failure instead of a silent hang -
+     *  see `build.gradle.kts`'s note on `kotlinx-coroutines-test` for why that distinction
+     *  matters for this exact class of bug. */
+    @Test
+    fun `play answers the startup restore prompt through its own request handler`(): Unit = runBlocking {
+        val board = FakeBoardModel()
+        val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, IntArray(16) { it })))
+        val (view, output) = viewWith("y\n", PresenterImpl(board, saves))
+
+        withTimeout(3_000) { view.play() }
+
+        assertTrue(output.toString().contains("Restore save 'foo'?"))
+        assertTrue(board.calls.any { it.startsWith("restoreState") })
     }
 
     @Test

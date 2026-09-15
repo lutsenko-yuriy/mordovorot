@@ -26,6 +26,12 @@ class FakeBoardModel(
     }
 
     override fun restoreState(state: IntArray) {
+        // Mirrors BoardImpl's own validation (audit finding on PR #46) - without it, a
+        // mis-sized fixture leaves a fake board whose array doesn't match SQUARE_SIDE, and
+        // ViewImpl.play()'s displayBoard call throws every iteration with nothing consuming
+        // input to ever reach EOF - an unbounded loop instead of a readable test failure.
+        require(state.size == SQUARE_SIDE * SQUARE_SIDE) { "Expected ${SQUARE_SIDE * SQUARE_SIDE} values, got ${state.size}" }
+        require(state.toSet() == (0 until state.size).toSet()) { "Board state must contain each of ${state.size} tile values exactly once" }
         calls.add("restoreState(${state.toList()})")
         boardArray = state
     }
