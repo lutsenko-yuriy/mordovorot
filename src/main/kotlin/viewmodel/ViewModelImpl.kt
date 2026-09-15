@@ -258,8 +258,12 @@ class ViewModelImpl(
                         val typed = ask(UiRequest.ChooseSaveToRestore(saveInfos)) ?: break
                         // Matches either the bare name or the "name (NxN)" the console prompt
                         // now prints (GH-44 WU4, audit finding on PR #54) - a user typing back
-                        // exactly what they see must not get stuck re-prompted forever.
-                        val match = saveInfos.firstOrNull { it.name == typed || it.display() == typed }
+                        // exactly what they see must not get stuck re-prompted forever. Exact
+                        // name match tried first - only a hand-placed save file with a space in
+                        // its name (no in-app save path allows one) could make a display-form
+                        // match ambiguous, and even then this order picks the save whose actual
+                        // name was typed (round 2 audit finding on PR #54).
+                        val match = saveInfos.firstOrNull { it.name == typed } ?: saveInfos.firstOrNull { it.display() == typed }
                         if (match != null) {
                             chosen = match.name
                         } else {

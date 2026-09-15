@@ -118,6 +118,27 @@ class ViewImplCommandTest {
         assertEquals(listOf("loadGame(foo)"), viewModel.calls)
     }
 
+    /** Round 2 audit finding on PR #54 (GH-44 WU4): `availableSavesMessage()` now shows
+     *  "name (NxN)" - typing that back into `load` must not fail with "Incorrect input". */
+    @Test
+    fun `load command strips a trailing size suffix, GH-44 WU4`(): Unit = runBlocking {
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("load foo (5x5)\n", viewModel)
+
+        view.processCommand()
+
+        assertEquals(listOf("loadGame(foo)"), viewModel.calls)
+    }
+
+    @Test
+    fun `load command with a size suffix that doesn't match the NxN shape is rejected, not silently truncated`(): Unit = runBlocking {
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("load foo bar\n", viewModel)
+
+        assertFailsWith<IllegalArgumentException> { view.processCommand() }
+        assertEquals(emptyList(), viewModel.calls)
+    }
+
     @Test
     fun `save with a missing file name throws without delegating`(): Unit = runBlocking {
         val viewModel = FakeViewModel()

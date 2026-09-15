@@ -102,7 +102,7 @@ class ViewImpl internal constructor(
             }
 
             "save" -> viewModel.saveGame(nameArg(parts))
-            "load" -> viewModel.loadGame(nameArg(parts))
+            "load" -> viewModel.loadGame(loadNameArg(parts))
 
             "exit", "quit" -> {
                 requireArgCount(parts, 1)
@@ -191,6 +191,19 @@ class ViewImpl internal constructor(
     private fun nameArg(parts: List<String>): String {
         requireArgCount(parts, 2)
         return parts[1]
+    }
+
+    /** [nameArg], but also strips a trailing `(NxN)` token - what `viewmodel.SaveInfo.display`
+     *  (GH-44 WU4) now appends when a save's size is shown in the `load`-not-found message, so
+     *  typing back exactly what's shown (`load foo (5x5)`) loads `foo` instead of failing with
+     *  "Incorrect input" (round 2 audit finding on PR #54, same class of issue
+     *  [viewmodel.ViewModelImpl.restoreOnStartup]'s own match already handles). A real save name
+     *  containing a literal trailing `(NxN)`-shaped token is not reachable through any in-app
+     *  save path - every one rejects whitespace in a name
+     *  ([viewmodel.ViewModelImpl.promptForValidSaveName], `view.tui.TuiView.handleToolbarSave`). */
+    private fun loadNameArg(parts: List<String>): String {
+        if (parts.size == 3 && Regex("""\(\d+x\d+\)""").matches(parts[2])) return parts[1]
+        return nameArg(parts)
     }
 
     private fun requireArgCount(parts: List<String>, expected: Int) {

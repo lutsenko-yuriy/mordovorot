@@ -252,6 +252,32 @@ class ViewModelStartupRestoreTest {
         assertEquals(listOf("restoreState(${fourByFour.toList()})"), board.calls)
     }
 
+    /** Round 2 audit finding on PR #54 (GH-44 WU4): an exact name match must win over another
+     *  save's display-form match - only reachable with a hand-placed save file whose name
+     *  contains a space (no in-app save path allows one), but a real save named literally
+     *  "foo (4x4)" must still be selectable by typing its own name. */
+    @Test
+    fun `an exact name match wins over another save's colliding display form`(): Unit = runBlocking {
+        // Same squareSide (4) on both - a mismatch would hit loadGame's separate size-mismatch
+        // rejection (pre-WU5), which isn't what this test is about; barState distinguishes
+        // which save actually got restored.
+        val board = FakeBoardModel()
+        val barState = intArrayOf(3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12)
+        val saves = FakeSaveRepository(
+            mutableMapOf(
+                "foo" to SavedBoard(4, fourByFour),
+                "foo (4x4)" to SavedBoard(4, barState),
+            ),
+        )
+        val viewModel = ViewModelImpl(board, saves)
+        val ui = FakeViewModelUi(chooseSaveToRestoreResponses = mutableListOf("foo (4x4)"))
+
+        ui.drive(viewModel) { viewModel.restoreOnStartup() }
+
+        assertEquals(listOf("Loaded 'foo (4x4)'."), ui.shownMessages)
+        assertEquals(listOf("restoreState(${barState.toList()})"), board.calls)
+    }
+
     @Test
     fun `restoreOnStartup is a no-op on a second call - does not re-prompt or double-track`(): Unit = runBlocking {
         // A caller invoking it twice in one launch (e.g. by mistake, or two code paths both
