@@ -5,13 +5,14 @@ import testing.FakeBoardModel
 import testing.FakeSaveRepository
 import testing.FakeView
 import view.EndOfInputException
+import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class ConsolePresenterPlayTest {
 
     @Test
-    fun `play returns immediately when the board is already correct`() {
+    fun `play returns immediately when the board is already correct`(): Unit = runBlocking {
         val board = FakeBoardModel().apply { correct = true }
         val view = FakeView()
         val presenter = ConsolePresenterImpl(view, board)
@@ -31,7 +32,7 @@ class ConsolePresenterPlayTest {
      *  subclass needed its own anchor, and the console side lost its coverage when every
      *  startup-restore test moved onto the TUI entry point). */
     @Test
-    fun `play offers startup restore before entering the loop`() {
+    fun `play offers startup restore before entering the loop`(): Unit = runBlocking {
         val board = FakeBoardModel().apply { correct = true }
         val savedState = intArrayOf(3, 2, 1, 0)
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, savedState)))
@@ -45,7 +46,7 @@ class ConsolePresenterPlayTest {
     }
 
     @Test
-    fun `play displays the board and processes one command before the board is solved`() {
+    fun `play displays the board and processes one command before the board is solved`(): Unit = runBlocking {
         val board = FakeBoardModel()
         val view = FakeView(mutableListOf({ board.correct = true }))
         val presenter = ConsolePresenterImpl(view, board)
@@ -59,7 +60,7 @@ class ConsolePresenterPlayTest {
     }
 
     @Test
-    fun `play returns without looping when processCommand throws EndOfInputException`() {
+    fun `play returns without looping when processCommand throws EndOfInputException`(): Unit = runBlocking {
         val board = FakeBoardModel()
         val view = FakeView(mutableListOf({ throw EndOfInputException() }))
         val presenter = ConsolePresenterImpl(view, board)
@@ -76,7 +77,7 @@ class ConsolePresenterPlayTest {
      *  this catch unexercised, since [BasePresenterExitTest] asserts the throw against
      *  `TestPresenter` directly, with no loop to catch it). */
     @Test
-    fun `play returns when exitGame requests an exit`() {
+    fun `play returns when exitGame requests an exit`(): Unit = runBlocking {
         val board = FakeBoardModel()
         lateinit var presenter: ConsolePresenterImpl
         val view = FakeView(
@@ -91,7 +92,7 @@ class ConsolePresenterPlayTest {
     }
 
     @Test
-    fun `play swallows processCommand exceptions and keeps looping`() {
+    fun `play swallows processCommand exceptions and keeps looping`(): Unit = runBlocking {
         val board = FakeBoardModel()
         val view = FakeView(
             mutableListOf(
@@ -108,7 +109,7 @@ class ConsolePresenterPlayTest {
     }
 
     @Test
-    fun `play routes a swallowed exception's message through view showMessage, not System-err`() {
+    fun `play routes a swallowed exception's message through view showMessage, not System-err`(): Unit = runBlocking {
         val board = FakeBoardModel()
         val view = FakeView(
             mutableListOf(
@@ -128,7 +129,7 @@ class ConsolePresenterPlayTest {
      *  [BasePresenter.exitGame] behaviour; that method's own message/analytics contract is
      *  covered directly, without a play() loop, in [BasePresenterExitTest]. */
     @Test
-    fun `a failed save during exit does not quit - play keeps looping`() {
+    fun `a failed save during exit does not quit - play keeps looping`(): Unit = runBlocking {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository()
         saves.saveException = RuntimeException("disk full")

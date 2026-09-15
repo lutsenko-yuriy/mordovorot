@@ -23,7 +23,7 @@ interface TuiPresenter : Presenter {
      *  Exposed on this interface (rather than the shared [Presenter] core) so [view.tui.TuiView]
      *  (GH-3) can run it ahead of its own event loop, instead of [ConsolePresenter.play]'s
      *  console-only loop. */
-    fun restoreOnStartup()
+    suspend fun restoreOnStartup()
 
     /** Current board tile values (0-based, GH-10 dialect) - lets the mouse-driven TUI (GH-3)
      *  render/re-render after every click, since it doesn't call [ConsolePresenter.play]'s

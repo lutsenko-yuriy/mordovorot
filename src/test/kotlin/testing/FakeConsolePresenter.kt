@@ -10,7 +10,7 @@ import presenter.ConsolePresenter
  */
 class FakeConsolePresenter : RecordingPresenter(), ConsolePresenter {
 
-    override fun play() {
+    override suspend fun play() {
         calls.add("play")
     }
 }

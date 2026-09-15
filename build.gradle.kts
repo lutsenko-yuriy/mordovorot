@@ -14,7 +14,15 @@ kotlin {
 }
 
 dependencies {
+    // GH-42: the project's first third-party runtime dependency - powers Presenter's
+    // View-request channel. 1.8.1 is the last kotlinx.coroutines line built against
+    // Kotlin 1.9.x (1.9.0 moved to Kotlin 2.0); confirmed empirically by this build.
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
     testImplementation(kotlin("test"))
+    // Test-only: gives a timeout-failure instead of a silent hang on a deadlocked
+    // coroutine test - this refactor's actual failure mode. No real delay() anywhere
+    // in this codebase, so its virtual-time skipping isn't the point of adding it.
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
 }
 
 application {

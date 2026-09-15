@@ -42,7 +42,7 @@ class GameSession(
      *  prompt. */
     private var startupRestoreDone = false
 
-    fun run() {
+    suspend fun run() {
         var isFirstSession = true
         while (true) {
             try {

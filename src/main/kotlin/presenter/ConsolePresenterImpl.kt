@@ -19,7 +19,7 @@ class ConsolePresenterImpl(
     startupRestoreDone: Boolean = false,
 ) : BasePresenter(view, board, saves, analytics, startupRestoreDone), ConsolePresenter {
 
-    override fun play() {
+    override suspend fun play() {
         offerStartupRestore()
         while (!board.isCorrect()) {
             try {

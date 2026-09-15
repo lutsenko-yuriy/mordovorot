@@ -31,7 +31,7 @@ abstract class BasePresenter(
 
     override fun resetGame() = board.resetGame()
 
-    override fun saveGame(name: String): Boolean {
+    override suspend fun saveGame(name: String): Boolean {
         // saves.exists/save can throw (bad name, IOException) - caught here rather than left to
         // play()'s generic handler, so a failed save is still tracked and gets its own message
         // instead of silently missing from save_command_used (audit finding on PR #13).
@@ -55,7 +55,7 @@ abstract class BasePresenter(
         }
     }
 
-    override fun loadGame(name: String) {
+    override suspend fun loadGame(name: String) {
         loadGame(name, trigger = "command")
     }
 
@@ -64,7 +64,7 @@ abstract class BasePresenter(
      *  Returns whether the board was actually restored, so [offerStartupRestore] can report an
      *  accurate `startup_restore_decision` instead of assuming success (audit on PR #14: a
      *  corrupted/mismatched save offered at startup was being recorded as "restored"). */
-    private fun loadGame(name: String, trigger: String): Boolean {
+    private suspend fun loadGame(name: String, trigger: String): Boolean {
         // The whole body is guarded, not just saves.load - availableSavesMessage() (itself
         // saves.listSaves()) and board.restoreState can also throw, and WU4's startup restore
         // flow calls this before play()'s try/catch exists, so loadGame must not throw
@@ -103,7 +103,7 @@ abstract class BasePresenter(
      * that fails does **not** end the session (see below) - [exitGame] can return normally
      * instead of always throwing [ExitRequestedException].
      */
-    override fun exitGame() {
+    override suspend fun exitGame() {
         if (!view.confirmSaveBeforeExit()) {
             analytics.track("exit_command_used", mapOf("save_choice" to "declined"))
             throw ExitRequestedException()
@@ -147,7 +147,7 @@ abstract class BasePresenter(
      *    [saveGame] throw, which [promptForValidSaveName]'s caller must not confuse with a
      *    genuine save failure (e.g. a read-only `saves/` directory).
      */
-    private fun promptForValidSaveName(): String? {
+    private suspend fun promptForValidSaveName(): String? {
         while (true) {
             val name = view.promptSaveName() ?: return null
             if (name.any { it.isWhitespace() } || !saves.isValidName(name)) {
@@ -185,7 +185,7 @@ abstract class BasePresenter(
      * first step, and [TuiPresenterImpl] re-exposes it publicly as [TuiPresenter.restoreOnStartup]
      * so [view.tui.TuiView] can run it ahead of its own event loop (GH-3).
      */
-    protected fun offerStartupRestore() {
+    protected suspend fun offerStartupRestore() {
         if (startupRestoreDone) return
         startupRestoreDone = true
         try {

@@ -12,7 +12,7 @@ class RecordingModeSwitcher : ModeSwitcher {
 
     val calls = mutableListOf<Call>()
 
-    override fun switchTo(target: InputMode, trigger: String) {
+    override suspend fun switchTo(target: InputMode, trigger: String) {
         calls.add(Call(target, trigger))
     }
 }

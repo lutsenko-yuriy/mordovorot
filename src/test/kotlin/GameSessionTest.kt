@@ -9,6 +9,7 @@ import testing.FakeTerminal
 import testing.RecordingAnalyticsService
 import view.View
 import view.ViewImpl
+import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -23,13 +24,13 @@ class GameSessionTest {
     /** [View] test double: only [play] does anything, running the scripted [onPlay]. */
     private class ScriptedView(private val onPlay: () -> Unit) : View {
         override fun displayBoard(boardState: IntArray, squareSide: Int) {}
-        override fun showMessage(message: String) {}
-        override fun processCommand() {}
-        override fun confirmRestore(saveName: String): Boolean = false
-        override fun chooseSaveToRestore(saveNames: List<String>): String? = null
-        override fun confirmSaveBeforeExit(): Boolean = false
-        override fun promptSaveName(): String? = null
-        override fun play() = onPlay()
+        override suspend fun showMessage(message: String) {}
+        override suspend fun processCommand() {}
+        override suspend fun confirmRestore(saveName: String): Boolean = false
+        override suspend fun chooseSaveToRestore(saveNames: List<String>): String? = null
+        override suspend fun confirmSaveBeforeExit(): Boolean = false
+        override suspend fun promptSaveName(): String? = null
+        override suspend fun play() = onPlay()
     }
 
     private data class BuildCall(val mode: InputMode, val board: BoardModel, val saves: SaveRepository, val startupRestoreDone: Boolean)
@@ -53,7 +54,7 @@ class GameSessionTest {
             },
         )
 
-        session.run()
+        runBlocking { session.run() }
 
         assertEquals(listOf(InputMode.CONSOLE, InputMode.MOUSE), calls.map { it.mode })
         assertTrue(calls.all { it.board === board })
@@ -78,7 +79,7 @@ class GameSessionTest {
             },
         )
 
-        session.run()
+        runBlocking { session.run() }
 
         assertEquals(listOf(false, true), calls.map { it.startupRestoreDone })
     }
@@ -103,7 +104,7 @@ class GameSessionTest {
             },
         )
 
-        session.run()
+        runBlocking { session.run() }
 
         assertEquals(listOf(InputMode.CONSOLE, InputMode.MOUSE, InputMode.KEYBOARD), modesBuilt)
         assertEquals(3, built)
@@ -121,7 +122,7 @@ class GameSessionTest {
             },
         )
 
-        session.run()
+        runBlocking { session.run() }
 
         assertEquals(1, built)
     }
@@ -144,7 +145,7 @@ class GameSessionTest {
             },
         )
 
-        session.run() // must not throw
+        runBlocking { session.run() } // must not throw
 
         assertEquals(listOf(InputMode.CONSOLE, InputMode.MOUSE, InputMode.CONSOLE), calls.map { it.mode })
         // The fallback build (3rd) must not re-show the startup restore prompt over a live board.
@@ -158,7 +159,7 @@ class GameSessionTest {
             buildView = { _, _, _, _, _ -> ScriptedView { throw RuntimeException("stty not found") } },
         )
 
-        assertFailsWith<RuntimeException> { session.run() }
+        assertFailsWith<RuntimeException> { runBlocking { session.run() } }
     }
 
     @Test
@@ -181,7 +182,7 @@ class GameSessionTest {
             },
         )
 
-        assertFailsWith<RuntimeException> { session.run() }
+        assertFailsWith<RuntimeException> { runBlocking { session.run() } }
         assertEquals(listOf(InputMode.MOUSE, InputMode.KEYBOARD, InputMode.CONSOLE), modesBuilt)
     }
 
@@ -197,7 +198,7 @@ class GameSessionTest {
             },
         )
 
-        assertFailsWith<ExitRequestedException> { session.run() }
+        assertFailsWith<ExitRequestedException> { runBlocking { session.run() } }
     }
 
     @Test

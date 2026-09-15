@@ -5,6 +5,7 @@ import presenter.TuiPresenter
 import testing.FakeTuiPresenter
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
+import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -29,7 +30,7 @@ class TuiViewSolvedStateTest {
         BoardLayout(terminalSize, presenter.side, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE))
 
     @Test
-    fun `when the board becomes solved, arrow clicks make no presenter call`() {
+    fun `when the board becomes solved, arrow clicks make no presenter call`(): Unit = runBlocking {
         val presenter = FakeTuiPresenter().apply { solved = true }
         val (x, y) = boardLayout(presenter).leftArrowPosition(0)
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.MouseClick(x, y)), terminalSize = terminalSize)
@@ -40,7 +41,7 @@ class TuiViewSolvedStateTest {
     }
 
     @Test
-    fun `the title changes to Congratulations tick on solve`() {
+    fun `the title changes to Congratulations tick on solve`(): Unit = runBlocking {
         val presenter = FakeTuiPresenter().apply { solved = true }
         val terminal = FakeTerminal(terminalSize = terminalSize)
 
@@ -51,7 +52,7 @@ class TuiViewSolvedStateTest {
     }
 
     @Test
-    fun `Save, Load, and Exit remain active after solve`() {
+    fun `Save, Load, and Exit remain active after solve`(): Unit = runBlocking {
         val presenter = FakeTuiPresenter().apply { solved = true }
 
         val (saveX, saveY) = boardLayout(presenter).saveButtonPosition()
@@ -71,7 +72,7 @@ class TuiViewSolvedStateTest {
     }
 
     @Test
-    fun `screen_congratulations fires exactly once when a shift solves the board`() {
+    fun `screen_congratulations fires exactly once when a shift solves the board`(): Unit = runBlocking {
         // solved() flips to true only once shiftLeft(0) actually runs - a real transition
         // reached by playing, not by loading an already-solved save (see the next test).
         val delegate = FakeTuiPresenter()
@@ -92,14 +93,14 @@ class TuiViewSolvedStateTest {
     }
 
     @Test
-    fun `screen_congratulations does not fire when a startup restore loads an already-solved save`() {
+    fun `screen_congratulations does not fire when a startup restore loads an already-solved save`(): Unit = runBlocking {
         // Audit finding on PR #25: gating solely on isSolved() at repaint time fired this event
         // on every restore of a pre-solved save (startup or toolbar Load) - inflating a "board
         // was solved by playing" metric with saves that were already solved before this session
         // even started. The event now fires only from a shift that causes the transition.
         val delegate = FakeTuiPresenter().apply { solved = true }
         val presenter = object : TuiPresenter by delegate {
-            override fun restoreOnStartup() {
+            override suspend fun restoreOnStartup() {
                 delegate.restoreOnStartup()
                 delegate.loadGame("solved-save")
             }
@@ -114,10 +115,10 @@ class TuiViewSolvedStateTest {
     }
 
     @Test
-    fun `loading an unsolved board from the Congratulations screen re-enables the arrows and title`() {
+    fun `loading an unsolved board from the Congratulations screen re-enables the arrows and title`(): Unit = runBlocking {
         val delegate = FakeTuiPresenter().apply { solved = true; saveNames = listOf("save1") }
         val presenter = object : TuiPresenter by delegate {
-            override fun loadGame(name: String) {
+            override suspend fun loadGame(name: String) {
                 delegate.loadGame(name)
                 delegate.solved = false
             }

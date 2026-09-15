@@ -82,7 +82,7 @@ class TuiView internal constructor(
         }
     }
 
-    override fun play() {
+    override suspend fun play() {
         try {
             terminal.enterRawMode()
             // GH-18's input-strategy seam (WU3): mouse reporting is MouseInput's own business
@@ -113,7 +113,7 @@ class TuiView internal constructor(
         }
     }
 
-    private fun handleTarget(target: HitTarget) {
+    private suspend fun handleTarget(target: HitTarget) {
         when (target) {
             is HitTarget.ShiftLeft -> shift { presenter.shiftLeft(target.row) }
             is HitTarget.ShiftRight -> shift { presenter.shiftRight(target.row) }
@@ -147,7 +147,7 @@ class TuiView internal constructor(
         if (presenter.isSolved() && !wasSolved) analytics.track("screen_congratulations")
     }
 
-    private fun handleToolbarSave() {
+    private suspend fun handleToolbarSave() {
         when (val outcome = runSaveDialog("toolbar")) {
             is SaveOutcome.Confirm -> {
                 // The exit flow's promptForValidSaveName rejects a whitespace name because
@@ -166,14 +166,14 @@ class TuiView internal constructor(
         }
     }
 
-    private fun handleToolbarLoad() {
+    private suspend fun handleToolbarLoad() {
         when (val outcome = runLoadDialog("Load game", "toolbar")) {
             is LoadOutcome.Confirm -> presenter.loadGame(outcome.name)
             LoadOutcome.Cancel -> {}
         }
     }
 
-    private fun handleToolbarExit() {
+    private suspend fun handleToolbarExit() {
         analytics.track("screen_exit_dialog")
         input.onDialogOpened()
         val dialog = Dialog(
@@ -327,30 +327,30 @@ class TuiView internal constructor(
     // console-only loop, which TuiView never calls (see class KDoc).
     override fun displayBoard(boardState: IntArray, squareSide: Int) {}
 
-    override fun processCommand() {}
+    override suspend fun processCommand() {}
 
-    override fun showMessage(message: String) {
+    override suspend fun showMessage(message: String) {
         pendingMessage = message
     }
 
     /** The startup restore prompt for exactly one save - the same Load-shaped modal as any
      *  other save count (per the plan, this is where the console's 1-save yes/no split
      *  disappears in the TUI). */
-    override fun confirmRestore(saveName: String): Boolean =
+    override suspend fun confirmRestore(saveName: String): Boolean =
         runLoadDialog("Restore a saved game?", "startup", preloadedSaves = listOf(saveName)) is LoadOutcome.Confirm
 
-    override fun chooseSaveToRestore(saveNames: List<String>): String? =
+    override suspend fun chooseSaveToRestore(saveNames: List<String>): String? =
         (runLoadDialog("Restore a saved game?", "startup", preloadedSaves = saveNames) as? LoadOutcome.Confirm)?.name
 
     /** Consumes the answer the Exit dialog's Yes/No click already collected - see
      *  [pendingExitAnswer]. */
-    override fun confirmSaveBeforeExit(): Boolean {
+    override suspend fun confirmSaveBeforeExit(): Boolean {
         val answer = pendingExitAnswer ?: false
         pendingExitAnswer = null
         return answer
     }
 
-    override fun promptSaveName(): String? =
+    override suspend fun promptSaveName(): String? =
         when (val outcome = runSaveDialog("exit_flow")) {
             is SaveOutcome.Confirm -> outcome.name
             SaveOutcome.Cancel -> null

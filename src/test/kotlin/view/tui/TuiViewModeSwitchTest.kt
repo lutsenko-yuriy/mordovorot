@@ -6,6 +6,7 @@ import presenter.ModeSwitcher
 import testing.FakeTerminal
 import testing.FakeTuiPresenter
 import testing.RecordingModeSwitcher
+import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -29,7 +30,7 @@ class TuiViewModeSwitchTest {
     )
 
     @Test
-    fun `clicking the toolbar's Keyboard button requests a switch to keyboard mode with trigger=toolbar`() {
+    fun `clicking the toolbar's Keyboard button requests a switch to keyboard mode with trigger=toolbar`(): Unit = runBlocking {
         val switcher = RecordingModeSwitcher()
         val button = mouseBoardLayout().toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.KEYBOARD) }
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.MouseClick(button.range.first, button.y)))
@@ -41,7 +42,7 @@ class TuiViewModeSwitchTest {
     }
 
     @Test
-    fun `clicking the toolbar's Console button requests a switch to console mode with trigger=toolbar`() {
+    fun `clicking the toolbar's Console button requests a switch to console mode with trigger=toolbar`(): Unit = runBlocking {
         val switcher = RecordingModeSwitcher()
         val button = mouseBoardLayout().toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.CONSOLE) }
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.MouseClick(button.range.first, button.y)))
@@ -53,7 +54,7 @@ class TuiViewModeSwitchTest {
     }
 
     @Test
-    fun `pressing F7 in keyboard mode requests a switch to mouse mode with trigger=shortcut, even when solved`() {
+    fun `pressing F7 in keyboard mode requests a switch to mouse mode with trigger=shortcut, even when solved`(): Unit = runBlocking {
         val switcher = RecordingModeSwitcher()
         val presenter = FakeTuiPresenter().apply { solved = true }
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.FunctionKey(7)))
@@ -65,7 +66,7 @@ class TuiViewModeSwitchTest {
     }
 
     @Test
-    fun `pressing F8 in keyboard mode requests a switch to console mode with trigger=shortcut`() {
+    fun `pressing F8 in keyboard mode requests a switch to console mode with trigger=shortcut`(): Unit = runBlocking {
         val switcher = RecordingModeSwitcher()
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.FunctionKey(8)))
         val view = TuiView.create(terminal, input = KeyboardInput(), modeSwitcherFactory = { switcher }) { FakeTuiPresenter() }
@@ -76,12 +77,12 @@ class TuiViewModeSwitchTest {
     }
 
     @Test
-    fun `pressing F8 with a real ModeSwitcher unwinds ModeSwitchRequestedException out of play() and restores the terminal`() {
+    fun `pressing F8 with a real ModeSwitcher unwinds ModeSwitchRequestedException out of play() and restores the terminal`(): Unit = runBlocking {
         // Audit suggestion on PR #40: the mouse-click path has this coverage (below); the
         // keyboard-shortcut path only had RecordingModeSwitcher tests, leaving the actual
         // unwind-and-restore guarantee untested for F7/F8's route to handleTarget.
         val throwingSwitcher = object : ModeSwitcher {
-            override fun switchTo(target: InputMode, trigger: String) = throw ModeSwitchRequestedException(target)
+            override suspend fun switchTo(target: InputMode, trigger: String) = throw ModeSwitchRequestedException(target)
         }
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.FunctionKey(8)))
         val view = TuiView.create(terminal, input = KeyboardInput(), modeSwitcherFactory = { throwingSwitcher }) { FakeTuiPresenter() }
@@ -91,7 +92,7 @@ class TuiViewModeSwitchTest {
     }
 
     @Test
-    fun `a mode switch reached after a dialog was opened and cancelled still unwinds cleanly and restores the terminal`() {
+    fun `a mode switch reached after a dialog was opened and cancelled still unwinds cleanly and restores the terminal`(): Unit = runBlocking {
         // A Save dialog exactly as handleToolbarSave's runSaveDialog builds it on its first
         // iteration (empty typed name, no overwrite warning) - needed to compute the Cancel
         // button's real coordinates.
@@ -109,7 +110,7 @@ class TuiViewModeSwitchTest {
         val consoleButton = boardLayout.toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.CONSOLE) }
 
         val throwingSwitcher = object : ModeSwitcher {
-            override fun switchTo(target: InputMode, trigger: String) = throw ModeSwitchRequestedException(target)
+            override suspend fun switchTo(target: InputMode, trigger: String) = throw ModeSwitchRequestedException(target)
         }
         val terminal = FakeTerminal(
             events = mutableListOf(

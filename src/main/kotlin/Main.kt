@@ -1,10 +1,11 @@
 import analytics.AnalyticsService
 import analytics.NoopAnalyticsService
+import kotlinx.coroutines.runBlocking
 
 /**
  * Created by yurich on 02.12.16.
  */
-fun main(args: Array<String>) {
+fun main(args: Array<String>) = runBlocking {
     val analytics = NoopAnalyticsService()
     val mode = resolveInputMode(args, analytics)
     GameSession(initialMode = mode, analytics = analytics).run()

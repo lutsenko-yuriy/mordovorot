@@ -40,7 +40,7 @@ class FakeTuiPresenter : RecordingPresenter(), TuiPresenter {
         return solved
     }
 
-    override fun restoreOnStartup() {
+    override suspend fun restoreOnStartup() {
         calls.add("restoreOnStartup")
     }
 

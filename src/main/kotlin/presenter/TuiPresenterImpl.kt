@@ -19,7 +19,7 @@ class TuiPresenterImpl(
     startupRestoreDone: Boolean = false,
 ) : BasePresenter(view, board, saves, analytics, startupRestoreDone), TuiPresenter {
 
-    override fun restoreOnStartup() = offerStartupRestore()
+    override suspend fun restoreOnStartup() = offerStartupRestore()
 
     override fun listSaves(): List<String> =
         try {
