@@ -98,7 +98,7 @@ class ViewImplPlayTest {
     @Test
     fun `play displays the board and processes one command before the board is solved`(): Unit = runBlocking {
         val fakeBoard = FakeBoardModel()
-        val viewModel = ViewModelImpl(solveOnShiftLeft(fakeBoard))
+        val viewModel = ViewModelImpl(solveOnShiftLeft(fakeBoard), sizeChosenAtLaunch = true)
         val (view, output) = viewWith("left 1\n", viewModel)
 
         view.play()
@@ -127,7 +127,7 @@ class ViewImplPlayTest {
     @Test
     fun `play returns when exitGame requests an exit`(): Unit = runBlocking {
         val board = FakeBoardModel()
-        val viewModel = ViewModelImpl(board, FakeSaveRepository())
+        val viewModel = ViewModelImpl(board, FakeSaveRepository(), sizeChosenAtLaunch = true)
         // "n" declines the save-before-quitting prompt - exitGame() throws immediately. The
         // trailing "left 1" must never be reached if the loop actually stops at exit.
         val (view, _) = viewWith("exit\nn\nleft 1\n", viewModel)
@@ -140,7 +140,7 @@ class ViewImplPlayTest {
     @Test
     fun `play swallows processCommand exceptions and keeps looping`(): Unit = runBlocking {
         val fakeBoard = FakeBoardModel()
-        val viewModel = ViewModelImpl(solveOnShiftLeft(fakeBoard))
+        val viewModel = ViewModelImpl(solveOnShiftLeft(fakeBoard), sizeChosenAtLaunch = true)
         val (view, output) = viewWith("banana\nleft 1\n", viewModel)
 
         view.play()
@@ -159,7 +159,7 @@ class ViewImplPlayTest {
 
     @Test
     fun `play routes a swallowed exception's message through showMessage, not System-err`(): Unit = runBlocking {
-        val viewModel = ViewModelImpl(FakeBoardModel())
+        val viewModel = ViewModelImpl(FakeBoardModel(), sizeChosenAtLaunch = true)
         val (view, output) = viewWith("left abc\n", viewModel)
 
         view.play()
@@ -175,7 +175,7 @@ class ViewImplPlayTest {
     fun `a failed save during exit does not quit - play keeps looping`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         saves.saveException = RuntimeException("disk full")
-        val viewModel = ViewModelImpl(FakeBoardModel(), saves)
+        val viewModel = ViewModelImpl(FakeBoardModel(), saves, sizeChosenAtLaunch = true)
         // "y" confirms saving, "foo" is the name - the save then fails, and the loop must not
         // have thrown ExitRequestedException, or this call would never return normally.
         val (view, output) = viewWith("exit\ny\nfoo\n", viewModel)

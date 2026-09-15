@@ -1,7 +1,10 @@
 package view.tui
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
+import testing.FakeBoardModel
 import testing.FakeSaveRepository
 import testing.FakeTerminal
 import testing.FakeViewModel
@@ -46,9 +49,27 @@ class TuiViewSizeDialogTest {
 
     @Test
     fun `startup - no --size given, restore declined-no saves - the Size dialog appears automatically (opened_from=startup)`(): Unit = runBlocking {
-        // TODO: Build a TuiView over a real ViewModelImpl(FakeBoardModel(), FakeSaveRepository(), analytics, sizePromptEnabled = true), no saves.
-        // TODO: Run play().
-        // TODO: Verify the Size dialog frame appears without a toolbar click.
-        // TODO: Verify screen_size_dialog {opened_from: "startup"} was tracked.
+        val saves = FakeSaveRepository()
+        val board = FakeBoardModel()
+        val analytics = RecordingAnalyticsService()
+        val dialog = Dialog(
+            Dialog.Kind.SIZE,
+            "New game size",
+            buttons = listOf(
+                DialogButtonSpec("3", "3x3"), DialogButtonSpec("4", "4x4"),
+                DialogButtonSpec("5", "5x5"), DialogButtonSpec("cancel", "Cancel"),
+            ),
+        )
+        val button5 = DialogLayout(dialog, terminalSize).buttons().first { it.target == HitTarget.DialogButton("5") }
+        val terminal = FakeTerminal(
+            events = mutableListOf(TerminalEvent.MouseClick(button5.x, DialogLayout(dialog, terminalSize).buttonsRow())),
+            terminalSize = terminalSize,
+        )
+
+        TuiView.create(terminal, analytics, viewModel = ViewModelImpl(board, saves, analytics)).play()
+
+        assertTrue(terminal.frames.first().contains("New game size"))
+        assertEquals(listOf("newGame(5)"), board.calls)
+        assertTrue(analytics.events.any { it.name == "screen_size_dialog" && it.properties["opened_from"] == "startup" })
     }
 }

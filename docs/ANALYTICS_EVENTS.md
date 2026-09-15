@@ -79,11 +79,11 @@ Fired once at startup, after the launch mode is resolved (default mouse TUI, `--
 
 ### `dialog_cancelled`
 
-Fired when the user cancels the Save, Load, or Exit dialog in the mouse-driven or keyboard-driven TUI (mouse click, or Escape/Cancel-control in keyboard mode) without completing the action. *(GH-3, GH-18)*
+Fired when the user cancels the Save, Load, Exit, or Size dialog in the mouse-driven or keyboard-driven TUI (mouse click, or Escape/Cancel-control in keyboard mode) without completing the action. *(GH-3, GH-18, GH-44)*
 
 | Property | Type | Description |
 |---|---|---|
-| `dialog` | `string` | `save`, `load`, or `exit`. |
+| `dialog` | `string` | `save`, `load`, `exit`, or `size`. |
 | `input_method` | `string` | `mouse` or `keyboard` — which TUI mode the session was running in. *(GH-18)* |
 
 ### `input_mode_switched`

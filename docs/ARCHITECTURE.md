@@ -252,19 +252,30 @@ running.
 
 ### Board-size surfaces (GH-44)
 Four entry points, all of which *start a fresh game* rather than resizing the
-running one: the `--size=N` launch flag (`Main.resolveBoardSize`, warning and
-falling back to 4 on anything invalid, and reported as `app_launched.board_size`);
-a startup prompt raised by `ViewModelImpl.restoreOnStartup` as
-`UiRequest.ChooseBoardSize`, shown only when `--size` wasn't given *and* nothing
-was restored — console answers it with a text prompt, the TUI with its
-`Dialog.Kind.SIZE` picker; the console `size <N>` command (a plain integer, *not*
-subject to `ViewImpl`'s 1-based `DISPLAY_OFFSET` — a size is not a row index); and
-the TUI's `[ New ]` toolbar button (`HitTarget.ToolbarNew`, F9 in keyboard mode),
-which opens the same picker. All of them funnel into
-`ViewModel.newGame(size, trigger)` → `BoardImpl.newGame`, which is also where
-`new_game_size_selected` is tracked (only on success). Save/load's size-mismatch
-rejection is unchanged — a save is never auto-resized onto a differently-sized
-board.
+running one: the `--size=N` launch flag (`Main.resolveBoardSize` returns `Int?`
+- `null` for a missing, non-numeric, or out-of-range value, distinct from "asked
+for exactly the default" - warning and falling back to 4 on `null`; reported as
+`app_launched.board_size`); a startup prompt raised by
+`ViewModelImpl.restoreOnStartup` as `UiRequest.ChooseBoardSize` — console
+answers it with a text prompt, the TUI with its `Dialog.Kind.SIZE` picker; the
+console `size <N>` command (a plain integer, *not* subject to `ViewImpl`'s
+1-based `DISPLAY_OFFSET` — a size is not a row index); and the TUI's `[ New ]`
+toolbar button (`HitTarget.ToolbarNew`, F9 in keyboard mode), which opens the
+same picker. All of them funnel into `ViewModel.newGame(size, trigger)` →
+`BoardImpl.newGame`, which is also where `new_game_size_selected` is tracked
+(only on success). Save/load's size-mismatch rejection is unchanged — a save
+is never auto-resized onto a differently-sized board.
+
+**`--size=N` bypasses the *entire* startup sequence, not just the size prompt.**
+A usable `--size=N` sets `sizeChosenAtLaunch` (threaded `GameSession` →
+`defaultView` → `ViewModelImpl`, the same path `startupRestoreDone` already
+takes across a mode switch), and `restoreOnStartup` returns immediately when
+it's set — no restore prompt, no size prompt, no `startup_restore_prompt_shown`/
+`startup_restore_decision`, regardless of what saves exist on disk. Without the
+flag (or with an unusable one - `sizeChosenAtLaunch` is `false` in that case
+too, matching `resolveBoardSize`'s `null`), the restore prompt runs as before
+(GH-6), and the size prompt raises only once it's established nothing was
+actually restored (no saves, declined, blank/EOF, or a failed load).
 
 ### Launch mode and runtime mode switching (GH-3, GH-18, GH-30)
 `InputMode` (root package, renamed from `LaunchMode` for GH-30) resolves

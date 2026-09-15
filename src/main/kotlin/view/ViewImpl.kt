@@ -1,6 +1,7 @@
 package view
 
 import InputMode
+import board_model.BoardSize
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -142,6 +143,22 @@ class ViewImpl internal constructor(
         return line.trim().ifEmpty { null }
     }
 
+    /** Re-prompts on an out-of-range or non-numeric answer instead of falling back to
+     *  [current] - unlike blank/EOF, which *is* "keep the current size" (`null`). Safe to loop
+     *  here: this calls no request-raising viewModel method, so the WU2 deadlock invariant
+     *  (see [ask][viewmodel.ViewModelImpl.ask]'s KDoc) holds (GH-44). */
+    internal suspend fun chooseBoardSize(current: Int): Int? {
+        while (true) {
+            output.print("Board size? [${BoardSize.MIN}-${BoardSize.MAX}, Enter for $current]: ")
+            val line = readLineOrNull() ?: return null
+            val typed = line.trim()
+            if (typed.isEmpty()) return null
+            val size = typed.toIntOrNull()
+            if (size != null && BoardSize.isValid(size)) return size
+            output.println("Please enter a number between ${BoardSize.MIN} and ${BoardSize.MAX}, or press Enter to keep $current.")
+        }
+    }
+
     /** null on a clean EOF or a dead stream (IOException) - both mean "no more input". Unlike
      *  [processCommand], the startup-restore and exit-before-quitting prompts treat that as
      *  "decline"/"blank" rather than throwing - see [viewmodel.ViewModelImpl]'s
@@ -212,6 +229,7 @@ class ViewImpl internal constructor(
             is UiRequest.ChooseSaveToRestore -> request.respond(chooseSaveToRestore(request.saveNames))
             is UiRequest.ConfirmSaveBeforeExit -> request.respond(confirmSaveBeforeExit())
             is UiRequest.PromptSaveName -> request.respond(promptSaveName())
+            is UiRequest.ChooseBoardSize -> request.respond(chooseBoardSize(request.current))
         }
     }
 }

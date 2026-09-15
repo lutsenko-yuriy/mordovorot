@@ -32,7 +32,12 @@ class TuiViewDialogTest {
         saves: FakeSaveRepository = FakeSaveRepository(),
         board: FakeBoardModel = FakeBoardModel(),
         analytics: RecordingAnalyticsService = RecordingAnalyticsService(),
-    ): TuiView = TuiView.create(terminal, analytics, viewModel = ViewModelImpl(board, saves, analytics))
+        // false by default, same as ViewModelImpl's own default - most callers here have no
+        // saves and don't care about the restore/size prompts either way; a handful whose
+        // scripted terminal events are built around the GH-44 size dialog's own shape pass
+        // true to skip both and keep the original Save/Load/Exit-only flow.
+        sizeChosenAtLaunch: Boolean = false,
+    ): TuiView = TuiView.create(terminal, analytics, viewModel = ViewModelImpl(board, saves, analytics, sizeChosenAtLaunch = sizeChosenAtLaunch))
 
     // Matches MouseInput.decorateBoard's GH-30 modeButtons - the two mode-switch buttons the
     // real toolbar now carries, so hardcoded positions in this file line up with what TuiView
@@ -219,7 +224,7 @@ class TuiViewDialogTest {
         )
         val analytics = RecordingAnalyticsService()
 
-        viewWithRealViewModel(terminal, saves, board, analytics).play()
+        viewWithRealViewModel(terminal, saves, board, analytics, sizeChosenAtLaunch = true).play()
 
         assertTrue(saves.saveCalls.any { it.first == "h" })
         assertTrue(analytics.events.any { it.name == "exit_command_used" && it.properties["save_choice"] == "saved" })
@@ -244,7 +249,7 @@ class TuiViewDialogTest {
         )
         val analytics = RecordingAnalyticsService()
 
-        viewWithRealViewModel(terminal, saves, board, analytics).play()
+        viewWithRealViewModel(terminal, saves, board, analytics, sizeChosenAtLaunch = true).play()
 
         assertTrue(saves.saveCalls.isEmpty())
         assertTrue(analytics.events.any { it.name == "exit_command_used" && it.properties["save_choice"] == "declined" })
@@ -339,7 +344,7 @@ class TuiViewDialogTest {
             terminalSize = terminalSize,
         )
 
-        viewWithRealViewModel(terminal, saves, board).play()
+        viewWithRealViewModel(terminal, saves, board, sizeChosenAtLaunch = true).play()
 
         assertTrue(terminal.frames.last().contains("Saved as 'h'."))
     }
@@ -368,7 +373,7 @@ class TuiViewDialogTest {
             terminalSize = terminalSize,
         )
 
-        viewWithRealViewModel(terminal, saves, board).play()
+        viewWithRealViewModel(terminal, saves, board, sizeChosenAtLaunch = true).play()
 
         assertTrue(terminal.frames.any { it.contains("Not quitting") })
         assertTrue(terminal.frames.last().contains("Mordovorot"))
@@ -483,7 +488,7 @@ class TuiViewDialogTest {
             terminalSize = terminalSize,
         )
 
-        viewWithRealViewModel(terminal, saves, board).play()
+        viewWithRealViewModel(terminal, saves, board, sizeChosenAtLaunch = true).play()
 
         val explanationFrames = terminal.frames.filter { it.contains("isn't a usable save name") }
         assertTrue(explanationFrames.size >= 2)

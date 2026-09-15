@@ -26,6 +26,10 @@ class GameSession(
     private val board: BoardModel = BoardImpl(),
     private val saves: SaveRepository = FileSaveRepository(),
     private val analytics: AnalyticsService = NoopAnalyticsService(),
+    /** `true` when `--size=N` was given at launch (GH-44) - threaded into every rebuilt
+     *  [ViewModelImpl] the same way `startupRestoreDone` already is, so its startup size/restore
+     *  prompts stay skipped across a mode switch too. */
+    private val sizeChosenAtLaunch: Boolean = false,
     private val terminalFactory: () -> Terminal = { AnsiTerminal() },
     private val buildView: (
         mode: InputMode,
@@ -33,7 +37,10 @@ class GameSession(
         saves: SaveRepository,
         analytics: AnalyticsService,
         startupRestoreDone: Boolean,
-    ) -> View = { mode, b, s, a, restoreDone -> defaultView(mode, b, s, a, restoreDone, terminalFactory) },
+        sizeChosenAtLaunch: Boolean,
+    ) -> View = { mode, b, s, a, restoreDone, sizeAtLaunch ->
+        defaultView(mode, b, s, a, restoreDone, sizeAtLaunch, terminalFactory)
+    },
 ) {
 
     private var mode: InputMode = initialMode
@@ -52,7 +59,7 @@ class GameSession(
                 // KDoc). buildView is inside this try too - a throw from the rebuild itself
                 // (e.g. a future terminalFactory failure) must fall back the same as a throw
                 // from play() (audit finding on PR #37).
-                val view = buildView(mode, board, saves, analytics, startupRestoreDone)
+                val view = buildView(mode, board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch)
                 view.play()
                 return
             } catch (e: ModeSwitchRequestedException) {
@@ -94,12 +101,13 @@ internal fun defaultView(
     saves: SaveRepository,
     analytics: AnalyticsService,
     startupRestoreDone: Boolean,
+    sizeChosenAtLaunch: Boolean,
     terminalFactory: () -> Terminal,
 ): View {
     val decoratedAnalytics = InputMethodAnalyticsService(analytics, mode.name.lowercase())
     // Built once per rebuild and handed to the View - the viewModel no longer needs a View to
     // exist first (GH-42 WU3: ViewModelImpl holds no View reference at all).
-    val viewModel = ViewModelImpl(board, saves, decoratedAnalytics, startupRestoreDone)
+    val viewModel = ViewModelImpl(board, saves, decoratedAnalytics, startupRestoreDone, sizeChosenAtLaunch)
     return when (mode) {
         InputMode.CONSOLE ->
             ViewImpl.create(

@@ -21,6 +21,11 @@ class ViewModelImpl(
     private val analytics: AnalyticsService = NoopAnalyticsService(),
     /** Seeded `true` by `GameSession` after a mode switch, so the prompt doesn't re-show. */
     startupRestoreDone: Boolean = false,
+    /** `true` when `--size=N` was given at launch (GH-44) - the flag *is* the answer, so
+     *  [restoreOnStartup] skips both the restore prompt and the size prompt entirely and starts
+     *  fresh at the size the board was already constructed with, regardless of what saves
+     *  exist. */
+    private val sizeChosenAtLaunch: Boolean = false,
 ) : ViewModel {
 
     /** Rendezvous - `ask` doesn't return until the View has actually finished handling the
@@ -212,37 +217,51 @@ class ViewModelImpl(
     /** Guards [restoreOnStartup] against running twice - including across a mode switch. */
     private var startupRestoreDone = startupRestoreDone
 
+    /** The startup sequence (GH-44 grew this beyond just the restore prompt): offers to restore
+     *  a previous save (0/1/2+ saves, unchanged from GH-6), then - only if nothing was actually
+     *  restored - offers a size prompt for the fresh game about to start. Skips both steps
+     *  entirely when [sizeChosenAtLaunch] is set: `--size=N` *is* the answer, so the board just
+     *  keeps the size it was already constructed with, regardless of what saves exist. */
     override suspend fun restoreOnStartup() {
         if (startupRestoreDone) return
         startupRestoreDone = true
+        if (sizeChosenAtLaunch) return
         try {
             val saveNames = saves.listSaves()
-            if (saveNames.isEmpty()) return
-
-            analytics.track("startup_restore_prompt_shown", mapOf("save_file_count" to saveNames.size))
-
-            val nameToRestore = if (saveNames.size == 1) {
-                saveNames[0].takeIf { ask(UiRequest.ConfirmRestore(it)) }
+            val restored = if (saveNames.isEmpty()) {
+                false
             } else {
-                var chosen: String? = null
-                while (chosen == null) {
-                    val typed = ask(UiRequest.ChooseSaveToRestore(saveNames)) ?: break
-                    if (typed in saveNames) {
-                        chosen = typed
-                    } else {
-                        showMessage("No save named '$typed'. Available saves: ${saveNames.joinToString(", ")}")
+                analytics.track("startup_restore_prompt_shown", mapOf("save_file_count" to saveNames.size))
+
+                val nameToRestore = if (saveNames.size == 1) {
+                    saveNames[0].takeIf { ask(UiRequest.ConfirmRestore(it)) }
+                } else {
+                    var chosen: String? = null
+                    while (chosen == null) {
+                        val typed = ask(UiRequest.ChooseSaveToRestore(saveNames)) ?: break
+                        if (typed in saveNames) {
+                            chosen = typed
+                        } else {
+                            showMessage("No save named '$typed'. Available saves: ${saveNames.joinToString(", ")}")
+                        }
                     }
+                    chosen
                 }
-                chosen
+
+                // loadGame can still fail here (a save deleted or corrupted since listSaves()
+                // ran just above) - decision reflects what actually happened, not just what was
+                // picked.
+                val didRestore = nameToRestore?.let { loadGame(it, trigger = "startup_prompt") } ?: false
+                analytics.track(
+                    "startup_restore_decision",
+                    mapOf("decision" to (if (didRestore) "restored" else "new_game"), "save_file_count" to saveNames.size),
+                )
+                didRestore
             }
 
-            // loadGame can still fail here (a save deleted or corrupted since listSaves() ran
-            // just above) - decision reflects what actually happened, not just what was picked.
-            val restored = nameToRestore?.let { loadGame(it, trigger = "startup_prompt") } ?: false
-            analytics.track(
-                "startup_restore_decision",
-                mapOf("decision" to (if (restored) "restored" else "new_game"), "save_file_count" to saveNames.size),
-            )
+            if (!restored) {
+                ask(UiRequest.ChooseBoardSize(board.squareSide))?.let { newGame(it, trigger = "startup_prompt") }
+            }
         } catch (e: SessionControlException) {
             throw e
         } catch (e: CancellationException) {

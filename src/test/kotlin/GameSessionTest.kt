@@ -40,7 +40,7 @@ class GameSessionTest {
         val session = GameSession(
             initialMode = InputMode.CONSOLE,
             board = board,
-            buildView = { mode, b, s, _, restoreDone ->
+            buildView = { mode, b, s, _, restoreDone, _ ->
                 calls.add(BuildCall(mode, b, s, restoreDone))
                 built++
                 ScriptedView {
@@ -66,7 +66,7 @@ class GameSessionTest {
         val session = GameSession(
             initialMode = InputMode.CONSOLE,
             saves = saves,
-            buildView = { mode, b, s, _, restoreDone ->
+            buildView = { mode, b, s, _, restoreDone, _ ->
                 calls.add(BuildCall(mode, b, s, restoreDone))
                 built++
                 ScriptedView {
@@ -81,13 +81,35 @@ class GameSessionTest {
     }
 
     @Test
+    fun `sizeChosenAtLaunch reaches every rebuild, including across a mode switch`(): Unit = runBlocking {
+        val sizeFlags = mutableListOf<Boolean>()
+        var built = 0
+
+        val session = GameSession(
+            initialMode = InputMode.CONSOLE,
+            sizeChosenAtLaunch = true,
+            buildView = { mode, _, _, _, _, sizeAtLaunch ->
+                sizeFlags.add(sizeAtLaunch)
+                built++
+                ScriptedView {
+                    if (built == 1) throw ModeSwitchRequestedException(InputMode.MOUSE)
+                }
+            },
+        )
+
+        session.run()
+
+        assertEquals(listOf(true, true), sizeFlags)
+    }
+
+    @Test
     fun `three consecutive switches cycle through console, mouse, and keyboard, each rebuilding a fresh View-viewModel`(): Unit = runBlocking {
         val modesBuilt = mutableListOf<InputMode>()
         var built = 0
 
         val session = GameSession(
             initialMode = InputMode.CONSOLE,
-            buildView = { mode, _, _, _, _ ->
+            buildView = { mode, _, _, _, _, _ ->
                 modesBuilt.add(mode)
                 built++
                 ScriptedView {
@@ -112,7 +134,7 @@ class GameSessionTest {
 
         val session = GameSession(
             initialMode = InputMode.MOUSE,
-            buildView = { _, _, _, _, _ ->
+            buildView = { _, _, _, _, _, _ ->
                 built++
                 ScriptedView {} // returns normally - simulates exit
             },
@@ -130,7 +152,7 @@ class GameSessionTest {
 
         val session = GameSession(
             initialMode = InputMode.CONSOLE,
-            buildView = { mode, b, s, _, restoreDone ->
+            buildView = { mode, b, s, _, restoreDone, _ ->
                 calls.add(BuildCall(mode, b, s, restoreDone))
                 built++
                 when (built) {
@@ -152,7 +174,7 @@ class GameSessionTest {
     fun `a failure on the very first session still throws - no game in progress to protect`(): Unit = runBlocking {
         val session = GameSession(
             initialMode = InputMode.CONSOLE,
-            buildView = { _, _, _, _, _ -> ScriptedView { throw RuntimeException("stty not found") } },
+            buildView = { _, _, _, _, _, _ -> ScriptedView { throw RuntimeException("stty not found") } },
         )
 
         assertFailsWith<RuntimeException> { session.run() }
@@ -165,7 +187,7 @@ class GameSessionTest {
 
         val session = GameSession(
             initialMode = InputMode.MOUSE,
-            buildView = { mode, _, _, _, _ ->
+            buildView = { mode, _, _, _, _, _ ->
                 modesBuilt.add(mode)
                 built++
                 when (built) {
@@ -186,7 +208,7 @@ class GameSessionTest {
     fun `ExitRequestedException escaping a rebuild reaches the caller, not swallowed as a failed switch`(): Unit = runBlocking {
         val session = GameSession(
             initialMode = InputMode.CONSOLE,
-            buildView = { mode, _, _, _, _ ->
+            buildView = { mode, _, _, _, _, _ ->
                 ScriptedView {
                     if (mode == InputMode.CONSOLE) throw ModeSwitchRequestedException(InputMode.MOUSE)
                     throw ExitRequestedException()
@@ -205,6 +227,7 @@ class GameSessionTest {
             FakeSaveRepository(),
             RecordingAnalyticsService(),
             startupRestoreDone = true,
+            sizeChosenAtLaunch = false,
             terminalFactory = { FakeTerminal() },
         )
 

@@ -10,6 +10,7 @@ import java.io.StringReader
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import testing.FakeViewModel
 import testing.RecordingModeSwitcher
@@ -397,6 +398,51 @@ class ViewImplCommandTest {
         view.viewModel = FakeViewModel()
 
         assertEquals(null, view.promptSaveName())
+    }
+
+    @Test
+    fun `chooseBoardSize returns the typed size when valid`(): Unit = runBlocking {
+        val (view, _) = viewWith("3\n")
+
+        assertEquals(3, view.chooseBoardSize(4))
+    }
+
+    @Test
+    fun `chooseBoardSize returns null on a blank line - keep the current size`(): Unit = runBlocking {
+        val (view, _) = viewWith("\n")
+
+        assertEquals(null, view.chooseBoardSize(4))
+    }
+
+    @Test
+    fun `chooseBoardSize returns null on EOF instead of throwing`(): Unit = runBlocking {
+        val (view, _) = viewWith("")
+
+        assertEquals(null, view.chooseBoardSize(4))
+    }
+
+    @Test
+    fun `chooseBoardSize returns null when the input stream is dead, same as clean EOF`(): Unit = runBlocking {
+        val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
+        view.viewModel = FakeViewModel()
+
+        assertEquals(null, view.chooseBoardSize(4))
+    }
+
+    @Test
+    fun `chooseBoardSize re-prompts on an out-of-range value, then accepts a valid one`(): Unit = runBlocking {
+        val (view, output) = viewWith("9\n5\n")
+
+        assertEquals(5, view.chooseBoardSize(4))
+        assertTrue(output.toString().contains("Please enter a number between 3 and 5"))
+    }
+
+    @Test
+    fun `chooseBoardSize re-prompts on a non-numeric value, then accepts a valid one`(): Unit = runBlocking {
+        val (view, output) = viewWith("abc\n3\n")
+
+        assertEquals(3, view.chooseBoardSize(4))
+        assertTrue(output.toString().contains("Please enter a number between 3 and 5"))
     }
 
     @Test
