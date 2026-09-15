@@ -1,9 +1,12 @@
 package view
 
 import InputMode
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import presenter.ConsolePresenter
 import presenter.ModeSwitcher
 import presenter.NoopModeSwitcher
+import presenter.UiRequest
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -104,13 +107,16 @@ class ViewImpl internal constructor(
         output.println()
     }
 
-    override suspend fun confirmRestore(saveName: String): Boolean {
+    /** No longer a [View] override (GH-42 WU2) - called only from [handle], this view's own
+     *  [uiRequests] handler. Stays `internal`, not `private`, so `ViewImplCommandTest` can keep
+     *  driving it directly. */
+    internal suspend fun confirmRestore(saveName: String): Boolean {
         output.print("Restore save '$saveName'? [y/N] ")
         val line = readLineOrNull() ?: return false
         return line.trim().lowercase() in setOf("y", "yes")
     }
 
-    override suspend fun chooseSaveToRestore(saveNames: List<String>): String? {
+    internal suspend fun chooseSaveToRestore(saveNames: List<String>): String? {
         output.print(
             "Multiple saves found: ${saveNames.joinToString(", ")}. " +
                 "Type a name to restore, or press Enter to start a new game: "
@@ -119,13 +125,13 @@ class ViewImpl internal constructor(
         return line.trim().ifEmpty { null }
     }
 
-    override suspend fun confirmSaveBeforeExit(): Boolean {
+    internal suspend fun confirmSaveBeforeExit(): Boolean {
         output.print("Save before quitting? [y/N] ")
         val line = readLineOrNull() ?: return false
         return line.trim().lowercase() in setOf("y", "yes")
     }
 
-    override suspend fun promptSaveName(): String? {
+    internal suspend fun promptSaveName(): String? {
         output.print("Save name: ")
         val line = readLineOrNull() ?: return null
         return line.trim().ifEmpty { null }
@@ -158,7 +164,29 @@ class ViewImpl internal constructor(
         if (parts.size != expected) throw IllegalArgumentException("Incorrect input")
     }
 
-    override suspend fun play() {
-        presenter.play()
+    /** Drains [presenter]'s [presenter.Presenter.uiRequests] alongside [presenter.play]'s own
+     *  loop (GH-42 WU2) - the handler coroutine is what lets `saveGame`/`loadGame`/`exitGame`/
+     *  `offerStartupRestore` suspend on [presenter.BasePresenter.ask] instead of calling back
+     *  into this view directly. Cancelled once `play()` returns either way. */
+    override suspend fun play() = coroutineScope {
+        val ui = launch { for (request in presenter.uiRequests) handle(request) }
+        try {
+            presenter.play()
+        } finally {
+            ui.cancel()
+        }
+    }
+
+    private suspend fun handle(request: UiRequest<*>) {
+        when (request) {
+            is UiRequest.ShowMessage -> {
+                showMessage(request.text)
+                request.respond(Unit)
+            }
+            is UiRequest.ConfirmRestore -> request.respond(confirmRestore(request.saveName))
+            is UiRequest.ChooseSaveToRestore -> request.respond(chooseSaveToRestore(request.saveNames))
+            is UiRequest.ConfirmSaveBeforeExit -> request.respond(confirmSaveBeforeExit())
+            is UiRequest.PromptSaveName -> request.respond(promptSaveName())
+        }
     }
 }

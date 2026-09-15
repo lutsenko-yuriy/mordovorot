@@ -1,9 +1,16 @@
 package presenter
 
+import kotlinx.coroutines.channels.ReceiveChannel
+
 /** The shared domain-mutation surface both [ConsolePresenter] and [TuiPresenter] use
  *  identically - shift/reset/save/load/exit. UI-specific concerns (the console's [ConsolePresenter.play]
  *  loop, the TUI's read-only query surface) live on the sub-interfaces, not here (GH-23). */
 interface Presenter {
+
+    /** The UI interactions this presenter is waiting on, in emission order (GH-42 WU2). Exactly
+     *  one consumer - the View that owns this presenter's session, draining it in a coroutine
+     *  alongside its own event loop. See [presenter.BasePresenter.ask]. */
+    val uiRequests: ReceiveChannel<UiRequest<*>>
 
     fun shiftLeft(row: Int)
     fun shiftRight(row: Int)

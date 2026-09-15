@@ -9,17 +9,15 @@ import view.View
  * (e.g. flips `correct = true`) or throws, to control loop termination and
  * exception handling. Running out of scripted commands throws, which bounds
  * every test to a finite number of play() iterations instead of risking a hang.
+ *
+ * Trimmed to [displayBoard]/[showMessage]/[processCommand]/[play] (GH-42 WU2) - the four
+ * prompt methods it used to script (`confirmRestore`/`chooseSaveToRestore`/
+ * `confirmSaveBeforeExit`/`promptSaveName`) left the [View] interface once
+ * [presenter.BasePresenter] started raising [presenter.UiRequest]s for them instead of calling
+ * a `View` directly; [FakePresenterUi] scripts those now.
  */
 class FakeView(
     private val commands: MutableList<suspend () -> Unit> = mutableListOf(),
-    /** Scripted return values for [confirmRestore], consumed in call order. */
-    private val confirmRestoreResponses: MutableList<Boolean> = mutableListOf(),
-    /** Scripted return values for [chooseSaveToRestore], consumed in call order. */
-    private val chooseSaveToRestoreResponses: MutableList<String?> = mutableListOf(),
-    /** Scripted return values for [confirmSaveBeforeExit], consumed in call order. */
-    private val confirmSaveBeforeExitResponses: MutableList<Boolean> = mutableListOf(),
-    /** Scripted return values for [promptSaveName], consumed in call order. */
-    private val promptSaveNameResponses: MutableList<String?> = mutableListOf(),
 ) : View {
 
     val displayBoardCalls = mutableListOf<Pair<IntArray, Int>>()
@@ -27,16 +25,6 @@ class FakeView(
     val shownMessages = mutableListOf<String>()
 
     var processCommandCallCount = 0
-        private set
-
-    val confirmRestoreCalls = mutableListOf<String>()
-
-    val chooseSaveToRestoreCalls = mutableListOf<List<String>>()
-
-    var confirmSaveBeforeExitCallCount = 0
-        private set
-
-    var promptSaveNameCallCount = 0
         private set
 
     override fun displayBoard(boardState: IntArray, squareSide: Int) {
@@ -53,38 +41,6 @@ class FakeView(
             throw IllegalStateException("FakeView ran out of scripted commands")
         }
         commands.removeAt(0).invoke()
-    }
-
-    override suspend fun confirmRestore(saveName: String): Boolean {
-        confirmRestoreCalls.add(saveName)
-        if (confirmRestoreResponses.isEmpty()) {
-            throw IllegalStateException("FakeView ran out of scripted confirmRestore responses")
-        }
-        return confirmRestoreResponses.removeAt(0)
-    }
-
-    override suspend fun chooseSaveToRestore(saveNames: List<String>): String? {
-        chooseSaveToRestoreCalls.add(saveNames)
-        if (chooseSaveToRestoreResponses.isEmpty()) {
-            throw IllegalStateException("FakeView ran out of scripted chooseSaveToRestore responses")
-        }
-        return chooseSaveToRestoreResponses.removeAt(0)
-    }
-
-    override suspend fun confirmSaveBeforeExit(): Boolean {
-        confirmSaveBeforeExitCallCount++
-        if (confirmSaveBeforeExitResponses.isEmpty()) {
-            throw IllegalStateException("FakeView ran out of scripted confirmSaveBeforeExit responses")
-        }
-        return confirmSaveBeforeExitResponses.removeAt(0)
-    }
-
-    override suspend fun promptSaveName(): String? {
-        promptSaveNameCallCount++
-        if (promptSaveNameResponses.isEmpty()) {
-            throw IllegalStateException("FakeView ran out of scripted promptSaveName responses")
-        }
-        return promptSaveNameResponses.removeAt(0)
     }
 
     override suspend fun play() {

@@ -2,6 +2,7 @@ package presenter
 
 import board_model.BoardImpl
 import storage.SaveFileFormatException
+import testing.FakePresenterUi
 import testing.FakeSaveRepository
 import testing.FakeView
 import testing.RecordingAnalyticsService
@@ -12,7 +13,10 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /** Covers [BasePresenter.saveGame]/[BasePresenter.loadGame] (originally GH-6's `save`/`load`
- *  commands, WU3), shared identically by both UIs (split GH-23). */
+ *  commands, WU3), shared identically by both UIs (split GH-23). Driven via [FakePresenterUi.drive]
+ *  (GH-42 WU2) - both methods always call `showMessage`, which suspends on [BasePresenter.ask],
+ *  so every test here needs something draining [Presenter.uiRequests] concurrently, not just the
+ *  ones that previously asserted on a message. */
 class BasePresenterSaveLoadTest {
 
     @Test
@@ -21,8 +25,9 @@ class BasePresenterSaveLoadTest {
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(1, 0, 3, 2)) }
         val presenter = TestPresenter(FakeView(), board, saves, analytics)
+        val ui = FakePresenterUi()
 
-        presenter.saveGame("foo")
+        ui.drive(presenter) { presenter.saveGame("foo") }
 
         assertEquals(1, saves.saveCalls.size)
         val (name, state, squareSide) = saves.saveCalls[0]
@@ -47,8 +52,9 @@ class BasePresenterSaveLoadTest {
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(3, 2, 1, 0)) }
         val presenter = TestPresenter(FakeView(), board, saves, analytics)
+        val ui = FakePresenterUi()
 
-        presenter.saveGame("foo")
+        ui.drive(presenter) { presenter.saveGame("foo") }
 
         assertEquals(listOf(3, 2, 1, 0), saves.load("foo")!!.state.toList())
         assertEquals(
@@ -66,13 +72,13 @@ class BasePresenterSaveLoadTest {
     fun `saveGame surfaces a message and tracks result=error instead of crashing when the repository throws`(): Unit = runBlocking {
         val saves = FakeSaveRepository().apply { saveException = IllegalArgumentException("Save name must not be blank") }
         val analytics = RecordingAnalyticsService()
-        val view = FakeView()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
-        val presenter = TestPresenter(view, board, saves, analytics)
+        val presenter = TestPresenter(FakeView(), board, saves, analytics)
+        val ui = FakePresenterUi()
 
-        presenter.saveGame("..")
+        ui.drive(presenter) { presenter.saveGame("..") }
 
-        assertTrue(view.shownMessages.any { it.contains("Save name must not be blank") })
+        assertTrue(ui.shownMessages.any { it.contains("Save name must not be blank") })
         assertEquals(
             listOf(RecordingAnalyticsService.Event("save_command_used", mapOf("result" to "error"))),
             analytics.events,
@@ -86,8 +92,9 @@ class BasePresenterSaveLoadTest {
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
         val presenter = TestPresenter(FakeView(), board, saves, analytics)
+        val ui = FakePresenterUi()
 
-        presenter.loadGame("foo")
+        ui.drive(presenter) { presenter.loadGame("foo") }
 
         assertEquals(listOf(3, 2, 1, 0), board.boardArray.toList())
         assertEquals(
@@ -101,14 +108,14 @@ class BasePresenterSaveLoadTest {
         val saves = FakeSaveRepository()
         saves.save("bar", intArrayOf(3, 2, 1, 0), 2)
         val analytics = RecordingAnalyticsService()
-        val view = FakeView()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
-        val presenter = TestPresenter(view, board, saves, analytics)
+        val presenter = TestPresenter(FakeView(), board, saves, analytics)
+        val ui = FakePresenterUi()
 
-        presenter.loadGame("missing")
+        ui.drive(presenter) { presenter.loadGame("missing") }
 
         assertEquals(listOf(0, 1, 2, 3), board.boardArray.toList())
-        assertTrue(view.shownMessages.any { it.contains("missing") && it.contains("bar") })
+        assertTrue(ui.shownMessages.any { it.contains("missing") && it.contains("bar") })
         assertEquals(
             listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "not_found"))),
             analytics.events,
@@ -118,13 +125,13 @@ class BasePresenterSaveLoadTest {
     @Test
     fun `loadGame with no saves at all still messages cleanly`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
-        val view = FakeView()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
-        val presenter = TestPresenter(view, board, saves, RecordingAnalyticsService())
+        val presenter = TestPresenter(FakeView(), board, saves, RecordingAnalyticsService())
+        val ui = FakePresenterUi()
 
-        presenter.loadGame("missing")
+        ui.drive(presenter) { presenter.loadGame("missing") }
 
-        assertTrue(view.shownMessages.any { it.contains("No saves available") })
+        assertTrue(ui.shownMessages.any { it.contains("No saves available") })
     }
 
     @Test
@@ -132,14 +139,14 @@ class BasePresenterSaveLoadTest {
         val saves = FakeSaveRepository()
         saves.save("small", intArrayOf(0, 1, 2, 3), 2)
         val analytics = RecordingAnalyticsService()
-        val view = FakeView()
         val board = BoardImpl(4).apply { restoreState((0..15).toList().toIntArray()) }
-        val presenter = TestPresenter(view, board, saves, analytics)
+        val presenter = TestPresenter(FakeView(), board, saves, analytics)
+        val ui = FakePresenterUi()
 
-        presenter.loadGame("small")
+        ui.drive(presenter) { presenter.loadGame("small") }
 
         assertEquals((0..15).toList(), board.boardArray.toList())
-        assertTrue(view.shownMessages.any { it.contains("small") })
+        assertTrue(ui.shownMessages.any { it.contains("small") })
         assertEquals(
             listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "size_mismatch"))),
             analytics.events,
@@ -156,14 +163,14 @@ class BasePresenterSaveLoadTest {
             listSavesException = java.io.IOException("permission denied")
         }
         val analytics = RecordingAnalyticsService()
-        val view = FakeView()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
-        val presenter = TestPresenter(view, board, saves, analytics)
+        val presenter = TestPresenter(FakeView(), board, saves, analytics)
+        val ui = FakePresenterUi()
 
-        presenter.loadGame("missing")
+        ui.drive(presenter) { presenter.loadGame("missing") }
 
         assertEquals(listOf(0, 1, 2, 3), board.boardArray.toList())
-        assertTrue(view.shownMessages.any { it.contains("Could not list available saves") })
+        assertTrue(ui.shownMessages.any { it.contains("Could not list available saves") })
         assertEquals(
             listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "not_found"))),
             analytics.events,
@@ -176,14 +183,14 @@ class BasePresenterSaveLoadTest {
             loadException = SaveFileFormatException("corrupt", "missing board values")
         }
         val analytics = RecordingAnalyticsService()
-        val view = FakeView()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
-        val presenter = TestPresenter(view, board, saves, analytics)
+        val presenter = TestPresenter(FakeView(), board, saves, analytics)
+        val ui = FakePresenterUi()
 
-        presenter.loadGame("corrupt")
+        ui.drive(presenter) { presenter.loadGame("corrupt") }
 
         assertEquals(listOf(0, 1, 2, 3), board.boardArray.toList())
-        assertTrue(view.shownMessages.any { it.contains("corrupt") })
+        assertTrue(ui.shownMessages.any { it.contains("corrupt") })
         assertEquals(
             listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "error"))),
             analytics.events,

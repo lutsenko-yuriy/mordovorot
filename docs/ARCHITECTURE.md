@@ -161,11 +161,14 @@ Core game state and rules: board array, shifting, reset, and the win check
 (`isCorrect`). No dependency on `presenter` or `view`.
 
 ### presenter (GH-42: ViewModel-style, no View reference)
-**Status: target state as of WU3/3 — WU1/3 has landed so far** (`suspend` propagation only;
+**Status: target state as of WU3/3 — WU2/3 has landed so far.** The request channel
+described below is real and in use (`UiRequest`, `BasePresenter.ask`, and each `View`'s
+own request-handler coroutine); what's still pending is WU3's interface collapse —
 `Presenter`/`ConsolePresenter`/`TuiPresenter` and their impls still match the GH-23 split
-described in the code today, and `BasePresenter` still holds its `View`). The rest of this
-section describes where WU2-WU3 are heading, written ahead of the code per this ticket's
-approved plan - see `docs/knowledge/notes/GH-42.md`.
+described in the code today, `BasePresenter` still holds its `View` (used only by
+`ConsolePresenterImpl.play()`'s own `displayBoard`/`processCommand` calls, not moved yet),
+and the paragraph below describing a single `Presenter`/`PresenterImpl` is still where
+WU3 is heading, not the code as it stands - see `docs/knowledge/notes/GH-42.md`.
 
 Mediates between `view`, `board_model`, and `storage`, but never calls into `view`
 directly. `Presenter` is one interface (shift/reset/save/load/exit plus the
@@ -182,15 +185,19 @@ Five interactions that used to be blocking calls into `View` (`showMessage`,
 `confirmRestore`, `chooseSaveToRestore`, `confirmSaveBeforeExit`, `promptSaveName`)
 are now `presenter.UiRequest<R>` values sent on `Presenter.uiRequests`, a
 `Channel.RENDEZVOUS` the owning `View` drains in a sibling coroutine and answers via
-`UiRequest.respond`. Rendezvous delivery (the channel has zero buffer, and `ask()`
-doesn't return until the View has actually handled the request) is what keeps
-message/prompt ordering identical to the old blocking-call behavior. The one
-invariant that keeps this deadlock-free: a View's request handler must never call
-a request-raising `Presenter` method (`saveGame`/`loadGame`/`exitGame`/
-`restoreOnStartup`) from inside itself — only the plain query methods are safe
-there. `saveGame`/`loadGame`/`exitGame`/`restoreOnStartup` are `suspend`; a
-cancelled coroutine resumes them with `CancellationException`, which each method's
-catch-all rethrows rather than swallows (ordinary structured-concurrency hygiene).
+`UiRequest.respond`. `showMessage` is the exception among the five - it stays on the
+`View` interface too (`ModeSwitcherImpl` still calls it directly, outside any
+`UiRequest`), while the other four became plain `internal` methods on `ViewImpl`/
+`TuiView`, reachable only through each view's own request handler. Rendezvous delivery
+(the channel has zero buffer, and `ask()` doesn't return until the View has actually
+handled the request) is what keeps message/prompt ordering identical to the old
+blocking-call behavior. The one invariant that keeps this deadlock-free: a View's
+request handler must never call a request-raising `Presenter` method
+(`saveGame`/`loadGame`/`exitGame`/`restoreOnStartup`) from inside itself — only the
+plain query methods are safe there. `saveGame`/`loadGame`/`exitGame`/`restoreOnStartup`
+are `suspend`; a cancelled coroutine resumes them with `CancellationException`, which
+each method's catch-all rethrows rather than swallows (ordinary structured-concurrency
+hygiene).
 
 ### view
 Console I/O only: reads commands from stdin, renders the board, and calls

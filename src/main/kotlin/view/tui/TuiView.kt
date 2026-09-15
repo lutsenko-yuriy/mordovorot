@@ -2,10 +2,13 @@ package view.tui
 
 import analytics.AnalyticsService
 import analytics.NoopAnalyticsService
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import presenter.ExitRequestedException
 import presenter.ModeSwitcher
 import presenter.NoopModeSwitcher
 import presenter.TuiPresenter
+import presenter.UiRequest
 import view.View
 
 /**
@@ -82,7 +85,11 @@ class TuiView internal constructor(
         }
     }
 
-    override suspend fun play() {
+    /** Drains [presenter]'s [presenter.Presenter.uiRequests] alongside the board's own event
+     *  loop (GH-42 WU2) - what lets `saveGame`/`loadGame`/`exitGame`/`restoreOnStartup` suspend
+     *  on [presenter.BasePresenter.ask] instead of calling back into this view directly. */
+    override suspend fun play() = coroutineScope {
+        val ui = launch { for (request in presenter.uiRequests) handle(request) }
         try {
             terminal.enterRawMode()
             // GH-18's input-strategy seam (WU3): mouse reporting is MouseInput's own business
@@ -98,18 +105,32 @@ class TuiView internal constructor(
                         try {
                             handleTarget(action.target)
                         } catch (e: ExitRequestedException) {
-                            return
+                            return@coroutineScope
                         }
                         repaint()
                     }
                     InputAction.Redraw -> repaint()
-                    InputAction.Quit -> return
+                    InputAction.Quit -> return@coroutineScope
                     else -> {}
                 }
             }
         } finally {
             // Belt-and-braces alongside AnsiTerminal's own shutdown hook - see WU3's note here.
             terminal.restore()
+            ui.cancel()
+        }
+    }
+
+    private suspend fun handle(request: UiRequest<*>) {
+        when (request) {
+            is UiRequest.ShowMessage -> {
+                showMessage(request.text)
+                request.respond(Unit)
+            }
+            is UiRequest.ConfirmRestore -> request.respond(confirmRestore(request.saveName))
+            is UiRequest.ChooseSaveToRestore -> request.respond(chooseSaveToRestore(request.saveNames))
+            is UiRequest.ConfirmSaveBeforeExit -> request.respond(confirmSaveBeforeExit())
+            is UiRequest.PromptSaveName -> request.respond(promptSaveName())
         }
     }
 
@@ -336,21 +357,21 @@ class TuiView internal constructor(
     /** The startup restore prompt for exactly one save - the same Load-shaped modal as any
      *  other save count (per the plan, this is where the console's 1-save yes/no split
      *  disappears in the TUI). */
-    override suspend fun confirmRestore(saveName: String): Boolean =
+    internal suspend fun confirmRestore(saveName: String): Boolean =
         runLoadDialog("Restore a saved game?", "startup", preloadedSaves = listOf(saveName)) is LoadOutcome.Confirm
 
-    override suspend fun chooseSaveToRestore(saveNames: List<String>): String? =
+    internal suspend fun chooseSaveToRestore(saveNames: List<String>): String? =
         (runLoadDialog("Restore a saved game?", "startup", preloadedSaves = saveNames) as? LoadOutcome.Confirm)?.name
 
     /** Consumes the answer the Exit dialog's Yes/No click already collected - see
      *  [pendingExitAnswer]. */
-    override suspend fun confirmSaveBeforeExit(): Boolean {
+    internal suspend fun confirmSaveBeforeExit(): Boolean {
         val answer = pendingExitAnswer ?: false
         pendingExitAnswer = null
         return answer
     }
 
-    override suspend fun promptSaveName(): String? =
+    internal suspend fun promptSaveName(): String? =
         when (val outcome = runSaveDialog("exit_flow")) {
             is SaveOutcome.Confirm -> outcome.name
             SaveOutcome.Cancel -> null

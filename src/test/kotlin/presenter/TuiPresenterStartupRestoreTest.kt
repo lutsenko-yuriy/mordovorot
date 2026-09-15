@@ -2,6 +2,7 @@ package presenter
 
 import storage.SavedBoard
 import testing.FakeBoardModel
+import testing.FakePresenterUi
 import testing.FakeSaveRepository
 import testing.FakeView
 import testing.RecordingAnalyticsService
@@ -31,13 +32,15 @@ class TuiPresenterStartupRestoreTest {
         val savedState = intArrayOf(3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12)
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, savedState)))
         val analytics = RecordingAnalyticsService()
-        val view = FakeView(confirmRestoreResponses = mutableListOf(true))
-        val presenter = TuiPresenterImpl(view, board, saves, analytics)
+        val presenter = TuiPresenterImpl(FakeView(), board, saves, analytics)
+        val ui = FakePresenterUi(confirmRestoreResponses = mutableListOf(true))
 
-        presenter.restoreOnStartup()
-        presenter.restoreOnStartup()
+        ui.drive(presenter) {
+            presenter.restoreOnStartup()
+            presenter.restoreOnStartup()
+        }
 
-        assertEquals(listOf("foo"), view.confirmRestoreCalls)
+        assertEquals(listOf("foo"), ui.confirmRestoreCalls)
         assertEquals(listOf("restoreState(${savedState.toList()})"), board.calls)
         assertEquals(
             listOf(

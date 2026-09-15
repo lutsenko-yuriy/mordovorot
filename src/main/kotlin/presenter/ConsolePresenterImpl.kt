@@ -35,7 +35,7 @@ class ConsolePresenterImpl(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                view.showMessage(e.message ?: "Error") // not System.err - stays in sync with the board output
+                showMessage(e.message ?: "Error") // not System.err - stays in sync with the board output; ask()-based (GH-42 WU2)
             }
         }
     }

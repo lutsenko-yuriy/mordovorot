@@ -3,6 +3,7 @@ package presenter
 import storage.SaveFileFormatException
 import storage.SavedBoard
 import testing.FakeBoardModel
+import testing.FakePresenterUi
 import testing.FakeSaveRepository
 import testing.FakeView
 import testing.RecordingAnalyticsService
@@ -19,6 +20,10 @@ import kotlin.test.assertEquals
  * the restore flow alone. The idempotence guard and a same-sequence cross-check against the TUI
  * entry point ([TuiPresenterImpl.restoreOnStartup]) live in [TuiPresenterStartupRestoreTest]
  * (split GH-23 WU2). See the plan comment on GH-6 for the full branch matrix.
+ *
+ * Driven via [FakePresenterUi.drive] (GH-42 WU2) - `offerStartupRestore` suspends on
+ * [BasePresenter.ask], so something must drain [Presenter.uiRequests] concurrently with
+ * `play()`, or the `ask` call hangs forever.
  */
 class ConsolePresenterStartupRestoreTest {
 
@@ -29,13 +34,13 @@ class ConsolePresenterStartupRestoreTest {
         val board = FakeBoardModel().apply { correct = true }
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
-        val view = FakeView()
-        val presenter = ConsolePresenterImpl(view, board, saves, analytics)
+        val presenter = ConsolePresenterImpl(FakeView(), board, saves, analytics)
+        val ui = FakePresenterUi()
 
-        presenter.play()
+        ui.drive(presenter) { presenter.play() }
 
-        assertEquals(emptyList(), view.confirmRestoreCalls)
-        assertEquals(emptyList(), view.chooseSaveToRestoreCalls)
+        assertEquals(emptyList(), ui.confirmRestoreCalls)
+        assertEquals(emptyList(), ui.chooseSaveToRestoreCalls)
         assertEquals(emptyList(), analytics.events)
         assertEquals(emptyList(), board.calls)
     }
@@ -46,12 +51,12 @@ class ConsolePresenterStartupRestoreTest {
         val savedState = intArrayOf(3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12)
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, savedState)))
         val analytics = RecordingAnalyticsService()
-        val view = FakeView(confirmRestoreResponses = mutableListOf(true))
-        val presenter = ConsolePresenterImpl(view, board, saves, analytics)
+        val presenter = ConsolePresenterImpl(FakeView(), board, saves, analytics)
+        val ui = FakePresenterUi(confirmRestoreResponses = mutableListOf(true))
 
-        presenter.play()
+        ui.drive(presenter) { presenter.play() }
 
-        assertEquals(listOf("foo"), view.confirmRestoreCalls)
+        assertEquals(listOf("foo"), ui.confirmRestoreCalls)
         assertEquals(listOf("restoreState(${savedState.toList()})"), board.calls)
         assertEquals(
             listOf(
@@ -68,10 +73,10 @@ class ConsolePresenterStartupRestoreTest {
         val board = FakeBoardModel().apply { correct = true }
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, fourByFour)))
         val analytics = RecordingAnalyticsService()
-        val view = FakeView(confirmRestoreResponses = mutableListOf(false))
-        val presenter = ConsolePresenterImpl(view, board, saves, analytics)
+        val presenter = ConsolePresenterImpl(FakeView(), board, saves, analytics)
+        val ui = FakePresenterUi(confirmRestoreResponses = mutableListOf(false))
 
-        presenter.play()
+        ui.drive(presenter) { presenter.play() }
 
         assertEquals(emptyList(), board.calls)
         assertEquals(
@@ -94,12 +99,12 @@ class ConsolePresenterStartupRestoreTest {
             ),
         )
         val analytics = RecordingAnalyticsService()
-        val view = FakeView(chooseSaveToRestoreResponses = mutableListOf("bar"))
-        val presenter = ConsolePresenterImpl(view, board, saves, analytics)
+        val presenter = ConsolePresenterImpl(FakeView(), board, saves, analytics)
+        val ui = FakePresenterUi(chooseSaveToRestoreResponses = mutableListOf("bar"))
 
-        presenter.play()
+        ui.drive(presenter) { presenter.play() }
 
-        assertEquals(listOf(listOf("bar", "foo")), view.chooseSaveToRestoreCalls)
+        assertEquals(listOf(listOf("bar", "foo")), ui.chooseSaveToRestoreCalls)
         assertEquals(listOf("restoreState(${barState.toList()})"), board.calls)
         assertEquals(
             listOf(
@@ -121,10 +126,10 @@ class ConsolePresenterStartupRestoreTest {
             ),
         )
         val analytics = RecordingAnalyticsService()
-        val view = FakeView(chooseSaveToRestoreResponses = mutableListOf(null))
-        val presenter = ConsolePresenterImpl(view, board, saves, analytics)
+        val presenter = ConsolePresenterImpl(FakeView(), board, saves, analytics)
+        val ui = FakePresenterUi(chooseSaveToRestoreResponses = mutableListOf(null))
 
-        presenter.play()
+        ui.drive(presenter) { presenter.play() }
 
         assertEquals(emptyList(), board.calls)
         assertEquals(
@@ -147,12 +152,12 @@ class ConsolePresenterStartupRestoreTest {
             ),
         )
         val analytics = RecordingAnalyticsService()
-        val view = FakeView(chooseSaveToRestoreResponses = mutableListOf("nope", "bar"))
-        val presenter = ConsolePresenterImpl(view, board, saves, analytics)
+        val presenter = ConsolePresenterImpl(FakeView(), board, saves, analytics)
+        val ui = FakePresenterUi(chooseSaveToRestoreResponses = mutableListOf("nope", "bar"))
 
-        presenter.play()
+        ui.drive(presenter) { presenter.play() }
 
-        assertEquals(2, view.chooseSaveToRestoreCalls.size)
+        assertEquals(2, ui.chooseSaveToRestoreCalls.size)
         assertEquals(listOf("restoreState(${barState.toList()})"), board.calls)
         assertEquals(1, analytics.events.count { it.name == "startup_restore_prompt_shown" })
         assertEquals(
@@ -163,20 +168,20 @@ class ConsolePresenterStartupRestoreTest {
 
     @Test
     fun `EOF at the startup prompt starts a new game, same as a decline - real EOF translation is covered in ViewImplCommandTest`(): Unit = runBlocking {
-        // BasePresenter only ever sees the sentinel View.confirmRestore/chooseSaveToRestore
-        // return for EOF (false/null) - identical to a clean decline/blank answer, since the
-        // actual EOF-vs-decline distinction is made inside ViewImpl (see
-        // `confirmRestore returns false on EOF instead of throwing` and its chooseSaveToRestore
-        // counterpart in ViewImplCommandTest). This test only confirms the presenter doesn't
-        // hang or throw when that sentinel comes back - it can't, by construction, tell EOF
-        // apart from a decline at this layer.
+        // BasePresenter only ever sees the sentinel confirmRestore/chooseSaveToRestore response
+        // for EOF (false/null) - identical to a clean decline/blank answer, since the actual
+        // EOF-vs-decline distinction is made inside ViewImpl (see `confirmRestore returns false
+        // on EOF instead of throwing` and its chooseSaveToRestore counterpart in
+        // ViewImplCommandTest). This test only confirms the presenter doesn't hang or throw when
+        // that sentinel comes back - it can't, by construction, tell EOF apart from a decline at
+        // this layer.
         val board = FakeBoardModel().apply { correct = true }
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, fourByFour)))
         val analytics = RecordingAnalyticsService()
-        val view = FakeView(confirmRestoreResponses = mutableListOf(false))
-        val presenter = ConsolePresenterImpl(view, board, saves, analytics)
+        val presenter = ConsolePresenterImpl(FakeView(), board, saves, analytics)
+        val ui = FakePresenterUi(confirmRestoreResponses = mutableListOf(false))
 
-        presenter.play()
+        ui.drive(presenter) { presenter.play() }
 
         assertEquals(emptyList(), board.calls)
         assertEquals(
@@ -193,10 +198,10 @@ class ConsolePresenterStartupRestoreTest {
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, fourByFour)))
         saves.loadException = SaveFileFormatException("foo", "corrupted save file")
         val analytics = RecordingAnalyticsService()
-        val view = FakeView(confirmRestoreResponses = mutableListOf(true))
-        val presenter = ConsolePresenterImpl(view, board, saves, analytics)
+        val presenter = ConsolePresenterImpl(FakeView(), board, saves, analytics)
+        val ui = FakePresenterUi(confirmRestoreResponses = mutableListOf(true))
 
-        presenter.play()
+        ui.drive(presenter) { presenter.play() }
 
         assertEquals(emptyList(), board.calls)
         assertEquals(
@@ -219,14 +224,14 @@ class ConsolePresenterStartupRestoreTest {
             ),
         )
         val analytics = RecordingAnalyticsService()
-        val view = FakeView(chooseSaveToRestoreResponses = mutableListOf("nope", null))
-        val presenter = ConsolePresenterImpl(view, board, saves, analytics)
+        val presenter = ConsolePresenterImpl(FakeView(), board, saves, analytics)
+        val ui = FakePresenterUi(chooseSaveToRestoreResponses = mutableListOf("nope", null))
 
-        presenter.play()
+        ui.drive(presenter) { presenter.play() }
 
         assertEquals(
             listOf("No save named 'nope'. Available saves: bar, foo"),
-            view.shownMessages,
+            ui.shownMessages,
         )
     }
 }

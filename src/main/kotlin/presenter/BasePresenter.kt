@@ -5,6 +5,8 @@ import analytics.NoopAnalyticsService
 import board_model.BoardImpl
 import board_model.BoardModel
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
 import storage.FileSaveRepository
 import storage.SaveRepository
 import view.View
@@ -12,7 +14,9 @@ import view.View
 /** Owns the domain-mutation flows [ConsolePresenter] and [TuiPresenter] use identically -
  *  shift/reset/save/load/exit and their board/saves/analytics wiring. Console-only concerns
  *  ([ConsolePresenter.play]) and TUI-only concerns (the read-only query surface) live on the
- *  two concrete subclasses, [ConsolePresenterImpl] and [TuiPresenterImpl] (GH-23). */
+ *  two concrete subclasses, [ConsolePresenterImpl] and [TuiPresenterImpl] (GH-23). [view] is
+ *  no longer called from here (GH-42 WU2) - it stays only for [ConsolePresenterImpl.play]'s own
+ *  `displayBoard`/`processCommand` loop, not yet moved (WU3). */
 abstract class BasePresenter(
     protected val view: View,
     protected val board: BoardModel = BoardImpl(),
@@ -21,6 +25,29 @@ abstract class BasePresenter(
     /** Seeded `true` by `GameSession` after a mode switch, so the prompt doesn't re-show. */
     startupRestoreDone: Boolean = false,
 ) : Presenter {
+
+    /** Rendezvous - `ask` doesn't return until the View has actually finished handling the
+     *  request, which is what keeps message/prompt ordering identical to the old direct blocking
+     *  calls into [view.View] (GH-42 WU2, see docs/ARCHITECTURE.md's presenter section). */
+    private val requests = Channel<UiRequest<*>>(Channel.RENDEZVOUS)
+
+    override val uiRequests: ReceiveChannel<UiRequest<*>> = requests
+
+    /** Raises [request] on [uiRequests] and suspends until the View responds. The View must
+     *  never call back into a request-raising presenter method (`saveGame`/`loadGame`/`exitGame`/
+     *  `offerStartupRestore`) from inside its own request handler - doing so deadlocks, since the
+     *  handler is `ask`'s only consumer and would be busy with the request that triggered the
+     *  callback. */
+    private suspend fun <R> ask(request: UiRequest<R>): R {
+        requests.send(request)
+        return request.awaitResponse()
+    }
+
+    /** The one place [UiRequest.ShowMessage] is raised - every other message in this class goes
+     *  through this, not a bare `ask` call, so a future new message site can't forget it. */
+    protected suspend fun showMessage(text: String) {
+        ask(UiRequest.ShowMessage(text))
+    }
 
     override fun shiftLeft(row: Int) = board.shiftLeft(row)
 
@@ -40,7 +67,7 @@ abstract class BasePresenter(
             val existed = saves.exists(name)
             saves.save(name, board.boardArray, board.SQUARE_SIDE)
             analytics.track("save_command_used", mapOf("result" to "success", "overwrote_existing" to existed))
-            view.showMessage("Saved as '$name'.")
+            showMessage("Saved as '$name'.")
             return true
         } catch (e: SessionControlException) {
             throw e
@@ -53,7 +80,7 @@ abstract class BasePresenter(
             // hint that a save failed at all (audit round 3 on GH-12/PR #15, surfaced by the
             // exit-before-quitting flow where this is now the sole explanation for an aborted
             // quit, not just one line among several after an explicit `save`).
-            view.showMessage("Could not save as '$name': ${e.message ?: e::class.simpleName}")
+            showMessage("Could not save as '$name': ${e.message ?: e::class.simpleName}")
             return false
         }
     }
@@ -76,12 +103,12 @@ abstract class BasePresenter(
             val saved = saves.load(name)
             if (saved == null) {
                 analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "not_found"))
-                view.showMessage("No save named '$name'. ${availableSavesMessage()}")
+                showMessage("No save named '$name'. ${availableSavesMessage()}")
                 return false
             }
             if (saved.squareSide != board.SQUARE_SIDE) {
                 analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "size_mismatch"))
-                view.showMessage(
+                showMessage(
                     "Save '$name' is a ${saved.squareSide}x${saved.squareSide} board and can't be loaded onto " +
                         "this ${board.SQUARE_SIDE}x${board.SQUARE_SIDE} board."
                 )
@@ -89,7 +116,7 @@ abstract class BasePresenter(
             }
             board.restoreState(saved.state)
             analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "success"))
-            view.showMessage("Loaded '$name'.")
+            showMessage("Loaded '$name'.")
             return true
         } catch (e: SessionControlException) {
             throw e
@@ -97,7 +124,7 @@ abstract class BasePresenter(
             throw e
         } catch (e: Exception) {
             analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "error"))
-            view.showMessage(e.message ?: "Could not load '$name'.")
+            showMessage(e.message ?: "Could not load '$name'.")
             return false
         }
     }
@@ -109,7 +136,7 @@ abstract class BasePresenter(
      * instead of always throwing [ExitRequestedException].
      */
     override suspend fun exitGame() {
-        if (!view.confirmSaveBeforeExit()) {
+        if (!ask(UiRequest.ConfirmSaveBeforeExit())) {
             analytics.track("exit_command_used", mapOf("save_choice" to "declined"))
             throw ExitRequestedException()
         }
@@ -128,7 +155,7 @@ abstract class BasePresenter(
             // the underlying issue (e.g. a read-only saves/ directory) is resolved. No
             // exit_command_used - the session didn't actually end, so "declined" would
             // misrepresent an explicit save request as a decision not to save (audit round 2).
-            view.showMessage(
+            showMessage(
                 "Not quitting - your game is still running. Fix the problem and try exit again, " +
                     "or answer n to quit without saving."
             )
@@ -139,7 +166,7 @@ abstract class BasePresenter(
         throw ExitRequestedException()
     }
 
-    /** Re-prompts until [View.promptSaveName] returns a name usable by the `save`/`load`
+    /** Re-prompts until [UiRequest.PromptSaveName] returns a name usable by the `save`/`load`
      *  commands, or `null` on a blank answer or EOF, meaning the user doesn't want to save.
      *  Re-prompting on *any* invalid name (rather than treating it as "don't save" or letting
      *  it fall through to [saveGame]'s failure path) avoids silently discarding an explicit
@@ -154,9 +181,9 @@ abstract class BasePresenter(
      */
     private suspend fun promptForValidSaveName(): String? {
         while (true) {
-            val name = view.promptSaveName() ?: return null
+            val name = ask(UiRequest.PromptSaveName()) ?: return null
             if (name.any { it.isWhitespace() } || !saves.isValidName(name)) {
-                view.showMessage(
+                showMessage(
                     "'$name' isn't a usable save name (no spaces, path separators, or '..') - " +
                         "try again, or press Enter to skip saving."
                 )
@@ -169,6 +196,9 @@ abstract class BasePresenter(
     private fun availableSavesMessage(): String {
         // Guarded on its own - a failure here (e.g. an unreadable saves/ directory) shouldn't
         // change the load's actual result (it was still "not found"), just degrade the message.
+        // No CancellationException guard needed here (unlike the suspend methods above) -
+        // saves.listSaves() isn't suspend, so this catch-all can never observe one; revisit if
+        // that ever changes (audit finding on PR #45).
         val available = try {
             saves.listSaves()
         } catch (e: Exception) {
@@ -184,8 +214,11 @@ abstract class BasePresenter(
      * Offers to restore a previous game at startup, before play begins. No-op if there are no
      * saves, or on a repeat call. One save asks a yes/no question; two or more list names and
      * let the user type one (blank/EOF -> new game; an unknown name re-prompts rather than
-     * silently falling back to a new game). Never throws - this runs before either UI's own
-     * try/catch exists, mirroring [loadGame]/[saveGame]'s non-throwing contract. Protected
+     * silently falling back to a new game). Never throws for an ordinary failure (an unreadable
+     * saves dir, a View I/O error) - this runs before either UI's own try/catch exists, mirroring
+     * [loadGame]/[saveGame]'s non-throwing contract for those. [kotlinx.coroutines.CancellationException]
+     * is the one exception to that - GH-42 WU2's guard rethrows it rather than swallowing it as an
+     * ordinary failure, same as [loadGame]/[saveGame]. Protected
      * rather than exposed directly on [Presenter] - [ConsolePresenterImpl.play] calls it as its
      * first step, and [TuiPresenterImpl] re-exposes it publicly as [TuiPresenter.restoreOnStartup]
      * so [view.tui.TuiView] can run it ahead of its own event loop (GH-3).
@@ -200,15 +233,15 @@ abstract class BasePresenter(
             analytics.track("startup_restore_prompt_shown", mapOf("save_file_count" to saveNames.size))
 
             val nameToRestore = if (saveNames.size == 1) {
-                saveNames[0].takeIf { view.confirmRestore(it) }
+                saveNames[0].takeIf { ask(UiRequest.ConfirmRestore(it)) }
             } else {
                 var chosen: String? = null
                 while (chosen == null) {
-                    val typed = view.chooseSaveToRestore(saveNames) ?: break
+                    val typed = ask(UiRequest.ChooseSaveToRestore(saveNames)) ?: break
                     if (typed in saveNames) {
                         chosen = typed
                     } else {
-                        view.showMessage("No save named '$typed'. Available saves: ${saveNames.joinToString(", ")}")
+                        showMessage("No save named '$typed'. Available saves: ${saveNames.joinToString(", ")}")
                     }
                 }
                 chosen

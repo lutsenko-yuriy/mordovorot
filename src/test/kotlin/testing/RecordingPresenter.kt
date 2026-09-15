@@ -1,6 +1,9 @@
 package testing
 
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
 import presenter.Presenter
+import presenter.UiRequest
 
 /**
  * Shared [Presenter] core recording behind [FakeConsolePresenter] and [FakeTuiPresenter] - the
@@ -8,6 +11,10 @@ import presenter.Presenter
  * of the old dual-interface `FakePresenter` (GH-23).
  */
 abstract class RecordingPresenter : Presenter {
+
+    /** Never written to - these fakes record calls instead of calling back into a View, so
+     *  nothing ever raises a [UiRequest] here (GH-42 WU2). */
+    override val uiRequests: ReceiveChannel<UiRequest<*>> = Channel()
 
     val calls = mutableListOf<String>()
 
