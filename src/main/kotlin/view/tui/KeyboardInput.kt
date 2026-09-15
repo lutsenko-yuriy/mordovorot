@@ -2,10 +2,11 @@ package view.tui
 
 import InputMode
 
-/** Bottom-left controls reminder (GH-18/GH-30) - F5/F6/F7/F8/Esc stay live even when the
- *  arrows/cursor don't. Kept at 78 chars (audit finding on PR #40): the F7/F8 addition pushed
- *  the old wording to 88, clipping silently past the default/fallback 80-column terminal width
- *  ([ScreenRenderer.Canvas.put] has no wrap or ellipsis, unlike dialog content). */
+/** Bottom-left controls reminder (GH-18/GH-30/GH-44) - F5/F6/F9/F7/F8/Esc stay live even when
+ *  the arrows/cursor don't. Kept at exactly 80 chars, the default/fallback terminal width
+ *  ([ScreenRenderer.Canvas.put] has no wrap or ellipsis, unlike dialog content) - no slack left
+ *  for the next shortcut addition, which will need to shorten something else here first (audit
+ *  findings on PR #40 and PR #53). */
 private const val CONTROLS_HINT =
     "Arrows: move · Enter: shift · F5/F6/F9 Save/Load/New · F7/F8 Mouse/Console · Esc"
 
