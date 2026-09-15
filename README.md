@@ -25,7 +25,7 @@ view/UI implementation. The `view` layer isn't covered yet — tracked separatel
 
 ## Architecture
 
-MVP (Model-View-ViewModel): `board_model` (game state + rules), `viewmodel`
+MVVM (Model-View-ViewModel): `board_model` (game state + rules), `viewmodel`
 (mediates view ↔ model), `view` (console I/O). See `docs/ARCHITECTURE.md`
 for the full layout and layer rules, and `docs/PRODUCT_SPEC.md` for the
 feature list.

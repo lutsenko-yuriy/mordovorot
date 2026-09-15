@@ -6,7 +6,7 @@
 
 ## Overview
 
-MVP (Model-View-ViewModel): board_model + viewmodel + view packages
+MVVM (Model-View-ViewModel): board_model + viewmodel + view packages
 
 ## Directory structure
 
@@ -154,7 +154,7 @@ see "Dependencies" below.
 
 ## Layers
 
-Classic MVP. `board_model` and `view` are each an interface + one implementation.
+Classic MVVM. `board_model` and `view` are each an interface + one implementation.
 `viewmodel` (GH-42) is a single `ViewModel` interface + one `ViewModelImpl`, holding
 no reference to any `View` — it communicates with whichever `View` is driving it
 through a request channel instead of a constructor-injected dependency. Callers
