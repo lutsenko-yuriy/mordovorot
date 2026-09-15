@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.7.5] — 2026-09-15 (PR #51 merged)
+
+### Added
+- [wip] GH-44 (WU1/3): board-size domain layer — `board_model.BoardSize` (valid range 3-5, default 4), `BoardModel.newGame(side)` (the only way the board's side changes; `resetGame()` keeps reshuffling at the current size), and a `--size=N` launch flag (`Main.kt`'s `resolveBoardSize`) that's tracked on `app_launched.board_size`. `BoardModel.SQUARE_SIDE` renamed to `squareSide` since it's no longer constructor-fixed. `ViewModel.newGame(size, trigger)` delegates to the board and tracks `new_game_size_selected`. No player-visible entry point yet — the startup size prompt (WU2) and `size <N>`/`[ New ]` surfaces (WU3) land next.
+
 ## [0.7.4] — 2026-09-15 (PR #47 merged)
 
 ### Changed
