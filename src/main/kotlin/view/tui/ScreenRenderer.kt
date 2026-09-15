@@ -116,8 +116,8 @@ class ScreenRenderer {
 
     private fun drawToolbar(canvas: Canvas, layout: BoardLayout, toolbarShortcuts: Boolean) {
         for (button in layout.toolbarButtons()) {
-            if (toolbarShortcuts) canvas.putColored(button.x, layout.toolbarRow, button.text, SHORTCUT_COLOR_ON, SHORTCUT_COLOR_OFF)
-            else canvas.put(button.x, layout.toolbarRow, button.text)
+            if (toolbarShortcuts) canvas.putColored(button.x, button.y, button.text, SHORTCUT_COLOR_ON, SHORTCUT_COLOR_OFF)
+            else canvas.put(button.x, button.y, button.text)
         }
     }
 

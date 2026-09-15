@@ -32,7 +32,7 @@ class TuiViewModeSwitchTest {
     fun `clicking the toolbar's Keyboard button requests a switch to keyboard mode with trigger=toolbar`() {
         val switcher = RecordingModeSwitcher()
         val button = mouseBoardLayout().toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.KEYBOARD) }
-        val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.MouseClick(button.range.first, mouseBoardLayout().toolbarRow)))
+        val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.MouseClick(button.range.first, button.y)))
         val view = TuiView.create(terminal, modeSwitcherFactory = { switcher }) { FakeTuiPresenter() }
 
         view.play()
@@ -44,7 +44,7 @@ class TuiViewModeSwitchTest {
     fun `clicking the toolbar's Console button requests a switch to console mode with trigger=toolbar`() {
         val switcher = RecordingModeSwitcher()
         val button = mouseBoardLayout().toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.CONSOLE) }
-        val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.MouseClick(button.range.first, mouseBoardLayout().toolbarRow)))
+        val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.MouseClick(button.range.first, button.y)))
         val view = TuiView.create(terminal, modeSwitcherFactory = { switcher }) { FakeTuiPresenter() }
 
         view.play()
@@ -89,9 +89,9 @@ class TuiViewModeSwitchTest {
         }
         val terminal = FakeTerminal(
             events = mutableListOf(
-                TerminalEvent.MouseClick(saveButton.range.first, boardLayout.toolbarRow), // opens the Save dialog
+                TerminalEvent.MouseClick(saveButton.range.first, saveButton.y), // opens the Save dialog
                 TerminalEvent.MouseClick(cancelButton.range.first, dialogLayout.buttonsRow()), // cancels it
-                TerminalEvent.MouseClick(consoleButton.range.first, boardLayout.toolbarRow), // requests the switch
+                TerminalEvent.MouseClick(consoleButton.range.first, consoleButton.y), // requests the switch
             ),
             terminalSize = terminalSize,
         )

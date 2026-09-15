@@ -111,15 +111,35 @@ class BoardLayoutTest {
     }
 
     @Test
-    fun `mode buttons sit between Load and Exit and hit-test to ToolbarMode`() {
+    fun `mode buttons sit on their own row below the toolbar and hit-test to ToolbarMode`() {
         val layout = BoardLayout(ampleTerminal, squareSide = 4, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE))
 
         val buttons = layout.toolbarButtons()
         assertEquals(
-            listOf(HitTarget.ToolbarSave, HitTarget.ToolbarLoad, HitTarget.ToolbarMode(InputMode.KEYBOARD), HitTarget.ToolbarMode(InputMode.CONSOLE), HitTarget.ToolbarExit),
+            listOf(HitTarget.ToolbarSave, HitTarget.ToolbarLoad, HitTarget.ToolbarExit, HitTarget.ToolbarMode(InputMode.KEYBOARD), HitTarget.ToolbarMode(InputMode.CONSOLE)),
             buttons.map { it.target },
         )
-        for (button in buttons) assertEquals(button.target, layout.hitTest(button.range.first, layout.toolbarRow))
+        val (save, load, exit, keyboard, console) = buttons
+        assertEquals(layout.toolbarRow, save.y)
+        assertEquals(layout.toolbarRow, load.y)
+        assertEquals(layout.toolbarRow, exit.y)
+        assertEquals(layout.modeRow, keyboard.y)
+        assertEquals(layout.modeRow, console.y)
+        for (button in buttons) assertEquals(button.target, layout.hitTest(button.range.first, button.y))
+    }
+
+    @Test
+    fun `a terminal too narrow for a single five-button row still fits Save Load Exit split across two rows`() {
+        // Regression test (audit finding on PR #38): a single row of all five buttons needed 51
+        // columns; splitting Save/Load/Exit onto their own row (unchanged from before this
+        // ticket) keeps it fitting at the same width the three-button toolbar always has.
+        val narrow = TerminalSize(columns = 40, rows = 24)
+        val layout = BoardLayout(narrow, squareSide = 4, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE))
+
+        val (exitX, exitY) = layout.exitButtonPosition()
+        assertEquals(HitTarget.ToolbarExit, layout.hitTest(exitX, exitY))
+        val (keyboardX, keyboardY) = layout.toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.KEYBOARD) }.let { it.x to it.y }
+        assertEquals(HitTarget.ToolbarMode(InputMode.KEYBOARD), layout.hitTest(keyboardX, keyboardY))
     }
 
     @Test
