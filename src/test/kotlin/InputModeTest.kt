@@ -54,10 +54,19 @@ class InputModeTest {
     fun `app_launched is tracked with the resolved mode`() {
         val analytics = RecordingAnalyticsService()
 
-        val mode = resolveInputMode(arrayOf("--console"), analytics)
+        val mode = resolveInputMode(arrayOf("--console"), analytics, boardSize = 4)
 
         assertEquals(InputMode.CONSOLE, mode)
-        assertEquals(listOf(Event("app_launched", mapOf("mode" to "console"))), analytics.events)
+        assertEquals(listOf(Event("app_launched", mapOf("mode" to "console", "board_size" to 4))), analytics.events)
+    }
+
+    @Test
+    fun `app_launched carries the resolved board_size, not just the default`() {
+        val analytics = RecordingAnalyticsService()
+
+        resolveInputMode(arrayOf("--console"), analytics, boardSize = 5)
+
+        assertEquals(listOf(Event("app_launched", mapOf("mode" to "console", "board_size" to 5))), analytics.events)
     }
 
     @Test
@@ -67,7 +76,7 @@ class InputModeTest {
         val mode = resolveInputMode(arrayOf("--keyboard"), analytics, hasInteractiveTerminal = { true })
 
         assertEquals(InputMode.KEYBOARD, mode)
-        assertEquals(listOf(Event("app_launched", mapOf("mode" to "keyboard"))), analytics.events)
+        assertEquals(listOf(Event("app_launched", mapOf("mode" to "keyboard", "board_size" to 4))), analytics.events)
     }
 
     @Test
@@ -125,6 +134,16 @@ class InputModeTest {
         val warnings = mutableListOf<String>()
 
         resolveInputMode(arrayOf("--console"), analytics, warnUnrecognizedArg = { warnings.add(it) })
+
+        assertEquals(emptyList(), warnings)
+    }
+
+    @Test
+    fun `--size=N is not reported as an unrecognized argument`() {
+        val analytics = RecordingAnalyticsService()
+        val warnings = mutableListOf<String>()
+
+        resolveInputMode(arrayOf("--size=3"), analytics, warnUnrecognizedArg = { warnings.add(it) })
 
         assertEquals(emptyList(), warnings)
     }
