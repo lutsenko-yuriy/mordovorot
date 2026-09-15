@@ -8,4 +8,4 @@ package viewmodel
 data class SaveInfo(val name: String, val squareSide: Int?)
 
 /** `"name (NxN)"`, or just `"name"` when [SaveInfo.squareSide] is unknown. */
-fun SaveInfo.display(): String = if (squareSide != null) "$name (${squareSide}x$squareSide)" else name
+fun SaveInfo.display(): String = if (squareSide != null) "$name (${squareSide}x${squareSide})" else name
