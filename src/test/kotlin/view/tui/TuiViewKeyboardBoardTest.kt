@@ -1,7 +1,7 @@
 package view.tui
 
 import testing.FakeTerminal
-import testing.FakeTuiPresenter
+import testing.FakePresenter
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -17,12 +17,12 @@ class TuiViewKeyboardBoardTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
 
-    private fun view(terminal: FakeTerminal, presenter: FakeTuiPresenter): TuiView =
-        TuiView.create(terminal, input = KeyboardInput()) { presenter }
+    private fun view(terminal: FakeTerminal, presenter: FakePresenter): TuiView =
+        TuiView.create(terminal, input = KeyboardInput(), presenter = presenter)
 
     @Test
     fun `an arrow-key walk around the ring followed by Enter calls the expected shift`(): Unit = runBlocking {
-        val presenter = FakeTuiPresenter()
+        val presenter = FakePresenter()
         // LEFT[0] (start) -> Down -> LEFT[1], per ArrowRing's movement table.
         val terminal = FakeTerminal(
             events = mutableListOf(TerminalEvent.Arrow(Direction.DOWN), TerminalEvent.Enter),
@@ -36,7 +36,7 @@ class TuiViewKeyboardBoardTest {
 
     @Test
     fun `Space also activates the highlighted arrow, same as Enter`(): Unit = runBlocking {
-        val presenter = FakeTuiPresenter()
+        val presenter = FakePresenter()
         val terminal = FakeTerminal(
             events = mutableListOf(TerminalEvent.Arrow(Direction.DOWN), TerminalEvent.KeyPress(' ')),
             terminalSize = terminalSize,
@@ -52,7 +52,7 @@ class TuiViewKeyboardBoardTest {
         // Any frame, not just the last - EndOfInput closing the dialog triggers one more board
         // repaint before quitting.
         suspend fun framesFor(event: TerminalEvent): List<String> {
-            val presenter = FakeTuiPresenter()
+            val presenter = FakePresenter()
             val terminal = FakeTerminal(
                 events = mutableListOf(TerminalEvent.Arrow(Direction.DOWN), event),
                 terminalSize = terminalSize,
@@ -68,7 +68,7 @@ class TuiViewKeyboardBoardTest {
 
     @Test
     fun `the board repaints after every cursor move`(): Unit = runBlocking {
-        val presenter = FakeTuiPresenter()
+        val presenter = FakePresenter()
         val terminal = FakeTerminal(
             events = mutableListOf(TerminalEvent.Arrow(Direction.DOWN), TerminalEvent.Arrow(Direction.RIGHT)),
             terminalSize = terminalSize,
@@ -82,7 +82,7 @@ class TuiViewKeyboardBoardTest {
 
     @Test
     fun `play enters raw mode without enabling mouse reporting, and restores on the way out`(): Unit = runBlocking {
-        val presenter = FakeTuiPresenter()
+        val presenter = FakePresenter()
         val terminal = FakeTerminal(events = mutableListOf(), terminalSize = terminalSize)
 
         view(terminal, presenter).play()
@@ -94,7 +94,7 @@ class TuiViewKeyboardBoardTest {
 
     @Test
     fun `EndOfInput from the terminal ends the loop cleanly`(): Unit = runBlocking {
-        val presenter = FakeTuiPresenter()
+        val presenter = FakePresenter()
         val terminal = FakeTerminal(events = mutableListOf(), terminalSize = terminalSize)
 
         view(terminal, presenter).play()

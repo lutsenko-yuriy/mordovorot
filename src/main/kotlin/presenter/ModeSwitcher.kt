@@ -8,7 +8,7 @@ import view.View
 /**
  * Requests a switch to a different [InputMode] mid-session: checks for an interactive terminal,
  * tracks `input_mode_switched`, and either throws [ModeSwitchRequestedException] or shows a
- * rejection message and returns - mirrors [BasePresenter.exitGame]'s contract. Reached from each
+ * rejection message and returns - mirrors [PresenterImpl.exitGame]'s contract. Reached from each
  * `View`'s own affordance: `ViewImpl`'s `mouse`/`keyboard` commands, `TuiView`'s toolbar
  * buttons and F7/F8 (GH-30).
  *

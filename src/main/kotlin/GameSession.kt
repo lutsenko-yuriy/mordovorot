@@ -4,11 +4,10 @@ import analytics.NoopAnalyticsService
 import board_model.BoardImpl
 import board_model.BoardModel
 import kotlinx.coroutines.CancellationException
-import presenter.ConsolePresenterImpl
 import presenter.ModeSwitchRequestedException
 import presenter.ModeSwitcherImpl
+import presenter.PresenterImpl
 import presenter.SessionControlException
-import presenter.TuiPresenterImpl
 import storage.FileSaveRepository
 import storage.SaveRepository
 import view.View
@@ -98,23 +97,29 @@ internal fun defaultView(
     terminalFactory: () -> Terminal,
 ): View {
     val decoratedAnalytics = InputMethodAnalyticsService(analytics, mode.name.lowercase())
+    // Built once per rebuild and handed to the View - the presenter no longer needs a View to
+    // exist first (GH-42 WU3: PresenterImpl holds no View reference at all).
+    val presenter = PresenterImpl(board, saves, decoratedAnalytics, startupRestoreDone)
     return when (mode) {
         InputMode.CONSOLE ->
             ViewImpl.create(
                 modeSwitcherFactory = { v -> ModeSwitcherImpl(view = v, currentMode = mode, analytics = analytics) },
-            ) { v -> ConsolePresenterImpl(v, board, saves, decoratedAnalytics, startupRestoreDone) }
+                presenter = presenter,
+            )
         InputMode.MOUSE ->
             TuiView.create(
                 terminalFactory(),
                 analytics = decoratedAnalytics,
                 modeSwitcherFactory = { v -> ModeSwitcherImpl(view = v, currentMode = mode, analytics = analytics) },
-            ) { v -> TuiPresenterImpl(v, board, saves, decoratedAnalytics, startupRestoreDone) }
+                presenter = presenter,
+            )
         InputMode.KEYBOARD ->
             TuiView.create(
                 terminalFactory(),
                 analytics = decoratedAnalytics,
                 input = KeyboardInput(),
                 modeSwitcherFactory = { v -> ModeSwitcherImpl(view = v, currentMode = mode, analytics = analytics) },
-            ) { v -> TuiPresenterImpl(v, board, saves, decoratedAnalytics, startupRestoreDone) }
+                presenter = presenter,
+            )
     }
 }

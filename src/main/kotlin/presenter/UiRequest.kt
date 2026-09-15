@@ -4,7 +4,7 @@ import kotlinx.coroutines.CompletableDeferred
 
 /** One outstanding presenter->UI interaction plus the slot its answer lands in (GH-42 WU2).
  *  [R] makes [respond] type-checked per branch in the View's `when` over a received request.
- *  Travels on [Presenter.uiRequests], a rendezvous channel - see [presenter.BasePresenter.ask]
+ *  Travels on [Presenter.uiRequests], a rendezvous channel - see [presenter.PresenterImpl.ask]
  *  for why that ordering is what keeps message/prompt sequencing identical to the old direct
  *  blocking calls into [view.View]. */
 sealed class UiRequest<R> {

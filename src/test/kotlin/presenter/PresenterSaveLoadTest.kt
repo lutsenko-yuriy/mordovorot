@@ -4,27 +4,25 @@ import board_model.BoardImpl
 import storage.SaveFileFormatException
 import testing.FakePresenterUi
 import testing.FakeSaveRepository
-import testing.FakeView
 import testing.RecordingAnalyticsService
-import testing.TestPresenter
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/** Covers [BasePresenter.saveGame]/[BasePresenter.loadGame] (originally GH-6's `save`/`load`
+/** Covers [PresenterImpl.saveGame]/[PresenterImpl.loadGame] (originally GH-6's `save`/`load`
  *  commands, WU3), shared identically by both UIs (split GH-23). Driven via [FakePresenterUi.drive]
- *  (GH-42 WU2) - both methods always call `showMessage`, which suspends on [BasePresenter.ask],
+ *  (GH-42 WU2) - both methods always call `showMessage`, which suspends on [PresenterImpl.ask],
  *  so every test here needs something draining [Presenter.uiRequests] concurrently, not just the
  *  ones that previously asserted on a message. */
-class BasePresenterSaveLoadTest {
+class PresenterSaveLoadTest {
 
     @Test
     fun `saveGame creates a new file when none exists`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(1, 0, 3, 2)) }
-        val presenter = TestPresenter(FakeView(), board, saves, analytics)
+        val presenter = PresenterImpl(board, saves, analytics)
         val ui = FakePresenterUi()
 
         ui.drive(presenter) { presenter.saveGame("foo") }
@@ -51,7 +49,7 @@ class BasePresenterSaveLoadTest {
         saves.save("foo", intArrayOf(0, 1, 2, 3), 2)
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(3, 2, 1, 0)) }
-        val presenter = TestPresenter(FakeView(), board, saves, analytics)
+        val presenter = PresenterImpl(board, saves, analytics)
         val ui = FakePresenterUi()
 
         ui.drive(presenter) { presenter.saveGame("foo") }
@@ -73,7 +71,7 @@ class BasePresenterSaveLoadTest {
         val saves = FakeSaveRepository().apply { saveException = IllegalArgumentException("Save name must not be blank") }
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
-        val presenter = TestPresenter(FakeView(), board, saves, analytics)
+        val presenter = PresenterImpl(board, saves, analytics)
         val ui = FakePresenterUi()
 
         ui.drive(presenter) { presenter.saveGame("..") }
@@ -91,7 +89,7 @@ class BasePresenterSaveLoadTest {
         saves.save("foo", intArrayOf(3, 2, 1, 0), 2)
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
-        val presenter = TestPresenter(FakeView(), board, saves, analytics)
+        val presenter = PresenterImpl(board, saves, analytics)
         val ui = FakePresenterUi()
 
         ui.drive(presenter) { presenter.loadGame("foo") }
@@ -109,7 +107,7 @@ class BasePresenterSaveLoadTest {
         saves.save("bar", intArrayOf(3, 2, 1, 0), 2)
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
-        val presenter = TestPresenter(FakeView(), board, saves, analytics)
+        val presenter = PresenterImpl(board, saves, analytics)
         val ui = FakePresenterUi()
 
         ui.drive(presenter) { presenter.loadGame("missing") }
@@ -126,7 +124,7 @@ class BasePresenterSaveLoadTest {
     fun `loadGame with no saves at all still messages cleanly`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
-        val presenter = TestPresenter(FakeView(), board, saves, RecordingAnalyticsService())
+        val presenter = PresenterImpl(board, saves, RecordingAnalyticsService())
         val ui = FakePresenterUi()
 
         ui.drive(presenter) { presenter.loadGame("missing") }
@@ -140,7 +138,7 @@ class BasePresenterSaveLoadTest {
         saves.save("small", intArrayOf(0, 1, 2, 3), 2)
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(4).apply { restoreState((0..15).toList().toIntArray()) }
-        val presenter = TestPresenter(FakeView(), board, saves, analytics)
+        val presenter = PresenterImpl(board, saves, analytics)
         val ui = FakePresenterUi()
 
         ui.drive(presenter) { presenter.loadGame("small") }
@@ -164,7 +162,7 @@ class BasePresenterSaveLoadTest {
         }
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
-        val presenter = TestPresenter(FakeView(), board, saves, analytics)
+        val presenter = PresenterImpl(board, saves, analytics)
         val ui = FakePresenterUi()
 
         ui.drive(presenter) { presenter.loadGame("missing") }
@@ -184,7 +182,7 @@ class BasePresenterSaveLoadTest {
         }
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(2).apply { restoreState(intArrayOf(0, 1, 2, 3)) }
-        val presenter = TestPresenter(FakeView(), board, saves, analytics)
+        val presenter = PresenterImpl(board, saves, analytics)
         val ui = FakePresenterUi()
 
         ui.drive(presenter) { presenter.loadGame("corrupt") }

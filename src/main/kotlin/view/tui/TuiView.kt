@@ -7,21 +7,21 @@ import kotlinx.coroutines.launch
 import presenter.ExitRequestedException
 import presenter.ModeSwitcher
 import presenter.NoopModeSwitcher
-import presenter.TuiPresenter
+import presenter.Presenter
 import presenter.UiRequest
 import view.View
 
 /**
  * The mouse-driven `view.View` implementation for GH-3: owns its own event loop instead of
- * going through [presenter.ConsolePresenterImpl.play]'s console-only `while (!board.isCorrect())`
- * loop (see the ticket's solved-state note - this is what lets a Congratulations screen exist at
- * all). Every mouse gesture resolves to an existing [TuiPresenter] call. WU4 adds the Save/Load/
+ * going through [view.ViewImpl.play]'s console-only `while (!presenter.isSolved())` loop
+ * (see the ticket's solved-state note - this is what lets a Congratulations screen exist at
+ * all). Every mouse gesture resolves to an existing [Presenter] call. WU4 adds the Save/Load/
  * Exit dialogs and the startup restore prompt: [confirmSaveBeforeExit]/[promptSaveName]/
  * [confirmRestore]/[chooseSaveToRestore] each run their own blocking modal loop over
  * [terminal], the same way [view.ViewImpl]'s console prompts block on `readLine()`. Confirmed
  * product decision: once solved, the arrows go dead ([ScreenState.arrowsEnabled] false) - see
  * [ScreenState]'s KDoc. WU5 adds the Congratulations screen itself: since every repaint asks
- * [TuiPresenter.isSolved] fresh rather than tracking a phase flag, the toolbar stays fully live
+ * [Presenter.isSolved] fresh rather than tracking a phase flag, the toolbar stays fully live
  * and a load from the Congratulations screen that restores an unsolved board flips the title and
  * arrows straight back - see [wasSolved] for the one bit of state analytics needs that the
  * rendering doesn't.
@@ -33,7 +33,7 @@ class TuiView internal constructor(
 ) : View {
 
     /** Must be assigned before [play] is called - use [create]. */
-    lateinit var presenter: TuiPresenter
+    lateinit var presenter: Presenter
         internal set
 
     /** Wired atomically alongside [presenter] in [create] - defaults to a no-op so every
@@ -76,18 +76,18 @@ class TuiView internal constructor(
             analytics: AnalyticsService = NoopAnalyticsService(),
             input: TuiInput = MouseInput(),
             modeSwitcherFactory: (View) -> ModeSwitcher = { NoopModeSwitcher() },
-            presenterFactory: (View) -> TuiPresenter,
+            presenter: Presenter,
         ): TuiView {
             val view = TuiView(terminal, analytics, input)
             view.modeSwitcher = modeSwitcherFactory(view)
-            view.presenter = presenterFactory(view)
+            view.presenter = presenter
             return view
         }
     }
 
     /** Drains [presenter]'s [presenter.Presenter.uiRequests] alongside the board's own event
      *  loop (GH-42 WU2) - what lets `saveGame`/`loadGame`/`exitGame`/`restoreOnStartup` suspend
-     *  on [presenter.BasePresenter.ask] instead of calling back into this view directly. */
+     *  on [presenter.PresenterImpl.ask] instead of calling back into this view directly. */
     override suspend fun play() = coroutineScope {
         val ui = launch { for (request in presenter.uiRequests) handle(request) }
         try {
@@ -151,7 +151,7 @@ class TuiView internal constructor(
     /** Runs a shift and, only here, checks for the transition into solved -
      *  `screen_congratulations` tracks a board solved *by playing*, not one that arrives
      *  already solved via a toolbar/startup Load (audit finding on PR #25: gating on
-     *  [presenter.TuiPresenter.isSolved] at repaint time alone fired the event on every restore of
+     *  [presenter.Presenter.isSolved] at repaint time alone fired the event on every restore of
      *  a pre-solved save).
      *
      *  Today, [wasSolved] is guaranteed `false` on every call here - [shift] is only reachable
@@ -175,7 +175,7 @@ class TuiView internal constructor(
                 // console mode's save/load parsing splits on it (view.ViewImpl.nameArg) - a
                 // name saved with a space could never be `load`ed back from the console.
                 // Toolbar Save bypassed that check entirely, since it calls saveGame directly
-                // rather than going through BasePresenter's exit-flow validation (audit round 5
+                // rather than going through PresenterImpl's exit-flow validation (audit round 5
                 // on PR #24).
                 if (outcome.name.any { it.isWhitespace() }) {
                     showMessage("'${outcome.name}' isn't a usable save name (no spaces) - not saved.")
@@ -249,7 +249,7 @@ class TuiView internal constructor(
                 InputAction.EraseChar -> typed = typed.dropLast(1)
                 // An empty name is "skip saving" (matches the invalid-name re-prompt's own
                 // "press Enter to skip saving" instruction) rather than a Confirm(""), which
-                // would re-prompt forever - BasePresenter.promptForValidSaveName only stops on
+                // would re-prompt forever - PresenterImpl.promptForValidSaveName only stops on
                 // null. Applies to both Submit and the Save button - round 1 only fixed Enter
                 // (audit round 2 on PR #24).
                 InputAction.Submit -> return if (typed.isEmpty()) SaveOutcome.Cancel else SaveOutcome.Confirm(typed)
@@ -276,8 +276,8 @@ class TuiView internal constructor(
     /** Runs a Load-shaped dialog's own blocking loop: click a list row to select, Load/Cancel
      *  via click. Shared by the toolbar's Load and the startup restore prompt (same shape for
      *  any save count, per the plan). [preloadedSaves], when given, is shown as-is instead of
-     *  a fresh [TuiPresenter.listSaves] call - [confirmRestore]/[chooseSaveToRestore] already
-     *  receive the save list [presenter.TuiPresenterImpl.restoreOnStartup] queried, and re-querying
+     *  a fresh [Presenter.listSaves] call - [confirmRestore]/[chooseSaveToRestore] already
+     *  receive the save list [presenter.PresenterImpl.restoreOnStartup] queried, and re-querying
      *  instead risked disagreeing with it (audit finding on PR #24). */
     private fun runLoadDialog(title: String, openedFrom: String, preloadedSaves: List<String>? = null): LoadOutcome {
         val saves = preloadedSaves ?: presenter.listSaves()
@@ -344,8 +344,8 @@ class TuiView internal constructor(
         terminal.write(renderer.render(state, terminalSize))
     }
 
-    // The board's own displayBoard/processCommand belong to ConsolePresenterImpl.play()'s
-    // console-only loop, which TuiView never calls (see class KDoc).
+    // The board's own displayBoard/processCommand belong to ViewImpl.play()'s console-only
+    // loop, which TuiView never calls (see class KDoc).
     override fun displayBoard(boardState: IntArray, squareSide: Int) {}
 
     override suspend fun processCommand() {}

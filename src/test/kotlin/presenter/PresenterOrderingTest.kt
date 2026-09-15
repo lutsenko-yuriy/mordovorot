@@ -5,8 +5,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import testing.FakeBoardModel
 import testing.FakeSaveRepository
-import testing.FakeView
-import testing.TestPresenter
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -24,7 +22,7 @@ class PresenterOrderingTest {
 
     @Test
     fun `a message emitted before a prompt is observed before the prompt request arrives`(): Unit = runBlocking {
-        val presenter = TestPresenter(FakeView(), FakeBoardModel(), FakeSaveRepository())
+        val presenter = PresenterImpl(FakeBoardModel(), FakeSaveRepository())
         val events = mutableListOf<String>()
         var promptSaveNameCalls = 0
 

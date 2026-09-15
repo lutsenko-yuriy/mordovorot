@@ -1,6 +1,6 @@
 package view.tui
 
-import testing.FakeTuiPresenter
+import testing.FakePresenter
 import testing.FakeTerminal
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
@@ -9,22 +9,22 @@ import kotlin.test.assertTrue
 
 /**
  * Covers GH-3's board interaction loop: `TuiView` dispatching mouse clicks on the board to the
- * presenter and repainting. Driven via [FakeTerminal] + [FakeTuiPresenter] - no real terminal or
+ * presenter and repainting. Driven via [FakeTerminal] + [FakePresenter] - no real terminal or
  * presenter logic involved.
  */
 class TuiViewBoardTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
 
-    private fun layoutFor(presenter: FakeTuiPresenter) =
+    private fun layoutFor(presenter: FakePresenter) =
         BoardLayout(terminalSize, presenter.side, presenter.solved.not())
 
-    private fun view(terminal: FakeTerminal, presenter: FakeTuiPresenter): TuiView =
-        TuiView.create(terminal) { presenter }
+    private fun view(terminal: FakeTerminal, presenter: FakePresenter): TuiView =
+        TuiView.create(terminal, presenter = presenter)
 
     @Test
     fun `clicking a row's left or right arrow calls shiftLeft or shiftRight with the 0-based row`(): Unit = runBlocking {
-        val presenter = FakeTuiPresenter()
+        val presenter = FakePresenter()
         val layout = layoutFor(presenter)
         val (lx, ly) = layout.leftArrowPosition(1)
         val (rx, ry) = layout.rightArrowPosition(2)
@@ -41,7 +41,7 @@ class TuiViewBoardTest {
 
     @Test
     fun `clicking a column's up or down arrow calls shiftUp or shiftDown with the 0-based column`(): Unit = runBlocking {
-        val presenter = FakeTuiPresenter()
+        val presenter = FakePresenter()
         val layout = layoutFor(presenter)
         val (ux, uy) = layout.upArrowPosition(2)
         val (dx, dy) = layout.downArrowPosition(3)
@@ -58,7 +58,7 @@ class TuiViewBoardTest {
 
     @Test
     fun `the board repaints after every click`(): Unit = runBlocking {
-        val presenter = FakeTuiPresenter()
+        val presenter = FakePresenter()
         val layout = layoutFor(presenter)
         val (lx, ly) = layout.leftArrowPosition(0)
         val terminal = FakeTerminal(
@@ -74,7 +74,7 @@ class TuiViewBoardTest {
 
     @Test
     fun `a click on dead space makes no presenter call`(): Unit = runBlocking {
-        val presenter = FakeTuiPresenter()
+        val presenter = FakePresenter()
         val layout = layoutFor(presenter)
         val (lx, ly) = layout.leftArrowPosition(0)
         // A cell well inside the grid body, not on any arrow or toolbar button.
@@ -90,7 +90,7 @@ class TuiViewBoardTest {
 
     @Test
     fun `EndOfInput from the terminal ends the loop cleanly`(): Unit = runBlocking {
-        val presenter = FakeTuiPresenter()
+        val presenter = FakePresenter()
         val terminal = FakeTerminal(events = mutableListOf(), terminalSize = terminalSize)
 
         view(terminal, presenter).play()
@@ -105,7 +105,7 @@ class TuiViewBoardTest {
         // out until WU4/5 add a live toolbar/Congratulations screen to replace them. An earlier
         // audit-driven attempt to keep the arrows live instead (rounds 2/3 on PR #22) was a
         // misreading of that trade-off - reverted per direct confirmation.
-        val presenter = FakeTuiPresenter()
+        val presenter = FakePresenter()
         presenter.solved = true
         val layout = BoardLayout(terminalSize, presenter.side, arrowsEnabled = true)
         val (lx, ly) = layout.leftArrowPosition(0)
@@ -119,7 +119,7 @@ class TuiViewBoardTest {
 
     @Test
     fun `play enters raw mode and mouse reporting before reading any event, and restores on the way out`(): Unit = runBlocking {
-        val presenter = FakeTuiPresenter()
+        val presenter = FakePresenter()
         val terminal = FakeTerminal(events = mutableListOf(), terminalSize = terminalSize)
 
         view(terminal, presenter).play()

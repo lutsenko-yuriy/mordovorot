@@ -2,7 +2,7 @@ package view
 
 import InputMode
 import board_model.BoardImpl
-import presenter.ConsolePresenterImpl
+import presenter.PresenterImpl
 import presenter.ModeSwitchRequestedException
 import testing.FakeSaveRepository
 import java.io.BufferedReader
@@ -35,7 +35,7 @@ class ViewImplRequestHandlingTest {
             }
         }
         val input = BufferedReader(StringReader("save foo\n"))
-        val view = ViewImpl.create(input, output) { v -> ConsolePresenterImpl(v, BoardImpl(), FakeSaveRepository()) }
+        val view = ViewImpl.create(input, output, presenter = PresenterImpl(BoardImpl(), FakeSaveRepository()))
 
         assertFailsWith<ModeSwitchRequestedException> { view.play() }
     }
