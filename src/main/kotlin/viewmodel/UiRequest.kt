@@ -23,4 +23,9 @@ sealed class UiRequest<R> {
     class ChooseSaveToRestore(val saveNames: List<String>) : UiRequest<String?>()
     class ConfirmSaveBeforeExit : UiRequest<Boolean>()
     class PromptSaveName : UiRequest<String?>()
+
+    /** "Which size for the fresh game?" (GH-44) - raised by [ViewModelImpl.restoreOnStartup]
+     *  once it's established restore didn't happen. Answered with a chosen side, or `null` to
+     *  keep [current]. */
+    class ChooseBoardSize(val current: Int) : UiRequest<Int?>()
 }

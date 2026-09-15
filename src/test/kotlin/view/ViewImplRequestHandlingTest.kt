@@ -35,7 +35,7 @@ class ViewImplRequestHandlingTest {
             }
         }
         val input = BufferedReader(StringReader("save foo\n"))
-        val view = ViewImpl.create(input, output, viewModel = ViewModelImpl(BoardImpl(), FakeSaveRepository()))
+        val view = ViewImpl.create(input, output, viewModel = ViewModelImpl(BoardImpl(), FakeSaveRepository(), sizeChosenAtLaunch = true))
 
         assertFailsWith<ModeSwitchRequestedException> { view.play() }
     }

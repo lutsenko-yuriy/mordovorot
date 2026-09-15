@@ -18,6 +18,7 @@ class FakeViewModelUi(
     private val chooseSaveToRestoreResponses: MutableList<String?> = mutableListOf(),
     private val confirmSaveBeforeExitResponses: MutableList<Boolean> = mutableListOf(),
     private val promptSaveNameResponses: MutableList<String?> = mutableListOf(),
+    private val chooseBoardSizeResponses: MutableList<Int?> = mutableListOf(),
 ) {
 
     val shownMessages = mutableListOf<String>()
@@ -25,6 +26,8 @@ class FakeViewModelUi(
     val confirmRestoreCalls = mutableListOf<String>()
 
     val chooseSaveToRestoreCalls = mutableListOf<List<String>>()
+
+    val chooseBoardSizeCalls = mutableListOf<Int>()
 
     var confirmSaveBeforeExitCallCount = 0
         private set
@@ -66,6 +69,10 @@ class FakeViewModelUi(
             is UiRequest.PromptSaveName -> {
                 promptSaveNameCallCount++
                 request.respond(nextOrThrow(promptSaveNameResponses, "promptSaveName"))
+            }
+            is UiRequest.ChooseBoardSize -> {
+                chooseBoardSizeCalls.add(request.current)
+                request.respond(nextOrThrow(chooseBoardSizeResponses, "chooseBoardSize"))
             }
         }
     }

@@ -26,12 +26,12 @@ class ViewModelStartupRestoreTest {
     private val fourByFour = IntArray(16) { it }
 
     @Test
-    fun `no saves - starts a new game immediately, no prompt`(): Unit = runBlocking {
+    fun `no saves - skips the restore prompt (the size prompt still runs - see ViewModelSizePromptTest)`(): Unit = runBlocking {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
         val viewModel = ViewModelImpl(board, saves, analytics)
-        val ui = FakeViewModelUi()
+        val ui = FakeViewModelUi(chooseBoardSizeResponses = mutableListOf(null))
 
         ui.drive(viewModel) { viewModel.restoreOnStartup() }
 
@@ -70,7 +70,7 @@ class ViewModelStartupRestoreTest {
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, fourByFour)))
         val analytics = RecordingAnalyticsService()
         val viewModel = ViewModelImpl(board, saves, analytics)
-        val ui = FakeViewModelUi(confirmRestoreResponses = mutableListOf(false))
+        val ui = FakeViewModelUi(confirmRestoreResponses = mutableListOf(false), chooseBoardSizeResponses = mutableListOf(null))
 
         ui.drive(viewModel) { viewModel.restoreOnStartup() }
 
@@ -123,7 +123,7 @@ class ViewModelStartupRestoreTest {
         )
         val analytics = RecordingAnalyticsService()
         val viewModel = ViewModelImpl(board, saves, analytics)
-        val ui = FakeViewModelUi(chooseSaveToRestoreResponses = mutableListOf(null))
+        val ui = FakeViewModelUi(chooseSaveToRestoreResponses = mutableListOf(null), chooseBoardSizeResponses = mutableListOf(null))
 
         ui.drive(viewModel) { viewModel.restoreOnStartup() }
 
@@ -175,7 +175,7 @@ class ViewModelStartupRestoreTest {
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, fourByFour)))
         val analytics = RecordingAnalyticsService()
         val viewModel = ViewModelImpl(board, saves, analytics)
-        val ui = FakeViewModelUi(confirmRestoreResponses = mutableListOf(false))
+        val ui = FakeViewModelUi(confirmRestoreResponses = mutableListOf(false), chooseBoardSizeResponses = mutableListOf(null))
 
         ui.drive(viewModel) { viewModel.restoreOnStartup() }
 
@@ -195,7 +195,7 @@ class ViewModelStartupRestoreTest {
         saves.loadException = SaveFileFormatException("foo", "corrupted save file")
         val analytics = RecordingAnalyticsService()
         val viewModel = ViewModelImpl(board, saves, analytics)
-        val ui = FakeViewModelUi(confirmRestoreResponses = mutableListOf(true))
+        val ui = FakeViewModelUi(confirmRestoreResponses = mutableListOf(true), chooseBoardSizeResponses = mutableListOf(null))
 
         ui.drive(viewModel) { viewModel.restoreOnStartup() }
 
@@ -221,7 +221,7 @@ class ViewModelStartupRestoreTest {
         )
         val analytics = RecordingAnalyticsService()
         val viewModel = ViewModelImpl(board, saves, analytics)
-        val ui = FakeViewModelUi(chooseSaveToRestoreResponses = mutableListOf("nope", null))
+        val ui = FakeViewModelUi(chooseSaveToRestoreResponses = mutableListOf("nope", null), chooseBoardSizeResponses = mutableListOf(null))
 
         ui.drive(viewModel) { viewModel.restoreOnStartup() }
 

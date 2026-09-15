@@ -2,6 +2,7 @@ package view.tui
 
 import analytics.AnalyticsService
 import analytics.NoopAnalyticsService
+import board_model.BoardSize
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import view.View
@@ -131,6 +132,7 @@ class TuiView internal constructor(
             is UiRequest.ChooseSaveToRestore -> request.respond(chooseSaveToRestore(request.saveNames))
             is UiRequest.ConfirmSaveBeforeExit -> request.respond(confirmSaveBeforeExit())
             is UiRequest.PromptSaveName -> request.respond(promptSaveName())
+            is UiRequest.ChooseBoardSize -> request.respond(runSizeDialog("startup"))
         }
     }
 
@@ -303,6 +305,40 @@ class TuiView internal constructor(
                     else -> {}
                 }
                 InputAction.Quit -> return LoadOutcome.Cancel
+                else -> {}
+            }
+        }
+    }
+
+    /** Runs the size-picker dialog's own blocking loop: a button per valid side, plus Cancel -
+     *  buttons-only, like [handleToolbarExit]'s Exit dialog, so no text field or list to manage.
+     *  Shared by the startup [UiRequest.ChooseBoardSize] handler and (GH-44 WU3) the toolbar
+     *  `[ New ]` button/F9 - [openedFrom] is `"startup"` or `"toolbar"`. Returns the chosen side,
+     *  or `null` on Cancel/Escape/EOF - deliberately returns a value instead of calling
+     *  `viewModel.newGame` itself, so the startup call site stays outside the deadlock-prone
+     *  "View calls a request-raising viewModel method from its own request handler" shape (see
+     *  [viewmodel.ViewModelImpl.ask]'s KDoc). */
+    private fun runSizeDialog(openedFrom: String): Int? {
+        analytics.track("screen_size_dialog", mapOf("opened_from" to openedFrom))
+        input.onDialogOpened()
+        val dialog = Dialog(
+            kind = Dialog.Kind.SIZE,
+            title = "New game size",
+            buttons = (BoardSize.MIN..BoardSize.MAX).map { DialogButtonSpec(it.toString(), "${it}x$it") } +
+                DialogButtonSpec("cancel", "Cancel"),
+        )
+        while (true) {
+            repaintWithDialog(dialog)
+            when (val action = input.onDialogEvent(terminal.readEvent(), dialog, checkNotNull(dialogLayout))) {
+                InputAction.Cancel -> { trackDialogCancelled("size"); return null }
+                is InputAction.Activate -> when (val target = action.target) {
+                    is HitTarget.DialogButton -> when (target.id) {
+                        "cancel" -> { trackDialogCancelled("size"); return null }
+                        else -> target.id.toIntOrNull()?.let { return it }
+                    }
+                    else -> {}
+                }
+                InputAction.Quit -> return null
                 else -> {}
             }
         }
