@@ -11,9 +11,13 @@ fun main(args: Array<String>): Unit = runBlocking {
     val analytics = NoopAnalyticsService()
     val boardSize = resolveBoardSize(args)
     val mode = resolveInputMode(args, analytics, boardSize = boardSize)
-    // sizeChosenAtLaunch threading into ViewModelImpl's startup size prompt lands in WU2, once
-    // that prompt exists (GH-44).
-    GameSession(initialMode = mode, board = BoardImpl(boardSize), analytics = analytics).run()
+    val sizeChosenAtLaunch = args.any { it.startsWith("--size=") }
+    GameSession(
+        initialMode = mode,
+        board = BoardImpl(boardSize),
+        sizeChosenAtLaunch = sizeChosenAtLaunch,
+        analytics = analytics,
+    ).run()
 }
 
 /** Parses the `--size=N` launch flag (GH-44) - only this `=`-joined form is recognized (a
