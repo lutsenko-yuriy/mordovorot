@@ -4,6 +4,7 @@ import analytics.AnalyticsService
 import analytics.NoopAnalyticsService
 import board_model.BoardImpl
 import board_model.BoardModel
+import kotlinx.coroutines.CancellationException
 import storage.FileSaveRepository
 import storage.SaveRepository
 import view.EndOfInputException
@@ -31,6 +32,8 @@ class ConsolePresenterImpl(
                 return
             } catch (e: SessionControlException) {
                 throw e // e.g. ModeSwitchRequestedException - must reach GameSession, not the catch-all below
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 view.showMessage(e.message ?: "Error") // not System.err - stays in sync with the board output
             }

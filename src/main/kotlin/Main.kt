@@ -5,7 +5,7 @@ import kotlinx.coroutines.runBlocking
 /**
  * Created by yurich on 02.12.16.
  */
-fun main(args: Array<String>) = runBlocking {
+fun main(args: Array<String>): Unit = runBlocking {
     val analytics = NoopAnalyticsService()
     val mode = resolveInputMode(args, analytics)
     GameSession(initialMode = mode, analytics = analytics).run()

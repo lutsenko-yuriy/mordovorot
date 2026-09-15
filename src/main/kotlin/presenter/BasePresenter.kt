@@ -4,6 +4,7 @@ import analytics.AnalyticsService
 import analytics.NoopAnalyticsService
 import board_model.BoardImpl
 import board_model.BoardModel
+import kotlinx.coroutines.CancellationException
 import storage.FileSaveRepository
 import storage.SaveRepository
 import view.View
@@ -42,6 +43,8 @@ abstract class BasePresenter(
             view.showMessage("Saved as '$name'.")
             return true
         } catch (e: SessionControlException) {
+            throw e
+        } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             analytics.track("save_command_used", mapOf("result" to "error"))
@@ -89,6 +92,8 @@ abstract class BasePresenter(
             view.showMessage("Loaded '$name'.")
             return true
         } catch (e: SessionControlException) {
+            throw e
+        } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "error"))
@@ -217,6 +222,8 @@ abstract class BasePresenter(
                 mapOf("decision" to (if (restored) "restored" else "new_game"), "save_file_count" to saveNames.size),
             )
         } catch (e: SessionControlException) {
+            throw e
+        } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             // Any failure here (unreadable saves dir, view I/O error) just means the game

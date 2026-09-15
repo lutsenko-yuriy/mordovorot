@@ -6,7 +6,7 @@ import testing.FakeSaveRepository
 import testing.FakeView
 import testing.RecordingAnalyticsService
 import testing.RecordingAnalyticsService.Event
-import kotlinx.coroutines.runBlocking
+import testing.runTestBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -22,7 +22,7 @@ import kotlin.test.assertEquals
 class TuiPresenterStartupRestoreTest {
 
     @Test
-    fun `restoreOnStartup is a no-op on a second call - does not re-prompt or double-track`(): Unit = runBlocking {
+    fun `restoreOnStartup is a no-op on a second call - does not re-prompt or double-track`() = runTestBlocking {
         // A caller invoking it twice in one launch (e.g. by mistake, or two code paths both
         // calling it defensively) must not re-prompt the user or double-emit
         // startup_restore_prompt_shown/startup_restore_decision for what is still one launch

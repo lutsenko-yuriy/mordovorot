@@ -161,6 +161,12 @@ Core game state and rules: board array, shifting, reset, and the win check
 (`isCorrect`). No dependency on `presenter` or `view`.
 
 ### presenter (GH-42: ViewModel-style, no View reference)
+**Status: target state as of WU3/3 — WU1/3 has landed so far** (`suspend` propagation only;
+`Presenter`/`ConsolePresenter`/`TuiPresenter` and their impls still match the GH-23 split
+described in the code today, and `BasePresenter` still holds its `View`). The rest of this
+section describes where WU2-WU3 are heading, written ahead of the code per this ticket's
+approved plan - see `docs/knowledge/notes/GH-42.md`.
+
 Mediates between `view`, `board_model`, and `storage`, but never calls into `view`
 directly. `Presenter` is one interface (shift/reset/save/load/exit plus the
 query surface both UIs need — `isSolved`/`boardState`/`squareSide`/`listSaves`/

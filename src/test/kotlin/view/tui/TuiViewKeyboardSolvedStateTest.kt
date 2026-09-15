@@ -3,7 +3,7 @@ package view.tui
 import presenter.TuiPresenter
 import testing.FakeTerminal
 import testing.FakeTuiPresenter
-import kotlinx.coroutines.runBlocking
+import testing.runTestBlocking
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -22,7 +22,7 @@ class TuiViewKeyboardSolvedStateTest {
         TuiView.create(terminal, input = KeyboardInput()) { presenter }
 
     @Test
-    fun `once solved, no cursor is rendered and arrow keys and Enter are inert`(): Unit = runBlocking {
+    fun `once solved, no cursor is rendered and arrow keys and Enter are inert`() = runTestBlocking {
         val presenter = FakeTuiPresenter().apply { solved = true }
         val terminal = FakeTerminal(
             events = mutableListOf(TerminalEvent.Arrow(Direction.DOWN), TerminalEvent.Enter),
@@ -36,7 +36,7 @@ class TuiViewKeyboardSolvedStateTest {
     }
 
     @Test
-    fun `F5, F6, and Escape still open their dialogs after solve`(): Unit = runBlocking {
+    fun `F5, F6, and Escape still open their dialogs after solve`() = runTestBlocking {
         // Any frame, not just the last - see TuiViewKeyboardBoardTest's equivalent test.
         suspend fun framesFor(event: TerminalEvent): List<String> {
             val presenter = FakeTuiPresenter().apply { solved = true }
@@ -51,7 +51,7 @@ class TuiViewKeyboardSolvedStateTest {
     }
 
     @Test
-    fun `loading an unsolved save from the Congratulations screen restores the cursor and re-enables navigation`(): Unit = runBlocking {
+    fun `loading an unsolved save from the Congratulations screen restores the cursor and re-enables navigation`() = runTestBlocking {
         val delegate = FakeTuiPresenter().apply { solved = true; saveNames = listOf("save1") }
         val presenter = object : TuiPresenter by delegate {
             override suspend fun loadGame(name: String) {

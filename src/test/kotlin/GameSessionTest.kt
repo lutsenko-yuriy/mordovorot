@@ -9,7 +9,7 @@ import testing.FakeTerminal
 import testing.RecordingAnalyticsService
 import view.View
 import view.ViewImpl
-import kotlinx.coroutines.runBlocking
+import testing.runTestBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -36,7 +36,7 @@ class GameSessionTest {
     private data class BuildCall(val mode: InputMode, val board: BoardModel, val saves: SaveRepository, val startupRestoreDone: Boolean)
 
     @Test
-    fun `switching modes preserves board state and does not reshuffle`() {
+    fun `switching modes preserves board state and does not reshuffle`() = runTestBlocking {
         val board = FakeBoardModel(boardArray = intArrayOf(3, 2, 1, 0))
         val calls = mutableListOf<BuildCall>()
         var built = 0
@@ -54,7 +54,7 @@ class GameSessionTest {
             },
         )
 
-        runBlocking { session.run() }
+        session.run()
 
         assertEquals(listOf(InputMode.CONSOLE, InputMode.MOUSE), calls.map { it.mode })
         assertTrue(calls.all { it.board === board })
@@ -62,7 +62,7 @@ class GameSessionTest {
     }
 
     @Test
-    fun `switching modes skips the startup restore prompt on sessions after the first`() {
+    fun `switching modes skips the startup restore prompt on sessions after the first`() = runTestBlocking {
         val saves = FakeSaveRepository(mutableMapOf("slot1" to storage.SavedBoard(4, IntArray(16) { it })))
         val calls = mutableListOf<BuildCall>()
         var built = 0
@@ -79,13 +79,13 @@ class GameSessionTest {
             },
         )
 
-        runBlocking { session.run() }
+        session.run()
 
         assertEquals(listOf(false, true), calls.map { it.startupRestoreDone })
     }
 
     @Test
-    fun `three consecutive switches cycle through console, mouse, and keyboard, each rebuilding a fresh View-presenter`() {
+    fun `three consecutive switches cycle through console, mouse, and keyboard, each rebuilding a fresh View-presenter`() = runTestBlocking {
         val modesBuilt = mutableListOf<InputMode>()
         var built = 0
 
@@ -104,14 +104,14 @@ class GameSessionTest {
             },
         )
 
-        runBlocking { session.run() }
+        session.run()
 
         assertEquals(listOf(InputMode.CONSOLE, InputMode.MOUSE, InputMode.KEYBOARD), modesBuilt)
         assertEquals(3, built)
     }
 
     @Test
-    fun `play returning normally (exit) ends the session loop without another rebuild`() {
+    fun `play returning normally (exit) ends the session loop without another rebuild`() = runTestBlocking {
         var built = 0
 
         val session = GameSession(
@@ -122,13 +122,13 @@ class GameSessionTest {
             },
         )
 
-        runBlocking { session.run() }
+        session.run()
 
         assertEquals(1, built)
     }
 
     @Test
-    fun `a failed rebuild after a mode switch falls back to console instead of crashing, skipping the restore prompt`() {
+    fun `a failed rebuild after a mode switch falls back to console instead of crashing, skipping the restore prompt`() = runTestBlocking {
         val calls = mutableListOf<BuildCall>()
         var built = 0
 
@@ -145,7 +145,7 @@ class GameSessionTest {
             },
         )
 
-        runBlocking { session.run() } // must not throw
+        session.run() // must not throw
 
         assertEquals(listOf(InputMode.CONSOLE, InputMode.MOUSE, InputMode.CONSOLE), calls.map { it.mode })
         // The fallback build (3rd) must not re-show the startup restore prompt over a live board.
@@ -153,17 +153,17 @@ class GameSessionTest {
     }
 
     @Test
-    fun `a failure on the very first session still throws - no game in progress to protect`() {
+    fun `a failure on the very first session still throws - no game in progress to protect`() = runTestBlocking {
         val session = GameSession(
             initialMode = InputMode.CONSOLE,
             buildView = { _, _, _, _, _ -> ScriptedView { throw RuntimeException("stty not found") } },
         )
 
-        assertFailsWith<RuntimeException> { runBlocking { session.run() } }
+        assertFailsWith<RuntimeException> { session.run() }
     }
 
     @Test
-    fun `a second consecutive failure, once already falling back to console, has nowhere safer to go - it throws`() {
+    fun `a second consecutive failure, once already falling back to console, has nowhere safer to go - it throws`() = runTestBlocking {
         val modesBuilt = mutableListOf<InputMode>()
         var built = 0
 
@@ -182,12 +182,12 @@ class GameSessionTest {
             },
         )
 
-        assertFailsWith<RuntimeException> { runBlocking { session.run() } }
+        assertFailsWith<RuntimeException> { session.run() }
         assertEquals(listOf(InputMode.MOUSE, InputMode.KEYBOARD, InputMode.CONSOLE), modesBuilt)
     }
 
     @Test
-    fun `ExitRequestedException escaping a rebuild reaches the caller, not swallowed as a failed switch`() {
+    fun `ExitRequestedException escaping a rebuild reaches the caller, not swallowed as a failed switch`() = runTestBlocking {
         val session = GameSession(
             initialMode = InputMode.CONSOLE,
             buildView = { mode, _, _, _, _ ->
@@ -198,11 +198,11 @@ class GameSessionTest {
             },
         )
 
-        assertFailsWith<ExitRequestedException> { runBlocking { session.run() } }
+        assertFailsWith<ExitRequestedException> { session.run() }
     }
 
     @Test
-    fun `the production console View is wired with a real ModeSwitcher, not a silent no-op`() {
+    fun `the production console View is wired with a real ModeSwitcher, not a silent no-op`() = runTestBlocking {
         val view = defaultView(
             InputMode.CONSOLE,
             FakeBoardModel(),
