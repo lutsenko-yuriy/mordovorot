@@ -143,23 +143,54 @@ class ViewImplCommandTest {
 
     @Test
     fun `size command delegates to viewModel newGame with the given size and trigger=command`(): Unit = runBlocking {
-        // TODO: Feed input "size 3\n" to a ViewImpl wired to a FakeViewModel.
-        // TODO: Call processCommand().
-        // TODO: Verify viewModel.calls records newGame(3, command) - a plain int, not oneBasedIndexArg'd.
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("size 3\n", viewModel)
+
+        view.processCommand()
+
+        // A plain int, not oneBasedIndexArg'd - a size isn't a row/column index (GH-44 WU3).
+        assertEquals(listOf("newGame(3, command)"), viewModel.calls)
     }
 
     @Test
     fun `size command with a missing argument throws without delegating`(): Unit = runBlocking {
-        // TODO: Feed "size\n".
-        // TODO: Assert processCommand() throws IllegalArgumentException.
-        // TODO: Verify no delegation happened.
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("size\n", viewModel)
+
+        assertFailsWith<IllegalArgumentException> { view.processCommand() }
+        assertEquals(emptyList(), viewModel.calls)
     }
 
     @Test
     fun `size command with a non-numeric argument throws without delegating`(): Unit = runBlocking {
-        // TODO: Feed "size abc\n".
-        // TODO: Assert processCommand() throws IllegalArgumentException.
-        // TODO: Verify no delegation happened.
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("size abc\n", viewModel)
+
+        assertFailsWith<IllegalArgumentException> { view.processCommand() }
+        assertEquals(emptyList(), viewModel.calls)
+    }
+
+    @Test
+    fun `size command with a trailing extra token is rejected rather than silently ignored`(): Unit = runBlocking {
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("size 3 4\n", viewModel)
+
+        assertFailsWith<IllegalArgumentException> { view.processCommand() }
+        assertEquals(emptyList(), viewModel.calls)
+    }
+
+    @Test
+    fun `size command delegates an out-of-range value to viewModel newGame, which is where BoardSize validation happens`(): Unit = runBlocking {
+        // Unlike a non-numeric argument (rejected in ViewImpl itself, see above), an out-of-range
+        // but syntactically valid size is ViewImpl's business to forward, not reject - newGame
+        // (via BoardSize.require) throws, and play()'s generic Exception handler surfaces that
+        // message, same as an out-of-range left/right/up/down index.
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("size 9\n", viewModel)
+
+        view.processCommand()
+
+        assertEquals(listOf("newGame(9, command)"), viewModel.calls)
     }
 
     @Test

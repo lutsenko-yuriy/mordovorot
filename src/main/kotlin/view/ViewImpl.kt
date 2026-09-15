@@ -90,6 +90,15 @@ class ViewImpl internal constructor(
                 viewModel.resetGame()
             }
 
+            // Not subject to DISPLAY_OFFSET - a size isn't a row/column index (GH-44 WU3).
+            // Out-of-range/non-numeric values throw, same as shift's "Incorrect row"/"Incorrect
+            // column" - caught by play()'s generic Exception handler and shown as a message.
+            "size" -> {
+                requireArgCount(parts, 2)
+                val size = parts[1].toIntOrNull() ?: throw IllegalArgumentException("Incorrect input")
+                viewModel.newGame(size, trigger = "command")
+            }
+
             "save" -> viewModel.saveGame(nameArg(parts))
             "load" -> viewModel.loadGame(nameArg(parts))
 
