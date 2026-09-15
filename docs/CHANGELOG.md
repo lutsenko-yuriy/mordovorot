@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.8.0] — 2026-09-16 (PR #55 merged)
+
+### Added
+- [user] GH-44 (WU5/5): load auto-resizes to match a save's size instead of rejecting a mismatch — `BoardModel.restoreState` now derives `squareSide` from the restored state's own length, so loading a differently-sized save resizes the board and restores it, both at startup and via the mid-game `load`/Load dialog. This completes GH-44: the board is adjustable 3x3-5x5 (default 4x4) via `--size=N`, the startup prompt, `size <N>`/`[ New ]` mid-session; save-listing surfaces show each save's size; and a mismatched load resizes rather than rejects.
+
 ## [0.7.8] — 2026-09-16 (PR #54 merged)
 
 ### Added
