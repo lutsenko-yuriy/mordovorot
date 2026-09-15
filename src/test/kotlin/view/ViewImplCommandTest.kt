@@ -1,19 +1,19 @@
 package view
 
 import InputMode
-import presenter.ModeSwitchRequestedException
-import testing.FakePresenter
-import testing.RecordingModeSwitcher
 import java.io.BufferedReader
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.PrintStream
 import java.io.Reader
 import java.io.StringReader
-import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlinx.coroutines.runBlocking
+import testing.FakeViewModel
+import testing.RecordingModeSwitcher
+import viewmodel.ModeSwitchRequestedException
 
 /** A [Reader] that always fails, simulating a dead stream (e.g. the controlling
  *  terminal disappearing) rather than a clean end-of-stream. */
@@ -24,157 +24,157 @@ private class ThrowingReader : Reader() {
 
 class ViewImplCommandTest {
 
-    private fun viewWith(input: String, presenter: FakePresenter = FakePresenter()): Pair<ViewImpl, ByteArrayOutputStream> {
+    private fun viewWith(input: String, viewModel: FakeViewModel = FakeViewModel()): Pair<ViewImpl, ByteArrayOutputStream> {
         val outputBuffer = ByteArrayOutputStream()
         val view = ViewImpl(BufferedReader(StringReader(input)), PrintStream(outputBuffer))
-        view.presenter = presenter
+        view.viewModel = viewModel
         return view to outputBuffer
     }
 
     @Test
-    fun `left command delegates to presenter shiftLeft, translating the 1-based row to 0-based`(): Unit = runBlocking {
-        val presenter = FakePresenter()
-        val (view, _) = viewWith("left 1\n", presenter)
+    fun `left command delegates to viewModel shiftLeft, translating the 1-based row to 0-based`(): Unit = runBlocking {
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("left 1\n", viewModel)
 
         view.processCommand()
 
-        assertEquals(listOf("shiftLeft(0)"), presenter.calls)
+        assertEquals(listOf("shiftLeft(0)"), viewModel.calls)
     }
 
     @Test
-    fun `right command delegates to presenter shiftRight, translating the 1-based row to 0-based`(): Unit = runBlocking {
-        val presenter = FakePresenter()
-        val (view, _) = viewWith("right 3\n", presenter)
+    fun `right command delegates to viewModel shiftRight, translating the 1-based row to 0-based`(): Unit = runBlocking {
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("right 3\n", viewModel)
 
         view.processCommand()
 
-        assertEquals(listOf("shiftRight(2)"), presenter.calls)
+        assertEquals(listOf("shiftRight(2)"), viewModel.calls)
     }
 
     @Test
-    fun `up command delegates to presenter shiftUp, translating the 1-based column to 0-based`(): Unit = runBlocking {
-        val presenter = FakePresenter()
-        val (view, _) = viewWith("up 2\n", presenter)
+    fun `up command delegates to viewModel shiftUp, translating the 1-based column to 0-based`(): Unit = runBlocking {
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("up 2\n", viewModel)
 
         view.processCommand()
 
-        assertEquals(listOf("shiftUp(1)"), presenter.calls)
+        assertEquals(listOf("shiftUp(1)"), viewModel.calls)
     }
 
     @Test
-    fun `down command delegates to presenter shiftDown, translating the 1-based column to 0-based`(): Unit = runBlocking {
-        val presenter = FakePresenter()
-        val (view, _) = viewWith("down 4\n", presenter)
+    fun `down command delegates to viewModel shiftDown, translating the 1-based column to 0-based`(): Unit = runBlocking {
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("down 4\n", viewModel)
 
         view.processCommand()
 
-        assertEquals(listOf("shiftDown(3)"), presenter.calls)
+        assertEquals(listOf("shiftDown(3)"), viewModel.calls)
     }
 
     @Test
     fun `left 0 translates to -1, delegating to the board's own bounds check rather than validating in view`(): Unit = runBlocking {
-        val presenter = FakePresenter()
-        val (view, _) = viewWith("left 0\n", presenter)
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("left 0\n", viewModel)
 
         view.processCommand()
 
-        assertEquals(listOf("shiftLeft(-1)"), presenter.calls)
+        assertEquals(listOf("shiftLeft(-1)"), viewModel.calls)
     }
 
     @Test
     fun `Int-MIN_VALUE argument wraps rather than crashing, and still lands outside any valid board range`(): Unit = runBlocking {
-        val presenter = FakePresenter()
-        val (view, _) = viewWith("left ${Int.MIN_VALUE}\n", presenter)
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("left ${Int.MIN_VALUE}\n", viewModel)
 
         view.processCommand()
 
         // Int.MIN_VALUE - 1 wraps to Int.MAX_VALUE - still far outside 0 until SQUARE_SIDE.
-        assertEquals(listOf("shiftLeft(${Int.MAX_VALUE})"), presenter.calls)
+        assertEquals(listOf("shiftLeft(${Int.MAX_VALUE})"), viewModel.calls)
     }
 
     @Test
-    fun `save command delegates to presenter saveGame with the raw file name, untranslated`(): Unit = runBlocking {
-        val presenter = FakePresenter()
-        val (view, _) = viewWith("save foo\n", presenter)
+    fun `save command delegates to viewModel saveGame with the raw file name, untranslated`(): Unit = runBlocking {
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("save foo\n", viewModel)
 
         view.processCommand()
 
-        assertEquals(listOf("saveGame(foo)"), presenter.calls)
+        assertEquals(listOf("saveGame(foo)"), viewModel.calls)
     }
 
     @Test
-    fun `load command delegates to presenter loadGame with the raw file name, untranslated`(): Unit = runBlocking {
-        val presenter = FakePresenter()
-        val (view, _) = viewWith("load foo\n", presenter)
+    fun `load command delegates to viewModel loadGame with the raw file name, untranslated`(): Unit = runBlocking {
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("load foo\n", viewModel)
 
         view.processCommand()
 
-        assertEquals(listOf("loadGame(foo)"), presenter.calls)
+        assertEquals(listOf("loadGame(foo)"), viewModel.calls)
     }
 
     @Test
     fun `save with a missing file name throws without delegating`(): Unit = runBlocking {
-        val presenter = FakePresenter()
-        val (view, _) = viewWith("save\n", presenter)
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("save\n", viewModel)
 
         assertFailsWith<IllegalArgumentException> { view.processCommand() }
-        assertEquals(emptyList(), presenter.calls)
+        assertEquals(emptyList(), viewModel.calls)
     }
 
     @Test
     fun `save with a trailing extra token is rejected rather than silently ignored`(): Unit = runBlocking {
-        val presenter = FakePresenter()
-        val (view, _) = viewWith("save foo bar\n", presenter)
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("save foo bar\n", viewModel)
 
         assertFailsWith<IllegalArgumentException> { view.processCommand() }
-        assertEquals(emptyList(), presenter.calls)
+        assertEquals(emptyList(), viewModel.calls)
     }
 
     @Test
-    fun `reset command delegates to presenter resetGame`(): Unit = runBlocking {
-        val presenter = FakePresenter()
-        val (view, _) = viewWith("reset\n", presenter)
+    fun `reset command delegates to viewModel resetGame`(): Unit = runBlocking {
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("reset\n", viewModel)
 
         view.processCommand()
 
-        assertEquals(listOf("resetGame"), presenter.calls)
+        assertEquals(listOf("resetGame"), viewModel.calls)
     }
 
     @Test
     fun `commands are case-insensitive`(): Unit = runBlocking {
-        val presenter = FakePresenter()
-        val (view, _) = viewWith("LEFT 1\n", presenter)
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("LEFT 1\n", viewModel)
 
         view.processCommand()
 
-        assertEquals(listOf("shiftLeft(0)"), presenter.calls)
+        assertEquals(listOf("shiftLeft(0)"), viewModel.calls)
     }
 
     @Test
     fun `missing numeric argument throws without delegating`(): Unit = runBlocking {
-        val presenter = FakePresenter()
-        val (view, _) = viewWith("left\n", presenter)
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("left\n", viewModel)
 
         assertFailsWith<IllegalArgumentException> { view.processCommand() }
-        assertEquals(emptyList(), presenter.calls)
+        assertEquals(emptyList(), viewModel.calls)
     }
 
     @Test
     fun `non-numeric argument throws without delegating`(): Unit = runBlocking {
-        val presenter = FakePresenter()
-        val (view, _) = viewWith("left abc\n", presenter)
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("left abc\n", viewModel)
 
         assertFailsWith<IllegalArgumentException> { view.processCommand() }
-        assertEquals(emptyList(), presenter.calls)
+        assertEquals(emptyList(), viewModel.calls)
     }
 
     @Test
     fun `unknown command throws without delegating`(): Unit = runBlocking {
-        val presenter = FakePresenter()
-        val (view, _) = viewWith("teleport\n", presenter)
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("teleport\n", viewModel)
 
         assertFailsWith<IllegalArgumentException> { view.processCommand() }
-        assertEquals(emptyList(), presenter.calls)
+        assertEquals(emptyList(), viewModel.calls)
     }
 
     @Test
@@ -186,20 +186,20 @@ class ViewImplCommandTest {
 
     @Test
     fun `trailing extra token is rejected rather than silently ignored`(): Unit = runBlocking {
-        val presenter = FakePresenter()
-        val (view, _) = viewWith("left 1 99\n", presenter)
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("left 1 99\n", viewModel)
 
         assertFailsWith<IllegalArgumentException> { view.processCommand() }
-        assertEquals(emptyList(), presenter.calls)
+        assertEquals(emptyList(), viewModel.calls)
     }
 
     @Test
     fun `reset with a trailing argument is rejected rather than silently ignored`(): Unit = runBlocking {
-        val presenter = FakePresenter()
-        val (view, _) = viewWith("reset foo\n", presenter)
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("reset foo\n", viewModel)
 
         assertFailsWith<IllegalArgumentException> { view.processCommand() }
-        assertEquals(emptyList(), presenter.calls)
+        assertEquals(emptyList(), viewModel.calls)
     }
 
     @Test
@@ -224,7 +224,7 @@ class ViewImplCommandTest {
     @Test
     fun `IOException while reading input throws EndOfInputException instead of spinning forever`(): Unit = runBlocking {
         val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
-        view.presenter = FakePresenter()
+        view.viewModel = FakeViewModel()
 
         assertFailsWith<EndOfInputException> { view.processCommand() }
     }
@@ -255,7 +255,7 @@ class ViewImplCommandTest {
     @Test
     fun `confirmRestore returns false when the input stream is dead, same as clean EOF`(): Unit = runBlocking {
         val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
-        view.presenter = FakePresenter()
+        view.viewModel = FakeViewModel()
 
         assertEquals(false, view.confirmRestore("foo"))
     }
@@ -284,38 +284,38 @@ class ViewImplCommandTest {
     @Test
     fun `chooseSaveToRestore returns null when the input stream is dead, same as clean EOF`(): Unit = runBlocking {
         val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
-        view.presenter = FakePresenter()
+        view.viewModel = FakeViewModel()
 
         assertEquals(null, view.chooseSaveToRestore(listOf("foo", "bar")))
     }
 
     @Test
-    fun `exit command delegates to presenter exitGame`(): Unit = runBlocking {
-        val presenter = FakePresenter()
-        val (view, _) = viewWith("exit\n", presenter)
+    fun `exit command delegates to viewModel exitGame`(): Unit = runBlocking {
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("exit\n", viewModel)
 
         view.processCommand()
 
-        assertEquals(listOf("exitGame"), presenter.calls)
+        assertEquals(listOf("exitGame"), viewModel.calls)
     }
 
     @Test
     fun `quit command is an alias for exit`(): Unit = runBlocking {
-        val presenter = FakePresenter()
-        val (view, _) = viewWith("quit\n", presenter)
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("quit\n", viewModel)
 
         view.processCommand()
 
-        assertEquals(listOf("exitGame"), presenter.calls)
+        assertEquals(listOf("exitGame"), viewModel.calls)
     }
 
     @Test
     fun `exit with a trailing argument is rejected rather than silently ignored`(): Unit = runBlocking {
-        val presenter = FakePresenter()
-        val (view, _) = viewWith("exit foo\n", presenter)
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("exit foo\n", viewModel)
 
         assertFailsWith<IllegalArgumentException> { view.processCommand() }
-        assertEquals(emptyList(), presenter.calls)
+        assertEquals(emptyList(), viewModel.calls)
     }
 
     @Test
@@ -344,7 +344,7 @@ class ViewImplCommandTest {
     @Test
     fun `confirmSaveBeforeExit returns false when the input stream is dead, same as clean EOF`(): Unit = runBlocking {
         val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
-        view.presenter = FakePresenter()
+        view.viewModel = FakeViewModel()
 
         assertEquals(false, view.confirmSaveBeforeExit())
     }
@@ -373,7 +373,7 @@ class ViewImplCommandTest {
     @Test
     fun `promptSaveName returns null when the input stream is dead, same as clean EOF`(): Unit = runBlocking {
         val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
-        view.presenter = FakePresenter()
+        view.viewModel = FakeViewModel()
 
         assertEquals(null, view.promptSaveName())
     }
@@ -413,7 +413,7 @@ class ViewImplCommandTest {
     @Test
     fun `a mode switch that throws unwinds out of processCommand`(): Unit = runBlocking {
         val (view, _) = viewWith("keyboard\n")
-        view.modeSwitcher = object : presenter.ModeSwitcher {
+        view.modeSwitcher = object : viewmodel.ModeSwitcher {
             override suspend fun switchTo(target: InputMode, trigger: String) {
                 throw ModeSwitchRequestedException(target)
             }
@@ -423,31 +423,31 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `create wires the injected input, output, and presenter together atomically`(): Unit = runBlocking {
-        val presenter = FakePresenter()
+    fun `create wires the injected input, output, and viewModel together atomically`(): Unit = runBlocking {
+        val viewModel = FakeViewModel()
         val outputBuffer = ByteArrayOutputStream()
 
         val view = ViewImpl.create(
             input = BufferedReader(StringReader("left 1\n")),
             output = PrintStream(outputBuffer),
-            presenter = presenter,
+            viewModel = viewModel,
         )
 
         view.processCommand()
 
-        assertEquals(listOf("shiftLeft(0)"), presenter.calls)
+        assertEquals(listOf("shiftLeft(0)"), viewModel.calls)
     }
 
     @Test
     fun `create wires the injected modeSwitcherFactory the same way, atomically`(): Unit = runBlocking {
-        val presenter = FakePresenter()
+        val viewModel = FakeViewModel()
         val switcher = RecordingModeSwitcher()
 
         val view = ViewImpl.create(
             input = BufferedReader(StringReader("mouse\n")),
             output = PrintStream(ByteArrayOutputStream()),
             modeSwitcherFactory = { switcher },
-            presenter = presenter,
+            viewModel = viewModel,
         )
 
         view.processCommand()

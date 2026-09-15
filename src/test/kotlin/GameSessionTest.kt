@@ -1,7 +1,11 @@
 import board_model.BoardModel
-import presenter.ExitRequestedException
-import presenter.ModeSwitchRequestedException
-import presenter.ModeSwitcherImpl
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertIs
+import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
 import storage.SaveRepository
 import testing.FakeBoardModel
 import testing.FakeSaveRepository
@@ -9,13 +13,9 @@ import testing.FakeTerminal
 import testing.RecordingAnalyticsService
 import view.View
 import view.ViewImpl
-import kotlinx.coroutines.runBlocking
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertFalse
-import kotlin.test.assertIs
-import kotlin.test.assertTrue
+import viewmodel.ExitRequestedException
+import viewmodel.ModeSwitchRequestedException
+import viewmodel.ModeSwitcherImpl
 
 /** Covers GH-30's `GameSession`: rebuilds around the same board/saves on
  *  `ModeSwitchRequestedException`, ends when `play()` returns normally. */
@@ -81,7 +81,7 @@ class GameSessionTest {
     }
 
     @Test
-    fun `three consecutive switches cycle through console, mouse, and keyboard, each rebuilding a fresh View-presenter`(): Unit = runBlocking {
+    fun `three consecutive switches cycle through console, mouse, and keyboard, each rebuilding a fresh View-viewModel`(): Unit = runBlocking {
         val modesBuilt = mutableListOf<InputMode>()
         var built = 0
 

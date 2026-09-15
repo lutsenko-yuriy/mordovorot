@@ -2,7 +2,7 @@ package analytics
 
 /**
  * Decorates another [AnalyticsService], adding an `input_method` (`console`/`mouse`/`keyboard`)
- * property to every forwarded event - lets [presenter.PresenterImpl]'s existing events be
+ * property to every forwarded event - lets [viewmodel.ViewModelImpl]'s existing events be
  * split by launch mode without touching its `track(...)` call sites.
  */
 class InputMethodAnalyticsService(

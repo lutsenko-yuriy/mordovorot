@@ -4,10 +4,6 @@ import analytics.NoopAnalyticsService
 import board_model.BoardImpl
 import board_model.BoardModel
 import kotlinx.coroutines.CancellationException
-import presenter.ModeSwitchRequestedException
-import presenter.ModeSwitcherImpl
-import presenter.PresenterImpl
-import presenter.SessionControlException
 import storage.FileSaveRepository
 import storage.SaveRepository
 import view.View
@@ -16,9 +12,13 @@ import view.tui.AnsiTerminal
 import view.tui.KeyboardInput
 import view.tui.Terminal
 import view.tui.TuiView
+import viewmodel.ModeSwitchRequestedException
+import viewmodel.ModeSwitcherImpl
+import viewmodel.SessionControlException
+import viewmodel.ViewModelImpl
 
 /** The session loop extracted out of [main] for GH-30: owns the [BoardModel]/[SaveRepository]
- *  that survive every mode switch, rebuilds `View`+presenter+analytics per [InputMode] on
+ *  that survive every mode switch, rebuilds `View`+viewModel+analytics per [InputMode] on
  *  [ModeSwitchRequestedException], and stops when `play()` returns normally. [buildView] is the
  *  test seam; it defaults to [defaultView]'s real wiring. */
 class GameSession(
@@ -85,7 +85,7 @@ class GameSession(
 }
 
 /** The production `View` wiring, one per [InputMode] - what `main` built directly before GH-30.
- *  [analytics] is the undecorated service; decorated here per-mode for the presenter/View's own
+ *  [analytics] is the undecorated service; decorated here per-mode for the viewModel/View's own
  *  tracked events. Internal, not private, so a test can verify the CONSOLE branch actually wires
  *  a real `ModeSwitcher` rather than silently defaulting to a no-op (audit finding on PR #37). */
 internal fun defaultView(
@@ -97,21 +97,21 @@ internal fun defaultView(
     terminalFactory: () -> Terminal,
 ): View {
     val decoratedAnalytics = InputMethodAnalyticsService(analytics, mode.name.lowercase())
-    // Built once per rebuild and handed to the View - the presenter no longer needs a View to
-    // exist first (GH-42 WU3: PresenterImpl holds no View reference at all).
-    val presenter = PresenterImpl(board, saves, decoratedAnalytics, startupRestoreDone)
+    // Built once per rebuild and handed to the View - the viewModel no longer needs a View to
+    // exist first (GH-42 WU3: ViewModelImpl holds no View reference at all).
+    val viewModel = ViewModelImpl(board, saves, decoratedAnalytics, startupRestoreDone)
     return when (mode) {
         InputMode.CONSOLE ->
             ViewImpl.create(
                 modeSwitcherFactory = { v -> ModeSwitcherImpl(view = v, currentMode = mode, analytics = analytics) },
-                presenter = presenter,
+                viewModel = viewModel,
             )
         InputMode.MOUSE ->
             TuiView.create(
                 terminalFactory(),
                 analytics = decoratedAnalytics,
                 modeSwitcherFactory = { v -> ModeSwitcherImpl(view = v, currentMode = mode, analytics = analytics) },
-                presenter = presenter,
+                viewModel = viewModel,
             )
         InputMode.KEYBOARD ->
             TuiView.create(
@@ -119,7 +119,7 @@ internal fun defaultView(
                 analytics = decoratedAnalytics,
                 input = KeyboardInput(),
                 modeSwitcherFactory = { v -> ModeSwitcherImpl(view = v, currentMode = mode, analytics = analytics) },
-                presenter = presenter,
+                viewModel = viewModel,
             )
     }
 }

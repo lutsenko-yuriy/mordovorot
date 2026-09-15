@@ -2,18 +2,18 @@ package testing
 
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import presenter.Presenter
-import presenter.UiRequest
+import viewmodel.UiRequest
+import viewmodel.ViewModel
 
 /**
- * Drains a [Presenter]'s [Presenter.uiRequests] and answers from scripted lists - the
- * presenter-test replacement for [FakeView]'s four prompt methods (GH-42 WU2), which moved off
- * [view.View] onto [UiRequest] once [presenter.PresenterImpl] started raising requests instead
+ * Drains a [ViewModel]'s [ViewModel.uiRequests] and answers from scripted lists - the
+ * viewModel-test replacement for [FakeView]'s four prompt methods (GH-42 WU2), which moved off
+ * [view.View] onto [UiRequest] once [viewmodel.ViewModelImpl] started raising requests instead
  * of calling a `View` directly. Keeps the same recording fields and "ran out of scripted
  * responses" `IllegalStateException` bound as the old `FakeView`, so no test can hang on an
  * under-scripted response list.
  */
-class FakePresenterUi(
+class FakeViewModelUi(
     private val confirmRestoreResponses: MutableList<Boolean> = mutableListOf(),
     private val chooseSaveToRestoreResponses: MutableList<String?> = mutableListOf(),
     private val confirmSaveBeforeExitResponses: MutableList<Boolean> = mutableListOf(),
@@ -32,12 +32,12 @@ class FakePresenterUi(
     var promptSaveNameCallCount = 0
         private set
 
-    /** Runs [block] against [presenter] while concurrently draining its [Presenter.uiRequests] -
+    /** Runs [block] against [viewModel] while concurrently draining its [ViewModel.uiRequests] -
      *  without this, a suspended `ask()` call (e.g. inside `saveGame`/`exitGame`) would hang
-     *  forever, since [Presenter.uiRequests] is a rendezvous channel with no other consumer. Any
+     *  forever, since [ViewModel.uiRequests] is a rendezvous channel with no other consumer. Any
      *  exception [block] throws propagates out of [drive] once the handler is cancelled. */
-    suspend fun drive(presenter: Presenter, block: suspend () -> Unit) = coroutineScope {
-        val handler = launch { for (request in presenter.uiRequests) handle(request) }
+    suspend fun drive(viewModel: ViewModel, block: suspend () -> Unit) = coroutineScope {
+        val handler = launch { for (request in viewModel.uiRequests) handle(request) }
         try {
             block()
         } finally {
@@ -72,7 +72,7 @@ class FakePresenterUi(
 
     private fun <T> nextOrThrow(responses: MutableList<T>, name: String): T {
         if (responses.isEmpty()) {
-            throw IllegalStateException("FakePresenterUi ran out of scripted $name responses")
+            throw IllegalStateException("FakeViewModelUi ran out of scripted $name responses")
         }
         return responses.removeAt(0)
     }

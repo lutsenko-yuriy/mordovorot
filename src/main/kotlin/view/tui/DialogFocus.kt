@@ -13,7 +13,7 @@ sealed class DialogFocusTarget {
  * Pure focus ring for GH-18's keyboard dialog navigation: the focusable controls of a [Dialog],
  * in order - its text field (Save only), then its list rows (Load only), then its buttons -
  * with [next]/[previous] wrapping a 0-based focus index around the ring and [target] mapping
- * that index back to what it means ([DialogFocusTarget]). No terminal or presenter involved.
+ * that index back to what it means ([DialogFocusTarget]). No terminal or viewModel involved.
  */
 class DialogFocus(dialog: Dialog) {
 

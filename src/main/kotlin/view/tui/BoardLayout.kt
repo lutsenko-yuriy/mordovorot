@@ -10,7 +10,7 @@ internal const val CELL_WIDTH = 4
 /**
  * Pure geometry for GH-3's board screen: given a terminal size and the board's square side,
  * computes where the shift arrows, the grid, and the toolbar buttons land, and resolves a click
- * coordinate to a [HitTarget]. No terminal or presenter involved - [ScreenRenderer] draws to
+ * coordinate to a [HitTarget]. No terminal or viewModel involved - [ScreenRenderer] draws to
  * these same coordinates so what's drawn is exactly what's clickable.
  *
  * Layout, top to bottom: title row, a blank row, the up-arrows row, the grid (box-drawing

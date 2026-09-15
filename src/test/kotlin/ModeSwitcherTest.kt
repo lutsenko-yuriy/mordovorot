@@ -1,12 +1,12 @@
-import presenter.ModeSwitchRequestedException
-import presenter.ModeSwitcherImpl
-import testing.FakeView
-import testing.RecordingAnalyticsService
-import testing.RecordingAnalyticsService.Event
-import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlinx.coroutines.runBlocking
+import testing.FakeView
+import testing.RecordingAnalyticsService
+import testing.RecordingAnalyticsService.Event
+import viewmodel.ModeSwitchRequestedException
+import viewmodel.ModeSwitcherImpl
 
 /** Covers GH-30's `ModeSwitcherImpl`: TTY check, `input_mode_switched` tracking, throw vs
  *  reject-with-message vs same-mode no-op. */

@@ -1,19 +1,19 @@
 package view
 
 import InputMode
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import presenter.ExitRequestedException
-import presenter.ModeSwitcher
-import presenter.NoopModeSwitcher
-import presenter.Presenter
-import presenter.SessionControlException
-import presenter.UiRequest
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 import java.io.PrintStream
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import viewmodel.ExitRequestedException
+import viewmodel.ModeSwitcher
+import viewmodel.NoopModeSwitcher
+import viewmodel.SessionControlException
+import viewmodel.UiRequest
+import viewmodel.ViewModel
 
 /**
  * Created by yurich on 08.12.16.
@@ -24,7 +24,7 @@ class ViewImpl internal constructor(
 ) : View {
 
     /** Must be assigned before [play] or [processCommand] are called - use [create]. */
-    lateinit var presenter: Presenter
+    lateinit var viewModel: ViewModel
         internal set
 
     /** Backs the `mouse`/`keyboard` commands (GH-30) - defaults to a no-op so existing call
@@ -37,18 +37,18 @@ class ViewImpl internal constructor(
         // and storage stay 0-based. This is the only translation point (GH-10).
         private const val DISPLAY_OFFSET = 1
 
-        /** The only public way to obtain a [ViewImpl] - wires [presenter]/[modeSwitcher] atomically.
-         *  [presenter] no longer needs a `View` to already exist (GH-42 WU3 - it holds no `View`
+        /** The only public way to obtain a [ViewImpl] - wires [viewModel]/[modeSwitcher] atomically.
+         *  [viewModel] no longer needs a `View` to already exist (GH-42 WU3 - it holds no `View`
          *  reference at all), unlike [modeSwitcherFactory], which still does. */
         fun create(
             input: BufferedReader = BufferedReader(InputStreamReader(System.`in`)),
             output: PrintStream = System.out,
             modeSwitcherFactory: (View) -> ModeSwitcher = { NoopModeSwitcher() },
-            presenter: Presenter,
+            viewModel: ViewModel,
         ): ViewImpl {
             val view = ViewImpl(input, output)
             view.modeSwitcher = modeSwitcherFactory(view)
-            view.presenter = presenter
+            view.viewModel = viewModel
             return view
         }
     }
@@ -79,22 +79,22 @@ class ViewImpl internal constructor(
         val command = parts.getOrNull(0)?.lowercase() ?: throw IllegalArgumentException("Incorrect input")
 
         when (command) {
-            "left" -> presenter.shiftLeft(oneBasedIndexArg(parts))
-            "right" -> presenter.shiftRight(oneBasedIndexArg(parts))
-            "up" -> presenter.shiftUp(oneBasedIndexArg(parts))
-            "down" -> presenter.shiftDown(oneBasedIndexArg(parts))
+            "left" -> viewModel.shiftLeft(oneBasedIndexArg(parts))
+            "right" -> viewModel.shiftRight(oneBasedIndexArg(parts))
+            "up" -> viewModel.shiftUp(oneBasedIndexArg(parts))
+            "down" -> viewModel.shiftDown(oneBasedIndexArg(parts))
 
             "reset" -> {
                 requireArgCount(parts, 1)
-                presenter.resetGame()
+                viewModel.resetGame()
             }
 
-            "save" -> presenter.saveGame(nameArg(parts))
-            "load" -> presenter.loadGame(nameArg(parts))
+            "save" -> viewModel.saveGame(nameArg(parts))
+            "load" -> viewModel.loadGame(nameArg(parts))
 
             "exit", "quit" -> {
                 requireArgCount(parts, 1)
-                presenter.exitGame()
+                viewModel.exitGame()
             }
 
             "mouse" -> {
@@ -144,7 +144,7 @@ class ViewImpl internal constructor(
 
     /** null on a clean EOF or a dead stream (IOException) - both mean "no more input". Unlike
      *  [processCommand], the startup-restore and exit-before-quitting prompts treat that as
-     *  "decline"/"blank" rather than throwing - see [presenter.PresenterImpl]'s
+     *  "decline"/"blank" rather than throwing - see [viewmodel.ViewModelImpl]'s
      *  restoreOnStartup/exitGame. */
     private fun readLineOrNull(): String? = try {
         input.readLine()
@@ -171,19 +171,19 @@ class ViewImpl internal constructor(
 
     /** The console session: offers the startup restore prompt, then loops
      *  `displayBoard`/`processCommand` until the board is solved (GH-42 WU3 - moved here from
-     *  the old `ConsolePresenterImpl.play()` (GH-23), since a presenter-owned loop that called back into
+     *  the old `ConsoleViewModelImpl.play()` (GH-23), since a viewModel-owned loop that called back into
      *  a `View` it also raised requests on would deadlock - see hard problem 1 on the plan
-     *  comment on GH-42). Alongside it, drains [presenter]'s [presenter.Presenter.uiRequests]
+     *  comment on GH-42). Alongside it, drains [viewModel]'s [viewmodel.ViewModel.uiRequests]
      *  (GH-42 WU2) - the handler coroutine is what lets `saveGame`/`loadGame`/`exitGame`/
-     *  `restoreOnStartup` suspend on [presenter.PresenterImpl.ask] instead of calling back into
+     *  `restoreOnStartup` suspend on [viewmodel.ViewModelImpl.ask] instead of calling back into
      *  this view directly. Cancelled once `play()` returns either way. */
     override suspend fun play() = coroutineScope {
-        val ui = launch { for (request in presenter.uiRequests) handle(request) }
+        val ui = launch { for (request in viewModel.uiRequests) handle(request) }
         try {
-            presenter.restoreOnStartup()
-            while (!presenter.isSolved()) {
+            viewModel.restoreOnStartup()
+            while (!viewModel.isSolved()) {
                 try {
-                    displayBoard(presenter.boardState(), presenter.squareSide())
+                    displayBoard(viewModel.boardState(), viewModel.squareSide())
                     processCommand()
                 } catch (e: EndOfInputException) {
                     break

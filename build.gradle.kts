@@ -14,7 +14,7 @@ kotlin {
 }
 
 dependencies {
-    // GH-42: the project's first third-party runtime dependency - powers Presenter's
+    // GH-42: the project's first third-party runtime dependency - powers ViewModel's
     // View-request channel. 1.8.1 is the last kotlinx.coroutines line built against
     // Kotlin 1.9.x (1.9.0 moved to Kotlin 2.0); confirmed empirically by this build.
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")

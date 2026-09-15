@@ -48,7 +48,7 @@ Full product specifications: docs/PRODUCT_SPEC.md
 
 ## Architecture
 
-MVP (Model-View-Presenter): board_model + presenter + view packages
+MVVM (Model-View-ViewModel): board_model + viewmodel + view packages
 
 Details and directory layout: @docs/ARCHITECTURE.md.
 

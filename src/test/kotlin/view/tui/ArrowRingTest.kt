@@ -8,7 +8,7 @@ import kotlin.test.assertEquals
  * perimeter of shift arrows (corners wrap to the nearest arrow on the adjacent edge rather than
  * dead-ending), and [ArrowRing.toHitTarget] mapping a cursor to the [HitTarget.ShiftLeft]/
  * [HitTarget.ShiftRight]/[HitTarget.ShiftUp]/[HitTarget.ShiftDown] a click on that arrow would
- * produce. Pure geometry, no terminal or presenter involved. Exhaustive over every
+ * produce. Pure geometry, no terminal or viewModel involved. Exhaustive over every
  * (edge, index, direction) combination for squareSide = 4, plus squareSide = 2 where the corner
  * cases collapse onto each other (row 0 == last row).
  */

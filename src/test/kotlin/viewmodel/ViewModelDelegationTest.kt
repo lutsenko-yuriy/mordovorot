@@ -1,18 +1,18 @@
-package presenter
+package viewmodel
 
 import testing.FakeBoardModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class PresenterDelegationTest {
+class ViewModelDelegationTest {
 
     @Test
     fun `shiftLeft delegates to the board`() {
         val board = FakeBoardModel()
-        val presenter = PresenterImpl(board)
+        val viewModel = ViewModelImpl(board)
 
-        presenter.shiftLeft(2)
+        viewModel.shiftLeft(2)
 
         assertEquals(listOf("shiftLeft(2)"), board.calls)
     }
@@ -20,9 +20,9 @@ class PresenterDelegationTest {
     @Test
     fun `shiftRight delegates to the board`() {
         val board = FakeBoardModel()
-        val presenter = PresenterImpl(board)
+        val viewModel = ViewModelImpl(board)
 
-        presenter.shiftRight(1)
+        viewModel.shiftRight(1)
 
         assertEquals(listOf("shiftRight(1)"), board.calls)
     }
@@ -30,9 +30,9 @@ class PresenterDelegationTest {
     @Test
     fun `shiftUp delegates to the board`() {
         val board = FakeBoardModel()
-        val presenter = PresenterImpl(board)
+        val viewModel = ViewModelImpl(board)
 
-        presenter.shiftUp(3)
+        viewModel.shiftUp(3)
 
         assertEquals(listOf("shiftUp(3)"), board.calls)
     }
@@ -40,9 +40,9 @@ class PresenterDelegationTest {
     @Test
     fun `shiftDown delegates to the board`() {
         val board = FakeBoardModel()
-        val presenter = PresenterImpl(board)
+        val viewModel = ViewModelImpl(board)
 
-        presenter.shiftDown(0)
+        viewModel.shiftDown(0)
 
         assertEquals(listOf("shiftDown(0)"), board.calls)
     }
@@ -50,9 +50,9 @@ class PresenterDelegationTest {
     @Test
     fun `resetGame delegates to the board`() {
         val board = FakeBoardModel()
-        val presenter = PresenterImpl(board)
+        val viewModel = ViewModelImpl(board)
 
-        presenter.resetGame()
+        viewModel.resetGame()
 
         assertEquals(listOf("resetGame"), board.calls)
     }
@@ -61,9 +61,9 @@ class PresenterDelegationTest {
     fun `exceptions from the board propagate unchanged`() {
         val board = FakeBoardModel()
         board.shiftLeftException = IllegalArgumentException("Incorrect row")
-        val presenter = PresenterImpl(board)
+        val viewModel = ViewModelImpl(board)
 
-        val exception = assertFailsWith<IllegalArgumentException> { presenter.shiftLeft(4) }
+        val exception = assertFailsWith<IllegalArgumentException> { viewModel.shiftLeft(4) }
 
         assertEquals("Incorrect row", exception.message)
     }

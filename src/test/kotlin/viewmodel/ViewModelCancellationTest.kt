@@ -1,4 +1,4 @@
-package presenter
+package viewmodel
 
 import storage.SavedBoard
 import testing.FakeBoardModel
@@ -14,7 +14,7 @@ import kotlin.test.assertEquals
 
 /**
  * Hard problem 3 (GH-42 WU2): `saveGame`/`loadGame`/`restoreOnStartup` all suspend inside
- * [PresenterImpl.ask], whose `catch (e: Exception)` catch-all would otherwise swallow a
+ * [ViewModelImpl.ask], whose `catch (e: Exception)` catch-all would otherwise swallow a
  * [kotlinx.coroutines.CancellationException] - `CancellationException` *is* a `java.lang.Exception`
  * on the JVM (via `IllegalStateException`). Each method's `catch (e: CancellationException) {
  * throw e }` guard, immediately before its catch-all, is what these tests pin: cancelling the
@@ -22,7 +22,7 @@ import kotlin.test.assertEquals
  * the catch-all's error message (which would itself hang, being another suspend `ask` call with
  * nothing left to drain it once the coroutine is cancelled).
  *
- * No handler drains [Presenter.uiRequests] in any of these tests - that's deliberate; each
+ * No handler drains [ViewModel.uiRequests] in any of these tests - that's deliberate; each
  * call is cancelled while suspended waiting for an answer nothing will ever give it.
  *
  * Each scenario below reaches its suspending `showMessage` call *after* already tracking a
@@ -31,14 +31,14 @@ import kotlin.test.assertEquals
  * *second*, spurious `result: error` event" from the catch-all misreading the resumed
  * [kotlinx.coroutines.CancellationException] as an ordinary failure.
  */
-class PresenterCancellationTest {
+class ViewModelCancellationTest {
 
     @Test
     fun `saveGame cancelled while suspended in ask does not also track a spurious result=error`(): Unit = runBlocking {
         val analytics = RecordingAnalyticsService()
-        val presenter = PresenterImpl(FakeBoardModel(), FakeSaveRepository(), analytics)
+        val viewModel = ViewModelImpl(FakeBoardModel(), FakeSaveRepository(), analytics)
 
-        val job = launch { presenter.saveGame("foo") }
+        val job = launch { viewModel.saveGame("foo") }
         yield() // let saveGame reach ask()'s suspension point before cancelling
         job.cancelAndJoin()
 
@@ -52,9 +52,9 @@ class PresenterCancellationTest {
     fun `loadGame cancelled while suspended in ask does not also track a spurious result=error`(): Unit = runBlocking {
         val analytics = RecordingAnalyticsService()
         val saves = FakeSaveRepository(mutableMapOf("missing-on-purpose" to SavedBoard(4, IntArray(16) { it })))
-        val presenter = PresenterImpl(FakeBoardModel(), saves, analytics)
+        val viewModel = ViewModelImpl(FakeBoardModel(), saves, analytics)
 
-        val job = launch { presenter.loadGame("not-found") }
+        val job = launch { viewModel.loadGame("not-found") }
         yield()
         job.cancelAndJoin()
 
@@ -68,9 +68,9 @@ class PresenterCancellationTest {
     fun `offerStartupRestore cancelled while suspended in ask does not track a decision`(): Unit = runBlocking {
         val analytics = RecordingAnalyticsService()
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, IntArray(16) { it })))
-        val presenter = PresenterImpl(FakeBoardModel(), saves, analytics)
+        val viewModel = ViewModelImpl(FakeBoardModel(), saves, analytics)
 
-        val job = launch { presenter.restoreOnStartup() }
+        val job = launch { viewModel.restoreOnStartup() }
         yield()
         job.cancelAndJoin()
 

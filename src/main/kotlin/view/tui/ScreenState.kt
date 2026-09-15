@@ -12,7 +12,7 @@ const val TITLE_SOLVED = "Congratulations ✓"
  * Everything [ScreenRenderer] needs to draw one frame of the board screen: the title, the
  * board's current tile values (0-based, GH-10 dialect - [ScreenRenderer] applies the 1-based
  * display offset) and side, and whether the shift arrows are interactive. `arrowsEnabled = false`
- * is how [presenter.Presenter.isSolved] reaching the TUI shows up here - see the ticket's
+ * is how [viewmodel.ViewModel.isSolved] reaching the TUI shows up here - see the ticket's
  * solved-state note (dimmed, non-clickable arrows, live toolbar, `Congratulations ✓` title -
  * see [view.tui.TuiView]'s class KDoc for the full solved-state behavior).
  */
@@ -23,7 +23,7 @@ data class ScreenState(
     val arrowsEnabled: Boolean,
     /** The modal overlay to draw on top of the board (WU4), or `null` for the plain board. */
     val dialog: Dialog? = null,
-    /** A one-shot status line from the presenter (e.g. "Saved as 'x'.", "Not quitting - ...") -
+    /** A one-shot status line from the viewModel (e.g. "Saved as 'x'.", "Not quitting - ...") -
      *  board-only, since dialogs show their own [Dialog.message] instead (WU4). */
     val message: String? = null,
     /** The highlighted shift arrow in keyboard mode (GH-18) - `null` in mouse mode and whenever
@@ -43,7 +43,7 @@ data class ScreenState(
     val modeButtons: List<InputMode> = emptyList(),
 ) {
     companion object {
-        /** Builds the board screen's [ScreenState] from the presenter's current query results. */
+        /** Builds the board screen's [ScreenState] from the viewModel's current query results. */
         fun forBoard(board: List<Int>, squareSide: Int, solved: Boolean): ScreenState =
             ScreenState(
                 title = if (solved) TITLE_SOLVED else TITLE_UNSOLVED,
