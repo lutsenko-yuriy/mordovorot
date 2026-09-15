@@ -264,7 +264,21 @@ toolbar button (`HitTarget.ToolbarNew`, F9 in keyboard mode), which opens the
 same picker. All of them funnel into `ViewModel.newGame(size, trigger)` →
 `BoardImpl.newGame`, which is also where `new_game_size_selected` is tracked
 (only on success). Save/load's size-mismatch rejection is unchanged — a save
-is never auto-resized onto a differently-sized board.
+is never auto-resized onto a differently-sized board (WU4 only made the size
+visible ahead of that rejection; see below).
+
+**Save size visibility (WU4).** Every surface that lists a save's name — the
+startup restore prompts (console single/multi-choice, the TUI's Load-shaped
+dialog), the mid-game `load`/Load-dialog listing, and the console's
+"not found"/"no save named" messages — also shows that save's board size, so a
+player can tell up front whether a save will hit the mismatch rejection above.
+`ViewModel.listSaves()` returns `List<SaveInfo>` (`name` + nullable
+`squareSide`, `viewmodel/SaveInfo.kt`) instead of bare names; `squareSide` is
+`null` when the save can't be read (corrupted/IO error) rather than dropping
+the entry. `UiRequest.ConfirmRestore`/`ChooseSaveToRestore` now carry
+`SaveInfo` too. No save-file-format change — `ViewModelImpl` derives each
+size from `saves.load(name)?.squareSide`, one extra read per save already
+being listed.
 
 **`--size=N` bypasses the *entire* startup sequence, not just the size prompt.**
 A usable `--size=N` sets `sizeChosenAtLaunch` (threaded `GameSession` →
