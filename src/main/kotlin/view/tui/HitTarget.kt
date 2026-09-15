@@ -17,6 +17,10 @@ sealed class HitTarget {
     object ToolbarLoad : HitTarget()
     object ToolbarExit : HitTarget()
 
+    /** The `[ New ]` toolbar button (GH-44 WU3) - opens the same size-picker dialog as the
+     *  startup prompt ([viewmodel.ViewModel.newGame]'s `"toolbar"` trigger). */
+    object ToolbarNew : HitTarget()
+
     /** A toolbar button requesting a switch to [mode] (GH-30) - one per entry in
      *  [ScreenState.modeButtons], never the mode the view is already in. */
     data class ToolbarMode(val mode: InputMode) : HitTarget()

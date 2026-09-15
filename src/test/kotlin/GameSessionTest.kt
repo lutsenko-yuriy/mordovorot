@@ -88,7 +88,7 @@ class GameSessionTest {
         val session = GameSession(
             initialMode = InputMode.CONSOLE,
             sizeChosenAtLaunch = true,
-            buildView = { mode, _, _, _, _, sizeAtLaunch ->
+            buildView = { _, _, _, _, _, sizeAtLaunch ->
                 sizeFlags.add(sizeAtLaunch)
                 built++
                 ScriptedView {

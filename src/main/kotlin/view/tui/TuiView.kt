@@ -145,6 +145,7 @@ class TuiView internal constructor(
             HitTarget.ToolbarSave -> handleToolbarSave()
             HitTarget.ToolbarLoad -> handleToolbarLoad()
             HitTarget.ToolbarExit -> handleToolbarExit()
+            HitTarget.ToolbarNew -> handleToolbarNew()
             is HitTarget.ToolbarMode -> modeSwitcher.switchTo(target.mode, trigger = input.switchTrigger)
             else -> {}
         }
@@ -194,6 +195,13 @@ class TuiView internal constructor(
             is LoadOutcome.Confirm -> viewModel.loadGame(outcome.name)
             LoadOutcome.Cancel -> {}
         }
+    }
+
+    /** GH-44 WU3: the `[ New ]` toolbar button - opens the same size picker
+     *  [UiRequest.ChooseBoardSize]'s startup handler does, but calls [ViewModel.newGame]
+     *  directly instead of returning through `ask` (this isn't answering a raised request). */
+    private fun handleToolbarNew() {
+        runSizeDialog("toolbar")?.let { viewModel.newGame(it, trigger = "toolbar") }
     }
 
     private suspend fun handleToolbarExit() {
@@ -334,7 +342,10 @@ class TuiView internal constructor(
                 is InputAction.Activate -> when (val target = action.target) {
                     is HitTarget.DialogButton -> when (target.id) {
                         "cancel" -> { trackDialogCancelled("size"); return null }
-                        else -> target.id.toIntOrNull()?.let { return it }
+                        else -> {
+                            val chosen = target.id.toIntOrNull()
+                            if (chosen != null) return chosen
+                        }
                     }
                     else -> {}
                 }

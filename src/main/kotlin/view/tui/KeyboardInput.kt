@@ -7,18 +7,18 @@ import InputMode
  *  the old wording to 88, clipping silently past the default/fallback 80-column terminal width
  *  ([ScreenRenderer.Canvas.put] has no wrap or ellipsis, unlike dialog content). */
 private const val CONTROLS_HINT =
-    "Arrows: move · Enter: shift · F5/F6 Save/Load · F7/F8 Mouse/Console · Esc Exit"
+    "Arrows: move · Enter: shift · F5/F6/F9 Save/Load/New · F7/F8 Mouse/Console · Esc"
 
 /**
  * GH-18's keyboard-driven [TuiInput] - the only stateful one, owning the board [ArrowCursor] and
  * the dialog's focus index into its [DialogFocus] ring.
  *
  * Board: arrows move the cursor around the perimeter ring; Enter/Space activates the highlighted
- * arrow; F5/F6 open Save/Load, F7/F8 (GH-30) request a switch to mouse/console mode, and Escape
- * opens Exit - all regardless of cursor position, staying live even when solved (arrows/Enter go
- * inert instead, cursor stops rendering). Escape replaces a fifth function key for Exit - board
- * and dialog events are mutually exclusive, so it can't collide with Escape's dialog-level
- * Cancel.
+ * arrow; F5/F6 open Save/Load, F9 (GH-44 WU3) opens the New-game size picker, F7/F8 (GH-30)
+ * request a switch to mouse/console mode, and Escape opens Exit - all regardless of cursor
+ * position, staying live even when solved (arrows/Enter go inert instead, cursor stops
+ * rendering). Escape replaces a function key for Exit - board and dialog events are mutually
+ * exclusive, so it can't collide with Escape's dialog-level Cancel.
  *
  * Dialog: Tab/Down/Right advance the focus ring, Shift-Tab/Up/Left go back, Enter activates
  * whatever's focused (submit, select a row, or click a button), Escape cancels, typing only ever
@@ -82,12 +82,17 @@ class KeyboardInput : TuiInput {
     }
 
     override fun decorateBoard(state: ScreenState): ScreenState {
+        val previousSquareSide = squareSide
         squareSide = state.squareSide
         val wasEnabled = arrowsEnabled
         arrowsEnabled = state.arrowsEnabled
-        // Resets the cursor only on the disabled -> enabled transition (e.g. loading an unsolved
-        // save from the Congratulations screen), never on an ordinary mid-game repaint.
-        if (arrowsEnabled && !wasEnabled) cursor = ArrowCursor(Edge.LEFT, 0)
+        // Resets the cursor on the disabled -> enabled transition (e.g. loading an unsolved save
+        // from the Congratulations screen), and whenever squareSide itself changes ([ ToolbarNew ]
+        // /`size <N>`, GH-44 WU3, can start a fresh game at a different side mid-session) - the
+        // old cursor's index could otherwise point past the new, smaller ring (e.g. LEFT[4] left
+        // over from a 5x5 board is out of range on a fresh 3x3 one). Never resets on an ordinary
+        // mid-game repaint at the same side.
+        if ((arrowsEnabled && !wasEnabled) || squareSide != previousSquareSide) cursor = ArrowCursor(Edge.LEFT, 0)
         if (state.dialog == null) dialogFocusIndex = 0
         return state.copy(
             cursor = if (arrowsEnabled) cursor else null,
@@ -139,6 +144,7 @@ class KeyboardInput : TuiInput {
         6 -> InputAction.Activate(HitTarget.ToolbarLoad)
         7 -> InputAction.Activate(HitTarget.ToolbarMode(InputMode.MOUSE))
         8 -> InputAction.Activate(HitTarget.ToolbarMode(InputMode.CONSOLE))
+        9 -> InputAction.Activate(HitTarget.ToolbarNew)
         else -> InputAction.None
     }
 

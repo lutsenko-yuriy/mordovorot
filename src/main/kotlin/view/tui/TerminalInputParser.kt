@@ -107,8 +107,8 @@ class TerminalInputParser {
         return 6
     }
 
-    /** Arrow keys (`ESC [ A..D`), Tab-reverse (`ESC [ Z`), and the F5/F6/F7/F8 function keys
-     *  (`ESC [ 15~` / `17~` / `18~` / `19~`) decode here; any other CSI sequence (Home/End, page
+    /** Arrow keys (`ESC [ A..D`), Tab-reverse (`ESC [ Z`), and the F5/F6/F7/F8/F9 function keys
+     *  (`ESC [ 15~` / `17~` / `18~` / `19~` / `20~`) decode here; any other CSI sequence (Home/End, page
      *  keys, other function keys, ...) is discarded whole rather than left to leak its individual
      *  bytes out as bogus [TerminalEvent.KeyPress]es. */
     private fun decodeUnknownCsi(data: ByteArray, from: Int, events: MutableList<TerminalEvent>): Int {
@@ -137,6 +137,7 @@ class TerminalInputParser {
                 17 -> TerminalEvent.FunctionKey(6)
                 18 -> TerminalEvent.FunctionKey(7)
                 19 -> TerminalEvent.FunctionKey(8)
+                20 -> TerminalEvent.FunctionKey(9)
                 else -> null
             }
             else -> null
