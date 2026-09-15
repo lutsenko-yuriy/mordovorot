@@ -29,9 +29,19 @@ public class BoardImpl(initialSide: Int = BoardSize.DEFAULT) : BoardModel {
     }
 
     override fun restoreState(state: IntArray) {
-        require(state.size == squareSide * squareSide) { "Expected ${squareSide * squareSide} values, got ${state.size}" }
+        // squareSide comes from state's own length, not the board's current side (GH-44 WU5) -
+        // a valid save is whatever size it says it is; loading one resizes the board to match
+        // instead of requiring a coincidental match to what the board happened to be at.
+        val restoredSide = Math.sqrt(state.size.toDouble()).toInt()
+        require(restoredSide * restoredSide == state.size) { "Board state size must be a perfect square, got ${state.size}" }
         require(state.toSet() == (0 until state.size).toSet()) { "Board state must contain each of ${state.size} tile values exactly once" }
+        // BoardSize.require, same as newGame (audit finding on PR #55) - without it, a
+        // hand-edited/corrupted save with a squareSide outside 3..5 (FileSaveRepository only
+        // rejects <= 0) would resize the live board past what every other size-changing surface
+        // enforces, e.g. a 1x1 board that's permanently solved or a board too wide to render.
+        BoardSize.require(restoredSide)
 
+        side = restoredSide
         boardArray = state.copyOf()
         counter = 0
     }

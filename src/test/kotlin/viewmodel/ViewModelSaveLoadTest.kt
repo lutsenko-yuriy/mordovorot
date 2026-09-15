@@ -133,9 +133,9 @@ class ViewModelSaveLoadTest {
     }
 
     @Test
-    fun `loadGame surfaces a message and tracks result=size_mismatch when the save's board size differs`(): Unit = runBlocking {
+    fun `loadGame resizes the board to match a save whose size differs, instead of rejecting it`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
-        saves.save("small", intArrayOf(0, 1, 2, 3), 2)
+        saves.save("small", intArrayOf(3, 2, 1, 0, 7, 6, 5, 4, 8), 3)
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(4).apply { restoreState((0..15).toList().toIntArray()) }
         val viewModel = ViewModelImpl(board, saves, analytics)
@@ -143,10 +143,11 @@ class ViewModelSaveLoadTest {
 
         ui.drive(viewModel) { viewModel.loadGame("small") }
 
-        assertEquals((0..15).toList(), board.boardArray.toList())
-        assertTrue(ui.shownMessages.any { it.contains("small") })
+        assertEquals(3, board.squareSide)
+        assertEquals(listOf(3, 2, 1, 0, 7, 6, 5, 4, 8), board.boardArray.toList())
+        assertTrue(ui.shownMessages.any { it.contains("Loaded 'small'") })
         assertEquals(
-            listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "size_mismatch"))),
+            listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "success"))),
             analytics.events,
         )
     }

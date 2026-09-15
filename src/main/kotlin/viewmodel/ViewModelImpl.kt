@@ -113,14 +113,8 @@ class ViewModelImpl(
                 showMessage("No save named '$name'. ${availableSavesMessage()}")
                 return false
             }
-            if (saved.squareSide != board.squareSide) {
-                analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "size_mismatch"))
-                showMessage(
-                    "Save '$name' is a ${saved.squareSide}x${saved.squareSide} board and can't be loaded onto " +
-                        "this ${board.squareSide}x${board.squareSide} board."
-                )
-                return false
-            }
+            // No size-mismatch rejection (GH-44 WU5) - board.restoreState resizes the board to
+            // match the save instead, so every successful saves.load() now restores.
             board.restoreState(saved.state)
             analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "success"))
             showMessage("Loaded '$name'.")

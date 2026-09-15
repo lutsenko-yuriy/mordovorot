@@ -1,6 +1,7 @@
 package testing
 
 import board_model.BoardModel
+import board_model.BoardSize
 
 /**
  * A [BoardModel] test double that records every call it receives instead of
@@ -40,13 +41,17 @@ class FakeBoardModel(
     }
 
     override fun restoreState(state: IntArray) {
-        // Mirrors BoardImpl's own validation (audit finding on PR #46) - without it, a
-        // mis-sized fixture leaves a fake board whose array doesn't match squareSide, and
-        // ViewImpl.play()'s displayBoard call throws every iteration with nothing consuming
-        // input to ever reach EOF - an unbounded loop instead of a readable test failure.
-        require(state.size == squareSide * squareSide) { "Expected ${squareSide * squareSide} values, got ${state.size}" }
+        // Mirrors BoardImpl's own validation (audit finding on PR #46), including squareSide now
+        // deriving from state's own length rather than requiring a match (GH-44 WU5) - without the
+        // perfect-square check, a mis-sized fixture leaves a fake board whose array doesn't match
+        // squareSide, and ViewImpl.play()'s displayBoard call throws every iteration with nothing
+        // consuming input to ever reach EOF - an unbounded loop instead of a readable test failure.
+        val restoredSide = Math.sqrt(state.size.toDouble()).toInt()
+        require(restoredSide * restoredSide == state.size) { "Board state size must be a perfect square, got ${state.size}" }
         require(state.toSet() == (0 until state.size).toSet()) { "Board state must contain each of ${state.size} tile values exactly once" }
+        BoardSize.require(restoredSide) // mirrors BoardImpl's own BoardSize check (audit finding on PR #55)
         calls.add("restoreState(${state.toList()})")
+        squareSide = restoredSide
         boardArray = state
     }
 

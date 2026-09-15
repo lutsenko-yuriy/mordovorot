@@ -35,7 +35,7 @@ Fired when the board is restored from a save file, either via the `load` command
 | Property | Type | Description |
 |---|---|---|
 | `trigger` | `string` | `command` or `startup_prompt`. |
-| `result` | `string` | `success`, `not_found`, `size_mismatch` (save's board size doesn't match the current board), or `error` (corrupted save file or a filesystem failure). |
+| `result` | `string` | `success` (also covers a load that resized the board to the save's size, GH-44 WU5), `not_found`, or `error` (corrupted save file or a filesystem failure). |
 | `input_method` | `string` | `console`, `mouse`, or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* |
 
 ### `startup_restore_prompt_shown`

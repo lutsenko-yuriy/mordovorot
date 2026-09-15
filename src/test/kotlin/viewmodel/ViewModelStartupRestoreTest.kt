@@ -258,9 +258,10 @@ class ViewModelStartupRestoreTest {
      *  "foo (4x4)" must still be selectable by typing its own name. */
     @Test
     fun `an exact name match wins over another save's colliding display form`(): Unit = runBlocking {
-        // Same squareSide (4) on both - a mismatch would hit loadGame's separate size-mismatch
-        // rejection (pre-WU5), which isn't what this test is about; barState distinguishes
-        // which save actually got restored.
+        // Same squareSide (4) on both - differing sizes would make barState alone sufficient to
+        // tell the saves apart, weakening the point of this test (that the *name* match wins,
+        // not just any distinguishing detail); barState is what actually distinguishes which
+        // save got restored.
         val board = FakeBoardModel()
         val barState = intArrayOf(3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12)
         val saves = FakeSaveRepository(

@@ -73,13 +73,14 @@ class BoardImplNewGameTest {
     }
 
     @Test
-    fun `restoreState validates against the size set by newGame, not the constructor size`() {
+    fun `restoreState after newGame resizes to the restored state's own size, not the size newGame left it at, GH-44 WU5`() {
         val board = BoardImpl(4)
         board.newGame(3)
 
-        assertFailsWith<IllegalArgumentException> {
-            board.restoreState(IntArray(16) { it })
-        }
+        board.restoreState(IntArray(16) { it })
+
+        assertEquals(4, board.squareSide)
+        assertEquals((0..15).toList(), board.boardArray.toList())
     }
 
     @Test
