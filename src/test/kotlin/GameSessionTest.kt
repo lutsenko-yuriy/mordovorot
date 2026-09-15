@@ -26,10 +26,6 @@ class GameSessionTest {
         override fun displayBoard(boardState: IntArray, squareSide: Int) {}
         override suspend fun showMessage(message: String) {}
         override suspend fun processCommand() {}
-        override suspend fun confirmRestore(saveName: String): Boolean = false
-        override suspend fun chooseSaveToRestore(saveNames: List<String>): String? = null
-        override suspend fun confirmSaveBeforeExit(): Boolean = false
-        override suspend fun promptSaveName(): String? = null
         override suspend fun play() = onPlay()
     }
 

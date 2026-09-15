@@ -2,6 +2,7 @@ package presenter
 
 import storage.SavedBoard
 import testing.FakeBoardModel
+import testing.FakePresenterUi
 import testing.FakeSaveRepository
 import testing.FakeView
 import view.EndOfInputException
@@ -9,6 +10,11 @@ import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+/** Driven via [FakePresenterUi.drive] (GH-42 WU2) - `saveGame`/`loadGame`/`exitGame`/
+ *  `offerStartupRestore` all suspend on [BasePresenter.ask], so a live handler must drain
+ *  [Presenter.uiRequests] concurrently with `play()`, or any test exercising those paths hangs.
+ *  [FakeView] still covers [ConsolePresenterImpl.play]'s own direct `displayBoard`/
+ *  `processCommand` calls - those haven't moved off `View` (WU3). */
 class ConsolePresenterPlayTest {
 
     @Test
@@ -16,8 +22,9 @@ class ConsolePresenterPlayTest {
         val board = FakeBoardModel().apply { correct = true }
         val view = FakeView()
         val presenter = ConsolePresenterImpl(view, board)
+        val ui = FakePresenterUi()
 
-        presenter.play()
+        ui.drive(presenter) { presenter.play() }
 
         assertEquals(0, view.displayBoardCalls.size)
         assertEquals(0, view.processCommandCallCount)
@@ -36,12 +43,13 @@ class ConsolePresenterPlayTest {
         val board = FakeBoardModel().apply { correct = true }
         val savedState = intArrayOf(3, 2, 1, 0)
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, savedState)))
-        val view = FakeView(confirmRestoreResponses = mutableListOf(true))
+        val view = FakeView()
         val presenter = ConsolePresenterImpl(view, board, saves)
+        val ui = FakePresenterUi(confirmRestoreResponses = mutableListOf(true))
 
-        presenter.play()
+        ui.drive(presenter) { presenter.play() }
 
-        assertEquals(listOf("foo"), view.confirmRestoreCalls)
+        assertEquals(listOf("foo"), ui.confirmRestoreCalls)
         assertEquals(listOf("restoreState(${savedState.toList()})"), board.calls)
     }
 
@@ -50,8 +58,9 @@ class ConsolePresenterPlayTest {
         val board = FakeBoardModel()
         val view = FakeView(mutableListOf({ board.correct = true }))
         val presenter = ConsolePresenterImpl(view, board)
+        val ui = FakePresenterUi()
 
-        presenter.play()
+        ui.drive(presenter) { presenter.play() }
 
         assertEquals(1, view.displayBoardCalls.size)
         assertEquals(1, view.processCommandCallCount)
@@ -64,8 +73,9 @@ class ConsolePresenterPlayTest {
         val board = FakeBoardModel()
         val view = FakeView(mutableListOf({ throw EndOfInputException() }))
         val presenter = ConsolePresenterImpl(view, board)
+        val ui = FakePresenterUi()
 
-        presenter.play()
+        ui.drive(presenter) { presenter.play() }
 
         assertEquals(1, view.displayBoardCalls.size)
         assertEquals(1, view.processCommandCallCount)
@@ -80,13 +90,11 @@ class ConsolePresenterPlayTest {
     fun `play returns when exitGame requests an exit`(): Unit = runBlocking {
         val board = FakeBoardModel()
         lateinit var presenter: ConsolePresenterImpl
-        val view = FakeView(
-            commands = mutableListOf({ presenter.exitGame() }),
-            confirmSaveBeforeExitResponses = mutableListOf(false),
-        )
+        val view = FakeView(commands = mutableListOf({ presenter.exitGame() }))
         presenter = ConsolePresenterImpl(view, board)
+        val ui = FakePresenterUi(confirmSaveBeforeExitResponses = mutableListOf(false))
 
-        presenter.play()
+        ui.drive(presenter) { presenter.play() }
 
         assertEquals(1, view.processCommandCallCount)
     }
@@ -101,15 +109,16 @@ class ConsolePresenterPlayTest {
             )
         )
         val presenter = ConsolePresenterImpl(view, board)
+        val ui = FakePresenterUi()
 
-        presenter.play()
+        ui.drive(presenter) { presenter.play() }
 
         assertEquals(2, view.displayBoardCalls.size)
         assertEquals(2, view.processCommandCallCount)
     }
 
     @Test
-    fun `play routes a swallowed exception's message through view showMessage, not System-err`(): Unit = runBlocking {
+    fun `play routes a swallowed exception's message through showMessage, not System-err`(): Unit = runBlocking {
         val board = FakeBoardModel()
         val view = FakeView(
             mutableListOf(
@@ -118,10 +127,11 @@ class ConsolePresenterPlayTest {
             )
         )
         val presenter = ConsolePresenterImpl(view, board)
+        val ui = FakePresenterUi()
 
-        presenter.play()
+        ui.drive(presenter) { presenter.play() }
 
-        assertEquals(listOf("bad command"), view.shownMessages)
+        assertEquals(listOf("bad command"), ui.shownMessages)
     }
 
     /** Play-loop-specific half of `exit, save confirmed but the save itself fails` - moved here
@@ -134,14 +144,14 @@ class ConsolePresenterPlayTest {
         val saves = FakeSaveRepository()
         saves.saveException = RuntimeException("disk full")
         lateinit var presenter: ConsolePresenterImpl
-        val view = FakeView(
-            commands = mutableListOf({ presenter.exitGame() }, { board.correct = true }),
+        val view = FakeView(commands = mutableListOf({ presenter.exitGame() }, { board.correct = true }))
+        presenter = ConsolePresenterImpl(view, board, saves)
+        val ui = FakePresenterUi(
             confirmSaveBeforeExitResponses = mutableListOf(true),
             promptSaveNameResponses = mutableListOf("foo"),
         )
-        presenter = ConsolePresenterImpl(view, board, saves)
 
-        presenter.play()
+        ui.drive(presenter) { presenter.play() }
 
         assertEquals(2, view.processCommandCallCount)
     }
