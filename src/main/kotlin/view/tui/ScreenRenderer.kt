@@ -36,7 +36,7 @@ private const val CLEAR_AND_HOME = "\u001B[2J\u001B[H"
 class ScreenRenderer {
 
     fun render(state: ScreenState, terminalSize: TerminalSize): String {
-        val layout = BoardLayout(terminalSize, state.squareSide, state.arrowsEnabled, state.toolbarShortcuts)
+        val layout = BoardLayout(terminalSize, state.squareSide, state.arrowsEnabled, state.toolbarShortcuts, state.modeButtons)
         val canvas = Canvas(terminalSize.columns.coerceAtLeast(1), terminalSize.rows.coerceAtLeast(1))
 
         canvas.put(centeredX(state.title, terminalSize), layout.titleRow, state.title)
@@ -116,8 +116,8 @@ class ScreenRenderer {
 
     private fun drawToolbar(canvas: Canvas, layout: BoardLayout, toolbarShortcuts: Boolean) {
         for (button in layout.toolbarButtons()) {
-            if (toolbarShortcuts) canvas.putColored(button.x, layout.toolbarRow, button.text, SHORTCUT_COLOR_ON, SHORTCUT_COLOR_OFF)
-            else canvas.put(button.x, layout.toolbarRow, button.text)
+            if (toolbarShortcuts) canvas.putColored(button.x, button.y, button.text, SHORTCUT_COLOR_ON, SHORTCUT_COLOR_OFF)
+            else canvas.put(button.x, button.y, button.text)
         }
     }
 

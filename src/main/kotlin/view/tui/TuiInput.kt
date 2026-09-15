@@ -28,6 +28,12 @@ sealed class InputAction {
  * is the other implementation.
  */
 interface TuiInput {
+    /** The `trigger` value [TuiView] reports on `input_mode_switched` for a mode-button
+     *  activation from this input (GH-30) - `"toolbar"` for a click, `"shortcut"` for a
+     *  keyboard function key. Keeps [TuiView] itself mode-agnostic, same as everything else
+     *  here. */
+    val switchTrigger: String
+
     /** Runs once, right after [Terminal.enterRawMode] - mouse reporting on for [MouseInput],
      *  left off for a keyboard-only mode. */
     fun prepare(terminal: Terminal)

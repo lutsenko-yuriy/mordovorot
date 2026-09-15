@@ -1,5 +1,7 @@
 package view.tui
 
+import InputMode
+
 /** Default (unsolved) board title. */
 const val TITLE_UNSOLVED = "Mordovorot"
 
@@ -34,6 +36,11 @@ data class ScreenState(
      *  `[ Save ]` (mouse mode) - see [BoardLayout.toolbarButtons]'s KDoc for why this must be
      *  carried on [ScreenState] rather than decided independently by each construction site. */
     val toolbarShortcuts: Boolean = false,
+    /** The other input modes offered on the toolbar (GH-30) - never the mode the view is
+     *  already in. Empty in console mode (no toolbar at all); set by [TuiInput.decorateBoard]
+     *  ([MouseInput]'s WU3, `KeyboardInput`'s WU4), never by [forBoard] itself, same as
+     *  [cursor]/[controlsHint]. */
+    val modeButtons: List<InputMode> = emptyList(),
 ) {
     companion object {
         /** Builds the board screen's [ScreenState] from the presenter's current query results. */

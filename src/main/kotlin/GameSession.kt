@@ -99,12 +99,17 @@ internal fun defaultView(
                 modeSwitcherFactory = { v -> ModeSwitcherImpl(view = v, currentMode = mode, analytics = analytics) },
             ) { v -> ConsolePresenterImpl(v, board, saves, decoratedAnalytics, startupRestoreDone) }
         InputMode.MOUSE ->
-            TuiView.create(terminalFactory(), analytics = decoratedAnalytics) { v ->
-                TuiPresenterImpl(v, board, saves, decoratedAnalytics, startupRestoreDone)
-            }
+            TuiView.create(
+                terminalFactory(),
+                analytics = decoratedAnalytics,
+                modeSwitcherFactory = { v -> ModeSwitcherImpl(view = v, currentMode = mode, analytics = analytics) },
+            ) { v -> TuiPresenterImpl(v, board, saves, decoratedAnalytics, startupRestoreDone) }
         InputMode.KEYBOARD ->
-            TuiView.create(terminalFactory(), analytics = decoratedAnalytics, input = KeyboardInput()) { v ->
-                TuiPresenterImpl(v, board, saves, decoratedAnalytics, startupRestoreDone)
-            }
+            TuiView.create(
+                terminalFactory(),
+                analytics = decoratedAnalytics,
+                input = KeyboardInput(),
+                modeSwitcherFactory = { v -> ModeSwitcherImpl(view = v, currentMode = mode, analytics = analytics) },
+            ) { v -> TuiPresenterImpl(v, board, saves, decoratedAnalytics, startupRestoreDone) }
     }
 }
