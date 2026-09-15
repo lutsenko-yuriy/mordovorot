@@ -110,10 +110,12 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
   (`◀`/`▶`/`▲`/`▼`); the cursored arrow is shown in yellow. Enter or Space activates whichever
   arrow is highlighted, same effect as clicking it. Once solved, the cursor disappears and arrow
   keys/Enter go inert, matching the mouse mode's dimmed-arrows behavior.
-- **Toolbar shortcuts**, shown in light blue on the toolbar buttons and always live regardless of
-  cursor position or solved state: **F5** opens Save, **F6** opens Load, **F7** switches to mouse
-  mode, **F8** switches to console mode (GH-30), and **Escape** opens the Exit dialog. A
-  controls-hint line below the toolbar spells these out in plain text.
+- **Toolbar shortcuts**, shown in light blue on the toolbar buttons — including a second row
+  below `[ Save ] [ Load ] [ Exit ]` for `[Mouse F7]`/`[Console F8]` (GH-30), mirroring the mouse
+  mode's `[ Keyboard ] [ Console ]` row — and always live regardless of cursor position or solved
+  state: **F5** opens Save, **F6** opens Load, **F7** switches to mouse mode, **F8** switches to
+  console mode, and **Escape** opens the Exit dialog. A controls-hint line below the toolbar
+  spells these out in plain text.
 - **Dialog navigation:** Tab/Shift+Tab (or the arrow keys) cycle focus between a dialog's
   controls (text field, list rows, buttons); Enter activates whatever has focus; Escape cancels
   the dialog, same as clicking Cancel. Typing and Backspace work on the focused text field as in

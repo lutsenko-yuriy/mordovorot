@@ -4,6 +4,7 @@ import InputMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Direct coverage of GH-18's [KeyboardInput] board and dialog translation, in isolation from
@@ -92,8 +93,18 @@ class KeyboardInputTest {
         val solved = input.decorateBoard(solvedBoard())
         assertNull(solved.cursor)
         assertEquals(true, solved.toolbarShortcuts)
-        assertEquals("Arrows: move · Enter/Space: shift · F5 Save · F6 Load · F7 Mouse · F8 Console · Esc Exit", solved.controlsHint)
+        assertEquals("Arrows: move · Enter: shift · F5/F6 Save/Load · F7/F8 Mouse/Console · Esc Exit", solved.controlsHint)
         assertEquals(listOf(InputMode.MOUSE, InputMode.CONSOLE), solved.modeButtons)
+    }
+
+    @Test
+    fun `the controls hint fits inside an 80-column terminal (audit finding on PR #40)`() {
+        // ScreenRenderer draws it with Canvas.put, which clips silently past the terminal width -
+        // no wrap, no ellipsis. 80 is both the classic default and AnsiTerminal's hardcoded
+        // fallback when `stty size` fails, so this is the narrowest width that must never clip.
+        val hint = KeyboardInput().decorateBoard(unsolvedBoard()).controlsHint
+
+        assertTrue((hint?.length ?: 0) <= 80)
     }
 
     @Test

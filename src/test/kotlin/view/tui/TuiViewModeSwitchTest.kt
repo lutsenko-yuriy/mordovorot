@@ -76,6 +76,21 @@ class TuiViewModeSwitchTest {
     }
 
     @Test
+    fun `pressing F8 with a real ModeSwitcher unwinds ModeSwitchRequestedException out of play() and restores the terminal`() {
+        // Audit suggestion on PR #40: the mouse-click path has this coverage (below); the
+        // keyboard-shortcut path only had RecordingModeSwitcher tests, leaving the actual
+        // unwind-and-restore guarantee untested for F7/F8's route to handleTarget.
+        val throwingSwitcher = object : ModeSwitcher {
+            override fun switchTo(target: InputMode, trigger: String) = throw ModeSwitchRequestedException(target)
+        }
+        val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.FunctionKey(8)))
+        val view = TuiView.create(terminal, input = KeyboardInput(), modeSwitcherFactory = { throwingSwitcher }) { FakeTuiPresenter() }
+
+        assertFailsWith<ModeSwitchRequestedException> { view.play() }
+        assertTrue(terminal.restored)
+    }
+
+    @Test
     fun `a mode switch reached after a dialog was opened and cancelled still unwinds cleanly and restores the terminal`() {
         // A Save dialog exactly as handleToolbarSave's runSaveDialog builds it on its first
         // iteration (empty typed name, no overwrite warning) - needed to compute the Cancel
