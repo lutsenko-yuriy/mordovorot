@@ -267,8 +267,11 @@ subsequent switch fires `input_mode_switched` instead (`docs/ANALYTICS_EVENTS.md
   not a terminal-handling convenience — and it's the multiplatform artifact, so the
   same coordinate resolves per-target once other platforms are added, with no
   declaration change. `kotlinx-coroutines-test` is a test-only addition alongside it,
-  for deadlock detection in a suite whose new failure mode is hangs, not clean
-  failures. Run on a single `runBlocking` event loop with no dispatcher — there's no
+  added ahead of WU2 — unused by WU1 itself, which has no request-handler coroutine
+  yet for a test to launch/cancel/deadlock on; WU2's `runTest` will give a
+  timeout-failure instead of a silent hang, the failure mode that WU's request
+  channel actually risks. Run on a single `runBlocking` event loop with no
+  dispatcher — there's no
   real concurrency to exploit here (every I/O call is blocking, single-consumer), so
   a thread pool (`Dispatchers.Default`/`IO`) or `Dispatchers.Unconfined` would only
   add nondeterminism to the request/response ordering for no benefit.

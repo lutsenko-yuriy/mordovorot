@@ -3,6 +3,7 @@ import analytics.InputMethodAnalyticsService
 import analytics.NoopAnalyticsService
 import board_model.BoardImpl
 import board_model.BoardModel
+import kotlinx.coroutines.CancellationException
 import presenter.ConsolePresenterImpl
 import presenter.ModeSwitchRequestedException
 import presenter.ModeSwitcherImpl
@@ -61,6 +62,10 @@ class GameSession(
             } catch (e: SessionControlException) {
                 // Any other control-flow exception (ExitRequestedException) must reach main, not
                 // be treated as a failed rebuild - audit finding on PR #37.
+                throw e
+            } catch (e: CancellationException) {
+                // Same reasoning as SessionControlException above - a cancelled coroutine must
+                // not be misread as a failed rebuild (round-2 audit finding on PR #43, GH-42).
                 throw e
             } catch (e: Exception) {
                 // A rebuild can fail for real (e.g. `stty` missing - audit finding on PR #37):
