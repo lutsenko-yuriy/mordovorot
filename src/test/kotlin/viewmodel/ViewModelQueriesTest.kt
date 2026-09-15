@@ -1,4 +1,4 @@
-package presenter
+package viewmodel
 
 import storage.SavedBoard
 import testing.FakeBoardModel
@@ -9,12 +9,12 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
- * Covers [PresenterImpl]'s additive, read-only query methods (`listSaves`, `saveExists`,
+ * Covers [ViewModelImpl]'s additive, read-only query methods (`listSaves`, `saveExists`,
  * `isSolved`) that the mouse-driven TUI needs and the console UI never had to ask for
  * (GH-3). All three degrade to a safe default instead of throwing, mirroring the
- * non-throwing discipline [PresenterImpl.saveGame]/[PresenterImpl.loadGame] already follow.
+ * non-throwing discipline [ViewModelImpl.saveGame]/[ViewModelImpl.loadGame] already follow.
  */
-class PresenterQueriesTest {
+class ViewModelQueriesTest {
 
     @Test
     fun `listSaves delegates to the save repository`() {
@@ -24,72 +24,72 @@ class PresenterQueriesTest {
                 "bar" to SavedBoard(4, IntArray(16) { it }),
             ),
         )
-        val presenter = PresenterImpl(FakeBoardModel(), saves)
+        val viewModel = ViewModelImpl(FakeBoardModel(), saves)
 
-        assertEquals(listOf("bar", "foo"), presenter.listSaves())
+        assertEquals(listOf("bar", "foo"), viewModel.listSaves())
     }
 
     @Test
     fun `listSaves degrades to an empty list on a repository failure`() {
         val saves = FakeSaveRepository()
         saves.listSavesException = RuntimeException("unreadable saves dir")
-        val presenter = PresenterImpl(FakeBoardModel(), saves)
+        val viewModel = ViewModelImpl(FakeBoardModel(), saves)
 
-        assertEquals(emptyList(), presenter.listSaves())
+        assertEquals(emptyList(), viewModel.listSaves())
     }
 
     @Test
     fun `saveExists delegates to the save repository`() {
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, IntArray(16) { it })))
-        val presenter = PresenterImpl(FakeBoardModel(), saves)
+        val viewModel = ViewModelImpl(FakeBoardModel(), saves)
 
-        assertTrue(presenter.saveExists("foo"))
-        assertFalse(presenter.saveExists("bar"))
+        assertTrue(viewModel.saveExists("foo"))
+        assertFalse(viewModel.saveExists("bar"))
     }
 
     @Test
     fun `saveExists degrades to false on a repository failure`() {
         val saves = FakeSaveRepository()
         saves.existsException = RuntimeException("a/b")
-        val presenter = PresenterImpl(FakeBoardModel(), saves)
+        val viewModel = ViewModelImpl(FakeBoardModel(), saves)
 
-        assertFalse(presenter.saveExists("a/b"))
+        assertFalse(viewModel.saveExists("a/b"))
     }
 
     @Test
     fun `isSolved delegates to board isCorrect`() {
         val board = FakeBoardModel()
-        val presenter = PresenterImpl(board)
+        val viewModel = ViewModelImpl(board)
 
         board.correct = false
-        assertFalse(presenter.isSolved())
+        assertFalse(viewModel.isSolved())
 
         board.correct = true
-        assertTrue(presenter.isSolved())
+        assertTrue(viewModel.isSolved())
     }
 
     @Test
     fun `boardState delegates to the board's current tile array`() {
         val board = FakeBoardModel(boardArray = intArrayOf(3, 1, 0, 2))
-        val presenter = PresenterImpl(board)
+        val viewModel = ViewModelImpl(board)
 
-        assertEquals(listOf(3, 1, 0, 2), presenter.boardState().toList())
+        assertEquals(listOf(3, 1, 0, 2), viewModel.boardState().toList())
     }
 
     @Test
     fun `boardState returns a defensive copy - mutating it does not affect the board`() {
         val board = FakeBoardModel(boardArray = intArrayOf(3, 1, 0, 2))
-        val presenter = PresenterImpl(board)
+        val viewModel = ViewModelImpl(board)
 
-        presenter.boardState()[0] = 99
+        viewModel.boardState()[0] = 99
 
         assertEquals(listOf(3, 1, 0, 2), board.boardArray.toList())
     }
 
     @Test
     fun `squareSide delegates to the board's square side`() {
-        val presenter = PresenterImpl(FakeBoardModel(SQUARE_SIDE = 4))
+        val viewModel = ViewModelImpl(FakeBoardModel(SQUARE_SIDE = 4))
 
-        assertEquals(4, presenter.squareSide())
+        assertEquals(4, viewModel.squareSide())
     }
 }

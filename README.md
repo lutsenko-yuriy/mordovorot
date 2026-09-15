@@ -20,12 +20,12 @@ Built with Gradle (via the wrapper, no local Gradle install needed):
 ./gradlew test
 ```
 
-`board_model` and `presenter` have full unit test coverage, independent of any
+`board_model` and `viewmodel` have full unit test coverage, independent of any
 view/UI implementation. The `view` layer isn't covered yet — tracked separately.
 
 ## Architecture
 
-MVP (Model-View-Presenter): `board_model` (game state + rules), `presenter`
+MVP (Model-View-ViewModel): `board_model` (game state + rules), `viewmodel`
 (mediates view ↔ model), `view` (console I/O). See `docs/ARCHITECTURE.md`
 for the full layout and layer rules, and `docs/PRODUCT_SPEC.md` for the
 feature list.

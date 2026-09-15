@@ -1,23 +1,23 @@
 package view.tui
 
 import InputMode
-import presenter.ModeSwitchRequestedException
-import presenter.PresenterImpl
-import storage.SavedBoard
-import testing.FakeBoardModel
-import testing.FakeSaveRepository
-import testing.FakeTerminal
-import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
+import storage.SavedBoard
+import testing.FakeBoardModel
+import testing.FakeSaveRepository
+import testing.FakeTerminal
+import viewmodel.ModeSwitchRequestedException
+import viewmodel.ViewModelImpl
 
 /**
  * Closes a coverage gap an audit found on PR #45 (GH-42 WU2): every `TuiView*Test` that drives
- * `play()` uses either `FakePresenter` (whose `uiRequests` nothing ever sends to - the
+ * `play()` uses either `FakeViewModel` (whose `uiRequests` nothing ever sends to - the
  * handler starts, suspends, and is cancelled without ever reaching [TuiView.handle]) or a real
- * `PresenterImpl` with exactly one save (exercising `handle`'s `ConfirmRestore`/
+ * `ViewModelImpl` with exactly one save (exercising `handle`'s `ConfirmRestore`/
  * `ConfirmSaveBeforeExit`/`PromptSaveName` branches via the exit and 1-save-startup flows, but
  * never `ChooseSaveToRestore` - that needs 2+ saves).
  */
@@ -46,7 +46,7 @@ class TuiViewRequestHandlingTest {
             override fun readEvent(): TerminalEvent = TerminalEvent.EndOfInput
             override fun size(): TerminalSize = terminalSize
         }
-        val view = TuiView.create(terminal, presenter = PresenterImpl(board, saves))
+        val view = TuiView.create(terminal, viewModel = ViewModelImpl(board, saves))
 
         assertFailsWith<ModeSwitchRequestedException> { view.play() }
     }
@@ -79,7 +79,7 @@ class TuiViewRequestHandlingTest {
             terminalSize = terminalSize,
         )
 
-        TuiView.create(terminal, presenter = PresenterImpl(board, saves)).play()
+        TuiView.create(terminal, viewModel = ViewModelImpl(board, saves)).play()
 
         assertTrue(terminal.frames.first().contains("Restore a saved game?"))
         assertEquals(listOf("restoreState(${fooState.toList()})"), board.calls)

@@ -1,18 +1,18 @@
-package presenter
+package viewmodel
 
 import kotlinx.coroutines.channels.ReceiveChannel
 
-/** The one presenter surface both `view.ViewImpl` and `view.tui.TuiView` depend on (GH-42 WU3) -
+/** The one viewModel surface both `view.ViewImpl` and `view.tui.TuiView` depend on (GH-42 WU3) -
  *  shift/reset/save/load/exit plus the read-only query surface (`listSaves`/`saveExists`/
  *  `isSolved`/`boardState`/`squareSide`) the TUI needs to render/re-render outside any console
- *  loop. Superseded GH-23's `ConsolePresenter`/`TuiPresenter` split: once `ConsolePresenterImpl.play()`'s
+ *  loop. Superseded GH-23's `ConsoleViewModel`/`TuiViewModel` split: once `ConsoleViewModelImpl.play()`'s
  *  console loop moved into `ViewImpl` (hard problem 1 on the plan comment on GH-42), both UIs
  *  needed the identical surface, so the split no longer described anything real. */
-interface Presenter {
+interface ViewModel {
 
-    /** The UI interactions this presenter is waiting on, in emission order (GH-42 WU2). Exactly
-     *  one consumer - the View that owns this presenter's session, draining it in a coroutine
-     *  alongside its own event loop. See [presenter.PresenterImpl.ask]. */
+    /** The UI interactions this viewModel is waiting on, in emission order (GH-42 WU2). Exactly
+     *  one consumer - the View that owns this viewModel's session, draining it in a coroutine
+     *  alongside its own event loop. See [viewmodel.ViewModelImpl.ask]. */
     val uiRequests: ReceiveChannel<UiRequest<*>>
 
     fun shiftLeft(row: Int)
@@ -23,7 +23,7 @@ interface Presenter {
 
     fun resetGame()
 
-    /** Returns whether the save actually succeeded - see [presenter.PresenterImpl.exitGame],
+    /** Returns whether the save actually succeeded - see [viewmodel.ViewModelImpl.exitGame],
      *  which needs the real outcome rather than assuming success. `suspend` (GH-42): asks the
      *  View for confirmation/messages instead of returning synchronously. */
     suspend fun saveGame(name: String): Boolean
@@ -32,7 +32,7 @@ interface Presenter {
     /** Ends the current session (the `exit`/`quit` command) after an optional save-first
      *  dialogue. Usually ends the owning View's play loop outright; returns normally instead,
      *  leaving the session running, if the user asked to save but the save attempt failed -
-     *  see [presenter.PresenterImpl.exitGame]. */
+     *  see [viewmodel.ViewModelImpl.exitGame]. */
     suspend fun exitGame()
 
     /** Save names, sorted; empty when nothing has been saved yet, or on a storage error -

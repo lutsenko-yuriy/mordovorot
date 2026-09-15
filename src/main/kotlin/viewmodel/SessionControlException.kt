@@ -1,4 +1,4 @@
-package presenter
+package viewmodel
 
 /** Marker for exceptions that unwind `View.play()` as normal control flow (ending or rebuilding
  *  the session), not an error - so a catch-all can rethrow via this one type instead of naming

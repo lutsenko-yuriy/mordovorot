@@ -8,7 +8,7 @@ import kotlin.test.assertNotEquals
 /**
  * Covers GH-3's board geometry: given a terminal size and the board's square side, computing
  * where the 16 shift arrows and 3 toolbar buttons land, and hit-testing a click coordinate
- * against them. Pure geometry, no terminal or presenter involved. Coordinates are read back
+ * against them. Pure geometry, no terminal or viewModel involved. Coordinates are read back
  * from the layout's own accessors rather than hardcoded, so the test stays valid across layout
  * tweaks - only the hit-test contract (a click at that coordinate resolves to that target) is
  * asserted.

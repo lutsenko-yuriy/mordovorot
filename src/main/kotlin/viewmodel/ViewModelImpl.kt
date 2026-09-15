@@ -1,4 +1,4 @@
-package presenter
+package viewmodel
 
 import analytics.AnalyticsService
 import analytics.NoopAnalyticsService
@@ -10,28 +10,28 @@ import kotlinx.coroutines.channels.ReceiveChannel
 import storage.FileSaveRepository
 import storage.SaveRepository
 
-/** The one [Presenter] implementation (GH-42 WU3, collapsing GH-23's `BasePresenter` +
- *  `ConsolePresenterImpl` + `TuiPresenterImpl` split): owns board/saves/analytics wiring and
+/** The one [ViewModel] implementation (GH-42 WU3, collapsing GH-23's `BaseViewModel` +
+ *  `ConsoleViewModelImpl` + `TuiViewModelImpl` split): owns board/saves/analytics wiring and
  *  every domain-mutation flow - shift/reset/save/load/exit/restoreOnStartup plus the read-only
  *  query surface. Holds no `View` reference; talks to whichever View is driving it through
  *  [uiRequests] instead of a constructor-injected dependency. */
-class PresenterImpl(
+class ViewModelImpl(
     private val board: BoardModel = BoardImpl(),
     private val saves: SaveRepository = FileSaveRepository(),
     private val analytics: AnalyticsService = NoopAnalyticsService(),
     /** Seeded `true` by `GameSession` after a mode switch, so the prompt doesn't re-show. */
     startupRestoreDone: Boolean = false,
-) : Presenter {
+) : ViewModel {
 
     /** Rendezvous - `ask` doesn't return until the View has actually finished handling the
      *  request, which is what keeps message/prompt ordering identical to the old direct blocking
-     *  calls into `View` (GH-42 WU2, see docs/ARCHITECTURE.md's presenter section). */
+     *  calls into `View` (GH-42 WU2, see docs/ARCHITECTURE.md's viewModel section). */
     private val requests = Channel<UiRequest<*>>(Channel.RENDEZVOUS)
 
     override val uiRequests: ReceiveChannel<UiRequest<*>> = requests
 
     /** Raises [request] on [uiRequests] and suspends until the View responds. The View must
-     *  never call back into a request-raising presenter method (`saveGame`/`loadGame`/`exitGame`/
+     *  never call back into a request-raising viewModel method (`saveGame`/`loadGame`/`exitGame`/
      *  `restoreOnStartup`) from inside its own request handler - doing so deadlocks, since the
      *  handler is `ask`'s only consumer and would be busy with the request that triggered the
      *  callback. */

@@ -3,7 +3,7 @@ package testing
 import view.View
 
 /**
- * A [View] test double for exercising [presenter.ConsolePresenterImpl.play] without any
+ * A [View] test double for exercising [viewmodel.ConsoleViewModelImpl.play] without any
  * console I/O. Each call to [processCommand] pops and runs the next scripted
  * action from [commands] - typically a lambda that mutates a [FakeBoardModel]
  * (e.g. flips `correct = true`) or throws, to control loop termination and
@@ -13,8 +13,8 @@ import view.View
  * Trimmed to [displayBoard]/[showMessage]/[processCommand]/[play] (GH-42 WU2) - the four
  * prompt methods it used to script (`confirmRestore`/`chooseSaveToRestore`/
  * `confirmSaveBeforeExit`/`promptSaveName`) left the [View] interface once
- * [presenter.BasePresenter] started raising [presenter.UiRequest]s for them instead of calling
- * a `View` directly; [FakePresenterUi] scripts those now.
+ * [viewmodel.BaseViewModel] started raising [viewmodel.UiRequest]s for them instead of calling
+ * a `View` directly; [FakeViewModelUi] scripts those now.
  */
 class FakeView(
     private val commands: MutableList<suspend () -> Unit> = mutableListOf(),

@@ -2,16 +2,16 @@ package testing
 
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
-import presenter.Presenter
-import presenter.UiRequest
+import viewmodel.UiRequest
+import viewmodel.ViewModel
 
 /**
- * A [Presenter] test double that records every call it receives. Used by both `ViewImpl` and
- * `TuiView` tests to verify command/click dispatch without depending on real presenter/board
- * logic - collapses GH-23's `RecordingPresenter`/`FakeConsolePresenter`/`FakeTuiPresenter` split
+ * A [ViewModel] test double that records every call it receives. Used by both `ViewImpl` and
+ * `TuiView` tests to verify command/click dispatch without depending on real viewModel/board
+ * logic - collapses GH-23's `RecordingViewModel`/`FakeConsoleViewModel`/`FakeTuiViewModel` split
  * once the interfaces it mirrored collapsed the same way (GH-42 WU3).
  */
-class FakePresenter : Presenter {
+class FakeViewModel : ViewModel {
 
     /** Never written to - this fake records calls instead of calling back into a View, so
      *  nothing ever raises a [UiRequest] here (GH-42 WU2). */
@@ -55,7 +55,7 @@ class FakePresenter : Presenter {
     }
 
     /** Always reports success - tests exercising a failed save use [testing.FakeSaveRepository]
-     *  directly against a real [presenter.PresenterImpl], not this fake. */
+     *  directly against a real [viewmodel.ViewModelImpl], not this fake. */
     override suspend fun saveGame(name: String): Boolean {
         calls.add("saveGame($name)")
         return true

@@ -4,24 +4,24 @@ import analytics.AnalyticsService
 import analytics.NoopAnalyticsService
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import presenter.ExitRequestedException
-import presenter.ModeSwitcher
-import presenter.NoopModeSwitcher
-import presenter.Presenter
-import presenter.UiRequest
 import view.View
+import viewmodel.ExitRequestedException
+import viewmodel.ModeSwitcher
+import viewmodel.NoopModeSwitcher
+import viewmodel.UiRequest
+import viewmodel.ViewModel
 
 /**
  * The mouse-driven `view.View` implementation for GH-3: owns its own event loop instead of
- * going through [view.ViewImpl.play]'s console-only `while (!presenter.isSolved())` loop
+ * going through [view.ViewImpl.play]'s console-only `while (!viewModel.isSolved())` loop
  * (see the ticket's solved-state note - this is what lets a Congratulations screen exist at
- * all). Every mouse gesture resolves to an existing [Presenter] call. WU4 adds the Save/Load/
+ * all). Every mouse gesture resolves to an existing [ViewModel] call. WU4 adds the Save/Load/
  * Exit dialogs and the startup restore prompt: [confirmSaveBeforeExit]/[promptSaveName]/
  * [confirmRestore]/[chooseSaveToRestore] each run their own blocking modal loop over
  * [terminal], the same way [view.ViewImpl]'s console prompts block on `readLine()`. Confirmed
  * product decision: once solved, the arrows go dead ([ScreenState.arrowsEnabled] false) - see
  * [ScreenState]'s KDoc. WU5 adds the Congratulations screen itself: since every repaint asks
- * [Presenter.isSolved] fresh rather than tracking a phase flag, the toolbar stays fully live
+ * [ViewModel.isSolved] fresh rather than tracking a phase flag, the toolbar stays fully live
  * and a load from the Congratulations screen that restores an unsolved board flips the title and
  * arrows straight back - see [wasSolved] for the one bit of state analytics needs that the
  * rendering doesn't.
@@ -33,10 +33,10 @@ class TuiView internal constructor(
 ) : View {
 
     /** Must be assigned before [play] is called - use [create]. */
-    lateinit var presenter: Presenter
+    lateinit var viewModel: ViewModel
         internal set
 
-    /** Wired atomically alongside [presenter] in [create] - defaults to a no-op so every
+    /** Wired atomically alongside [viewModel] in [create] - defaults to a no-op so every
      *  existing construction site keeps compiling unchanged (GH-30). */
     var modeSwitcher: ModeSwitcher = NoopModeSwitcher()
         internal set
@@ -53,7 +53,7 @@ class TuiView internal constructor(
      *  finding on PR #24). Null whenever no dialog is open. */
     private var dialogLayout: DialogLayout? = null
 
-    /** Set by a toolbar Exit click just before calling [presenter.exitGame], consumed once by
+    /** Set by a toolbar Exit click just before calling [viewModel.exitGame], consumed once by
      *  [confirmSaveBeforeExit] - the dialog already collected the answer, so exitGame's
      *  callback doesn't prompt a second time. */
     private var pendingExitAnswer: Boolean? = null
@@ -69,33 +69,33 @@ class TuiView internal constructor(
     private var wasSolved = false
 
     companion object {
-        /** The only public way to obtain a [TuiView] - wires [presenter] atomically, same
+        /** The only public way to obtain a [TuiView] - wires [viewModel] atomically, same
          *  pattern as [view.ViewImpl.create]. */
         fun create(
             terminal: Terminal,
             analytics: AnalyticsService = NoopAnalyticsService(),
             input: TuiInput = MouseInput(),
             modeSwitcherFactory: (View) -> ModeSwitcher = { NoopModeSwitcher() },
-            presenter: Presenter,
+            viewModel: ViewModel,
         ): TuiView {
             val view = TuiView(terminal, analytics, input)
             view.modeSwitcher = modeSwitcherFactory(view)
-            view.presenter = presenter
+            view.viewModel = viewModel
             return view
         }
     }
 
-    /** Drains [presenter]'s [presenter.Presenter.uiRequests] alongside the board's own event
+    /** Drains [viewModel]'s [viewmodel.ViewModel.uiRequests] alongside the board's own event
      *  loop (GH-42 WU2) - what lets `saveGame`/`loadGame`/`exitGame`/`restoreOnStartup` suspend
-     *  on [presenter.PresenterImpl.ask] instead of calling back into this view directly. */
+     *  on [viewmodel.ViewModelImpl.ask] instead of calling back into this view directly. */
     override suspend fun play() = coroutineScope {
-        val ui = launch { for (request in presenter.uiRequests) handle(request) }
+        val ui = launch { for (request in viewModel.uiRequests) handle(request) }
         try {
             terminal.enterRawMode()
             // GH-18's input-strategy seam (WU3): mouse reporting is MouseInput's own business
             // now, never turned on by a keyboard-only mode.
             input.prepare(terminal)
-            presenter.restoreOnStartup()
+            viewModel.restoreOnStartup()
             repaint()
             while (true) {
                 // layout is always non-null here - the repaint() call just above (or the one at
@@ -136,10 +136,10 @@ class TuiView internal constructor(
 
     private suspend fun handleTarget(target: HitTarget) {
         when (target) {
-            is HitTarget.ShiftLeft -> shift { presenter.shiftLeft(target.row) }
-            is HitTarget.ShiftRight -> shift { presenter.shiftRight(target.row) }
-            is HitTarget.ShiftUp -> shift { presenter.shiftUp(target.col) }
-            is HitTarget.ShiftDown -> shift { presenter.shiftDown(target.col) }
+            is HitTarget.ShiftLeft -> shift { viewModel.shiftLeft(target.row) }
+            is HitTarget.ShiftRight -> shift { viewModel.shiftRight(target.row) }
+            is HitTarget.ShiftUp -> shift { viewModel.shiftUp(target.col) }
+            is HitTarget.ShiftDown -> shift { viewModel.shiftDown(target.col) }
             HitTarget.ToolbarSave -> handleToolbarSave()
             HitTarget.ToolbarLoad -> handleToolbarLoad()
             HitTarget.ToolbarExit -> handleToolbarExit()
@@ -151,7 +151,7 @@ class TuiView internal constructor(
     /** Runs a shift and, only here, checks for the transition into solved -
      *  `screen_congratulations` tracks a board solved *by playing*, not one that arrives
      *  already solved via a toolbar/startup Load (audit finding on PR #25: gating on
-     *  [presenter.Presenter.isSolved] at repaint time alone fired the event on every restore of
+     *  [viewmodel.ViewModel.isSolved] at repaint time alone fired the event on every restore of
      *  a pre-solved save).
      *
      *  Today, [wasSolved] is guaranteed `false` on every call here - [shift] is only reachable
@@ -165,7 +165,7 @@ class TuiView internal constructor(
      *  cost real correctness the day that assumption breaks. */
     private fun shift(action: () -> Unit) {
         action()
-        if (presenter.isSolved() && !wasSolved) analytics.track("screen_congratulations")
+        if (viewModel.isSolved() && !wasSolved) analytics.track("screen_congratulations")
     }
 
     private suspend fun handleToolbarSave() {
@@ -175,12 +175,12 @@ class TuiView internal constructor(
                 // console mode's save/load parsing splits on it (view.ViewImpl.nameArg) - a
                 // name saved with a space could never be `load`ed back from the console.
                 // Toolbar Save bypassed that check entirely, since it calls saveGame directly
-                // rather than going through PresenterImpl's exit-flow validation (audit round 5
+                // rather than going through ViewModelImpl's exit-flow validation (audit round 5
                 // on PR #24).
                 if (outcome.name.any { it.isWhitespace() }) {
                     showMessage("'${outcome.name}' isn't a usable save name (no spaces) - not saved.")
                 } else {
-                    presenter.saveGame(outcome.name)
+                    viewModel.saveGame(outcome.name)
                 }
             }
             SaveOutcome.Cancel -> {}
@@ -189,7 +189,7 @@ class TuiView internal constructor(
 
     private suspend fun handleToolbarLoad() {
         when (val outcome = runLoadDialog("Load game", "toolbar")) {
-            is LoadOutcome.Confirm -> presenter.loadGame(outcome.name)
+            is LoadOutcome.Confirm -> viewModel.loadGame(outcome.name)
             LoadOutcome.Cancel -> {}
         }
     }
@@ -207,8 +207,8 @@ class TuiView internal constructor(
             when (val action = input.onDialogEvent(terminal.readEvent(), dialog, checkNotNull(dialogLayout))) {
                 InputAction.Cancel -> return trackDialogCancelled("exit")
                 is InputAction.Activate -> when (action.target) {
-                    HitTarget.DialogButton("yes") -> { pendingExitAnswer = true; presenter.exitGame(); return }
-                    HitTarget.DialogButton("no") -> { pendingExitAnswer = false; presenter.exitGame(); return }
+                    HitTarget.DialogButton("yes") -> { pendingExitAnswer = true; viewModel.exitGame(); return }
+                    HitTarget.DialogButton("no") -> { pendingExitAnswer = false; viewModel.exitGame(); return }
                     HitTarget.DialogButton("cancel") -> return trackDialogCancelled("exit")
                     else -> {}
                 }
@@ -249,7 +249,7 @@ class TuiView internal constructor(
                 InputAction.EraseChar -> typed = typed.dropLast(1)
                 // An empty name is "skip saving" (matches the invalid-name re-prompt's own
                 // "press Enter to skip saving" instruction) rather than a Confirm(""), which
-                // would re-prompt forever - PresenterImpl.promptForValidSaveName only stops on
+                // would re-prompt forever - ViewModelImpl.promptForValidSaveName only stops on
                 // null. Applies to both Submit and the Save button - round 1 only fixed Enter
                 // (audit round 2 on PR #24).
                 InputAction.Submit -> return if (typed.isEmpty()) SaveOutcome.Cancel else SaveOutcome.Confirm(typed)
@@ -266,7 +266,7 @@ class TuiView internal constructor(
     }
 
     private fun overwriteWarning(name: String): String? =
-        if (name.isNotEmpty() && presenter.saveExists(name)) "'$name' already exists - it will be overwritten." else null
+        if (name.isNotEmpty() && viewModel.saveExists(name)) "'$name' already exists - it will be overwritten." else null
 
     private sealed class LoadOutcome {
         data class Confirm(val name: String) : LoadOutcome()
@@ -276,11 +276,11 @@ class TuiView internal constructor(
     /** Runs a Load-shaped dialog's own blocking loop: click a list row to select, Load/Cancel
      *  via click. Shared by the toolbar's Load and the startup restore prompt (same shape for
      *  any save count, per the plan). [preloadedSaves], when given, is shown as-is instead of
-     *  a fresh [Presenter.listSaves] call - [confirmRestore]/[chooseSaveToRestore] already
-     *  receive the save list [presenter.PresenterImpl.restoreOnStartup] queried, and re-querying
+     *  a fresh [ViewModel.listSaves] call - [confirmRestore]/[chooseSaveToRestore] already
+     *  receive the save list [viewmodel.ViewModelImpl.restoreOnStartup] queried, and re-querying
      *  instead risked disagreeing with it (audit finding on PR #24). */
     private fun runLoadDialog(title: String, openedFrom: String, preloadedSaves: List<String>? = null): LoadOutcome {
-        val saves = preloadedSaves ?: presenter.listSaves()
+        val saves = preloadedSaves ?: viewModel.listSaves()
         analytics.track("screen_load_dialog", mapOf("opened_from" to openedFrom, "save_file_count" to saves.size))
         input.onDialogOpened()
         var selected = if (saves.isNotEmpty()) 0 else -1
@@ -322,7 +322,7 @@ class TuiView internal constructor(
         val message = if (dialog == null) pendingMessage.also { pendingMessage = null } else null
         // Only syncs wasSolved here - the actual screen_congratulations firing decision lives
         // in shift() so a Load doesn't count as the transition (see its KDoc).
-        val solved = presenter.isSolved()
+        val solved = viewModel.isSolved()
         wasSolved = solved
         // Both the state and dialog run through the active input's decoration (cursor, focus
         // highlight, toolbar shortcut labels) before layout is built from them - draw and
@@ -332,7 +332,7 @@ class TuiView internal constructor(
         val decoratedDialog = dialog?.let { input.decorateDialog(it) }
         val state = input.decorateBoard(
             ScreenState
-                .forBoard(presenter.boardState().toList(), presenter.squareSide(), solved)
+                .forBoard(viewModel.boardState().toList(), viewModel.squareSide(), solved)
                 .copy(dialog = decoratedDialog, message = message),
         )
         layout = BoardLayout(terminalSize, state.squareSide, state.arrowsEnabled, state.toolbarShortcuts, state.modeButtons)

@@ -8,7 +8,7 @@ import kotlin.test.assertNull
  * Covers GH-18's keyboard dialog focus ring: the order of a [Dialog]'s focusable controls (text
  * field, then list rows, then buttons - each only if the dialog actually has one), and
  * [DialogFocus.next]/[DialogFocus.previous] wrapping around that ring. Pure geometry, no
- * terminal or presenter involved.
+ * terminal or viewModel involved.
  */
 class DialogFocusTest {
 

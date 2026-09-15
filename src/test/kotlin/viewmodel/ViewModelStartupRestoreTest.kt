@@ -1,9 +1,9 @@
-package presenter
+package viewmodel
 
 import storage.SaveFileFormatException
 import storage.SavedBoard
 import testing.FakeBoardModel
-import testing.FakePresenterUi
+import testing.FakeViewModelUi
 import testing.FakeSaveRepository
 import testing.RecordingAnalyticsService
 import testing.RecordingAnalyticsService.Event
@@ -12,16 +12,16 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * Covers [PresenterImpl.restoreOnStartup]'s branch matrix (0/1/2+ save files), driven directly -
+ * Covers [ViewModelImpl.restoreOnStartup]'s branch matrix (0/1/2+ save files), driven directly -
  * `restoreOnStartup` is public since GH-3 so each View can run it ahead of its own event loop
  * ([view.tui.TuiView], and [view.ViewImpl.play] since GH-42 WU3). See the plan comment on GH-6
  * for the full branch matrix.
  *
- * Driven via [FakePresenterUi.drive] (GH-42 WU2) - `restoreOnStartup` suspends on
- * [PresenterImpl.ask], so something must drain [Presenter.uiRequests] concurrently, or the `ask`
+ * Driven via [FakeViewModelUi.drive] (GH-42 WU2) - `restoreOnStartup` suspends on
+ * [ViewModelImpl.ask], so something must drain [ViewModel.uiRequests] concurrently, or the `ask`
  * call hangs forever.
  */
-class PresenterStartupRestoreTest {
+class ViewModelStartupRestoreTest {
 
     private val fourByFour = IntArray(16) { it }
 
@@ -30,10 +30,10 @@ class PresenterStartupRestoreTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
-        val presenter = PresenterImpl(board, saves, analytics)
-        val ui = FakePresenterUi()
+        val viewModel = ViewModelImpl(board, saves, analytics)
+        val ui = FakeViewModelUi()
 
-        ui.drive(presenter) { presenter.restoreOnStartup() }
+        ui.drive(viewModel) { viewModel.restoreOnStartup() }
 
         assertEquals(emptyList(), ui.confirmRestoreCalls)
         assertEquals(emptyList(), ui.chooseSaveToRestoreCalls)
@@ -47,10 +47,10 @@ class PresenterStartupRestoreTest {
         val savedState = intArrayOf(3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12)
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, savedState)))
         val analytics = RecordingAnalyticsService()
-        val presenter = PresenterImpl(board, saves, analytics)
-        val ui = FakePresenterUi(confirmRestoreResponses = mutableListOf(true))
+        val viewModel = ViewModelImpl(board, saves, analytics)
+        val ui = FakeViewModelUi(confirmRestoreResponses = mutableListOf(true))
 
-        ui.drive(presenter) { presenter.restoreOnStartup() }
+        ui.drive(viewModel) { viewModel.restoreOnStartup() }
 
         assertEquals(listOf("foo"), ui.confirmRestoreCalls)
         assertEquals(listOf("restoreState(${savedState.toList()})"), board.calls)
@@ -69,10 +69,10 @@ class PresenterStartupRestoreTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, fourByFour)))
         val analytics = RecordingAnalyticsService()
-        val presenter = PresenterImpl(board, saves, analytics)
-        val ui = FakePresenterUi(confirmRestoreResponses = mutableListOf(false))
+        val viewModel = ViewModelImpl(board, saves, analytics)
+        val ui = FakeViewModelUi(confirmRestoreResponses = mutableListOf(false))
 
-        ui.drive(presenter) { presenter.restoreOnStartup() }
+        ui.drive(viewModel) { viewModel.restoreOnStartup() }
 
         assertEquals(emptyList(), board.calls)
         assertEquals(
@@ -95,10 +95,10 @@ class PresenterStartupRestoreTest {
             ),
         )
         val analytics = RecordingAnalyticsService()
-        val presenter = PresenterImpl(board, saves, analytics)
-        val ui = FakePresenterUi(chooseSaveToRestoreResponses = mutableListOf("bar"))
+        val viewModel = ViewModelImpl(board, saves, analytics)
+        val ui = FakeViewModelUi(chooseSaveToRestoreResponses = mutableListOf("bar"))
 
-        ui.drive(presenter) { presenter.restoreOnStartup() }
+        ui.drive(viewModel) { viewModel.restoreOnStartup() }
 
         assertEquals(listOf(listOf("bar", "foo")), ui.chooseSaveToRestoreCalls)
         assertEquals(listOf("restoreState(${barState.toList()})"), board.calls)
@@ -122,10 +122,10 @@ class PresenterStartupRestoreTest {
             ),
         )
         val analytics = RecordingAnalyticsService()
-        val presenter = PresenterImpl(board, saves, analytics)
-        val ui = FakePresenterUi(chooseSaveToRestoreResponses = mutableListOf(null))
+        val viewModel = ViewModelImpl(board, saves, analytics)
+        val ui = FakeViewModelUi(chooseSaveToRestoreResponses = mutableListOf(null))
 
-        ui.drive(presenter) { presenter.restoreOnStartup() }
+        ui.drive(viewModel) { viewModel.restoreOnStartup() }
 
         assertEquals(emptyList(), board.calls)
         assertEquals(
@@ -148,10 +148,10 @@ class PresenterStartupRestoreTest {
             ),
         )
         val analytics = RecordingAnalyticsService()
-        val presenter = PresenterImpl(board, saves, analytics)
-        val ui = FakePresenterUi(chooseSaveToRestoreResponses = mutableListOf("nope", "bar"))
+        val viewModel = ViewModelImpl(board, saves, analytics)
+        val ui = FakeViewModelUi(chooseSaveToRestoreResponses = mutableListOf("nope", "bar"))
 
-        ui.drive(presenter) { presenter.restoreOnStartup() }
+        ui.drive(viewModel) { viewModel.restoreOnStartup() }
 
         assertEquals(2, ui.chooseSaveToRestoreCalls.size)
         assertEquals(listOf("restoreState(${barState.toList()})"), board.calls)
@@ -164,20 +164,20 @@ class PresenterStartupRestoreTest {
 
     @Test
     fun `EOF at the startup prompt starts a new game, same as a decline - real EOF translation is covered in ViewImplCommandTest`(): Unit = runBlocking {
-        // PresenterImpl only ever sees the sentinel confirmRestore/chooseSaveToRestore response
+        // ViewModelImpl only ever sees the sentinel confirmRestore/chooseSaveToRestore response
         // for EOF (false/null) - identical to a clean decline/blank answer, since the actual
         // EOF-vs-decline distinction is made inside ViewImpl (see `confirmRestore returns false
         // on EOF instead of throwing` and its chooseSaveToRestore counterpart in
-        // ViewImplCommandTest). This test only confirms the presenter doesn't hang or throw when
+        // ViewImplCommandTest). This test only confirms the viewModel doesn't hang or throw when
         // that sentinel comes back - it can't, by construction, tell EOF apart from a decline at
         // this layer.
         val board = FakeBoardModel()
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, fourByFour)))
         val analytics = RecordingAnalyticsService()
-        val presenter = PresenterImpl(board, saves, analytics)
-        val ui = FakePresenterUi(confirmRestoreResponses = mutableListOf(false))
+        val viewModel = ViewModelImpl(board, saves, analytics)
+        val ui = FakeViewModelUi(confirmRestoreResponses = mutableListOf(false))
 
-        ui.drive(presenter) { presenter.restoreOnStartup() }
+        ui.drive(viewModel) { viewModel.restoreOnStartup() }
 
         assertEquals(emptyList(), board.calls)
         assertEquals(
@@ -194,10 +194,10 @@ class PresenterStartupRestoreTest {
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, fourByFour)))
         saves.loadException = SaveFileFormatException("foo", "corrupted save file")
         val analytics = RecordingAnalyticsService()
-        val presenter = PresenterImpl(board, saves, analytics)
-        val ui = FakePresenterUi(confirmRestoreResponses = mutableListOf(true))
+        val viewModel = ViewModelImpl(board, saves, analytics)
+        val ui = FakeViewModelUi(confirmRestoreResponses = mutableListOf(true))
 
-        ui.drive(presenter) { presenter.restoreOnStartup() }
+        ui.drive(viewModel) { viewModel.restoreOnStartup() }
 
         assertEquals(emptyList(), board.calls)
         assertEquals(
@@ -220,10 +220,10 @@ class PresenterStartupRestoreTest {
             ),
         )
         val analytics = RecordingAnalyticsService()
-        val presenter = PresenterImpl(board, saves, analytics)
-        val ui = FakePresenterUi(chooseSaveToRestoreResponses = mutableListOf("nope", null))
+        val viewModel = ViewModelImpl(board, saves, analytics)
+        val ui = FakeViewModelUi(chooseSaveToRestoreResponses = mutableListOf("nope", null))
 
-        ui.drive(presenter) { presenter.restoreOnStartup() }
+        ui.drive(viewModel) { viewModel.restoreOnStartup() }
 
         assertEquals(
             listOf("No save named 'nope'. Available saves: bar, foo"),
@@ -241,12 +241,12 @@ class PresenterStartupRestoreTest {
         val savedState = intArrayOf(3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12)
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, savedState)))
         val analytics = RecordingAnalyticsService()
-        val presenter = PresenterImpl(board, saves, analytics)
-        val ui = FakePresenterUi(confirmRestoreResponses = mutableListOf(true))
+        val viewModel = ViewModelImpl(board, saves, analytics)
+        val ui = FakeViewModelUi(confirmRestoreResponses = mutableListOf(true))
 
-        ui.drive(presenter) {
-            presenter.restoreOnStartup()
-            presenter.restoreOnStartup()
+        ui.drive(viewModel) {
+            viewModel.restoreOnStartup()
+            viewModel.restoreOnStartup()
         }
 
         assertEquals(listOf("foo"), ui.confirmRestoreCalls)

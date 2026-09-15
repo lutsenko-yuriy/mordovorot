@@ -2,15 +2,15 @@ package view.tui
 
 import analytics.AnalyticsService
 import analytics.InputMethodAnalyticsService
-import presenter.PresenterImpl
+import kotlin.test.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
 import testing.FakeBoardModel
 import testing.FakeSaveRepository
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
-import kotlinx.coroutines.runBlocking
-import kotlin.test.Test
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import viewmodel.ViewModelImpl
 
 /**
  * Covers GH-18's keyboard-driven Save/Load/Exit dialogs and the startup restore prompt, plus
@@ -21,12 +21,12 @@ class TuiViewKeyboardDialogTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
 
-    private fun viewWithRealPresenter(
+    private fun viewWithRealViewModel(
         terminal: FakeTerminal,
         saves: FakeSaveRepository = FakeSaveRepository(),
         board: FakeBoardModel = FakeBoardModel(),
         analytics: AnalyticsService = RecordingAnalyticsService(),
-    ): TuiView = TuiView.create(terminal, analytics, input = KeyboardInput(), presenter = PresenterImpl(board, saves, analytics))
+    ): TuiView = TuiView.create(terminal, analytics, input = KeyboardInput(), viewModel = ViewModelImpl(board, saves, analytics))
 
     @Test
     fun `the exit flow's Save re-prompt after a rejected name starts focus back on the text field`(): Unit = runBlocking {
@@ -50,7 +50,7 @@ class TuiViewKeyboardDialogTest {
             terminalSize = terminalSize,
         )
 
-        TuiView.create(terminal, input = KeyboardInput(), presenter = PresenterImpl(board, saves)).play()
+        TuiView.create(terminal, input = KeyboardInput(), viewModel = ViewModelImpl(board, saves)).play()
 
         assertTrue(saves.saveCalls.any { it.first == "ok" })
     }
@@ -69,7 +69,7 @@ class TuiViewKeyboardDialogTest {
             terminalSize = terminalSize,
         )
 
-        viewWithRealPresenter(terminal, saves, board).play()
+        viewWithRealViewModel(terminal, saves, board).play()
 
         assertTrue(saves.saveCalls.any { it.first == "hi" })
         assertTrue(terminal.frames.last().contains("Saved as 'hi'."))
@@ -85,7 +85,7 @@ class TuiViewKeyboardDialogTest {
             terminalSize = terminalSize,
         )
 
-        viewWithRealPresenter(terminal, saves, analytics = analytics).play()
+        viewWithRealViewModel(terminal, saves, analytics = analytics).play()
 
         assertTrue(saves.saveCalls.isEmpty())
         assertTrue(
@@ -106,7 +106,7 @@ class TuiViewKeyboardDialogTest {
             terminalSize = terminalSize,
         )
 
-        viewWithRealPresenter(terminal, saves).play()
+        viewWithRealViewModel(terminal, saves).play()
 
         assertTrue(saves.saveCalls.isEmpty())
     }
@@ -129,7 +129,7 @@ class TuiViewKeyboardDialogTest {
             terminalSize = terminalSize,
         )
 
-        viewWithRealPresenter(terminal, saves, board).play()
+        viewWithRealViewModel(terminal, saves, board).play()
 
         assertTrue(board.calls.contains("restoreState(${fooBoard.state.toList()})"))
     }
@@ -143,7 +143,7 @@ class TuiViewKeyboardDialogTest {
             terminalSize = terminalSize,
         )
 
-        viewWithRealPresenter(terminal, saves, board).play()
+        viewWithRealViewModel(terminal, saves, board).play()
 
         assertTrue(board.calls.none { it.startsWith("restoreState") })
         assertFalse(terminal.frames.last().contains("Load game"))
@@ -169,7 +169,7 @@ class TuiViewKeyboardDialogTest {
             terminalSize = terminalSize,
         )
 
-        viewWithRealPresenter(terminal, saves, board, analytics).play()
+        viewWithRealViewModel(terminal, saves, board, analytics).play()
 
         assertTrue(saves.saveCalls.any { it.first == "h" })
         assertTrue(analytics.events.any { it.name == "exit_command_used" && it.properties["save_choice"] == "saved" })
@@ -184,7 +184,7 @@ class TuiViewKeyboardDialogTest {
             terminalSize = terminalSize,
         )
 
-        viewWithRealPresenter(terminal, analytics = analytics).play()
+        viewWithRealViewModel(terminal, analytics = analytics).play()
 
         assertFalse(terminal.frames.last().contains("Save before quitting?"))
         assertTrue(terminal.frames.last().contains("Mordovorot"))
@@ -204,7 +204,7 @@ class TuiViewKeyboardDialogTest {
             terminalSize = terminalSize,
         )
 
-        viewWithRealPresenter(terminal, saves, board).play()
+        viewWithRealViewModel(terminal, saves, board).play()
 
         assertTrue(board.calls.contains("restoreState(${saved.state.toList()})"))
     }

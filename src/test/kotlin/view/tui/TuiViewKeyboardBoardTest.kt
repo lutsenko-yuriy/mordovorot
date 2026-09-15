@@ -1,7 +1,7 @@
 package view.tui
 
 import testing.FakeTerminal
-import testing.FakePresenter
+import testing.FakeViewModel
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -17,34 +17,34 @@ class TuiViewKeyboardBoardTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
 
-    private fun view(terminal: FakeTerminal, presenter: FakePresenter): TuiView =
-        TuiView.create(terminal, input = KeyboardInput(), presenter = presenter)
+    private fun view(terminal: FakeTerminal, viewModel: FakeViewModel): TuiView =
+        TuiView.create(terminal, input = KeyboardInput(), viewModel = viewModel)
 
     @Test
     fun `an arrow-key walk around the ring followed by Enter calls the expected shift`(): Unit = runBlocking {
-        val presenter = FakePresenter()
+        val viewModel = FakeViewModel()
         // LEFT[0] (start) -> Down -> LEFT[1], per ArrowRing's movement table.
         val terminal = FakeTerminal(
             events = mutableListOf(TerminalEvent.Arrow(Direction.DOWN), TerminalEvent.Enter),
             terminalSize = terminalSize,
         )
 
-        view(terminal, presenter).play()
+        view(terminal, viewModel).play()
 
-        assertTrue(presenter.calls.contains("shiftLeft(1)"))
+        assertTrue(viewModel.calls.contains("shiftLeft(1)"))
     }
 
     @Test
     fun `Space also activates the highlighted arrow, same as Enter`(): Unit = runBlocking {
-        val presenter = FakePresenter()
+        val viewModel = FakeViewModel()
         val terminal = FakeTerminal(
             events = mutableListOf(TerminalEvent.Arrow(Direction.DOWN), TerminalEvent.KeyPress(' ')),
             terminalSize = terminalSize,
         )
 
-        view(terminal, presenter).play()
+        view(terminal, viewModel).play()
 
-        assertTrue(presenter.calls.contains("shiftLeft(1)"))
+        assertTrue(viewModel.calls.contains("shiftLeft(1)"))
     }
 
     @Test
@@ -52,12 +52,12 @@ class TuiViewKeyboardBoardTest {
         // Any frame, not just the last - EndOfInput closing the dialog triggers one more board
         // repaint before quitting.
         suspend fun framesFor(event: TerminalEvent): List<String> {
-            val presenter = FakePresenter()
+            val viewModel = FakeViewModel()
             val terminal = FakeTerminal(
                 events = mutableListOf(TerminalEvent.Arrow(Direction.DOWN), event),
                 terminalSize = terminalSize,
             )
-            view(terminal, presenter).play()
+            view(terminal, viewModel).play()
             return terminal.frames
         }
 
@@ -68,13 +68,13 @@ class TuiViewKeyboardBoardTest {
 
     @Test
     fun `the board repaints after every cursor move`(): Unit = runBlocking {
-        val presenter = FakePresenter()
+        val viewModel = FakeViewModel()
         val terminal = FakeTerminal(
             events = mutableListOf(TerminalEvent.Arrow(Direction.DOWN), TerminalEvent.Arrow(Direction.RIGHT)),
             terminalSize = terminalSize,
         )
 
-        view(terminal, presenter).play()
+        view(terminal, viewModel).play()
 
         // One initial paint on startup, plus one per move.
         assertEquals(3, terminal.frames.size)
@@ -82,10 +82,10 @@ class TuiViewKeyboardBoardTest {
 
     @Test
     fun `play enters raw mode without enabling mouse reporting, and restores on the way out`(): Unit = runBlocking {
-        val presenter = FakePresenter()
+        val viewModel = FakeViewModel()
         val terminal = FakeTerminal(events = mutableListOf(), terminalSize = terminalSize)
 
-        view(terminal, presenter).play()
+        view(terminal, viewModel).play()
 
         assertTrue(terminal.rawModeEntered)
         assertTrue(terminal.restored)
@@ -94,11 +94,11 @@ class TuiViewKeyboardBoardTest {
 
     @Test
     fun `EndOfInput from the terminal ends the loop cleanly`(): Unit = runBlocking {
-        val presenter = FakePresenter()
+        val viewModel = FakeViewModel()
         val terminal = FakeTerminal(events = mutableListOf(), terminalSize = terminalSize)
 
-        view(terminal, presenter).play()
+        view(terminal, viewModel).play()
 
-        assertTrue(presenter.calls.none { it.startsWith("shift") })
+        assertTrue(viewModel.calls.none { it.startsWith("shift") })
     }
 }

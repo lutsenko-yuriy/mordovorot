@@ -14,7 +14,7 @@ data class ArrowCursor(val edge: Edge, val index: Int)
  * perimeter ring, with [move] stepping an [ArrowCursor] in an arrow-key direction (corners wrap
  * rather than dead-ending) and [toHitTarget] mapping a cursor to the [HitTarget.ShiftLeft]/
  * [HitTarget.ShiftRight]/[HitTarget.ShiftUp]/[HitTarget.ShiftDown] a click on that same arrow
- * would produce. No terminal or presenter involved - see the plan comment on GH-18 for the full
+ * would produce. No terminal or viewModel involved - see the plan comment on GH-18 for the full
  * movement table this implements.
  */
 class ArrowRing(private val squareSide: Int) {
