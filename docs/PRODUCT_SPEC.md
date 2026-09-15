@@ -40,18 +40,23 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
   will not see saves made from another one.
 - **Startup restore prompt:** on launch, before the first move, the app checks for existing
   saves:
-  - No saves — starts a new game immediately, no prompt.
-  - Exactly one save — asks a yes/no question offering to restore it; declining (or EOF) starts
-    a new game.
+  - No saves — skips straight to the board-size prompt below (GH-44) instead of the restore
+    question.
+  - Exactly one save — asks a yes/no question offering to restore it; declining (or EOF) falls
+    through to the board-size prompt.
   - Two or more saves — lists all save names and asks the user to type one to restore, or press
     Enter for a new game. An unrecognized name re-prompts rather than silently starting a new
-    game; EOF is treated the same as pressing Enter.
-  - When saves exist, this prompt consumes stdin lines before the normal command loop starts —
-    at least one (the yes/no answer, or the typed name) and, with two or more saves, one per
-    unrecognized name typed, since each miss re-prompts on the next line rather than giving up.
-    A script feeding commands via a pipe (e.g. `printf "left 1\n" | app`) must account for
-    this, or its lines will be consumed as restore-prompt answers instead of reaching the
-    command loop.
+    game; EOF is treated the same as pressing Enter. Declining falls through to the board-size
+    prompt the same as the one-save case.
+  - This entire prompt - restore included - is skipped outright when `--size=N` was given at
+    launch (GH-44): the flag is the answer, no matter what saves exist.
+  - When it runs, this prompt (and the board-size prompt that can follow it) consumes stdin
+    lines before the normal command loop starts — at least one (the yes/no answer, the typed
+    name, or the size) and, with two or more saves, one per unrecognized name typed, since each
+    miss re-prompts on the next line rather than giving up. A script feeding commands via a pipe
+    (e.g. `printf "left 1\n" | app`) must account for this, or its lines will be consumed as
+    restore/size-prompt answers instead of reaching the command loop - pass `--size=N` to skip
+    both prompts entirely in a scripted/piped launch.
 
 ### Feature 5 — Exit command (GH-12)
 - `exit` or `quit` (case-insensitive, no arguments) ends the current session on demand, the
