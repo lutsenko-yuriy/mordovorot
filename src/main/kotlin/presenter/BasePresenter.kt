@@ -166,7 +166,7 @@ abstract class BasePresenter(
         throw ExitRequestedException()
     }
 
-    /** Re-prompts until [View.promptSaveName] returns a name usable by the `save`/`load`
+    /** Re-prompts until [UiRequest.PromptSaveName] returns a name usable by the `save`/`load`
      *  commands, or `null` on a blank answer or EOF, meaning the user doesn't want to save.
      *  Re-prompting on *any* invalid name (rather than treating it as "don't save" or letting
      *  it fall through to [saveGame]'s failure path) avoids silently discarding an explicit
@@ -196,6 +196,9 @@ abstract class BasePresenter(
     private fun availableSavesMessage(): String {
         // Guarded on its own - a failure here (e.g. an unreadable saves/ directory) shouldn't
         // change the load's actual result (it was still "not found"), just degrade the message.
+        // No CancellationException guard needed here (unlike the suspend methods above) -
+        // saves.listSaves() isn't suspend, so this catch-all can never observe one; revisit if
+        // that ever changes (audit finding on PR #45).
         val available = try {
             saves.listSaves()
         } catch (e: Exception) {
@@ -211,8 +214,11 @@ abstract class BasePresenter(
      * Offers to restore a previous game at startup, before play begins. No-op if there are no
      * saves, or on a repeat call. One save asks a yes/no question; two or more list names and
      * let the user type one (blank/EOF -> new game; an unknown name re-prompts rather than
-     * silently falling back to a new game). Never throws - this runs before either UI's own
-     * try/catch exists, mirroring [loadGame]/[saveGame]'s non-throwing contract. Protected
+     * silently falling back to a new game). Never throws for an ordinary failure (an unreadable
+     * saves dir, a View I/O error) - this runs before either UI's own try/catch exists, mirroring
+     * [loadGame]/[saveGame]'s non-throwing contract for those. [kotlinx.coroutines.CancellationException]
+     * is the one exception to that - GH-42 WU2's guard rethrows it rather than swallowing it as an
+     * ordinary failure, same as [loadGame]/[saveGame]. Protected
      * rather than exposed directly on [Presenter] - [ConsolePresenterImpl.play] calls it as its
      * first step, and [TuiPresenterImpl] re-exposes it publicly as [TuiPresenter.restoreOnStartup]
      * so [view.tui.TuiView] can run it ahead of its own event loop (GH-3).
