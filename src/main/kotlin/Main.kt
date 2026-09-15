@@ -9,9 +9,14 @@ import kotlinx.coroutines.runBlocking
  */
 fun main(args: Array<String>): Unit = runBlocking {
     val analytics = NoopAnalyticsService()
-    val boardSize = resolveBoardSize(args)
+    val parsedSize = resolveBoardSize(args)
+    val boardSize = parsedSize ?: BoardSize.DEFAULT
     val mode = resolveInputMode(args, analytics, boardSize = boardSize)
-    val sizeChosenAtLaunch = args.any { it.startsWith("--size=") }
+    // An invalid --size=N (out of range, non-numeric, blank) degrades to "no flag given" here
+    // too - sizeChosenAtLaunch must track whether the flag was actually usable, not just
+    // present, or a typo'd flag would silently suppress the restore/size prompts on top of
+    // falling back to the default size (audit finding on PR #52).
+    val sizeChosenAtLaunch = parsedSize != null
     GameSession(
         initialMode = mode,
         board = BoardImpl(boardSize),
@@ -22,15 +27,18 @@ fun main(args: Array<String>): Unit = runBlocking {
 
 /** Parses the `--size=N` launch flag (GH-44) - only this `=`-joined form is recognized (a
  *  space-separated `--size 4` falls through as two unrecognized arguments to
- *  [resolveInputMode] instead). A missing flag, a non-numeric value, or one outside
- *  [BoardSize.isValid] all fall back to [BoardSize.DEFAULT] with a warning (except a missing
- *  flag, which is simply the default and warns nothing). Split out from [main] for the same
- *  testability reason as [resolveInputMode]. */
+ *  [resolveInputMode] instead). Returns `null` - not [BoardSize.DEFAULT] - for a missing flag,
+ *  a non-numeric value, or one outside [BoardSize.isValid]: a caller needs to tell "the flag
+ *  wasn't usable" apart from "the flag asked for exactly the default", since
+ *  [main]'s `sizeChosenAtLaunch` (whether the startup restore/size prompts should run at all)
+ *  depends on that distinction, not just on whether `--size=` was present (audit finding on
+ *  PR #52 - a typo'd flag was silently suppressing both prompts while falling back to the
+ *  default size). Split out from [main] for the same testability reason as [resolveInputMode]. */
 fun resolveBoardSize(
     args: Array<String>,
     warnInvalidSize: (String) -> Unit = { System.err.println(it) },
-): Int {
-    val flag = args.firstOrNull { it.startsWith("--size=") } ?: return BoardSize.DEFAULT
+): Int? {
+    val flag = args.firstOrNull { it.startsWith("--size=") } ?: return null
     val value = flag.removePrefix("--size=")
     val size = value.toIntOrNull()
     if (size == null || !BoardSize.isValid(size)) {
@@ -38,7 +46,7 @@ fun resolveBoardSize(
             "'--size=$value' is not a valid board size (must be ${BoardSize.MIN}-${BoardSize.MAX}) - " +
                 "falling back to ${BoardSize.DEFAULT}."
         )
-        return BoardSize.DEFAULT
+        return null
     }
     return size
 }
