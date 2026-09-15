@@ -141,6 +141,27 @@ class ViewImplCommandTest {
     }
 
     @Test
+    fun `size command delegates to viewModel newGame with the given size and trigger=command`(): Unit = runBlocking {
+        // TODO: Feed input "size 3\n" to a ViewImpl wired to a FakeViewModel.
+        // TODO: Call processCommand().
+        // TODO: Verify viewModel.calls records newGame(3, command) - a plain int, not oneBasedIndexArg'd.
+    }
+
+    @Test
+    fun `size command with a missing argument throws without delegating`(): Unit = runBlocking {
+        // TODO: Feed "size\n".
+        // TODO: Assert processCommand() throws IllegalArgumentException.
+        // TODO: Verify no delegation happened.
+    }
+
+    @Test
+    fun `size command with a non-numeric argument throws without delegating`(): Unit = runBlocking {
+        // TODO: Feed "size abc\n".
+        // TODO: Assert processCommand() throws IllegalArgumentException.
+        // TODO: Verify no delegation happened.
+    }
+
+    @Test
     fun `commands are case-insensitive`(): Unit = runBlocking {
         val viewModel = FakeViewModel()
         val (view, _) = viewWith("LEFT 1\n", viewModel)

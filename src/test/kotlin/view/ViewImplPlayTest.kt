@@ -150,6 +150,14 @@ class ViewImplPlayTest {
     }
 
     @Test
+    fun `size command with an out-of-range value shows a rejection message and the game keeps playing at the current size`(): Unit = runBlocking {
+        // TODO: Feed "size 9\nleft 1\n" to a real ViewImpl + ViewModelImpl (GH-44).
+        // TODO: Call play().
+        // TODO: Verify the output contains a rejection message.
+        // TODO: Verify the loop kept going - the subsequent "left 1" was still processed.
+    }
+
+    @Test
     fun `play routes a swallowed exception's message through showMessage, not System-err`(): Unit = runBlocking {
         val viewModel = ViewModelImpl(FakeBoardModel())
         val (view, output) = viewWith("left abc\n", viewModel)

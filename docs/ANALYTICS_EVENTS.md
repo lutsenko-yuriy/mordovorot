@@ -75,6 +75,7 @@ Fired once at startup, after the launch mode is resolved (default mouse TUI, `--
 | Property | Type | Description |
 |---|---|---|
 | `mode` | `string` | `mouse`, `console`, or `keyboard`. |
+| `board_size` | `number` | The resolved board side (3-5) for this launch — from `--size=N` or the default (4). *(GH-44)* |
 
 ### `dialog_cancelled`
 
@@ -95,6 +96,17 @@ Fired when the user requests a switch to a *different* input mode mid-session �
 | `to_mode` | `string` | `console`, `mouse`, or `keyboard` — requested target mode. |
 | `trigger` | `string` | `toolbar`, `shortcut`, or `command`. |
 | `result` | `string` | `success` or `rejected_no_tty` (no interactive terminal available for a mouse/keyboard target). |
+
+### `new_game_size_selected`
+
+Fired when a fresh game starts at a chosen board size via one of the post-launch surfaces (the
+`--size` CLI flag is covered by `app_launched.board_size` instead). *(GH-44)*
+
+| Property | Type | Description |
+|---|---|---|
+| `size` | `number` | The board side chosen (3-5). |
+| `trigger` | `string` | `startup_prompt`, `command` (`size <N>`), or `toolbar` (`[ New ]` → size-picker dialog). |
+| `input_method` | `string` | `console`, `mouse`, or `keyboard` — which UI mode the session was running in. |
 
 <!-- All events above are sent through `analytics.AnalyticsService`, currently backed by
      `analytics.NoopAnalyticsService` (no real SDK wired up yet). -->
@@ -117,3 +129,4 @@ Fired when the user requests a switch to a *different* input mode mid-session �
 | `screen_load_dialog` | Load dialog opens in the mouse-driven TUI (toolbar click, or startup restore when saves exist). Properties `opened_from`: `toolbar` or `startup`; `save_file_count`: number. *(GH-3)* |
 | `screen_exit_dialog` | Exit button clicked in the mouse-driven TUI. *(GH-3)* |
 | `screen_congratulations` | A shift click solves the board while the mouse-driven TUI is active - fires once on that transition. Does **not** fire when an already-solved save is restored (toolbar Load or startup restore); the Congratulations screen still renders, but nothing was solved *by playing* this session. *(GH-3)* |
+| `screen_size_dialog` | TUI size-picker dialog opens. Property `opened_from`: `toolbar` (via `[ New ]`) or `startup` (no `--size` given, restore prompt declined/empty). *(GH-44)* |
