@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.7.6] — 2026-09-15 (PR #52 merged)
+
+### Added
+- [wip] GH-44 (WU2/4): startup size prompt — `ViewModelImpl.restoreOnStartup` raises `UiRequest.ChooseBoardSize` once it's established nothing was restored (no saves, declined, blank/EOF, failed load); console answers with a text prompt, the TUI with a new `Dialog.Kind.SIZE` picker (buttons-only, like `EXIT`). `--size=N` at launch now bypasses the restore prompt entirely too, not just the size prompt - the flag is the answer no matter what saves exist. Still no `size <N>`/`[ New ]` mid-session entry points - those land in WU3.
+
 ## [0.7.5] — 2026-09-15 (PR #51 merged)
 
 ### Added
