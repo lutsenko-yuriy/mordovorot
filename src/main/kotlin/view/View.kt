@@ -1,5 +1,7 @@
 package view
 
+import presenter.UiRequest
+
 /**
  * Created by yurich on 08.12.16.
  */
