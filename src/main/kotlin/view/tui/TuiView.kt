@@ -9,8 +9,10 @@ import view.View
 import viewmodel.ExitRequestedException
 import viewmodel.ModeSwitcher
 import viewmodel.NoopModeSwitcher
+import viewmodel.SaveInfo
 import viewmodel.UiRequest
 import viewmodel.ViewModel
+import viewmodel.display
 
 /**
  * The mouse-driven `view.View` implementation for GH-3: owns its own event loop instead of
@@ -128,8 +130,8 @@ class TuiView internal constructor(
                 showMessage(request.text)
                 request.respond(Unit)
             }
-            is UiRequest.ConfirmRestore -> request.respond(confirmRestore(request.saveName))
-            is UiRequest.ChooseSaveToRestore -> request.respond(chooseSaveToRestore(request.saveNames))
+            is UiRequest.ConfirmRestore -> request.respond(confirmRestore(request.save))
+            is UiRequest.ChooseSaveToRestore -> request.respond(chooseSaveToRestore(request.saves))
             is UiRequest.ConfirmSaveBeforeExit -> request.respond(confirmSaveBeforeExit())
             is UiRequest.PromptSaveName -> request.respond(promptSaveName())
             is UiRequest.ChooseBoardSize -> request.respond(runSizeDialog("startup"))
@@ -288,8 +290,9 @@ class TuiView internal constructor(
      *  any save count, per the plan). [preloadedSaves], when given, is shown as-is instead of
      *  a fresh [ViewModel.listSaves] call - [confirmRestore]/[chooseSaveToRestore] already
      *  receive the save list [viewmodel.ViewModelImpl.restoreOnStartup] queried, and re-querying
-     *  instead risked disagreeing with it (audit finding on PR #24). */
-    private fun runLoadDialog(title: String, openedFrom: String, preloadedSaves: List<String>? = null): LoadOutcome {
+     *  instead risked disagreeing with it (audit finding on PR #24). Each row shows its size
+     *  (GH-44 WU4) via [display]. */
+    private fun runLoadDialog(title: String, openedFrom: String, preloadedSaves: List<SaveInfo>? = null): LoadOutcome {
         val saves = preloadedSaves ?: viewModel.listSaves()
         analytics.track("screen_load_dialog", mapOf("opened_from" to openedFrom, "save_file_count" to saves.size))
         input.onDialogOpened()
@@ -299,7 +302,7 @@ class TuiView internal constructor(
                 kind = Dialog.Kind.LOAD,
                 title = title,
                 message = if (saves.isEmpty()) "No saves found." else null,
-                listItems = saves,
+                listItems = saves.map { it.display() },
                 selectedIndex = selected,
                 buttons = listOf(DialogButtonSpec("load", "Load"), DialogButtonSpec("cancel", "Cancel")),
             )
@@ -308,7 +311,7 @@ class TuiView internal constructor(
                 InputAction.Cancel -> { trackDialogCancelled("load"); return LoadOutcome.Cancel }
                 is InputAction.Activate -> when (val target = action.target) {
                     is HitTarget.DialogListRow -> selected = target.index
-                    HitTarget.DialogButton("load") -> if (selected in saves.indices) return LoadOutcome.Confirm(saves[selected])
+                    HitTarget.DialogButton("load") -> if (selected in saves.indices) return LoadOutcome.Confirm(saves[selected].name)
                     HitTarget.DialogButton("cancel") -> { trackDialogCancelled("load"); return LoadOutcome.Cancel }
                     else -> {}
                 }
@@ -404,11 +407,11 @@ class TuiView internal constructor(
     /** The startup restore prompt for exactly one save - the same Load-shaped modal as any
      *  other save count (per the plan, this is where the console's 1-save yes/no split
      *  disappears in the TUI). */
-    internal suspend fun confirmRestore(saveName: String): Boolean =
-        runLoadDialog("Restore a saved game?", "startup", preloadedSaves = listOf(saveName)) is LoadOutcome.Confirm
+    internal suspend fun confirmRestore(save: SaveInfo): Boolean =
+        runLoadDialog("Restore a saved game?", "startup", preloadedSaves = listOf(save)) is LoadOutcome.Confirm
 
-    internal suspend fun chooseSaveToRestore(saveNames: List<String>): String? =
-        (runLoadDialog("Restore a saved game?", "startup", preloadedSaves = saveNames) as? LoadOutcome.Confirm)?.name
+    internal suspend fun chooseSaveToRestore(saves: List<SaveInfo>): String? =
+        (runLoadDialog("Restore a saved game?", "startup", preloadedSaves = saves) as? LoadOutcome.Confirm)?.name
 
     /** Consumes the answer the Exit dialog's Yes/No click already collected - see
      *  [pendingExitAnswer]. */

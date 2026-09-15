@@ -91,7 +91,7 @@ class ViewImplPlayTest {
 
         withTimeout(3_000) { view.play() }
 
-        assertTrue(output.toString().contains("Restore save 'foo'?"))
+        assertTrue(output.toString().contains("Restore save 'foo (4x4)'?"))
         assertTrue(board.calls.any { it.startsWith("restoreState") })
     }
 

@@ -19,8 +19,9 @@ sealed class UiRequest<R> {
     internal suspend fun awaitResponse(): R = response.await()
 
     class ShowMessage(val text: String) : UiRequest<Unit>()
-    class ConfirmRestore(val saveName: String) : UiRequest<Boolean>()
-    class ChooseSaveToRestore(val saveNames: List<String>) : UiRequest<String?>()
+    /** [save] carries its size (GH-44 WU4) so the View can show it alongside the name. */
+    class ConfirmRestore(val save: SaveInfo) : UiRequest<Boolean>()
+    class ChooseSaveToRestore(val saves: List<SaveInfo>) : UiRequest<String?>()
     class ConfirmSaveBeforeExit : UiRequest<Boolean>()
     class PromptSaveName : UiRequest<String?>()
 

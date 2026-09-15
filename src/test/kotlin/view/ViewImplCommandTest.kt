@@ -15,6 +15,11 @@ import kotlinx.coroutines.runBlocking
 import testing.FakeViewModel
 import testing.RecordingModeSwitcher
 import viewmodel.ModeSwitchRequestedException
+import viewmodel.SaveInfo
+
+/** A save whose size doesn't matter for this test - most of [ViewImplCommandTest]'s
+ *  confirmRestore/chooseSaveToRestore cases only care about the name. */
+private fun saveInfo(name: String) = SaveInfo(name, null)
 
 /** A [Reader] that always fails, simulating a dead stream (e.g. the controlling
  *  terminal disappearing) rather than a clean end-of-stream. */
@@ -286,7 +291,7 @@ class ViewImplCommandTest {
     fun `confirmRestore returns true for y or yes, case-insensitively`(): Unit = runBlocking {
         for (answer in listOf("y", "Y", "yes", "YES", "Yes")) {
             val (view, _) = viewWith("$answer\n")
-            assertEquals(true, view.confirmRestore("foo"), "expected '$answer' to confirm")
+            assertEquals(true, view.confirmRestore(saveInfo("foo")), "expected '$answer' to confirm")
         }
     }
 
@@ -294,7 +299,7 @@ class ViewImplCommandTest {
     fun `confirmRestore returns false for a blank line, a no, or garbage input`(): Unit = runBlocking {
         for (answer in listOf("", "n", "no", "blah")) {
             val (view, _) = viewWith("$answer\n")
-            assertEquals(false, view.confirmRestore("foo"), "expected '$answer' to decline")
+            assertEquals(false, view.confirmRestore(saveInfo("foo")), "expected '$answer' to decline")
         }
     }
 
@@ -302,7 +307,7 @@ class ViewImplCommandTest {
     fun `confirmRestore returns false on EOF instead of throwing`(): Unit = runBlocking {
         val (view, _) = viewWith("")
 
-        assertEquals(false, view.confirmRestore("foo"))
+        assertEquals(false, view.confirmRestore(saveInfo("foo")))
     }
 
     @Test
@@ -310,28 +315,28 @@ class ViewImplCommandTest {
         val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
         view.viewModel = FakeViewModel()
 
-        assertEquals(false, view.confirmRestore("foo"))
+        assertEquals(false, view.confirmRestore(saveInfo("foo")))
     }
 
     @Test
     fun `chooseSaveToRestore returns the raw typed name unvalidated`(): Unit = runBlocking {
         val (view, _) = viewWith("bar\n")
 
-        assertEquals("bar", view.chooseSaveToRestore(listOf("foo", "bar")))
+        assertEquals("bar", view.chooseSaveToRestore(listOf(saveInfo("foo"), saveInfo("bar"))))
     }
 
     @Test
     fun `chooseSaveToRestore returns null on a blank line`(): Unit = runBlocking {
         val (view, _) = viewWith("\n")
 
-        assertEquals(null, view.chooseSaveToRestore(listOf("foo", "bar")))
+        assertEquals(null, view.chooseSaveToRestore(listOf(saveInfo("foo"), saveInfo("bar"))))
     }
 
     @Test
     fun `chooseSaveToRestore returns null on EOF instead of throwing`(): Unit = runBlocking {
         val (view, _) = viewWith("")
 
-        assertEquals(null, view.chooseSaveToRestore(listOf("foo", "bar")))
+        assertEquals(null, view.chooseSaveToRestore(listOf(saveInfo("foo"), saveInfo("bar"))))
     }
 
     @Test
@@ -339,7 +344,34 @@ class ViewImplCommandTest {
         val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
         view.viewModel = FakeViewModel()
 
-        assertEquals(null, view.chooseSaveToRestore(listOf("foo", "bar")))
+        assertEquals(null, view.chooseSaveToRestore(listOf(saveInfo("foo"), saveInfo("bar"))))
+    }
+
+    @Test
+    fun `confirmRestore's prompt shows the save's size, GH-44 WU4`(): Unit = runBlocking {
+        val (view, output) = viewWith("n\n")
+
+        view.confirmRestore(SaveInfo("foo", 5))
+
+        assertTrue(output.toString().contains("Restore save 'foo (5x5)'?"))
+    }
+
+    @Test
+    fun `confirmRestore's prompt shows just the name when the size is unknown, GH-44 WU4`(): Unit = runBlocking {
+        val (view, output) = viewWith("n\n")
+
+        view.confirmRestore(SaveInfo("foo", null))
+
+        assertTrue(output.toString().contains("Restore save 'foo'?"))
+    }
+
+    @Test
+    fun `chooseSaveToRestore's prompt lists each save's size, GH-44 WU4`(): Unit = runBlocking {
+        val (view, output) = viewWith("\n")
+
+        view.chooseSaveToRestore(listOf(SaveInfo("bar", 4), SaveInfo("foo", 5)))
+
+        assertTrue(output.toString().contains("Multiple saves found: bar (4x4), foo (5x5)."))
     }
 
     @Test

@@ -84,4 +84,23 @@ class TuiViewRequestHandlingTest {
         assertTrue(terminal.frames.first().contains("Restore a saved game?"))
         assertEquals(listOf("restoreState(${fooState.toList()})"), board.calls)
     }
+
+    /** GH-44 WU4: the startup restore prompt's list rows show each save's size, sourced from
+     *  the real [ViewModelImpl] (not [testing.FakeViewModel], which never scripts a size). */
+    @Test
+    fun `chooseSaveToRestore's dialog rows show each save's size`(): Unit = runBlocking {
+        val saves = FakeSaveRepository(
+            mutableMapOf(
+                "foo" to SavedBoard(4, IntArray(16) { it }),
+                "bar" to SavedBoard(5, IntArray(25) { it }),
+            ),
+        )
+        val board = FakeBoardModel()
+        val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.Escape), terminalSize = terminalSize)
+
+        TuiView.create(terminal, viewModel = ViewModelImpl(board, saves)).play()
+
+        assertTrue(terminal.frames.first().contains("bar (5x5)"))
+        assertTrue(terminal.frames.first().contains("foo (4x4)"))
+    }
 }

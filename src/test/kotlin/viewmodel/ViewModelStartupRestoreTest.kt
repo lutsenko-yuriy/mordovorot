@@ -226,7 +226,7 @@ class ViewModelStartupRestoreTest {
         ui.drive(viewModel) { viewModel.restoreOnStartup() }
 
         assertEquals(
-            listOf("No save named 'nope'. Available saves: bar, foo"),
+            listOf("No save named 'nope'. Available saves: bar (4x4), foo (4x4)"),
             ui.shownMessages,
         )
     }

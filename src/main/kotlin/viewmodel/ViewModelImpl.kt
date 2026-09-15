@@ -206,13 +206,27 @@ class ViewModelImpl(
         // No CancellationException guard needed here (unlike the suspend methods above) -
         // saves.listSaves() isn't suspend, so this catch-all can never observe one; revisit if
         // that ever changes (audit finding on PR #45).
-        val available = try {
+        val names = try {
             saves.listSaves()
         } catch (e: Exception) {
             return "Could not list available saves."
         }
-        return if (available.isEmpty()) "No saves available." else "Available saves: ${available.joinToString(", ")}"
+        return if (names.isEmpty()) {
+            "No saves available."
+        } else {
+            "Available saves: ${names.joinToString(", ") { SaveInfo(it, sizeOf(it)).display() }}"
+        }
     }
+
+    /** [SaveInfo.squareSide] for [name], `null` when the save can't be read (corrupted or an
+     *  IO error) - a listing degrades to showing the name alone rather than dropping the save
+     *  or failing the whole listing (GH-44 WU4). */
+    private fun sizeOf(name: String): Int? =
+        try {
+            saves.load(name)?.squareSide
+        } catch (e: Exception) {
+            null
+        }
 
     /** Guards [restoreOnStartup] against running twice - including across a mode switch. */
     private var startupRestoreDone = startupRestoreDone
@@ -227,22 +241,22 @@ class ViewModelImpl(
         startupRestoreDone = true
         if (sizeChosenAtLaunch) return
         try {
-            val saveNames = saves.listSaves()
-            val restored = if (saveNames.isEmpty()) {
+            val saveInfos = saves.listSaves().map { SaveInfo(it, sizeOf(it)) }
+            val restored = if (saveInfos.isEmpty()) {
                 false
             } else {
-                analytics.track("startup_restore_prompt_shown", mapOf("save_file_count" to saveNames.size))
+                analytics.track("startup_restore_prompt_shown", mapOf("save_file_count" to saveInfos.size))
 
-                val nameToRestore = if (saveNames.size == 1) {
-                    saveNames[0].takeIf { ask(UiRequest.ConfirmRestore(it)) }
+                val nameToRestore = if (saveInfos.size == 1) {
+                    saveInfos[0].name.takeIf { ask(UiRequest.ConfirmRestore(saveInfos[0])) }
                 } else {
                     var chosen: String? = null
                     while (chosen == null) {
-                        val typed = ask(UiRequest.ChooseSaveToRestore(saveNames)) ?: break
-                        if (typed in saveNames) {
+                        val typed = ask(UiRequest.ChooseSaveToRestore(saveInfos)) ?: break
+                        if (typed in saveInfos.map { it.name }) {
                             chosen = typed
                         } else {
-                            showMessage("No save named '$typed'. Available saves: ${saveNames.joinToString(", ")}")
+                            showMessage("No save named '$typed'. Available saves: ${saveInfos.joinToString(", ") { it.display() }}")
                         }
                     }
                     chosen
@@ -254,7 +268,7 @@ class ViewModelImpl(
                 val didRestore = nameToRestore?.let { loadGame(it, trigger = "startup_prompt") } ?: false
                 analytics.track(
                     "startup_restore_decision",
-                    mapOf("decision" to (if (didRestore) "restored" else "new_game"), "save_file_count" to saveNames.size),
+                    mapOf("decision" to (if (didRestore) "restored" else "new_game"), "save_file_count" to saveInfos.size),
                 )
                 didRestore
             }
@@ -272,9 +286,9 @@ class ViewModelImpl(
         }
     }
 
-    override fun listSaves(): List<String> =
+    override fun listSaves(): List<SaveInfo> =
         try {
-            saves.listSaves()
+            saves.listSaves().map { SaveInfo(it, sizeOf(it)) }
         } catch (e: Exception) {
             emptyList()
         }

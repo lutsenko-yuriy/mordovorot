@@ -12,9 +12,11 @@ import kotlinx.coroutines.launch
 import viewmodel.ExitRequestedException
 import viewmodel.ModeSwitcher
 import viewmodel.NoopModeSwitcher
+import viewmodel.SaveInfo
 import viewmodel.SessionControlException
 import viewmodel.UiRequest
 import viewmodel.ViewModel
+import viewmodel.display
 
 /**
  * Created by yurich on 08.12.16.
@@ -125,15 +127,15 @@ class ViewImpl internal constructor(
     /** No longer a [View] override (GH-42 WU2) - called only from [handle], this view's own
      *  [uiRequests] handler. Stays `internal`, not `private`, so `ViewImplCommandTest` can keep
      *  driving it directly. */
-    internal suspend fun confirmRestore(saveName: String): Boolean {
-        output.print("Restore save '$saveName'? [y/N] ")
+    internal suspend fun confirmRestore(save: SaveInfo): Boolean {
+        output.print("Restore save '${save.display()}'? [y/N] ")
         val line = readLineOrNull() ?: return false
         return line.trim().lowercase() in setOf("y", "yes")
     }
 
-    internal suspend fun chooseSaveToRestore(saveNames: List<String>): String? {
+    internal suspend fun chooseSaveToRestore(saves: List<SaveInfo>): String? {
         output.print(
-            "Multiple saves found: ${saveNames.joinToString(", ")}. " +
+            "Multiple saves found: ${saves.joinToString(", ") { it.display() }}. " +
                 "Type a name to restore, or press Enter to start a new game: "
         )
         val line = readLineOrNull() ?: return null
@@ -234,8 +236,8 @@ class ViewImpl internal constructor(
                 showMessage(request.text)
                 request.respond(Unit)
             }
-            is UiRequest.ConfirmRestore -> request.respond(confirmRestore(request.saveName))
-            is UiRequest.ChooseSaveToRestore -> request.respond(chooseSaveToRestore(request.saveNames))
+            is UiRequest.ConfirmRestore -> request.respond(confirmRestore(request.save))
+            is UiRequest.ChooseSaveToRestore -> request.respond(chooseSaveToRestore(request.saves))
             is UiRequest.ConfirmSaveBeforeExit -> request.respond(confirmSaveBeforeExit())
             is UiRequest.PromptSaveName -> request.respond(promptSaveName())
             is UiRequest.ChooseBoardSize -> request.respond(chooseBoardSize(request.current))

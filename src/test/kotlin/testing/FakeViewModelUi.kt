@@ -55,11 +55,11 @@ class FakeViewModelUi(
                 request.respond(Unit)
             }
             is UiRequest.ConfirmRestore -> {
-                confirmRestoreCalls.add(request.saveName)
+                confirmRestoreCalls.add(request.save.name)
                 request.respond(nextOrThrow(confirmRestoreResponses, "confirmRestore"))
             }
             is UiRequest.ChooseSaveToRestore -> {
-                chooseSaveToRestoreCalls.add(request.saveNames)
+                chooseSaveToRestoreCalls.add(request.saves.map { it.name })
                 request.respond(nextOrThrow(chooseSaveToRestoreResponses, "chooseSaveToRestore"))
             }
             is UiRequest.ConfirmSaveBeforeExit -> {

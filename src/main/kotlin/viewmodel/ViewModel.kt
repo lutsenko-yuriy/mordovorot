@@ -42,10 +42,11 @@ interface ViewModel {
      *  see [viewmodel.ViewModelImpl.exitGame]. */
     suspend fun exitGame()
 
-    /** Save names, sorted; empty when nothing has been saved yet, or on a storage error -
-     *  lets the mouse-driven Load dialog (GH-3) show what's available without exposing
-     *  storage errors to the UI layer. */
-    fun listSaves(): List<String>
+    /** Saves with their board size (GH-44 WU4), sorted by name; empty when nothing has been
+     *  saved yet, or on a storage error - lets the mouse-driven Load dialog (GH-3) show what's
+     *  available without exposing storage errors to the UI layer. A save whose size couldn't be
+     *  read has a `null` [SaveInfo.squareSide] rather than being dropped from the list. */
+    fun listSaves(): List<SaveInfo>
 
     /** Whether a save named [name] already exists. Backs the mouse-driven Save dialog's
      *  overwrite warning (GH-3); degrades to `false` on a storage error, same non-throwing
