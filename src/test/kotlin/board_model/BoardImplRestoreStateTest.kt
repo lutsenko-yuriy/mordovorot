@@ -27,12 +27,23 @@ class BoardImplRestoreStateTest {
     }
 
     @Test
-    fun `restoreState rejects an array of the wrong size`() {
+    fun `restoreState rejects an array whose size isn't a perfect square`() {
         val board = BoardImpl(4)
 
         assertFailsWith<IllegalArgumentException> {
-            board.restoreState(intArrayOf(0, 1, 2, 3))
+            board.restoreState(intArrayOf(0, 1, 2, 3, 4))
         }
+    }
+
+    @Test
+    fun `restoreState resizes the board to match a differently-sized valid arrangement, GH-44 WU5`() {
+        val board = BoardImpl(4)
+        val arrangement = intArrayOf(3, 2, 1, 0, 7, 6, 5, 4, 8)
+
+        board.restoreState(arrangement)
+
+        assertEquals(3, board.squareSide)
+        assertEquals(arrangement.toList(), board.boardArray.toList())
     }
 
     @Test
