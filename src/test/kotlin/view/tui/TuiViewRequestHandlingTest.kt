@@ -2,7 +2,7 @@ package view.tui
 
 import InputMode
 import presenter.ModeSwitchRequestedException
-import presenter.TuiPresenterImpl
+import presenter.PresenterImpl
 import storage.SavedBoard
 import testing.FakeBoardModel
 import testing.FakeSaveRepository
@@ -15,9 +15,9 @@ import kotlin.test.assertTrue
 
 /**
  * Closes a coverage gap an audit found on PR #45 (GH-42 WU2): every `TuiView*Test` that drives
- * `play()` uses either `FakeTuiPresenter` (whose `uiRequests` nothing ever sends to - the
+ * `play()` uses either `FakePresenter` (whose `uiRequests` nothing ever sends to - the
  * handler starts, suspends, and is cancelled without ever reaching [TuiView.handle]) or a real
- * `TuiPresenterImpl` with exactly one save (exercising `handle`'s `ConfirmRestore`/
+ * `PresenterImpl` with exactly one save (exercising `handle`'s `ConfirmRestore`/
  * `ConfirmSaveBeforeExit`/`PromptSaveName` branches via the exit and 1-save-startup flows, but
  * never `ChooseSaveToRestore` - that needs 2+ saves).
  */
@@ -46,7 +46,7 @@ class TuiViewRequestHandlingTest {
             override fun readEvent(): TerminalEvent = TerminalEvent.EndOfInput
             override fun size(): TerminalSize = terminalSize
         }
-        val view = TuiView.create(terminal) { v -> TuiPresenterImpl(v, board, saves) }
+        val view = TuiView.create(terminal, presenter = PresenterImpl(board, saves))
 
         assertFailsWith<ModeSwitchRequestedException> { view.play() }
     }
@@ -79,7 +79,7 @@ class TuiViewRequestHandlingTest {
             terminalSize = terminalSize,
         )
 
-        TuiView.create(terminal) { v -> TuiPresenterImpl(v, board, saves) }.play()
+        TuiView.create(terminal, presenter = PresenterImpl(board, saves)).play()
 
         assertTrue(terminal.frames.first().contains("Restore a saved game?"))
         assertEquals(listOf("restoreState(${fooState.toList()})"), board.calls)

@@ -29,25 +29,27 @@ src/main/kotlin/
 │   ├── AnalyticsService.kt             # Analytics abstraction — track(event, properties)
 │   ├── NoopAnalyticsService.kt         # Default implementation; no SDK wired up yet
 │   └── InputMethodAnalyticsService.kt  # Decorator adding `input_method` to every forwarded
-│                                         # event, without touching BasePresenter's call sites (GH-3)
+│                                         # event, without touching PresenterImpl's call sites (GH-3)
 ├── board_model/
 │   ├── BoardModel.kt    # Board interface (domain contract)
 │   └── BoardImpl.kt     # IntArray-backed board state + shift/reset/isCorrect logic
 ├── presenter/
-│   ├── Presenter.kt          # Shared core interface — shift/reset/save/load/exit (GH-23)
-│   ├── ConsolePresenter.kt   # Console-only interface — adds play() (GH-23)
-│   ├── TuiPresenter.kt       # TUI-only interface — adds the read-only query surface
-│   │                           # (listSaves/saveExists/isSolved/boardState/squareSide) and
-│   │                           # restoreOnStartup (GH-23)
-│   ├── BasePresenter.kt      # Abstract base implementing the shared core; board/saves/analytics
+│   ├── Presenter.kt          # The one presenter interface (GH-42 WU3, collapsing GH-23's
+│   │                           # ConsolePresenter/TuiPresenter split) — shift/reset/save/load/exit
+│   │                           # plus the read-only query surface (listSaves/saveExists/isSolved/
+│   │                           # boardState/squareSide) and restoreOnStartup
+│   ├── PresenterImpl.kt      # The one implementation (GH-42 WU3, collapsing BasePresenter +
+│   │                           # ConsolePresenterImpl + TuiPresenterImpl). board/saves/analytics
 │   │                           # are constructor params (each defaulted to a real impl) so fakes
-│   │                           # can be injected (GH-23). `startupRestoreDone` is also a
-│   │                           # constructor param (default false) so GameSession can seed it
-│   │                           # true on every session after the first, skipping a re-shown
-│   │                           # startup restore prompt after a mode switch (GH-30)
-│   ├── ConsolePresenterImpl.kt # BasePresenter + ConsolePresenter — owns the line-based play() loop
-│   ├── TuiPresenterImpl.kt     # BasePresenter + TuiPresenter — owns the query surface, exposes
-│   │                             # restoreOnStartup() publicly for view.tui.TuiView (GH-23)
+│   │                           # can be injected. `startupRestoreDone` is also a constructor param
+│   │                           # (default false) so GameSession can seed it true on every session
+│   │                           # after the first, skipping a re-shown startup restore prompt after
+│   │                           # a mode switch (GH-30). Holds no `View` reference — see the
+│   │                           # "presenter" section below
+│   ├── UiRequest.kt          # Sealed request/response type for the five presenter→UI
+│   │                           # interactions (ShowMessage/ConfirmRestore/ChooseSaveToRestore/
+│   │                           # ConfirmSaveBeforeExit/PromptSaveName), sent on
+│   │                           # Presenter.uiRequests (GH-42 WU2)
 │   ├── SessionControlException.kt # Sealed marker base for control-flow exceptions that unwind
 │   │                                 # play() intentionally — lets a catch-all rethrow via this
 │   │                                 # one type instead of naming each subtype (GH-30)
@@ -56,7 +58,7 @@ src/main/kotlin/
 │   │                             # an interactive terminal, tracks input_mode_switched, and
 │   │                             # either throws ModeSwitchRequestedException (success) or shows
 │   │                             # a message and returns (rejected), mirroring
-│   │                             # BasePresenter.exitGame's contract (GH-30)
+│   │                             # PresenterImpl.exitGame's contract (GH-30)
 │   └── ModeSwitchRequestedException.kt # Carries the requested InputMode; unwinds a running
 │                                          # session's play() back to GameSession's loop (GH-30)
 ├── storage/
@@ -109,14 +111,14 @@ src/main/kotlin/
         │                      # (GH-18)
         ├── KeyboardInput.kt # TuiInput impl: owns the board ArrowCursor and DialogFocus state
         │                      # for --keyboard mode (GH-18)
-        └── TuiView.kt   # Owns its own event loop (doesn't call ConsolePresenterImpl.play() - see
-                          # the ticket's solved-state note). Save/Load/Exit and the startup
-                          # restore prompt each run their own blocking modal loop over
-                          # Terminal (WU4). State-driven solved screen (WU5): every repaint asks
-                          # TuiPresenter.isSolved() fresh rather than tracking a phase flag, so the
-                          # Congratulations title/dimmed arrows and a load back to an unsolved
-                          # board both fall out of the same repaint path with no extra branching.
-                          # Delegates input handling to an injected TuiInput (default
+        └── TuiView.kt   # Owns its own event loop (doesn't go through ViewImpl.play()'s
+                          # console-only loop - see the ticket's solved-state note). Save/Load/
+                          # Exit and the startup restore prompt each run their own blocking modal
+                          # loop over Terminal (WU4). State-driven solved screen (WU5): every
+                          # repaint asks Presenter.isSolved() fresh rather than tracking a phase
+                          # flag, so the Congratulations title/dimmed arrows and a load back to an
+                          # unsolved board both fall out of the same repaint path with no extra
+                          # branching. Delegates input handling to an injected TuiInput (default
                           # MouseInput()) so mouse and keyboard modes share one event loop (GH-18).
 
 src/test/kotlin/
@@ -128,21 +130,23 @@ src/test/kotlin/
 │                            # rejected_no_tty; same-mode no-op (GH-30)
 ├── analytics/            # NoopAnalyticsService, InputMethodAnalyticsService coverage
 ├── board_model/         # BoardImpl coverage: reset/shuffle, isCorrect, all four shifts, restoreState
-├── presenter/            # One test file per production class (GH-3, split GH-23):
-│                           # BasePresenterDelegationTest / BasePresenterSaveLoadTest /
-│                           # BasePresenterExitTest drive testing.TestPresenter directly, no
-│                           # play() loop; ConsolePresenterPlayTest drives ConsolePresenterImpl.play()
-│                           # (incl. the loop-continuation half of the exit-save-failure case);
-│                           # ConsolePresenterStartupRestoreTest covers the startup-restore branch
-│                           # matrix through play(); TuiPresenterStartupRestoreTest covers the
-│                           # idempotence guard plus one cross-check against the TUI entry point;
-│                           # TuiPresenterQueriesTest covers TuiPresenterImpl's query surface
+├── presenter/            # One test file per PresenterImpl concern (GH-42 WU3, collapsing GH-23's
+│                           # split): PresenterDelegationTest / PresenterSaveLoadTest /
+│                           # PresenterExitTest drive PresenterImpl directly, no play()
+│                           # loop involved; PresenterStartupRestoreTest covers restoreOnStartup's
+│                           # branch matrix plus the idempotence guard; PresenterQueriesTest covers
+│                           # the read-only query surface; PresenterCancellationTest/
+│                           # PresenterOrderingTest pin the request-channel's CancellationException
+│                           # guard and rendezvous ordering (GH-42 WU2)
 ├── storage/               # FileSaveRepository coverage
-├── view/                  # ViewImpl command-parsing coverage; view/tui/ coverage (GH-3, WU2-WU5)
+├── view/                  # ViewImpl command-parsing coverage (incl. ViewImplPlayTest, the
+│                           # console session loop that moved here from ConsolePresenterImpl.play()
+│                           # in GH-42 WU3); view/tui/ coverage (GH-3, WU2-WU5)
 └── testing/              # FakeBoardModel / FakeView / FakeSaveRepository / RecordingAnalyticsService /
-                            # RecordingPresenter + FakeConsolePresenter/FakeTuiPresenter (recording
-                            # doubles, split GH-23) / TestPresenter (minimal concrete BasePresenter) /
-                            # RecordingModeSwitcher (GH-30)
+                            # FakePresenter (recording double, collapsing GH-23's
+                            # RecordingPresenter/FakeConsolePresenter/FakeTuiPresenter split in
+                            # GH-42 WU3) / FakePresenterUi (scripted UiRequest responder, GH-42
+                            # WU2) / RecordingModeSwitcher (GH-30)
 ```
 
 Gradle's standard source-set convention (`src/main/kotlin`, `src/test/kotlin`) is used —
@@ -161,14 +165,8 @@ Core game state and rules: board array, shifting, reset, and the win check
 (`isCorrect`). No dependency on `presenter` or `view`.
 
 ### presenter (GH-42: ViewModel-style, no View reference)
-**Status: target state as of WU3/3 — WU2/3 has landed so far.** The request channel
-described below is real and in use (`UiRequest`, `BasePresenter.ask`, and each `View`'s
-own request-handler coroutine); what's still pending is WU3's interface collapse —
-`Presenter`/`ConsolePresenter`/`TuiPresenter` and their impls still match the GH-23 split
-described in the code today, `BasePresenter` still holds its `View` (used only by
-`ConsolePresenterImpl.play()`'s own `displayBoard`/`processCommand` calls, not moved yet),
-and the paragraph below describing a single `Presenter`/`PresenterImpl` is still where
-WU3 is heading, not the code as it stands - see `docs/knowledge/notes/GH-42.md`.
+**Status: landed (WU3/3 of the GH-42 redesign) — a WU4 rename to `ViewModel`/`ViewModelImpl`
+is still pending, tracked on the ticket.** Everything described below is real and in use.
 
 Mediates between `view`, `board_model`, and `storage`, but never calls into `view`
 directly. `Presenter` is one interface (shift/reset/save/load/exit plus the
@@ -201,7 +199,7 @@ hygiene).
 
 ### view
 Console I/O only: reads commands from stdin, renders the board, and calls
-into the `ConsolePresenter`. Should not manipulate `board_model` directly.
+into `Presenter`. Should not manipulate `board_model` directly.
 
 **1-based console dialect (GH-10):** the console is 1-based (displayed tile
 values, `left`/`right`/`up`/`down` row/column input); `board_model` and
@@ -213,9 +211,9 @@ not `view` — the view translates, it does not validate.
 `BoardImpl.restoreState` and `FileSaveRepository`'s validation errors avoid
 stating an explicit numeric range (e.g. "contain each of N tile values
 exactly once" rather than "permutation of 0..N-1") specifically so they read
-correctly once surfaced through `ConsolePresenterImpl.play`'s `showMessage(e.message
-...)` to the 1-based console — GH-6's `save`/`load` commands are the first
-thing that makes these messages reachable.
+correctly once surfaced through `ViewImpl.play`'s `showMessage(e.message ...)`
+to the 1-based console — GH-6's `save`/`load` commands are the first thing
+that makes these messages reachable.
 
 ### storage
 File persistence for save games. `SaveRepository` is the contract `presenter`
@@ -229,7 +227,7 @@ that needs to track an event), currently backed by `NoopAnalyticsService`.
 `InputMethodAnalyticsService` (GH-3) decorates another `AnalyticsService`,
 adding an `input_method` (`console`/`mouse`/`keyboard`, GH-18) property to
 every forwarded event — the decorator pattern lets `Main` distinguish events
-by launch mode without `BasePresenter` itself knowing which UI mode is
+by launch mode without `PresenterImpl` itself knowing which UI mode is
 running.
 
 ### Launch mode and runtime mode switching (GH-3, GH-18, GH-30)
@@ -274,11 +272,14 @@ subsequent switch fires `input_mode_switched` instead (`docs/ANALYTICS_EVENTS.md
   not a terminal-handling convenience — and it's the multiplatform artifact, so the
   same coordinate resolves per-target once other platforms are added, with no
   declaration change. `kotlinx-coroutines-test` is a test-only addition alongside it,
-  added ahead of WU2 — unused by WU1 itself, which has no request-handler coroutine
-  yet for a test to launch/cancel/deadlock on; WU2's `runTest` will give a
-  timeout-failure instead of a silent hang, the failure mode that WU's request
-  channel actually risks. Run on a single `runBlocking` event loop with no
-  dispatcher — there's no
+  added ahead of WU2 but still unused as of WU3 — every test in the suite runs on
+  plain `runBlocking`, matching the rest of the codebase, rather than mixing in
+  `runTest` ahead of a project-wide decision (see `build.gradle.kts`'s comment on the
+  dependency). `runTest` would give a timeout-failure instead of a silent hang on a
+  deadlocked coroutine test, the failure mode the request channel actually risks —
+  adopting it (or dropping the dependency and relying on Gradle's own test timeout
+  instead) is an open decision, not yet settled. Run on a single `runBlocking` event
+  loop with no dispatcher — there's no
   real concurrency to exploit here (every I/O call is blocking, single-consumer), so
   a thread pool (`Dispatchers.Default`/`IO`) or `Dispatchers.Unconfined` would only
   add nondeterminism to the request/response ordering for no benefit.

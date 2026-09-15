@@ -2,7 +2,7 @@ package view.tui
 
 import analytics.AnalyticsService
 import analytics.InputMethodAnalyticsService
-import presenter.TuiPresenterImpl
+import presenter.PresenterImpl
 import testing.FakeBoardModel
 import testing.FakeSaveRepository
 import testing.FakeTerminal
@@ -26,7 +26,7 @@ class TuiViewKeyboardDialogTest {
         saves: FakeSaveRepository = FakeSaveRepository(),
         board: FakeBoardModel = FakeBoardModel(),
         analytics: AnalyticsService = RecordingAnalyticsService(),
-    ): TuiView = TuiView.create(terminal, analytics, input = KeyboardInput()) { v -> TuiPresenterImpl(v, board, saves, analytics) }
+    ): TuiView = TuiView.create(terminal, analytics, input = KeyboardInput(), presenter = PresenterImpl(board, saves, analytics))
 
     @Test
     fun `the exit flow's Save re-prompt after a rejected name starts focus back on the text field`(): Unit = runBlocking {
@@ -50,7 +50,7 @@ class TuiViewKeyboardDialogTest {
             terminalSize = terminalSize,
         )
 
-        TuiView.create(terminal, input = KeyboardInput()) { v -> TuiPresenterImpl(v, board, saves) }.play()
+        TuiView.create(terminal, input = KeyboardInput(), presenter = PresenterImpl(board, saves)).play()
 
         assertTrue(saves.saveCalls.any { it.first == "ok" })
     }

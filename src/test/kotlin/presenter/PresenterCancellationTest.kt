@@ -3,10 +3,8 @@ package presenter
 import storage.SavedBoard
 import testing.FakeBoardModel
 import testing.FakeSaveRepository
-import testing.FakeView
 import testing.RecordingAnalyticsService
 import testing.RecordingAnalyticsService.Event
-import testing.TestPresenter
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -15,8 +13,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * Hard problem 3 (GH-42 WU2): `saveGame`/`loadGame`/`offerStartupRestore` all suspend inside
- * [BasePresenter.ask], whose `catch (e: Exception)` catch-all would otherwise swallow a
+ * Hard problem 3 (GH-42 WU2): `saveGame`/`loadGame`/`restoreOnStartup` all suspend inside
+ * [PresenterImpl.ask], whose `catch (e: Exception)` catch-all would otherwise swallow a
  * [kotlinx.coroutines.CancellationException] - `CancellationException` *is* a `java.lang.Exception`
  * on the JVM (via `IllegalStateException`). Each method's `catch (e: CancellationException) {
  * throw e }` guard, immediately before its catch-all, is what these tests pin: cancelling the
@@ -38,7 +36,7 @@ class PresenterCancellationTest {
     @Test
     fun `saveGame cancelled while suspended in ask does not also track a spurious result=error`(): Unit = runBlocking {
         val analytics = RecordingAnalyticsService()
-        val presenter = TestPresenter(FakeView(), FakeBoardModel(), FakeSaveRepository(), analytics)
+        val presenter = PresenterImpl(FakeBoardModel(), FakeSaveRepository(), analytics)
 
         val job = launch { presenter.saveGame("foo") }
         yield() // let saveGame reach ask()'s suspension point before cancelling
@@ -54,7 +52,7 @@ class PresenterCancellationTest {
     fun `loadGame cancelled while suspended in ask does not also track a spurious result=error`(): Unit = runBlocking {
         val analytics = RecordingAnalyticsService()
         val saves = FakeSaveRepository(mutableMapOf("missing-on-purpose" to SavedBoard(4, IntArray(16) { it })))
-        val presenter = TestPresenter(FakeView(), FakeBoardModel(), saves, analytics)
+        val presenter = PresenterImpl(FakeBoardModel(), saves, analytics)
 
         val job = launch { presenter.loadGame("not-found") }
         yield()
@@ -70,7 +68,7 @@ class PresenterCancellationTest {
     fun `offerStartupRestore cancelled while suspended in ask does not track a decision`(): Unit = runBlocking {
         val analytics = RecordingAnalyticsService()
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, IntArray(16) { it })))
-        val presenter = TuiPresenterImpl(FakeView(), FakeBoardModel(), saves, analytics)
+        val presenter = PresenterImpl(FakeBoardModel(), saves, analytics)
 
         val job = launch { presenter.restoreOnStartup() }
         yield()

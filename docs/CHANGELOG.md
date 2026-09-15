@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.7.3] — 2026-09-15 (PR #46 merged)
+
+### Changed
+- [wip] GH-42 (WU3/4): collapse `Presenter`/`ConsolePresenter`/`TuiPresenter` into one `Presenter`, and `BasePresenter`/`ConsolePresenterImpl`/`TuiPresenterImpl` into one `PresenterImpl` — it holds no `View` reference at all now. The console session loop (`displayBoard`/`processCommand`/the solved check) moved from the old `ConsolePresenterImpl.play()` into `ViewImpl.play()`, alongside its own `UiRequest`-draining handler coroutine, matching the shape `TuiView.play()` already had. No user-visible behaviour change.
+
 ## [0.7.2] — 2026-09-15 (PR #45 merged)
 
 ### Changed

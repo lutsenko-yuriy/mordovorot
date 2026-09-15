@@ -1,11 +1,14 @@
 package view
 
 import InputMode
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import presenter.ConsolePresenter
+import presenter.ExitRequestedException
 import presenter.ModeSwitcher
 import presenter.NoopModeSwitcher
+import presenter.Presenter
+import presenter.SessionControlException
 import presenter.UiRequest
 import java.io.BufferedReader
 import java.io.IOException
@@ -21,7 +24,7 @@ class ViewImpl internal constructor(
 ) : View {
 
     /** Must be assigned before [play] or [processCommand] are called - use [create]. */
-    lateinit var presenter: ConsolePresenter
+    lateinit var presenter: Presenter
         internal set
 
     /** Backs the `mouse`/`keyboard` commands (GH-30) - defaults to a no-op so existing call
@@ -34,16 +37,18 @@ class ViewImpl internal constructor(
         // and storage stay 0-based. This is the only translation point (GH-10).
         private const val DISPLAY_OFFSET = 1
 
-        /** The only public way to obtain a [ViewImpl] - wires [presenter]/[modeSwitcher] atomically. */
+        /** The only public way to obtain a [ViewImpl] - wires [presenter]/[modeSwitcher] atomically.
+         *  [presenter] no longer needs a `View` to already exist (GH-42 WU3 - it holds no `View`
+         *  reference at all), unlike [modeSwitcherFactory], which still does. */
         fun create(
             input: BufferedReader = BufferedReader(InputStreamReader(System.`in`)),
             output: PrintStream = System.out,
             modeSwitcherFactory: (View) -> ModeSwitcher = { NoopModeSwitcher() },
-            presenterFactory: (View) -> ConsolePresenter,
+            presenter: Presenter,
         ): ViewImpl {
             val view = ViewImpl(input, output)
             view.modeSwitcher = modeSwitcherFactory(view)
-            view.presenter = presenterFactory(view)
+            view.presenter = presenter
             return view
         }
     }
@@ -139,8 +144,8 @@ class ViewImpl internal constructor(
 
     /** null on a clean EOF or a dead stream (IOException) - both mean "no more input". Unlike
      *  [processCommand], the startup-restore and exit-before-quitting prompts treat that as
-     *  "decline"/"blank" rather than throwing - see [presenter.BasePresenter]'s
-     *  offerStartupRestore/exitGame. */
+     *  "decline"/"blank" rather than throwing - see [presenter.PresenterImpl]'s
+     *  restoreOnStartup/exitGame. */
     private fun readLineOrNull(): String? = try {
         input.readLine()
     } catch (e: IOException) {
@@ -164,14 +169,34 @@ class ViewImpl internal constructor(
         if (parts.size != expected) throw IllegalArgumentException("Incorrect input")
     }
 
-    /** Drains [presenter]'s [presenter.Presenter.uiRequests] alongside [presenter.play]'s own
-     *  loop (GH-42 WU2) - the handler coroutine is what lets `saveGame`/`loadGame`/`exitGame`/
-     *  `offerStartupRestore` suspend on [presenter.BasePresenter.ask] instead of calling back
-     *  into this view directly. Cancelled once `play()` returns either way. */
+    /** The console session: offers the startup restore prompt, then loops
+     *  `displayBoard`/`processCommand` until the board is solved (GH-42 WU3 - moved here from
+     *  the old `ConsolePresenterImpl.play()` (GH-23), since a presenter-owned loop that called back into
+     *  a `View` it also raised requests on would deadlock - see hard problem 1 on the plan
+     *  comment on GH-42). Alongside it, drains [presenter]'s [presenter.Presenter.uiRequests]
+     *  (GH-42 WU2) - the handler coroutine is what lets `saveGame`/`loadGame`/`exitGame`/
+     *  `restoreOnStartup` suspend on [presenter.PresenterImpl.ask] instead of calling back into
+     *  this view directly. Cancelled once `play()` returns either way. */
     override suspend fun play() = coroutineScope {
         val ui = launch { for (request in presenter.uiRequests) handle(request) }
         try {
-            presenter.play()
+            presenter.restoreOnStartup()
+            while (!presenter.isSolved()) {
+                try {
+                    displayBoard(presenter.boardState(), presenter.squareSide())
+                    processCommand()
+                } catch (e: EndOfInputException) {
+                    break
+                } catch (e: ExitRequestedException) {
+                    break
+                } catch (e: SessionControlException) {
+                    throw e // e.g. ModeSwitchRequestedException - must reach GameSession, not the catch-all below
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    showMessage(e.message ?: "Error") // not System.err - stays in sync with the board output
+                }
+            }
         } finally {
             ui.cancel()
         }

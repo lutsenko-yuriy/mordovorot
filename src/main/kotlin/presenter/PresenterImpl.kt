@@ -9,18 +9,15 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import storage.FileSaveRepository
 import storage.SaveRepository
-import view.View
 
-/** Owns the domain-mutation flows [ConsolePresenter] and [TuiPresenter] use identically -
- *  shift/reset/save/load/exit and their board/saves/analytics wiring. Console-only concerns
- *  ([ConsolePresenter.play]) and TUI-only concerns (the read-only query surface) live on the
- *  two concrete subclasses, [ConsolePresenterImpl] and [TuiPresenterImpl] (GH-23). [view] is
- *  no longer called from here (GH-42 WU2) - it stays only for [ConsolePresenterImpl.play]'s own
- *  `displayBoard`/`processCommand` loop, not yet moved (WU3). */
-abstract class BasePresenter(
-    protected val view: View,
-    protected val board: BoardModel = BoardImpl(),
-    protected val saves: SaveRepository = FileSaveRepository(),
+/** The one [Presenter] implementation (GH-42 WU3, collapsing GH-23's `BasePresenter` +
+ *  `ConsolePresenterImpl` + `TuiPresenterImpl` split): owns board/saves/analytics wiring and
+ *  every domain-mutation flow - shift/reset/save/load/exit/restoreOnStartup plus the read-only
+ *  query surface. Holds no `View` reference; talks to whichever View is driving it through
+ *  [uiRequests] instead of a constructor-injected dependency. */
+class PresenterImpl(
+    private val board: BoardModel = BoardImpl(),
+    private val saves: SaveRepository = FileSaveRepository(),
     private val analytics: AnalyticsService = NoopAnalyticsService(),
     /** Seeded `true` by `GameSession` after a mode switch, so the prompt doesn't re-show. */
     startupRestoreDone: Boolean = false,
@@ -28,14 +25,14 @@ abstract class BasePresenter(
 
     /** Rendezvous - `ask` doesn't return until the View has actually finished handling the
      *  request, which is what keeps message/prompt ordering identical to the old direct blocking
-     *  calls into [view.View] (GH-42 WU2, see docs/ARCHITECTURE.md's presenter section). */
+     *  calls into `View` (GH-42 WU2, see docs/ARCHITECTURE.md's presenter section). */
     private val requests = Channel<UiRequest<*>>(Channel.RENDEZVOUS)
 
     override val uiRequests: ReceiveChannel<UiRequest<*>> = requests
 
     /** Raises [request] on [uiRequests] and suspends until the View responds. The View must
      *  never call back into a request-raising presenter method (`saveGame`/`loadGame`/`exitGame`/
-     *  `offerStartupRestore`) from inside its own request handler - doing so deadlocks, since the
+     *  `restoreOnStartup`) from inside its own request handler - doing so deadlocks, since the
      *  handler is `ask`'s only consumer and would be busy with the request that triggered the
      *  callback. */
     private suspend fun <R> ask(request: UiRequest<R>): R {
@@ -45,7 +42,7 @@ abstract class BasePresenter(
 
     /** The one place [UiRequest.ShowMessage] is raised - every other message in this class goes
      *  through this, not a bare `ask` call, so a future new message site can't forget it. */
-    protected suspend fun showMessage(text: String) {
+    private suspend fun showMessage(text: String) {
         ask(UiRequest.ShowMessage(text))
     }
 
@@ -90,14 +87,14 @@ abstract class BasePresenter(
     }
 
     /** [trigger] is `"command"` for the mid-game `load` console command, or `"startup_prompt"`
-     *  when called from [offerStartupRestore] - see `load_command_used` in docs/ANALYTICS_EVENTS.md.
-     *  Returns whether the board was actually restored, so [offerStartupRestore] can report an
+     *  when called from [restoreOnStartup] - see `load_command_used` in docs/ANALYTICS_EVENTS.md.
+     *  Returns whether the board was actually restored, so [restoreOnStartup] can report an
      *  accurate `startup_restore_decision` instead of assuming success (audit on PR #14: a
      *  corrupted/mismatched save offered at startup was being recorded as "restored"). */
     private suspend fun loadGame(name: String, trigger: String): Boolean {
         // The whole body is guarded, not just saves.load - availableSavesMessage() (itself
-        // saves.listSaves()) and board.restoreState can also throw, and WU4's startup restore
-        // flow calls this before play()'s try/catch exists, so loadGame must not throw
+        // saves.listSaves()) and board.restoreState can also throw, and the startup restore
+        // flow calls this before any View's own try/catch exists, so loadGame must not throw
         // regardless of which step fails (audit on PR #13).
         try {
             val saved = saves.load(name)
@@ -207,23 +204,10 @@ abstract class BasePresenter(
         return if (available.isEmpty()) "No saves available." else "Available saves: ${available.joinToString(", ")}"
     }
 
-    /** Guards [offerStartupRestore] against running twice - including across a mode switch. */
+    /** Guards [restoreOnStartup] against running twice - including across a mode switch. */
     private var startupRestoreDone = startupRestoreDone
 
-    /**
-     * Offers to restore a previous game at startup, before play begins. No-op if there are no
-     * saves, or on a repeat call. One save asks a yes/no question; two or more list names and
-     * let the user type one (blank/EOF -> new game; an unknown name re-prompts rather than
-     * silently falling back to a new game). Never throws for an ordinary failure (an unreadable
-     * saves dir, a View I/O error) - this runs before either UI's own try/catch exists, mirroring
-     * [loadGame]/[saveGame]'s non-throwing contract for those. [kotlinx.coroutines.CancellationException]
-     * is the one exception to that - GH-42 WU2's guard rethrows it rather than swallowing it as an
-     * ordinary failure, same as [loadGame]/[saveGame]. Protected
-     * rather than exposed directly on [Presenter] - [ConsolePresenterImpl.play] calls it as its
-     * first step, and [TuiPresenterImpl] re-exposes it publicly as [TuiPresenter.restoreOnStartup]
-     * so [view.tui.TuiView] can run it ahead of its own event loop (GH-3).
-     */
-    protected suspend fun offerStartupRestore() {
+    override suspend fun restoreOnStartup() {
         if (startupRestoreDone) return
         startupRestoreDone = true
         try {
@@ -263,4 +247,27 @@ abstract class BasePresenter(
             // starts fresh instead of crashing at boot.
         }
     }
+
+    override fun listSaves(): List<String> =
+        try {
+            saves.listSaves()
+        } catch (e: Exception) {
+            emptyList()
+        }
+
+    override fun saveExists(name: String): Boolean =
+        try {
+            saves.exists(name)
+        } catch (e: Exception) {
+            false
+        }
+
+    override fun isSolved(): Boolean = board.isCorrect()
+
+    // A defensive copy - board.boardArray is the live, mutable backing array; handing it out
+    // directly would let a caller (or a future one) mutate board state without going through
+    // shiftLeft/Right/Up/Down (audit finding on PR #22).
+    override fun boardState(): IntArray = board.boardArray.copyOf()
+
+    override fun squareSide(): Int = board.SQUARE_SIDE
 }

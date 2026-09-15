@@ -4,7 +4,7 @@ import InputMode
 import presenter.ModeSwitchRequestedException
 import presenter.ModeSwitcher
 import testing.FakeTerminal
-import testing.FakeTuiPresenter
+import testing.FakePresenter
 import testing.RecordingModeSwitcher
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
@@ -34,7 +34,7 @@ class TuiViewModeSwitchTest {
         val switcher = RecordingModeSwitcher()
         val button = mouseBoardLayout().toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.KEYBOARD) }
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.MouseClick(button.range.first, button.y)))
-        val view = TuiView.create(terminal, modeSwitcherFactory = { switcher }) { FakeTuiPresenter() }
+        val view = TuiView.create(terminal, modeSwitcherFactory = { switcher }, presenter = FakePresenter())
 
         view.play()
 
@@ -46,7 +46,7 @@ class TuiViewModeSwitchTest {
         val switcher = RecordingModeSwitcher()
         val button = mouseBoardLayout().toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.CONSOLE) }
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.MouseClick(button.range.first, button.y)))
-        val view = TuiView.create(terminal, modeSwitcherFactory = { switcher }) { FakeTuiPresenter() }
+        val view = TuiView.create(terminal, modeSwitcherFactory = { switcher }, presenter = FakePresenter())
 
         view.play()
 
@@ -56,9 +56,9 @@ class TuiViewModeSwitchTest {
     @Test
     fun `pressing F7 in keyboard mode requests a switch to mouse mode with trigger=shortcut, even when solved`(): Unit = runBlocking {
         val switcher = RecordingModeSwitcher()
-        val presenter = FakeTuiPresenter().apply { solved = true }
+        val presenter = FakePresenter().apply { solved = true }
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.FunctionKey(7)))
-        val view = TuiView.create(terminal, input = KeyboardInput(), modeSwitcherFactory = { switcher }) { presenter }
+        val view = TuiView.create(terminal, input = KeyboardInput(), modeSwitcherFactory = { switcher }, presenter = presenter)
 
         view.play()
 
@@ -69,7 +69,7 @@ class TuiViewModeSwitchTest {
     fun `pressing F8 in keyboard mode requests a switch to console mode with trigger=shortcut`(): Unit = runBlocking {
         val switcher = RecordingModeSwitcher()
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.FunctionKey(8)))
-        val view = TuiView.create(terminal, input = KeyboardInput(), modeSwitcherFactory = { switcher }) { FakeTuiPresenter() }
+        val view = TuiView.create(terminal, input = KeyboardInput(), modeSwitcherFactory = { switcher }, presenter = FakePresenter())
 
         view.play()
 
@@ -85,7 +85,7 @@ class TuiViewModeSwitchTest {
             override suspend fun switchTo(target: InputMode, trigger: String) = throw ModeSwitchRequestedException(target)
         }
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.FunctionKey(8)))
-        val view = TuiView.create(terminal, input = KeyboardInput(), modeSwitcherFactory = { throwingSwitcher }) { FakeTuiPresenter() }
+        val view = TuiView.create(terminal, input = KeyboardInput(), modeSwitcherFactory = { throwingSwitcher }, presenter = FakePresenter())
 
         assertFailsWith<ModeSwitchRequestedException> { view.play() }
         assertTrue(terminal.restored)
@@ -120,7 +120,7 @@ class TuiViewModeSwitchTest {
             ),
             terminalSize = terminalSize,
         )
-        val view = TuiView.create(terminal, modeSwitcherFactory = { throwingSwitcher }) { FakeTuiPresenter() }
+        val view = TuiView.create(terminal, modeSwitcherFactory = { throwingSwitcher }, presenter = FakePresenter())
 
         assertFailsWith<ModeSwitchRequestedException> { view.play() }
         assertTrue(terminal.restored)

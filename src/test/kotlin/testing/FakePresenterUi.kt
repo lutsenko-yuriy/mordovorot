@@ -8,7 +8,7 @@ import presenter.UiRequest
 /**
  * Drains a [Presenter]'s [Presenter.uiRequests] and answers from scripted lists - the
  * presenter-test replacement for [FakeView]'s four prompt methods (GH-42 WU2), which moved off
- * [view.View] onto [UiRequest] once [presenter.BasePresenter] started raising requests instead
+ * [view.View] onto [UiRequest] once [presenter.PresenterImpl] started raising requests instead
  * of calling a `View` directly. Keeps the same recording fields and "ran out of scripted
  * responses" `IllegalStateException` bound as the old `FakeView`, so no test can hang on an
  * under-scripted response list.
