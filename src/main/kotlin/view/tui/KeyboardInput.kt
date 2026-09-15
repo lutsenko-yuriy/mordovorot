@@ -1,17 +1,24 @@
 package view.tui
 
-/** Bottom-left controls reminder (GH-18) - F5/F6/Esc stay live even when the arrows/cursor don't. */
-private const val CONTROLS_HINT = "Arrows: move · Enter/Space: shift · F5 Save · F6 Load · Esc Exit"
+import InputMode
+
+/** Bottom-left controls reminder (GH-18/GH-30) - F5/F6/F7/F8/Esc stay live even when the
+ *  arrows/cursor don't. Kept at 78 chars (audit finding on PR #40): the F7/F8 addition pushed
+ *  the old wording to 88, clipping silently past the default/fallback 80-column terminal width
+ *  ([ScreenRenderer.Canvas.put] has no wrap or ellipsis, unlike dialog content). */
+private const val CONTROLS_HINT =
+    "Arrows: move · Enter: shift · F5/F6 Save/Load · F7/F8 Mouse/Console · Esc Exit"
 
 /**
  * GH-18's keyboard-driven [TuiInput] - the only stateful one, owning the board [ArrowCursor] and
  * the dialog's focus index into its [DialogFocus] ring.
  *
  * Board: arrows move the cursor around the perimeter ring; Enter/Space activates the highlighted
- * arrow; F5/F6 open Save/Load and Escape opens Exit, regardless of cursor position, staying live
- * even when solved (arrows/Enter go inert instead, cursor stops rendering). Escape replaces a
- * fourth function key for Exit - board and dialog events are mutually exclusive, so it can't
- * collide with Escape's dialog-level Cancel.
+ * arrow; F5/F6 open Save/Load, F7/F8 (GH-30) request a switch to mouse/console mode, and Escape
+ * opens Exit - all regardless of cursor position, staying live even when solved (arrows/Enter go
+ * inert instead, cursor stops rendering). Escape replaces a fifth function key for Exit - board
+ * and dialog events are mutually exclusive, so it can't collide with Escape's dialog-level
+ * Cancel.
  *
  * Dialog: Tab/Down/Right advance the focus ring, Shift-Tab/Up/Left go back, Enter activates
  * whatever's focused (submit, select a row, or click a button), Escape cancels, typing only ever
@@ -86,6 +93,7 @@ class KeyboardInput : TuiInput {
             cursor = if (arrowsEnabled) cursor else null,
             controlsHint = CONTROLS_HINT,
             toolbarShortcuts = true,
+            modeButtons = listOf(InputMode.MOUSE, InputMode.CONSOLE),
         )
     }
 
@@ -129,7 +137,9 @@ class KeyboardInput : TuiInput {
     private fun functionKeyAction(n: Int): InputAction = when (n) {
         5 -> InputAction.Activate(HitTarget.ToolbarSave)
         6 -> InputAction.Activate(HitTarget.ToolbarLoad)
-        else -> InputAction.None // F7 is decoded upstream but means nothing here anymore
+        7 -> InputAction.Activate(HitTarget.ToolbarMode(InputMode.MOUSE))
+        8 -> InputAction.Activate(HitTarget.ToolbarMode(InputMode.CONSOLE))
+        else -> InputAction.None
     }
 
     private companion object {

@@ -9,6 +9,8 @@ Steps:
 2. Spawn an Agent with:
    - `model`: `"haiku"`
    - `prompt`: full content of the skill file, followed by the arguments below. Pass any arguments after the command as the role/provider hint.
+3. Before sending, confirm the `prompt` argument you're about to pass actually contains
+   the skill file's full text (not a placeholder token) — re-read it back if unsure.
 
 **Arguments:**
 $ARGUMENTS
