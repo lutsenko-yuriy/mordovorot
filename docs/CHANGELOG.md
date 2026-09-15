@@ -13,6 +13,16 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.7.2] — 2026-09-15 (PR #45 merged)
+
+### Changed
+- [wip] GH-42 (WU2/4): `UiRequest`/`ask()` request-response channel — `Presenter` no longer calls `showMessage`/`confirmRestore`/`chooseSaveToRestore`/`confirmSaveBeforeExit`/`promptSaveName` directly on its `View`; it raises a `UiRequest<R>` on a `Channel.RENDEZVOUS` (`Presenter.uiRequests`) and suspends until the View answers. `ViewImpl`/`TuiView` each gain a request-handler coroutine draining that channel alongside their own event loop. `saveGame`/`loadGame`/`exitGame`/`offerStartupRestore` gain a `CancellationException`-before-catch-all guard so a cancelled coroutine isn't misread as a failed save/load. No user-visible behaviour change.
+
+## [0.7.1] — 2026-09-15 (PR #43 merged)
+
+### Changed
+- [wip] GH-42 (WU1/4): coroutines dependency + suspend propagation, no design change — adds `kotlinx-coroutines-core` (the project's first third-party runtime dependency) and `kotlinx-coroutines-test`; `main()` wraps in `runBlocking`; `GameSession.run()`, `View`'s prompt methods, and `Presenter.saveGame()`/`loadGame()`/`exitGame()` become `suspend`, ahead of WU2's request channel. `BasePresenter` still holds its `View` reference at this point. No user-visible behaviour change.
+
 ## [0.7.0] — 2026-09-15 (PR #40 merged)
 
 ### Added
