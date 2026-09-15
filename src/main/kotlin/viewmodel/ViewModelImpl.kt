@@ -56,6 +56,11 @@ class ViewModelImpl(
 
     override fun resetGame() = board.resetGame()
 
+    override fun newGame(size: Int, trigger: String) {
+        board.newGame(size)
+        analytics.track("new_game_size_selected", mapOf("size" to size, "trigger" to trigger))
+    }
+
     override suspend fun saveGame(name: String): Boolean {
         // saves.exists/save can throw (bad name, IOException) - caught here rather than left to
         // play()'s generic handler, so a failed save is still tracked and gets its own message
