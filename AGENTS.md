@@ -14,6 +14,9 @@ Full product specifications: docs/PRODUCT_SPEC.md
 |---|---|
 | docs/PRODUCT_SPEC.md | What the app does — feature requirements |
 | docs/ARCHITECTURE.md | How the code is organised — layers, directory structure, dependencies |
+| docs/TECH_STACK.md | Languages, frameworks, platforms and tooling the project uses |
+| docs/CODE_STYLE.md | Code style rules — base standard per language, formatting, linting, comment hygiene |
+| docs/CONSTRAINTS.md | Standing project constraints — reference when evaluating trade-offs |
 | docs/BACKLOG.md | Known issues and remaining work not yet released |
 | docs/CHANGELOG.md | Released version history |
 | docs/VERSIONING.md | Version numbering rules and CI/CD pipeline |
@@ -28,7 +31,8 @@ Full product specifications: docs/PRODUCT_SPEC.md
 | docs/workflows/POSTMORTEM.md | Post-fix root-cause investigation workflow — reconstructing when/why a shipped bug was introduced, after `TROUBLESHOOT.md` produced the fix |
 | docs/workflows/MULTI_WU.md | Multi-WU ticket appendix to `FEATURE.md` — WU-splitting guidelines, pre-implementation WU types, branch/PR-per-WU rules, WU cycle |
 | CLAUDE.local.md | Local machine settings (binary paths, MCP auth, model tier mappings) — not committed |
-| skills/configure/calibrate/SKILL.md | One-time setup: propose and approve the model → tier mapping |
+| skills/configure/onboard/SKILL.md | First-session onboarding: project config, tech stack, code style and constraints, first model mapping, then the onboarded marker; orientation for later clones |
+| skills/configure/calibrate/SKILL.md | Re-map models to tiers when the available models change (the first mapping happens in `/onboard`) |
 | skills/configure/migrate-provider/SKILL.md | Switch a tool role (pm, vcs) to a different provider without changing skill files |
 | skills/configure/skill-creator/SKILL.md | Two-mode skill: create a new skill (guided wizard) or refactor an existing one into lean SKILL.md + resources |
 | skills/configure/style/SKILL.md | Switch communication style: DETAILED, CONCISE, or SCHEMATIC |
@@ -50,7 +54,7 @@ Full product specifications: docs/PRODUCT_SPEC.md
 
 MVVM (Model-View-ViewModel): board_model + viewmodel + view packages
 
-Details and directory layout: @docs/ARCHITECTURE.md.
+Details and directory layout: @docs/ARCHITECTURE.md. Languages and tooling: docs/TECH_STACK.md.
 
 ## Common Commands
 
@@ -63,6 +67,8 @@ Details and directory layout: @docs/ARCHITECTURE.md.
 ## Code style
 
 Kotlin official style guide
+
+See `docs/CODE_STYLE.md` for the full rules.
 
 ## Versioning
 
