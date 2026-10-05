@@ -1,21 +1,12 @@
 # Project Config
 
 Read this file to resolve all project-specific constants referenced in skill instructions.
-When setting up the project, fill in every `{{placeholder}}`. Skills stay unchanged.
-
-## Source control
-
-| Setting | Value |
-|---|---|
-| Git host | `GitHub` (e.g. GitHub, GitLab, Bitbucket) |
+Project identity (name, issue prefix, git host, PM tool, test/version settings) lives in `skill_router.toml`
+(`[project]`, `[providers]`). Skills stay unchanged.
 
 ## Tech stack
 
-| Layer | Technology |
-|---|---|
-| Framework | Plain Kotlin/JVM, built with Gradle (Kotlin DSL, wrapper pinned to 8.7) |
-| State management | In-memory (`BoardImpl` holds an `IntArray` board state) |
-| Local persistence | None — state lives only for the process lifetime |
+Languages, frameworks, platforms and tooling: `docs/TECH_STACK.md`.
 
 ## Project management
 
