@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.8.1] — 2026-10-05 (PR #56 merged)
+
+### Added
+- [wip] HAB-278 (WU9, Habit Loop ticket): port the `/onboard` skill and onboarding gate from yuriys-agentic-boyz (`scripts/onboard/`, `skills/configure/onboard/`, committed `.claude/settings.json` hooks, empty `[project]` config shape) and delete `setup.sh`. Until `/onboard` runs (WU10) the gate keeps the clone in onboarding mode. `tests.yml` is not ported: the onboard test suite asserts template state (see PR #56).
+
 ## [0.8.0] — 2026-09-16 (PR #55 merged)
 
 ### Added
