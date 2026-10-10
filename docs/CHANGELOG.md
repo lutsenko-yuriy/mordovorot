@@ -13,6 +13,10 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [Unreleased]
+
+- [meta] (PR #57) HAB-278 WU10: ran /onboard — filled skill_router.toml [project]/pm=github, TECH_STACK/CODE_STYLE/CONSTRAINTS/MODEL_TIERS docs, removed unused .mcp.json, synced build.gradle.kts version to 0.8.1.
+
 ## [0.8.1] — 2026-10-05 (PR #56 merged)
 
 ### Added
