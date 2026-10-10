@@ -1,27 +1,25 @@
-<!-- yab:template -->
 # Code Style
-
-<!-- Delete the marker line above once this file is filled in; `onboard.py check` reports it as still a template while it is present. -->
 
 ## Base standard
 
-<!-- Name the published style guide for EACH language in docs/TECH_STACK.md "## Languages", with a link.
-     Example: "Python: PEP 8. Shell: Google Shell Style Guide." Everything below adds to or clarifies it. -->
-
-<language>: <style guide link>
+Kotlin: [Kotlin coding conventions](https://kotlinlang.org/docs/coding-conventions.html)
+Python: [PEP 8](https://peps.python.org/pep-0008/)
+Shell: [Google Shell Style Guide](https://google.github.io/styleguide/shellguide.html)
 
 ## Formatting
 
-<!-- Formatter, line length, and the command to run before committing. State what CI enforces. -->
+No formatter configured; CI enforces none. Use IntelliJ's built-in "Kotlin coding conventions" code style when reformatting, and commit formatting separately with a `style:` prefix.
 
 ## Linting
 
-<!-- Linter and the rules or configuration file that apply. -->
+None configured for any language (no ktlint/detekt, ruff, or shellcheck).
 
 ## Naming and structure
 
-<!-- Project-specific conventions: file naming, module layout, naming of tests. -->
+- Packages follow MVVM layers: `board_model`, `viewmodel`, `view` (+ `view/tui`), plus `storage` and `analytics`
+- Interface + `Impl` pairs (`BoardModel`/`BoardImpl`, `ViewModel`/`ViewModelImpl`, `View`/`ViewImpl`)
+- Tests mirror the main package path, named class + aspect under test (e.g. `BoardImplShiftTest.kt`); shared fakes go in `src/test/kotlin/testing/` (`Fake*`, `Recording*`)
 
 ## Comments
 
-<!-- Rules for code comments, e.g. explain why not what; one concise line. -->
+Explain why, not what. Keep new comments to one concise line, even though some older code uses denser comments.

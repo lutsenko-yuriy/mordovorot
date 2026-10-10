@@ -61,19 +61,19 @@ Details and directory layout: @docs/ARCHITECTURE.md. Languages and tooling: docs
 - **Run tests:** `./gradlew test`
 - **Lint:** none configured
 - **Build:** `./gradlew build`
-- **Run the game:** `./gradlew run`
+- **Run the game:** `./gradlew run` (console mode; the TUI needs the `installDist` launcher, see `docs/TECH_STACK.md`)
 - **Install dependencies:** none to install manually — Gradle resolves everything (`kotlin("test")` on the JUnit 5 platform) on first run
 
 ## Code style
 
-Kotlin official style guide
+Kotlin coding conventions, PEP 8 (Python), Google Shell Style Guide (Shell); no formatter or linter enforced.
 
 See `docs/CODE_STYLE.md` for the full rules.
 
 ## Versioning
 
 Update the version name whenever a new `CHANGELOG.md` entry is added — no separate approval needed.
-CI (`.github/workflows/build.yml`) builds and tests on push/PR but does not bump versions; no version file exists in this repo (see `skills/shared/project-config.md`).
+CI (`.github/workflows/build.yml`) builds and tests on push/PR but does not bump versions; the version lives in `build.gradle.kts` (`version`), see `skills/shared/project-config.md`.
 Details: @docs/VERSIONING.md
 
 ## Session start

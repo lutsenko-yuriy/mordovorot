@@ -61,7 +61,7 @@ Models available to this project (set during `/onboard`):
 
 | Model | Access |
 |---|---|
-| claude-opus-5, claude-sonnet-5, claude-haiku-4-5 | |
+| claude-opus-5-5, claude-sonnet-5-5, claude-haiku-4-5-20251001 | |
 
 The `calibrate` skill reads this list and proposes the mapping below. Re-run `calibrate` whenever the available models change.
 
@@ -69,22 +69,21 @@ The `calibrate` skill reads this list and proposes the mapping below. Re-run `ca
 
 ## Active mapping
 
-_Last updated: 2026-09-10._
+_Last updated: 2026-10-10._
 
 | Effort | Reasoning | Model | Claude Code alias |
 |---|---|---|---|
-| THOROUGH | ARCHITECTURAL | claude-opus-5 | `opus` |
-| THOROUGH | TACTICAL | claude-opus-5 | `opus` |
-| FOCUSED | ARCHITECTURAL | claude-sonnet-5 | `sonnet` |
-| FOCUSED | TACTICAL | claude-sonnet-5 | `sonnet` |
-| RAPID | TACTICAL | claude-haiku-4-5 | `haiku` |
-| RAPID | MECHANICAL | claude-haiku-4-5 | `haiku` |
+| THOROUGH | ARCHITECTURAL | claude-opus-5-5 | `opus` |
+| THOROUGH | TACTICAL | claude-opus-5-5 | `opus` |
+| FOCUSED | ARCHITECTURAL | claude-sonnet-5-5 | `sonnet` |
+| FOCUSED | TACTICAL | claude-sonnet-5-5 | `sonnet` |
+| RAPID | TACTICAL | claude-haiku-4-5-20251001 | `haiku` |
+| RAPID | MECHANICAL | claude-haiku-4-5-20251001 | `haiku` |
 
 ### Notes
 
 - Only three models cover six tier combinations, so the Effort axis is the primary discriminator: Opus → both THOROUGH rows, Sonnet → both FOCUSED rows, Haiku → both RAPID rows.
-- `audit` (THOROUGH + TACTICAL) is the best candidate to demote to Sonnet later, once a test suite exists and absorbs some of the correctness burden.
-- The session's own model is `claude-sonnet-5` (`sonnet`), so FOCUSED-tier skills run in the current session (passthrough); THOROUGH-tier skills spawn up to `opus`; RAPID-tier skills spawn down to `haiku` for speed/cost.
+- The session's own model is `claude-opus-5-5` (`opus`), so THOROUGH-tier skills run in the current session (passthrough); the command stubs are not re-routed yet (onboard skips calibrate step 5a), so every skill currently runs inline on `opus`; run `/calibrate` to route FOCUSED to `sonnet` and RAPID to `haiku`.
 
 ---
 
