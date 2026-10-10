@@ -35,11 +35,12 @@ Saves go to `saves/`, relative to the directory you launch from. See
 ## Testing
 
 ```bash
-./gradlew test                                              # game
-python3 -m unittest discover -s scripts/onboard/tests -t .  # onboarding tooling
+./gradlew test                                                         # game
+python3 -m unittest discover -s scripts/onboard/tests -t .       # onboarding tooling
+python3 -m unittest discover -s scripts/skill_router/tests -t scripts  # skill router
 ```
 
-Run the onboarding tests on Python 3.11+ for full coverage. Under 3.9 the `tomllib` tests are skipped.
+Run the Python tests on Python 3.11+ for full coverage. Under 3.9 the `tomllib` tests are skipped.
 
 ## Architecture
 
