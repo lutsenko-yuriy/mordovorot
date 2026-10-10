@@ -37,8 +37,8 @@ Languages, frameworks, platforms and tooling: `docs/TECH_STACK.md`.
 
 | Setting | Value |
 |---|---|
-| Version file | None yet — no manifest/version file exists; track releases via `docs/CHANGELOG.md` and git tags until one is added |
-| Version field | N/A |
+| Version file | `build.gradle.kts` |
+| Version field | `version` |
 | Manual vs automated | Manual — CI (`.github/workflows/build.yml`) runs `./gradlew build` on push/PR but does not bump versions |
 
 ## In QA path patterns

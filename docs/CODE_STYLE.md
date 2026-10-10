@@ -8,7 +8,7 @@ Shell: [Google Shell Style Guide](https://google.github.io/styleguide/shellguide
 
 ## Formatting
 
-No formatter configured; CI enforces none. Use the IntelliJ Kotlin official style (`kotlin.code.style=official`) when reformatting, and commit formatting separately with a `style:` prefix.
+No formatter configured; CI enforces none. Use IntelliJ's built-in "Kotlin coding conventions" code style when reformatting, and commit formatting separately with a `style:` prefix.
 
 ## Linting
 

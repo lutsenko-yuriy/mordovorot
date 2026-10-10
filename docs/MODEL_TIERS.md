@@ -83,7 +83,7 @@ _Last updated: 2026-10-10._
 ### Notes
 
 - Only three models cover six tier combinations, so the Effort axis is the primary discriminator: Opus → both THOROUGH rows, Sonnet → both FOCUSED rows, Haiku → both RAPID rows.
-- The session's own model is `claude-opus-5-5` (`opus`), so THOROUGH-tier skills run in the current session (passthrough); FOCUSED-tier skills spawn down to `sonnet`; RAPID-tier skills spawn down to `haiku` for speed/cost.
+- The session's own model is `claude-opus-5-5` (`opus`), so THOROUGH-tier skills run in the current session (passthrough); the command stubs are not re-routed yet (onboard skips calibrate step 5a), so every skill currently runs inline on `opus`; run `/calibrate` to route FOCUSED to `sonnet` and RAPID to `haiku`.
 
 ---
 
