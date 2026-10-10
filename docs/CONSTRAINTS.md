@@ -1,21 +1,17 @@
-<!-- yab:template -->
 # Project Constraints
-
-<!-- Delete the marker line above once this file is filled in; `onboard.py check` reports it as still a template while it is present.
-     Standing constraints that agents and reviewers weigh when evaluating trade-offs, especially in research tickets. -->
 
 ## Team & capacity
 
-- <e.g. team size, who reviews, what support capacity exists>
+- Solo developer working with AI agents: agents implement, the developer reviews and approves
 
 ## Stage
 
-- <e.g. pre-launch vs. in production; what to optimise for>
+- Pre-launch hobby prototype; optimise for clean architecture and experimentation, no users to protect
 
 ## Environment
 
-- <e.g. available devices, test environments, access limits>
+- Local macOS terminal for manual play-testing; GitHub Actions ubuntu runner for build and test
 
 ## Budget & compliance
 
-- <e.g. cost ceilings, licensing, privacy or regulatory rules>
+- Free tiers only, no paid services; analytics stay local/no-op and no personal data is collected

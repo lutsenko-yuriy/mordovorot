@@ -1,9 +1,5 @@
 # Architecture
 
-<!-- Describe how the code is organised.
-     The Tech Lead and Developer agents read this file before planning or implementing work.
-     Keep it accurate — update it whenever the structure changes. -->
-
 ## Related docs
 
 - `docs/TECH_STACK.md` — languages, frameworks, tooling
