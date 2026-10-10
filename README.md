@@ -24,6 +24,7 @@ a terminal through to the game.
 
 Flags:
 
+- `--mouse`: the mouse TUI (the default with a terminal).
 - `--console`: force console mode. It also takes over whenever there's no interactive terminal.
 - `--size=N`: start at board side `N` (3-5). This skips the startup restore/size prompts,
   which is useful for piped input.
@@ -37,6 +38,8 @@ Saves go to `saves/`, relative to the directory you launch from. See
 ./gradlew test                                              # game
 python3 -m unittest discover -s scripts/onboard/tests -t .  # onboarding tooling
 ```
+
+Run the onboarding tests on Python 3.11+ for full coverage. Under 3.9 the `tomllib` tests are skipped.
 
 ## Architecture
 
@@ -57,8 +60,9 @@ multi-skill workflow. `AGENTS.md`, included via `CLAUDE.md`, is the
 orchestrator. It points to the skills under `skills/` and to the project facts in `docs/`.
 Issues and backlog live in [GitHub Issues](https://github.com/lutsenko-yuriy/mordovorot/issues).
 
-**Requires:** `git`, `python3` 3.11+, and an authenticated `gh` (`gh auth login`).
-Without `python3`, the onboarding gate denies every tool call, and `/onboard` can't fix that.
+**Requires:** `git`, `python3`, a Python 3.11+ interpreter, and an authenticated `gh` (`gh auth login`).
+The gate runs on any `python3`, 3.9 included. Without `python3`, the gate denies every tool call, and `/onboard` can't fix that.
+Onboarding's `check`, `apply` and `mark` need 3.11+ (for example `python3.12`). `/onboard` finds one on its own.
 
 1. Open Claude Code **from the repo root**. Claude Code reads `.claude/settings.json` only
    from the directory it starts in. If you start it from a subdirectory, the gate hooks
@@ -69,5 +73,4 @@ Without `python3`, the onboarding gate denies every tool call, and `/onboard` ca
    committed, so each collaborator runs `/onboard` once.
 3. Start with `/summarize`.
 
-If you re-run the full configuration, commit and push its output before collaborators
-clone. Otherwise each of their `/onboard` runs repeats it.
+If you change the configuration, commit and push it, so collaborators don't work from a stale one.
