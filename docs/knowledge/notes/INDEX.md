@@ -44,3 +44,4 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-12: Exit command](GH-12.md)
 - [GH-23: Split Presenter into console/TUI-specific presenters](GH-23.md)
 - [GH-6: Save and load game state to/from local files](GH-6.md)
+- [GH-62: Move counter](GH-62.md)
