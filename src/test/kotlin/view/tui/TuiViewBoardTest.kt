@@ -128,4 +128,14 @@ class TuiViewBoardTest {
         assertTrue(terminal.mouseReportingEnabled)
         assertTrue(terminal.restored)
     }
+
+    @Test
+    fun `the frame shows the viewModel's move count (GH-62)`(): Unit = runBlocking {
+        val viewModel = FakeViewModel().apply { moves = 4 }
+        val terminal = FakeTerminal(events = mutableListOf(), terminalSize = terminalSize)
+
+        view(terminal, viewModel).play()
+
+        assertTrue(terminal.frames.first().contains("Moves: 4"))
+    }
 }

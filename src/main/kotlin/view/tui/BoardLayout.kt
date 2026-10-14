@@ -13,7 +13,7 @@ internal const val CELL_WIDTH = 4
  * coordinate to a [HitTarget]. No terminal or viewModel involved - [ScreenRenderer] draws to
  * these same coordinates so what's drawn is exactly what's clickable.
  *
- * Layout, top to bottom: title row, a blank row, the up-arrows row, the grid (box-drawing
+ * Layout, top to bottom: title row, the moves row (GH-62), a blank row, the up-arrows row, the grid (box-drawing
  * borders around [squareSide] x [squareSide] cells, with left/right arrows flanking each row),
  * the down-arrows row, a blank row, the toolbar row, and (GH-30) the mode row directly below it
  * for the Keyboard/Console switch buttons - kept on their own row, not appended to the toolbar
@@ -44,10 +44,13 @@ class BoardLayout(
     private val originY = ((terminalSize.rows - fullHeight) / 2).coerceAtLeast(0)
 
     private val gridLeft = originX + LEFT_GUTTER
-    private val gridTop = originY + 3
+    private val gridTop = originY + 4
 
     val titleRow: Int get() = originY
-    private val upArrowRow = originY + 2
+
+    /** `Moves: N`, directly under the title (GH-62). */
+    val movesRow: Int get() = originY + 1
+    private val upArrowRow = originY + 3
     private val downArrowRow = gridTop + innerRows
     internal val toolbarRow = downArrowRow + 2
 
@@ -152,8 +155,8 @@ class BoardLayout(
         const val LEFT_GUTTER = 2
         const val RIGHT_GUTTER = 2
 
-        /** Title row, a blank row, the up-arrows row. */
-        const val TOP_EXTRA = 3
+        /** Title row, moves row, a blank row, the up-arrows row. */
+        const val TOP_EXTRA = 4
 
         /** The down-arrows row, a blank row, the toolbar row. */
         const val BOTTOM_EXTRA = 3

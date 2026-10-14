@@ -41,6 +41,8 @@ class ScreenRenderer {
         val canvas = Canvas(terminalSize.columns.coerceAtLeast(1), terminalSize.rows.coerceAtLeast(1))
 
         canvas.put(centeredX(state.title, terminalSize), layout.titleRow, state.title)
+        val moves = "Moves: ${state.moveCount}"
+        canvas.put(centeredX(moves, terminalSize), layout.movesRow, moves)
         drawGrid(canvas, layout, state)
         drawArrows(canvas, layout, state)
         drawToolbar(canvas, layout, state.toolbarShortcuts)

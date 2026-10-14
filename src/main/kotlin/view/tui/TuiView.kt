@@ -382,7 +382,7 @@ class TuiView internal constructor(
         val decoratedDialog = dialog?.let { input.decorateDialog(it) }
         val state = input.decorateBoard(
             ScreenState
-                .forBoard(viewModel.boardState().toList(), viewModel.squareSide(), solved)
+                .forBoard(viewModel.boardState().toList(), viewModel.squareSide(), solved, viewModel.moveCount())
                 .copy(dialog = decoratedDialog, message = message),
         )
         layout = BoardLayout(terminalSize, state.squareSide, state.arrowsEnabled, state.toolbarShortcuts, state.modeButtons)
