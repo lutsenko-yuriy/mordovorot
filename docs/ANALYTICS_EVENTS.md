@@ -108,6 +108,18 @@ Fired when a fresh game starts at a chosen board size via one of the post-launch
 | `trigger` | `string` | `startup_prompt`, `command` (`size <N>`), or `toolbar` (`[ New ]` → size-picker dialog). |
 | `input_method` | `string` | `console`, `mouse`, or `keyboard` — which UI mode the session was running in. |
 
+### `board_solved`
+
+Fired once when a shift solves the board during play, in any input mode (console included). Like
+`screen_congratulations`, it does **not** fire when an already-solved save is restored. *(GH-62)*
+
+| Property | Type | Description |
+|---|---|---|
+| `move_count` | `number` | The final move count shown to the player (a move is a run of consecutive shifts on one row/column). |
+| `board_size` | `number` | The board side (3-5). |
+| `restored_from_save` | `boolean` | Whether this game was loaded from a save, so part of `move_count` may come from an earlier session. |
+| `input_method` | `string` | `console`, `mouse`, or `keyboard` — which UI mode the session was running in. |
+
 <!-- All events above are sent through `analytics.AnalyticsService`, currently backed by
      `analytics.NoopAnalyticsService` (no real SDK wired up yet). -->
 
