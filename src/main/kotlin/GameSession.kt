@@ -3,7 +3,6 @@ import analytics.InputMethodAnalyticsService
 import analytics.NoopAnalyticsService
 import board_model.BoardImpl
 import board_model.BoardModel
-import kotlinx.coroutines.CancellationException
 import storage.FileSaveRepository
 import storage.SaveRepository
 import view.View
@@ -14,7 +13,7 @@ import view.tui.Terminal
 import view.tui.TuiView
 import viewmodel.ModeSwitchRequestedException
 import viewmodel.ModeSwitcherImpl
-import viewmodel.SessionControlException
+import viewmodel.catchingNonControl
 import viewmodel.ViewModelImpl
 
 /** The session loop extracted out of [main] for GH-30: owns the [BoardModel]/[SaveRepository]
@@ -52,38 +51,29 @@ class GameSession(
     suspend fun run() {
         var isFirstSession = true
         while (true) {
+            // Other control-flow exceptions must reach main (PR #37, PR #43).
             try {
-                // The undecorated service - defaultView decorates it per-mode itself, and keeps
-                // a plain reference for ModeSwitcher (input_mode_switched carries from_mode/
-                // to_mode already, no need for a duplicate input_method - see ModeSwitcher's
-                // KDoc). buildView is inside this try too - a throw from the rebuild itself
-                // (e.g. a future terminalFactory failure) must fall back the same as a throw
-                // from play() (audit finding on PR #37).
-                val view = buildView(mode, board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch)
-                view.play()
-                return
+                catchingNonControl(
+                    onError = { e ->
+                        // Failed rebuild (e.g. no `stty`): fall back to console to keep the game,
+                        // unless this is startup or console itself failed.
+                        if (isFirstSession || mode == InputMode.CONSOLE) throw e
+                        System.err.println(
+                            "Could not switch to ${mode.name.lowercase()} mode (${e.message ?: e::class.simpleName}) " +
+                                "- falling back to console."
+                        )
+                        mode = InputMode.CONSOLE
+                        startupRestoreDone = true
+                    },
+                ) {
+                    // Undecorated analytics - defaultView decorates per mode. buildView is guarded too,
+                    // so a rebuild failure falls back like a play() failure (PR #37).
+                    val view = buildView(mode, board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch)
+                    view.play()
+                    return
+                }
             } catch (e: ModeSwitchRequestedException) {
                 mode = e.target
-                startupRestoreDone = true
-            } catch (e: SessionControlException) {
-                // Any other control-flow exception (ExitRequestedException) must reach main, not
-                // be treated as a failed rebuild - audit finding on PR #37.
-                throw e
-            } catch (e: CancellationException) {
-                // Same reasoning as SessionControlException above - a cancelled coroutine must
-                // not be misread as a failed rebuild (round-2 audit finding on PR #43, GH-42).
-                throw e
-            } catch (e: Exception) {
-                // A rebuild can fail for real (e.g. `stty` missing - audit finding on PR #37):
-                // unlike a startup failure, there's a live unsaved game to protect, so fall back
-                // to console (the one mode with no terminal setup to fail) instead of crashing -
-                // unless console itself just failed, which leaves nowhere safer to go.
-                if (isFirstSession || mode == InputMode.CONSOLE) throw e
-                System.err.println(
-                    "Could not switch to ${mode.name.lowercase()} mode (${e.message ?: e::class.simpleName}) " +
-                        "- falling back to console."
-                )
-                mode = InputMode.CONSOLE
                 startupRestoreDone = true
             }
             isFirstSession = false

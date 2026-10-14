@@ -4,7 +4,6 @@ import analytics.AnalyticsService
 import analytics.NoopAnalyticsService
 import board_model.BoardImpl
 import board_model.BoardModel
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import storage.FileSaveRepository
@@ -80,25 +79,19 @@ class ViewModelImpl(
         // saves.exists/save can throw (bad name, IOException) - caught here rather than left to
         // play()'s generic handler, so a failed save is still tracked and gets its own message
         // instead of silently missing from save_command_used (audit finding on PR #13).
-        try {
+        return catchingNonControl(
+            onError = { e ->
+                analytics.track("save_command_used", mapOf("result" to "error"))
+                // Always say the save failed - e.message alone can be just a path (PR #15).
+                showMessage("Could not save as '$name': ${e.message ?: e::class.simpleName}")
+                false
+            },
+        ) {
             val existed = saves.exists(name)
             saves.save(name, board.boardArray, board.squareSide, board.moveCount)
             analytics.track("save_command_used", mapOf("result" to "success", "overwrote_existing" to existed))
             showMessage("Saved as '$name'.")
-            return true
-        } catch (e: SessionControlException) {
-            throw e
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            analytics.track("save_command_used", mapOf("result" to "error"))
-            // e.message alone can be uninformative or outright misleading here - e.g.
-            // AccessDeniedException's message is just the offending temp-file path, with no
-            // hint that a save failed at all (audit round 3 on GH-12/PR #15, surfaced by the
-            // exit-before-quitting flow where this is now the sole explanation for an aborted
-            // quit, not just one line among several after an explicit `save`).
-            showMessage("Could not save as '$name': ${e.message ?: e::class.simpleName}")
-            return false
+            true
         }
     }
 
@@ -116,7 +109,13 @@ class ViewModelImpl(
         // saves.listSaves()) and board.restoreState can also throw, and the startup restore
         // flow calls this before any View's own try/catch exists, so loadGame must not throw
         // regardless of which step fails (audit on PR #13).
-        try {
+        return catchingNonControl(
+            onError = { e ->
+                analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "error"))
+                showMessage(e.message ?: "Could not load '$name'.")
+                false
+            },
+        ) {
             val saved = saves.load(name)
             if (saved == null) {
                 analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "not_found"))
@@ -128,15 +127,7 @@ class ViewModelImpl(
             board.restoreState(saved.state, saved.moveCount)
             analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "success"))
             showMessage("Loaded '$name'.")
-            return true
-        } catch (e: SessionControlException) {
-            throw e
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "error"))
-            showMessage(e.message ?: "Could not load '$name'.")
-            return false
+            true
         }
     }
 
@@ -247,7 +238,8 @@ class ViewModelImpl(
         if (startupRestoreDone) return
         startupRestoreDone = true
         if (sizeChosenAtLaunch) return
-        try {
+        // Any failure here just starts a fresh game instead of crashing at boot.
+        catchingNonControl(onError = {}) {
             val saveInfos = saves.listSaves().map { SaveInfo(it, sizeOf(it)) }
             val restored = if (saveInfos.isEmpty()) {
                 false
@@ -291,13 +283,6 @@ class ViewModelImpl(
             if (!restored) {
                 ask(UiRequest.ChooseBoardSize(board.squareSide))?.let { newGame(it, trigger = "startup_prompt") }
             }
-        } catch (e: SessionControlException) {
-            throw e
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            // Any failure here (unreadable saves dir, view I/O error) just means the game
-            // starts fresh instead of crashing at boot.
         }
     }
 

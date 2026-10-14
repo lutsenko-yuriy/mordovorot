@@ -61,6 +61,9 @@ src/main/kotlin/
 │   ├── SessionControlException.kt # Sealed marker base for control-flow exceptions that unwind
 │   │                                 # play() intentionally — lets a catch-all rethrow via this
 │   │                                 # one type instead of naming each subtype (GH-30)
+│   ├── CatchingNonControl.kt # catchingNonControl — the shared catch-all: rethrows
+│   │                           # SessionControlException/CancellationException, routes any
+│   │                           # other Exception to onError (GH-65)
 │   ├── ExitRequestedException.kt # Signals play() (or view.tui.TuiView's own loop, GH-3) to stop
 │   ├── ModeSwitcher.kt        # ModeSwitcher / ModeSwitcherImpl / NoopModeSwitcher — checks for
 │   │                             # an interactive terminal, tracks input_mode_switched, and
@@ -147,7 +150,8 @@ src/test/kotlin/
 │                           # branch matrix plus the idempotence guard; ViewModelQueriesTest covers
 │                           # the read-only query surface; ViewModelCancellationTest/
 │                           # ViewModelOrderingTest pin the request-channel's CancellationException
-│                           # guard and rendezvous ordering (GH-42 WU2)
+│                           # guard and rendezvous ordering (GH-42 WU2); CatchingNonControlTest
+│                           # pins the shared catch-all helper (GH-65)
 ├── storage/               # FileSaveRepository coverage
 ├── view/                  # ViewImpl command-parsing coverage (incl. ViewImplPlayTest, the
 │                           # console session loop that moved here from ConsoleViewModelImpl.play()
@@ -223,8 +227,8 @@ request handler must never call a request-raising `ViewModel` method
 (`saveGame`/`loadGame`/`exitGame`/`restoreOnStartup`) from inside itself — only the
 plain query methods are safe there. `saveGame`/`loadGame`/`exitGame`/`restoreOnStartup`
 are `suspend`; a cancelled coroutine resumes them with `CancellationException`, which
-each method's catch-all rethrows rather than swallows (ordinary structured-concurrency
-hygiene).
+each method's catch-all (`catchingNonControl`) rethrows rather than swallows (ordinary
+structured-concurrency hygiene).
 
 ### view
 UI only: `ViewImpl` reads console commands from stdin, `view.tui.TuiView` drives the
