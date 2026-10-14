@@ -45,7 +45,7 @@ behaviour beyond a literal value, it is not trivial — use the full workflow in
       Invoke the analyze skill for GH-XX: <issue title>
       ```
       Identifies trackable moments, proposes events, flags PII concerns. Pure infrastructure or CI changes with no user-facing screens skip this gate.
-   3. **Implementation plan.** For large changes (spanning multiple files, introducing new domain entities, new dependencies, or architectural shifts): invoke `plan` and wait for approval, before writing any code.
+   3. **Implementation plan.** Required for every non-trivial ticket (anything not tagged `[trivial]`): invoke `plan` and wait for approval, before writing any code — `implement` refuses to start without an approved plan comment. Small changes get a short plan, not no plan.
       ```
       Invoke the plan skill for GH-XX: <issue title>
       ```
