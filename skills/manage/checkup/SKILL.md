@@ -10,7 +10,7 @@ description: Two-tier periodic code-quality checkup (light monthly / heavy quart
 @skills/shared/project-config.md
 @skills/shared/decision-guidelines.md
 
-This skill audits, it doesn't ship a feature. Per [ADR-0001](../../../docs/knowledge/decisions/ADR-0001-two-tier-periodic-code-quality-checkup.md), findings are fixed inline or deferred to the ledger — never filed as individual PM tickets.
+This skill audits, it doesn't ship a feature. Per [ADR-0001](../../../docs/knowledge/decisions/ADR-0001-two-tier-periodic-code-quality-checkup.md), findings are fixed inline or deferred to the ledger — never filed as individual PM tickets during the run (a deferred finding may later be promoted to a ticket when scheduled; see `resources/findings-protocol.md` §6).
 
 ---
 
@@ -71,7 +71,7 @@ One line per tier run: dimensions walked, findings fixed inline, findings deferr
 
 ## Constraints
 
-- Never file an individual PM ticket for a finding — deferred findings go in the ledger's Open findings table only (per ADR-0001).
+- Never file an individual PM ticket for a finding during the run — deferred findings go in the ledger's Open findings table (per ADR-0001). Promotion to a ticket happens later, when the finding is scheduled.
 - An inline fix must stay within Boy Scout Rule scope — small and safe without its own test-writing cycle. Anything larger gets deferred, not force-fitted into this skill's commit.
 - Do not touch `## Resolved findings` rows other than moving matching IDs in from `## Open findings` — never fabricate a resolution.
 - Do not merge the PR/MR opened in step 6 — that's the user's call.
