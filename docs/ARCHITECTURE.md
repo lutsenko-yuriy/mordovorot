@@ -126,8 +126,8 @@ src/main/kotlin/
         │                      # for --keyboard mode (GH-18)
         └── TuiView.kt   # Owns its own event loop (doesn't go through ViewImpl.play()'s
                           # console-only loop - see the ticket's solved-state note). Save/Load/
-                          # Exit and the startup restore prompt each run their own blocking modal
-                          # loop over Terminal (WU4). State-driven solved screen (WU5): every
+                          # Exit/Size and the startup restore prompt share one blocking modal
+                          # loop over Terminal, runModal (WU4, GH-64). State-driven solved screen (WU5): every
                           # repaint asks ViewModel.isSolved() fresh rather than tracking a phase
                           # flag, so the Congratulations title/dimmed arrows and a load back to an
                           # unsolved board both fall out of the same repaint path with no extra

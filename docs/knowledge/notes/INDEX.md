@@ -45,4 +45,5 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-23: Split Presenter into console/TUI-specific presenters](GH-23.md)
 - [GH-6: Save and load game state to/from local files](GH-6.md)
 - [GH-62: Move counter](GH-62.md)
+- [GH-64: Extract shared modal-loop helper in TuiView](GH-64.md)
 - [GH-65: Extract shared non-control exception catch helper](GH-65.md)
