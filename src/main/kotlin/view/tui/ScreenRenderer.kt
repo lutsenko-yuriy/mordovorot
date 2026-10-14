@@ -10,7 +10,8 @@ private const val DIM_OFF = "\u001B[22m"
 private const val REVERSE_ON = "\u001B[7m"
 private const val REVERSE_OFF = "\u001B[27m"
 
-/** SGR bright-yellow foreground on/off - GH-18's board cursor. */
+/** SGR bright-yellow foreground on/off - GH-18's board cursor, drawn inside reverse video so
+ *  it stays visible without color (CHK-2026-10-14-heavy-5). */
 private const val CURSOR_COLOR_ON = "\u001B[93m"
 private const val CURSOR_COLOR_OFF = "\u001B[39m"
 
@@ -95,7 +96,7 @@ class ScreenRenderer {
         // non-null when arrowsEnabled is true (ScreenState's own KDoc), so the two never compete
         // for the same arrow.
         fun glyph(g: String, isCursor: Boolean) = when {
-            isCursor -> "$CURSOR_COLOR_ON$g$CURSOR_COLOR_OFF"
+            isCursor -> "$REVERSE_ON$CURSOR_COLOR_ON$g$CURSOR_COLOR_OFF$REVERSE_OFF"
             state.arrowsEnabled -> g
             else -> "$DIM_ON$g$DIM_OFF"
         }
