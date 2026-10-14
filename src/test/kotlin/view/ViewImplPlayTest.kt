@@ -50,14 +50,41 @@ class ViewImplPlayTest {
     }
 
     @Test
-    fun `play returns immediately when the board is already correct`(): Unit = runBlocking {
+    fun `play shows the board and offers a new game when the board is already solved`(): Unit = runBlocking {
         val viewModel = FakeViewModel().apply { solved = true }
-        val (view, output) = viewWith("", viewModel)
+        val (view, output) = viewWith("left 1\n", viewModel)
 
         view.play()
 
-        assertEquals("", output.toString())
-        assertFalse(viewModel.calls.contains("boardState"))
+        assertTrue(output.toString().startsWith("1\t2\t3\t4\t"))
+        assertTrue(viewModel.calls.indexOf("boardState") < viewModel.calls.indexOf("offerPlayAgain"))
+        assertFalse(viewModel.calls.any { it.startsWith("shift") })
+    }
+
+    @Test
+    fun `accepting a new game keeps the loop running`(): Unit = runBlocking {
+        val viewModel = FakeViewModel().apply {
+            solved = true
+            playAgainAccepted = true
+        }
+        val (view, _) = viewWith("left 1\n", viewModel)
+
+        view.play()
+
+        assertTrue(viewModel.calls.indexOf("offerPlayAgain") < viewModel.calls.indexOf("shiftLeft(0)"))
+    }
+
+    /** Like the startup-restore test below: the play-again prompt must be answered by play()'s
+     *  own request handler. [withTimeout] turns a hang into a failure. */
+    @Test
+    fun `play answers the play-again prompt through its own request handler`(): Unit = runBlocking {
+        val board = FakeBoardModel().apply { correct = true }
+        val (view, output) = viewWith("n\n", ViewModelImpl(board, sizeChosenAtLaunch = true))
+
+        withTimeout(3_000) { view.play() }
+
+        assertTrue(output.toString().contains("Congratulations"))
+        assertTrue(output.toString().endsWith("Start a new game? [y/N] "))
     }
 
     /** Console-side anchor for [viewmodel.ViewModelImpl.restoreOnStartup] - the flow's own
