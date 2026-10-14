@@ -27,7 +27,7 @@ class FakeView(
     var processCommandCallCount = 0
         private set
 
-    override fun displayBoard(boardState: IntArray, squareSide: Int) {
+    override fun displayBoard(boardState: IntArray, squareSide: Int, moveCount: Int) {
         displayBoardCalls.add(boardState.copyOf() to squareSide)
     }
 

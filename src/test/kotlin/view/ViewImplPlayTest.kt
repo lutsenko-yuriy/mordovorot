@@ -192,4 +192,14 @@ class ViewImplPlayTest {
 
         assertTrue(output.toString().contains("Not quitting"))
     }
+
+    @Test
+    fun `play shows the move count after each board, GH-62`(): Unit = runBlocking {
+        val viewModel = FakeViewModel().apply { moves = 3 }
+        val (view, output) = viewWith("", viewModel)
+
+        view.play()
+
+        assertTrue(output.toString().contains("Moves: 3"))
+    }
 }

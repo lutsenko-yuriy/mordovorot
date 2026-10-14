@@ -100,7 +100,7 @@ class OneBasedConsoleTest {
     fun `the rendered board and left 1's target row agree on the same first row`(): Unit = runBlocking {
         val (view, board, output) = stackWith("left 1\n")
 
-        view.displayBoard(board.boardArray, board.squareSide)
+        view.displayBoard(board.boardArray, board.squareSide, board.moveCount)
         view.processCommand()
 
         val nl = System.lineSeparator()

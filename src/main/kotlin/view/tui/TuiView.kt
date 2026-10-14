@@ -396,7 +396,7 @@ class TuiView internal constructor(
 
     // The board's own displayBoard/processCommand belong to ViewImpl.play()'s console-only
     // loop, which TuiView never calls (see class KDoc).
-    override fun displayBoard(boardState: IntArray, squareSide: Int) {}
+    override fun displayBoard(boardState: IntArray, squareSide: Int, moveCount: Int) {}
 
     override suspend fun processCommand() {}
 

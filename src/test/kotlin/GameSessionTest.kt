@@ -23,7 +23,7 @@ class GameSessionTest {
 
     /** [View] test double: only [play] does anything, running the scripted [onPlay]. */
     private class ScriptedView(private val onPlay: () -> Unit) : View {
-        override fun displayBoard(boardState: IntArray, squareSide: Int) {}
+        override fun displayBoard(boardState: IntArray, squareSide: Int, moveCount: Int) {}
         override suspend fun showMessage(message: String) {}
         override suspend fun processCommand() {}
         override suspend fun play() = onPlay()
