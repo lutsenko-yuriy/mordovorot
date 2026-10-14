@@ -14,6 +14,9 @@ class FakeSaveRepository(
     /** Every [save] call, in order, for asserting what was persisted and with what arguments. */
     val saveCalls = mutableListOf<Triple<String, IntArray, Int>>()
 
+    /** The moveCount passed to each [save] call, parallel to [saveCalls]. */
+    val savedMoveCounts = mutableListOf<Int>()
+
     /** When set, [save] throws this instead of persisting - simulates an unsafe name or a
      *  filesystem failure (disk full, read-only directory). */
     var saveException: Throwable? = null
@@ -42,10 +45,11 @@ class FakeSaveRepository(
         return saves.containsKey(name)
     }
 
-    override fun save(name: String, state: IntArray, squareSide: Int) {
+    override fun save(name: String, state: IntArray, squareSide: Int, moveCount: Int) {
         saveException?.let { throw it }
         saveCalls.add(Triple(name, state.copyOf(), squareSide))
-        saves[name] = SavedBoard(squareSide, state.copyOf())
+        savedMoveCounts.add(moveCount)
+        saves[name] = SavedBoard(squareSide, state.copyOf(), moveCount)
     }
 
     override fun load(name: String): SavedBoard? {

@@ -151,13 +151,52 @@ class FileSaveRepositoryTest {
     }
 
     @Test
-    fun `the on-disk format is square side on line 1, values on line 2`() {
+    fun `the on-disk format is square side on line 1, values on line 2, move count on line 3`() {
         val dir = createTempDirectory("mordovorot-saves")
         val repo = FileSaveRepository(dir)
 
-        repo.save("foo", intArrayOf(3, 0, 2, 1), 2)
+        repo.save("foo", intArrayOf(3, 0, 2, 1), 2, moveCount = 7)
 
-        assertEquals("2\n3 0 2 1", dir.resolve("foo.save").readText().trim())
+        assertEquals("2\n3 0 2 1\n7", dir.resolve("foo.save").readText().trim())
+    }
+
+    @Test
+    fun `save then load round-trips the move count`() {
+        val repo = newRepository()
+        val state = intArrayOf(3, 0, 2, 1)
+
+        repo.save("foo", state, 2, moveCount = 12)
+
+        assertEquals(SavedBoard(2, state, moveCount = 12), repo.load("foo"))
+    }
+
+    @Test
+    fun `load treats a missing or blank move count line as 0, GH-62`() {
+        val dir = createTempDirectory("mordovorot-saves")
+        val repo = FileSaveRepository(dir)
+        dir.resolve("legacy.save").writeText("2\n3 0 2 1\n")
+        dir.resolve("blank.save").writeText("2\n3 0 2 1\n  \n")
+
+        assertEquals(0, repo.load("legacy")?.moveCount)
+        assertEquals(0, repo.load("blank")?.moveCount)
+    }
+
+    @Test
+    fun `load throws SaveFileFormatException on a non-integer or negative move count`() {
+        val dir = createTempDirectory("mordovorot-saves")
+        val repo = FileSaveRepository(dir)
+        dir.resolve("word.save").writeText("2\n3 0 2 1\nmany\n")
+        dir.resolve("negative.save").writeText("2\n3 0 2 1\n-1\n")
+
+        assertFailsWith<SaveFileFormatException> { repo.load("word") }
+        assertFailsWith<SaveFileFormatException> { repo.load("negative") }
+    }
+
+    @Test
+    fun `save rejects a negative move count`() {
+        val repo = newRepository()
+
+        assertFailsWith<IllegalArgumentException> { repo.save("foo", intArrayOf(3, 0, 2, 1), 2, moveCount = -1) }
     }
 
     @Test

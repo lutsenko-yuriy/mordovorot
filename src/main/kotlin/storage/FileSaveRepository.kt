@@ -32,18 +32,19 @@ class FileSaveRepository(private val directory: Path = defaultDirectory()) : Sav
         return pathFor(name).exists()
     }
 
-    override fun save(name: String, state: IntArray, squareSide: Int) {
+    override fun save(name: String, state: IntArray, squareSide: Int, moveCount: Int) {
         requireSafeName(name)
         require(squareSide > 0) { "Square side must be positive" }
         require(state.size == squareSide * squareSide) { "Expected ${squareSide * squareSide} values, got ${state.size}" }
         require(state.toSet() == (0 until state.size).toSet()) { "State must contain each of ${state.size} tile values exactly once" }
+        require(moveCount >= 0) { "Move count must not be negative" }
 
         directory.createDirectories()
         // Write to a temp file and move atomically so a crash or a rejected write
         // mid-flight can't truncate an existing save (findings from WU2's audit).
         val temp = Files.createTempFile(directory, "$name-", ".tmp")
         try {
-            temp.writeText("$squareSide\n${state.joinToString(" ")}\n")
+            temp.writeText("$squareSide\n${state.joinToString(" ")}\n$moveCount\n")
             Files.move(temp, pathFor(name), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
         } catch (e: Exception) {
             Files.deleteIfExists(temp)
@@ -77,7 +78,13 @@ class FileSaveRepository(private val directory: Path = defaultDirectory()) : Sav
             throw SaveFileFormatException(name, "board values are not a valid arrangement (each tile must appear exactly once)")
         }
 
-        return SavedBoard(squareSide, state)
+        // Saves from before GH-62 have no third line - they load with no moves made.
+        val moveCountLine = lines.getOrNull(2)?.trim().orEmpty()
+        val moveCount = if (moveCountLine.isEmpty()) 0 else moveCountLine.toIntOrNull()
+            ?: throw SaveFileFormatException(name, "move count is not an integer")
+        if (moveCount < 0) throw SaveFileFormatException(name, "move count must not be negative")
+
+        return SavedBoard(squareSide, state, moveCount)
     }
 
     override fun isValidName(name: String): Boolean = isSafeName(name)
