@@ -11,8 +11,16 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 
 ## Reviewed — nothing noteworthy
 
+- [GH-10: 1-based tile values and row/column indices](GH-10.md)
+- [GH-12: Exit command](GH-12.md)
+- [GH-18: Keyboard-only navigation mode for TUI](GH-18.md)
 - [GH-2-adjust-1: Adopt yuriys-agentic-boyz multi-skill workflow — follow-up](GH-2-adjust-1.md)
 - [GH-2-adjust-2: Adopt yuriys-agentic-boyz multi-skill workflow — follow-up](GH-2-adjust-2.md)
 - [GH-2: Adopt yuriys-agentic-boyz multi-skill workflow](GH-2.md)
+- [GH-23: Split Presenter into console/TUI-specific presenters](GH-23.md)
+- [GH-3: Mouse-driven TUI with directional edge arrows](GH-3.md)
+- [GH-30: GameSession session loop and mode switching](GH-30.md)
 - [GH-4: Automated test coverage for board_model and presenter](GH-4.md)
+- [GH-42: Redesign Presenter as a ViewModel (remove View reference)](GH-42.md)
+- [GH-44: Adjustable board size (3x3-5x5, default 4x4)](GH-44.md)
 - [GH-6: Save and load game state to/from local files](GH-6.md)
