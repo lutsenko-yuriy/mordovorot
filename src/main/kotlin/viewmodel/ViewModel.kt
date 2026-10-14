@@ -42,6 +42,11 @@ interface ViewModel {
      *  see [viewmodel.ViewModelImpl.exitGame]. */
     suspend fun exitGame()
 
+    /** The console's solved-state flow (GH-66): Congratulations message, then `Start a new
+     *  game?`. Returns normally once a fresh game has started; throws [ExitRequestedException]
+     *  on decline. The TUI never calls it - it has its own Congratulations screen. */
+    suspend fun offerPlayAgain()
+
     /** Saves with their board size (GH-44 WU4), sorted by name; empty when nothing has been
      *  saved yet, or on a storage error - lets the mouse-driven Load dialog (GH-3) show what's
      *  available without exposing storage errors to the UI layer. A save whose size couldn't be

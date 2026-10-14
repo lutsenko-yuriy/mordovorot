@@ -36,7 +36,7 @@ class ViewModelImpl(
 
     /** Raises [request] on [uiRequests] and suspends until the View responds. The View must
      *  never call back into a request-raising viewModel method (`saveGame`/`loadGame`/`exitGame`/
-     *  `restoreOnStartup`) from inside its own request handler - doing so deadlocks, since the
+     *  `restoreOnStartup`/`offerPlayAgain`) from inside its own request handler - doing so deadlocks, since the
      *  handler is `ask`'s only consumer and would be busy with the request that triggered the
      *  callback. */
     private suspend fun <R> ask(request: UiRequest<R>): R {
@@ -166,6 +166,17 @@ class ViewModelImpl(
 
         analytics.track("exit_command_used", mapOf("save_choice" to "saved"))
         throw ExitRequestedException()
+    }
+
+    /** On accept, Enter/EOF at the size prompt still starts a fresh game at the current size -
+     *  unlike the startup prompt, where it keeps the board as is. */
+    override suspend fun offerPlayAgain() {
+        val moves = board.moveCount
+        showMessage("Congratulations, you solved this puzzle in $moves ${if (moves == 1) "move" else "moves"}!")
+        val accepted = ask(UiRequest.ConfirmPlayAgain())
+        analytics.track("play_again_decision", mapOf("decision" to if (accepted) "new_game" else "quit"))
+        if (!accepted) throw ExitRequestedException()
+        newGame(ask(UiRequest.ChooseBoardSize(board.squareSide)) ?: board.squareSide, trigger = "play_again")
     }
 
     /** Re-prompts until [UiRequest.PromptSaveName] returns a name usable by the `save`/`load`

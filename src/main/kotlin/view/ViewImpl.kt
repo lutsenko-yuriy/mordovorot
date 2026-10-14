@@ -148,6 +148,12 @@ class ViewImpl internal constructor(
         return line.trim().lowercase() in setOf("y", "yes")
     }
 
+    internal suspend fun confirmPlayAgain(): Boolean {
+        output.print("Start a new game? [y/N] ")
+        val line = readLineOrNull() ?: return false
+        return line.trim().lowercase() in setOf("y", "yes")
+    }
+
     internal suspend fun promptSaveName(): String? {
         output.print("Save name: ")
         val line = readLineOrNull() ?: return null
@@ -256,6 +262,7 @@ class ViewImpl internal constructor(
             is UiRequest.ConfirmSaveBeforeExit -> request.respond(confirmSaveBeforeExit())
             is UiRequest.PromptSaveName -> request.respond(promptSaveName())
             is UiRequest.ChooseBoardSize -> request.respond(chooseBoardSize(request.current))
+            is UiRequest.ConfirmPlayAgain -> request.respond(confirmPlayAgain())
         }
     }
 }

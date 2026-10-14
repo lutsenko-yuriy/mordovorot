@@ -135,6 +135,8 @@ class TuiView internal constructor(
             is UiRequest.ConfirmSaveBeforeExit -> request.respond(confirmSaveBeforeExit())
             is UiRequest.PromptSaveName -> request.respond(promptSaveName())
             is UiRequest.ChooseBoardSize -> request.respond(runSizeDialog("startup"))
+            // Never raised here - the TUI has its own Congratulations screen (GH-66).
+            is UiRequest.ConfirmPlayAgain -> request.respond(false)
         }
     }
 
