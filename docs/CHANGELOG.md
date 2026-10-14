@@ -13,8 +13,10 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
-## [Unreleased]
+## [0.9.0] — 2026-10-14
 
+### Added
+- [user] (PR #69) GH-62: move counter — a move is a run of consecutive shifts on one row/column; shown as `Moves: N` (console: after the board; TUI: under the title), kept across mode switches, saved as the save file's third line (older saves load as 0), and a `board_solved` analytics event.
 - [meta] (PR #61) GH-60: add `bookmarks:` frontmatter to GH notes; align README test comments; run notes index check in CI
 - [wip] HAB-278 WU22: port YAB onboarding remote/README/CHANGELOG handling and skill_router fixes; session start reads [providers].pm (PR #59)
 - [meta] (PR #58) HAB-278 WU11: README refresh — installDist launcher for the TUIs, --mouse/--keyboard/--console/--size flags, onboarding test command, /onboard prerequisites (python3 vs 3.11+), launch-from-root and config-push hint.

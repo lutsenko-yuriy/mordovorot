@@ -297,4 +297,21 @@ class ScreenRendererTest {
         assertTrue(frame.contains("Name: ${longName}_ ◀"))
         assertFalse(frame.contains("…"))
     }
+
+    /** The frame's text rows, ANSI escapes stripped. */
+    private fun rowsOf(frame: String): List<String> =
+        frame.replace(Regex("\u001B\\[[0-9;?]*[A-Za-z]"), "").split("\r\n")
+
+    @Test
+    fun `the move count renders centered on the row under the title, solved or not (GH-62)`() {
+        val layout = BoardLayout(terminalSize, 4)
+        for (solved in listOf(false, true)) {
+            val state = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = solved, moveCount = 7)
+
+            val movesRow = rowsOf(renderer.render(state, terminalSize))[layout.movesRow]
+
+            assertEquals("Moves: 7", movesRow.trim())
+            assertEquals((terminalSize.columns - "Moves: 7".length) / 2, movesRow.indexOf("Moves: 7"))
+        }
+    }
 }

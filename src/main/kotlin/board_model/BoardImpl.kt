@@ -5,7 +5,14 @@ public class BoardImpl(initialSide: Int = BoardSize.DEFAULT) : BoardModel {
     private var side: Int = BoardSize.require(initialSide)
     override val squareSide: Int get() = side
 
-    var counter: Int = 0
+    override var moveCount: Int = 0
+        private set
+
+    /** One row or column - shifts in either direction along it extend the same move. */
+    private data class Line(val isRow: Boolean, val index: Int)
+
+    /** Line of the last shift; null when the next shift must start a new move. */
+    private var lastLine: Line? = null
 
     override var boardArray: IntArray =
             IntArray(squareSide * squareSide, { item -> item })
@@ -17,7 +24,8 @@ public class BoardImpl(initialSide: Int = BoardSize.DEFAULT) : BoardModel {
     override fun resetGame() {
         boardArray =
                 IntArray(squareSide * squareSide, { it })
-        counter = 0
+        moveCount = 0
+        lastLine = null
 
         boardArray.shuffle()
     }
@@ -28,7 +36,7 @@ public class BoardImpl(initialSide: Int = BoardSize.DEFAULT) : BoardModel {
         resetGame()
     }
 
-    override fun restoreState(state: IntArray) {
+    override fun restoreState(state: IntArray, moveCount: Int) {
         // squareSide comes from state's own length, not the board's current side (GH-44 WU5) -
         // a valid save is whatever size it says it is; loading one resizes the board to match
         // instead of requiring a coincidental match to what the board happened to be at.
@@ -40,16 +48,19 @@ public class BoardImpl(initialSide: Int = BoardSize.DEFAULT) : BoardModel {
         // rejects <= 0) would resize the live board past what every other size-changing surface
         // enforces, e.g. a 1x1 board that's permanently solved or a board too wide to render.
         BoardSize.require(restoredSide)
+        require(moveCount >= 0) { "Move count must not be negative, got $moveCount" }
 
         side = restoredSide
         boardArray = state.copyOf()
-        counter = 0
+        this.moveCount = moveCount
+        lastLine = null
     }
 
     override fun shiftLeft(row: Int) {
         if (row !in 0 until squareSide) {
             throw IllegalArgumentException("Incorrect row")
         }
+        countMove(Line(isRow = true, index = row))
 
         val t = boardArray[row * squareSide]
         for (i in 0..squareSide - 2) {
@@ -63,6 +74,7 @@ public class BoardImpl(initialSide: Int = BoardSize.DEFAULT) : BoardModel {
         if (row !in 0 until squareSide) {
             throw IllegalArgumentException("Incorrect row")
         }
+        countMove(Line(isRow = true, index = row))
 
         val t = boardArray[(row + 1) * squareSide - 1]
         for (i in squareSide - 2 downTo 0) {
@@ -75,6 +87,7 @@ public class BoardImpl(initialSide: Int = BoardSize.DEFAULT) : BoardModel {
         if (col !in 0 until squareSide) {
             throw IllegalArgumentException("Incorrect column")
         }
+        countMove(Line(isRow = false, index = col))
 
         val t = boardArray[col]
         for (i in 0..squareSide - 2) {
@@ -87,12 +100,18 @@ public class BoardImpl(initialSide: Int = BoardSize.DEFAULT) : BoardModel {
         if (col !in 0 until squareSide) {
             throw IllegalArgumentException("Incorrect column")
         }
+        countMove(Line(isRow = false, index = col))
 
         val t = boardArray[col + (squareSide - 1) * squareSide]
         for (i in squareSide - 2 downTo 0) {
             boardArray[col + (i + 1) * squareSide] = boardArray[col + i * squareSide]
         }
         boardArray[col] = t
+    }
+
+    private fun countMove(line: Line) {
+        if (line != lastLine) moveCount++
+        lastLine = line
     }
 
     override fun isCorrect(): Boolean {

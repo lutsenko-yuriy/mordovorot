@@ -172,4 +172,12 @@ class BoardLayoutTest {
         assertEquals(listOf("[ Mouse ]", "[ Console ]"), plain.toolbarButtons().map { it.text }.filter { it.contains("Mouse") || it.contains("Console") })
         assertEquals(listOf("[Mouse F7]", "[Console F8]"), shortcuts.toolbarButtons().map { it.text }.filter { it.contains("Mouse") || it.contains("Console") })
     }
+
+    @Test
+    fun `the moves row sits directly under the title, with a blank row before the up arrows (GH-62)`() {
+        val layout = BoardLayout(ampleTerminal, squareSide = 4)
+
+        assertEquals(layout.titleRow + 1, layout.movesRow)
+        assertEquals(layout.movesRow + 2, layout.upArrowPosition(0).second)
+    }
 }

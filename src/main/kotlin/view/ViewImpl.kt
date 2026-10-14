@@ -56,13 +56,14 @@ class ViewImpl internal constructor(
         }
     }
 
-    override fun displayBoard(boardState: IntArray, squareSide: Int) {
+    override fun displayBoard(boardState: IntArray, squareSide: Int, moveCount: Int) {
         for (i in 0 until squareSide) {
             for (j in 0 until squareSide) {
                 output.print("${boardState[i * squareSide + j] + DISPLAY_OFFSET}\t")
             }
             output.println()
         }
+        output.println("Moves: $moveCount")
         output.println()
     }
 
@@ -224,7 +225,7 @@ class ViewImpl internal constructor(
             viewModel.restoreOnStartup()
             while (!viewModel.isSolved()) {
                 try {
-                    displayBoard(viewModel.boardState(), viewModel.squareSide())
+                    displayBoard(viewModel.boardState(), viewModel.squareSide(), viewModel.moveCount())
                     processCommand()
                 } catch (e: EndOfInputException) {
                     break

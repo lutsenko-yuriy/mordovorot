@@ -68,4 +68,7 @@ interface ViewModel {
 
     /** The board's square side (rows == columns), paired with [boardState] for layout. */
     fun squareSide(): Int
+
+    /** Moves made this game (GH-62) - see [board_model.BoardModel.moveCount]. */
+    fun moveCount(): Int
 }

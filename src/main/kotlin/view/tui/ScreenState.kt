@@ -41,15 +41,18 @@ data class ScreenState(
      *  ([MouseInput]'s WU3, `KeyboardInput`'s WU4), never by [forBoard] itself, same as
      *  [cursor]/[controlsHint]. */
     val modeButtons: List<InputMode> = emptyList(),
+    /** Moves made this game (GH-62), drawn under the title. */
+    val moveCount: Int = 0,
 ) {
     companion object {
         /** Builds the board screen's [ScreenState] from the viewModel's current query results. */
-        fun forBoard(board: List<Int>, squareSide: Int, solved: Boolean): ScreenState =
+        fun forBoard(board: List<Int>, squareSide: Int, solved: Boolean, moveCount: Int = 0): ScreenState =
             ScreenState(
                 title = if (solved) TITLE_SOLVED else TITLE_UNSOLVED,
                 board = board,
                 squareSide = squareSide,
                 arrowsEnabled = !solved,
+                moveCount = moveCount,
             )
     }
 }

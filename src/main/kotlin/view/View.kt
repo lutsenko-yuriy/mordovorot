@@ -6,7 +6,7 @@ import viewmodel.UiRequest
  * Created by yurich on 08.12.16.
  */
 interface View {
-    fun displayBoard(boardState: IntArray, squareSide: Int)
+    fun displayBoard(boardState: IntArray, squareSide: Int, moveCount: Int)
 
     /** Still on the interface (unlike the four prompt methods below, which left it in GH-42
      *  WU2) because [viewmodel.ModeSwitcherImpl] calls it directly, outside any [UiRequest].

@@ -36,7 +36,7 @@ src/main/kotlin/
 │   ├── BoardModel.kt    # Board interface (domain contract)
 │   ├── BoardSize.kt     # The valid board side range (MIN 3 / MAX 5 / DEFAULT 4) and its
 │   │                      # validation - the one place the range lives (GH-44)
-│   └── BoardImpl.kt     # IntArray-backed board state + shift/reset/newGame/isCorrect logic.
+│   └── BoardImpl.kt     # IntArray-backed board state + shift/reset/newGame/isCorrect logic + move count.
 │                          # `squareSide` is a read-only view over a private mutable field:
 │                          # `newGame(side)` is the only thing that ever changes it (GH-44),
 │                          # `resetGame()` reshuffles at the same size
@@ -186,13 +186,20 @@ size-setting surface starts a fresh game instead. The board instance itself is
 still the one `GameSession` holds across mode switches (GH-30) — the side mutates
 in place rather than the instance being swapped, so that invariant is unaffected.
 
+**Move count (GH-62):** `BoardImpl` owns the move rule — a move is a run of
+consecutive shifts on one row or column. Each shift checks bounds first, then
+counts a move only if its line differs from the last shift's. `resetGame`/`newGame`
+zero the count; `restoreState(state, moveCount)` sets it and clears the last line,
+so the first shift after a load always starts a new move. Because the count lives
+on the board, it survives mode switches with no extra wiring.
+
 ### viewmodel (GH-42: ViewModel-style, no View reference)
 **Status: landed (WU4/4 of the GH-42 redesign — final WU).** Everything described below is
 real and in use; the `presenter` package/naming this superseded is gone.
 
 Mediates between `view`, `board_model`, and `storage`, but never calls into `view`
 directly. `ViewModel` is one interface (shift/reset/save/load/exit plus the
-query surface both UIs need — `isSolved`/`boardState`/`squareSide`/`listSaves`/
+query surface both UIs need — `isSolved`/`boardState`/`squareSide`/`moveCount`/`listSaves`/
 `saveExists`), and `ViewModelImpl` is its one implementation, taking `board`/`saves`/
 `analytics` as constructor params (each defaulted to a real implementation) so
 tests can inject fakes without touching the filesystem or a real analytics SDK.
@@ -244,6 +251,11 @@ depends on; `FileSaveRepository` is the only class in the codebase that touches
 the filesystem. No dependency on `board_model`, `viewmodel`, or `view` — it
 deals in plain data (`SavedBoard`), not domain objects.
 
+Save file format: line 1 is the square side, line 2 the space-separated tile
+values, line 3 the move count (GH-62). A missing or blank line 3 (a save from
+before GH-62) loads as 0; a non-integer or negative one is a
+`SaveFileFormatException`.
+
 ### analytics
 Cross-cutting: `AnalyticsService` is injected into `viewmodel` (and any layer
 that needs to track an event), currently backed by `NoopAnalyticsService`.
@@ -252,6 +264,11 @@ adding an `input_method` (`console`/`mouse`/`keyboard`, GH-18) property to
 every forwarded event — the decorator pattern lets `Main` distinguish events
 by launch mode without `ViewModelImpl` itself knowing which UI mode is
 running.
+
+`board_solved` (GH-62) is tracked in `ViewModelImpl`, not a View: every shift goes
+through one private `shift` helper that fires it when the shift turns an unsolved
+board into a solved one, so it covers all three modes. Loads bypass that helper,
+so restoring a solved save never fires it.
 
 ### Board-size surfaces (GH-44)
 Four entry points, all of which *start a fresh game* rather than resizing the

@@ -282,13 +282,13 @@ class ViewImplCommandTest {
     }
 
     @Test
-    fun `displayBoard renders a tab-separated grid, offset to 1-based tile values`(): Unit = runBlocking {
+    fun `displayBoard renders a tab-separated grid, offset to 1-based tile values, then the move count`(): Unit = runBlocking {
         val (view, output) = viewWith("")
 
-        view.displayBoard(intArrayOf(0, 1, 2, 3), 2)
+        view.displayBoard(intArrayOf(0, 1, 2, 3), 2, 5)
 
         val nl = System.lineSeparator()
-        assertEquals("1\t2\t${nl}3\t4\t$nl$nl", output.toString())
+        assertEquals("1\t2\t${nl}3\t4\t${nl}Moves: 5$nl$nl", output.toString())
     }
 
     @Test

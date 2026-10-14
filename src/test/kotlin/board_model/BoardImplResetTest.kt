@@ -14,13 +14,14 @@ class BoardImplResetTest {
     }
 
     @Test
-    fun `resetGame resets counter to zero`() {
+    fun `resetGame resets the move count to zero`() {
         val board = BoardImpl(4)
-        board.counter = 7
+        board.shiftLeft(0)
+        board.shiftUp(1)
 
         board.resetGame()
 
-        assertEquals(0, board.counter)
+        assertEquals(0, board.moveCount)
     }
 
     @Test
