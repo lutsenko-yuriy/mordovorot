@@ -1,6 +1,7 @@
 package view.tui
 
 import InputMode
+import board_model.BoardSize
 
 /** Bottom-left controls reminder (GH-18/GH-30/GH-44) - F5/F6/F9/F7/F8/Esc stay live even when
  *  the arrows/cursor don't. Kept at exactly 80 chars, the default/fallback terminal width
@@ -30,7 +31,7 @@ class KeyboardInput : TuiInput {
     override val switchTrigger = "shortcut"
 
     private var cursor = ArrowCursor(Edge.LEFT, 0)
-    private var squareSide = DEFAULT_SQUARE_SIDE
+    private var squareSide = BoardSize.DEFAULT
     private var arrowsEnabled = true
 
     /** Reset to `0` by [onDialogOpened] at the start of every modal loop, and defensively
@@ -147,9 +148,5 @@ class KeyboardInput : TuiInput {
         8 -> InputAction.Activate(HitTarget.ToolbarMode(InputMode.CONSOLE))
         9 -> InputAction.Activate(HitTarget.ToolbarNew)
         else -> InputAction.None
-    }
-
-    private companion object {
-        const val DEFAULT_SQUARE_SIDE = 4
     }
 }

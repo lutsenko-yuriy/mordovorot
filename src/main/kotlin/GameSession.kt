@@ -108,17 +108,15 @@ internal fun defaultView(
     // Built once per rebuild and handed to the View - the viewModel no longer needs a View to
     // exist first (GH-42 WU3: ViewModelImpl holds no View reference at all).
     val viewModel = ViewModelImpl(board, saves, decoratedAnalytics, startupRestoreDone, sizeChosenAtLaunch)
+    val modeSwitcherFactory = { v: View -> ModeSwitcherImpl(view = v, currentMode = mode, analytics = analytics) }
     return when (mode) {
         InputMode.CONSOLE ->
-            ViewImpl.create(
-                modeSwitcherFactory = { v -> ModeSwitcherImpl(view = v, currentMode = mode, analytics = analytics) },
-                viewModel = viewModel,
-            )
+            ViewImpl.create(modeSwitcherFactory = modeSwitcherFactory, viewModel = viewModel)
         InputMode.MOUSE ->
             TuiView.create(
                 terminalFactory(),
                 analytics = decoratedAnalytics,
-                modeSwitcherFactory = { v -> ModeSwitcherImpl(view = v, currentMode = mode, analytics = analytics) },
+                modeSwitcherFactory = modeSwitcherFactory,
                 viewModel = viewModel,
             )
         InputMode.KEYBOARD ->
@@ -126,7 +124,7 @@ internal fun defaultView(
                 terminalFactory(),
                 analytics = decoratedAnalytics,
                 input = KeyboardInput(),
-                modeSwitcherFactory = { v -> ModeSwitcherImpl(view = v, currentMode = mode, analytics = analytics) },
+                modeSwitcherFactory = modeSwitcherFactory,
                 viewModel = viewModel,
             )
     }
