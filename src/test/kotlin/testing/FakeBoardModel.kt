@@ -18,6 +18,9 @@ class FakeBoardModel(
 
     val calls = mutableListOf<String>()
 
+    /** Settable so tests can fake a count; [restoreState] sets it, like the real board. */
+    override var moveCount: Int = 0
+
     /** When set, [newGame] throws this instead of recording the call - mirrors
      *  [shiftLeftException] for the same purpose. */
     var newGameException: Throwable? = null
@@ -40,7 +43,7 @@ class FakeBoardModel(
         boardArray = IntArray(side * side) { it }
     }
 
-    override fun restoreState(state: IntArray) {
+    override fun restoreState(state: IntArray, moveCount: Int) {
         // Mirrors BoardImpl's own validation (audit finding on PR #46), including squareSide now
         // deriving from state's own length rather than requiring a match (GH-44 WU5) - without the
         // perfect-square check, a mis-sized fixture leaves a fake board whose array doesn't match
@@ -53,6 +56,7 @@ class FakeBoardModel(
         calls.add("restoreState(${state.toList()})")
         squareSide = restoredSide
         boardArray = state
+        this.moveCount = moveCount
     }
 
     override fun shiftLeft(row: Int) {
