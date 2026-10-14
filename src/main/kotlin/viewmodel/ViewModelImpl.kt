@@ -51,13 +51,23 @@ class ViewModelImpl(
         ask(UiRequest.ShowMessage(text))
     }
 
-    override fun shiftLeft(row: Int) = board.shiftLeft(row)
+    override fun shiftLeft(row: Int) = shift { board.shiftLeft(row) }
 
-    override fun shiftRight(row: Int) = board.shiftRight(row)
+    override fun shiftRight(row: Int) = shift { board.shiftRight(row) }
 
-    override fun shiftUp(col: Int) = board.shiftUp(col)
+    override fun shiftUp(col: Int) = shift { board.shiftUp(col) }
 
-    override fun shiftDown(col: Int) = board.shiftDown(col)
+    override fun shiftDown(col: Int) = shift { board.shiftDown(col) }
+
+    /** Runs a shift and tracks `board_solved` when it turns an unsolved board into a solved one
+     *  (GH-62). Loads never pass through here, so restoring a solved save doesn't fire it. */
+    private fun shift(action: () -> Unit) {
+        val wasSolved = board.isCorrect()
+        action()
+        if (!wasSolved && board.isCorrect()) {
+            analytics.track("board_solved", mapOf("move_count" to board.moveCount, "board_size" to board.squareSide))
+        }
+    }
 
     override fun resetGame() = board.resetGame()
 
@@ -72,7 +82,7 @@ class ViewModelImpl(
         // instead of silently missing from save_command_used (audit finding on PR #13).
         try {
             val existed = saves.exists(name)
-            saves.save(name, board.boardArray, board.squareSide)
+            saves.save(name, board.boardArray, board.squareSide, board.moveCount)
             analytics.track("save_command_used", mapOf("result" to "success", "overwrote_existing" to existed))
             showMessage("Saved as '$name'.")
             return true
@@ -115,7 +125,7 @@ class ViewModelImpl(
             }
             // No size-mismatch rejection (GH-44 WU5) - board.restoreState resizes the board to
             // match the save instead, so every successful saves.load() now restores.
-            board.restoreState(saved.state)
+            board.restoreState(saved.state, saved.moveCount)
             analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "success"))
             showMessage("Loaded '$name'.")
             return true
@@ -313,4 +323,6 @@ class ViewModelImpl(
     override fun boardState(): IntArray = board.boardArray.copyOf()
 
     override fun squareSide(): Int = board.squareSide
+
+    override fun moveCount(): Int = board.moveCount
 }

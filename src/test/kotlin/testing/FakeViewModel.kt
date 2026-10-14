@@ -35,6 +35,9 @@ class FakeViewModel : ViewModel {
     /** Scripts [squareSide]'s return value. */
     var side: Int = 4
 
+    /** Scripts [moveCount]'s return value. */
+    var moves: Int = 0
+
     override fun shiftLeft(row: Int) {
         calls.add("shiftLeft($row)")
     }
@@ -104,4 +107,8 @@ class FakeViewModel : ViewModel {
         calls.add("squareSide")
         return side
     }
+
+    // Not recorded in [calls] - it's a read-only query like [boardState], but tests asserting
+    // exact call lists predate it.
+    override fun moveCount(): Int = moves
 }
