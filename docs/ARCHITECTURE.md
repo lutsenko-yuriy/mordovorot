@@ -338,14 +338,9 @@ subsequent switch fires `input_mode_switched` instead (`docs/ANALYTICS_EVENTS.md
   JetBrains-maintained concurrency primitive the eventual KMP UI layer needs anyway,
   not a terminal-handling convenience — and it's the multiplatform artifact, so the
   same coordinate resolves per-target once other platforms are added, with no
-  declaration change. `kotlinx-coroutines-test` is a test-only addition alongside it,
-  added ahead of WU2 but still unused as of WU3 — every test in the suite runs on
-  plain `runBlocking`, matching the rest of the codebase, rather than mixing in
-  `runTest` ahead of a project-wide decision (see `build.gradle.kts`'s comment on the
-  dependency). `runTest` would give a timeout-failure instead of a silent hang on a
-  deadlocked coroutine test, the failure mode the request channel actually risks —
-  adopting it (or dropping the dependency and relying on Gradle's own test timeout
-  instead) is an open decision, not yet settled. Run on a single `runBlocking` event
+  declaration change. Tests run on plain `runBlocking`; `kotlinx-coroutines-test` was
+  dropped unused (checkup CHK-2026-10-14-light-2), with `withTimeout` guarding the
+  tests where a deadlock would otherwise hang silently. Run on a single `runBlocking` event
   loop with no dispatcher — there's no
   real concurrency to exploit here (every I/O call is blocking, single-consumer), so
   a thread pool (`Dispatchers.Default`/`IO`) or `Dispatchers.Unconfined` would only

@@ -11,7 +11,7 @@
 ## Frameworks and libraries
 
 - [kotlinx.coroutines](https://github.com/Kotlin/kotlinx.coroutines) 1.8.1: ViewModel ↔ View request channel
-- [kotlin.test](https://kotlinlang.org/api/latest/kotlin.test/) on JUnit 5; kotlinx-coroutines-test 1.8.1 (test only)
+- [kotlin.test](https://kotlinlang.org/api/latest/kotlin.test/) on JUnit 5
 
 ## Platforms
 
