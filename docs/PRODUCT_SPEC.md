@@ -15,10 +15,19 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
 - On starting a new game, the board is reshuffled via a Fisher-Yates shuffle.
 - The board is considered "correct" (solved) when its values are in ascending order.
 
-### Feature 2 — Moves
+### Feature 2 — Shifts and moves
 - The user can shift any row left or right, cyclically wrapping the value that falls off one end onto the other end.
 - The user can shift any column up or down, with the same cyclic wrap-around behavior.
-- Moves are addressed by a **1-based** row/column index (the first row/column is `1`, the last is `SQUARE_SIDE`); an index of `0` or greater than `SQUARE_SIDE` is rejected (GH-10).
+- Shifts are addressed by a **1-based** row/column index (the first row/column is `1`, the last is `SQUARE_SIDE`); an index of `0` or greater than `SQUARE_SIDE` is rejected (GH-10).
+- **Move counter (GH-62):** a *move* is a run of consecutive shifts on the same row or column, in
+  either direction - `left 1, left 1, right 1` is one move; `left 1, right 2, right 1` is three.
+  Row 1 and column 1 are different lines. A rejected shift doesn't count.
+  - Shown as `Moves: N` - after the board in console mode, on the row under the title in the TUI
+    (still there under `Congratulations ✓`).
+  - A new game (`reset`, `size <N>`, `[ New ]`, the startup size prompt) starts at `Moves: 0`.
+  - Switching input mode keeps the count.
+  - Saves store the count; loading restores it, and the next shift always starts a new move. A
+    save made before GH-62 loads as `Moves: 0`.
 
 ### Feature 3 — Console interaction
 - The user issues commands through a console (stdin) loop.

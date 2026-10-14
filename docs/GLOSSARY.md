@@ -11,7 +11,7 @@ When a new term is introduced during a `brief` session, add it here before creat
 | Board size | The valid range of square sides a game can use: 3–5, default 4. Chosen via `--size=N`, the startup size prompt, `size <N>`, or `[ New ]` | `BoardSize` |
 | Dialog | A modal box in the TUI (Save, Load, Exit, New-game size picker, Startup restore) that takes over input until confirmed or cancelled | `Dialog`, `DialogLayout` |
 | Input mode | Which front-end is driving the game: mouse TUI, keyboard TUI, or console. Switchable mid-session without losing the game | `InputMode` |
-| Move | A run of consecutive shifts on the same row or column, in any direction; shifting a different line starts a new move, and so does the first shift after a load. Counted and shown as `Moves: N` | *(none yet — added by GH-62)* |
+| Move | A run of consecutive shifts on the same row or column, in any direction; shifting a different line starts a new move, and so does the first shift after a load. Counted and shown as `Moves: N` | `BoardModel.moveCount` / `ViewModel.moveCount()` |
 | Save file | A local `.save` file under `saves/` storing a board's size and tile arrangement, created/updated via the `save` command and restored via `load` or the startup restore prompt | `SavedBoard`, `SaveRepository`, `FileSaveRepository` |
 | Save info | A save's name plus its board size, as shown in every save listing (e.g. `foo (5x5)`) | `SaveInfo` |
 | Shift | Cyclically rotating one row (left/right) or column (up/down) by one position | `shiftLeft`, `shiftRight`, `shiftUp`, `shiftDown` |
