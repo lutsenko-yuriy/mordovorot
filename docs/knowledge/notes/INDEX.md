@@ -24,3 +24,4 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-42: Redesign Presenter as a ViewModel (remove View reference)](GH-42.md)
 - [GH-44: Adjustable board size (3x3-5x5, default 4x4)](GH-44.md)
 - [GH-6: Save and load game state to/from local files](GH-6.md)
+- [GH-60: Add `bookmarks:` to GH notes; align README test comments](GH-60.md)
