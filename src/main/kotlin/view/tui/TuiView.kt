@@ -20,8 +20,8 @@ import viewmodel.display
  * (see the ticket's solved-state note - this is what lets a Congratulations screen exist at
  * all). Every mouse gesture resolves to an existing [ViewModel] call. WU4 adds the Save/Load/
  * Exit dialogs and the startup restore prompt: [confirmSaveBeforeExit]/[promptSaveName]/
- * [confirmRestore]/[chooseSaveToRestore] each run their own blocking modal loop over
- * [terminal], the same way [view.ViewImpl]'s console prompts block on `readLine()`. Confirmed
+ * [confirmRestore]/[chooseSaveToRestore] block in the shared [runModal] loop over
+ * [terminal] (GH-64), the same way [view.ViewImpl]'s console prompts block on `readLine()`. Confirmed
  * product decision: once solved, the arrows go dead ([ScreenState.arrowsEnabled] false) - see
  * [ScreenState]'s KDoc. WU5 adds the Congratulations screen itself: since every repaint asks
  * [ViewModel.isSolved] fresh rather than tracking a phase flag, the toolbar stays fully live
