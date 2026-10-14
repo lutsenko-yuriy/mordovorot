@@ -12,6 +12,7 @@ Version bumps are manual and require user approval before any change.
 
 ## CI/CD
 
-`.github/workflows/build.yml` runs `./gradlew build` (compile + test + assemble) on every
-push to `master` and on every pull request. It does not publish artifacts or bump versions —
+`.github/workflows/build.yml` runs `./gradlew build` (compile + test + assemble) and
+`scripts/notes/index.py --check` (notes `INDEX.md` is current) on every push to `master`
+and on every pull request. It does not publish artifacts or bump versions —
 those remain manual.
