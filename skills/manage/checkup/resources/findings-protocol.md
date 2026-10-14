@@ -26,7 +26,7 @@ Every finding — inline-fixed or deferred — gets a block in the run's `docs/k
 
 - **Finding:** <what was found>
 - **Debt quadrant:** deliberate/inadvertent × reckless/prudent
-- **Disposition:** fixed inline (commit `<sha>`) | deferred — see ledger, deadline `YYYY-MM-DD`
+- **Disposition:** fixed inline (commit `<sha>`, or PR #N if the PR was squash-merged) | deferred — see ledger, deadline `YYYY-MM-DD`
 - **Graduation candidate:** yes/no — if yes, name the mechanical check this dimension could graduate into
 ```
 
