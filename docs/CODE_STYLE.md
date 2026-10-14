@@ -22,4 +22,5 @@ None configured for any language (no ktlint/detekt, ruff, or shellcheck).
 
 ## Comments
 
-Explain why, not what. Keep new comments to one concise line, even though some older code uses denser comments.
+Explain why, not what. If a comment is longer than the method or property it describes, try
+to shorten it, but keeping its meaning matters more than brevity.
