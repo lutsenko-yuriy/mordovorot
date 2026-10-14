@@ -16,9 +16,8 @@ import viewmodel.display
 
 /**
  * The mouse-driven `view.View` implementation for GH-3: owns its own event loop instead of
- * going through [view.ViewImpl.play]'s console-only `while (!viewModel.isSolved())` loop
- * (see the ticket's solved-state note - this is what lets a Congratulations screen exist at
- * all). Every mouse gesture resolves to an existing [ViewModel] call. WU4 adds the Save/Load/
+ * going through [view.ViewImpl.play]'s console-only command loop (that's what lets a
+ * Congratulations screen exist at all). Every mouse gesture resolves to an existing [ViewModel] call. WU4 adds the Save/Load/
  * Exit dialogs and the startup restore prompt: [confirmSaveBeforeExit]/[promptSaveName]/
  * [confirmRestore]/[chooseSaveToRestore] block in the shared [runModal] loop over
  * [terminal] (GH-64), the same way [view.ViewImpl]'s console prompts block on `readLine()`. Confirmed
@@ -135,6 +134,8 @@ class TuiView internal constructor(
             is UiRequest.ConfirmSaveBeforeExit -> request.respond(confirmSaveBeforeExit())
             is UiRequest.PromptSaveName -> request.respond(promptSaveName())
             is UiRequest.ChooseBoardSize -> request.respond(runSizeDialog("startup"))
+            // Never raised here - the TUI has its own Congratulations screen (GH-66).
+            is UiRequest.ConfirmPlayAgain -> request.respond(false)
         }
     }
 

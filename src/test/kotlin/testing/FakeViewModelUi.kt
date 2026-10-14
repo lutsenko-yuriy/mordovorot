@@ -19,6 +19,7 @@ class FakeViewModelUi(
     private val confirmSaveBeforeExitResponses: MutableList<Boolean> = mutableListOf(),
     private val promptSaveNameResponses: MutableList<String?> = mutableListOf(),
     private val chooseBoardSizeResponses: MutableList<Int?> = mutableListOf(),
+    private val confirmPlayAgainResponses: MutableList<Boolean> = mutableListOf(),
 ) {
 
     val shownMessages = mutableListOf<String>()
@@ -33,6 +34,9 @@ class FakeViewModelUi(
         private set
 
     var promptSaveNameCallCount = 0
+        private set
+
+    var confirmPlayAgainCallCount = 0
         private set
 
     /** Runs [block] against [viewModel] while concurrently draining its [ViewModel.uiRequests] -
@@ -73,6 +77,10 @@ class FakeViewModelUi(
             is UiRequest.ChooseBoardSize -> {
                 chooseBoardSizeCalls.add(request.current)
                 request.respond(nextOrThrow(chooseBoardSizeResponses, "chooseBoardSize"))
+            }
+            is UiRequest.ConfirmPlayAgain -> {
+                confirmPlayAgainCallCount++
+                request.respond(nextOrThrow(confirmPlayAgainResponses, "confirmPlayAgain"))
             }
         }
     }

@@ -32,6 +32,17 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
 ### Feature 3 — Console interaction
 - The user issues commands through a console (stdin) loop.
 - After every command, the board is redisplayed and re-evaluated for the solved state.
+- **Solved state (GH-66):** once the board is solved, the final board and its `Moves: N` are
+  shown, then `Congratulations, you solved this puzzle in N moves!` (`in 1 move!` for one),
+  then `Start a new game? [y/N]`.
+  - `y`/`yes` shows the board-size prompt (`Board size? [3-5, Enter for <current>]`) and starts
+    a fresh game at the chosen size - Enter keeps the current size, but still starts a fresh
+    game.
+  - Anything else, or EOF, ends the session.
+  - A board that's already solved when loaded (`load` or the startup restore prompt) gets the
+    same flow straight away, with the save's own move count.
+  - These answers consume extra stdin lines (one, or two on `y`) - a scripted run must
+    account for them, like the exit prompts below.
 - `reset` reshuffles the board at its current size, starting a fresh game.
 - `mouse`/`keyboard` switch to that TUI mode without losing the current game (GH-30). If there's
   no interactive terminal to switch into, the command is rejected with an on-screen message and
@@ -81,7 +92,7 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
 
 ### Feature 5 — Exit command (GH-12)
 - `exit` or `quit` (case-insensitive, no arguments) ends the current session on demand, the
-  same as today's EOF (Ctrl+D) or board-solved exits.
+  same as EOF (Ctrl+D) or declining a new game once the board is solved (Feature 3).
 - Before quitting, it asks `Save before quitting? [y/N]`:
   - `y`/`yes` — prompts for a save name and saves under it (same underlying flow as the `save`
     command), then quits. A blank name or EOF at this second prompt quits without saving.
@@ -152,10 +163,3 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
 - All other dialog and startup-restore behavior (validation, re-prompting) is identical to
   Feature 6 — only the input method differs, which shows up in analytics as an `input_method`
   property of `keyboard` instead of `mouse`.
-
-## Known gaps
-
-- Console mode (`--console` or a non-interactive launch) has no documented win-condition
-  message — see `src/main/kotlin/view/ViewImpl.kt` for current behavior and treat it as the
-  source of truth until this section is expanded. The mouse-driven TUI's solved state (Feature
-  6) is unaffected — its Congratulations screen is documented above.

@@ -340,6 +340,32 @@ class ViewImplCommandTest {
     }
 
     @Test
+    fun `confirmPlayAgain returns true for y or yes, case-insensitively, after printing the prompt`(): Unit = runBlocking {
+        for (answer in listOf("y", "Y", "yes", "YES", "Yes")) {
+            val (view, output) = viewWith("$answer\n")
+            assertEquals(true, view.confirmPlayAgain(), "expected '$answer' to confirm")
+            assertEquals("Start a new game? [y/N] ", output.toString())
+        }
+    }
+
+    @Test
+    fun `confirmPlayAgain returns false for a blank line, a no, or garbage input`(): Unit = runBlocking {
+        for (answer in listOf("", "n", "no", "blah")) {
+            val (view, _) = viewWith("$answer\n")
+            assertEquals(false, view.confirmPlayAgain(), "expected '$answer' to decline")
+        }
+    }
+
+    @Test
+    fun `confirmPlayAgain returns false on EOF or a dead stream instead of throwing`(): Unit = runBlocking {
+        assertEquals(false, viewWith("").first.confirmPlayAgain())
+
+        val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
+        view.viewModel = FakeViewModel()
+        assertEquals(false, view.confirmPlayAgain())
+    }
+
+    @Test
     fun `chooseSaveToRestore returns the raw typed name unvalidated`(): Unit = runBlocking {
         val (view, _) = viewWith("bar\n")
 

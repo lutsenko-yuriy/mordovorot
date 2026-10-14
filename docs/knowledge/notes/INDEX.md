@@ -6,7 +6,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 
 ## Top themes
 
-- **template-drift** (4)
+- **template-drift** (5)
 - **token-cost** (3)
 - **scope-growth** (1)
 - **smoke-test-gap** (1)
@@ -29,6 +29,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-2-adjust-2: Adopt yuriys-agentic-boyz multi-skill workflow — follow-up](GH-2-adjust-2.md)
 - [GH-2: Adopt yuriys-agentic-boyz multi-skill workflow](GH-2.md)
 - [GH-60: Add `bookmarks:` to GH notes; align README test comments](GH-60.md)
+- [GH-66: Console solved-state message and final board](GH-66.md)
 
 ### token-cost
 - [GH-18: Keyboard-only navigation mode for TUI](GH-18.md)

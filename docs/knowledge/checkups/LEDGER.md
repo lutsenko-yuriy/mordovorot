@@ -17,9 +17,6 @@ Findings needing human decision or larger effort, each carrying an explicit dead
 
 | ID | Opened | Tier | Dimension | Debt quadrant | Summary | Deadline | Write-up |
 |---|---|---|---|---|---|---|---|
-| CHK-2026-10-14-heavy-1 | 2026-10-14 | heavy | Readability & structural clarity | prudent-inadvertent | `TuiView`'s four modal dialog loops duplicate the repaint/readEvent/Cancel-Activate-Quit skeleton — extract a shared loop helper → GH-64 | 2027-01-14 | [CHK-2026-10-14-heavy](CHK-2026-10-14-heavy.md) |
-| CHK-2026-10-14-heavy-2 | 2026-10-14 | heavy | Readability & structural clarity | prudent-inadvertent | Rethrow-SessionControl/rethrow-Cancellation/catch-Exception triplet copied in 5 places — extract one helper → GH-65 | 2027-01-14 | [CHK-2026-10-14-heavy](CHK-2026-10-14-heavy.md) |
-| CHK-2026-10-14-heavy-3 | 2026-10-14 | heavy | Cross-surface UX consistency | prudent-deliberate | Console mode exits silently on solve (final board never shown) vs TUI's Congratulations screen → GH-66 | 2026-12-14 | [CHK-2026-10-14-heavy](CHK-2026-10-14-heavy.md) |
 | CHK-2026-10-14-heavy-4 | 2026-10-14 | heavy | Cross-surface UX consistency | prudent-inadvertent | Console has no `help`/command list; all errors are a bare `Incorrect input` → GH-67 | 2027-01-14 | [CHK-2026-10-14-heavy](CHK-2026-10-14-heavy.md) |
 
 ## Resolved findings
@@ -33,3 +30,6 @@ Archive of findings once fixed or otherwise closed out.
 | CHK-2026-10-14-light-3 | 2026-10-14 | 2026-10-14 | light | Glossary/naming drift | GLOSSARY.md: stale `SQUARE_SIDE`/Save-file symbols, "solved" alias contradicts code, missing input mode/board size/dialog/toolbar/startup restore terms — fixed in commit `8986e12` | [CHK-2026-10-14-light](CHK-2026-10-14-light.md) |
 | CHK-2026-10-14-heavy-5 | 2026-10-14 | 2026-10-14 | heavy | Accessibility | Keyboard-mode board cursor is colour-only (yellow) — add a non-colour cue (reverse video/brackets) — fixed in commit `00824fc` | [CHK-2026-10-14-heavy](CHK-2026-10-14-heavy.md) |
 | CHK-2026-10-14-heavy-6 | 2026-10-14 | 2026-10-14 | heavy | Knowledge-corpus bookmark health | Bookmark vocabulary empty, all 14 notes `[]` — adopt proposed bookmarks and tag notes — fixed in commit `a93d932` | [CHK-2026-10-14-heavy](CHK-2026-10-14-heavy.md) |
+| CHK-2026-10-14-heavy-1 | 2026-10-14 | 2026-10-14 | heavy | Readability & structural clarity | `TuiView`'s four modal dialog loops duplicate the repaint/readEvent/Cancel-Activate-Quit skeleton — extract a shared loop helper → GH-64 — fixed in GH-64 (PR #71) | [CHK-2026-10-14-heavy](CHK-2026-10-14-heavy.md) |
+| CHK-2026-10-14-heavy-2 | 2026-10-14 | 2026-10-14 | heavy | Readability & structural clarity | Rethrow-SessionControl/rethrow-Cancellation/catch-Exception triplet copied in 5 places — extract one helper → GH-65 — fixed in GH-65 (PR #70) | [CHK-2026-10-14-heavy](CHK-2026-10-14-heavy.md) |
+| CHK-2026-10-14-heavy-3 | 2026-10-14 | 2026-10-15 | heavy | Cross-surface UX consistency | Console mode exits silently on solve (final board never shown) vs TUI's Congratulations screen → GH-66 — fixed in GH-66 | [CHK-2026-10-14-heavy](CHK-2026-10-14-heavy.md) |

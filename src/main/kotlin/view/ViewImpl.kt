@@ -148,6 +148,12 @@ class ViewImpl internal constructor(
         return line.trim().lowercase() in setOf("y", "yes")
     }
 
+    internal suspend fun confirmPlayAgain(): Boolean {
+        output.print("Start a new game? [y/N] ")
+        val line = readLineOrNull() ?: return false
+        return line.trim().lowercase() in setOf("y", "yes")
+    }
+
     internal suspend fun promptSaveName(): String? {
         output.print("Save name: ")
         val line = readLineOrNull() ?: return null
@@ -210,8 +216,8 @@ class ViewImpl internal constructor(
         if (parts.size != expected) throw IllegalArgumentException("Incorrect input")
     }
 
-    /** The console session: offers the startup restore prompt, then loops
-     *  `displayBoard`/`processCommand` until the board is solved (GH-42 WU3 - moved here from
+    /** The console session: offers the startup restore prompt, then loops `displayBoard` plus
+     *  `processCommand` - or, once solved, `offerPlayAgain` (GH-66) - until exit or EOF (GH-42 WU3 - moved here from
      *  the old `ConsoleViewModelImpl.play()` (GH-23), since a viewModel-owned loop that called back into
      *  a `View` it also raised requests on would deadlock - see hard problem 1 on the plan
      *  comment on GH-42). Alongside it, drains [viewModel]'s [viewmodel.ViewModel.uiRequests]
@@ -222,7 +228,7 @@ class ViewImpl internal constructor(
         val ui = launch { for (request in viewModel.uiRequests) handle(request) }
         try {
             viewModel.restoreOnStartup()
-            while (!viewModel.isSolved()) {
+            while (true) {
                 // Other control-flow exceptions (e.g. mode switch) propagate to GameSession.
                 try {
                     catchingNonControl(
@@ -232,7 +238,7 @@ class ViewImpl internal constructor(
                         },
                     ) {
                         displayBoard(viewModel.boardState(), viewModel.squareSide(), viewModel.moveCount())
-                        processCommand()
+                        if (viewModel.isSolved()) viewModel.offerPlayAgain() else processCommand()
                     }
                 } catch (e: EndOfInputException) {
                     break
@@ -256,6 +262,7 @@ class ViewImpl internal constructor(
             is UiRequest.ConfirmSaveBeforeExit -> request.respond(confirmSaveBeforeExit())
             is UiRequest.PromptSaveName -> request.respond(promptSaveName())
             is UiRequest.ChooseBoardSize -> request.respond(chooseBoardSize(request.current))
+            is UiRequest.ConfirmPlayAgain -> request.respond(confirmPlayAgain())
         }
     }
 }

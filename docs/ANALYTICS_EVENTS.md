@@ -108,6 +108,8 @@ Fired when a fresh game starts at a chosen board size via one of the post-launch
 | `trigger` | `string` | `startup_prompt`, `command` (`size <N>`), or `toolbar` (`[ New ]` → size-picker dialog). |
 | `input_method` | `string` | `console`, `mouse`, or `keyboard` — which UI mode the session was running in. |
 
+*GH-66:* `trigger` also takes `play_again` - the console size prompt after accepting `Start a new game?` on a solved board.
+
 ### `board_solved`
 
 Fired once when a shift solves the board during play, in any input mode (console included). Like
@@ -118,6 +120,16 @@ Fired once when a shift solves the board during play, in any input mode (console
 | `move_count` | `number` | The final move count shown to the player (a move is a run of consecutive shifts on one row/column). |
 | `board_size` | `number` | The board side (3-5). |
 | `input_method` | `string` | `console`, `mouse`, or `keyboard` — which UI mode the session was running in. |
+
+### `play_again_decision`
+
+Fired when the player answers the console's `Start a new game? [y/N]` prompt, shown after the
+solved board and Congratulations message - including when an already-solved save was loaded. *(GH-66)*
+
+| Property | Type | Description |
+|---|---|---|
+| `decision` | `string` | `new_game` (`y`/`yes` - the size prompt follows) or `quit` (anything else, Enter, or EOF - the session ends). |
+| `input_method` | `string` | Always `console` - the prompt only exists in console mode. |
 
 <!-- All events above are sent through `analytics.AnalyticsService`, currently backed by
      `analytics.NoopAnalyticsService` (no real SDK wired up yet). -->

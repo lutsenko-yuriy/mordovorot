@@ -2,6 +2,7 @@ package testing
 
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
+import viewmodel.ExitRequestedException
 import viewmodel.SaveInfo
 import viewmodel.UiRequest
 import viewmodel.ViewModel
@@ -34,6 +35,10 @@ class FakeViewModel : ViewModel {
 
     /** Scripts [squareSide]'s return value. */
     var side: Int = 4
+
+    /** Scripts [offerPlayAgain]: `false` declines (throws, ending the loop), `true` starts a
+     *  "new game" by clearing [solved]. */
+    var playAgainAccepted: Boolean = false
 
     /** Scripts [moveCount]'s return value. */
     var moves: Int = 0
@@ -75,6 +80,12 @@ class FakeViewModel : ViewModel {
 
     override suspend fun exitGame() {
         calls.add("exitGame")
+    }
+
+    override suspend fun offerPlayAgain() {
+        calls.add("offerPlayAgain")
+        if (!playAgainAccepted) throw ExitRequestedException()
+        solved = false
     }
 
     /** [SaveInfo.squareSide] is always `null` here - tests that care about size drive a real

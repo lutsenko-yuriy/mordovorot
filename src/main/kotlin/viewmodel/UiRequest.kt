@@ -29,4 +29,8 @@ sealed class UiRequest<R> {
      *  once it's established restore didn't happen. Answered with a chosen side, or `null` to
      *  keep [current]. */
     class ChooseBoardSize(val current: Int) : UiRequest<Int?>()
+
+    /** "Start a new game?" after the console board is solved (GH-66) - raised by
+     *  [ViewModelImpl.offerPlayAgain]. */
+    class ConfirmPlayAgain : UiRequest<Boolean>()
 }
