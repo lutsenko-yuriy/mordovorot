@@ -1,5 +1,5 @@
 ---
-bookmarks: []
+bookmarks: [token-cost]
 ---
 
 # GH-3: Mouse-driven TUI with directional edge arrows

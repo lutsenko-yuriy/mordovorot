@@ -13,3 +13,9 @@ surfaces a recurring theme worth tagging; re-validated quarterly as part of the 
 
 | Bookmark | Meaning |
 |---|---|
+| `token-cost` | Token/budget burn, or review/audit cost out of proportion to what it found |
+| `subagent-routing` | A routed skill's subagent didn't spawn, or spawned with the wrong/placeholder prompt |
+| `template-drift` | Gaps or staleness inherited from the upstream workflow template, or generated artifacts drifting from their sources |
+| `scope-growth` | A ticket's planned work units grew during implementation |
+| `smoke-test-gap` | A smoke test missed or misattributed a real problem |
+| `workflow-order` | Workflow steps run in the wrong order (e.g. debrief after merge) |

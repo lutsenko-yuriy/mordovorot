@@ -127,7 +127,7 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
   both are given, and no-interactive-terminal falls back to console mode the same as mouse mode;
   an explicit `--keyboard`/`--mouse` that can't get a TTY warns about the fallback.
 - **Board navigation:** arrow keys move a highlighted cursor around the ring of shift arrows
-  (`◀`/`▶`/`▲`/`▼`); the cursored arrow is shown in yellow. Enter or Space activates whichever
+  (`◀`/`▶`/`▲`/`▼`); the cursored arrow is shown in yellow on a reverse-video cell, so it stays visible without color. Enter or Space activates whichever
   arrow is highlighted, same effect as clicking it. Once solved, the cursor disappears and arrow
   keys/Enter go inert, matching the mouse mode's dimmed-arrows behavior.
 - **Toolbar shortcuts**, shown in light blue on the toolbar buttons — including a second row

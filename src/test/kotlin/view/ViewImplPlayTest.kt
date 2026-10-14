@@ -80,9 +80,7 @@ class ViewImplPlayTest {
      *  `uiRequests` handler must be launched *before* `restoreOnStartup()`, not just called
      *  before the loop - `FakeViewModel` can't catch this (it never raises a `UiRequest`), so
      *  this test drives a real [ViewModelImpl] through the handler instead (audit finding on
-     *  PR #46). [withTimeout] turns a regression here into a failure instead of a silent hang -
-     *  see `build.gradle.kts`'s note on `kotlinx-coroutines-test` for why that distinction
-     *  matters for this exact class of bug. */
+     *  PR #46). [withTimeout] turns a regression here into a failure instead of a silent hang. */
     @Test
     fun `play answers the startup restore prompt through its own request handler`(): Unit = runBlocking {
         val board = FakeBoardModel()

@@ -168,6 +168,18 @@ class ScreenRendererTest {
     }
 
     @Test
+    fun `the keyboard cursor is also reverse-video, so it is visible without color`() {
+        val state = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false)
+            .copy(cursor = ArrowCursor(Edge.TOP, 2))
+
+        val frame = renderer.render(state, terminalSize)
+
+        // WCAG 1.4.1 - color must not be the only cue (CHK-2026-10-14-heavy-5).
+        assertTrue(frame.contains("\u001B[7m\u001B[93m▲\u001B[39m\u001B[27m"))
+        assertFalse(renderer.render(state.copy(cursor = null), terminalSize).contains("\u001B[7m"))
+    }
+
+    @Test
     fun `toolbarShortcuts renders F-key labels instead of the plain ones, in the shortcut color`() {
         val plain = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false)
         val shortcuts = plain.copy(toolbarShortcuts = true)

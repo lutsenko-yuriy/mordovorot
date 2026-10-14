@@ -1,5 +1,5 @@
 ---
-bookmarks: []
+bookmarks: [smoke-test-gap]
 ---
 
 # GH-4: Automated test coverage for board_model and presenter

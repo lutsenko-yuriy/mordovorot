@@ -1,5 +1,5 @@
 ---
-bookmarks: []
+bookmarks: [template-drift]
 ---
 
 # GH-2: Adopt yuriys-agentic-boyz multi-skill workflow
