@@ -15,8 +15,8 @@ A record of all versioned releases. For planned work and known issues, see @docs
 
 ## [0.9.1] — 2026-10-14
 
-### Fixed
-- [meta] (PR #70) GH-65: add catchingNonControl exception-catch helper; route five non-control catch sites through it for consistency.
+### Changed
+- [app] (PR #70) GH-65: add catchingNonControl exception-catch helper; route five non-control catch sites through it for consistency. No user-visible behaviour change.
 
 ## [0.9.0] — 2026-10-14
 
