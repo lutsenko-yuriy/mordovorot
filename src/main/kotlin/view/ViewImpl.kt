@@ -6,14 +6,13 @@ import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 import java.io.PrintStream
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import viewmodel.ExitRequestedException
 import viewmodel.ModeSwitcher
 import viewmodel.NoopModeSwitcher
 import viewmodel.SaveInfo
-import viewmodel.SessionControlException
+import viewmodel.catchingNonControl
 import viewmodel.UiRequest
 import viewmodel.ViewModel
 import viewmodel.display
@@ -224,19 +223,22 @@ class ViewImpl internal constructor(
         try {
             viewModel.restoreOnStartup()
             while (!viewModel.isSolved()) {
+                // Other control-flow exceptions (e.g. ModeSwitchRequestedException) pass through
+                // catchingNonControl and play() to GameSession.
                 try {
-                    displayBoard(viewModel.boardState(), viewModel.squareSide(), viewModel.moveCount())
-                    processCommand()
+                    catchingNonControl(
+                        onError = { e ->
+                            if (e is EndOfInputException) throw e
+                            showMessage(e.message ?: "Error") // not System.err - stays in sync with the board output
+                        },
+                    ) {
+                        displayBoard(viewModel.boardState(), viewModel.squareSide(), viewModel.moveCount())
+                        processCommand()
+                    }
                 } catch (e: EndOfInputException) {
                     break
                 } catch (e: ExitRequestedException) {
                     break
-                } catch (e: SessionControlException) {
-                    throw e // e.g. ModeSwitchRequestedException - must reach GameSession, not the catch-all below
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    showMessage(e.message ?: "Error") // not System.err - stays in sync with the board output
                 }
             }
         } finally {
