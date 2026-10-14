@@ -1,5 +1,5 @@
 ---
-bookmarks: []
+bookmarks: [template-drift]
 ---
 
 # GH-2-adjust-1: Adopt yuriys-agentic-boyz multi-skill workflow — follow-up
