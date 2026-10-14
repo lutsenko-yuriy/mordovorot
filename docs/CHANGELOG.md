@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.10.0] — 2026-10-15
+
+### Added
+- [user] (PR #72) GH-66: console shows solved-state message and final board; congratulations prompt and play-again option follow. Board state is reset between games.
+
 ## [0.9.2] — 2026-10-14
 
 ### Changed
