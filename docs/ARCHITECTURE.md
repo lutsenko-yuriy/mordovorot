@@ -44,7 +44,8 @@ src/main/kotlin/
 │   ├── ViewModel.kt          # The one viewmodel interface (GH-42 WU3, collapsing GH-23's
 │   │                           # ConsoleViewModel/TuiViewModel split) — shift/reset/save/load/exit
 │   │                           # plus the read-only query surface (listSaves/saveExists/isSolved/
-│   │                           # boardState/squareSide) and restoreOnStartup
+│   │                           # boardState/squareSide), restoreOnStartup, and offerPlayAgain
+│   │                           # (console solved-state flow, GH-66)
 │   ├── ViewModelImpl.kt      # The one implementation (GH-42 WU3, collapsing BaseViewModel +
 │   │                           # ConsoleViewModelImpl + TuiViewModelImpl). board/saves/analytics
 │   │                           # are constructor params (each defaulted to a real impl) so fakes
@@ -53,9 +54,10 @@ src/main/kotlin/
 │   │                           # after the first, skipping a re-shown startup restore prompt after
 │   │                           # a mode switch (GH-30). Holds no `View` reference — see the
 │   │                           # "viewmodel" section below
-│   ├── UiRequest.kt          # Sealed request/response type for the six viewmodel→UI
+│   ├── UiRequest.kt          # Sealed request/response type for the seven viewmodel→UI
 │   │                           # interactions (ShowMessage/ConfirmRestore/ChooseSaveToRestore/
-│   │                           # ConfirmSaveBeforeExit/PromptSaveName/ChooseBoardSize (GH-44)),
+│   │                           # ConfirmSaveBeforeExit/PromptSaveName/ChooseBoardSize (GH-44)/
+│   │                           # ConfirmPlayAgain (GH-66, console only)),
 │   │                           # sent on
 │   │                           # ViewModel.uiRequests (GH-42 WU2)
 │   ├── SessionControlException.kt # Sealed marker base for control-flow exceptions that unwind
@@ -141,6 +143,8 @@ src/test/kotlin/
 │                            # instance, startupRestoreDone seeding, multi-switch chains (GH-30)
 ├── ModeSwitcherTest.kt    # TTY present/absent x target x trigger matrix; success vs
 │                            # rejected_no_tty; same-mode no-op (GH-30)
+├── SolvedConsoleScenarioTest.kt # Console solved state end to end: Congratulations, play-again
+│                            # prompt, already-solved loads (GH-66)
 ├── analytics/            # NoopAnalyticsService, InputMethodAnalyticsService coverage
 ├── board_model/         # BoardImpl coverage: reset/shuffle, isCorrect, all four shifts, restoreState
 ├── viewmodel/            # One test file per ViewModelImpl concern (GH-42 WU3, collapsing GH-23's
@@ -151,7 +155,8 @@ src/test/kotlin/
 │                           # the read-only query surface; ViewModelCancellationTest/
 │                           # ViewModelOrderingTest pin the request-channel's CancellationException
 │                           # guard and rendezvous ordering (GH-42 WU2); CatchingNonControlTest
-│                           # pins the shared catch-all helper (GH-65)
+│                           # pins the shared catch-all helper (GH-65); ViewModelPlayAgainTest
+│                           # covers offerPlayAgain (GH-66)
 ├── storage/               # FileSaveRepository coverage
 ├── view/                  # ViewImpl command-parsing coverage (incl. ViewImplPlayTest, the
 │                           # console session loop that moved here from ConsoleViewModelImpl.play()
@@ -224,9 +229,8 @@ are now `viewmodel.UiRequest<R>` values sent on `ViewModel.uiRequests`, a
 handled the request) is what keeps message/prompt ordering identical to the old
 blocking-call behavior. The one invariant that keeps this deadlock-free: a View's
 request handler must never call a request-raising `ViewModel` method
-(`saveGame`/`loadGame`/`exitGame`/`restoreOnStartup`) from inside itself — only the
-plain query methods are safe there. `saveGame`/`loadGame`/`exitGame`/`restoreOnStartup`
-are `suspend`; a cancelled coroutine resumes them with `CancellationException`, which
+(`saveGame`/`loadGame`/`exitGame`/`restoreOnStartup`/`offerPlayAgain`) from inside
+itself — only the plain query methods are safe there. All five are `suspend`; a cancelled coroutine resumes them with `CancellationException`, which
 each method's catch-all (`catchingNonControl`) rethrows rather than swallows (ordinary
 structured-concurrency hygiene).
 
