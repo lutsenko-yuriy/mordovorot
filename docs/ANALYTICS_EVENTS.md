@@ -125,8 +125,8 @@ Fired when a fresh game starts at a chosen board size via one of the post-launch
 
 | Screen name | When tracked |
 |---|---|
-| `screen_save_dialog` | Save dialog opens in the mouse-driven TUI (toolbar click, or via the Exit dialog's "Yes"). Property `opened_from`: `toolbar` or `exit_flow`. *(GH-3)* |
-| `screen_load_dialog` | Load dialog opens in the mouse-driven TUI (toolbar click, or startup restore when saves exist). Properties `opened_from`: `toolbar` or `startup`; `save_file_count`: number. *(GH-3)* |
-| `screen_exit_dialog` | Exit button clicked in the mouse-driven TUI. *(GH-3)* |
-| `screen_congratulations` | A shift click solves the board while the mouse-driven TUI is active - fires once on that transition. Does **not** fire when an already-solved save is restored (toolbar Load or startup restore); the Congratulations screen still renders, but nothing was solved *by playing* this session. *(GH-3)* |
+| `screen_save_dialog` | Save dialog opens in the TUI (toolbar click/F5, or via the Exit dialog's "Yes"). Property `opened_from`: `toolbar` or `exit_flow`. *(GH-3)* |
+| `screen_load_dialog` | Load dialog opens in the TUI (toolbar click/F6, or startup restore when saves exist). Properties `opened_from`: `toolbar` or `startup`; `save_file_count`: number. *(GH-3)* |
+| `screen_exit_dialog` | Exit dialog opens in the TUI (Exit button click, or Escape in keyboard mode). *(GH-3, GH-18)* |
+| `screen_congratulations` | A shift (click or keyboard Enter/Space) solves the board while the TUI is active - fires once on that transition. Does **not** fire when an already-solved save is restored (toolbar Load or startup restore); the Congratulations screen still renders, but nothing was solved *by playing* this session. *(GH-3)* |
 | `screen_size_dialog` | TUI size-picker dialog opens. Property `opened_from`: `toolbar` (via `[ New ]`) or `startup` (no `--size` given, restore prompt declined/empty). *(GH-44)* |
