@@ -82,11 +82,7 @@ class ViewModelImpl(
         return catchingNonControl(
             onError = { e ->
                 analytics.track("save_command_used", mapOf("result" to "error"))
-                // e.message alone can be uninformative or outright misleading here - e.g.
-                // AccessDeniedException's message is just the offending temp-file path, with no
-                // hint that a save failed at all (audit round 3 on GH-12/PR #15, surfaced by the
-                // exit-before-quitting flow where this is now the sole explanation for an aborted
-                // quit, not just one line among several after an explicit `save`).
+                // Always say the save failed - e.message alone can be just a path (PR #15).
                 showMessage("Could not save as '$name': ${e.message ?: e::class.simpleName}")
                 false
             },
@@ -242,8 +238,7 @@ class ViewModelImpl(
         if (startupRestoreDone) return
         startupRestoreDone = true
         if (sizeChosenAtLaunch) return
-        // Any failure here (unreadable saves dir, view I/O error) just means the game starts
-        // fresh instead of crashing at boot.
+        // Any failure here just starts a fresh game instead of crashing at boot.
         catchingNonControl(onError = {}) {
             val saveInfos = saves.listSaves().map { SaveInfo(it, sizeOf(it)) }
             val restored = if (saveInfos.isEmpty()) {

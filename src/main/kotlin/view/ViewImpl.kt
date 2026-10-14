@@ -223,13 +223,12 @@ class ViewImpl internal constructor(
         try {
             viewModel.restoreOnStartup()
             while (!viewModel.isSolved()) {
-                // Other control-flow exceptions (e.g. ModeSwitchRequestedException) pass through
-                // catchingNonControl and play() to GameSession.
+                // Other control-flow exceptions (e.g. mode switch) propagate to GameSession.
                 try {
                     catchingNonControl(
                         onError = { e ->
                             if (e is EndOfInputException) throw e
-                            showMessage(e.message ?: "Error") // not System.err - stays in sync with the board output
+                            showMessage(e.message ?: "Error") // not System.err - keeps order with board output
                         },
                     ) {
                         displayBoard(viewModel.boardState(), viewModel.squareSide(), viewModel.moveCount())

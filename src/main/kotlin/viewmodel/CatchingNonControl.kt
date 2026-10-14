@@ -2,9 +2,8 @@ package viewmodel
 
 import kotlinx.coroutines.CancellationException
 
-/** Runs [block], routing any ordinary [Exception] to [onError] while always rethrowing
- *  [SessionControlException] and [CancellationException] - the catch-all every call site needs,
- *  in one place so none can forget a rethrow (GH-65). Inline, so [block] may suspend. */
+/** Runs [block], passing any ordinary [Exception] to [onError]; [SessionControlException] and
+ *  [CancellationException] are always rethrown. Inline, so [block] may suspend. */
 inline fun <T> catchingNonControl(onError: (Exception) -> T, block: () -> T): T =
     try {
         block()
