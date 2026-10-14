@@ -37,7 +37,7 @@ src/main/kotlin/
 │   ├── BoardSize.kt     # The valid board side range (MIN 3 / MAX 5 / DEFAULT 4) and its
 │   │                      # validation - the one place the range lives (GH-44)
 │   └── BoardImpl.kt     # IntArray-backed board state + shift/reset/newGame/isCorrect logic.
-│                          # `SQUARE_SIDE` is a read-only view over a private mutable field:
+│                          # `squareSide` is a read-only view over a private mutable field:
 │                          # `newGame(side)` is the only thing that ever changes it (GH-44),
 │                          # `resetGame()` reshuffles at the same size
 ├── viewmodel/
@@ -220,8 +220,9 @@ each method's catch-all rethrows rather than swallows (ordinary structured-concu
 hygiene).
 
 ### view
-Console I/O only: reads commands from stdin, renders the board, and calls
-into `ViewModel`. Should not manipulate `board_model` directly.
+UI only: `ViewImpl` reads console commands from stdin, `view.tui.TuiView` drives the
+mouse/keyboard TUI; both render the board and call into `ViewModel`. Should not
+manipulate `board_model` directly.
 
 **1-based console dialect (GH-10):** the console is 1-based (displayed tile
 values, `left`/`right`/`up`/`down` row/column input); `board_model` and

@@ -14,7 +14,7 @@ private const val REVERSE_OFF = "\u001B[27m"
 private const val CURSOR_COLOR_ON = "\u001B[93m"
 private const val CURSOR_COLOR_OFF = "\u001B[39m"
 
-/** SGR bright-cyan foreground on/off - GH-18's F5/F6/Esc toolbar shortcut labels. */
+/** SGR bright-cyan foreground on/off - GH-18's keyboard-mode toolbar shortcut labels. */
 private const val SHORTCUT_COLOR_ON = "\u001B[96m"
 private const val SHORTCUT_COLOR_OFF = "\u001B[39m"
 

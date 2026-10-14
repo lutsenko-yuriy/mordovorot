@@ -8,8 +8,8 @@ Each tier is tracked as "not yet done this period" — a period label, not an ex
 
 | Tier | Cadence | Last run | Period covered | Next due |
 |---|---|---|---|---|
-| Light | 1st of every calendar month | never | — | — |
-| Heavy | 14th of Jan/Apr/Jul/Oct | never | — | — |
+| Light | 1st of every calendar month | 2026-10-14 | 2026-10 | 2026-11-01 |
+| Heavy | 14th of Jan/Apr/Jul/Oct | 2026-10-14 | 2026-Q4 | 2027-01-14 |
 
 ## Open findings
 
@@ -17,7 +17,15 @@ Findings needing human decision or larger effort, each carrying an explicit dead
 
 | ID | Opened | Tier | Dimension | Debt quadrant | Summary | Deadline | Write-up |
 |---|---|---|---|---|---|---|---|
-| _none yet_ | | | | | | | |
+| CHK-2026-10-14-light-1 | 2026-10-14 | light | Unused functionality | prudent-inadvertent | `BoardImpl.counter` is write-only (reset, never incremented/read outside 3 tests) — repurpose in GH-62 or remove | 2026-11-14 | [CHK-2026-10-14-light](CHK-2026-10-14-light.md) |
+| CHK-2026-10-14-light-2 | 2026-10-14 | light | Unused functionality | prudent-deliberate | `kotlinx-coroutines-test` unused since GH-42 — decide: adopt `runTest` or drop the dependency | 2026-11-30 | [CHK-2026-10-14-light](CHK-2026-10-14-light.md) |
+| CHK-2026-10-14-light-3 | 2026-10-14 | light | Glossary/naming drift | prudent-inadvertent | GLOSSARY.md: stale `SQUARE_SIDE`/Save-file symbols, "solved" alias contradicts code, missing input mode/board size/dialog/toolbar/startup restore terms | 2026-10-31 | [CHK-2026-10-14-light](CHK-2026-10-14-light.md) |
+| CHK-2026-10-14-heavy-1 | 2026-10-14 | heavy | Readability & structural clarity | prudent-inadvertent | `TuiView`'s four modal dialog loops duplicate the repaint/readEvent/Cancel-Activate-Quit skeleton — extract a shared loop helper | 2027-01-14 | [CHK-2026-10-14-heavy](CHK-2026-10-14-heavy.md) |
+| CHK-2026-10-14-heavy-2 | 2026-10-14 | heavy | Readability & structural clarity | prudent-inadvertent | Rethrow-SessionControl/rethrow-Cancellation/catch-Exception triplet copied in 5 places — extract one helper | 2027-01-14 | [CHK-2026-10-14-heavy](CHK-2026-10-14-heavy.md) |
+| CHK-2026-10-14-heavy-3 | 2026-10-14 | heavy | Cross-surface UX consistency | prudent-deliberate | Console mode exits silently on solve (final board never shown) vs TUI's Congratulations screen | 2026-12-14 | [CHK-2026-10-14-heavy](CHK-2026-10-14-heavy.md) |
+| CHK-2026-10-14-heavy-4 | 2026-10-14 | heavy | Cross-surface UX consistency | prudent-inadvertent | Console has no `help`/command list; all errors are a bare `Incorrect input` | 2027-01-14 | [CHK-2026-10-14-heavy](CHK-2026-10-14-heavy.md) |
+| CHK-2026-10-14-heavy-5 | 2026-10-14 | heavy | Accessibility | prudent-inadvertent | Keyboard-mode board cursor is colour-only (yellow) — add a non-colour cue (reverse video/brackets) | 2026-12-14 | [CHK-2026-10-14-heavy](CHK-2026-10-14-heavy.md) |
+| CHK-2026-10-14-heavy-6 | 2026-10-14 | heavy | Knowledge-corpus bookmark health | prudent-inadvertent | Bookmark vocabulary empty, all 14 notes `[]` — adopt proposed bookmarks and tag notes | 2026-11-14 | [CHK-2026-10-14-heavy](CHK-2026-10-14-heavy.md) |
 
 ## Resolved findings
 
