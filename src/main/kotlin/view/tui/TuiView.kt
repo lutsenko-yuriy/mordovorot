@@ -214,17 +214,10 @@ class TuiView internal constructor(
             title = "Save before quitting?",
             buttons = listOf(DialogButtonSpec("yes", "Yes"), DialogButtonSpec("no", "No"), DialogButtonSpec("cancel", "Cancel")),
         )
-        while (true) {
-            repaintWithDialog(dialog)
-            when (val action = input.onDialogEvent(terminal.readEvent(), dialog, checkNotNull(dialogLayout))) {
-                InputAction.Cancel -> return trackDialogCancelled("exit")
-                is InputAction.Activate -> when (action.target) {
-                    HitTarget.DialogButton("yes") -> { pendingExitAnswer = true; viewModel.exitGame(); return }
-                    HitTarget.DialogButton("no") -> { pendingExitAnswer = false; viewModel.exitGame(); return }
-                    HitTarget.DialogButton("cancel") -> return trackDialogCancelled("exit")
-                    else -> {}
-                }
-                InputAction.Quit -> return
+        runModal("exit", cancelled = Unit, dialog = { dialog }) { action ->
+            when ((action as? InputAction.Activate)?.target) {
+                HitTarget.DialogButton("yes") -> { pendingExitAnswer = true; viewModel.exitGame(); return }
+                HitTarget.DialogButton("no") -> { pendingExitAnswer = false; viewModel.exitGame(); return }
                 else -> {}
             }
         }
@@ -247,31 +240,24 @@ class TuiView internal constructor(
         val initialMessage = pendingMessage
         pendingMessage = null
         var typed = ""
-        while (true) {
-            val dialog = Dialog(
+        val dialog = {
+            Dialog(
                 kind = Dialog.Kind.SAVE,
                 title = "Save game",
                 message = overwriteWarning(typed) ?: initialMessage,
                 textFieldValue = typed,
                 buttons = listOf(DialogButtonSpec("save", "Save"), DialogButtonSpec("cancel", "Cancel")),
             )
-            repaintWithDialog(dialog)
-            when (val action = input.onDialogEvent(terminal.readEvent(), dialog, checkNotNull(dialogLayout))) {
+        }
+        return runModal("save", cancelled = SaveOutcome.Cancel, dialog = dialog) { action ->
+            when (action) {
                 is InputAction.TextChar -> typed += action.char
                 InputAction.EraseChar -> typed = typed.dropLast(1)
-                // An empty name is "skip saving" (matches the invalid-name re-prompt's own
-                // "press Enter to skip saving" instruction) rather than a Confirm(""), which
-                // would re-prompt forever - ViewModelImpl.promptForValidSaveName only stops on
-                // null. Applies to both Submit and the Save button - round 1 only fixed Enter
+                // An empty name means "skip saving" - Confirm("") would re-prompt forever
                 // (audit round 2 on PR #24).
                 InputAction.Submit -> return if (typed.isEmpty()) SaveOutcome.Cancel else SaveOutcome.Confirm(typed)
-                InputAction.Cancel -> { trackDialogCancelled("save"); return SaveOutcome.Cancel }
-                is InputAction.Activate -> when (action.target) {
-                    HitTarget.DialogButton("save") -> return if (typed.isEmpty()) SaveOutcome.Cancel else SaveOutcome.Confirm(typed)
-                    HitTarget.DialogButton("cancel") -> { trackDialogCancelled("save"); return SaveOutcome.Cancel }
-                    else -> {}
-                }
-                InputAction.Quit -> return SaveOutcome.Cancel
+                is InputAction.Activate ->
+                    if (action.target == HitTarget.DialogButton("save")) return if (typed.isEmpty()) SaveOutcome.Cancel else SaveOutcome.Confirm(typed)
                 else -> {}
             }
         }
@@ -297,8 +283,8 @@ class TuiView internal constructor(
         analytics.track("screen_load_dialog", mapOf("opened_from" to openedFrom, "save_file_count" to saves.size))
         input.onDialogOpened()
         var selected = if (saves.isNotEmpty()) 0 else -1
-        while (true) {
-            val dialog = Dialog(
+        val dialog = {
+            Dialog(
                 kind = Dialog.Kind.LOAD,
                 title = title,
                 message = if (saves.isEmpty()) "No saves found." else null,
@@ -306,16 +292,11 @@ class TuiView internal constructor(
                 selectedIndex = selected,
                 buttons = listOf(DialogButtonSpec("load", "Load"), DialogButtonSpec("cancel", "Cancel")),
             )
-            repaintWithDialog(dialog)
-            when (val action = input.onDialogEvent(terminal.readEvent(), dialog, checkNotNull(dialogLayout))) {
-                InputAction.Cancel -> { trackDialogCancelled("load"); return LoadOutcome.Cancel }
-                is InputAction.Activate -> when (val target = action.target) {
-                    is HitTarget.DialogListRow -> selected = target.index
-                    HitTarget.DialogButton("load") -> if (selected in saves.indices) return LoadOutcome.Confirm(saves[selected].name)
-                    HitTarget.DialogButton("cancel") -> { trackDialogCancelled("load"); return LoadOutcome.Cancel }
-                    else -> {}
-                }
-                InputAction.Quit -> return LoadOutcome.Cancel
+        }
+        return runModal("load", cancelled = LoadOutcome.Cancel, dialog = dialog) { action ->
+            when (val target = (action as? InputAction.Activate)?.target) {
+                is HitTarget.DialogListRow -> selected = target.index
+                HitTarget.DialogButton("load") -> if (selected in saves.indices) return LoadOutcome.Confirm(saves[selected].name)
                 else -> {}
             }
         }
@@ -338,28 +319,29 @@ class TuiView internal constructor(
             buttons = (BoardSize.MIN..BoardSize.MAX).map { DialogButtonSpec(it.toString(), "${it}x$it") } +
                 DialogButtonSpec("cancel", "Cancel"),
         )
-        while (true) {
-            repaintWithDialog(dialog)
-            when (val action = input.onDialogEvent(terminal.readEvent(), dialog, checkNotNull(dialogLayout))) {
-                InputAction.Cancel -> { trackDialogCancelled("size"); return null }
-                is InputAction.Activate -> when (val target = action.target) {
-                    is HitTarget.DialogButton -> when (target.id) {
-                        "cancel" -> { trackDialogCancelled("size"); return null }
-                        else -> {
-                            val chosen = target.id.toIntOrNull()
-                            if (chosen != null) return chosen
-                        }
-                    }
-                    else -> {}
-                }
-                InputAction.Quit -> return null
-                else -> {}
-            }
+        return runModal<Int?>("size", cancelled = null, dialog = { dialog }) { action ->
+            val target = (action as? InputAction.Activate)?.target
+            (target as? HitTarget.DialogButton)?.id?.toIntOrNull()?.let { return it }
         }
     }
 
-    private fun trackDialogCancelled(dialog: String) {
-        analytics.track("dialog_cancelled", mapOf("dialog" to dialog))
+    /** Shared dialog loop: repaints [dialog] and passes each event to [onAction], which returns
+     *  from the caller when done. Escape or the "cancel" button tracks `dialog_cancelled` and
+     *  returns [cancelled]; end of input returns it untracked. */
+    private inline fun <T> runModal(name: String, cancelled: T, dialog: () -> Dialog, onAction: (InputAction) -> Unit): T {
+        while (true) {
+            val current = dialog()
+            repaintWithDialog(current)
+            val action = input.onDialogEvent(terminal.readEvent(), current, checkNotNull(dialogLayout))
+            when {
+                action == InputAction.Quit -> return cancelled
+                action == InputAction.Cancel || (action as? InputAction.Activate)?.target == HitTarget.DialogButton("cancel") -> {
+                    analytics.track("dialog_cancelled", mapOf("dialog" to name))
+                    return cancelled
+                }
+                else -> onAction(action)
+            }
+        }
     }
 
     private fun repaint() = repaintWithDialog(null)
