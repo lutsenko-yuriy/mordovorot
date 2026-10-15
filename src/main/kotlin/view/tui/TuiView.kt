@@ -14,6 +14,7 @@ import viewmodel.UiRequest
 import viewmodel.UnsolvableSaveChoice
 import viewmodel.ViewModel
 import viewmodel.display
+import viewmodel.displayWithSize
 
 /**
  * The mouse-driven `view.View` implementation for GH-3: owns its own event loop instead of
@@ -98,7 +99,11 @@ class TuiView internal constructor(
             // GH-18's input-strategy seam (WU3): mouse reporting is MouseInput's own business
             // now, never turned on by a keyboard-only mode.
             input.prepare(terminal)
-            viewModel.restoreOnStartup()
+            try {
+                viewModel.restoreOnStartup()
+            } catch (e: ExitRequestedException) {
+                return@coroutineScope // Exit from an unsolvable save at startup (GH-74).
+            }
             repaint()
             while (true) {
                 // layout is always non-null here - the repaint() call just above (or the one at
@@ -134,10 +139,11 @@ class TuiView internal constructor(
             is UiRequest.ChooseSaveToRestore -> request.respond(chooseSaveToRestore(request.saves))
             is UiRequest.ConfirmSaveBeforeExit -> request.respond(confirmSaveBeforeExit())
             is UiRequest.PromptSaveName -> request.respond(promptSaveName())
-            is UiRequest.ChooseBoardSize -> request.respond(runSizeDialog("startup"))
+            is UiRequest.ChooseBoardSize -> request.respond(runSizeDialog(request.origin))
             // Never raised here - the TUI has its own Congratulations screen (GH-66).
             is UiRequest.ConfirmPlayAgain -> request.respond(false)
-            is UiRequest.ResolveUnsolvableSave -> request.respond(UnsolvableSaveChoice.EXIT)
+            is UiRequest.ResolveUnsolvableSave ->
+                request.respond(runUnsolvableDialog(request.save, if (request.atStartup) "startup" else "toolbar"))
         }
     }
 
@@ -210,17 +216,54 @@ class TuiView internal constructor(
     }
 
     private suspend fun handleToolbarExit() {
+        pendingExitAnswer = runExitDialog(cancellable = true) ?: return
+        viewModel.exitGame()
+    }
+
+    /** The Save-before-quitting dialog: `true`/`false` for Yes/No, `null` on Cancel/Escape or end
+     *  of input. Without Cancel ([cancellable] `false`, GH-74's mid-game Exit from an unsolvable
+     *  save) Escape is ignored. */
+    private fun runExitDialog(cancellable: Boolean): Boolean? {
         analytics.track("screen_exit_dialog")
         input.onDialogOpened()
+        val buttons = listOf(DialogButtonSpec("yes", "Yes"), DialogButtonSpec("no", "No"))
         val dialog = Dialog(
             kind = Dialog.Kind.EXIT,
             title = "Save before quitting?",
-            buttons = listOf(DialogButtonSpec("yes", "Yes"), DialogButtonSpec("no", "No"), DialogButtonSpec("cancel", "Cancel")),
+            buttons = if (cancellable) buttons + DialogButtonSpec("cancel", "Cancel") else buttons,
         )
-        runModal("exit", cancelled = Unit, dialog = { dialog }) { action ->
+        return runModal<Boolean?>("exit", cancelled = null, cancellable = cancellable, dialog = { dialog }) { action ->
             when ((action as? InputAction.Activate)?.target) {
-                HitTarget.DialogButton("yes") -> { pendingExitAnswer = true; viewModel.exitGame(); return }
-                HitTarget.DialogButton("no") -> { pendingExitAnswer = false; viewModel.exitGame(); return }
+                HitTarget.DialogButton("yes") -> return true
+                HitTarget.DialogButton("no") -> return false
+                else -> {}
+            }
+        }
+    }
+
+    /** GH-74's choice for an unsolvable save. Non-cancellable - the ticket offers exactly these
+     *  three outcomes; end of input means Exit. Shows the viewModel's can't-be-solved message,
+     *  which [showMessage] just parked in [pendingMessage]. */
+    private fun runUnsolvableDialog(save: SaveInfo, openedFrom: String): UnsolvableSaveChoice {
+        analytics.track("screen_unsolvable_dialog", mapOf("opened_from" to openedFrom))
+        input.onDialogOpened()
+        val message = pendingMessage ?: "'${save.displayWithSize()}' can't be solved by any sequence of shifts."
+        pendingMessage = null
+        val dialog = Dialog(
+            kind = Dialog.Kind.UNSOLVABLE,
+            title = "Can't be solved",
+            message = message,
+            buttons = listOf(
+                DialogButtonSpec("repair", "Repair & load"),
+                DialogButtonSpec("new", "New game"),
+                DialogButtonSpec("exit", "Exit"),
+            ),
+        )
+        return runModal("unsolvable", cancelled = UnsolvableSaveChoice.EXIT, cancellable = false, dialog = { dialog }) { action ->
+            when ((action as? InputAction.Activate)?.target) {
+                HitTarget.DialogButton("repair") -> return UnsolvableSaveChoice.REPAIR
+                HitTarget.DialogButton("new") -> return UnsolvableSaveChoice.NEW_GAME
+                HitTarget.DialogButton("exit") -> return UnsolvableSaveChoice.EXIT
                 else -> {}
             }
         }
@@ -308,7 +351,7 @@ class TuiView internal constructor(
     /** Runs the size-picker dialog's own blocking loop: a button per valid side, plus Cancel -
      *  buttons-only, like [handleToolbarExit]'s Exit dialog, so no text field or list to manage.
      *  Shared by the startup [UiRequest.ChooseBoardSize] handler and (GH-44 WU3) the toolbar
-     *  `[ New ]` button/F9 - [openedFrom] is `"startup"` or `"toolbar"`. Returns the chosen side,
+     *  `[ New ]` button/F9 - [openedFrom] is `"toolbar"` or a [UiRequest.ChooseBoardSize.origin]. Returns the chosen side,
      *  or `null` on Cancel/Escape/EOF - deliberately returns a value instead of calling
      *  `viewModel.newGame` itself, so the startup call site stays outside the deadlock-prone
      *  "View calls a request-raising viewModel method from its own request handler" shape (see
@@ -330,14 +373,22 @@ class TuiView internal constructor(
 
     /** Shared dialog loop: repaints [dialog] and passes each event to [onAction], which returns
      *  from the caller when done. Escape or the "cancel" button tracks `dialog_cancelled` and
-     *  returns [cancelled]; end of input returns it untracked. */
-    private inline fun <T> runModal(name: String, cancelled: T, dialog: () -> Dialog, onAction: (InputAction) -> Unit): T {
+     *  returns [cancelled] - unless not [cancellable], when Escape is ignored. End of input
+     *  returns [cancelled] untracked either way. */
+    private inline fun <T> runModal(
+        name: String,
+        cancelled: T,
+        cancellable: Boolean = true,
+        dialog: () -> Dialog,
+        onAction: (InputAction) -> Unit,
+    ): T {
         while (true) {
             val current = dialog()
             repaintWithDialog(current)
             val action = input.onDialogEvent(terminal.readEvent(), current, checkNotNull(dialogLayout))
             when {
                 action == InputAction.Quit -> return cancelled
+                action == InputAction.Cancel && !cancellable -> {}
                 action == InputAction.Cancel || (action as? InputAction.Activate)?.target == HitTarget.DialogButton("cancel") -> {
                     analytics.track("dialog_cancelled", mapOf("dialog" to name))
                     return cancelled
@@ -398,10 +449,11 @@ class TuiView internal constructor(
     internal suspend fun chooseSaveToRestore(saves: List<SaveInfo>): String? =
         (runLoadDialog("Restore a saved game?", "startup", preloadedSaves = saves) as? LoadOutcome.Confirm)?.name
 
-    /** Consumes the answer the Exit dialog's Yes/No click already collected - see
-     *  [pendingExitAnswer]. */
+    /** Consumes the answer the toolbar Exit dialog already collected - see [pendingExitAnswer].
+     *  With none (an Exit from GH-74's unsolvable-save dialog), asks here instead; end of input
+     *  declines, like the console's EOF. */
     internal suspend fun confirmSaveBeforeExit(): Boolean {
-        val answer = pendingExitAnswer ?: false
+        val answer = pendingExitAnswer ?: runExitDialog(cancellable = false) ?: false
         pendingExitAnswer = null
         return answer
     }
