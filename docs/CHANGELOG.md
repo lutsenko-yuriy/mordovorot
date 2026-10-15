@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.11.1] — 2026-10-15 (PR #76 merged)
+
+### Fixed
+- [wip] (PR #76) GH-74 (WU1/2): new games on 3x3/5x5 boards are always solvable (parity-fixed shuffle); saves that can't be solved are marked `unsolvable` in every save listing, and `load` accepts the marked form. Loading such a save still restores it as-is - the repair / new game / exit choice lands in WU2.
+
 ## [0.11.0] — 2026-10-15
 
 ### Added
