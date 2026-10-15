@@ -1,8 +1,17 @@
+import board_model.BoardImpl
+import kotlinx.coroutines.runBlocking
+import storage.FileSaveRepository
+import testing.FakeTerminal
 import testing.RecordingAnalyticsService
+import view.tui.TerminalEvent
+import view.tui.TerminalSize
+import kotlin.io.path.createTempDirectory
 import testing.RecordingAnalyticsService.Event
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /** GH-79 scenarios: console mode removed - the no-terminal abort, the `--console` notice, the TUI
  *  without a console switch, the failed-switch fallback, and old saves still loading. */
@@ -95,17 +104,45 @@ class ConsoleRemovalScenarioTest {
         assertEquals(emptyList(), notices)
     }
 
+    private val scrambled = IntArray(16) { 15 - it }
+
+    private class Run(val terminal: FakeTerminal, val board: BoardImpl, val analytics: RecordingAnalyticsService)
+
+    /** A real [GameSession] in [mode] with `--size` semantics, wired through `defaultView`. */
+    private fun session(mode: InputMode, events: List<TerminalEvent> = emptyList()): Run = runBlocking {
+        val terminal = FakeTerminal(events.toMutableList(), TerminalSize(80, 40))
+        val analytics = RecordingAnalyticsService()
+        val board = BoardImpl(4).apply { restoreState(scrambled) }
+        GameSession(
+            initialMode = mode,
+            board = board,
+            saves = FileSaveRepository(createTempDirectory("mordovorot-gh79")),
+            analytics = analytics,
+            sizeChosenAtLaunch = true,
+            terminalFactory = { terminal },
+        ).run()
+        Run(terminal, board, analytics)
+    }
+
     @Test
     fun `the mouse toolbar offers only the Keyboard switch`() {
-        // TODO: run a mouse-mode session with no events
-        // TODO: the first frame contains "[ Keyboard ]" and no "Console"
+        val frame = session(InputMode.MOUSE).terminal.frames.first()
+
+        assertTrue(frame.contains("[ Keyboard ]"))
+        assertFalse(frame.contains("Console"))
     }
 
     @Test
     fun `keyboard mode offers only Mouse F7, and F8 does nothing`() {
-        // TODO: run a keyboard-mode session with events F8, then end of input
-        // TODO: frames contain "[Mouse F7]", no "Console", and the hint line has no "F8"
-        // TODO: no mode switch was requested and the board is unchanged
+        val run = session(InputMode.KEYBOARD, listOf(TerminalEvent.FunctionKey(8)))
+
+        for (frame in run.terminal.frames) {
+            assertTrue(frame.contains("[Mouse F7]"))
+            assertFalse(frame.contains("Console"))
+            assertFalse(frame.contains("F8"))
+        }
+        assertTrue(run.analytics.events.none { it.name == "input_mode_switched" })
+        assertEquals(scrambled.toList(), run.board.boardArray.toList())
     }
 
     @Test

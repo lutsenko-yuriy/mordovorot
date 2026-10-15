@@ -41,7 +41,7 @@ class TuiViewRequestHandlingTest {
             override fun enableMouseReporting() {}
             override fun write(frame: String) {
                 writeCount++
-                if (writeCount == 1) throw ModeSwitchRequestedException(InputMode.CONSOLE)
+                if (writeCount == 1) throw ModeSwitchRequestedException(InputMode.KEYBOARD)
             }
             override fun readEvent(): TerminalEvent = TerminalEvent.EndOfInput
             override fun size(): TerminalSize = terminalSize

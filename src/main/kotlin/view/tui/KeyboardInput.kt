@@ -3,21 +3,20 @@ package view.tui
 import InputMode
 import board_model.BoardSize
 
-/** Bottom-left controls reminder (GH-18/GH-30/GH-44) - F5/F6/F9/F7/F8/Esc stay live even when
- *  the arrows/cursor don't. Kept at exactly 80 chars, the default/fallback terminal width
- *  ([ScreenRenderer.Canvas.put] has no wrap or ellipsis, unlike dialog content) - no slack left
- *  for the next shortcut addition, which will need to shorten something else here first (audit
- *  findings on PR #40 and PR #53). */
+/** Bottom-left controls reminder (GH-18/GH-30/GH-44) - F5/F6/F9/F7/Esc stay live even when
+ *  the arrows/cursor don't. Must fit 80 chars, the default/fallback terminal width
+ *  ([ScreenRenderer.Canvas.put] has no wrap or ellipsis, unlike dialog content - audit findings
+ *  on PR #40 and PR #53). */
 private const val CONTROLS_HINT =
-    "Arrows: move · Enter: shift · F5/F6/F9 Save/Load/New · F7/F8 Mouse/Console · Esc"
+    "Arrows: move · Enter: shift · F5/F6/F9 Save/Load/New · F7 Mouse · Esc"
 
 /**
  * GH-18's keyboard-driven [TuiInput] - the only stateful one, owning the board [ArrowCursor] and
  * the dialog's focus index into its [DialogFocus] ring.
  *
  * Board: arrows move the cursor around the perimeter ring; Enter/Space activates the highlighted
- * arrow; F5/F6 open Save/Load, F9 (GH-44 WU3) opens the New-game size picker, F7/F8 (GH-30)
- * request a switch to mouse/console mode, and Escape opens Exit - all regardless of cursor
+ * arrow; F5/F6 open Save/Load, F9 (GH-44 WU3) opens the New-game size picker, F7 (GH-30)
+ * requests a switch to mouse mode, and Escape opens Exit - all regardless of cursor
  * position, staying live even when solved (arrows/Enter go inert instead, cursor stops
  * rendering). Escape replaces a function key for Exit - board and dialog events are mutually
  * exclusive, so it can't collide with Escape's dialog-level Cancel.
@@ -50,7 +49,7 @@ class KeyboardInput : TuiInput {
         event is TerminalEvent.Arrow -> InputAction.None // solved: nothing to land on
         isActivateKey(event) ->
             if (arrowsEnabled) InputAction.Activate(ArrowRing(squareSide).toHitTarget(cursor)) else InputAction.None
-        // F5/F6/Escape stay live regardless of arrowsEnabled - the toolbar never goes dead.
+        // F5/F6/F7/F9/Escape stay live regardless of arrowsEnabled - the toolbar never goes dead.
         event is TerminalEvent.FunctionKey -> functionKeyAction(event.n)
         event == TerminalEvent.Escape -> InputAction.Activate(HitTarget.ToolbarExit)
         event == TerminalEvent.EndOfInput -> InputAction.Quit
@@ -100,7 +99,7 @@ class KeyboardInput : TuiInput {
             cursor = if (arrowsEnabled) cursor else null,
             controlsHint = CONTROLS_HINT,
             toolbarShortcuts = true,
-            modeButtons = listOf(InputMode.MOUSE, InputMode.CONSOLE),
+            modeButtons = listOf(InputMode.MOUSE),
         )
     }
 
@@ -145,7 +144,6 @@ class KeyboardInput : TuiInput {
         5 -> InputAction.Activate(HitTarget.ToolbarSave)
         6 -> InputAction.Activate(HitTarget.ToolbarLoad)
         7 -> InputAction.Activate(HitTarget.ToolbarMode(InputMode.MOUSE))
-        8 -> InputAction.Activate(HitTarget.ToolbarMode(InputMode.CONSOLE))
         9 -> InputAction.Activate(HitTarget.ToolbarNew)
         else -> InputAction.None
     }

@@ -181,11 +181,4 @@ class ConsoleHelpScenarioTest {
     }
 
     /** D2 on the GH-67 plan: the hint shows on every console start, including a switch back. */
-    @Test
-    fun `switching back to the console shows the hint again`() {
-        val run = session("keyboard\nleft 1\n", events = listOf(TerminalEvent.FunctionKey(8)))
-
-        assertEquals(2, hintCount(run.output))
-        assertEquals(1, run.board.moveCount)
-    }
 }

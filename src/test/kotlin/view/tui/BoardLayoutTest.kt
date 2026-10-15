@@ -118,11 +118,11 @@ class BoardLayoutTest {
 
     @Test
     fun `mode buttons sit on their own row below the toolbar and hit-test to ToolbarMode`() {
-        val layout = BoardLayout(ampleTerminal, squareSide = 4, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE))
+        val layout = BoardLayout(ampleTerminal, squareSide = 4, modeButtons = listOf(InputMode.KEYBOARD))
 
         val buttons = layout.toolbarButtons()
         assertEquals(
-            listOf(HitTarget.ToolbarNew, HitTarget.ToolbarSave, HitTarget.ToolbarLoad, HitTarget.ToolbarExit, HitTarget.ToolbarMode(InputMode.KEYBOARD), HitTarget.ToolbarMode(InputMode.CONSOLE)),
+            listOf(HitTarget.ToolbarNew, HitTarget.ToolbarSave, HitTarget.ToolbarLoad, HitTarget.ToolbarExit, HitTarget.ToolbarMode(InputMode.KEYBOARD)),
             buttons.map { it.target },
         )
         val (new, save, load, exit) = buttons
@@ -130,9 +130,7 @@ class BoardLayoutTest {
         assertEquals(layout.toolbarRow, save.y)
         assertEquals(layout.toolbarRow, load.y)
         assertEquals(layout.toolbarRow, exit.y)
-        val (keyboard, console) = buttons.drop(4)
-        assertEquals(layout.modeRow, keyboard.y)
-        assertEquals(layout.modeRow, console.y)
+        assertEquals(layout.modeRow, buttons[4].y)
         for (button in buttons) assertEquals(button.target, layout.hitTest(button.range.first, button.y))
     }
 
@@ -142,7 +140,7 @@ class BoardLayoutTest {
         // columns; splitting Save/Load/Exit onto their own row (unchanged from before this
         // ticket) keeps it fitting at the same width the three-button toolbar always has.
         val narrow = TerminalSize(columns = 40, rows = 24)
-        val layout = BoardLayout(narrow, squareSide = 4, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE))
+        val layout = BoardLayout(narrow, squareSide = 4, modeButtons = listOf(InputMode.KEYBOARD))
 
         val (exitX, exitY) = layout.exitButtonPosition()
         assertEquals(HitTarget.ToolbarExit, layout.hitTest(exitX, exitY))
@@ -152,7 +150,7 @@ class BoardLayoutTest {
 
     @Test
     fun `Save, Load, and Exit positions stay correct once mode buttons lengthen the toolbar`() {
-        val layout = BoardLayout(ampleTerminal, squareSide = 4, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE))
+        val layout = BoardLayout(ampleTerminal, squareSide = 4, modeButtons = listOf(InputMode.KEYBOARD))
 
         val (saveX, saveY) = layout.saveButtonPosition()
         assertEquals(HitTarget.ToolbarSave, layout.hitTest(saveX, saveY))
@@ -166,11 +164,11 @@ class BoardLayoutTest {
 
     @Test
     fun `mode button labels switch to F-key shortcuts under toolbarShortcuts`() {
-        val plain = BoardLayout(ampleTerminal, squareSide = 4, modeButtons = listOf(InputMode.MOUSE, InputMode.CONSOLE))
-        val shortcuts = BoardLayout(ampleTerminal, squareSide = 4, toolbarShortcuts = true, modeButtons = listOf(InputMode.MOUSE, InputMode.CONSOLE))
+        val plain = BoardLayout(ampleTerminal, squareSide = 4, modeButtons = listOf(InputMode.MOUSE))
+        val shortcuts = BoardLayout(ampleTerminal, squareSide = 4, toolbarShortcuts = true, modeButtons = listOf(InputMode.MOUSE))
 
-        assertEquals(listOf("[ Mouse ]", "[ Console ]"), plain.toolbarButtons().map { it.text }.filter { it.contains("Mouse") || it.contains("Console") })
-        assertEquals(listOf("[Mouse F7]", "[Console F8]"), shortcuts.toolbarButtons().map { it.text }.filter { it.contains("Mouse") || it.contains("Console") })
+        assertEquals("[ Mouse ]", plain.toolbarButtons().last().text)
+        assertEquals("[Mouse F7]", shortcuts.toolbarButtons().last().text)
     }
 
     @Test

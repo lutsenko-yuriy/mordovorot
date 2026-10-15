@@ -16,7 +16,7 @@ internal const val CELL_WIDTH = 4
  * Layout, top to bottom: title row, the moves row (GH-62), a blank row, the up-arrows row, the grid (box-drawing
  * borders around [squareSide] x [squareSide] cells, with left/right arrows flanking each row),
  * the down-arrows row, a blank row, the toolbar row, and (GH-30) the mode row directly below it
- * for the Keyboard/Console switch buttons - kept on their own row, not appended to the toolbar
+ * for the mode-switch button - kept on their own row, not appended to the toolbar
  * row, so a narrow terminal that fit the original three-button toolbar still fits it (audit
  * finding on PR #38: a single five-button row overflowed off-screen below 51 columns). Centered
  * in [terminalSize]; a terminal too small to fit it still produces coordinates (some off-screen)
@@ -54,7 +54,7 @@ class BoardLayout(
     private val downArrowRow = gridTop + innerRows
     internal val toolbarRow = downArrowRow + 2
 
-    /** The Keyboard/Console mode-switch row, directly below [toolbarRow] (GH-30). */
+    /** The mode-switch row, directly below [toolbarRow] (GH-30). */
     internal val modeRow = toolbarRow + 1
 
     /** The grid's top-left corner and size, for [ScreenRenderer] to draw the box-drawing frame
@@ -132,8 +132,7 @@ class BoardLayout(
         }
     }
 
-    /** `[ Keyboard ]`/`[ Console ]` (mouse mode) vs. `[Mouse F7]`/`[Console F8]` (keyboard mode,
-     *  WU4). Keyboard mode never offers switching to itself, so it has no assigned shortcut key -
+    /** `[ Keyboard ]` (mouse mode) vs. `[Mouse F7]` (keyboard mode, WU4). Keyboard mode never offers switching to itself, so it has no assigned shortcut key -
      *  falls back to the plain label rather than drawing a broken `[Keyboard ]` (audit suggestion
      *  on PR #38). */
     private fun modeButtonLabel(mode: InputMode, shortcut: Boolean): String {
@@ -141,8 +140,7 @@ class BoardLayout(
         val key = if (shortcut) {
             when (mode) {
                 InputMode.MOUSE -> "F7"
-                InputMode.CONSOLE -> "F8"
-                InputMode.KEYBOARD -> null
+                InputMode.KEYBOARD, InputMode.CONSOLE -> null
             }
         } else null
         return if (key != null) "[$name $key]" else "[ $name ]"

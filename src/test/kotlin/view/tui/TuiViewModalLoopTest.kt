@@ -31,7 +31,7 @@ class TuiViewModalLoopTest {
     private fun cancelCount(case: Case, vararg afterOpen: (Dialog) -> TerminalEvent): Int {
         val viewModel = FakeViewModel().apply { saveNames = listOf("foo") }
         val analytics = RecordingAnalyticsService()
-        val (x, y) = case.open(BoardLayout(terminalSize, viewModel.side, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE)))
+        val (x, y) = case.open(BoardLayout(terminalSize, viewModel.side, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD)))
         val events = mutableListOf<TerminalEvent>(TerminalEvent.MouseClick(x, y))
         afterOpen.forEach { events += it(case.dialog) }
         runBlocking { TuiView.create(FakeTerminal(events = events, terminalSize = terminalSize), analytics, viewModel = viewModel).play() }

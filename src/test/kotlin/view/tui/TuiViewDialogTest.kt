@@ -39,11 +39,11 @@ class TuiViewDialogTest {
         sizeChosenAtLaunch: Boolean = false,
     ): TuiView = TuiView.create(terminal, analytics, viewModel = ViewModelImpl(board, saves, analytics, sizeChosenAtLaunch = sizeChosenAtLaunch))
 
-    // Matches MouseInput.decorateBoard's GH-30 modeButtons - the two mode-switch buttons the
-    // real toolbar now carries, so hardcoded positions in this file line up with what TuiView
+    // Matches MouseInput.decorateBoard's GH-30 modeButtons - the mode-switch button the
+    // real toolbar carries, so hardcoded positions in this file line up with what TuiView
     // actually draws/hit-tests.
     private fun boardLayout(viewModel: FakeViewModel) =
-        BoardLayout(terminalSize, viewModel.side, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE))
+        BoardLayout(terminalSize, viewModel.side, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD))
 
     @Test
     fun `Save dialog happy path - typed name with no conflict saves and closes`(): Unit = runBlocking {
@@ -168,7 +168,7 @@ class TuiViewDialogTest {
                 "bar" to storage.SavedBoard(5, IntArray(25) { it }),
             ),
         )
-        val loadLayout = BoardLayout(terminalSize, squareSide = 4, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE))
+        val loadLayout = BoardLayout(terminalSize, squareSide = 4, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD))
         val (loadX, loadY) = loadLayout.loadButtonPosition()
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.MouseClick(loadX, loadY), TerminalEvent.Escape), terminalSize = terminalSize)
 
@@ -225,7 +225,7 @@ class TuiViewDialogTest {
     fun `Exit dialog Yes opens the Save dialog then quits after a successful save`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         val board = FakeBoardModel()
-        val (exitX, exitY) = BoardLayout(terminalSize, board.squareSide, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE)).exitButtonPosition()
+        val (exitX, exitY) = BoardLayout(terminalSize, board.squareSide, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD)).exitButtonPosition()
         val exitDialog = Dialog(
             Dialog.Kind.EXIT, "Save before quitting?",
             buttons = listOf(DialogButtonSpec("yes", "Yes"), DialogButtonSpec("no", "No"), DialogButtonSpec("cancel", "Cancel")),
@@ -254,7 +254,7 @@ class TuiViewDialogTest {
     fun `Exit dialog No quits without saving`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         val board = FakeBoardModel()
-        val (exitX, exitY) = BoardLayout(terminalSize, board.squareSide, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE)).exitButtonPosition()
+        val (exitX, exitY) = BoardLayout(terminalSize, board.squareSide, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD)).exitButtonPosition()
         val exitDialog = Dialog(
             Dialog.Kind.EXIT, "Save before quitting?",
             buttons = listOf(DialogButtonSpec("yes", "Yes"), DialogButtonSpec("no", "No"), DialogButtonSpec("cancel", "Cancel")),
@@ -352,7 +352,7 @@ class TuiViewDialogTest {
     fun `a successful toolbar Save shows the viewModel's confirmation message on the board afterward`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         val board = FakeBoardModel()
-        val (saveX, saveY) = BoardLayout(terminalSize, board.squareSide, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE)).saveButtonPosition()
+        val (saveX, saveY) = BoardLayout(terminalSize, board.squareSide, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD)).saveButtonPosition()
         val saveDialog = Dialog(Dialog.Kind.SAVE, "Save game", buttons = listOf(DialogButtonSpec("save", "Save"), DialogButtonSpec("cancel", "Cancel")))
         val saveButton = DialogLayout(saveDialog, terminalSize).buttons().first { it.target == HitTarget.DialogButton("save") }
         val terminal = FakeTerminal(
@@ -374,7 +374,7 @@ class TuiViewDialogTest {
         val saves = FakeSaveRepository()
         saves.saveException = RuntimeException("disk full")
         val board = FakeBoardModel()
-        val (exitX, exitY) = BoardLayout(terminalSize, board.squareSide, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE)).exitButtonPosition()
+        val (exitX, exitY) = BoardLayout(terminalSize, board.squareSide, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD)).exitButtonPosition()
         val exitDialog = Dialog(
             Dialog.Kind.EXIT, "Save before quitting?",
             buttons = listOf(DialogButtonSpec("yes", "Yes"), DialogButtonSpec("no", "No"), DialogButtonSpec("cancel", "Cancel")),
@@ -403,8 +403,8 @@ class TuiViewDialogTest {
     fun `a board status message does not leak into a dialog opened afterward`(): Unit = runBlocking {
         val saves = FakeSaveRepository(mutableMapOf("foo" to storage.SavedBoard(4, IntArray(16) { it })))
         val board = FakeBoardModel()
-        val (loadX, loadY) = BoardLayout(terminalSize, board.squareSide, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE)).loadButtonPosition()
-        val (saveX, saveY) = BoardLayout(terminalSize, board.squareSide, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE)).saveButtonPosition()
+        val (loadX, loadY) = BoardLayout(terminalSize, board.squareSide, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD)).loadButtonPosition()
+        val (saveX, saveY) = BoardLayout(terminalSize, board.squareSide, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD)).saveButtonPosition()
         val loadDialog = Dialog(Dialog.Kind.LOAD, "Load game", listItems = listOf("foo"), buttons = listOf(DialogButtonSpec("load", "Load"), DialogButtonSpec("cancel", "Cancel")))
         val loadButton = DialogLayout(loadDialog, terminalSize).buttons().first { it.target == HitTarget.DialogButton("load") }
         val terminal = FakeTerminal(
@@ -475,7 +475,7 @@ class TuiViewDialogTest {
     fun `the exit flow's invalid-name explanation stays visible past the user's first corrective keystroke`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         val board = FakeBoardModel()
-        val (exitX, exitY) = BoardLayout(terminalSize, board.squareSide, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE)).exitButtonPosition()
+        val (exitX, exitY) = BoardLayout(terminalSize, board.squareSide, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD)).exitButtonPosition()
         val exitDialog = Dialog(
             Dialog.Kind.EXIT, "Save before quitting?",
             buttons = listOf(DialogButtonSpec("yes", "Yes"), DialogButtonSpec("no", "No"), DialogButtonSpec("cancel", "Cancel")),
@@ -520,7 +520,7 @@ class TuiViewDialogTest {
         val narrow = TerminalSize(columns = 40, rows = 24)
         val viewModel = FakeViewModel()
         viewModel.existingSaveNames = setOf("somesave")
-        val (saveX, saveY) = BoardLayout(narrow, viewModel.side, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE)).saveButtonPosition()
+        val (saveX, saveY) = BoardLayout(narrow, viewModel.side, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD)).saveButtonPosition()
         val terminal = FakeTerminal(
             events = (listOf(TerminalEvent.MouseClick(saveX, saveY)) + "somesave".map { TerminalEvent.KeyPress(it) }).toMutableList(),
             terminalSize = narrow,

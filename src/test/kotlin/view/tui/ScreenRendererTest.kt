@@ -91,15 +91,11 @@ class ScreenRendererTest {
     @Test
     fun `mode buttons render in both label styles`() {
         val plain = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false)
-            .copy(modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE))
-        val shortcuts = plain.copy(toolbarShortcuts = true, modeButtons = listOf(InputMode.MOUSE, InputMode.CONSOLE))
+            .copy(modeButtons = listOf(InputMode.KEYBOARD))
+        val shortcuts = plain.copy(toolbarShortcuts = true, modeButtons = listOf(InputMode.MOUSE))
 
         assertTrue(renderer.render(plain, terminalSize).contains("[ Keyboard ]"))
-        assertTrue(renderer.render(plain, terminalSize).contains("[ Console ]"))
-
-        val shortcutFrame = renderer.render(shortcuts, terminalSize)
-        assertTrue(shortcutFrame.contains("[Mouse F7]"))
-        assertTrue(shortcutFrame.contains("[Console F8]"))
+        assertTrue(renderer.render(shortcuts, terminalSize).contains("[Mouse F7]"))
     }
 
     @Test

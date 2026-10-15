@@ -10,7 +10,7 @@ import InputMode
  * one-for-one. Stateless - a fresh instance behaves identically to any other.
  *
  * [decorateBoard] is no longer a pure identity as of GH-30: it sets [ScreenState.modeButtons]
- * to offer Keyboard/Console on the toolbar.
+ * to offer the Keyboard switch on the toolbar.
  */
 class MouseInput : TuiInput {
 
@@ -40,7 +40,7 @@ class MouseInput : TuiInput {
     }
 
     override fun decorateBoard(state: ScreenState): ScreenState =
-        state.copy(modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE))
+        state.copy(modeButtons = listOf(InputMode.KEYBOARD))
 
     override fun decorateDialog(dialog: Dialog): Dialog = dialog
 }
