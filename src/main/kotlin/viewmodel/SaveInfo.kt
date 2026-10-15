@@ -16,5 +16,8 @@ data class SaveInfo(
 /** `"name (NxN)"`, or just `"name"` when [SaveInfo.squareSide] is unknown. */
 fun SaveInfo.displayWithSize(): String = if (squareSide != null) "$name (${squareSide}x${squareSide})" else name
 
-/** [displayWithSize] plus an ` unsolvable` mark when the save can't be solved (GH-74). */
-fun SaveInfo.display(): String = if (solvable) displayWithSize() else "${displayWithSize()} unsolvable"
+/** Appended by [display] to a save that can't be solved; `load` strips it back off (GH-74). */
+const val UNSOLVABLE_MARK = "unsolvable"
+
+/** [displayWithSize] plus the [UNSOLVABLE_MARK] when the save can't be solved (GH-74). */
+fun SaveInfo.display(): String = if (solvable) displayWithSize() else "${displayWithSize()} $UNSOLVABLE_MARK"

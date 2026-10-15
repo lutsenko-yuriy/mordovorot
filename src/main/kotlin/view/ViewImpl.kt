@@ -14,6 +14,7 @@ import viewmodel.ExitRequestedException
 import viewmodel.ModeSwitcher
 import viewmodel.NoopModeSwitcher
 import viewmodel.SaveInfo
+import viewmodel.UNSOLVABLE_MARK
 import viewmodel.catchingNonControl
 import viewmodel.UiRequest
 import viewmodel.ViewModel
@@ -268,7 +269,7 @@ class ViewImpl internal constructor(
          *  in a name ([viewmodel.ViewModelImpl.promptForValidSaveName],
          *  `view.tui.TuiView.handleToolbarSave`). */
         fun loadNameArg(): String {
-            val sized = parts.size == 3 || (parts.size == 4 && parts[3] == "unsolvable")
+            val sized = parts.size == 3 || (parts.size == 4 && parts[3] == UNSOLVABLE_MARK)
             if (sized && Regex("""\(\d+x\d+\)""").matches(parts[2])) return parts[1]
             return nameArg()
         }
