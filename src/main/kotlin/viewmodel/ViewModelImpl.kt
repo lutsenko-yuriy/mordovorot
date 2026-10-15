@@ -4,6 +4,7 @@ import analytics.AnalyticsService
 import analytics.NoopAnalyticsService
 import board_model.BoardImpl
 import board_model.BoardModel
+import board_model.Solvability
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import storage.FileSaveRepository
@@ -220,21 +221,21 @@ class ViewModelImpl(
         return if (names.isEmpty()) {
             "No saves available."
         } else {
-            "Available saves: ${names.joinToString(", ") { SaveInfo(it, sizeOf(it)).display() }}"
+            "Available saves: ${names.joinToString(", ") { infoOf(it).display() }}"
         }
     }
 
-    /** [SaveInfo.squareSide] for [name], `null` when the save can't be read (corrupted or an
-     *  IO error) - a listing degrades to showing the name alone rather than dropping the save
-     *  or failing the whole listing (GH-44 WU4). No CancellationException guard needed here -
+    /** [SaveInfo] for [name] from one [SaveRepository.load]. A save that can't be read (corrupted
+     *  or an IO error) gets a `null` size and no unsolvable mark - a listing degrades to showing
+     *  the name alone rather than dropping the save or failing the whole listing (GH-44 WU4). No CancellationException guard needed here -
      *  same reasoning as [availableSavesMessage]'s: [SaveRepository.load] isn't suspend, so this
      *  catch-all can never observe one, even though this is reachable from suspend callers
      *  (audit finding on PR #54). */
-    private fun sizeOf(name: String): Int? =
+    private fun infoOf(name: String): SaveInfo =
         try {
-            saves.load(name)?.squareSide
+            saves.load(name)?.let { SaveInfo(name, it.squareSide, Solvability.isSolvable(it.state)) } ?: SaveInfo(name, null)
         } catch (e: Exception) {
-            null
+            SaveInfo(name, null)
         }
 
     /** Guards [restoreOnStartup] against running twice - including across a mode switch. */
@@ -251,7 +252,7 @@ class ViewModelImpl(
         if (sizeChosenAtLaunch) return
         // Any failure here just starts a fresh game instead of crashing at boot.
         catchingNonControl(onError = {}) {
-            val saveInfos = saves.listSaves().map { SaveInfo(it, sizeOf(it)) }
+            val saveInfos = saves.listSaves().map(::infoOf)
             val restored = if (saveInfos.isEmpty()) {
                 false
             } else {
@@ -263,14 +264,16 @@ class ViewModelImpl(
                     var chosen: String? = null
                     while (chosen == null) {
                         val typed = ask(UiRequest.ChooseSaveToRestore(saveInfos)) ?: break
-                        // Matches either the bare name or the "name (NxN)" the console prompt
-                        // now prints (GH-44 WU4, audit finding on PR #54) - a user typing back
+                        // Matches the bare name, "name (NxN)", or the full display form with
+                        // the unsolvable mark (GH-44 WU4, audit finding on PR #54; GH-74) - a user typing back
                         // exactly what they see must not get stuck re-prompted forever. Exact
                         // name match tried first - only a hand-placed save file with a space in
                         // its name (no in-app save path allows one) could make a display-form
                         // match ambiguous, and even then this order picks the save whose actual
                         // name was typed (round 2 audit finding on PR #54).
-                        val match = saveInfos.firstOrNull { it.name == typed } ?: saveInfos.firstOrNull { it.display() == typed }
+                        val match = saveInfos.firstOrNull { it.name == typed }
+                            ?: saveInfos.firstOrNull { it.displayWithSize() == typed }
+                            ?: saveInfos.firstOrNull { it.display() == typed }
                         if (match != null) {
                             chosen = match.name
                         } else {
@@ -299,7 +302,7 @@ class ViewModelImpl(
 
     override fun listSaves(): List<SaveInfo> =
         try {
-            saves.listSaves().map { SaveInfo(it, sizeOf(it)) }
+            saves.listSaves().map(::infoOf)
         } catch (e: Exception) {
             emptyList()
         }

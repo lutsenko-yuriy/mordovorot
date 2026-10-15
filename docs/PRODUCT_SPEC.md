@@ -13,6 +13,10 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
 ### Feature 1 — Board
 - The game presents a square board of tiles laid out `SQUARE_SIDE × SQUARE_SIDE` (default 4×4), holding a shuffled permutation of the integers `0..SQUARE_SIDE²-1` internally, **displayed to the player as `1..SQUARE_SIDE²`** (GH-10).
 - On starting a new game, the board is reshuffled via a Fisher-Yates shuffle.
+- Every new game can be solved (GH-74). On a 4×4 board every arrangement can be solved. On 3×3
+  and 5×5 boards, only arrangements an even number of tile swaps away from the solved order can
+  be solved. If the shuffle lands on one that can't, two tiles are swapped to fix it. Every board
+  that can be solved stays equally likely.
 - The board is considered "correct" (solved) when its values are in ascending order.
 
 ### Feature 2 — Shifts and moves
@@ -81,6 +85,9 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
   also shows that save's board size, e.g. `foo (5x5)`, so a player can tell up front what
   size loading it will resize the board to (GH-44). A save whose size can't be read
   (corrupted) shows its name alone.
+- A save that no sequence of shifts can solve (only possible on 3×3/5×5, e.g. a hand-edited or
+  pre-GH-74 save) is marked in every listing: `foo (3x3) unsolvable` (GH-74). Typing that form
+  back into `load` (or the startup prompt) still selects `foo`.
 - Saves are stored as `.save` files in a `saves/` directory relative to wherever the app is
   launched from (the process's current working directory) — running from a different directory
   will not see saves made from another one.

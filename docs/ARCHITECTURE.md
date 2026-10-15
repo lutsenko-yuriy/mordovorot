@@ -36,10 +36,12 @@ src/main/kotlin/
 │   ├── BoardModel.kt    # Board interface (domain contract)
 │   ├── BoardSize.kt     # The valid board side range (MIN 3 / MAX 5 / DEFAULT 4) and its
 │   │                      # validation - the one place the range lives (GH-44)
+│   ├── Solvability.kt   # Which boards shifts can solve (permutation parity on odd sides)
+│   │                      # and the two-tile repair - the one place the rule lives (GH-74)
 │   └── BoardImpl.kt     # IntArray-backed board state + shift/reset/newGame/isCorrect logic + move count.
 │                          # `squareSide` is a read-only view over a private mutable field:
 │                          # `newGame(side)` is the only thing that ever changes it (GH-44),
-│                          # `resetGame()` reshuffles at the same size
+│                          # `resetGame()` reshuffles at the same size, always to a solvable board (GH-74)
 ├── viewmodel/
 │   ├── ViewModel.kt          # The one viewmodel interface (GH-42 WU3, collapsing GH-23's
 │   │                           # ConsoleViewModel/TuiViewModel split) — shift/reset/save/load/exit
@@ -195,7 +197,9 @@ does not validate" rule (see the 1-based console dialect note under `view`).
 `BoardImpl.newGame(side)` is the only operation that ever changes the side: it
 validates first, so an out-of-range value throws with the current board left
 untouched, then reallocates and shuffles. `resetGame()` keeps its older meaning —
-reshuffle at the same size. Nothing resizes an *in-progress* board: every
+reshuffle at the same size. Every shuffle is solvable (GH-74): `Solvability`
+holds the parity rule, and `resetGame()` swaps tiles 0/1 when the shuffle lands
+on an unsolvable board. Nothing resizes an *in-progress* board: every
 size-setting surface starts a fresh game instead. The board instance itself is
 still the one `GameSession` holds across mode switches (GH-30) — the side mutates
 in place rather than the instance being swapped, so that invariant is unaffected.
@@ -318,6 +322,9 @@ the entry. `UiRequest.ConfirmRestore`/`ChooseSaveToRestore` now carry
 `SaveInfo` too. No save-file-format change — `ViewModelImpl` derives each
 size from `saves.load(name)?.squareSide`, one extra read per save already
 being listed.
+`SaveInfo.solvable` (GH-74) comes from the same read via `Solvability`;
+`display()` appends `UNSOLVABLE_MARK` for a save that can't be solved, and the
+console `load` command strips it back off.
 
 **`--size=N` bypasses the *entire* startup sequence, not just the size prompt.**
 A usable `--size=N` sets `sizeChosenAtLaunch` (threaded `GameSession` →

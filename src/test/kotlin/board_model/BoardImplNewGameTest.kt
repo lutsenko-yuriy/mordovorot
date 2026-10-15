@@ -4,6 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 
 class BoardImplNewGameTest {
 
@@ -99,5 +100,17 @@ class BoardImplNewGameTest {
         }
 
         assertNotEquals(setOf((0..24).toList()), results.toSet())
+    }
+
+    /** GH-74: covers every new-game surface that goes through newGame (size command, play-again, size dialogs). */
+    @Test
+    fun `newGame always produces a solvable board on odd sides`() {
+        val board = BoardImpl(4)
+        for (side in listOf(3, 5)) {
+            repeat(200) {
+                board.newGame(side)
+                assertTrue(Solvability.isSolvable(board.boardArray), "side $side: ${board.boardArray.toList()}")
+            }
+        }
     }
 }

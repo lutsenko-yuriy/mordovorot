@@ -13,10 +13,11 @@ public interface BoardModel {
      *  starts a new move. */
     val moveCount: Int
 
-    // Create new game
+    /** Starts a fresh shuffled game at the current size; the shuffle is always solvable
+     *  ([Solvability], GH-74). */
     fun resetGame()
 
-    /** Starts a fresh shuffled game at [side] - one of the two ways the board's side ever changes,
+    /** Starts a fresh, always-solvable shuffled game at [side] - one of the two ways the board's side ever changes,
      *  the other being [restoreState] (GH-44 WU5). [side] must be a [BoardSize.isValid] value; an
      *  invalid one throws [IllegalArgumentException] and leaves the board untouched. Unlike
      *  [resetGame], which reshuffles at the current size. */

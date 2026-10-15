@@ -10,6 +10,7 @@ import testing.RecordingAnalyticsService.Event
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * Covers [ViewModelImpl.restoreOnStartup]'s branch matrix (0/1/2+ save files), driven directly -
@@ -250,6 +251,24 @@ class ViewModelStartupRestoreTest {
 
         assertEquals(listOf("Loaded 'foo'."), ui.shownMessages)
         assertEquals(listOf("restoreState(${fourByFour.toList()})"), board.calls)
+    }
+
+    /** GH-74: the multi-save prompt shows "foo (3x3) unsolvable" - typing that back, or just
+     *  "foo (3x3)", must select it too. */
+    @Test
+    fun `typing back the size-only or the full unsolvable-marked form selects that save`(): Unit = runBlocking {
+        val unsolvable = intArrayOf(2, 1, 0, 3, 4, 5, 6, 7, 8)
+        for (typed in listOf("foo (3x3)", "foo (3x3) unsolvable")) {
+            val saves = FakeSaveRepository(
+                mutableMapOf("foo" to SavedBoard(3, unsolvable), "bar" to SavedBoard(4, fourByFour)),
+            )
+            val viewModel = ViewModelImpl(FakeBoardModel(), saves)
+            val ui = FakeViewModelUi(chooseSaveToRestoreResponses = mutableListOf(typed))
+
+            ui.drive(viewModel) { viewModel.restoreOnStartup() }
+
+            assertTrue(ui.shownMessages.none { it.startsWith("No save named") }, "typed '$typed': ${ui.shownMessages}")
+        }
     }
 
     /** Round 2 audit finding on PR #54 (GH-44 WU4): an exact name match must win over another

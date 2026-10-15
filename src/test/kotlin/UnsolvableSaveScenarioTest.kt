@@ -1,4 +1,23 @@
+import analytics.AnalyticsService
+import analytics.InputMethodAnalyticsService
+import board_model.BoardImpl
+import kotlinx.coroutines.runBlocking
+import storage.FileSaveRepository
+import testing.RecordingAnalyticsService
+import view.View
+import view.ViewImpl
+import viewmodel.ModeSwitcherImpl
+import viewmodel.ViewModelImpl
+import java.io.BufferedReader
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
+import java.io.StringReader
+import java.nio.file.Path
+import kotlin.io.path.createTempDirectory
+import kotlin.io.path.writeText
 import kotlin.test.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /** GH-74 scenarios: unsolvable saves on odd board sizes - the `unsolvable` mark in listings and
  *  the repair / new game / exit choice on load. Real BoardImpl + ViewModelImpl +
@@ -10,16 +29,49 @@ import kotlin.test.Test
  *  - `even.save`: 4x4, state `1 0 2 3 ... 15` (every 4x4 board is solvable). */
 class UnsolvableSaveScenarioTest {
 
+    private class Run(val output: String, val board: BoardImpl, val analytics: RecordingAnalyticsService)
+
+    private fun session(input: String, savesDir: Path, sizeChosenAtLaunch: Boolean = false): Run = runBlocking {
+        val output = ByteArrayOutputStream()
+        val analytics = RecordingAnalyticsService()
+        val board = BoardImpl(4)
+        val reader = BufferedReader(StringReader(input))
+        GameSession(
+            initialMode = InputMode.CONSOLE,
+            board = board,
+            saves = FileSaveRepository(savesDir),
+            analytics = analytics,
+            sizeChosenAtLaunch = sizeChosenAtLaunch,
+            buildView = { m, b, s, a: AnalyticsService, restoreDone, sizeAtLaunch ->
+                val decorated = InputMethodAnalyticsService(a, m.name.lowercase())
+                val viewModel = ViewModelImpl(b, s, decorated, restoreDone, sizeAtLaunch)
+                val switcher = { v: View -> ModeSwitcherImpl(v, m, a, hasInteractiveTerminal = { true }) }
+                ViewImpl.create(reader, PrintStream(output), switcher, viewModel)
+            },
+        ).run()
+        Run(output.toString(), board, analytics)
+    }
+
+    private fun savesDir(vararg files: Pair<String, String>): Path = createTempDirectory("mordovorot-gh74").also { dir ->
+        for ((name, content) in files) dir.resolve("$name.save").writeText(content)
+    }
+
+    private val oddSave = "odd" to "3\n2 1 0 3 4 5 6 7 8\n5\n"
+    private val evenSave = "even" to "4\n1 0 ${(2 until 16).joinToString(" ")}\n0\n"
+
     @Test
     fun `an unsolvable save is marked in the startup restore prompt`() {
-        // TODO: 1. Seed odd.save alone; start with no --size (sizeChosenAtLaunch = false).
-        // TODO: 2. Output contains "Restore save 'odd (3x3) unsolvable'? [y/N] ".
+        val run = session("", savesDir(oddSave))
+
+        assertTrue(run.output.contains("Restore save 'odd (3x3) unsolvable'? [y/N] "), run.output)
     }
 
     @Test
     fun `a 4x4 save is never marked unsolvable`() {
-        // TODO: 1. Seed even.save alone; start with no --size.
-        // TODO: 2. Output contains "Restore save 'even (4x4)'? [y/N] " and no "unsolvable" anywhere.
+        val run = session("", savesDir(evenSave))
+
+        assertTrue(run.output.contains("Restore save 'even (4x4)'? [y/N] "), run.output)
+        assertFalse(run.output.contains("unsolvable"), run.output)
     }
 
     @Test
