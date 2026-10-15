@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.12.0] — 2026-10-15 (PR #77 merged)
+
+### Added
+- [user] (PR #77) GH-74: loading a save that can't be solved (3x3/5x5) now offers repair (two tiles swapped, save rewritten), a new game, or exit - console prompt and a TUI "Can't be solved" dialog; new games are always solvable (since 0.11.1).
+
 ## [0.11.1] — 2026-10-15 (PR #76 merged)
 
 ### Fixed
