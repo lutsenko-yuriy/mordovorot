@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.11.0] — 2026-10-15
+
+### Added
+- [user] (PR #73) GH-67: console `help` command lists all commands or shows one command's usage; `help` hint printed at console start; specific error messages with usage lines for rejected commands.
+
 ## [0.10.0] — 2026-10-15
 
 ### Added
