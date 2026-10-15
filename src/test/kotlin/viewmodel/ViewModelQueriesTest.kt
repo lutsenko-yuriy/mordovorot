@@ -39,6 +39,26 @@ class ViewModelQueriesTest {
         assertEquals(listOf(SaveInfo("foo", null)), viewModel.listSaves())
     }
 
+    /** GH-74: 2 1 0 ... is one swap from solved - odd, so unsolvable on 3x3. */
+    @Test
+    fun `listSaves marks an odd-parity 3x3 save unsolvable and never a 4x4 one`() {
+        val oneSwap3 = intArrayOf(2, 1, 0, 3, 4, 5, 6, 7, 8)
+        val oneSwap4 = IntArray(16) { it }.also { it[0] = 2; it[2] = 0 }
+        val saves = FakeSaveRepository(
+            mutableMapOf(
+                "odd" to SavedBoard(3, oneSwap3),
+                "even" to SavedBoard(4, oneSwap4),
+                "fine" to SavedBoard(3, IntArray(9) { it }),
+            ),
+        )
+        val viewModel = ViewModelImpl(FakeBoardModel(), saves)
+
+        assertEquals(
+            listOf(SaveInfo("even", 4), SaveInfo("fine", 3), SaveInfo("odd", 3, solvable = false)),
+            viewModel.listSaves(),
+        )
+    }
+
     @Test
     fun `listSaves degrades to an empty list on a repository failure`() {
         val saves = FakeSaveRepository()
