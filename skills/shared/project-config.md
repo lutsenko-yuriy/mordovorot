@@ -45,6 +45,6 @@ Languages, frameworks, platforms and tooling: `docs/TECH_STACK.md`.
 
 A merged PR moves to **In QA** (not Done directly) if it touches any of:
 
-- `src/main/kotlin/view/` — console I/O behavior is hard to cover with automated tests; a human should play a session before sign-off
+- `src/main/kotlin/view/` — terminal UI behaviour (raw-mode input, rendering, real terminal sizes) is hard to cover with automated tests; a human should play a session before sign-off
 
 Move straight to **Done** if the PR touches only: pure logic with no runtime platform dependency, documentation, CI config, or pure refactors where automated tests fully own correctness. When in doubt, use **In QA**.

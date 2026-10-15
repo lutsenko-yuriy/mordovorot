@@ -1,6 +1,6 @@
 # Mordovorot
 
-A console prototype of a sliding-row/column puzzle board game, written in Kotlin.
+A terminal prototype of a sliding-row/column puzzle board game, written in Kotlin.
 
 The board is a `SQUARE_SIDE × SQUARE_SIDE` grid (3×3 to 5×5, default 4×4) holding a
 shuffled permutation of numbers. Rows shift left/right and columns shift up/down,
@@ -10,8 +10,8 @@ cyclically wrapping around, until the board is back in ascending order.
 
 **Requires:** JDK 17. Gradle comes with the wrapper, so you don't need to install it.
 
-The mouse and keyboard TUIs need a real terminal, so launch them through the
-`installDist` launcher:
+The game is a terminal UI (mouse or keyboard) and needs a real terminal, so launch it
+through the `installDist` launcher:
 
 ```bash
 ./gradlew installDist
@@ -19,18 +19,19 @@ The mouse and keyboard TUIs need a real terminal, so launch them through the
 ./build/install/mordovorot/bin/mordovorot --keyboard   # keyboard-only TUI
 ```
 
-`./gradlew run` always runs the line-based console mode, because Gradle doesn't pass
-a terminal through to the game.
+`./gradlew run` doesn't pass a terminal through to the game, so it only prints
+`No interactive terminal found - Mordovorot only runs as a terminal UI.` and exits. The
+same happens with piped input or any other launch without a terminal.
 
 Flags:
 
 - `--mouse`: the mouse TUI (the default with a terminal).
-- `--console`: force console mode. It also takes over whenever there's no interactive terminal.
-- `--size=N`: start at board side `N` (3-5). This skips the startup restore/size prompts,
-  which is useful for piped input.
+- `--keyboard`: the keyboard-only TUI.
+- `--console`: console mode was removed; the game prints a notice and starts the TUI.
+- `--size=N`: start at board side `N` (3-5). This skips the startup restore/size prompts.
 
 Saves go to `saves/`, relative to the directory you launch from. See
-`docs/PRODUCT_SPEC.md` for the full command list and behaviour.
+`docs/PRODUCT_SPEC.md` for the full behaviour.
 
 ## Testing
 
@@ -48,7 +49,7 @@ The game uses MVVM (Model-View-ViewModel):
 
 - `board_model`: game state and rules.
 - `viewmodel`: mediates between view and model.
-- `view`: console and TUI I/O.
+- `view`: the terminal UI.
 - `storage` and `analytics`: supporting services.
 
 See `docs/ARCHITECTURE.md` for the full layout and the layer rules.

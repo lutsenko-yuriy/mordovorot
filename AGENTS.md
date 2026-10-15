@@ -4,7 +4,7 @@ This file provides guidance to AI coding agents (Claude Code, Codex, Cursor, Ope
 
 ## Project Overview
 
-Mordovorot — A console prototype of a sliding-row/column puzzle board game
+Mordovorot — A terminal prototype of a sliding-row/column puzzle board game
 
 Full product specifications: docs/PRODUCT_SPEC.md
 
@@ -61,7 +61,7 @@ Details and directory layout: @docs/ARCHITECTURE.md. Languages and tooling: docs
 - **Run tests:** `./gradlew test`
 - **Lint:** none configured
 - **Build:** `./gradlew build`
-- **Run the game:** `./gradlew run` (console mode; the TUI needs the `installDist` launcher, see `docs/TECH_STACK.md`)
+- **Run the game:** `./gradlew installDist && ./build/install/mordovorot/bin/mordovorot` (`./gradlew run` has no terminal, so it only prints the no-terminal message; see `docs/TECH_STACK.md`)
 - **Install dependencies:** none to install manually — Gradle resolves everything (`kotlin("test")` on the JUnit 5 platform) on first run
 
 ## Code style

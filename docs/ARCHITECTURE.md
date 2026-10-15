@@ -14,19 +14,18 @@ MVVM (Model-View-ViewModel): board_model + viewmodel + view packages
 
 ```
 src/main/kotlin/
-├── Main.kt              # Entry point — resolves the starting InputMode, then hands off to
-│                          # GameSession.run() (GH-3, GH-30)
-├── InputMode.kt         # MOUSE / CONSOLE / KEYBOARD — resolves the starting mode from
-│                          # `--console`/`--keyboard`/`--mouse` + terminal availability; also
-│                          # the type GameSession/ModeSwitcher pass around mid-session
-│                          # (GH-3, GH-18, renamed from LaunchMode for GH-30)
+├── Main.kt              # Entry point — resolves the starting InputMode (or aborts with no
+│                          # terminal, GH-79), then hands off to GameSession.run() (GH-3, GH-30)
+├── InputMode.kt         # MOUSE / KEYBOARD — parses the starting mode from `--keyboard`/
+│                          # `--mouse`; also the type GameSession/ModeSwitcher pass around
+│                          # mid-session (GH-3, GH-18, renamed from LaunchMode for GH-30)
 ├── GameSession.kt       # Session loop extracted out of Main: owns the one BoardImpl and
 │                          # one FileSaveRepository that survive every mode switch; builds a
 │                          # fresh View + viewmodel + InputMethodAnalyticsService per mode,
 │                          # runs play(), and re-enters on ModeSwitchRequestedException. A
-│                          # rebuild's play() throwing anything else falls back to console
-│                          # (unless console itself just failed) instead of crashing and losing
-│                          # the in-progress game - a first-session failure still throws (GH-30)
+│                          # rebuild's play() throwing anything else falls back to the previous
+│                          # mode (GH-79) instead of crashing and losing the in-progress game -
+│                          # a first-session failure, or a failed fallback, still throws (GH-30)
 ├── analytics/
 │   ├── AnalyticsService.kt             # Analytics abstraction — track(event, properties)
 │   ├── NoopAnalyticsService.kt         # Default implementation; no SDK wired up yet
@@ -43,11 +42,9 @@ src/main/kotlin/
 │                          # `newGame(side)` is the only thing that ever changes it (GH-44),
 │                          # `resetGame()` reshuffles at the same size, always to a solvable board (GH-74)
 ├── viewmodel/
-│   ├── ViewModel.kt          # The one viewmodel interface (GH-42 WU3, collapsing GH-23's
-│   │                           # ConsoleViewModel/TuiViewModel split) — shift/reset/save/load/exit
-│   │                           # plus the read-only query surface (listSaves/saveExists/isSolved/
-│   │                           # boardState/squareSide), restoreOnStartup, and offerPlayAgain
-│   │                           # (console solved-state flow, GH-66)
+│   ├── ViewModel.kt          # The one viewmodel interface (GH-42 WU3) — shift/newGame/save/
+│   │                           # load/exit plus the read-only query surface (listSaves/saveExists/
+│   │                           # isSolved/boardState/squareSide/moveCount) and restoreOnStartup
 │   ├── ViewModelImpl.kt      # The one implementation (GH-42 WU3, collapsing BaseViewModel +
 │   │                           # ConsoleViewModelImpl + TuiViewModelImpl). board/saves/analytics
 │   │                           # are constructor params (each defaulted to a real impl) so fakes
@@ -56,10 +53,9 @@ src/main/kotlin/
 │   │                           # after the first, skipping a re-shown startup restore prompt after
 │   │                           # a mode switch (GH-30). Holds no `View` reference — see the
 │   │                           # "viewmodel" section below
-│   ├── UiRequest.kt          # Sealed request/response type for the eight viewmodel→UI
+│   ├── UiRequest.kt          # Sealed request/response type for the seven viewmodel→UI
 │   │                           # interactions (ShowMessage/ConfirmRestore/ChooseSaveToRestore/
 │   │                           # ConfirmSaveBeforeExit/PromptSaveName/ChooseBoardSize (GH-44)/
-│   │                           # ConfirmPlayAgain (GH-66, console only)/
 │   │                           # ResolveUnsolvableSave (GH-74) + UnsolvableSaveChoice),
 │   │                           # sent on
 │   │                           # ViewModel.uiRequests (GH-42 WU2)
@@ -70,11 +66,9 @@ src/main/kotlin/
 │   │                           # SessionControlException/CancellationException, routes any
 │   │                           # other Exception to onError (GH-65)
 │   ├── ExitRequestedException.kt # Signals play() (or view.tui.TuiView's own loop, GH-3) to stop
-│   ├── ModeSwitcher.kt        # ModeSwitcher / ModeSwitcherImpl / NoopModeSwitcher — checks for
-│   │                             # an interactive terminal, tracks input_mode_switched, and
-│   │                             # either throws ModeSwitchRequestedException (success) or shows
-│   │                             # a message and returns (rejected), mirroring
-│   │                             # ViewModelImpl.exitGame's contract (GH-30)
+│   ├── ModeSwitcher.kt        # ModeSwitcher / ModeSwitcherImpl / NoopModeSwitcher — tracks
+│   │                             # input_mode_switched and throws ModeSwitchRequestedException;
+│   │                             # same-mode no-op (GH-30)
 │   └── ModeSwitchRequestedException.kt # Carries the requested InputMode; unwinds a running
 │                                          # session's play() back to GameSession's loop (GH-30)
 ├── storage/
@@ -84,16 +78,8 @@ src/main/kotlin/
 │   │                                touching the filesystem); rejects unsafe file names
 │   └── SaveFileFormatException.kt # Thrown on a malformed save file
 └── view/
-    ├── View.kt          # View interface — console display + command loop contract
-    ├── ViewImpl.kt      # Console I/O implementation (BufferedReader-based input). `mouse`/
-    │                      # `keyboard` commands reach an injected ModeSwitcher, wired via
-    │                      # create()'s modeSwitcherFactory param (GH-30), and console
-    │                      # analytics via create()'s analytics param (GH-67)
-    ├── ConsoleCommands.kt # Pure console command table (GH-67): usage + description per
-    │                      # command; source of `help` output, error usage lines and the hint
-    ├── ConsoleCommandException.kt # IllegalArgumentException subclass for a rejected console
-    │                      # command - carries the specific message for play() to print with the hint
-    └── tui/             # GH-3: a second View implementation for the mouse-driven TUI
+    ├── View.kt          # View interface — play() (GH-79 removed the console-only members)
+    └── tui/             # GH-3: the View implementation, the mouse/keyboard TUI
         ├── Terminal.kt / AnsiTerminal.kt   # Raw-mode terminal I/O (stty via ProcessBuilder,
         │                                     # xterm mouse-reporting escapes) - the one seam
         │                                     # touching the real terminal
@@ -101,7 +87,7 @@ src/main/kotlin/
         │                                               # and legacy X10 mouse reports, keys,
         │                                               # arrow/Tab/BackTab/function-key
         │                                               # decoding for keyboard mode, incl.
-        │                                               # F7/F8 for the mode-switch shortcuts)
+        │                                               # F7 for the mode-switch shortcut)
         │                                               # (GH-18, GH-30)
         ├── BoardLayout.kt / HitTarget.kt   # Pure board geometry + click hit-testing, incl. the
         │                                     # toolbar's mode-switch buttons
@@ -134,8 +120,7 @@ src/main/kotlin/
         │                      # (GH-18)
         ├── KeyboardInput.kt # TuiInput impl: owns the board ArrowCursor and DialogFocus state
         │                      # for --keyboard mode (GH-18)
-        └── TuiView.kt   # Owns its own event loop (doesn't go through ViewImpl.play()'s
-                          # console-only loop - see the ticket's solved-state note). Save/Load/
+        └── TuiView.kt   # Owns its own event loop. Save/Load/
                           # Exit/Size and the startup restore prompt share one blocking modal
                           # loop over Terminal, runModal (WU4, GH-64). State-driven solved screen (WU5): every
                           # repaint asks ViewModel.isSolved() fresh rather than tracking a phase
@@ -147,12 +132,14 @@ src/main/kotlin/
 src/test/kotlin/
 ├── InputModeTest.kt       # InputMode resolution + app_launched tracking (GH-3, renamed
 │                            # from LaunchModeTest for GH-30)
+├── ConsoleRemovalScenarioTest.kt # GH-79 end to end: no-terminal abort, --console notice, no
+│                            # console switch in the TUI, failed-switch fallback, old saves
+├── MoveCounterScenarioTest.kt / UnsolvableSaveScenarioTest.kt # GH-62/GH-74 end to end
+│                            # through the TUI over a real board and temp-dir saves
 ├── GameSessionTest.kt     # Session loop: switch rebuilds around the same BoardModel
 │                            # instance, startupRestoreDone seeding, multi-switch chains (GH-30)
-├── ModeSwitcherTest.kt    # TTY present/absent x target x trigger matrix; success vs
-│                            # rejected_no_tty; same-mode no-op (GH-30)
-├── SolvedConsoleScenarioTest.kt # Console solved state end to end: Congratulations, play-again
-│                            # prompt, already-solved loads (GH-66)
+├── ModeSwitcherTest.kt    # input_mode_switched tracking, trigger pass-through, same-mode
+│                            # no-op (GH-30)
 ├── analytics/            # NoopAnalyticsService, InputMethodAnalyticsService coverage
 ├── board_model/         # BoardImpl coverage: reset/shuffle, isCorrect, all four shifts, restoreState
 ├── viewmodel/            # One test file per ViewModelImpl concern (GH-42 WU3, collapsing GH-23's
@@ -163,13 +150,10 @@ src/test/kotlin/
 │                           # the read-only query surface; ViewModelCancellationTest/
 │                           # ViewModelOrderingTest pin the request-channel's CancellationException
 │                           # guard and rendezvous ordering (GH-42 WU2); CatchingNonControlTest
-│                           # pins the shared catch-all helper (GH-65); ViewModelPlayAgainTest
-│                           # covers offerPlayAgain (GH-66)
+│                           # pins the shared catch-all helper (GH-65)
 ├── storage/               # FileSaveRepository coverage
-├── view/                  # ViewImpl command-parsing coverage (incl. ViewImplPlayTest, the
-│                           # console session loop that moved here from ConsoleViewModelImpl.play()
-│                           # in GH-42 WU3); view/tui/ coverage (GH-3, WU2-WU5)
-└── testing/              # FakeBoardModel / FakeView / FakeSaveRepository / RecordingAnalyticsService /
+├── view/tui/              # TUI coverage (GH-3, WU2-WU5)
+└── testing/              # FakeBoardModel / FakeTerminal / FakeSaveRepository / RecordingAnalyticsService /
                             # FakeViewModel (recording double, collapsing GH-23's
                             # RecordingViewModel/FakeConsoleViewModel/FakeTuiViewModel split in
                             # GH-42 WU3) / FakeViewModelUi (scripted UiRequest responder, GH-42
@@ -181,7 +165,8 @@ see "Dependencies" below.
 
 ## Layers
 
-Classic MVVM. `board_model` and `view` are each an interface + one implementation.
+Classic MVVM. `board_model` and `view` are each an interface + one implementation
+(`view`'s is the TUI, `view.tui.TuiView`).
 `viewmodel` (GH-42) is a single `ViewModel` interface + one `ViewModelImpl`, holding
 no reference to any `View` — it communicates with whichever `View` is driving it
 through a request channel instead of a constructor-injected dependency. Callers
@@ -194,7 +179,7 @@ Core game state and rules: board array, shifting, reset, and the win check
 **Board size (GH-44):** the board stays square, with a side of 3–5 (default 4).
 `BoardSize` holds that range and its validation — the single place it lives, per
 this layer's "range validation lives in `board_model`, the view translates but
-does not validate" rule (see the 1-based console dialect note under `view`).
+does not validate" rule (see the 1-based display dialect note under `view`).
 `BoardImpl.newGame(side)` is the only operation that ever changes the side: it
 validates first, so an out-of-range value throws with the current board left
 untouched, then reallocates and shuffles. `resetGame()` keeps its older meaning —
@@ -217,54 +202,42 @@ on the board, it survives mode switches with no extra wiring.
 real and in use; the `presenter` package/naming this superseded is gone.
 
 Mediates between `view`, `board_model`, and `storage`, but never calls into `view`
-directly. `ViewModel` is one interface (shift/reset/save/load/exit plus the
-query surface both UIs need — `isSolved`/`boardState`/`squareSide`/`moveCount`/`listSaves`/
+directly. `ViewModel` is one interface (shift/newGame/save/load/exit plus the
+query surface the TUI needs — `isSolved`/`boardState`/`squareSide`/`moveCount`/`listSaves`/
 `saveExists`), and `ViewModelImpl` is its one implementation, taking `board`/`saves`/
 `analytics` as constructor params (each defaulted to a real implementation) so
 tests can inject fakes without touching the filesystem or a real analytics SDK.
-Superseded GH-23's split (`ConsoleViewModel`/`TuiViewModel` + `ConsoleViewModelImpl`/
-`TuiViewModelImpl`) once `ConsoleViewModelImpl.play()`'s console loop moved into
-`ViewImpl` — at that point both UIs needed the identical viewmodel surface, so the
-split no longer described anything real.
 
 Five interactions that used to be blocking calls into `View` (`showMessage`,
 `confirmRestore`, `chooseSaveToRestore`, `confirmSaveBeforeExit`, `promptSaveName`)
 are now `viewmodel.UiRequest<R>` values sent on `ViewModel.uiRequests`, a
 `Channel.RENDEZVOUS` the owning `View` drains in a sibling coroutine and answers via
-`UiRequest.respond`. `showMessage` is the exception among the five - it stays on the
-`View` interface too (`ModeSwitcherImpl` still calls it directly, outside any
-`UiRequest`), while the other four became plain `internal` methods on `ViewImpl`/
-`TuiView`, reachable only through each view's own request handler. Rendezvous delivery
+`UiRequest.respond`. `TuiView` answers each from its own request handler (the prompts
+are `internal` methods there, `showMessage` a private one). Rendezvous delivery
 (the channel has zero buffer, and `ask()` doesn't return until the View has actually
 handled the request) is what keeps message/prompt ordering identical to the old
 blocking-call behavior. The one invariant that keeps this deadlock-free: a View's
 request handler must never call a request-raising `ViewModel` method
-(`saveGame`/`loadGame`/`exitGame`/`restoreOnStartup`/`offerPlayAgain`) from inside
+(`saveGame`/`loadGame`/`exitGame`/`restoreOnStartup`) from inside
 itself — only the plain query methods are safe there. All five are `suspend`; a cancelled coroutine resumes them with `CancellationException`, which
 each method's catch-all (`catchingNonControl`) rethrows rather than swallows (ordinary
 structured-concurrency hygiene).
 
 ### view
-UI only: `ViewImpl` reads console commands from stdin, `view.tui.TuiView` drives the
-mouse/keyboard TUI; both render the board and call into `ViewModel`. Should not
-manipulate `board_model` directly.
+UI only: `view.tui.TuiView` drives the mouse/keyboard TUI, renders the board and
+calls into `ViewModel`. Should not manipulate `board_model` directly. The line-based
+console mode (`ViewImpl` and its command table) was removed in GH-79.
 
-**1-based console dialect (GH-10):** the console is 1-based (displayed tile
-values, `left`/`right`/`up`/`down` row/column input); `board_model` and
-`storage` stay 0-based. `ViewImpl`'s `DISPLAY_OFFSET` constant is the single
-translation point — `+1` when rendering, `-1` when parsing a shift argument.
-Range validation still lives in `board_model` (`BoardImpl`'s bounds check),
-not `view` — the view translates, it does not validate. Since GH-67 the view
-rewords that rejection (and `size <N>`'s `BoardSize` one) into a
-`ConsoleCommandException` with the typed 1-based value and a usage line, but
-still never checks the range itself.
+**1-based display dialect (GH-10):** displayed tile values are 1-based;
+`board_model` and `storage` stay 0-based. `ScreenRenderer`'s `DISPLAY_OFFSET`
+constant is the single translation point (`+1` when rendering). Clicks and key
+presses resolve to 0-based `HitTarget`s directly, so nothing parses a typed index.
+Range validation lives in `board_model` (`BoardImpl`'s bounds check), not `view`.
 
 `BoardImpl.restoreState` and `FileSaveRepository`'s validation errors avoid
 stating an explicit numeric range (e.g. "contain each of N tile values
-exactly once" rather than "permutation of 0..N-1") specifically so they read
-correctly once surfaced through `ViewImpl.play`'s `showMessage(e.message ...)`
-to the 1-based console — GH-6's `save`/`load` commands are the first thing
-that makes these messages reachable.
+exactly once" rather than "permutation of 0..N-1") so they read correctly
+next to the 1-based board when shown in a Load dialog message.
 
 ### storage
 File persistence for save games. `SaveRepository` is the contract `viewmodel`
@@ -281,26 +254,24 @@ before GH-62) loads as 0; a non-integer or negative one is a
 Cross-cutting: `AnalyticsService` is injected into `viewmodel` (and any layer
 that needs to track an event), currently backed by `NoopAnalyticsService`.
 `InputMethodAnalyticsService` (GH-3) decorates another `AnalyticsService`,
-adding an `input_method` (`console`/`mouse`/`keyboard`, GH-18) property to
+adding an `input_method` (`mouse`/`keyboard`, GH-18) property to
 every forwarded event — the decorator pattern lets `Main` distinguish events
 by launch mode without `ViewModelImpl` itself knowing which UI mode is
 running.
 
 `board_solved` (GH-62) is tracked in `ViewModelImpl`, not a View: every shift goes
 through one private `shift` helper that fires it when the shift turns an unsolved
-board into a solved one, so it covers all three modes. Loads bypass that helper,
+board into a solved one, so it covers both modes. Loads bypass that helper,
 so restoring a solved save never fires it.
 
 ### Board-size surfaces (GH-44)
-Four entry points, all of which *start a fresh game* rather than resizing the
+Three entry points, all of which *start a fresh game* rather than resizing the
 running one: the `--size=N` launch flag (`Main.resolveBoardSize` returns `Int?`
 - `null` for a missing, non-numeric, or out-of-range value, distinct from "asked
 for exactly the default" - warning and falling back to 4 on `null`; reported as
 `app_launched.board_size`); a startup prompt raised by
-`ViewModelImpl.restoreOnStartup` as `UiRequest.ChooseBoardSize` — console
-answers it with a text prompt, the TUI with its `Dialog.Kind.SIZE` picker; the
-console `size <N>` command (a plain integer, *not* subject to `ViewImpl`'s
-1-based `DISPLAY_OFFSET` — a size is not a row index); and the TUI's `[ New ]`
+`ViewModelImpl.restoreOnStartup` as `UiRequest.ChooseBoardSize`, answered by
+the TUI's `Dialog.Kind.SIZE` picker; and the TUI's `[ New ]`
 toolbar button (`HitTarget.ToolbarNew`, F9 in keyboard mode), which opens the
 same picker. All of them funnel into `ViewModel.newGame(size, trigger)` →
 `BoardImpl.newGame`, which is also where `new_game_size_selected` is tracked
@@ -312,9 +283,8 @@ the board to match rather than requiring a coincidental match. There is no
 `size_mismatch` outcome any more; every successful `saves.load()` restores.
 
 **Save size visibility (WU4).** Every surface that lists a save's name — the
-startup restore prompts (console single/multi-choice, the TUI's Load-shaped
-dialog), the mid-game `load`/Load-dialog listing, and the console's
-"not found"/"no save named" messages — also shows that save's board size, so a
+startup restore dialog, the mid-game Load dialog, and the "not found"/"no save
+named" messages — also shows that save's board size, so a
 player can tell up front what size loading it will resize the board to.
 `ViewModel.listSaves()` returns `List<SaveInfo>` (`name` + nullable
 `squareSide`, `viewmodel/SaveInfo.kt`) instead of bare names; `squareSide` is
@@ -324,16 +294,15 @@ the entry. `UiRequest.ConfirmRestore`/`ChooseSaveToRestore` now carry
 size from `saves.load(name)?.squareSide`, one extra read per save already
 being listed.
 `SaveInfo.solvable` (GH-74) comes from the same read via `Solvability`;
-`display()` appends `UNSOLVABLE_MARK` for a save that can't be solved, and the
-console `load` command strips it back off.
+`display()` appends `UNSOLVABLE_MARK` for a save that can't be solved.
 `ViewModelImpl.loadGame` never restores an unsolvable save directly: it raises
 `UiRequest.ResolveUnsolvableSave` (`atStartup` set from the startup restore) and
 acts on the `UnsolvableSaveChoice`. REPAIR writes `Solvability.repaired` back
 through `saves.save` and loads it. NEW_GAME raises
 `ChooseBoardSize(origin = "unsolvable_save")` mid-game, or returns `false` at
 startup so `restoreOnStartup`'s own size prompt runs. EXIT calls `exitGame()`
-mid-game, or throws `ExitRequestedException` at startup, which both
-`ViewImpl.play` and `TuiView.play` catch around `restoreOnStartup`.
+mid-game, or throws `ExitRequestedException` at startup, which
+`TuiView.play` catches around `restoreOnStartup`.
 `ChooseBoardSize.origin` is what the TUI reports as
 `screen_size_dialog.opened_from`. The TUI answers with a non-cancellable
 `Dialog.Kind.UNSOLVABLE` (`runModal(cancellable = false)`), and its
@@ -349,35 +318,38 @@ it's set — no restore prompt, no size prompt, no `startup_restore_prompt_shown
 flag (or with an unusable one - `sizeChosenAtLaunch` is `false` in that case
 too, matching `resolveBoardSize`'s `null`), the restore prompt runs as before
 (GH-6), and the size prompt raises only once it's established nothing was
-actually restored (no saves, declined, blank/EOF, or a failed load).
+actually restored (no saves, declined, blank/EOF, or a failed load). With 2+
+saves, `restoreOnStartup` matches the answer against save names exactly; the TUI
+always answers with a listed name, so anything else counts as declined (GH-79).
 
-### Launch mode and runtime mode switching (GH-3, GH-18, GH-30)
-`InputMode` (root package, renamed from `LaunchMode` for GH-30) resolves
-which `View` `Main` builds at startup: `--console` always selects the
-console `ViewImpl`; `--keyboard` selects the TUI built with `KeyboardInput`;
-`--mouse` explicitly selects the TUI built with `MouseInput` (the same mode
-that already runs by default when no mode flag is given). Precedence when
-multiple flags are passed: `--console` beats `--keyboard` beats
-`--mouse`/default. `--keyboard` and `--mouse` fall back to `CONSOLE` when no
-interactive terminal is available (`System.console() == null`, e.g. a
-piped/scripted run), same as the default does. Resolution is pure and
-injectable (`hasInteractiveTerminal` is a constructor-style parameter), so
-it's unit-tested without a real terminal.
+### Launch mode and runtime mode switching (GH-3, GH-18, GH-30, GH-79)
+`Main.resolveInputMode` decides how a launch starts. With no interactive
+terminal (`System.console() == null`, e.g. `./gradlew run` or piped input) it
+prints `No interactive terminal found - Mordovorot only runs as a terminal UI.`
+to stderr, tracks `app_launch_aborted` instead of `app_launched`, and returns
+`null`, so `main` returns and the JVM exits 0. Otherwise `InputMode.resolve`
+(root package, renamed from `LaunchMode` for GH-30) is pure flag parsing:
+`--keyboard` selects the TUI built with `KeyboardInput`, anything else (no
+flag, `--mouse`) the TUI built with `MouseInput`. `--console` selects nothing:
+in a terminal it prints `Console mode was removed - starting the terminal UI.`
+and sets `app_launched.console_flag_ignored`. The terminal check and both
+message sinks are injectable parameters, so all of this is unit-tested without
+a real terminal.
 
 `InputMode` no longer only decides where a session *begins* — `GameSession`
-lets it switch mid-session, driven by `ModeSwitcher`. Each `View`
-implementation exposes a way to request a switch (`ViewImpl`'s `mouse`/
-`keyboard` commands; `TuiView`'s toolbar buttons/F7/F8 shortcuts, reached
-via `HitTarget.ToolbarMode`/`ScreenState.modeButtons`), which
-`ModeSwitcherImpl` either turns into a `ModeSwitchRequestedException`
-(interactive terminal available for the target) or rejects with an
-on-screen message (no TTY — the same constraint `--mouse`/`--keyboard`
-already enforce at launch). `GameSession` catches the exception, rebuilds
-the `View`/viewmodel/analytics stack for the new mode around the *same*
-`BoardImpl`/`FileSaveRepository` instances, and re-enters `play()` — so
-switching preserves board state and never reshuffles. `app_launched` still
-fires exactly once, from the initial `InputMode` resolution in `Main`; each
-subsequent switch fires `input_mode_switched` instead (`docs/ANALYTICS_EVENTS.md`).
+lets it switch mid-session, driven by `ModeSwitcher`. `TuiView`'s toolbar
+`[ Keyboard ]` button (mouse mode) and F7 (keyboard mode), reached via
+`HitTarget.ToolbarMode`/`ScreenState.modeButtons`, call `ModeSwitcherImpl`,
+which tracks `input_mode_switched` and throws `ModeSwitchRequestedException`.
+`GameSession` catches the exception, rebuilds the `View`/viewmodel/analytics
+stack for the new mode around the *same* `BoardImpl`/`FileSaveRepository`
+instances, and re-enters `play()` — so switching preserves board state and
+never reshuffles. If that rebuild fails (e.g. no `stty`), `GameSession` prints
+`Could not switch to <target> mode (<reason>) - staying in <previous> mode.`
+and rebuilds the previous mode; a failure on the first session, or of that
+fallback, still throws. `app_launched` still fires exactly once, from the
+initial resolution in `Main`; each subsequent switch fires
+`input_mode_switched` instead (`docs/ANALYTICS_EVENTS.md`).
 
 ## Dependencies
 
@@ -403,7 +375,6 @@ subsequent switch fires `input_mode_switched` instead (`docs/ANALYTICS_EVENTS.md
   (board shuffling uses `kotlin.collections.shuffle()`, not a custom implementation).
 - **JLine considered and rejected (GH-6):** save/load filename tab-autocompletion
   would require raw/cbreak terminal input, which only a library like JLine 3 provides.
-  Rejected as too heavyweight for this project's zero-third-party-dependency stance,
-  and JLine degrades to a dumb terminal anyway when stdin isn't a real TTY (exactly how
-  `./gradlew run` and the test suite invoke the app). Substitute: save-selection prompts
-  list the available save names so the user can always see and copy an exact name.
+  Rejected as too heavyweight for this project's zero-third-party-dependency stance.
+  The TUI later made the question moot: its Load dialog lists the saves to pick from,
+  so nothing needs a typed save name.
