@@ -17,6 +17,7 @@ import viewmodel.SaveInfo
 import viewmodel.UNSOLVABLE_MARK
 import viewmodel.catchingNonControl
 import viewmodel.UiRequest
+import viewmodel.UnsolvableSaveChoice
 import viewmodel.ViewModel
 import viewmodel.display
 
@@ -168,6 +169,8 @@ class ViewImpl internal constructor(
         val line = readLineOrNull() ?: return false
         return line.trim().lowercase() in setOf("y", "yes")
     }
+
+    internal suspend fun resolveUnsolvableSave(): UnsolvableSaveChoice = UnsolvableSaveChoice.EXIT
 
     internal suspend fun promptSaveName(): String? {
         output.print("Save name: ")
@@ -341,6 +344,7 @@ class ViewImpl internal constructor(
             is UiRequest.PromptSaveName -> request.respond(promptSaveName())
             is UiRequest.ChooseBoardSize -> request.respond(chooseBoardSize(request.current))
             is UiRequest.ConfirmPlayAgain -> request.respond(confirmPlayAgain())
+            is UiRequest.ResolveUnsolvableSave -> request.respond(resolveUnsolvableSave())
         }
     }
 }

@@ -3,7 +3,9 @@ package testing
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import viewmodel.UiRequest
+import viewmodel.UnsolvableSaveChoice
 import viewmodel.ViewModel
+import viewmodel.display
 
 /**
  * Drains a [ViewModel]'s [ViewModel.uiRequests] and answers from scripted lists - the
@@ -20,6 +22,7 @@ class FakeViewModelUi(
     private val promptSaveNameResponses: MutableList<String?> = mutableListOf(),
     private val chooseBoardSizeResponses: MutableList<Int?> = mutableListOf(),
     private val confirmPlayAgainResponses: MutableList<Boolean> = mutableListOf(),
+    private val resolveUnsolvableSaveResponses: MutableList<UnsolvableSaveChoice> = mutableListOf(),
 ) {
 
     val shownMessages = mutableListOf<String>()
@@ -29,6 +32,12 @@ class FakeViewModelUi(
     val chooseSaveToRestoreCalls = mutableListOf<List<String>>()
 
     val chooseBoardSizeCalls = mutableListOf<Int>()
+
+    /** [UiRequest.ChooseBoardSize.origin] of each call, parallel to [chooseBoardSizeCalls]. */
+    val chooseBoardSizeOrigins = mutableListOf<String>()
+
+    /** Each [UiRequest.ResolveUnsolvableSave] as (displayed save, atStartup). */
+    val resolveUnsolvableSaveCalls = mutableListOf<Pair<String, Boolean>>()
 
     var confirmSaveBeforeExitCallCount = 0
         private set
@@ -76,11 +85,16 @@ class FakeViewModelUi(
             }
             is UiRequest.ChooseBoardSize -> {
                 chooseBoardSizeCalls.add(request.current)
+                chooseBoardSizeOrigins.add(request.origin)
                 request.respond(nextOrThrow(chooseBoardSizeResponses, "chooseBoardSize"))
             }
             is UiRequest.ConfirmPlayAgain -> {
                 confirmPlayAgainCallCount++
                 request.respond(nextOrThrow(confirmPlayAgainResponses, "confirmPlayAgain"))
+            }
+            is UiRequest.ResolveUnsolvableSave -> {
+                resolveUnsolvableSaveCalls.add(request.save.display() to request.atStartup)
+                request.respond(nextOrThrow(resolveUnsolvableSaveResponses, "resolveUnsolvableSave"))
             }
         }
     }

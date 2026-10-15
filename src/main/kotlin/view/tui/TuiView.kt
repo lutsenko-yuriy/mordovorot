@@ -11,6 +11,7 @@ import viewmodel.ModeSwitcher
 import viewmodel.NoopModeSwitcher
 import viewmodel.SaveInfo
 import viewmodel.UiRequest
+import viewmodel.UnsolvableSaveChoice
 import viewmodel.ViewModel
 import viewmodel.display
 
@@ -136,6 +137,7 @@ class TuiView internal constructor(
             is UiRequest.ChooseBoardSize -> request.respond(runSizeDialog("startup"))
             // Never raised here - the TUI has its own Congratulations screen (GH-66).
             is UiRequest.ConfirmPlayAgain -> request.respond(false)
+            is UiRequest.ResolveUnsolvableSave -> request.respond(UnsolvableSaveChoice.EXIT)
         }
     }
 
