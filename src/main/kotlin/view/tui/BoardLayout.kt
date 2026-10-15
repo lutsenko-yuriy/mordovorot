@@ -140,7 +140,7 @@ class BoardLayout(
         val key = if (shortcut) {
             when (mode) {
                 InputMode.MOUSE -> "F7"
-                InputMode.KEYBOARD, InputMode.CONSOLE -> null
+                InputMode.KEYBOARD -> null
             }
         } else null
         return if (key != null) "[$name $key]" else "[ $name ]"

@@ -4,8 +4,7 @@
  */
 enum class InputMode {
     MOUSE,
-    KEYBOARD,
-    CONSOLE;
+    KEYBOARD;
 
     companion object {
         /** Default terminal check for [resolveInputMode]. Caveat: breaks on JDK 22+

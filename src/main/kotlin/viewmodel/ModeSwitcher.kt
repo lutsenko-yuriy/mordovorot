@@ -3,57 +3,40 @@ package viewmodel
 import InputMode
 import analytics.AnalyticsService
 import analytics.NoopAnalyticsService
-import view.View
 
 /**
- * Requests a switch to a different [InputMode] mid-session: checks for an interactive terminal,
- * tracks `input_mode_switched`, and either throws [ModeSwitchRequestedException] or shows a
- * rejection message and returns - mirrors [ViewModelImpl.exitGame]'s contract. Reached from each
- * `View`'s own affordance: `ViewImpl`'s `mouse`/`keyboard` commands, `TuiView`'s toolbar
- * buttons and F7/F8 (GH-30).
+ * Requests a switch to a different [InputMode] mid-session: tracks `input_mode_switched` and
+ * throws [ModeSwitchRequestedException] - mirrors [ViewModelImpl.exitGame]'s contract. Reached
+ * from `TuiView`'s toolbar button and F7 (GH-30). No terminal check: a running TUI always has
+ * one (GH-79 removed the console mode that could ask without one).
  *
  * WU2-4 wiring note: pass the *undecorated* [AnalyticsService] - `input_mode_switched` isn't
  * documented with an `input_method` property (same reasoning as `app_launched`).
  */
 interface ModeSwitcher {
-    /** [trigger]: `"toolbar"`, `"shortcut"`, or `"command"`. `suspend` (GH-42): calls
-     *  [View.showMessage] on rejection, which is itself `suspend`. */
+    /** [trigger]: `"toolbar"` or `"shortcut"`. */
     suspend fun switchTo(target: InputMode, trigger: String)
 }
 
 /** [currentMode] is fixed per instance - `GameSession` builds a fresh one on every rebuild. */
 class ModeSwitcherImpl(
-    private val view: View,
     private val currentMode: InputMode,
     private val analytics: AnalyticsService = NoopAnalyticsService(),
-    private val hasInteractiveTerminal: () -> Boolean = InputMode.Companion::systemHasInteractiveTerminal,
 ) : ModeSwitcher {
 
     override suspend fun switchTo(target: InputMode, trigger: String) {
-        if (target == currentMode) return // already active - no event, no message
+        if (target == currentMode) return // already active - no event
 
-        if (target != InputMode.CONSOLE && !hasInteractiveTerminal()) {
-            track(target, trigger, "rejected_no_tty")
-            view.showMessage(
-                "Can't switch to ${target.name.lowercase()} mode - no interactive terminal available."
-            )
-            return
-        }
-
-        track(target, trigger, "success")
-        throw ModeSwitchRequestedException(target)
-    }
-
-    private fun track(target: InputMode, trigger: String, result: String) {
         analytics.track(
             "input_mode_switched",
             mapOf(
                 "from_mode" to currentMode.name.lowercase(),
                 "to_mode" to target.name.lowercase(),
                 "trigger" to trigger,
-                "result" to result,
+                "result" to "success",
             ),
         )
+        throw ModeSwitchRequestedException(target)
     }
 }
 

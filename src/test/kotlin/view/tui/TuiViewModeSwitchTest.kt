@@ -35,7 +35,7 @@ class TuiViewModeSwitchTest {
         val switcher = RecordingModeSwitcher()
         val button = mouseBoardLayout().toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.KEYBOARD) }
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.MouseClick(button.range.first, button.y)))
-        val view = TuiView.create(terminal, modeSwitcherFactory = { switcher }, viewModel = FakeViewModel())
+        val view = TuiView.create(terminal, modeSwitcher = switcher, viewModel = FakeViewModel())
 
         view.play()
 
@@ -55,7 +55,7 @@ class TuiViewModeSwitchTest {
         val switcher = RecordingModeSwitcher()
         val viewModel = FakeViewModel().apply { solved = true }
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.FunctionKey(7)))
-        val view = TuiView.create(terminal, input = KeyboardInput(), modeSwitcherFactory = { switcher }, viewModel = viewModel)
+        val view = TuiView.create(terminal, input = KeyboardInput(), modeSwitcher = switcher, viewModel = viewModel)
 
         view.play()
 
@@ -66,7 +66,7 @@ class TuiViewModeSwitchTest {
     fun `pressing F8 in keyboard mode requests no switch`(): Unit = runBlocking {
         val switcher = RecordingModeSwitcher()
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.FunctionKey(8)))
-        val view = TuiView.create(terminal, input = KeyboardInput(), modeSwitcherFactory = { switcher }, viewModel = FakeViewModel())
+        val view = TuiView.create(terminal, input = KeyboardInput(), modeSwitcher = switcher, viewModel = FakeViewModel())
 
         view.play()
 
@@ -82,7 +82,7 @@ class TuiViewModeSwitchTest {
             override suspend fun switchTo(target: InputMode, trigger: String) = throw ModeSwitchRequestedException(target)
         }
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.FunctionKey(7)))
-        val view = TuiView.create(terminal, input = KeyboardInput(), modeSwitcherFactory = { throwingSwitcher }, viewModel = FakeViewModel())
+        val view = TuiView.create(terminal, input = KeyboardInput(), modeSwitcher = throwingSwitcher, viewModel = FakeViewModel())
 
         assertFailsWith<ModeSwitchRequestedException> { view.play() }
         assertTrue(terminal.restored)
@@ -117,7 +117,7 @@ class TuiViewModeSwitchTest {
             ),
             terminalSize = terminalSize,
         )
-        val view = TuiView.create(terminal, modeSwitcherFactory = { throwingSwitcher }, viewModel = FakeViewModel())
+        val view = TuiView.create(terminal, modeSwitcher = throwingSwitcher, viewModel = FakeViewModel())
 
         assertFailsWith<ModeSwitchRequestedException> { view.play() }
         assertTrue(terminal.restored)

@@ -3,6 +3,8 @@ import kotlinx.coroutines.runBlocking
 import storage.FileSaveRepository
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
+import view.tui.BoardLayout
+import view.tui.HitTarget
 import view.tui.TerminalEvent
 import view.tui.TerminalSize
 import kotlin.io.path.createTempDirectory
@@ -146,11 +148,38 @@ class ConsoleRemovalScenarioTest {
     }
 
     @Test
-    fun `a failed switch falls back to the previous TUI mode and keeps the game`() {
-        // TODO: mouse session; shift row 1; click [ Keyboard ]
-        // TODO: the keyboard rebuild throws
-        // TODO: "Could not switch to keyboard mode (...) - staying in mouse mode." is shown
-        // TODO: mouse mode is rebuilt with the same board and Moves: 1, with no restore prompt
+    fun `a failed switch falls back to the previous TUI mode and keeps the game`(): Unit = runBlocking {
+        val terminalSize = TerminalSize(80, 40)
+        val layout = BoardLayout(terminalSize, 4, modeButtons = listOf(InputMode.KEYBOARD))
+        val (leftX, leftY) = layout.leftArrowPosition(0)
+        val keyboardButton = layout.toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.KEYBOARD) }
+        val terminal = FakeTerminal(
+            mutableListOf(TerminalEvent.MouseClick(leftX, leftY), TerminalEvent.MouseClick(keyboardButton.x, keyboardButton.y)),
+            terminalSize,
+        )
+        val board = BoardImpl(4).apply { restoreState(scrambled) }
+        val builds = mutableListOf<Pair<InputMode, Boolean>>()
+        val errors = mutableListOf<String>()
+
+        GameSession(
+            initialMode = InputMode.MOUSE,
+            board = board,
+            saves = FileSaveRepository(createTempDirectory("mordovorot-gh79")),
+            sizeChosenAtLaunch = true,
+            reportError = { errors += it },
+            buildView = { mode, b, s, a, restoreDone, sizeAtLaunch ->
+                builds += mode to restoreDone
+                if (mode == InputMode.KEYBOARD) throw RuntimeException("stty not found")
+                defaultView(mode, b, s, a, restoreDone, sizeAtLaunch, terminalFactory = { terminal })
+            },
+        ).run()
+
+        assertEquals(listOf("Could not switch to keyboard mode (stty not found) - staying in mouse mode."), errors)
+        assertEquals(listOf(InputMode.MOUSE to false, InputMode.KEYBOARD to true, InputMode.MOUSE to true), builds)
+        val lastFrame = terminal.frames.last().replace(Regex("\u001B\\[[0-9;?]*[A-Za-z]"), "").split("\r\n")
+        assertEquals("Moves: 1", lastFrame[layout.movesRow].trim())
+        assertTrue(terminal.frames.none { it.contains("Restore a saved game?") })
+        assertEquals(1, board.moveCount)
     }
 
     @Test

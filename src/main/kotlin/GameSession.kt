@@ -6,9 +6,9 @@ import board_model.BoardModel
 import storage.FileSaveRepository
 import storage.SaveRepository
 import view.View
-import view.ViewImpl
 import view.tui.AnsiTerminal
 import view.tui.KeyboardInput
+import view.tui.MouseInput
 import view.tui.Terminal
 import view.tui.TuiView
 import viewmodel.ModeSwitchRequestedException
@@ -30,6 +30,8 @@ class GameSession(
      *  prompts stay skipped across a mode switch too. */
     private val sizeChosenAtLaunch: Boolean = false,
     private val terminalFactory: () -> Terminal = { AnsiTerminal() },
+    /** Where the failed-switch fallback notice goes - stderr, like every launch diagnostic. */
+    private val reportError: (String) -> Unit = { System.err.println(it) },
     private val buildView: (
         mode: InputMode,
         board: BoardModel,
@@ -50,19 +52,24 @@ class GameSession(
 
     suspend fun run() {
         var isFirstSession = true
+        // The mode to fall back to if the current build fails - null when there's none: the
+        // first session, or a build that is itself already a fallback.
+        var fallbackMode: InputMode? = null
         while (true) {
             // Other control-flow exceptions must reach main (PR #37, PR #43).
             try {
                 catchingNonControl(
                     onError = { e ->
-                        // Failed rebuild (e.g. no `stty`): fall back to console to keep the game,
-                        // unless this is startup or console itself failed.
-                        if (isFirstSession || mode == InputMode.CONSOLE) throw e
-                        System.err.println(
+                        // Failed rebuild (e.g. no `stty`): go back to the previous mode to keep
+                        // the game (GH-79 D1), unless this is startup or the fallback failed too.
+                        val previous = fallbackMode
+                        if (isFirstSession || previous == null) throw e
+                        reportError(
                             "Could not switch to ${mode.name.lowercase()} mode (${e.message ?: e::class.simpleName}) " +
-                                "- falling back to console."
+                                "- staying in ${previous.name.lowercase()} mode."
                         )
-                        mode = InputMode.CONSOLE
+                        mode = previous
+                        fallbackMode = null
                         startupRestoreDone = true
                     },
                 ) {
@@ -73,6 +80,7 @@ class GameSession(
                     return
                 }
             } catch (e: ModeSwitchRequestedException) {
+                fallbackMode = mode
                 mode = e.target
                 startupRestoreDone = true
             }
@@ -83,8 +91,8 @@ class GameSession(
 
 /** The production `View` wiring, one per [InputMode] - what `main` built directly before GH-30.
  *  [analytics] is the undecorated service; decorated here per-mode for the viewModel/View's own
- *  tracked events. Internal, not private, so a test can verify the CONSOLE branch actually wires
- *  a real `ModeSwitcher` rather than silently defaulting to a no-op (audit finding on PR #37). */
+ *  tracked events. Internal, not private, so a test can verify it wires a real `ModeSwitcher`
+ *  rather than silently defaulting to a no-op (audit finding on PR #37). */
 internal fun defaultView(
     mode: InputMode,
     board: BoardModel,
@@ -98,24 +106,11 @@ internal fun defaultView(
     // Built once per rebuild and handed to the View - the viewModel no longer needs a View to
     // exist first (GH-42 WU3: ViewModelImpl holds no View reference at all).
     val viewModel = ViewModelImpl(board, saves, decoratedAnalytics, startupRestoreDone, sizeChosenAtLaunch)
-    val modeSwitcherFactory = { v: View -> ModeSwitcherImpl(view = v, currentMode = mode, analytics = analytics) }
-    return when (mode) {
-        InputMode.CONSOLE ->
-            ViewImpl.create(modeSwitcherFactory = modeSwitcherFactory, viewModel = viewModel, analytics = decoratedAnalytics)
-        InputMode.MOUSE ->
-            TuiView.create(
-                terminalFactory(),
-                analytics = decoratedAnalytics,
-                modeSwitcherFactory = modeSwitcherFactory,
-                viewModel = viewModel,
-            )
-        InputMode.KEYBOARD ->
-            TuiView.create(
-                terminalFactory(),
-                analytics = decoratedAnalytics,
-                input = KeyboardInput(),
-                modeSwitcherFactory = modeSwitcherFactory,
-                viewModel = viewModel,
-            )
-    }
+    return TuiView.create(
+        terminalFactory(),
+        analytics = decoratedAnalytics,
+        input = if (mode == InputMode.KEYBOARD) KeyboardInput() else MouseInput(),
+        modeSwitcher = ModeSwitcherImpl(currentMode = mode, analytics = analytics),
+        viewModel = viewModel,
+    )
 }
