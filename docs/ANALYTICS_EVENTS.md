@@ -35,7 +35,7 @@ Fired when the board is restored from a save file, either via the `load` command
 | Property | Type | Description |
 |---|---|---|
 | `trigger` | `string` | `command` or `startup_prompt`. |
-| `result` | `string` | `success` (also covers a load that resized the board to the save's size, GH-44 WU5), `not_found`, or `error` (corrupted save file or a filesystem failure). |
+| `result` | `string` | `success` (also covers a load that resized the board to the save's size, GH-44 WU5), `not_found`, `error` (corrupted save file or a filesystem failure), or `unsolvable` (GH-74 - the save can't be solved; `unsolvable_save_resolved` carries the outcome). |
 | `input_method` | `string` | `console`, `mouse`, or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* |
 
 ### `startup_restore_prompt_shown`
@@ -53,7 +53,7 @@ Fired when the user resolves the startup restore prompt. *(GH-6)*
 
 | Property | Type | Description |
 |---|---|---|
-| `decision` | `string` | `restored` or `new_game`. |
+| `decision` | `string` | `restored`, `new_game`, or `quit` (GH-74 - Exit chosen for an unsolvable save). Repairing an unsolvable save counts as `restored`. |
 | `save_file_count` | `number` | How many save files were on offer. |
 | `input_method` | `string` | `console`, `mouse`, or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* |
 
@@ -109,6 +109,21 @@ Fired when a fresh game starts at a chosen board size via one of the post-launch
 | `input_method` | `string` | `console`, `mouse`, or `keyboard` — which UI mode the session was running in. |
 
 *GH-66:* `trigger` also takes `play_again` - the console size prompt after accepting `Start a new game?` on a solved board.
+
+*GH-74:* `trigger` also takes `unsolvable_save` - the size prompt after choosing New game for an unsolvable save mid-game. At startup that choice falls through to the regular startup size prompt (`startup_prompt`).
+
+### `unsolvable_save_resolved`
+
+Fired when the player picks what to do with an unsolvable save, in any input mode. Save names are
+never sent. *(GH-74)*
+
+| Property | Type | Description |
+|---|---|---|
+| `choice` | `string` | `repair`, `new_game`, or `exit`. |
+| `trigger` | `string` | `command` (mid-game load) or `startup_prompt`. |
+| `board_size` | `number` | The save's board side (3 or 5). |
+| `repair_saved` | `boolean` | Only on `repair`: whether the repaired board was written back to the save file (`false` if the overwrite failed; the board is loaded either way). |
+| `input_method` | `string` | `console`, `mouse`, or `keyboard`. |
 
 ### `board_solved`
 
@@ -174,4 +189,5 @@ whose message is unchanged. *(GH-67)*
 | `screen_load_dialog` | Load dialog opens in the TUI (toolbar click/F6, or startup restore when saves exist). Properties `opened_from`: `toolbar` or `startup`; `save_file_count`: number. *(GH-3)* |
 | `screen_exit_dialog` | Exit dialog opens in the TUI (Exit button click, or Escape in keyboard mode). *(GH-3, GH-18)* |
 | `screen_congratulations` | A shift (click or keyboard Enter/Space) solves the board while the TUI is active - fires once on that transition. Does **not** fire when an already-solved save is restored (toolbar Load or startup restore); the Congratulations screen still renders, but nothing was solved *by playing* this session. *(GH-3)* |
-| `screen_size_dialog` | TUI size-picker dialog opens. Property `opened_from`: `toolbar` (via `[ New ]`) or `startup` (no `--size` given, restore prompt declined/empty). *(GH-44)* |
+| `screen_size_dialog` | TUI size-picker dialog opens. Property `opened_from`: `toolbar` (via `[ New ]`), `startup` (no `--size` given, restore prompt declined/empty), or `unsolvable_save` (New game chosen for an unsolvable save mid-game, GH-74). *(GH-44)* |
+| `screen_unsolvable_dialog` | TUI `Can't be solved` dialog opens for an unsolvable save. Property `opened_from`: `toolbar` (Load button/F6) or `startup` (restore dialog). *(GH-74)* |

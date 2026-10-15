@@ -27,10 +27,17 @@ sealed class UiRequest<R> {
 
     /** "Which size for the fresh game?" (GH-44) - raised by [ViewModelImpl.restoreOnStartup]
      *  once it's established restore didn't happen. Answered with a chosen side, or `null` to
-     *  keep [current]. */
-    class ChooseBoardSize(val current: Int) : UiRequest<Int?>()
+     *  keep [current]. [origin] is `startup`, `play_again` or `unsolvable_save` - what the TUI
+     *  reports as `screen_size_dialog.opened_from`. */
+    class ChooseBoardSize(val current: Int, val origin: String = "startup") : UiRequest<Int?>()
 
     /** "Start a new game?" after the console board is solved (GH-66) - raised by
      *  [ViewModelImpl.offerPlayAgain]. */
     class ConfirmPlayAgain : UiRequest<Boolean>()
+
+    /** "Repair, new game or exit?" when a load hits an unsolvable save (GH-74) - raised by
+     *  [ViewModelImpl]'s `loadGame`. [atStartup] is `true` for the startup restore. */
+    class ResolveUnsolvableSave(val save: SaveInfo, val atStartup: Boolean) : UiRequest<UnsolvableSaveChoice>()
 }
+
+enum class UnsolvableSaveChoice { REPAIR, NEW_GAME, EXIT }

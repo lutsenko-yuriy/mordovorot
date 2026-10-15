@@ -9,6 +9,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import storage.FileSaveRepository
 import storage.SaveRepository
+import storage.SavedBoard
 
 /** The one [ViewModel] implementation (GH-42 WU3, collapsing GH-23's `BaseViewModel` +
  *  `ConsoleViewModelImpl` + `TuiViewModelImpl` split): owns board/saves/analytics wiring and
@@ -123,12 +124,64 @@ class ViewModelImpl(
                 showMessage("No save named '$name'. ${availableSavesMessage()}")
                 return false
             }
+            if (!Solvability.isSolvable(saved.state)) {
+                analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "unsolvable"))
+                return resolveUnsolvable(name, saved, trigger)
+            }
             // No size-mismatch rejection (GH-44 WU5) - board.restoreState resizes the board to
             // match the save instead, so every successful saves.load() now restores.
             board.restoreState(saved.state, saved.moveCount)
             analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "success"))
             showMessage("Loaded '$name'.")
             true
+        }
+    }
+
+    /** The repair / new game / exit choice for an unsolvable save (GH-74). Returns whether the
+     *  (repaired) save was loaded. At startup, New game returns `false` so [restoreOnStartup]'s
+     *  own size prompt runs, and Exit throws [ExitRequestedException] - there is no game to save. */
+    private suspend fun resolveUnsolvable(name: String, saved: SavedBoard, trigger: String): Boolean {
+        val atStartup = trigger == "startup_prompt"
+        val info = SaveInfo(name, saved.squareSide, solvable = false)
+        showMessage("'${info.displayWithSize()}' can't be solved - no sequence of shifts reaches the solved board.")
+        val choice = ask(UiRequest.ResolveUnsolvableSave(info, atStartup))
+        fun track(extra: Map<String, Any> = emptyMap()) = analytics.track(
+            "unsolvable_save_resolved",
+            mapOf("choice" to choice.name.lowercase(), "trigger" to trigger, "board_size" to saved.squareSide) + extra,
+        )
+        when (choice) {
+            UnsolvableSaveChoice.REPAIR -> {
+                val fixed = Solvability.repaired(saved.state)
+                // Restored first, so a board that can't take the save (a hand-edited size) never
+                // rewrites the file. A failed overwrite still loads - the file keeps its mark.
+                board.restoreState(fixed, saved.moveCount)
+                val error = try {
+                    saves.save(name, fixed, saved.squareSide, saved.moveCount)
+                    null
+                } catch (e: Exception) {
+                    e
+                }
+                track(mapOf("repair_saved" to (error == null)))
+                showMessage(
+                    if (error == null) "Repaired '$name' (two tiles swapped) and loaded it."
+                    else "Repaired and loaded '$name', but could not update the save file: ${error.message ?: error::class.simpleName}"
+                )
+                return true
+            }
+            UnsolvableSaveChoice.NEW_GAME -> {
+                track()
+                if (!atStartup) {
+                    val size = ask(UiRequest.ChooseBoardSize(board.squareSide, origin = "unsolvable_save"))
+                    newGame(size ?: board.squareSide, trigger = "unsolvable_save")
+                }
+                return false
+            }
+            UnsolvableSaveChoice.EXIT -> {
+                track()
+                if (atStartup) throw ExitRequestedException()
+                exitGame()
+                return false
+            }
         }
     }
 
@@ -177,7 +230,7 @@ class ViewModelImpl(
         val accepted = ask(UiRequest.ConfirmPlayAgain())
         analytics.track("play_again_decision", mapOf("decision" to if (accepted) "new_game" else "quit"))
         if (!accepted) throw ExitRequestedException()
-        newGame(ask(UiRequest.ChooseBoardSize(board.squareSide)) ?: board.squareSide, trigger = "play_again")
+        newGame(ask(UiRequest.ChooseBoardSize(board.squareSide, origin = "play_again")) ?: board.squareSide, trigger = "play_again")
     }
 
     /** Re-prompts until [UiRequest.PromptSaveName] returns a name usable by the `save`/`load`
@@ -286,11 +339,16 @@ class ViewModelImpl(
                 // loadGame can still fail here (a save deleted or corrupted since listSaves()
                 // ran just above) - decision reflects what actually happened, not just what was
                 // picked.
-                val didRestore = nameToRestore?.let { loadGame(it, trigger = "startup_prompt") } ?: false
-                analytics.track(
-                    "startup_restore_decision",
-                    mapOf("decision" to (if (didRestore) "restored" else "new_game"), "save_file_count" to saveInfos.size),
-                )
+                fun trackDecision(decision: String) =
+                    analytics.track("startup_restore_decision", mapOf("decision" to decision, "save_file_count" to saveInfos.size))
+                val didRestore = try {
+                    nameToRestore?.let { loadGame(it, trigger = "startup_prompt") } ?: false
+                } catch (e: ExitRequestedException) {
+                    // Exit from the unsolvable-save choice (GH-74).
+                    trackDecision("quit")
+                    throw e
+                }
+                trackDecision(if (didRestore) "restored" else "new_game")
                 didRestore
             }
 

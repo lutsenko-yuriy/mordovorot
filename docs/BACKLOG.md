@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-- GH-74 (WU2): mark unsolvable saves as repairable; offer repair/new-game/exit in load dialog
+_(nothing in progress)_
 
 ---
 

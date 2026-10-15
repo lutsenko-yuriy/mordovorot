@@ -1,6 +1,7 @@
 package view.tui
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
@@ -28,6 +29,25 @@ class DialogLayoutTest {
 
         // Every wrapped line must fit inside the box - none may run past the right border.
         assertTrue(layout.messageLines.all { layout.left + 2 + it.length <= layout.left + layout.width })
+    }
+
+    /** GH-74: three buttons are wider than the default box - it grows, and every button stays
+     *  inside the border and hit-testable at 80 columns. */
+    @Test
+    fun `the unsolvable dialog's three buttons fit inside the box at 80 columns`() {
+        val dialog = Dialog(
+            Dialog.Kind.UNSOLVABLE,
+            "Can't be solved",
+            message = "'odd (3x3)' can't be solved by any sequence of shifts.",
+            buttons = listOf(DialogButtonSpec("repair", "Repair & load"), DialogButtonSpec("new", "New game"), DialogButtonSpec("exit", "Exit")),
+        )
+
+        val layout = DialogLayout(dialog, TerminalSize(80, 24))
+
+        val buttons = layout.buttons()
+        assertEquals(3, buttons.size)
+        assertTrue(buttons.all { it.range.first > layout.left && it.range.last < layout.left + layout.width - 1 }, "$buttons")
+        assertTrue(layout.left + layout.width <= 80)
     }
 
     @Test

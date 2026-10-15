@@ -263,11 +263,15 @@ class ViewModelStartupRestoreTest {
                 mutableMapOf("foo" to SavedBoard(3, unsolvable), "bar" to SavedBoard(4, fourByFour)),
             )
             val viewModel = ViewModelImpl(FakeBoardModel(), saves)
-            val ui = FakeViewModelUi(chooseSaveToRestoreResponses = mutableListOf(typed))
+            val ui = FakeViewModelUi(
+                chooseSaveToRestoreResponses = mutableListOf(typed),
+                resolveUnsolvableSaveResponses = mutableListOf(UnsolvableSaveChoice.REPAIR),
+            )
 
             ui.drive(viewModel) { viewModel.restoreOnStartup() }
 
             assertTrue(ui.shownMessages.none { it.startsWith("No save named") }, "typed '$typed': ${ui.shownMessages}")
+            assertEquals(listOf("foo (3x3) unsolvable" to true), ui.resolveUnsolvableSaveCalls)
         }
     }
 

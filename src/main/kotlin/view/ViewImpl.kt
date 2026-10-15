@@ -17,6 +17,7 @@ import viewmodel.SaveInfo
 import viewmodel.UNSOLVABLE_MARK
 import viewmodel.catchingNonControl
 import viewmodel.UiRequest
+import viewmodel.UnsolvableSaveChoice
 import viewmodel.ViewModel
 import viewmodel.display
 
@@ -169,6 +170,20 @@ class ViewImpl internal constructor(
         return line.trim().lowercase() in setOf("y", "yes")
     }
 
+    /** The repair / new game / exit choice for an unsolvable save (GH-74). Re-prompts on
+     *  anything else, blank included - there's no safe default. EOF means exit. */
+    internal suspend fun resolveUnsolvableSave(): UnsolvableSaveChoice {
+        while (true) {
+            output.print("Repair and load (r), start a new game (n), or exit (e)? ")
+            val line = readLineOrNull() ?: return UnsolvableSaveChoice.EXIT
+            when (line.trim().lowercase()) {
+                "r", "repair" -> return UnsolvableSaveChoice.REPAIR
+                "n", "new" -> return UnsolvableSaveChoice.NEW_GAME
+                "e", "exit", "quit" -> return UnsolvableSaveChoice.EXIT
+            }
+        }
+    }
+
     internal suspend fun promptSaveName(): String? {
         output.print("Save name: ")
         val line = readLineOrNull() ?: return null
@@ -287,7 +302,11 @@ class ViewImpl internal constructor(
     override suspend fun play() = coroutineScope {
         val ui = launch { for (request in viewModel.uiRequests) handle(request) }
         try {
-            viewModel.restoreOnStartup()
+            try {
+                viewModel.restoreOnStartup()
+            } catch (e: ExitRequestedException) {
+                return@coroutineScope // Exit from an unsolvable save at startup (GH-74).
+            }
             showMessage(ConsoleCommands.HELP_HINT)
             while (true) {
                 // Other control-flow exceptions (e.g. mode switch) propagate to GameSession.
@@ -341,6 +360,7 @@ class ViewImpl internal constructor(
             is UiRequest.PromptSaveName -> request.respond(promptSaveName())
             is UiRequest.ChooseBoardSize -> request.respond(chooseBoardSize(request.current))
             is UiRequest.ConfirmPlayAgain -> request.respond(confirmPlayAgain())
+            is UiRequest.ResolveUnsolvableSave -> request.respond(resolveUnsolvableSave())
         }
     }
 }

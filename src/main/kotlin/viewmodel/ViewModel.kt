@@ -34,6 +34,8 @@ interface ViewModel {
      *  which needs the real outcome rather than assuming success. `suspend` (GH-42): asks the
      *  View for confirmation/messages instead of returning synchronously. */
     suspend fun saveGame(name: String): Boolean
+    /** Throws [ExitRequestedException] when Exit is chosen for an unsolvable save (GH-74) and
+     *  the exit flow ends the session. */
     suspend fun loadGame(name: String)
 
     /** Ends the current session (the `exit`/`quit` command) after an optional save-first
@@ -64,7 +66,8 @@ interface ViewModel {
 
     /** Offers to restore a previous save at startup (0/1/2+ saves) before play begins. Public so
      *  each View can run it ahead of its own event loop (`view.tui.TuiView`, GH-3;
-     *  `view.ViewImpl.play`, GH-42 WU3). */
+     *  `view.ViewImpl.play`, GH-42 WU3). Throws [ExitRequestedException] when Exit is chosen for
+     *  an unsolvable save (GH-74) - the caller must end the session. */
     suspend fun restoreOnStartup()
 
     /** Current board tile values (0-based, GH-10 dialect) - lets a View render/re-render after

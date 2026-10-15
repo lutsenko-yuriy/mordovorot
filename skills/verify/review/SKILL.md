@@ -48,6 +48,7 @@ Evaluate each changed file against:
 - **Naming and placement** — files in the right directories per `docs/ARCHITECTURE.md`
 - **Interface coverage** — interfaces updated when implementations change their contract
 - **Architectural drift** — patterns inconsistent with the rest of the codebase without justification
+- **File size** — a changed source file over the `docs/CODE_STYLE.md` size guideline, or pushed over it by this PR/MR: flag as 🟡 with a concrete split suggestion. It's a guideline, not a hard limit — never 🔴, and a justified exception is fine
 
 Before flagging a finding, verify:
 - Is the scenario already handled by a path not visible in the diff?

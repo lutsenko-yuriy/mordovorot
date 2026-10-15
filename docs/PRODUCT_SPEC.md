@@ -88,6 +88,20 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
 - A save that no sequence of shifts can solve (only possible on 3×3/5×5, e.g. a hand-edited or
   pre-GH-74 save) is marked in every listing: `foo (3x3) unsolvable` (GH-74). Typing that form
   back into `load` (or the startup prompt) still selects `foo`.
+- Loading an unsolvable save (mid-game or from the startup prompt) doesn't restore it. Instead it
+  shows `'foo (3x3)' can't be solved - no sequence of shifts reaches the solved board.` and asks
+  `Repair and load (r), start a new game (n), or exit (e)?` (GH-74). It accepts `r`/`repair`,
+  `n`/`new` and `e`/`exit`/`quit`, case-insensitively, and asks again on anything else, a blank
+  line included. EOF counts as exit.
+  - **Repair** swaps two tiles, which makes the board solvable, and overwrites the save file with
+    the result, keeping its move count, then loads it: `Repaired 'foo' (two tiles swapped) and
+    loaded it.` If the file can't be rewritten, the repaired board is still loaded with a warning,
+    and the save stays marked.
+  - **New game** asks for the board size, like the startup prompt. Mid-game, Enter (or EOF)
+    starts a fresh game at the current size.
+  - **Exit** at startup quits right away, since there's no game to save. Mid-game, it runs the
+    `exit` command's `Save before quitting?` flow (Feature 5); a failed save keeps the current
+    game going.
 - Saves are stored as `.save` files in a `saves/` directory relative to wherever the app is
   launched from (the process's current working directory) — running from a different directory
   will not see saves made from another one.
@@ -152,7 +166,13 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
   - **Exit** — `[ Yes ] [ No ] [ Cancel ]`; Cancel closes the dialog and keeps playing, Yes/No
     behave like the console's `exit`/`quit` save-first prompt (Feature 5), including the
     invalid-name re-prompt and the failed-save-keeps-playing behavior.
-  - Any dialog can also be dismissed with Escape, same effect as its Cancel button.
+  - Any dialog can also be dismissed with Escape, same effect as its Cancel button - except the
+    two below.
+- **Unsolvable save** (GH-74): loading one (Load dialog or startup restore) opens a `Can't be
+  solved` dialog with `[ Repair & load ] [ New game ] [ Exit ]`, the same three choices as the
+  console (Feature 4). It has no Cancel, and Escape does nothing. New game opens the size picker.
+  Exit at startup quits; mid-game it opens a `Save before quitting?` dialog with Yes/No only
+  (no Cancel, Escape does nothing), which then behaves like the Exit dialog's Yes/No.
 - **Startup restore**, when saves exist, is the same Load-shaped dialog (titled "Restore a saved
   game?") regardless of how many saves there are — the console's one-save-yes/no vs.
   two-or-more-saves-list split (Feature 4) doesn't apply here; Cancel starts a new game.

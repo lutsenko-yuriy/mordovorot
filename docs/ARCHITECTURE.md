@@ -56,10 +56,11 @@ src/main/kotlin/
 │   │                           # after the first, skipping a re-shown startup restore prompt after
 │   │                           # a mode switch (GH-30). Holds no `View` reference — see the
 │   │                           # "viewmodel" section below
-│   ├── UiRequest.kt          # Sealed request/response type for the seven viewmodel→UI
+│   ├── UiRequest.kt          # Sealed request/response type for the eight viewmodel→UI
 │   │                           # interactions (ShowMessage/ConfirmRestore/ChooseSaveToRestore/
 │   │                           # ConfirmSaveBeforeExit/PromptSaveName/ChooseBoardSize (GH-44)/
-│   │                           # ConfirmPlayAgain (GH-66, console only)),
+│   │                           # ConfirmPlayAgain (GH-66, console only)/
+│   │                           # ResolveUnsolvableSave (GH-74) + UnsolvableSaveChoice),
 │   │                           # sent on
 │   │                           # ViewModel.uiRequests (GH-42 WU2)
 │   ├── SessionControlException.kt # Sealed marker base for control-flow exceptions that unwind
@@ -325,6 +326,19 @@ being listed.
 `SaveInfo.solvable` (GH-74) comes from the same read via `Solvability`;
 `display()` appends `UNSOLVABLE_MARK` for a save that can't be solved, and the
 console `load` command strips it back off.
+`ViewModelImpl.loadGame` never restores an unsolvable save directly: it raises
+`UiRequest.ResolveUnsolvableSave` (`atStartup` set from the startup restore) and
+acts on the `UnsolvableSaveChoice`. REPAIR writes `Solvability.repaired` back
+through `saves.save` and loads it. NEW_GAME raises
+`ChooseBoardSize(origin = "unsolvable_save")` mid-game, or returns `false` at
+startup so `restoreOnStartup`'s own size prompt runs. EXIT calls `exitGame()`
+mid-game, or throws `ExitRequestedException` at startup, which both
+`ViewImpl.play` and `TuiView.play` catch around `restoreOnStartup`.
+`ChooseBoardSize.origin` is what the TUI reports as
+`screen_size_dialog.opened_from`. The TUI answers with a non-cancellable
+`Dialog.Kind.UNSOLVABLE` (`runModal(cancellable = false)`), and its
+`confirmSaveBeforeExit` opens a Yes/No dialog itself when no toolbar Exit
+answer is pending.
 
 **`--size=N` bypasses the *entire* startup sequence, not just the size prompt.**
 A usable `--size=N` sets `sizeChosenAtLaunch` (threaded `GameSession` →
