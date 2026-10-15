@@ -1,4 +1,8 @@
+import testing.RecordingAnalyticsService
+import testing.RecordingAnalyticsService.Event
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 /** GH-79 scenarios: console mode removed - the no-terminal abort, the `--console` notice, the TUI
  *  without a console switch, the failed-switch fallback, and old saves still loading. */
@@ -6,43 +10,89 @@ class ConsoleRemovalScenarioTest {
 
     @Test
     fun `a launch with no terminal prints the abort message and starts no game`() {
-        // TODO: for each of no flag, --mouse, --keyboard, --console: resolve the launch with no
-        //  interactive terminal
-        // TODO: the result is "don't start" (null)
-        // TODO: the message sink got "No interactive terminal found - Mordovorot only runs as a terminal UI."
-        // TODO: app_launch_aborted tracked with reason=no_interactive_terminal and requested_mode
-        //  none / mouse / keyboard / console respectively
-        // TODO: no app_launched tracked
+        val cases = listOf(
+            emptyArray<String>() to "none",
+            arrayOf("--mouse") to "mouse",
+            arrayOf("--keyboard") to "keyboard",
+            arrayOf("--console") to "console",
+        )
+        for ((args, requested) in cases) {
+            val analytics = RecordingAnalyticsService()
+            val messages = mutableListOf<String>()
+
+            val mode = resolveInputMode(
+                args, analytics,
+                reportNoInteractiveTerminal = { messages += it },
+                hasInteractiveTerminal = { false },
+            )
+
+            assertNull(mode, "args=${args.toList()}")
+            assertEquals(listOf("No interactive terminal found - Mordovorot only runs as a terminal UI."), messages)
+            assertEquals(
+                listOf(Event("app_launch_aborted", mapOf("reason" to "no_interactive_terminal", "requested_mode" to requested))),
+                analytics.events,
+                "args=${args.toList()}",
+            )
+        }
     }
 
     @Test
     fun `--keyboard outranks --console in requested_mode`() {
-        // TODO: resolve --console --keyboard with no interactive terminal
-        // TODO: app_launch_aborted has requested_mode=keyboard
+        val analytics = RecordingAnalyticsService()
+
+        resolveInputMode(arrayOf("--console", "--keyboard"), analytics, reportNoInteractiveTerminal = {}, hasInteractiveTerminal = { false })
+
+        assertEquals("keyboard", analytics.events.single().properties["requested_mode"])
     }
 
     @Test
     fun `--console in a terminal shows the removal notice and starts the mouse TUI`() {
-        // TODO: resolve --console with an interactive terminal
-        // TODO: resolves to MOUSE
-        // TODO: the notice sink got "Console mode was removed - starting the terminal UI."
-        // TODO: app_launched has mode=mouse and console_flag_ignored=true
-        // TODO: no unrecognized-argument warning
+        val analytics = RecordingAnalyticsService()
+        val notices = mutableListOf<String>()
+        val unrecognized = mutableListOf<String>()
+
+        val mode = resolveInputMode(
+            arrayOf("--console"), analytics,
+            warnUnrecognizedArg = { unrecognized += it },
+            noticeConsoleRemoved = { notices += it },
+            hasInteractiveTerminal = { true },
+        )
+
+        assertEquals(InputMode.MOUSE, mode)
+        assertEquals(listOf("Console mode was removed - starting the terminal UI."), notices)
+        assertEquals(
+            listOf(Event("app_launched", mapOf("mode" to "mouse", "board_size" to 4, "console_flag_ignored" to true))),
+            analytics.events,
+        )
+        assertEquals(emptyList(), unrecognized)
     }
 
     @Test
     fun `--console with --keyboard starts keyboard mode with the notice`() {
-        // TODO: resolve --console --keyboard with an interactive terminal
-        // TODO: resolves to KEYBOARD
-        // TODO: the removal notice is shown
-        // TODO: no "--keyboard ignored" warning
+        val notices = mutableListOf<String>()
+        val warnings = mutableListOf<String>()
+
+        val mode = resolveInputMode(
+            arrayOf("--console", "--keyboard"), RecordingAnalyticsService(),
+            warnUnrecognizedArg = { warnings += it },
+            noticeConsoleRemoved = { notices += it },
+            hasInteractiveTerminal = { true },
+        )
+
+        assertEquals(InputMode.KEYBOARD, mode)
+        assertEquals(1, notices.size)
+        assertEquals(emptyList(), warnings)
     }
 
     @Test
     fun `a normal launch reports console_flag_ignored=false and no notice`() {
-        // TODO: resolve no flags with an interactive terminal
-        // TODO: app_launched has console_flag_ignored=false
-        // TODO: the notice sink was not called
+        val analytics = RecordingAnalyticsService()
+        val notices = mutableListOf<String>()
+
+        resolveInputMode(emptyArray(), analytics, noticeConsoleRemoved = { notices += it }, hasInteractiveTerminal = { true })
+
+        assertEquals(false, analytics.events.single().properties["console_flag_ignored"])
+        assertEquals(emptyList(), notices)
     }
 
     @Test
