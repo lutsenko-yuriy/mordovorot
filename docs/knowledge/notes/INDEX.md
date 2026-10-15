@@ -48,3 +48,4 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-62: Move counter](GH-62.md)
 - [GH-64: Extract shared modal-loop helper in TuiView](GH-64.md)
 - [GH-65: Extract shared non-control exception catch helper](GH-65.md)
+- [GH-67: Console help command and specific error messages](GH-67.md)
