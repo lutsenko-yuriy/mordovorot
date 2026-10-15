@@ -49,3 +49,4 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-64: Extract shared modal-loop helper in TuiView](GH-64.md)
 - [GH-65: Extract shared non-control exception catch helper](GH-65.md)
 - [GH-67: Console help command and specific error messages](GH-67.md)
+- [GH-74: Solvable boards on odd sizes and unsolvable-save handling](GH-74.md)
