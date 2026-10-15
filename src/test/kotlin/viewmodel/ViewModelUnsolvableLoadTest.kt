@@ -92,6 +92,21 @@ class ViewModelUnsolvableLoadTest {
         )
     }
 
+    /** Audit on PR #77: a hand-edited out-of-range size (7x7) can't be restored - the file must
+     *  stay as it was rather than be rewritten before the load fails. */
+    @Test
+    fun `repair leaves the save untouched when the board can't take it`(): Unit = runBlocking {
+        val sevenBySeven = IntArray(49) { it }.also { it[0] = 1; it[1] = 0 }
+        val saves = FakeSaveRepository(mutableMapOf("big" to SavedBoard(7, sevenBySeven.copyOf(), 2)))
+        val viewModel = ViewModelImpl(BoardImpl(4), saves, RecordingAnalyticsService())
+        val ui = FakeViewModelUi(resolveUnsolvableSaveResponses = mutableListOf(UnsolvableSaveChoice.REPAIR))
+
+        ui.drive(viewModel) { viewModel.loadGame("big") }
+
+        assertEquals(emptyList(), saves.saveCalls)
+        assertEquals(sevenBySeven.toList(), saves.load("big")!!.state.toList())
+    }
+
     @Test
     fun `new game mid-game asks for the size and starts a fresh game`(): Unit = runBlocking {
         val board = BoardImpl(4)

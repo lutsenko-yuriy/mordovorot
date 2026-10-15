@@ -152,14 +152,15 @@ class ViewModelImpl(
         when (choice) {
             UnsolvableSaveChoice.REPAIR -> {
                 val fixed = Solvability.repaired(saved.state)
-                // A failed overwrite still loads the repaired board - the file keeps its mark.
+                // Restored first, so a board that can't take the save (a hand-edited size) never
+                // rewrites the file. A failed overwrite still loads - the file keeps its mark.
+                board.restoreState(fixed, saved.moveCount)
                 val error = try {
                     saves.save(name, fixed, saved.squareSide, saved.moveCount)
                     null
                 } catch (e: Exception) {
                     e
                 }
-                board.restoreState(fixed, saved.moveCount)
                 track(mapOf("repair_saved" to (error == null)))
                 showMessage(
                     if (error == null) "Repaired '$name' (two tiles swapped) and loaded it."
