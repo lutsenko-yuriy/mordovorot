@@ -344,9 +344,10 @@ which tracks `input_mode_switched` and throws `ModeSwitchRequestedException`.
 `GameSession` catches the exception, rebuilds the `View`/viewmodel/analytics
 stack for the new mode around the *same* `BoardImpl`/`FileSaveRepository`
 instances, and re-enters `play()` — so switching preserves board state and
-never reshuffles. If that rebuild fails (e.g. no `stty`), `GameSession` prints
-`Could not switch to <target> mode (<reason>) - staying in <previous> mode.`
-and rebuilds the previous mode; a failure on the first session, or of that
+never reshuffles. If that rebuild fails (e.g. no `stty`), `GameSession`
+rebuilds the previous mode and hands it `Could not switch to <target> mode
+(<reason>) - staying in <previous> mode.` via `View.play(notice)`, shown as the
+first status line (stderr would be hidden behind the full-screen TUI); a failure on the first session, or of that
 fallback, still throws. `app_launched` still fires exactly once, from the
 initial resolution in `Main`; each subsequent switch fires
 `input_mode_switched` instead (`docs/ANALYTICS_EVENTS.md`).

@@ -90,7 +90,8 @@ class TuiView internal constructor(
     /** Drains [viewModel]'s [viewmodel.ViewModel.uiRequests] alongside the board's own event
      *  loop (GH-42 WU2) - what lets `saveGame`/`loadGame`/`exitGame`/`restoreOnStartup` suspend
      *  on [viewmodel.ViewModelImpl.ask] instead of calling back into this view directly. */
-    override suspend fun play() = coroutineScope {
+    override suspend fun play(notice: String?) = coroutineScope {
+        pendingMessage = notice
         val ui = launch { for (request in viewModel.uiRequests) handle(request) }
         try {
             terminal.enterRawMode()

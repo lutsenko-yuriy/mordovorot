@@ -166,14 +166,11 @@ class ConsoleRemovalScenarioTest {
         )
         val board = BoardImpl(4).apply { restoreState(scrambled) }
         val builds = mutableListOf<Pair<InputMode, Boolean>>()
-        val errors = mutableListOf<String>()
-
         GameSession(
             initialMode = InputMode.MOUSE,
             board = board,
             saves = FileSaveRepository(createTempDirectory("mordovorot-gh79")),
             sizeChosenAtLaunch = true,
-            reportError = { errors += it },
             buildView = { mode, b, s, a, restoreDone, sizeAtLaunch ->
                 builds += mode to restoreDone
                 if (mode == InputMode.KEYBOARD) throw RuntimeException("stty not found")
@@ -181,7 +178,8 @@ class ConsoleRemovalScenarioTest {
             },
         ).run()
 
-        assertEquals(listOf("Could not switch to keyboard mode (stty not found) - staying in mouse mode."), errors)
+        // Shown in the rebuilt TUI itself - on stderr the full-screen redraw would hide it.
+        assertTrue(terminal.frames.any { it.contains("Could not switch to keyboard mode (stty not found) - staying in mouse mode.") })
         assertEquals(listOf(InputMode.MOUSE to false, InputMode.KEYBOARD to true, InputMode.MOUSE to true), builds)
         val lastFrame = terminal.frames.last().replace(Regex("\u001B\\[[0-9;?]*[A-Za-z]"), "").split("\r\n")
         assertEquals("Moves: 1", lastFrame[layout.movesRow].trim())

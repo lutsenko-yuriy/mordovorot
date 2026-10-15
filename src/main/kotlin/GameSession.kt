@@ -30,8 +30,6 @@ class GameSession(
      *  prompts stay skipped across a mode switch too. */
     private val sizeChosenAtLaunch: Boolean = false,
     private val terminalFactory: () -> Terminal = { AnsiTerminal() },
-    /** Where the failed-switch fallback notice goes - stderr, like every launch diagnostic. */
-    private val reportError: (String) -> Unit = { System.err.println(it) },
     private val buildView: (
         mode: InputMode,
         board: BoardModel,
@@ -55,6 +53,8 @@ class GameSession(
         // The mode to fall back to if the current build fails - null when there's none: the
         // first session, or a build that is itself already a fallback.
         var fallbackMode: InputMode? = null
+        // Shown by the next View rather than printed - the full-screen TUI would cover stderr.
+        var notice: String? = null
         while (true) {
             // Other control-flow exceptions must reach main (PR #37, PR #43).
             try {
@@ -64,10 +64,8 @@ class GameSession(
                         // the game (GH-79 D1), unless this is startup or the fallback failed too.
                         val previous = fallbackMode
                         if (isFirstSession || previous == null) throw e
-                        reportError(
-                            "Could not switch to ${mode.name.lowercase()} mode (${e.message ?: e::class.simpleName}) " +
-                                "- staying in ${previous.name.lowercase()} mode."
-                        )
+                        notice = "Could not switch to ${mode.name.lowercase()} mode (${e.message ?: e::class.simpleName}) " +
+                            "- staying in ${previous.name.lowercase()} mode."
                         mode = previous
                         fallbackMode = null
                         startupRestoreDone = true
@@ -76,7 +74,7 @@ class GameSession(
                     // Undecorated analytics - defaultView decorates per mode. buildView is guarded too,
                     // so a rebuild failure falls back like a play() failure (PR #37).
                     val view = buildView(mode, board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch)
-                    view.play()
+                    view.play(notice.also { notice = null })
                     return
                 }
             } catch (e: ModeSwitchRequestedException) {

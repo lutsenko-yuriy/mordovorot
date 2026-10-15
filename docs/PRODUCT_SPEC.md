@@ -99,9 +99,9 @@ Mordovorot — A terminal prototype of a sliding-row/column puzzle board game
   Clicking an arrow shifts that row/column; every click repaints the whole screen. `[ New ]`
   (GH-44) opens the same size-picker dialog as the startup prompt and starts a fresh game at
   whichever size is chosen; Cancel leaves the current game untouched.
-- If switching modes fails (e.g. the terminal can't be set up), the game prints
-  `Could not switch to <mode> mode (<reason>) - staying in <current> mode.` and carries on in
-  the current mode with the same game (GH-79).
+- If switching modes fails (e.g. the terminal can't be set up), the game carries on in the
+  current mode with the same game and shows `Could not switch to <mode> mode (<reason>) -
+  staying in <current> mode.` on its status line (GH-79).
 - **Save/Load/Exit dialogs**, opened from the toolbar:
   - **Save** — a typed name field; an existing name shows an inline "already exists - it will
     be overwritten" warning before saving over it. A name containing spaces is rejected with an

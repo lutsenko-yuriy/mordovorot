@@ -21,9 +21,14 @@ import viewmodel.ModeSwitcherImpl
  *  `ModeSwitchRequestedException`, ends when `play()` returns normally. */
 class GameSessionTest {
 
-    /** [View] test double running the scripted [onPlay]. */
+    /** [View] test double running the scripted [onPlay]; records the notice [play] got. */
     private class ScriptedView(private val onPlay: () -> Unit) : View {
-        override suspend fun play() = onPlay()
+        var notice: String? = null
+
+        override suspend fun play(notice: String?) {
+            this.notice = notice
+            onPlay()
+        }
     }
 
     private data class BuildCall(val mode: InputMode, val board: BoardModel, val saves: SaveRepository, val startupRestoreDone: Boolean)
@@ -106,7 +111,6 @@ class GameSessionTest {
 
         val session = GameSession(
             initialMode = InputMode.MOUSE,
-            reportError = {},
             buildView = { mode, _, _, _, _, _ ->
                 modesBuilt.add(mode)
                 built++
@@ -146,12 +150,11 @@ class GameSessionTest {
     @Test
     fun `a failed rebuild after a mode switch falls back to the previous mode instead of crashing, skipping the restore prompt`(): Unit = runBlocking {
         val calls = mutableListOf<BuildCall>()
-        val errors = mutableListOf<String>()
+        val views = mutableListOf<ScriptedView>()
         var built = 0
 
         val session = GameSession(
             initialMode = InputMode.KEYBOARD,
-            reportError = { errors += it },
             buildView = { mode, b, s, _, restoreDone, _ ->
                 calls.add(BuildCall(mode, b, s, restoreDone))
                 built++
@@ -159,14 +162,14 @@ class GameSessionTest {
                     1 -> ScriptedView { throw ModeSwitchRequestedException(InputMode.MOUSE) }
                     2 -> ScriptedView { throw RuntimeException("stty not found") } // simulated terminal-setup failure
                     else -> ScriptedView {} // recovered keyboard session exits normally
-                }
+                }.also { views += it }
             },
         )
 
         session.run() // must not throw
 
         assertEquals(listOf(InputMode.KEYBOARD, InputMode.MOUSE, InputMode.KEYBOARD), calls.map { it.mode })
-        assertEquals(listOf("Could not switch to mouse mode (stty not found) - staying in keyboard mode."), errors)
+        assertEquals(listOf(null, null, "Could not switch to mouse mode (stty not found) - staying in keyboard mode."), views.map { it.notice })
         // The fallback build (3rd) must not re-show the startup restore prompt over a live board.
         assertEquals(listOf(false, true, true), calls.map { it.startupRestoreDone })
     }
