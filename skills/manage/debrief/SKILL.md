@@ -98,8 +98,12 @@ Create a branch from the latest `origin/main`, stage all changed files (approved
 git fetch origin
 git checkout -b feature/GH-XX-debrief origin/main
 git add <files>
+python3 scripts/notes/index.py && python3 scripts/notes/index.py --check
+git add docs/knowledge/notes/INDEX.md
 git commit -m "meta: debrief GH-XX — <short summary>"
 ```
+
+Regenerate the index only *after* `git add`-ing the note: it lists git-tracked notes only, so an untracked note is silently left out and CI's `--check` fails (GH-79). The note also needs a `bookmarks:` key (`bookmarks: []` if none apply) — a missing one failed `master` after GH-74.
 
 PR title: `meta: debrief GH-XX — <short summary>`. Include the PR URL in the report (step 8).
 
