@@ -31,7 +31,21 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
 
 ### Feature 3 — Console interaction
 - The user issues commands through a console (stdin) loop.
-- After every command, the board is redisplayed and re-evaluated for the solved state.
+- After every command, the board is redisplayed and re-evaluated for the solved state - except
+  after `help` or a rejected command, whose output takes the board's place until the next
+  command (GH-67).
+- **Help (GH-67):** each console start (a switch back from the TUI included) prints
+  `Enter help to list all the commands` right before the first board; the full list is never
+  shown automatically.
+  - `help` lists every command as a usage line plus a short description (`left <row 1-4>  -
+    shift a row left`); row/column ranges follow the current board size.
+  - `help <command>` shows just that command's line (`help quit` and `help exit` share one);
+    `help <unknown>` shows the full list.
+- **Rejected commands (GH-67)** show a specific error followed by the hint line:
+  `Unknown command: <verb>`, `Empty command`, or - for a known command used wrongly (missing,
+  extra, non-numeric or out-of-range argument) - the problem plus the command's usage line,
+  e.g. `Missing row number for left. Usage: left <row 1-4>`. `load` of an unknown save keeps
+  its own message (Feature 4) with no hint.
 - **Solved state (GH-66):** once the board is solved, the final board and its `Moves: N` are
   shown, then `Congratulations, you solved this puzzle in N moves!` (`in 1 move!` for one),
   then `Start a new game? [y/N]`.
@@ -50,8 +64,8 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
 - `size <N>` starts a fresh game at board side `N` (3-5), the same as the startup size prompt
   but mid-session (GH-44). `N` is a plain integer, not the 1-based row/column dialect the shift
   commands use. A missing or non-numeric argument is rejected the same way an out-of-range shift
-  index is; an out-of-range `N` (e.g. `size 9`) is rejected with a message naming the valid range
-  instead of starting a new game.
+  index is; an out-of-range `N` is rejected instead of starting a new game, with the valid range
+  in its usage line (`Size 9 is out of range for size. Usage: size <3-5>`, GH-67).
 
 ### Feature 4 — Save and load (GH-6)
 - `save <file-name>` stores the board's current tile arrangement to a local file, creating it

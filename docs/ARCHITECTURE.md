@@ -248,7 +248,10 @@ values, `left`/`right`/`up`/`down` row/column input); `board_model` and
 `storage` stay 0-based. `ViewImpl`'s `DISPLAY_OFFSET` constant is the single
 translation point — `+1` when rendering, `-1` when parsing a shift argument.
 Range validation still lives in `board_model` (`BoardImpl`'s bounds check),
-not `view` — the view translates, it does not validate.
+not `view` — the view translates, it does not validate. Since GH-67 the view
+rewords that rejection (and `size <N>`'s `BoardSize` one) into a
+`ConsoleCommandException` with the typed 1-based value and a usage line, but
+still never checks the range itself.
 
 `BoardImpl.restoreState` and `FileSaveRepository`'s validation errors avoid
 stating an explicit numeric range (e.g. "contain each of N tile values
