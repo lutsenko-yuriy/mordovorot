@@ -131,6 +131,28 @@ solved board and Congratulations message - including when an already-solved save
 | `decision` | `string` | `new_game` (`y`/`yes` - the size prompt follows) or `quit` (anything else, Enter, or EOF - the session ends). |
 | `input_method` | `string` | Always `console` - the prompt only exists in console mode. |
 
+### `help_command_used`
+
+Fired when the player runs `help` in console mode. *(GH-67)*
+
+| Property | Type | Description |
+|---|---|---|
+| `scope` | `string` | `all` (bare `help`), `command` (`help <known command>`), or `unknown_topic` (`help <unknown>` - falls back to the full list). The unknown word itself is never sent - free text may carry PII. |
+| `command` | `string` | The matched command name (e.g. `left`, `exit`). Only present when `scope` is `command`. |
+| `input_method` | `string` | Always `console` - `help` only exists in console mode. |
+
+### `console_command_rejected`
+
+Fired when a console command is rejected with an error plus the `Enter help to list all the
+commands` hint - `size <N>` out of range included. Not fired for `load` of an unknown save,
+whose message is unchanged. *(GH-67)*
+
+| Property | Type | Description |
+|---|---|---|
+| `reason` | `string` | `unknown_command`, `empty`, `missing_argument`, `too_many_arguments`, `not_a_number`, or `out_of_range`. |
+| `command` | `string` | The known command's name. Absent for `unknown_command` and `empty` - the raw typed verb is never sent, since free text may carry PII. |
+| `input_method` | `string` | Always `console`. |
+
 <!-- All events above are sent through `analytics.AnalyticsService`, currently backed by
      `analytics.NoopAnalyticsService` (no real SDK wired up yet). -->
 

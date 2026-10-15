@@ -85,6 +85,10 @@ src/main/kotlin/
     ├── ViewImpl.kt      # Console I/O implementation (BufferedReader-based input). `mouse`/
     │                      # `keyboard` commands reach an injected ModeSwitcher, wired via
     │                      # create()'s modeSwitcherFactory param (GH-30)
+    ├── ConsoleCommands.kt # Pure console command table (GH-67): usage + description per
+    │                      # command; source of `help` output, error usage lines and the hint
+    ├── ConsoleCommandException.kt # IllegalArgumentException subclass for a rejected console
+    │                      # command - carries the specific message for play() to print with the hint
     └── tui/             # GH-3: a second View implementation for the mouse-driven TUI
         ├── Terminal.kt / AnsiTerminal.kt   # Raw-mode terminal I/O (stty via ProcessBuilder,
         │                                     # xterm mouse-reporting escapes) - the one seam
