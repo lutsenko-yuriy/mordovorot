@@ -10,12 +10,11 @@ import testing.RecordingAnalyticsService.Event
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 /**
  * Covers [ViewModelImpl.restoreOnStartup]'s branch matrix (0/1/2+ save files), driven directly -
  * `restoreOnStartup` is public since GH-3 so each View can run it ahead of its own event loop
- * ([view.tui.TuiView], and [view.ViewImpl.play] since GH-42 WU3). See the plan comment on GH-6
+ * ([view.tui.TuiView]). See the plan comment on GH-6
  * for the full branch matrix.
  *
  * Driven via [FakeViewModelUi.drive] (GH-42 WU2) - `restoreOnStartup` suspends on
@@ -139,39 +138,36 @@ class ViewModelStartupRestoreTest {
     }
 
     @Test
-    fun `two or more saves, unknown name re-prompts instead of falling back`(): Unit = runBlocking {
+    fun `two or more saves, an answer matching no save counts as declined`(): Unit = runBlocking {
+        // The TUI only ever answers with a listed name (GH-79 removed the typed console prompt),
+        // so an unmatched answer is treated like a blank one rather than re-prompted.
         val board = FakeBoardModel()
-        val barState = intArrayOf(3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12)
         val saves = FakeSaveRepository(
             mutableMapOf(
                 "foo" to SavedBoard(4, fourByFour),
-                "bar" to SavedBoard(4, barState),
+                "bar" to SavedBoard(4, fourByFour),
             ),
         )
         val analytics = RecordingAnalyticsService()
         val viewModel = ViewModelImpl(board, saves, analytics)
-        val ui = FakeViewModelUi(chooseSaveToRestoreResponses = mutableListOf("nope", "bar"))
+        val ui = FakeViewModelUi(chooseSaveToRestoreResponses = mutableListOf("foo (4x4)"), chooseBoardSizeResponses = mutableListOf(null))
 
         ui.drive(viewModel) { viewModel.restoreOnStartup() }
 
-        assertEquals(2, ui.chooseSaveToRestoreCalls.size)
-        assertEquals(listOf("restoreState(${barState.toList()})"), board.calls)
-        assertEquals(1, analytics.events.count { it.name == "startup_restore_prompt_shown" })
+        assertEquals(1, ui.chooseSaveToRestoreCalls.size)
+        assertEquals(emptyList(), board.calls)
+        assertEquals(emptyList(), ui.shownMessages)
         assertEquals(
-            Event("startup_restore_decision", mapOf("decision" to "restored", "save_file_count" to 2)),
+            Event("startup_restore_decision", mapOf("decision" to "new_game", "save_file_count" to 2)),
             analytics.events.last(),
         )
     }
 
     @Test
-    fun `EOF at the startup prompt starts a new game, same as a decline - real EOF translation is covered in ViewImplCommandTest`(): Unit = runBlocking {
+    fun `EOF at the startup prompt starts a new game, same as a decline`(): Unit = runBlocking {
         // ViewModelImpl only ever sees the sentinel confirmRestore/chooseSaveToRestore response
-        // for EOF (false/null) - identical to a clean decline/blank answer, since the actual
-        // EOF-vs-decline distinction is made inside ViewImpl (see `confirmRestore returns false
-        // on EOF instead of throwing` and its chooseSaveToRestore counterpart in
-        // ViewImplCommandTest). This test only confirms the viewModel doesn't hang or throw when
-        // that sentinel comes back - it can't, by construction, tell EOF apart from a decline at
-        // this layer.
+        // for EOF (false/null) - identical to a clean decline/blank answer. This test only
+        // confirms the viewModel doesn't hang or throw when that sentinel comes back.
         val board = FakeBoardModel()
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, fourByFour)))
         val analytics = RecordingAnalyticsService()
@@ -209,97 +205,6 @@ class ViewModelStartupRestoreTest {
             ),
             analytics.events,
         )
-    }
-
-    @Test
-    fun `an unknown name typed with two or more saves shows a message before re-prompting`(): Unit = runBlocking {
-        val board = FakeBoardModel()
-        val saves = FakeSaveRepository(
-            mutableMapOf(
-                "foo" to SavedBoard(4, fourByFour),
-                "bar" to SavedBoard(4, fourByFour),
-            ),
-        )
-        val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, saves, analytics)
-        val ui = FakeViewModelUi(chooseSaveToRestoreResponses = mutableListOf("nope", null), chooseBoardSizeResponses = mutableListOf(null))
-
-        ui.drive(viewModel) { viewModel.restoreOnStartup() }
-
-        assertEquals(
-            listOf("No save named 'nope'. Available saves: bar (4x4), foo (4x4)"),
-            ui.shownMessages,
-        )
-    }
-
-    /** Audit finding on PR #54 (GH-44 WU4): the console prompt now prints "name (NxN)" for each
-     *  save, so a user typing back exactly what they see must restore that save, not get stuck
-     *  re-prompted forever against a bare-name-only match. */
-    @Test
-    fun `typing back the displayed name-and-size form restores that save, same as typing the bare name`(): Unit = runBlocking {
-        val board = FakeBoardModel()
-        val saves = FakeSaveRepository(
-            mutableMapOf(
-                "foo" to SavedBoard(4, fourByFour),
-                "bar" to SavedBoard(4, fourByFour),
-            ),
-        )
-        val viewModel = ViewModelImpl(board, saves)
-        val ui = FakeViewModelUi(chooseSaveToRestoreResponses = mutableListOf("foo (4x4)"))
-
-        ui.drive(viewModel) { viewModel.restoreOnStartup() }
-
-        assertEquals(listOf("Loaded 'foo'."), ui.shownMessages)
-        assertEquals(listOf("restoreState(${fourByFour.toList()})"), board.calls)
-    }
-
-    /** GH-74: the multi-save prompt shows "foo (3x3) unsolvable" - typing that back, or just
-     *  "foo (3x3)", must select it too. */
-    @Test
-    fun `typing back the size-only or the full unsolvable-marked form selects that save`(): Unit = runBlocking {
-        val unsolvable = intArrayOf(2, 1, 0, 3, 4, 5, 6, 7, 8)
-        for (typed in listOf("foo (3x3)", "foo (3x3) unsolvable")) {
-            val saves = FakeSaveRepository(
-                mutableMapOf("foo" to SavedBoard(3, unsolvable), "bar" to SavedBoard(4, fourByFour)),
-            )
-            val viewModel = ViewModelImpl(FakeBoardModel(), saves)
-            val ui = FakeViewModelUi(
-                chooseSaveToRestoreResponses = mutableListOf(typed),
-                resolveUnsolvableSaveResponses = mutableListOf(UnsolvableSaveChoice.REPAIR),
-            )
-
-            ui.drive(viewModel) { viewModel.restoreOnStartup() }
-
-            assertTrue(ui.shownMessages.none { it.startsWith("No save named") }, "typed '$typed': ${ui.shownMessages}")
-            assertEquals(listOf("foo (3x3) unsolvable" to true), ui.resolveUnsolvableSaveCalls)
-        }
-    }
-
-    /** Round 2 audit finding on PR #54 (GH-44 WU4): an exact name match must win over another
-     *  save's display-form match - only reachable with a hand-placed save file whose name
-     *  contains a space (no in-app save path allows one), but a real save named literally
-     *  "foo (4x4)" must still be selectable by typing its own name. */
-    @Test
-    fun `an exact name match wins over another save's colliding display form`(): Unit = runBlocking {
-        // Same squareSide (4) on both - differing sizes would make barState alone sufficient to
-        // tell the saves apart, weakening the point of this test (that the *name* match wins,
-        // not just any distinguishing detail); barState is what actually distinguishes which
-        // save got restored.
-        val board = FakeBoardModel()
-        val barState = intArrayOf(3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12)
-        val saves = FakeSaveRepository(
-            mutableMapOf(
-                "foo" to SavedBoard(4, fourByFour),
-                "foo (4x4)" to SavedBoard(4, barState),
-            ),
-        )
-        val viewModel = ViewModelImpl(board, saves)
-        val ui = FakeViewModelUi(chooseSaveToRestoreResponses = mutableListOf("foo (4x4)"))
-
-        ui.drive(viewModel) { viewModel.restoreOnStartup() }
-
-        assertEquals(listOf("Loaded 'foo (4x4)'."), ui.shownMessages)
-        assertEquals(listOf("restoreState(${barState.toList()})"), board.calls)
     }
 
     @Test

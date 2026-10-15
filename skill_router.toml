@@ -13,7 +13,7 @@ vcs = "github"
 # Answers that used to be {{PLACEHOLDER}} values; `scripts/onboard/onboard.py apply` substitutes them into
 # tracked files. Empty values are left as placeholders so `onboard.py check` still reports them.
 name = "Mordovorot"
-description = "A console prototype of a sliding-row/column puzzle board game"
+description = "A terminal prototype of a sliding-row/column puzzle board game"
 architecture_summary = "MVVM (Model-View-ViewModel): board_model + viewmodel + view packages"
 issue_prefix = "GH"
 git_host = "github.com"

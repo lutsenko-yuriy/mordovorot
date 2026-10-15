@@ -1,22 +1,15 @@
-import analytics.AnalyticsService
-import analytics.InputMethodAnalyticsService
 import board_model.BoardImpl
 import kotlinx.coroutines.runBlocking
 import storage.FileSaveRepository
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
-import view.View
-import view.ViewImpl
 import view.tui.BoardLayout
+import view.tui.Dialog
+import view.tui.DialogButtonSpec
+import view.tui.DialogLayout
+import view.tui.HitTarget
 import view.tui.TerminalEvent
 import view.tui.TerminalSize
-import view.tui.TuiView
-import viewmodel.ModeSwitcherImpl
-import viewmodel.ViewModelImpl
-import java.io.BufferedReader
-import java.io.ByteArrayOutputStream
-import java.io.PrintStream
-import java.io.StringReader
 import java.nio.file.Path
 import kotlin.io.path.createTempDirectory
 import kotlin.io.path.writeText
@@ -24,106 +17,124 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/** GH-62 scenarios: real BoardImpl + ViewModelImpl + FileSaveRepository (temp dir), driven
- *  through the console view or the TUI via FakeTerminal. */
+/** GH-79: GH-62's console move-counter scenarios rewritten for the TUI - real BoardImpl +
+ *  ViewModelImpl + FileSaveRepository (temp dir), driven through FakeTerminal, reading the
+ *  `Moves:` row under the title. */
 class MoveCounterScenarioTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
+    private val layout = BoardLayout(terminalSize, 4)
 
-    /** 4x4, row 1 rotated right once - `left 1` solves it. */
+    /** 4x4, row 1 rotated right once - a left shift on row 1 solves it. */
     private val oneShiftFromSolved = intArrayOf(3, 0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
 
-    /** 4x4, far from solved - no scripted shift sequence below can solve it by accident. */
+    /** 4x4, far from solved - no scripted click sequence below can solve it by accident. */
     private val scrambled = IntArray(16) { 15 - it }
 
-    private class Run(val output: String, val terminal: FakeTerminal, val analytics: RecordingAnalyticsService) {
-        /** Every `Moves: N` the console printed, in order. */
-        val consoleCounts: List<Int> get() = Regex("Moves: (\\d+)").findAll(output).map { it.groupValues[1].toInt() }.toList()
-    }
+    private class Run(val terminal: FakeTerminal, val analytics: RecordingAnalyticsService)
 
-    /** Runs a [GameSession] in [mode] over a real board and a temp-dir save repository, with
-     *  `--size` semantics (no startup prompts). Console reads [input]; the TUI reads [events]. */
+    /** A mouse-mode [GameSession] over a real board and a temp-dir save repository, with
+     *  `--size` semantics (no startup prompts), wired through `defaultView`. */
     private fun session(
-        input: String = "",
-        events: List<TerminalEvent> = emptyList(),
+        events: List<TerminalEvent>,
         initial: IntArray = scrambled,
-        mode: InputMode = InputMode.CONSOLE,
         savesDir: Path = createTempDirectory("mordovorot-gh62"),
     ): Run = runBlocking {
-        val output = ByteArrayOutputStream()
         val terminal = FakeTerminal(events.toMutableList(), terminalSize)
         val analytics = RecordingAnalyticsService()
-        val board = BoardImpl(4).apply { restoreState(initial) }
-        val reader = BufferedReader(StringReader(input))
         GameSession(
-            initialMode = mode,
-            board = board,
+            initialMode = InputMode.MOUSE,
+            board = BoardImpl(4).apply { restoreState(initial) },
             saves = FileSaveRepository(savesDir),
             analytics = analytics,
             sizeChosenAtLaunch = true,
-            buildView = { m, b, s, a: AnalyticsService, restoreDone, sizeAtLaunch ->
-                val decorated = InputMethodAnalyticsService(a, m.name.lowercase())
-                val viewModel = ViewModelImpl(b, s, decorated, restoreDone, sizeAtLaunch)
-                val switcher = { v: View -> ModeSwitcherImpl(v, m, a, hasInteractiveTerminal = { true }) }
-                when (m) {
-                    InputMode.CONSOLE -> ViewImpl.create(reader, PrintStream(output), switcher, viewModel)
-                    else -> TuiView.create(terminal, decorated, modeSwitcherFactory = switcher, viewModel = viewModel)
-                }
-            },
+            terminalFactory = { terminal },
         ).run()
-        Run(output.toString(), terminal, analytics)
+        Run(terminal, analytics)
+    }
+
+    private fun click(p: Pair<Int, Int>) = TerminalEvent.MouseClick(p.first, p.second)
+
+    private fun left(row: Int) = click(layout.leftArrowPosition(row))
+    private fun right(row: Int) = click(layout.rightArrowPosition(row))
+    private fun up(col: Int) = click(layout.upArrowPosition(col))
+
+    /** Toolbar Save, type [name], Enter. */
+    private fun save(name: String) = listOf(click(layout.saveButtonPosition())) + name.map { TerminalEvent.KeyPress(it) } + TerminalEvent.Enter
+
+    /** Toolbar Load, then the dialog's Load button with the first of [listed] selected. */
+    private fun load(vararg listed: String): List<TerminalEvent> {
+        val dialog = DialogLayout(
+            Dialog(
+                Dialog.Kind.LOAD,
+                "Load game",
+                listItems = listed.toList(),
+                selectedIndex = 0,
+                buttons = listOf(DialogButtonSpec("load", "Load"), DialogButtonSpec("cancel", "Cancel")),
+            ),
+            terminalSize,
+        )
+        val button = dialog.buttons().first { it.target == HitTarget.DialogButton("load") }
+        return listOf(click(layout.loadButtonPosition()), TerminalEvent.MouseClick(button.x, dialog.buttonsRow()))
+    }
+
+    /** Toolbar New, then the size dialog's [side] button. */
+    private fun newGame(side: Int): List<TerminalEvent> {
+        val dialog = DialogLayout(
+            Dialog(
+                Dialog.Kind.SIZE,
+                "New game size",
+                buttons = (3..5).map { DialogButtonSpec(it.toString(), "${it}x$it") } + DialogButtonSpec("cancel", "Cancel"),
+            ),
+            terminalSize,
+        )
+        val button = dialog.buttons().first { it.target == HitTarget.DialogButton(side.toString()) }
+        return listOf(click(layout.newButtonPosition()), TerminalEvent.MouseClick(button.x, dialog.buttonsRow()))
     }
 
     /** The text on the row directly under the title in a TUI [frame], ANSI escapes stripped. */
-    private fun rowUnderTitle(frame: String): String {
+    private fun movesShown(frame: String): String {
         val rows = frame.replace(Regex("\u001B\\[[0-9;?]*[A-Za-z]"), "").split("\r\n")
-        return rows[BoardLayout(terminalSize, 4).movesRow].trim()
+        return rows[layout.movesRow].trim()
+    }
+
+    private val Run.lastMoves get() = movesShown(terminal.frames.last())
+
+    @Test
+    fun `TUI shows Moves 0 on a fresh game`() {
+        val run = session(emptyList())
+
+        assertEquals("Moves: 0", movesShown(run.terminal.frames.first()))
     }
 
     @Test
-    fun `console shows Moves 0 on a fresh game`() {
-        val run = session()
+    fun `repeated clicks on the same line count as one move, in either direction`() {
+        val run = session(listOf(left(0), left(0), right(0)))
 
-        assertEquals(listOf(0), run.consoleCounts)
+        assertEquals("Moves: 1", run.lastMoves)
     }
 
     @Test
-    fun `repeated shifts on the same line count as one move, in either direction`() {
-        val run = session("left 1\nleft 1\nleft 1\nright 1\nright 1\n")
+    fun `switching lines starts a new move`() {
+        val run = session(listOf(left(0), up(0), left(0)))
 
-        assertEquals(1, run.consoleCounts.last())
+        assertEquals("Moves: 3", run.lastMoves)
     }
 
     @Test
-    fun `switching lines starts a new move, including returning to an earlier line and row vs column`() {
-        val run = session("left 1\nright 2\nright 1\nup 1\n")
+    fun `New resets the count`() {
+        val run = session(listOf(left(0)) + newGame(4))
 
-        assertEquals(listOf(0, 1, 2, 3, 4), run.consoleCounts)
-    }
-
-    @Test
-    fun `a rejected shift does not change the count`() {
-        // A rejected command hides the board until the next one (GH-67); the second left 1
-        // continues the same move.
-        val run = session("left 1\nleft 9\nleft 1\n")
-
-        assertTrue(run.output.contains("Row 9 is out of range for left."))
-        assertEquals(listOf(0, 1, 1), run.consoleCounts)
-    }
-
-    @Test
-    fun `starting a new game resets the count`() {
-        val run = session("left 1\nup 2\nsize 3\n")
-
-        assertEquals(listOf(0, 1, 2, 0), run.consoleCounts)
+        assertEquals("Moves: 0", run.lastMoves)
     }
 
     @Test
     fun `save then load restores the count, and the next shift starts a new move`() {
-        val run = session("left 1\nleft 1\nup 2\nsave s1\nup 2\nload s1\nup 2\n")
+        val run = session(listOf(left(0), up(0)) + save("m") + up(0) + load("m (4x4)") + up(0))
 
-        // fresh, left, left, up, save, up (same column), load, up (new move after a load)
-        assertEquals(listOf(0, 1, 1, 2, 2, 2, 2, 3), run.consoleCounts)
+        val frames = run.terminal.frames
+        assertEquals("Moves: 2", movesShown(frames[frames.size - 2])) // right after the load
+        assertEquals("Moves: 3", run.lastMoves)
     }
 
     @Test
@@ -131,43 +142,17 @@ class MoveCounterScenarioTest {
         val dir = createTempDirectory("mordovorot-gh62")
         dir.resolve("old.save").writeText("4\n${scrambled.joinToString(" ")}\n")
 
-        val run = session("left 1\nload old\n", savesDir = dir)
+        val run = session(listOf(left(0)) + load("old (4x4)"), savesDir = dir)
 
-        assertEquals(listOf(0, 1, 0), run.consoleCounts)
+        assertEquals("Moves: 0", run.lastMoves)
     }
 
     @Test
-    fun `TUI shows Moves under the title and updates on clicks, staying under Congratulations once solved`() {
-        val layout = BoardLayout(terminalSize, 4)
-        val click = { p: Pair<Int, Int> -> TerminalEvent.MouseClick(p.first, p.second) }
-        val run = session(
-            events = listOf(
-                click(layout.upArrowPosition(1)),
-                click(layout.downArrowPosition(1)),
-                click(layout.leftArrowPosition(0)),
-            ),
-            initial = oneShiftFromSolved,
-            mode = InputMode.MOUSE,
-        )
-
-        assertEquals(listOf("Moves: 0", "Moves: 1", "Moves: 1", "Moves: 2"), run.terminal.frames.take(4).map(::rowUnderTitle))
-        assertTrue(run.terminal.frames[3].contains("Congratulations ✓"))
-    }
-
-    @Test
-    fun `switching input mode keeps the count`() {
-        val run = session("left 1\nup 1\nmouse\n")
-
-        assertEquals(2, run.consoleCounts.last())
-        assertEquals("Moves: 2", rowUnderTitle(run.terminal.frames.first()))
-    }
-
-    @Test
-    fun `board_solved fires once in console mode with the final count and size`() {
-        val run = session("up 2\ndown 2\nleft 1\n", initial = oneShiftFromSolved)
+    fun `board_solved fires once in the TUI with the final count and size`() {
+        val run = session(listOf(left(0)), initial = oneShiftFromSolved)
 
         assertEquals(
-            listOf(mapOf("move_count" to 2, "board_size" to 4, "input_method" to "console")),
+            listOf(mapOf("move_count" to 1, "board_size" to 4, "input_method" to "mouse")),
             run.analytics.events.filter { it.name == "board_solved" }.map { it.properties },
         )
     }
@@ -177,9 +162,9 @@ class MoveCounterScenarioTest {
         val dir = createTempDirectory("mordovorot-gh62")
         dir.resolve("done.save").writeText("4\n${(0 until 16).joinToString(" ")}\n3\n")
 
-        val run = session("load done\n", savesDir = dir)
+        val run = session(load("done (4x4)"), savesDir = dir)
 
-        assertTrue(run.output.contains("Loaded 'done'."))
+        assertTrue(run.terminal.frames.last().contains("Congratulations"))
         assertTrue(run.analytics.events.none { it.name == "board_solved" })
     }
 }

@@ -27,7 +27,7 @@ class TuiViewSolvedStateTest {
     // Matches MouseInput.decorateBoard's GH-30 modeButtons - see TuiViewDialogTest's identical
     // helper for why.
     private fun boardLayout(viewModel: FakeViewModel) =
-        BoardLayout(terminalSize, viewModel.side, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE))
+        BoardLayout(terminalSize, viewModel.side, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD))
 
     @Test
     fun `when the board becomes solved, arrow clicks make no viewModel call`(): Unit = runBlocking {

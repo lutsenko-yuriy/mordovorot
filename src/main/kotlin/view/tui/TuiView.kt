@@ -17,12 +17,12 @@ import viewmodel.display
 import viewmodel.displayWithSize
 
 /**
- * The mouse-driven `view.View` implementation for GH-3: owns its own event loop instead of
- * going through [view.ViewImpl.play]'s console-only command loop (that's what lets a
- * Congratulations screen exist at all). Every mouse gesture resolves to an existing [ViewModel] call. WU4 adds the Save/Load/
+ * The terminal-UI `view.View` implementation for GH-3 (mouse or keyboard, per [input]): owns its
+ * own event loop, which is what lets a Congratulations screen exist at all. Every gesture
+ * resolves to an existing [ViewModel] call. WU4 adds the Save/Load/
  * Exit dialogs and the startup restore prompt: [confirmSaveBeforeExit]/[promptSaveName]/
  * [confirmRestore]/[chooseSaveToRestore] block in the shared [runModal] loop over
- * [terminal] (GH-64), the same way [view.ViewImpl]'s console prompts block on `readLine()`. Confirmed
+ * [terminal] (GH-64). Confirmed
  * product decision: once solved, the arrows go dead ([ScreenState.arrowsEnabled] false) - see
  * [ScreenState]'s KDoc. WU5 adds the Congratulations screen itself: since every repaint asks
  * [ViewModel.isSolved] fresh rather than tracking a phase flag, the toolbar stays fully live
@@ -40,8 +40,7 @@ class TuiView internal constructor(
     lateinit var viewModel: ViewModel
         internal set
 
-    /** Wired atomically alongside [viewModel] in [create] - defaults to a no-op so every
-     *  existing construction site keeps compiling unchanged (GH-30). */
+    /** Wired alongside [viewModel] in [create] - defaults to a no-op (GH-30). */
     var modeSwitcher: ModeSwitcher = NoopModeSwitcher()
         internal set
 
@@ -73,17 +72,16 @@ class TuiView internal constructor(
     private var wasSolved = false
 
     companion object {
-        /** The only public way to obtain a [TuiView] - wires [viewModel] atomically, same
-         *  pattern as [view.ViewImpl.create]. */
+        /** The only public way to obtain a [TuiView] - wires [viewModel] atomically. */
         fun create(
             terminal: Terminal,
             analytics: AnalyticsService = NoopAnalyticsService(),
             input: TuiInput = MouseInput(),
-            modeSwitcherFactory: (View) -> ModeSwitcher = { NoopModeSwitcher() },
+            modeSwitcher: ModeSwitcher = NoopModeSwitcher(),
             viewModel: ViewModel,
         ): TuiView {
             val view = TuiView(terminal, analytics, input)
-            view.modeSwitcher = modeSwitcherFactory(view)
+            view.modeSwitcher = modeSwitcher
             view.viewModel = viewModel
             return view
         }
@@ -92,7 +90,8 @@ class TuiView internal constructor(
     /** Drains [viewModel]'s [viewmodel.ViewModel.uiRequests] alongside the board's own event
      *  loop (GH-42 WU2) - what lets `saveGame`/`loadGame`/`exitGame`/`restoreOnStartup` suspend
      *  on [viewmodel.ViewModelImpl.ask] instead of calling back into this view directly. */
-    override suspend fun play() = coroutineScope {
+    override suspend fun play(notice: String?) = coroutineScope {
+        pendingMessage = notice
         val ui = launch { for (request in viewModel.uiRequests) handle(request) }
         try {
             terminal.enterRawMode()
@@ -140,8 +139,6 @@ class TuiView internal constructor(
             is UiRequest.ConfirmSaveBeforeExit -> request.respond(confirmSaveBeforeExit())
             is UiRequest.PromptSaveName -> request.respond(promptSaveName())
             is UiRequest.ChooseBoardSize -> request.respond(runSizeDialog(request.origin))
-            // Never raised here - the TUI has its own Congratulations screen (GH-66).
-            is UiRequest.ConfirmPlayAgain -> request.respond(false)
             is UiRequest.ResolveUnsolvableSave ->
                 request.respond(runUnsolvableDialog(request.save, if (request.atStartup) "startup" else "toolbar"))
         }
@@ -185,12 +182,9 @@ class TuiView internal constructor(
     private suspend fun handleToolbarSave() {
         when (val outcome = runSaveDialog("toolbar")) {
             is SaveOutcome.Confirm -> {
-                // The exit flow's promptForValidSaveName rejects a whitespace name because
-                // console mode's save/load parsing splits on it (view.ViewImpl.nameArg) - a
-                // name saved with a space could never be `load`ed back from the console.
-                // Toolbar Save bypassed that check entirely, since it calls saveGame directly
-                // rather than going through ViewModelImpl's exit-flow validation (audit round 5
-                // on PR #24).
+                // Same no-whitespace rule as the exit flow's promptForValidSaveName (GH-79 D6) -
+                // toolbar Save calls saveGame directly, bypassing that
+                // validation (audit round 5 on PR #24).
                 if (outcome.name.any { it.isWhitespace() }) {
                     showMessage("'${outcome.name}' isn't a usable save name (no spaces) - not saved.")
                 } else {
@@ -430,19 +424,12 @@ class TuiView internal constructor(
         terminal.write(renderer.render(state, terminalSize))
     }
 
-    // The board's own displayBoard/processCommand belong to ViewImpl.play()'s console-only
-    // loop, which TuiView never calls (see class KDoc).
-    override fun displayBoard(boardState: IntArray, squareSide: Int, moveCount: Int) {}
-
-    override suspend fun processCommand() {}
-
-    override suspend fun showMessage(message: String) {
+    private fun showMessage(message: String) {
         pendingMessage = message
     }
 
     /** The startup restore prompt for exactly one save - the same Load-shaped modal as any
-     *  other save count (per the plan, this is where the console's 1-save yes/no split
-     *  disappears in the TUI). */
+     *  other save count. */
     internal suspend fun confirmRestore(save: SaveInfo): Boolean =
         runLoadDialog("Restore a saved game?", "startup", preloadedSaves = listOf(save)) is LoadOutcome.Confirm
 
@@ -451,7 +438,7 @@ class TuiView internal constructor(
 
     /** Consumes the answer the toolbar Exit dialog already collected - see [pendingExitAnswer].
      *  With none (an Exit from GH-74's unsolvable-save dialog), asks here instead; end of input
-     *  declines, like the console's EOF. */
+     *  declines. */
     internal suspend fun confirmSaveBeforeExit(): Boolean {
         val answer = pendingExitAnswer ?: runExitDialog(cancellable = false) ?: false
         pendingExitAnswer = null

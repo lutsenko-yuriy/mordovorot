@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.13.0] — 2026-10-15 (PR #80 merged)
+
+### Removed
+- [user] (PR #80) GH-79: console mode removed - the game only runs as a terminal UI. A launch with no terminal prints "No interactive terminal found - Mordovorot only runs as a terminal UI." and exits; --console prints a notice and starts the TUI; the TUI's Console button and F8 are gone; a failed mode switch stays in the current mode. Saves are unaffected.
+
 ## [0.12.0] — 2026-10-15 (PR #77 merged)
 
 ### Added

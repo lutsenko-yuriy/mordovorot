@@ -2,16 +2,13 @@ package testing
 
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
-import viewmodel.ExitRequestedException
 import viewmodel.SaveInfo
 import viewmodel.UiRequest
 import viewmodel.ViewModel
 
 /**
- * A [ViewModel] test double that records every call it receives. Used by both `ViewImpl` and
- * `TuiView` tests to verify command/click dispatch without depending on real viewModel/board
- * logic - collapses GH-23's `RecordingViewModel`/`FakeConsoleViewModel`/`FakeTuiViewModel` split
- * once the interfaces it mirrored collapsed the same way (GH-42 WU3).
+ * A [ViewModel] test double that records every call it receives. Used by `TuiView` tests to
+ * verify click/key dispatch without depending on real viewModel/board logic.
  */
 class FakeViewModel : ViewModel {
 
@@ -36,10 +33,6 @@ class FakeViewModel : ViewModel {
     /** Scripts [squareSide]'s return value. */
     var side: Int = 4
 
-    /** Scripts [offerPlayAgain]: `false` declines (throws, ending the loop), `true` starts a
-     *  "new game" by clearing [solved]. */
-    var playAgainAccepted: Boolean = false
-
     /** Scripts [moveCount]'s return value. */
     var moves: Int = 0
 
@@ -59,10 +52,6 @@ class FakeViewModel : ViewModel {
         calls.add("shiftDown($col)")
     }
 
-    override fun resetGame() {
-        calls.add("resetGame")
-    }
-
     override fun newGame(size: Int, trigger: String) {
         calls.add("newGame($size, $trigger)")
     }
@@ -80,12 +69,6 @@ class FakeViewModel : ViewModel {
 
     override suspend fun exitGame() {
         calls.add("exitGame")
-    }
-
-    override suspend fun offerPlayAgain() {
-        calls.add("offerPlayAgain")
-        if (!playAgainAccepted) throw ExitRequestedException()
-        solved = false
     }
 
     /** [SaveInfo.squareSide] is always `null` here - tests that care about size drive a real
@@ -114,8 +97,7 @@ class FakeViewModel : ViewModel {
         return board
     }
 
-    // Not recorded in [calls] - the console reads it to word every rejection (GH-67), and tests
-    // assert an empty call list for those.
+    // Not recorded in [calls] - a read-only query, like [moveCount] below.
     override fun squareSide(): Int = side
 
     // Not recorded in [calls] - it's a read-only query like [boardState], but tests asserting

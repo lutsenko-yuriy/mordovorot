@@ -52,12 +52,12 @@ class KeyboardInputTest {
     }
 
     @Test
-    fun `F7 and F8 request a switch to mouse and console mode`() {
+    fun `F7 requests a switch to mouse mode, F8 does nothing (GH-79)`() {
         val input = KeyboardInput()
         input.decorateBoard(unsolvedBoard())
 
         assertEquals(InputAction.Activate(HitTarget.ToolbarMode(InputMode.MOUSE)), input.onBoardEvent(TerminalEvent.FunctionKey(7), boardLayout))
-        assertEquals(InputAction.Activate(HitTarget.ToolbarMode(InputMode.CONSOLE)), input.onBoardEvent(TerminalEvent.FunctionKey(8), boardLayout))
+        assertEquals(InputAction.None, input.onBoardEvent(TerminalEvent.FunctionKey(8), boardLayout))
     }
 
     @Test
@@ -86,11 +86,10 @@ class KeyboardInputTest {
         assertEquals(InputAction.None, input.onBoardEvent(TerminalEvent.Enter, boardLayout))
         assertEquals(InputAction.Activate(HitTarget.ToolbarSave), input.onBoardEvent(TerminalEvent.FunctionKey(5), boardLayout))
         assertEquals(InputAction.Activate(HitTarget.ToolbarExit), input.onBoardEvent(TerminalEvent.Escape, boardLayout))
-        // F7/F8's mode-switch requests, unlike arrows/Enter, stay live even when solved (GH-30).
+        // F7's mode-switch request, unlike arrows/Enter, stays live even when solved (GH-30).
         assertEquals(InputAction.Activate(HitTarget.ToolbarMode(InputMode.MOUSE)), input.onBoardEvent(TerminalEvent.FunctionKey(7), boardLayout))
-        assertEquals(InputAction.Activate(HitTarget.ToolbarMode(InputMode.CONSOLE)), input.onBoardEvent(TerminalEvent.FunctionKey(8), boardLayout))
         // F9's New-game dialog also stays live once solved (GH-44 WU3) - it starts a fresh game,
-        // same reasoning as F5/F6/F7/F8 never going dead.
+        // same reasoning as F5/F6/F7 never going dead.
         assertEquals(InputAction.Activate(HitTarget.ToolbarNew), input.onBoardEvent(TerminalEvent.FunctionKey(9), boardLayout))
     }
 
@@ -104,8 +103,8 @@ class KeyboardInputTest {
         val solved = input.decorateBoard(solvedBoard())
         assertNull(solved.cursor)
         assertEquals(true, solved.toolbarShortcuts)
-        assertEquals("Arrows: move · Enter: shift · F5/F6/F9 Save/Load/New · F7/F8 Mouse/Console · Esc", solved.controlsHint)
-        assertEquals(listOf(InputMode.MOUSE, InputMode.CONSOLE), solved.modeButtons)
+        assertEquals("Arrows: move · Enter: shift · F5/F6/F9 Save/Load/New · F7 Mouse · Esc", solved.controlsHint)
+        assertEquals(listOf(InputMode.MOUSE), solved.modeButtons)
     }
 
     @Test

@@ -35,6 +35,8 @@ Use this format exactly. Omit a section entirely if it has no content.
 
 @skills/design/plan/resources/plan-template.md
 
+When the plan decides where a user-facing message goes (stderr, a status line, a dialog), check that the user can actually see it there while the active UI is running - e.g. a full-screen TUI hides stderr (GH-79).
+
 ### 4. Post the plan as a PM comment
 
 Post the full plan text as a comment on the primary issue so `implement` can reference it.

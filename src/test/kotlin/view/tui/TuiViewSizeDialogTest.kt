@@ -28,7 +28,7 @@ class TuiViewSizeDialogTest {
      *  own helper - the real toolbar always carries them, so a hardcoded position here lines up
      *  with what [TuiView] actually draws/hit-tests. */
     private fun boardLayout(squareSide: Int) =
-        BoardLayout(terminalSize, squareSide, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE))
+        BoardLayout(terminalSize, squareSide, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD))
 
     private fun sizeDialog() = Dialog(
         Dialog.Kind.SIZE, "New game size",

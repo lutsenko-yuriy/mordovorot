@@ -1,6 +1,6 @@
 package view.tui
 
-/** GH-10's console dialect: tiles are stored 0-based, displayed 1-based. */
+/** GH-10's 1-based display dialect: tiles are stored 0-based, displayed 1-based. */
 private const val DISPLAY_OFFSET = 1
 
 private const val DIM_ON = "\u001B[2m"

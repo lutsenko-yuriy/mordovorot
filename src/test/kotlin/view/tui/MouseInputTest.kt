@@ -67,9 +67,9 @@ class MouseInputTest {
     }
 
     @Test
-    fun `decorateBoard offers Keyboard and Console on the toolbar (GH-30), decorateDialog stays the identity`() {
+    fun `decorateBoard offers only Keyboard on the toolbar (GH-30, GH-79), decorateDialog stays the identity`() {
         val state = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false)
-        assertEquals(state.copy(modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE)), input.decorateBoard(state))
+        assertEquals(state.copy(modeButtons = listOf(InputMode.KEYBOARD)), input.decorateBoard(state))
 
         val dialog = Dialog(Dialog.Kind.EXIT, "Save before quitting?", buttons = listOf(DialogButtonSpec("yes", "Yes")))
         assertEquals(dialog, input.decorateDialog(dialog))

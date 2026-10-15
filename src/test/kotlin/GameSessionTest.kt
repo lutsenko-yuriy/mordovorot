@@ -12,21 +12,23 @@ import testing.FakeSaveRepository
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
 import view.View
-import view.ViewImpl
 import viewmodel.ExitRequestedException
 import viewmodel.ModeSwitchRequestedException
+import view.tui.TuiView
 import viewmodel.ModeSwitcherImpl
 
 /** Covers GH-30's `GameSession`: rebuilds around the same board/saves on
  *  `ModeSwitchRequestedException`, ends when `play()` returns normally. */
 class GameSessionTest {
 
-    /** [View] test double: only [play] does anything, running the scripted [onPlay]. */
+    /** [View] test double running the scripted [onPlay]; records the notice [play] got. */
     private class ScriptedView(private val onPlay: () -> Unit) : View {
-        override fun displayBoard(boardState: IntArray, squareSide: Int, moveCount: Int) {}
-        override suspend fun showMessage(message: String) {}
-        override suspend fun processCommand() {}
-        override suspend fun play() = onPlay()
+        var notice: String? = null
+
+        override suspend fun play(notice: String?) {
+            this.notice = notice
+            onPlay()
+        }
     }
 
     private data class BuildCall(val mode: InputMode, val board: BoardModel, val saves: SaveRepository, val startupRestoreDone: Boolean)
@@ -38,7 +40,7 @@ class GameSessionTest {
         var built = 0
 
         val session = GameSession(
-            initialMode = InputMode.CONSOLE,
+            initialMode = InputMode.KEYBOARD,
             board = board,
             buildView = { mode, b, s, _, restoreDone, _ ->
                 calls.add(BuildCall(mode, b, s, restoreDone))
@@ -52,7 +54,7 @@ class GameSessionTest {
 
         session.run()
 
-        assertEquals(listOf(InputMode.CONSOLE, InputMode.MOUSE), calls.map { it.mode })
+        assertEquals(listOf(InputMode.KEYBOARD, InputMode.MOUSE), calls.map { it.mode })
         assertTrue(calls.all { it.board === board })
         assertFalse(board.calls.contains("resetGame"))
     }
@@ -64,7 +66,7 @@ class GameSessionTest {
         var built = 0
 
         val session = GameSession(
-            initialMode = InputMode.CONSOLE,
+            initialMode = InputMode.MOUSE,
             saves = saves,
             buildView = { mode, b, s, _, restoreDone, _ ->
                 calls.add(BuildCall(mode, b, s, restoreDone))
@@ -86,7 +88,7 @@ class GameSessionTest {
         var built = 0
 
         val session = GameSession(
-            initialMode = InputMode.CONSOLE,
+            initialMode = InputMode.KEYBOARD,
             sizeChosenAtLaunch = true,
             buildView = { _, _, _, _, _, sizeAtLaunch ->
                 sizeFlags.add(sizeAtLaunch)
@@ -103,20 +105,20 @@ class GameSessionTest {
     }
 
     @Test
-    fun `three consecutive switches cycle through console, mouse, and keyboard, each rebuilding a fresh View-viewModel`(): Unit = runBlocking {
+    fun `three consecutive switches cycle mouse, keyboard, mouse, each rebuilding a fresh View-viewModel`(): Unit = runBlocking {
         val modesBuilt = mutableListOf<InputMode>()
         var built = 0
 
         val session = GameSession(
-            initialMode = InputMode.CONSOLE,
+            initialMode = InputMode.MOUSE,
             buildView = { mode, _, _, _, _, _ ->
                 modesBuilt.add(mode)
                 built++
                 ScriptedView {
                     when (built) {
-                        1 -> throw ModeSwitchRequestedException(InputMode.MOUSE)
-                        2 -> throw ModeSwitchRequestedException(InputMode.KEYBOARD)
-                        else -> {} // third build (keyboard mode): return normally, exit
+                        1 -> throw ModeSwitchRequestedException(InputMode.KEYBOARD)
+                        2 -> throw ModeSwitchRequestedException(InputMode.MOUSE)
+                        else -> {} // third build (mouse mode): return normally, exit
                     }
                 }
             },
@@ -124,7 +126,7 @@ class GameSessionTest {
 
         session.run()
 
-        assertEquals(listOf(InputMode.CONSOLE, InputMode.MOUSE, InputMode.KEYBOARD), modesBuilt)
+        assertEquals(listOf(InputMode.MOUSE, InputMode.KEYBOARD, InputMode.MOUSE), modesBuilt)
         assertEquals(3, built)
     }
 
@@ -146,26 +148,28 @@ class GameSessionTest {
     }
 
     @Test
-    fun `a failed rebuild after a mode switch falls back to console instead of crashing, skipping the restore prompt`(): Unit = runBlocking {
+    fun `a failed rebuild after a mode switch falls back to the previous mode instead of crashing, skipping the restore prompt`(): Unit = runBlocking {
         val calls = mutableListOf<BuildCall>()
+        val views = mutableListOf<ScriptedView>()
         var built = 0
 
         val session = GameSession(
-            initialMode = InputMode.CONSOLE,
+            initialMode = InputMode.KEYBOARD,
             buildView = { mode, b, s, _, restoreDone, _ ->
                 calls.add(BuildCall(mode, b, s, restoreDone))
                 built++
                 when (built) {
                     1 -> ScriptedView { throw ModeSwitchRequestedException(InputMode.MOUSE) }
                     2 -> ScriptedView { throw RuntimeException("stty not found") } // simulated terminal-setup failure
-                    else -> ScriptedView {} // recovered console session exits normally
-                }
+                    else -> ScriptedView {} // recovered keyboard session exits normally
+                }.also { views += it }
             },
         )
 
         session.run() // must not throw
 
-        assertEquals(listOf(InputMode.CONSOLE, InputMode.MOUSE, InputMode.CONSOLE), calls.map { it.mode })
+        assertEquals(listOf(InputMode.KEYBOARD, InputMode.MOUSE, InputMode.KEYBOARD), calls.map { it.mode })
+        assertEquals(listOf(null, null, "Could not switch to mouse mode (stty not found) - staying in keyboard mode."), views.map { it.notice })
         // The fallback build (3rd) must not re-show the startup restore prompt over a live board.
         assertEquals(listOf(false, true, true), calls.map { it.startupRestoreDone })
     }
@@ -173,7 +177,7 @@ class GameSessionTest {
     @Test
     fun `a failure on the very first session still throws - no game in progress to protect`(): Unit = runBlocking {
         val session = GameSession(
-            initialMode = InputMode.CONSOLE,
+            initialMode = InputMode.MOUSE,
             buildView = { _, _, _, _, _, _ -> ScriptedView { throw RuntimeException("stty not found") } },
         )
 
@@ -181,7 +185,7 @@ class GameSessionTest {
     }
 
     @Test
-    fun `a second consecutive failure, once already falling back to console, has nowhere safer to go - it throws`(): Unit = runBlocking {
+    fun `a second consecutive failure, once already falling back, has nowhere safer to go - it throws`(): Unit = runBlocking {
         val modesBuilt = mutableListOf<InputMode>()
         var built = 0
 
@@ -192,25 +196,25 @@ class GameSessionTest {
                 built++
                 when (built) {
                     // a real switch first (not a failure) so isFirstSession is already false
-                    // by the time the organic fallback-to-console path below is exercised.
+                    // by the time the fallback path below is exercised.
                     1 -> ScriptedView { throw ModeSwitchRequestedException(InputMode.KEYBOARD) }
                     2 -> ScriptedView { throw RuntimeException("stty not found") }
-                    else -> ScriptedView { throw RuntimeException("console broke too") }
+                    else -> ScriptedView { throw RuntimeException("mouse broke too") }
                 }
             },
         )
 
         assertFailsWith<RuntimeException> { session.run() }
-        assertEquals(listOf(InputMode.MOUSE, InputMode.KEYBOARD, InputMode.CONSOLE), modesBuilt)
+        assertEquals(listOf(InputMode.MOUSE, InputMode.KEYBOARD, InputMode.MOUSE), modesBuilt)
     }
 
     @Test
     fun `ExitRequestedException escaping a rebuild reaches the caller, not swallowed as a failed switch`(): Unit = runBlocking {
         val session = GameSession(
-            initialMode = InputMode.CONSOLE,
+            initialMode = InputMode.KEYBOARD,
             buildView = { mode, _, _, _, _, _ ->
                 ScriptedView {
-                    if (mode == InputMode.CONSOLE) throw ModeSwitchRequestedException(InputMode.MOUSE)
+                    if (mode == InputMode.KEYBOARD) throw ModeSwitchRequestedException(InputMode.MOUSE)
                     throw ExitRequestedException()
                 }
             },
@@ -220,37 +224,20 @@ class GameSessionTest {
     }
 
     @Test
-    fun `the production console View is wired with a real ModeSwitcher, not a silent no-op`(): Unit = runBlocking {
-        val view = defaultView(
-            InputMode.CONSOLE,
-            FakeBoardModel(),
-            FakeSaveRepository(),
-            RecordingAnalyticsService(),
-            startupRestoreDone = true,
-            sizeChosenAtLaunch = false,
-            terminalFactory = { FakeTerminal() },
-        )
+    fun `the production View is wired with a real ModeSwitcher, not a silent no-op`(): Unit = runBlocking {
+        for (mode in InputMode.entries) {
+            val view = defaultView(
+                mode,
+                FakeBoardModel(),
+                FakeSaveRepository(),
+                RecordingAnalyticsService(),
+                startupRestoreDone = true,
+                sizeChosenAtLaunch = false,
+                terminalFactory = { FakeTerminal() },
+            )
 
-        assertIs<ViewImpl>(view)
-        assertIs<ModeSwitcherImpl>(view.modeSwitcher)
-    }
-
-    @Test
-    fun `the production console View tracks through the console-decorated analytics, GH-67`(): Unit = runBlocking {
-        val analytics = RecordingAnalyticsService()
-        val view = defaultView(
-            InputMode.CONSOLE,
-            FakeBoardModel(),
-            FakeSaveRepository(),
-            analytics,
-            startupRestoreDone = true,
-            sizeChosenAtLaunch = false,
-            terminalFactory = { FakeTerminal() },
-        )
-
-        assertIs<ViewImpl>(view)
-        view.analytics.track("probe")
-
-        assertEquals(listOf(mapOf("input_method" to "console")), analytics.events.map { it.properties })
+            assertIs<TuiView>(view)
+            assertIs<ModeSwitcherImpl>(view.modeSwitcher)
+        }
     }
 }

@@ -13,9 +13,10 @@ import viewmodel.ModeSwitchRequestedException
 import viewmodel.ModeSwitcher
 
 /**
- * Covers GH-30's TUI-side mode-switch triggers: the mouse toolbar's Keyboard/Console buttons
- * and the keyboard mode's F7/F8 shortcuts, both reaching an injected `ModeSwitcher` with the
- * right target mode and trigger, plus the exception unwinding cleanly out of `TuiView.play()`.
+ * Covers GH-30's TUI-side mode-switch triggers: the mouse toolbar's Keyboard button and the
+ * keyboard mode's F7 shortcut, both reaching an injected `ModeSwitcher` with the right target
+ * mode and trigger, plus the exception unwinding cleanly out of `TuiView.play()`. F8 (console,
+ * GH-79) is inert.
  */
 class TuiViewModeSwitchTest {
 
@@ -26,7 +27,7 @@ class TuiViewModeSwitchTest {
     private fun mouseBoardLayout() = BoardLayout(
         terminalSize,
         squareSide = 4,
-        modeButtons = listOf(InputMode.KEYBOARD, InputMode.CONSOLE),
+        modeButtons = listOf(InputMode.KEYBOARD),
     )
 
     @Test
@@ -34,7 +35,7 @@ class TuiViewModeSwitchTest {
         val switcher = RecordingModeSwitcher()
         val button = mouseBoardLayout().toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.KEYBOARD) }
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.MouseClick(button.range.first, button.y)))
-        val view = TuiView.create(terminal, modeSwitcherFactory = { switcher }, viewModel = FakeViewModel())
+        val view = TuiView.create(terminal, modeSwitcher = switcher, viewModel = FakeViewModel())
 
         view.play()
 
@@ -42,15 +43,11 @@ class TuiViewModeSwitchTest {
     }
 
     @Test
-    fun `clicking the toolbar's Console button requests a switch to console mode with trigger=toolbar`(): Unit = runBlocking {
-        val switcher = RecordingModeSwitcher()
-        val button = mouseBoardLayout().toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.CONSOLE) }
-        val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.MouseClick(button.range.first, button.y)))
-        val view = TuiView.create(terminal, modeSwitcherFactory = { switcher }, viewModel = FakeViewModel())
-
-        view.play()
-
-        assertEquals(listOf(RecordingModeSwitcher.Call(InputMode.CONSOLE, "toolbar")), switcher.calls)
+    fun `the mouse toolbar has no Console button`() {
+        assertEquals(
+            listOf(HitTarget.ToolbarMode(InputMode.KEYBOARD)),
+            mouseBoardLayout().toolbarButtons().map { it.target }.filterIsInstance<HitTarget.ToolbarMode>(),
+        )
     }
 
     @Test
@@ -58,7 +55,7 @@ class TuiViewModeSwitchTest {
         val switcher = RecordingModeSwitcher()
         val viewModel = FakeViewModel().apply { solved = true }
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.FunctionKey(7)))
-        val view = TuiView.create(terminal, input = KeyboardInput(), modeSwitcherFactory = { switcher }, viewModel = viewModel)
+        val view = TuiView.create(terminal, input = KeyboardInput(), modeSwitcher = switcher, viewModel = viewModel)
 
         view.play()
 
@@ -66,26 +63,26 @@ class TuiViewModeSwitchTest {
     }
 
     @Test
-    fun `pressing F8 in keyboard mode requests a switch to console mode with trigger=shortcut`(): Unit = runBlocking {
+    fun `pressing F8 in keyboard mode requests no switch`(): Unit = runBlocking {
         val switcher = RecordingModeSwitcher()
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.FunctionKey(8)))
-        val view = TuiView.create(terminal, input = KeyboardInput(), modeSwitcherFactory = { switcher }, viewModel = FakeViewModel())
+        val view = TuiView.create(terminal, input = KeyboardInput(), modeSwitcher = switcher, viewModel = FakeViewModel())
 
         view.play()
 
-        assertEquals(listOf(RecordingModeSwitcher.Call(InputMode.CONSOLE, "shortcut")), switcher.calls)
+        assertEquals(emptyList(), switcher.calls)
     }
 
     @Test
-    fun `pressing F8 with a real ModeSwitcher unwinds ModeSwitchRequestedException out of play() and restores the terminal`(): Unit = runBlocking {
+    fun `pressing F7 with a real ModeSwitcher unwinds ModeSwitchRequestedException out of play() and restores the terminal`(): Unit = runBlocking {
         // Audit suggestion on PR #40: the mouse-click path has this coverage (below); the
         // keyboard-shortcut path only had RecordingModeSwitcher tests, leaving the actual
-        // unwind-and-restore guarantee untested for F7/F8's route to handleTarget.
+        // unwind-and-restore guarantee untested for F7's route to handleTarget.
         val throwingSwitcher = object : ModeSwitcher {
             override suspend fun switchTo(target: InputMode, trigger: String) = throw ModeSwitchRequestedException(target)
         }
-        val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.FunctionKey(8)))
-        val view = TuiView.create(terminal, input = KeyboardInput(), modeSwitcherFactory = { throwingSwitcher }, viewModel = FakeViewModel())
+        val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.FunctionKey(7)))
+        val view = TuiView.create(terminal, input = KeyboardInput(), modeSwitcher = throwingSwitcher, viewModel = FakeViewModel())
 
         assertFailsWith<ModeSwitchRequestedException> { view.play() }
         assertTrue(terminal.restored)
@@ -107,7 +104,7 @@ class TuiViewModeSwitchTest {
 
         val boardLayout = mouseBoardLayout()
         val saveButton = boardLayout.toolbarButtons().first { it.target == HitTarget.ToolbarSave }
-        val consoleButton = boardLayout.toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.CONSOLE) }
+        val keyboardButton = boardLayout.toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.KEYBOARD) }
 
         val throwingSwitcher = object : ModeSwitcher {
             override suspend fun switchTo(target: InputMode, trigger: String) = throw ModeSwitchRequestedException(target)
@@ -116,11 +113,11 @@ class TuiViewModeSwitchTest {
             events = mutableListOf(
                 TerminalEvent.MouseClick(saveButton.range.first, saveButton.y), // opens the Save dialog
                 TerminalEvent.MouseClick(cancelButton.range.first, dialogLayout.buttonsRow()), // cancels it
-                TerminalEvent.MouseClick(consoleButton.range.first, consoleButton.y), // requests the switch
+                TerminalEvent.MouseClick(keyboardButton.range.first, keyboardButton.y), // requests the switch
             ),
             terminalSize = terminalSize,
         )
-        val view = TuiView.create(terminal, modeSwitcherFactory = { throwingSwitcher }, viewModel = FakeViewModel())
+        val view = TuiView.create(terminal, modeSwitcher = throwingSwitcher, viewModel = FakeViewModel())
 
         assertFailsWith<ModeSwitchRequestedException> { view.play() }
         assertTrue(terminal.restored)

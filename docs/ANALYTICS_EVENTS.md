@@ -20,13 +20,13 @@ Fired when <trigger condition>.
 
 ### `save_command_used`
 
-Fired when the user runs `save <file-name>`. *(GH-6)*
+Fired when the user saves via the Save dialog (toolbar Save / F5) or the exit flow. *(GH-6)* The name dates from the removed console `save` command and is kept for continuity (GH-79).
 
 | Property | Type | Description |
 |---|---|---|
 | `result` | `string` | `success` or `error` (e.g. an unsafe name, or a filesystem failure such as a full disk). |
 | `overwrote_existing` | `boolean` | Whether a file with that name already existed. Only present when `result` is `success` - on `error` it may not be known (e.g. the name check itself failed). |
-| `input_method` | `string` | `console`, `mouse`, or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* |
+| `input_method` | `string` | `mouse` or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* *(`console` retired — GH-79)* |
 
 ### `load_command_used`
 
@@ -34,9 +34,9 @@ Fired when the board is restored from a save file, either via the `load` command
 
 | Property | Type | Description |
 |---|---|---|
-| `trigger` | `string` | `command` or `startup_prompt`. |
+| `trigger` | `string` | `command` (a mid-game load: toolbar Load / F6 - the value predates GH-79 and is kept) or `startup_prompt`. |
 | `result` | `string` | `success` (also covers a load that resized the board to the save's size, GH-44 WU5), `not_found`, `error` (corrupted save file or a filesystem failure), or `unsolvable` (GH-74 - the save can't be solved; `unsolvable_save_resolved` carries the outcome). |
-| `input_method` | `string` | `console`, `mouse`, or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* |
+| `input_method` | `string` | `mouse` or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* *(`console` retired — GH-79)* |
 
 ### `startup_restore_prompt_shown`
 
@@ -45,7 +45,7 @@ Fired when the app boots and finds one or more save files. *(GH-6)*
 | Property | Type | Description |
 |---|---|---|
 | `save_file_count` | `number` | How many save files were found. |
-| `input_method` | `string` | `console`, `mouse`, or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* |
+| `input_method` | `string` | `mouse` or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* *(`console` retired — GH-79)* |
 
 ### `startup_restore_decision`
 
@@ -55,27 +55,29 @@ Fired when the user resolves the startup restore prompt. *(GH-6)*
 |---|---|---|
 | `decision` | `string` | `restored`, `new_game`, or `quit` (GH-74 - Exit chosen for an unsolvable save). Repairing an unsolvable save counts as `restored`. |
 | `save_file_count` | `number` | How many save files were on offer. |
-| `input_method` | `string` | `console`, `mouse`, or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* |
+| `input_method` | `string` | `mouse` or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* *(`console` retired — GH-79)* |
 
 ### `exit_command_used`
 
-Fired when the user runs `exit` or `quit` **and the session actually ends** - not fired if the
+Fired when the user exits via the Exit dialog (toolbar Exit / Escape) **and the session actually ends** - not fired if the
 user asked to save but the save attempt failed, since the session keeps running in that case
 instead of quitting (see Feature 5 in `docs/PRODUCT_SPEC.md`). *(GH-12)*
 
 | Property | Type | Description |
 |---|---|---|
 | `save_choice` | `string` | `saved` (the save-before-quitting prompt was accepted and the save succeeded) or `declined` (the user said no, or left the save name blank/EOF - never fired for a failed save attempt, which keeps the session open instead). The save outcome itself (success/error/overwrite) is separately reported by `save_command_used`, since this reuses the `save` command's flow. |
-| `input_method` | `string` | `console`, `mouse`, or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* |
+| `input_method` | `string` | `mouse` or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* *(`console` retired — GH-79)* |
 
 ### `app_launched`
 
-Fired once at startup, after the launch mode is resolved (default mouse TUI, `--console`, or `--keyboard`). *(GH-3, GH-18)*
+Fired once at startup, after the launch mode is resolved (default mouse TUI or `--keyboard`), when a game actually starts - a launch with no terminal fires `app_launch_aborted` instead (GH-79). *(GH-3, GH-18)*
 
 | Property | Type | Description |
 |---|---|---|
-| `mode` | `string` | `mouse`, `console`, or `keyboard`. |
+| `mode` | `string` | `mouse` or `keyboard`. *(`console` retired — GH-79)* |
 | `board_size` | `number` | The resolved board side (3-5) for this launch — from `--size=N` or the default (4). *(GH-44)* |
+
+*GH-79:* new property `console_flag_ignored` (`boolean`, always sent) - `true` when `--console` was passed and the `Console mode was removed` notice was shown before the TUI started.
 
 ### `dialog_cancelled`
 
@@ -88,14 +90,14 @@ Fired when the user cancels the Save, Load, Exit, or Size dialog in the mouse-dr
 
 ### `input_mode_switched`
 
-Fired when the user requests a switch to a *different* input mode mid-session — toolbar button (mouse mode), keyboard shortcut (keyboard mode), or console command (console mode) — regardless of outcome. Requesting the mode that's already active is a no-op instead: no event, no message, no exception (audit finding on PR #36). *(GH-30)*
+Fired when the user requests a switch to a *different* input mode mid-session — toolbar button (mouse mode) or keyboard shortcut (keyboard mode). Requesting the mode that's already active is a no-op instead: no event, no message, no exception (audit finding on PR #36). *(GH-30)*
 
 | Property | Type | Description |
 |---|---|---|
-| `from_mode` | `string` | `console`, `mouse`, or `keyboard` — mode active before the switch. |
-| `to_mode` | `string` | `console`, `mouse`, or `keyboard` — requested target mode. |
-| `trigger` | `string` | `toolbar`, `shortcut`, or `command`. |
-| `result` | `string` | `success` or `rejected_no_tty` (no interactive terminal available for a mouse/keyboard target). |
+| `from_mode` | `string` | `mouse` or `keyboard` — mode active before the switch. *(`console` retired — GH-79)* |
+| `to_mode` | `string` | `mouse` or `keyboard` — requested target mode. *(`console` retired — GH-79)* |
+| `trigger` | `string` | `toolbar` or `shortcut`. *(`command` retired — GH-79)* |
+| `result` | `string` | Always `success`. *(`rejected_no_tty` retired — GH-79: a running TUI always has a terminal)* |
 
 ### `new_game_size_selected`
 
@@ -105,10 +107,10 @@ Fired when a fresh game starts at a chosen board size via one of the post-launch
 | Property | Type | Description |
 |---|---|---|
 | `size` | `number` | The board side chosen (3-5). |
-| `trigger` | `string` | `startup_prompt`, `command` (`size <N>`), or `toolbar` (`[ New ]` → size-picker dialog). |
-| `input_method` | `string` | `console`, `mouse`, or `keyboard` — which UI mode the session was running in. |
+| `trigger` | `string` | `startup_prompt` or `toolbar` (`[ New ]` → size-picker dialog). *(`command` retired — GH-79)* |
+| `input_method` | `string` | `mouse` or `keyboard` — which UI mode the session was running in. *(`console` retired — GH-79)* |
 
-*GH-66:* `trigger` also takes `play_again` - the console size prompt after accepting `Start a new game?` on a solved board.
+*GH-66:* `trigger` also took `play_again` - the console size prompt after accepting `Start a new game?` on a solved board. *(Retired — GH-79)*
 
 *GH-74:* `trigger` also takes `unsolvable_save` - the size prompt after choosing New game for an unsolvable save mid-game. At startup that choice falls through to the regular startup size prompt (`startup_prompt`).
 
@@ -120,23 +122,25 @@ never sent. *(GH-74)*
 | Property | Type | Description |
 |---|---|---|
 | `choice` | `string` | `repair`, `new_game`, or `exit`. |
-| `trigger` | `string` | `command` (mid-game load) or `startup_prompt`. |
+| `trigger` | `string` | `command` (mid-game load: toolbar Load / F6) or `startup_prompt`. |
 | `board_size` | `number` | The save's board side (3 or 5). |
 | `repair_saved` | `boolean` | Only on `repair`: whether the repaired board was written back to the save file (`false` if the overwrite failed; the board is loaded either way). |
-| `input_method` | `string` | `console`, `mouse`, or `keyboard`. |
+| `input_method` | `string` | `mouse` or `keyboard`. *(`console` retired — GH-79)* |
 
 ### `board_solved`
 
-Fired once when a shift solves the board during play, in any input mode (console included). Like
+Fired once when a shift solves the board during play, in either input mode. Like
 `screen_congratulations`, it does **not** fire when an already-solved save is restored. *(GH-62)*
 
 | Property | Type | Description |
 |---|---|---|
 | `move_count` | `number` | The final move count shown to the player (a move is a run of consecutive shifts on one row/column). |
 | `board_size` | `number` | The board side (3-5). |
-| `input_method` | `string` | `console`, `mouse`, or `keyboard` — which UI mode the session was running in. |
+| `input_method` | `string` | `mouse` or `keyboard` — which UI mode the session was running in. *(`console` retired — GH-79)* |
 
 ### `play_again_decision`
+
+**Retired — GH-79:** console mode was removed, so this event is no longer fired.
 
 Fired when the player answers the console's `Start a new game? [y/N]` prompt, shown after the
 solved board and Congratulations message - including when an already-solved save was loaded. *(GH-66)*
@@ -148,6 +152,8 @@ solved board and Congratulations message - including when an already-solved save
 
 ### `help_command_used`
 
+**Retired — GH-79:** console mode was removed, so this event is no longer fired.
+
 Fired when the player runs `help` in console mode. *(GH-67)*
 
 | Property | Type | Description |
@@ -158,6 +164,8 @@ Fired when the player runs `help` in console mode. *(GH-67)*
 
 ### `console_command_rejected`
 
+**Retired — GH-79:** console mode was removed, so this event is no longer fired.
+
 Fired when a console command is rejected with an error plus the `Enter help to list all the
 commands` hint - `size <N>` out of range included. Not fired for `load` of an unknown save,
 whose message is unchanged. *(GH-67)*
@@ -167,6 +175,16 @@ whose message is unchanged. *(GH-67)*
 | `reason` | `string` | `unknown_command`, `empty`, `missing_argument`, `too_many_arguments`, `not_a_number`, or `out_of_range`. |
 | `command` | `string` | The known command's name. Absent for `unknown_command` and `empty` - the raw typed verb is never sent, since free text may carry PII. |
 | `input_method` | `string` | Always `console`. |
+
+### `app_launch_aborted`
+
+Fired when a launch finds no interactive terminal, prints the `No interactive terminal found`
+message and exits - instead of `app_launched`, which only fires when a game starts. *(GH-79)*
+
+| Property | Type | Description |
+|---|---|---|
+| `reason` | `string` | Always `no_interactive_terminal` for now. |
+| `requested_mode` | `string` | `mouse`, `keyboard`, `console`, or `none` - the mode flag passed at launch (`none` when no flag was given). With several flags, `keyboard` beats `mouse` beats `console`. |
 
 <!-- All events above are sent through `analytics.AnalyticsService`, currently backed by
      `analytics.NoopAnalyticsService` (no real SDK wired up yet). -->

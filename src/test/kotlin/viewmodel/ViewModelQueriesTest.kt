@@ -11,8 +11,7 @@ import kotlin.test.assertTrue
 
 /**
  * Covers [ViewModelImpl]'s additive, read-only query methods (`listSaves`, `saveExists`,
- * `isSolved`) that the mouse-driven TUI needs and the console UI never had to ask for
- * (GH-3). All three degrade to a safe default instead of throwing, mirroring the
+ * `isSolved`) that the TUI needs (GH-3). All three degrade to a safe default instead of throwing, mirroring the
  * non-throwing discipline [ViewModelImpl.saveGame]/[ViewModelImpl.loadGame] already follow.
  */
 class ViewModelQueriesTest {

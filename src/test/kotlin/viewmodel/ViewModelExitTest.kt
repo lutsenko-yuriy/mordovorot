@@ -11,13 +11,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 /**
- * Covers [ViewModelImpl.exitGame] (the `exit`/`quit` command) directly against [ViewModelImpl],
- * driven with no `play()` loop involved - [exitGame] itself never calls back into it. The one
- * play-loop-specific assertion this used to carry ("a failed save doesn't end the session") is
- * [view.ViewImplPlayTest]'s `a failed save during exit does not quit - play keeps looping`
- * instead (split GH-23 WU2, since that's a property of the console play loop, not
- * of [exitGame] itself). The `exit`/`quit` -> `viewModel.exitGame()` dispatch itself is covered
- * separately in ViewImplCommandTest. See the analytics plan on GH-12 for `exit_command_used`.
+ * Covers [ViewModelImpl.exitGame] (toolbar Exit) directly against [ViewModelImpl], driven with
+ * no `play()` loop involved - [exitGame] itself never calls back into it. See the analytics plan
+ * on GH-12 for `exit_command_used`.
  *
  * Driven via [FakeViewModelUi.drive] (GH-42 WU2) - [exitGame] suspends on
  * [ViewModelImpl.ask], so something must be draining [ViewModel.uiRequests] concurrently or the

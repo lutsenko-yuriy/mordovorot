@@ -6,7 +6,7 @@
 
 ## Overview
 
-Mordovorot — A console prototype of a sliding-row/column puzzle board game
+Mordovorot — A terminal prototype of a sliding-row/column puzzle board game
 
 ## Features
 
@@ -22,160 +22,104 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
 ### Feature 2 — Shifts and moves
 - The user can shift any row left or right, cyclically wrapping the value that falls off one end onto the other end.
 - The user can shift any column up or down, with the same cyclic wrap-around behavior.
-- Shifts are addressed by a **1-based** row/column index (the first row/column is `1`, the last is `SQUARE_SIDE`); an index of `0` or greater than `SQUARE_SIDE` is rejected (GH-10).
 - **Move counter (GH-62):** a *move* is a run of consecutive shifts on the same row or column, in
-  either direction - `left 1, left 1, right 1` is one move; `left 1, right 2, right 1` is three.
-  Row 1 and column 1 are different lines. A rejected shift doesn't count.
-  - Shown as `Moves: N` - after the board in console mode, on the row under the title in the TUI
-    (still there under `Congratulations ✓`).
-  - A new game (`reset`, `size <N>`, `[ New ]`, the startup size prompt) starts at `Moves: 0`.
+  either direction - shifting row 1 left, left, then right is one move; row 1, then column 1,
+  then row 1 again is three. Row 1 and column 1 are different lines.
+  - Shown as `Moves: N` on the row under the title (still there under `Congratulations ✓`).
+  - A new game (`[ New ]`, the startup size prompt) starts at `Moves: 0`.
   - Switching input mode keeps the count.
   - Saves store the count; loading restores it, and the next shift always starts a new move. A
     save made before GH-62 loads as `Moves: 0`.
 
-### Feature 3 — Console interaction
-- The user issues commands through a console (stdin) loop.
-- After every command, the board is redisplayed and re-evaluated for the solved state - except
-  after `help` or a rejected command, whose output takes the board's place until the next
-  command (GH-67).
-- **Help (GH-67):** each console start (a switch back from the TUI included) prints
-  `Enter help to list all the commands` right before the first board; the full list is never
-  shown automatically.
-  - `help` lists every command as a usage line plus a short description (`left <row 1-4>  -
-    shift a row left`); row/column ranges follow the current board size.
-  - `help <command>` shows just that command's line (`help quit` and `help exit` share one);
-    `help <unknown>` shows the full list.
-- **Rejected commands (GH-67)** show a specific error followed by the hint line:
-  `Unknown command: <verb>`, `Empty command`, or - for a known command used wrongly (missing,
-  extra, non-numeric or out-of-range argument) - the problem plus the command's usage line,
-  e.g. `Missing row number for left. Usage: left <row 1-4>`. `load` of an unknown save keeps
-  its own message (Feature 4) with no hint.
-- **Solved state (GH-66):** once the board is solved, the final board and its `Moves: N` are
-  shown, then `Congratulations, you solved this puzzle in N moves!` (`in 1 move!` for one),
-  then `Start a new game? [y/N]`.
-  - `y`/`yes` shows the board-size prompt (`Board size? [3-5, Enter for <current>]`) and starts
-    a fresh game at the chosen size - Enter keeps the current size, but still starts a fresh
-    game.
-  - Anything else, or EOF, ends the session.
-  - A board that's already solved when loaded (`load` or the startup restore prompt) gets the
-    same flow straight away, with the save's own move count.
-  - These answers consume extra stdin lines (one, or two on `y`) - a scripted run must
-    account for them, like the exit prompts below.
-- `reset` reshuffles the board at its current size, starting a fresh game.
-- `mouse`/`keyboard` switch to that TUI mode without losing the current game (GH-30). If there's
-  no interactive terminal to switch into, the command is rejected with an on-screen message and
-  play continues in console mode.
-- `size <N>` starts a fresh game at board side `N` (3-5), the same as the startup size prompt
-  but mid-session (GH-44). `N` is a plain integer, not the 1-based row/column dialect the shift
-  commands use. A missing or non-numeric argument is rejected the same way an out-of-range shift
-  index is; an out-of-range `N` is rejected instead of starting a new game, with the valid range
-  in its usage line (`Size 9 is out of range for size. Usage: size <3-5>`, GH-67).
+### Feature 3 — Launch (GH-79)
+- The game only runs as a terminal UI (Features 6 and 7). The line-based console mode was
+  removed in GH-79.
+- Launching without an interactive terminal (e.g. `./gradlew run`, piped or scripted input), with
+  any flags, prints `No interactive terminal found - Mordovorot only runs as a terminal UI.` to
+  stderr and exits normally (status 0) without starting a game.
+- `--console` in a terminal prints `Console mode was removed - starting the terminal UI.` and
+  then starts the TUI as if the flag weren't there (`--console --keyboard` starts keyboard mode).
+- `--size=N` starts at board side `N` (3-5) and skips the startup restore and size prompts
+  (Feature 4). An unusable value warns and falls back to 4. Unrecognized arguments are reported
+  and ignored.
 
 ### Feature 4 — Save and load (GH-6)
-- `save <file-name>` stores the board's current tile arrangement to a local file, creating it
-  or overwriting an existing file of that name. Works both at the start of a session and mid-game.
-- `load <file-name>` restores the board's tile arrangement from an existing save file. Works
-  mid-game, not just at startup.
-- Loading an unknown file name leaves the board untouched and shows a message (listing
-  available saves, where relevant) instead of crashing. Loading a save whose board size
-  differs from the current board resizes the board to match and restores its tiles - it is
-  never rejected for a size mismatch (GH-44).
-- Every place a save's name is listed - the startup restore prompts below, the `load`
-  command's "no save named"/available-saves message, and the TUI's Load dialog (Feature 6) -
-  also shows that save's board size, e.g. `foo (5x5)`, so a player can tell up front what
-  size loading it will resize the board to (GH-44). A save whose size can't be read
-  (corrupted) shows its name alone.
+- The Save dialog stores the board's current tile arrangement to a local file, creating it or
+  overwriting an existing file of that name. The Load dialog restores the board from an existing
+  save. Both work at any point in a game.
+- A save that can't be loaded (deleted or corrupted since it was listed) leaves the board
+  untouched and shows a message instead of crashing. Loading a save whose board size differs
+  from the current board resizes the board to match and restores its tiles - it is never
+  rejected for a size mismatch (GH-44).
+- Every place a save's name is listed - the startup restore dialog and the Load dialog - also
+  shows that save's board size, e.g. `foo (5x5)`, so a player can tell up front what size
+  loading it will resize the board to (GH-44). A save whose size can't be read (corrupted)
+  shows its name alone.
 - A save that no sequence of shifts can solve (only possible on 3×3/5×5, e.g. a hand-edited or
-  pre-GH-74 save) is marked in every listing: `foo (3x3) unsolvable` (GH-74). Typing that form
-  back into `load` (or the startup prompt) still selects `foo`.
-- Loading an unsolvable save (mid-game or from the startup prompt) doesn't restore it. Instead it
-  shows `'foo (3x3)' can't be solved - no sequence of shifts reaches the solved board.` and asks
-  `Repair and load (r), start a new game (n), or exit (e)?` (GH-74). It accepts `r`/`repair`,
-  `n`/`new` and `e`/`exit`/`quit`, case-insensitively, and asks again on anything else, a blank
-  line included. EOF counts as exit.
+  pre-GH-74 save) is marked in every listing: `foo (3x3) unsolvable` (GH-74).
+- Loading an unsolvable save (mid-game or at startup) doesn't restore it. Instead it opens a
+  `Can't be solved` dialog with three choices (GH-74, see Feature 6):
   - **Repair** swaps two tiles, which makes the board solvable, and overwrites the save file with
     the result, keeping its move count, then loads it: `Repaired 'foo' (two tiles swapped) and
     loaded it.` If the file can't be rewritten, the repaired board is still loaded with a warning,
     and the save stays marked.
-  - **New game** asks for the board size, like the startup prompt. Mid-game, Enter (or EOF)
-    starts a fresh game at the current size.
+  - **New game** opens the board-size picker.
   - **Exit** at startup quits right away, since there's no game to save. Mid-game, it runs the
-    `exit` command's `Save before quitting?` flow (Feature 5); a failed save keeps the current
-    game going.
+    `Save before quitting?` flow (Feature 5); a failed save keeps the current game going.
 - Saves are stored as `.save` files in a `saves/` directory relative to wherever the app is
   launched from (the process's current working directory) — running from a different directory
-  will not see saves made from another one.
+  will not see saves made from another one. The save file format is unchanged by GH-79, so older
+  saves still load.
 - **Startup restore prompt:** on launch, before the first move, the app checks for existing
   saves:
-  - No saves — skips straight to the board-size prompt below (GH-44) instead of the restore
-    question.
-  - Exactly one save — asks a yes/no question offering to restore it; declining (or EOF) falls
-    through to the board-size prompt.
-  - Two or more saves — lists all save names and asks the user to type one to restore, or press
-    Enter for a new game. An unrecognized name re-prompts rather than silently starting a new
-    game; EOF is treated the same as pressing Enter. Declining falls through to the board-size
-    prompt the same as the one-save case.
+  - No saves — skips straight to the board-size prompt (GH-44).
+  - One or more saves — opens the Load-shaped "Restore a saved game?" dialog (Feature 6).
+    Cancelling it falls through to the board-size prompt.
   - This entire prompt - restore included - is skipped outright when `--size=N` was given at
     launch (GH-44): the flag is the answer, no matter what saves exist.
-  - When it runs, this prompt (and the board-size prompt that can follow it) consumes stdin
-    lines before the normal command loop starts — at least one (the yes/no answer, the typed
-    name, or the size) and, with two or more saves, one per unrecognized name typed, since each
-    miss re-prompts on the next line rather than giving up. A script feeding commands via a pipe
-    (e.g. `printf "left 1\n" | app`) must account for this, or its lines will be consumed as
-    restore/size-prompt answers instead of reaching the command loop - pass `--size=N` to skip
-    both prompts entirely in a scripted/piped launch.
 
-### Feature 5 — Exit command (GH-12)
-- `exit` or `quit` (case-insensitive, no arguments) ends the current session on demand, the
-  same as EOF (Ctrl+D) or declining a new game once the board is solved (Feature 3).
-- Before quitting, it asks `Save before quitting? [y/N]`:
-  - `y`/`yes` — prompts for a save name and saves under it (same underlying flow as the `save`
-    command), then quits. A blank name or EOF at this second prompt quits without saving.
-  - A name that isn't usable as a save identifier - containing spaces (unloadable via the
-    `load` command's single-token parsing), a path separator, or `..` - is rejected with a
-    message and re-prompted, rather than silently discarding the save request.
+### Feature 5 — Exit (GH-12)
+- The toolbar Exit (Escape in keyboard mode) ends the current session on demand after asking
+  `Save before quitting?`:
+  - **Yes** opens the Save dialog and saves under the typed name, then quits. An empty name
+    quits without saving.
+  - A name that isn't usable as a save identifier - containing spaces, a path separator, or
+    `..` - is rejected with a message and asked for again, rather than silently discarding the
+    save request.
   - If the save itself fails (e.g. a read-only `saves/` directory), the session **does not
-    quit** — the error is shown (same message as a failed `save` command) and play continues,
-    so an explicit save request never costs the player their game.
-  - Anything other than `y`/`yes` (including EOF) at the first prompt — quits without saving.
-  - Like the startup restore prompt, these consume extra stdin lines before the process exits
-    (or, on a failed save, before play resumes) — a scripted run piping commands must account
-    for the yes/no answer and, if given, the save name(s).
+    quit** — the error is shown and play continues, so an explicit save request never costs the
+    player their game.
+  - **No** quits without saving; **Cancel** closes the dialog and keeps playing.
 
 ### Feature 6 — Mouse-driven TUI (GH-3)
 - On launch, the app runs a mouse-clickable terminal UI by default: a centered board with
   `◀`/`▶`/`▲`/`▼` arrows at the ends of each row/column, a toolbar
-  (`[ New ] [ Save ] [ Load ] [ Exit ]`) below it, and a second row below that
-  (`[ Keyboard ] [ Console ]`) for switching input mode without losing the current game (GH-30) -
-  the same behavior as the console's `mouse`/`keyboard` commands. Clicking an arrow shifts that
-  row/column the same as the console's `left`/`right`/`up`/`down` commands; every click repaints
-  the whole screen. `[ New ]` (GH-44) opens the same size-picker dialog as the startup prompt and
-  starts a fresh game at whichever size is chosen; Cancel leaves the current game untouched.
-- `--console` forces the line-based console interaction (Features 1-5) instead. Launching
-  without an interactive terminal (e.g. piped/scripted input) falls back to console mode
-  automatically, since mouse mode has no terminal to click in.
-- **Save/Load/Exit dialogs**, opened from the toolbar, replace the console's typed prompts with
-  clickable modals:
+  (`[ New ] [ Save ] [ Load ] [ Exit ]`) below it, and a second row below that with
+  `[ Keyboard ]` for switching to keyboard mode without losing the current game (GH-30).
+  Clicking an arrow shifts that row/column; every click repaints the whole screen. `[ New ]`
+  (GH-44) opens the same size-picker dialog as the startup prompt and starts a fresh game at
+  whichever size is chosen; Cancel leaves the current game untouched.
+- If switching modes fails (e.g. the terminal can't be set up), the game carries on in the
+  current mode with the same game and shows `Could not switch to <mode> mode (<reason>) -
+  staying in <current> mode.` on its status line (GH-79).
+- **Save/Load/Exit dialogs**, opened from the toolbar:
   - **Save** — a typed name field; an existing name shows an inline "already exists - it will
     be overwritten" warning before saving over it. A name containing spaces is rejected with an
-    on-screen message instead of being saved (the console's `load` command couldn't read it
-    back). An empty name (Enter, or clicking Save with nothing typed) cancels without saving.
+    on-screen message instead of being saved. An empty name (Enter, or clicking Save with
+    nothing typed) cancels without saving.
   - **Load** — a clickable list of save names and sizes (e.g. `foo (5x5)`, GH-44 - `No saves
     found.` when there are none, with the Load button inert); selecting one and confirming
     restores it.
-  - **Exit** — `[ Yes ] [ No ] [ Cancel ]`; Cancel closes the dialog and keeps playing, Yes/No
-    behave like the console's `exit`/`quit` save-first prompt (Feature 5), including the
-    invalid-name re-prompt and the failed-save-keeps-playing behavior.
+  - **Exit** — `[ Yes ] [ No ] [ Cancel ]`, behaving as Feature 5 describes.
   - Any dialog can also be dismissed with Escape, same effect as its Cancel button - except the
     two below.
 - **Unsolvable save** (GH-74): loading one (Load dialog or startup restore) opens a `Can't be
-  solved` dialog with `[ Repair & load ] [ New game ] [ Exit ]`, the same three choices as the
-  console (Feature 4). It has no Cancel, and Escape does nothing. New game opens the size picker.
-  Exit at startup quits; mid-game it opens a `Save before quitting?` dialog with Yes/No only
-  (no Cancel, Escape does nothing), which then behaves like the Exit dialog's Yes/No.
+  solved` dialog with `[ Repair & load ] [ New game ] [ Exit ]` (Feature 4). It has no Cancel,
+  and Escape does nothing. New game opens the size picker. Exit at startup quits; mid-game it
+  opens a `Save before quitting?` dialog with Yes/No only (no Cancel, Escape does nothing),
+  which then behaves like the Exit dialog's Yes/No.
 - **Startup restore**, when saves exist, is the same Load-shaped dialog (titled "Restore a saved
-  game?") regardless of how many saves there are — the console's one-save-yes/no vs.
-  two-or-more-saves-list split (Feature 4) doesn't apply here; Cancel starts a new game.
+  game?") regardless of how many saves there are; Cancel starts a new game.
 - **Solved state:** once the board is solved, the title switches to `Congratulations ✓`, the
   shift arrows are shown dimmed and stop responding to clicks, and the toolbar (New/Save/Load/Exit)
   stays fully clickable. Loading a different, unsolved save from the Congratulations screen
@@ -184,19 +128,19 @@ Mordovorot — A console prototype of a sliding-row/column puzzle board game
 
 ### Feature 7 — Keyboard-only TUI (GH-18)
 - `--keyboard` runs the same TUI screens as Feature 6 (board, toolbar, dialogs, Congratulations
-  screen), but driven entirely from the keyboard instead of the mouse. `--console` still wins if
-  both are given, and no-interactive-terminal falls back to console mode the same as mouse mode;
-  an explicit `--keyboard`/`--mouse` that can't get a TTY warns about the fallback.
+  screen), but driven entirely from the keyboard instead of the mouse. Launch rules are the same
+  as mouse mode (Feature 3).
 - **Board navigation:** arrow keys move a highlighted cursor around the ring of shift arrows
   (`◀`/`▶`/`▲`/`▼`); the cursored arrow is shown in yellow on a reverse-video cell, so it stays visible without color. Enter or Space activates whichever
   arrow is highlighted, same effect as clicking it. Once solved, the cursor disappears and arrow
   keys/Enter go inert, matching the mouse mode's dimmed-arrows behavior.
 - **Toolbar shortcuts**, shown in light blue on the toolbar buttons — including a second row
-  below `[ New ] [ Save ] [ Load ] [ Exit ]` for `[Mouse F7]`/`[Console F8]` (GH-30), mirroring
-  the mouse mode's `[ Keyboard ] [ Console ]` row — and always live regardless of cursor position
-  or solved state: **F5** opens Save, **F6** opens Load, **F9** opens the New-game size picker
-  (GH-44), **F7** switches to mouse mode, **F8** switches to console mode, and **Escape** opens
-  the Exit dialog. A controls-hint line below the toolbar spells these out in plain text.
+  below `[ New ] [ Save ] [ Load ] [ Exit ]` for `[Mouse F7]` (GH-30), mirroring the mouse
+  mode's `[ Keyboard ]` row — and always live regardless of cursor position or solved state:
+  **F5** opens Save, **F6** opens Load, **F9** opens the New-game size picker (GH-44), **F7**
+  switches to mouse mode, and **Escape** opens the Exit dialog. F8 does nothing (it switched to
+  console mode before GH-79). A controls-hint line below the toolbar spells these out in plain
+  text: `Arrows: move · Enter: shift · F5/F6/F9 Save/Load/New · F7 Mouse · Esc`.
 - **Dialog navigation:** Tab/Shift+Tab (or the arrow keys) cycle focus between a dialog's
   controls (text field, list rows, buttons); Enter activates whatever has focus; Escape cancels
   the dialog, same as clicking Cancel. Typing and Backspace work on the focused text field as in

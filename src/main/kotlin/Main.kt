@@ -11,7 +11,8 @@ fun main(args: Array<String>): Unit = runBlocking {
     val analytics = NoopAnalyticsService()
     val parsedSize = resolveBoardSize(args)
     val boardSize = parsedSize ?: BoardSize.DEFAULT
-    val mode = resolveInputMode(args, analytics, boardSize = boardSize)
+    // No terminal: the abort message is already printed - return normally, so the exit is 0.
+    val mode = resolveInputMode(args, analytics, boardSize = boardSize) ?: return@runBlocking
     // An invalid --size=N (out of range, non-numeric, blank) degrades to "no flag given" here
     // too - sizeChosenAtLaunch must track whether the flag was actually usable, not just
     // present, or a typo'd flag would silently suppress the restore/size prompts on top of
@@ -51,30 +52,38 @@ fun resolveBoardSize(
     return size
 }
 
-/** Resolves the starting input mode, warns on any unrecognized argument, and tracks
- *  `app_launched` - split out from [main] so it's unit-testable without running the whole game
- *  loop. */
+/** Resolves the starting input mode, warns on any unrecognized argument, and tracks the launch -
+ *  split out from [main] so it's unit-testable without running the whole game loop. Returns
+ *  `null` (and tracks `app_launch_aborted` instead of `app_launched`) when there is no
+ *  interactive terminal: the game only runs as a TUI since GH-79. */
 fun resolveInputMode(
     args: Array<String>,
     analytics: AnalyticsService,
     boardSize: Int = BoardSize.DEFAULT,
     warnUnrecognizedArg: (String) -> Unit = { System.err.println("Unrecognized argument: '$it' - ignoring.") },
-    warnConsoleKeyboardConflict: () -> Unit = { System.err.println("'--keyboard' ignored - '--console' takes precedence.") },
-    warnNoInteractiveTerminal: (String) -> Unit = { flag ->
-        System.err.println("'$flag' ignored - no interactive terminal detected, falling back to console mode.")
-    },
-    hasInteractiveTerminal: () -> Boolean = { System.console() != null },
-): InputMode {
+    reportNoInteractiveTerminal: (String) -> Unit = { System.err.println(it) },
+    noticeConsoleRemoved: (String) -> Unit = { System.err.println(it) },
+    hasInteractiveTerminal: () -> Boolean = InputMode.Companion::systemHasInteractiveTerminal,
+): InputMode? {
     val knownArgs = setOf("--console", "--keyboard", "--mouse")
     args.filter { it !in knownArgs && !it.startsWith("--size=") }.forEach(warnUnrecognizedArg)
-    if ("--console" in args && "--keyboard" in args) warnConsoleKeyboardConflict()
-    val mode = InputMode.resolve(args, hasInteractiveTerminal)
-    // An explicit --keyboard/--mouse silently downgrading to CONSOLE (no TTY) deserves the same
-    // feedback the --console/--keyboard conflict above gets.
-    if (mode == InputMode.CONSOLE && "--console" !in args) {
-        val requested = listOfNotNull("--keyboard".takeIf { it in args }, "--mouse".takeIf { it in args })
-        requested.forEach(warnNoInteractiveTerminal)
+    val consoleFlag = "--console" in args
+    if (!hasInteractiveTerminal()) {
+        reportNoInteractiveTerminal("No interactive terminal found - Mordovorot only runs as a terminal UI.")
+        val requested = when {
+            "--keyboard" in args -> "keyboard"
+            "--mouse" in args -> "mouse"
+            consoleFlag -> "console"
+            else -> "none"
+        }
+        analytics.track("app_launch_aborted", mapOf("reason" to "no_interactive_terminal", "requested_mode" to requested))
+        return null
     }
-    analytics.track("app_launched", mapOf("mode" to mode.name.lowercase(), "board_size" to boardSize))
+    if (consoleFlag) noticeConsoleRemoved("Console mode was removed - starting the terminal UI.")
+    val mode = InputMode.resolve(args)
+    analytics.track(
+        "app_launched",
+        mapOf("mode" to mode.name.lowercase(), "board_size" to boardSize, "console_flag_ignored" to consoleFlag),
+    )
     return mode
 }

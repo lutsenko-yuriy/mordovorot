@@ -15,7 +15,7 @@
 
 ## Platforms
 
-- JVM 17 desktop console app: line-based console mode, plus an ANSI mouse/keyboard TUI that needs a real terminal (`installDist` launcher, not `./gradlew run`)
+- JVM 17 desktop terminal app: an ANSI mouse/keyboard TUI that needs a real terminal (`installDist` launcher, not `./gradlew run`)
 
 ## Tooling
 

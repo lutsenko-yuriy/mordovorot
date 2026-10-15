@@ -4,8 +4,8 @@ import InputMode
 
 /**
  * What a mouse click resolves to. Row/column indices here are 0-based model indices - the
- * `DISPLAY_OFFSET` 1-based dialect ([view.ViewImpl]'s GH-10 note) applies only to typed input
- * and rendered tile values, never to a click coordinate.
+ * `DISPLAY_OFFSET` 1-based dialect (GH-10, [ScreenRenderer]) applies only to rendered tile
+ * values, never to a click coordinate.
  */
 sealed class HitTarget {
     data class ShiftLeft(val row: Int) : HitTarget()

@@ -3,7 +3,7 @@ plugins {
     application
 }
 
-version = "0.12.0"
+version = "0.13.0"
 
 repositories {
     mavenCentral()
@@ -30,11 +30,7 @@ tasks.test {
 }
 
 tasks.named<JavaExec>("run") {
-    // The application plugin doesn't wire stdin by default; ViewImpl reads
-    // console commands from a BufferedReader over System.in, so without this
-    // the game hits EOF on its first read.
-    standardInput = System.`in`
     // Gradle pipes this process's stdout through its own logger, so System.console() is
-    // always null here - the mouse TUI (GH-3) is unreachable via `./gradlew run`. Use
-    // `./gradlew installDist && ./build/install/mordovorot/bin/mordovorot` to launch it.
+    // always null here - `./gradlew run` only prints the no-terminal message (GH-79). Use
+    // `./gradlew installDist && ./build/install/mordovorot/bin/mordovorot` to play.
 }

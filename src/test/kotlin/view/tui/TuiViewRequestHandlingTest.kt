@@ -26,7 +26,7 @@ class TuiViewRequestHandlingTest {
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
 
     /** Hard problem 2's residual case (GH-42 WU2, see the plan comment on GH-42), TuiView's half
-     *  of [view.ViewImplRequestHandlingTest] - a control-flow exception thrown from *inside* the
+     *  - a control-flow exception thrown from *inside* the
      *  request-handler coroutine still escapes [TuiView.play] to its caller. Forced here by
      *  making the very first `terminal.write` (reached from inside `handle`'s `ConfirmRestore`
      *  branch, since `restoreOnStartup()` runs before the board's own first `repaint()`) throw. */
@@ -41,7 +41,7 @@ class TuiViewRequestHandlingTest {
             override fun enableMouseReporting() {}
             override fun write(frame: String) {
                 writeCount++
-                if (writeCount == 1) throw ModeSwitchRequestedException(InputMode.CONSOLE)
+                if (writeCount == 1) throw ModeSwitchRequestedException(InputMode.KEYBOARD)
             }
             override fun readEvent(): TerminalEvent = TerminalEvent.EndOfInput
             override fun size(): TerminalSize = terminalSize
