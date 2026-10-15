@@ -7,7 +7,9 @@ import view.tui.BoardLayout
 import view.tui.HitTarget
 import view.tui.TerminalEvent
 import view.tui.TerminalSize
+import java.nio.file.Path
 import kotlin.io.path.createTempDirectory
+import kotlin.io.path.writeText
 import testing.RecordingAnalyticsService.Event
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -111,16 +113,21 @@ class ConsoleRemovalScenarioTest {
     private class Run(val terminal: FakeTerminal, val board: BoardImpl, val analytics: RecordingAnalyticsService)
 
     /** A real [GameSession] in [mode] with `--size` semantics, wired through `defaultView`. */
-    private fun session(mode: InputMode, events: List<TerminalEvent> = emptyList()): Run = runBlocking {
+    private fun session(
+        mode: InputMode,
+        events: List<TerminalEvent> = emptyList(),
+        savesDir: Path = createTempDirectory("mordovorot-gh79"),
+        sizeChosenAtLaunch: Boolean = true,
+    ): Run = runBlocking {
         val terminal = FakeTerminal(events.toMutableList(), TerminalSize(80, 40))
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(4).apply { restoreState(scrambled) }
         GameSession(
             initialMode = mode,
             board = board,
-            saves = FileSaveRepository(createTempDirectory("mordovorot-gh79")),
+            saves = FileSaveRepository(savesDir),
             analytics = analytics,
-            sizeChosenAtLaunch = true,
+            sizeChosenAtLaunch = sizeChosenAtLaunch,
             terminalFactory = { terminal },
         ).run()
         Run(terminal, board, analytics)
@@ -184,8 +191,16 @@ class ConsoleRemovalScenarioTest {
 
     @Test
     fun `a save made before GH-79 still restores at TUI startup`() {
-        // TODO: seed old.save (4x4 format with a move count)
-        // TODO: mouse session; confirm the restore dialog
-        // TODO: the board and Moves: match the save
+        val saved = IntArray(16) { (it + 5) % 16 }
+        val dir = createTempDirectory("mordovorot-gh79")
+        dir.resolve("old.save").writeText("4\n${saved.joinToString(" ")}\n7\n")
+
+        // Restore dialog: Tab from the one row to Load, Enter.
+        val run = session(InputMode.KEYBOARD, listOf(TerminalEvent.Tab, TerminalEvent.Enter), dir, sizeChosenAtLaunch = false)
+
+        assertTrue(run.terminal.frames.first().contains("old (4x4)"))
+        assertEquals(saved.toList(), run.board.boardArray.toList())
+        val lastFrame = run.terminal.frames.last().replace(Regex("\u001B\\[[0-9;?]*[A-Za-z]"), "").split("\r\n")
+        assertEquals("Moves: 7", lastFrame[BoardLayout(TerminalSize(80, 40), 4).movesRow].trim())
     }
 }
