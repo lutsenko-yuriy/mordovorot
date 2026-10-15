@@ -28,6 +28,11 @@ public class BoardImpl(initialSide: Int = BoardSize.DEFAULT) : BoardModel {
         lastLine = null
 
         boardArray.shuffle()
+        // Swapping 0/1 maps odd permutations one-to-one onto even ones, so the result stays
+        // uniform over solvable boards (GH-74).
+        if (!Solvability.isSolvable(boardArray)) {
+            boardArray[0] = boardArray[1].also { boardArray[1] = boardArray[0] }
+        }
     }
 
     override fun newGame(side: Int) {

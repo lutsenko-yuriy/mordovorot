@@ -2,6 +2,7 @@ package board_model
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class BoardImplResetTest {
 
@@ -32,4 +33,15 @@ class BoardImplResetTest {
         assertEquals((0..8).toList(), board.boardArray.sorted())
     }
 
+    /** GH-74: without the parity fix, 200 odd-side shuffles all landing solvable is ~2^-200. */
+    @Test
+    fun `resetGame always produces a solvable board on odd sides`() {
+        for (side in listOf(3, 5)) {
+            val board = BoardImpl(side)
+            repeat(200) {
+                board.resetGame()
+                assertTrue(Solvability.isSolvable(board.boardArray), "side $side: ${board.boardArray.toList()}")
+            }
+        }
+    }
 }
