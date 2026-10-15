@@ -77,6 +77,8 @@ Fired once at startup, after the launch mode is resolved (default mouse TUI, `--
 | `mode` | `string` | `mouse`, `console`, or `keyboard`. |
 | `board_size` | `number` | The resolved board side (3-5) for this launch — from `--size=N` or the default (4). *(GH-44)* |
 
+*GH-79:* new property `console_flag_ignored` (`boolean`) - `true` when `--console` was passed and the `Console mode was removed` notice was shown before the TUI started.
+
 ### `dialog_cancelled`
 
 Fired when the user cancels the Save, Load, Exit, or Size dialog in the mouse-driven or keyboard-driven TUI (mouse click, or Escape/Cancel-control in keyboard mode) without completing the action. *(GH-3, GH-18, GH-44)*
@@ -167,6 +169,16 @@ whose message is unchanged. *(GH-67)*
 | `reason` | `string` | `unknown_command`, `empty`, `missing_argument`, `too_many_arguments`, `not_a_number`, or `out_of_range`. |
 | `command` | `string` | The known command's name. Absent for `unknown_command` and `empty` - the raw typed verb is never sent, since free text may carry PII. |
 | `input_method` | `string` | Always `console`. |
+
+### `app_launch_aborted`
+
+Fired when a launch finds no interactive terminal, prints the `No interactive terminal found`
+message and exits - instead of `app_launched`, which only fires when a game starts. *(GH-79)*
+
+| Property | Type | Description |
+|---|---|---|
+| `reason` | `string` | Always `no_interactive_terminal` for now. |
+| `requested_mode` | `string` | `mouse`, `keyboard`, `console`, or `none` - the mode flag passed at launch (`none` when no flag was given). |
 
 <!-- All events above are sent through `analytics.AnalyticsService`, currently backed by
      `analytics.NoopAnalyticsService` (no real SDK wired up yet). -->
