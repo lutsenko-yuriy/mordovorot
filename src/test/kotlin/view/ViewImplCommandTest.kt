@@ -16,6 +16,7 @@ import testing.FakeViewModel
 import testing.RecordingModeSwitcher
 import viewmodel.ModeSwitchRequestedException
 import viewmodel.SaveInfo
+import viewmodel.UnsolvableSaveChoice
 
 /** A save whose size doesn't matter for this test - most of [ViewImplCommandTest]'s
  *  confirmRestore/chooseSaveToRestore cases only care about the name. */
@@ -383,6 +384,37 @@ class ViewImplCommandTest {
         val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
         view.viewModel = FakeViewModel()
         assertEquals(false, view.confirmPlayAgain())
+    }
+
+    @Test
+    fun `resolveUnsolvableSave accepts short and long answers, case-insensitively`(): Unit = runBlocking {
+        val expected = mapOf(
+            "r" to UnsolvableSaveChoice.REPAIR, "Repair" to UnsolvableSaveChoice.REPAIR,
+            "N" to UnsolvableSaveChoice.NEW_GAME, "new" to UnsolvableSaveChoice.NEW_GAME,
+            "e" to UnsolvableSaveChoice.EXIT, "EXIT" to UnsolvableSaveChoice.EXIT, "quit" to UnsolvableSaveChoice.EXIT,
+        )
+        for ((answer, choice) in expected) {
+            val (view, output) = viewWith(" $answer \n")
+            assertEquals(choice, view.resolveUnsolvableSave(), "answer '$answer'")
+            assertEquals("Repair and load (r), start a new game (n), or exit (e)? ", output.toString())
+        }
+    }
+
+    @Test
+    fun `resolveUnsolvableSave re-prompts on a blank or unknown answer`(): Unit = runBlocking {
+        val (view, output) = viewWith("\nx\nn\n")
+
+        assertEquals(UnsolvableSaveChoice.NEW_GAME, view.resolveUnsolvableSave())
+        assertEquals(3, output.toString().split("Repair and load (r)").size - 1)
+    }
+
+    @Test
+    fun `resolveUnsolvableSave answers exit on EOF or a dead stream`(): Unit = runBlocking {
+        assertEquals(UnsolvableSaveChoice.EXIT, viewWith("").first.resolveUnsolvableSave())
+
+        val view = ViewImpl(BufferedReader(ThrowingReader()), PrintStream(ByteArrayOutputStream()))
+        view.viewModel = FakeViewModel()
+        assertEquals(UnsolvableSaveChoice.EXIT, view.resolveUnsolvableSave())
     }
 
     @Test

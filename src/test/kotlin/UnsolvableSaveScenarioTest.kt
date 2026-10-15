@@ -1,6 +1,7 @@
 import analytics.AnalyticsService
 import analytics.InputMethodAnalyticsService
 import board_model.BoardImpl
+import board_model.Solvability
 import kotlinx.coroutines.runBlocking
 import storage.FileSaveRepository
 import testing.RecordingAnalyticsService
@@ -14,8 +15,10 @@ import java.io.PrintStream
 import java.io.StringReader
 import java.nio.file.Path
 import kotlin.io.path.createTempDirectory
+import kotlin.io.path.readText
 import kotlin.io.path.writeText
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -74,67 +77,99 @@ class UnsolvableSaveScenarioTest {
         assertFalse(run.output.contains("unsolvable"), run.output)
     }
 
+    private val unsolvableMessage = "'odd (3x3)' can't be solved - no sequence of shifts reaches the solved board."
+    private val choicePrompt = "Repair and load (r), start a new game (n), or exit (e)? "
+    private val sizePrompt = "Board size? [3-5, Enter for 4]: "
+
+    private fun Run.event(name: String) = analytics.events.single { it.name == name }.properties
+
+    private fun Path.state(name: String) = resolve("$name.save").readText()
+
     @Test
     fun `restoring an unsolvable save at startup offers repair, new game or exit`() {
-        // TODO: 1. Seed odd.save; input "y".
-        // TODO: 2. Output contains "'odd (3x3)' can't be solved - no sequence of shifts reaches the solved board."
-        //          followed by "Repair and load (r), start a new game (n), or exit (e)? ".
+        val run = session("y\n", savesDir(oddSave))
+
+        assertTrue(run.output.contains("$unsolvableMessage\n$choicePrompt"), run.output)
     }
 
     @Test
     fun `repair at startup loads the fixed board and rewrites the save`() {
-        // TODO: 1. Seed odd.save; input "y", "r".
-        // TODO: 2. Output contains "Repaired 'odd' (two tiles swapped) and loaded it."
-        // TODO: 3. Board is 3x3, solvable, and the output shows "Moves: 5".
-        // TODO: 4. odd.save on disk now holds the repaired state (1 2 0 3 4 5 6 7 8) with 5 moves.
-        // TODO: 5. Events: load_command_used {result: unsolvable, trigger: startup_prompt},
-        //          unsolvable_save_resolved {choice: repair, trigger: startup_prompt, board_size: 3, repair_saved: true},
-        //          startup_restore_decision {decision: restored}.
+        val dir = savesDir(oddSave)
+
+        val run = session("y\nr\n", dir)
+
+        assertTrue(run.output.contains("Repaired 'odd' (two tiles swapped) and loaded it."), run.output)
+        assertEquals(3, run.board.squareSide)
+        assertTrue(Solvability.isSolvable(run.board.boardArray))
+        assertTrue(run.output.contains("Moves: 5"), run.output)
+        assertEquals("3\n1 2 0 3 4 5 6 7 8\n5\n", dir.state("odd"))
+        assertEquals(mapOf("trigger" to "startup_prompt", "result" to "unsolvable", "input_method" to "console"), run.event("load_command_used"))
+        assertEquals(
+            mapOf("choice" to "repair", "trigger" to "startup_prompt", "board_size" to 3, "repair_saved" to true, "input_method" to "console"),
+            run.event("unsolvable_save_resolved"),
+        )
+        assertEquals("restored", run.event("startup_restore_decision")["decision"])
     }
 
     @Test
     fun `new game at startup shows the board-size prompt`() {
-        // TODO: 1. Seed odd.save; input "y", "n", "5".
-        // TODO: 2. After the r/n/e prompt, output shows "Board size? [3-5, Enter for 4]: ".
-        // TODO: 3. Board is 5x5 and solvable.
-        // TODO: 4. odd.save on disk is unchanged.
-        // TODO: 5. Events: unsolvable_save_resolved {choice: new_game}, startup_restore_decision {decision: new_game}.
+        val dir = savesDir(oddSave)
+
+        val run = session("y\nn\n5\n", dir)
+
+        assertTrue(run.output.contains("$choicePrompt$sizePrompt"), run.output)
+        assertEquals(5, run.board.squareSide)
+        assertTrue(Solvability.isSolvable(run.board.boardArray))
+        assertEquals(oddSave.second, dir.state("odd"))
+        assertEquals("new_game", run.event("unsolvable_save_resolved")["choice"])
+        assertEquals("new_game", run.event("startup_restore_decision")["decision"])
     }
 
     @Test
     fun `exit at startup quits without asking to save`() {
-        // TODO: 1. Seed odd.save; input "y", "e".
-        // TODO: 2. Output ends right after the r/n/e prompt - no "Save before quitting?".
-        // TODO: 3. Events: unsolvable_save_resolved {choice: exit}, startup_restore_decision {decision: quit}.
+        val run = session("y\ne\n", savesDir(oddSave))
+
+        assertTrue(run.output.endsWith(choicePrompt), run.output)
+        assertEquals("exit", run.event("unsolvable_save_resolved")["choice"])
+        assertEquals("quit", run.event("startup_restore_decision")["decision"])
     }
 
     @Test
     fun `loading an unsolvable save mid-game and choosing new game asks for the size`() {
-        // TODO: 1. Seed odd.save; start with the size chosen at launch (4x4 game).
-        // TODO: 2. Input "load odd", "n", "3".
-        // TODO: 3. Output shows the can't-be-solved message, the r/n/e prompt, then "Board size? [3-5, Enter for 4]: ".
-        // TODO: 4. Board is 3x3 and solvable.
-        // TODO: 5. Events: new_game_size_selected {trigger: unsolvable_save}.
+        val run = session("load odd\nn\n3\n", savesDir(oddSave), sizeChosenAtLaunch = true)
+
+        assertTrue(run.output.contains("$unsolvableMessage\n$choicePrompt$sizePrompt"), run.output)
+        assertEquals(3, run.board.squareSide)
+        assertTrue(Solvability.isSolvable(run.board.boardArray))
+        assertEquals("unsolvable_save", run.event("new_game_size_selected")["trigger"])
     }
 
     @Test
     fun `exiting from a mid-game unsolvable load runs the normal exit flow`() {
-        // TODO: 1. Seed odd.save; start with the size chosen at launch; input "load odd", "e", "n".
-        // TODO: 2. Output shows "Save before quitting? [y/N] " and the session ends.
-        // TODO: 3. Events: exit_command_used {save_choice: declined},
-        //          unsolvable_save_resolved {choice: exit, trigger: command}.
+        val run = session("load odd\ne\nn\n", savesDir(oddSave), sizeChosenAtLaunch = true)
+
+        assertTrue(run.output.endsWith("${choicePrompt}Save before quitting? [y/N] "), run.output)
+        assertEquals("declined", run.event("exit_command_used")["save_choice"])
+        assertEquals(
+            mapOf("choice" to "exit", "trigger" to "command", "board_size" to 3, "input_method" to "console"),
+            run.event("unsolvable_save_resolved"),
+        )
     }
 
     @Test
     fun `an invalid answer re-prompts for repair, new game or exit`() {
-        // TODO: 1. Seed odd.save; start with the size chosen at launch; input "load odd", "x", "", "R".
-        // TODO: 2. The r/n/e prompt appears 3 times.
-        // TODO: 3. The repaired board is loaded (capital R counts as repair).
+        val run = session("load odd\nx\n\nR\n", savesDir(oddSave), sizeChosenAtLaunch = true)
+
+        assertEquals(3, run.output.split(choicePrompt).size - 1, run.output)
+        assertEquals(listOf(1, 2, 0, 3, 4, 5, 6, 7, 8), run.board.boardArray.toList())
     }
 
     @Test
     fun `load accepts the listed form with the unsolvable mark`() {
-        // TODO: 1. Seed odd.save; start with the size chosen at launch; input "load odd (3x3) unsolvable", "r".
-        // TODO: 2. The r/n/e prompt appears and the repair loads odd - no "No save named" message.
+        val run = session("load odd (3x3) unsolvable\nr\n", savesDir(oddSave), sizeChosenAtLaunch = true)
+
+        assertTrue(run.output.contains(choicePrompt), run.output)
+        assertFalse(run.output.contains("No save named"), run.output)
+        assertEquals(listOf(1, 2, 0, 3, 4, 5, 6, 7, 8), run.board.boardArray.toList())
     }
 }
