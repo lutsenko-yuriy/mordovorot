@@ -731,4 +731,21 @@ class ViewImplCommandTest {
         assertTrue(output.toString().startsWith("Commands:"))
         assertTrue(!output.toString().contains("lft"))
     }
+
+    /** Guards the `when` in [ViewImpl.processCommand] against a table entry it has no branch for. */
+    @Test
+    fun `every command in the table has a handler`(): Unit = runBlocking {
+        for (command in ConsoleCommands.all) {
+            val arg = when (command.arg) {
+                ArgKind.ROW, ArgKind.COLUMN -> " 1"
+                ArgKind.SIZE -> " 3"
+                ArgKind.NAME -> " foo"
+                ArgKind.NONE, ArgKind.OPTIONAL_COMMAND -> ""
+            }
+            for (name in command.names) {
+                val (view, _) = viewWith("$name$arg\n")
+                view.processCommand()
+            }
+        }
+    }
 }

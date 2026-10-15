@@ -84,7 +84,8 @@ src/main/kotlin/
     ├── View.kt          # View interface — console display + command loop contract
     ├── ViewImpl.kt      # Console I/O implementation (BufferedReader-based input). `mouse`/
     │                      # `keyboard` commands reach an injected ModeSwitcher, wired via
-    │                      # create()'s modeSwitcherFactory param (GH-30)
+    │                      # create()'s modeSwitcherFactory param (GH-30), and console
+    │                      # analytics via create()'s analytics param (GH-67)
     ├── ConsoleCommands.kt # Pure console command table (GH-67): usage + description per
     │                      # command; source of `help` output, error usage lines and the hint
     ├── ConsoleCommandException.kt # IllegalArgumentException subclass for a rejected console

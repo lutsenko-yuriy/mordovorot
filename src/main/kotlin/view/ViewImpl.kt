@@ -131,6 +131,8 @@ class ViewImpl internal constructor(
             }
 
             "help" -> help(typed)
+
+            else -> error("No handler for console command '${command.name}'")
         }
 
         output.println()
