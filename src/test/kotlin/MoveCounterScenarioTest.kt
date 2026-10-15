@@ -105,7 +105,7 @@ class MoveCounterScenarioTest {
     fun `a rejected shift does not change the count`() {
         val run = session("left 1\nleft 9\n")
 
-        assertTrue(run.output.contains("Incorrect row"))
+        assertTrue(run.output.contains("Row 9 is out of range for left."))
         assertEquals(listOf(0, 1, 1), run.consoleCounts)
     }
 

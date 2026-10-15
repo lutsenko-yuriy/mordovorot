@@ -79,46 +79,46 @@ class ViewImpl internal constructor(
             throw EndOfInputException(e)
         } ?: throw EndOfInputException()
         val parts = line.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
-        val command = parts.getOrNull(0)?.lowercase() ?: throw IllegalArgumentException("Incorrect input")
+        val verb = parts.getOrNull(0)?.lowercase() ?: throw ConsoleCommandException("Empty command", "empty")
+        val command = ConsoleCommands.find(verb)
+            ?: throw ConsoleCommandException("Unknown command: $verb", "unknown_command")
+        val typed = Typed(verb, command, parts)
 
-        when (command) {
-            "left" -> viewModel.shiftLeft(oneBasedIndexArg(parts))
-            "right" -> viewModel.shiftRight(oneBasedIndexArg(parts))
-            "up" -> viewModel.shiftUp(oneBasedIndexArg(parts))
-            "down" -> viewModel.shiftDown(oneBasedIndexArg(parts))
+        when (command.name) {
+            "left" -> typed.shift { viewModel.shiftLeft(it) }
+            "right" -> typed.shift { viewModel.shiftRight(it) }
+            "up" -> typed.shift { viewModel.shiftUp(it) }
+            "down" -> typed.shift { viewModel.shiftDown(it) }
 
             "reset" -> {
-                requireArgCount(parts, 1)
+                typed.requireArgCount(1)
                 viewModel.resetGame()
             }
 
             // Not subject to DISPLAY_OFFSET - a size isn't a row/column index (GH-44 WU3).
-            // Out-of-range/non-numeric values throw, same as shift's "Incorrect row"/"Incorrect
-            // column" - caught by play()'s generic Exception handler and shown as a message.
             "size" -> {
-                requireArgCount(parts, 2)
-                val size = parts[1].toIntOrNull() ?: throw IllegalArgumentException("Incorrect input")
-                viewModel.newGame(size, trigger = "command")
+                val size = typed.intArg()
+                typed.rangeChecked(size) { viewModel.newGame(size, trigger = "command") }
             }
 
-            "save" -> viewModel.saveGame(nameArg(parts))
-            "load" -> viewModel.loadGame(loadNameArg(parts))
+            "save" -> viewModel.saveGame(typed.nameArg())
+            "load" -> viewModel.loadGame(typed.loadNameArg())
 
-            "exit", "quit" -> {
-                requireArgCount(parts, 1)
+            "exit" -> {
+                typed.requireArgCount(1)
                 viewModel.exitGame()
             }
 
             "mouse" -> {
-                requireArgCount(parts, 1)
+                typed.requireArgCount(1)
                 modeSwitcher.switchTo(InputMode.MOUSE, trigger = "command")
             }
             "keyboard" -> {
-                requireArgCount(parts, 1)
+                typed.requireArgCount(1)
                 modeSwitcher.switchTo(InputMode.KEYBOARD, trigger = "command")
             }
 
-            else -> throw IllegalArgumentException("Incorrect input")
+            "help" -> help(typed)
         }
 
         output.println()
@@ -186,34 +186,65 @@ class ViewImpl internal constructor(
         null
     }
 
-    private fun oneBasedIndexArg(parts: List<String>): Int {
-        requireArgCount(parts, 2)
-        val value = parts[1].toIntOrNull() ?: throw IllegalArgumentException("Incorrect input")
-        return value - DISPLAY_OFFSET
+    /** `help` and `help <topic>` (GH-67): an unknown topic falls back to the full list. */
+    private fun help(typed: Typed) {
+        if (typed.parts.size > 2) throw typed.reject("Too many arguments for ${typed.verb}", "too_many_arguments")
+        val side = viewModel.squareSide()
+        val topic = typed.parts.getOrNull(1)?.let { ConsoleCommands.find(it) }
+        output.println(topic?.let { ConsoleCommands.helpLine(it, side) } ?: ConsoleCommands.helpText(side))
     }
 
-    /** Save/load file names are free-form text, not a 1-based index - no [DISPLAY_OFFSET]
-     *  translation applies here. */
-    private fun nameArg(parts: List<String>): String {
-        requireArgCount(parts, 2)
-        return parts[1]
-    }
+    /** One parsed console line: [verb] lowercased as typed, [command] its table entry. Every
+     *  rejection is a [ConsoleCommandException] naming the problem plus the usage line (GH-67). */
+    private inner class Typed(val verb: String, val command: ConsoleCommand, val parts: List<String>) {
 
-    /** [nameArg], but also strips a trailing `(NxN)` token - what `viewmodel.SaveInfo.display`
-     *  (GH-44 WU4) now appends when a save's size is shown in the `load`-not-found message, so
-     *  typing back exactly what's shown (`load foo (5x5)`) loads `foo` instead of failing with
-     *  "Incorrect input" (round 2 audit finding on PR #54, same class of issue
-     *  [viewmodel.ViewModelImpl.restoreOnStartup]'s own match already handles). A real save name
-     *  containing a literal trailing `(NxN)`-shaped token is not reachable through any in-app
-     *  save path - every one rejects whitespace in a name
-     *  ([viewmodel.ViewModelImpl.promptForValidSaveName], `view.tui.TuiView.handleToolbarSave`). */
-    private fun loadNameArg(parts: List<String>): String {
-        if (parts.size == 3 && Regex("""\(\d+x\d+\)""").matches(parts[2])) return parts[1]
-        return nameArg(parts)
-    }
+        fun reject(problem: String, reason: String) = ConsoleCommandException(
+            "$problem. Usage: ${ConsoleCommands.usage(verb, viewModel.squareSide())}",
+            reason,
+            command.name,
+        )
 
-    private fun requireArgCount(parts: List<String>, expected: Int) {
-        if (parts.size != expected) throw IllegalArgumentException("Incorrect input")
+        fun requireArgCount(expected: Int) {
+            if (parts.size < expected) throw reject("Missing ${command.arg.missing} for $verb", "missing_argument")
+            if (parts.size > expected) throw reject("Too many arguments for $verb", "too_many_arguments")
+        }
+
+        fun intArg(): Int {
+            requireArgCount(2)
+            return parts[1].toIntOrNull() ?: throw reject("${command.arg.label} must be a number for $verb", "not_a_number")
+        }
+
+        /** The range check stays in board_model (GH-10) - its rejection is only reworded here. */
+        inline fun rangeChecked(value: Int, action: () -> Unit) {
+            try {
+                action()
+            } catch (e: IllegalArgumentException) {
+                throw reject("${command.arg.label} $value is out of range for $verb", "out_of_range")
+            }
+        }
+
+        fun shift(action: (Int) -> Unit) {
+            val value = intArg()
+            rangeChecked(value) { action(value - DISPLAY_OFFSET) }
+        }
+
+        /** Save/load file names are free-form text, not a 1-based index - no [DISPLAY_OFFSET]
+         *  translation applies here. */
+        fun nameArg(): String {
+            requireArgCount(2)
+            return parts[1]
+        }
+
+        /** [nameArg], but also strips a trailing `(NxN)` token - what `viewmodel.SaveInfo.display`
+         *  (GH-44 WU4) appends when a save's size is shown in the `load`-not-found message, so
+         *  typing back exactly what's shown (`load foo (5x5)`) loads `foo` (round 2 audit finding
+         *  on PR #54). A real save name with a trailing `(NxN)`-shaped token is unreachable: every
+         *  save path rejects whitespace in a name ([viewmodel.ViewModelImpl.promptForValidSaveName],
+         *  `view.tui.TuiView.handleToolbarSave`). */
+        fun loadNameArg(): String {
+            if (parts.size == 3 && Regex("""\(\d+x\d+\)""").matches(parts[2])) return parts[1]
+            return nameArg()
+        }
     }
 
     /** The console session: offers the startup restore prompt, then loops `displayBoard` plus

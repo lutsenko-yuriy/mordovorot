@@ -170,7 +170,7 @@ class ViewImplPlayTest {
 
         view.play()
 
-        assertTrue(output.toString().contains("Incorrect input"))
+        assertTrue(output.toString().contains("Unknown command: banana"))
         assertEquals(listOf("shiftLeft(0)"), fakeBoard.calls)
     }
 
@@ -186,7 +186,7 @@ class ViewImplPlayTest {
 
         view.play()
 
-        assertTrue(output.toString().contains("Board size must be between 3 and 5, got 9"))
+        assertTrue(output.toString().contains("Size 9 is out of range for size. Usage: size <3-5>"))
         // The loop kept going past the rejected size - the subsequent "left 1" still reached
         // the board, at whatever size it was left at.
         assertEquals(listOf("shiftLeft(0)"), fakeBoard.calls)
@@ -199,7 +199,7 @@ class ViewImplPlayTest {
 
         view.play()
 
-        assertTrue(output.toString().contains("Incorrect input"))
+        assertTrue(output.toString().contains("Row must be a number for left. Usage: left <row 1-4>"))
     }
 
     /** Play-loop-specific half of `exit, save confirmed but the save itself fails` - "does not
