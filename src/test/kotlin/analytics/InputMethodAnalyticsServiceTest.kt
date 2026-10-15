@@ -29,7 +29,7 @@ class InputMethodAnalyticsServiceTest {
     @Test
     fun `preserves all other properties already present`() {
         val recording = RecordingAnalyticsService()
-        val analytics = InputMethodAnalyticsService(recording, inputMethod = "console")
+        val analytics = InputMethodAnalyticsService(recording, inputMethod = "keyboard")
 
         analytics.track("load_command_used", mapOf("trigger" to "command", "result" to "success"))
 
@@ -37,7 +37,7 @@ class InputMethodAnalyticsServiceTest {
             listOf(
                 Event(
                     "load_command_used",
-                    mapOf("trigger" to "command", "result" to "success", "input_method" to "console"),
+                    mapOf("trigger" to "command", "result" to "success", "input_method" to "keyboard"),
                 ),
             ),
             recording.events,
@@ -49,10 +49,10 @@ class InputMethodAnalyticsServiceTest {
         val recording = RecordingAnalyticsService()
         val analytics = InputMethodAnalyticsService(recording, inputMethod = "mouse")
 
-        analytics.track("some_event", mapOf("input_method" to "console"))
+        analytics.track("some_event", mapOf("input_method" to "keyboard"))
 
         assertEquals(
-            listOf(Event("some_event", mapOf("input_method" to "console"))),
+            listOf(Event("some_event", mapOf("input_method" to "keyboard"))),
             recording.events,
         )
     }

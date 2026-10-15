@@ -48,16 +48,6 @@ class ViewModelDelegationTest {
     }
 
     @Test
-    fun `resetGame delegates to the board`() {
-        val board = FakeBoardModel()
-        val viewModel = ViewModelImpl(board)
-
-        viewModel.resetGame()
-
-        assertEquals(listOf("resetGame"), board.calls)
-    }
-
-    @Test
     fun `exceptions from the board propagate unchanged`() {
         val board = FakeBoardModel()
         board.shiftLeftException = IllegalArgumentException("Incorrect row")

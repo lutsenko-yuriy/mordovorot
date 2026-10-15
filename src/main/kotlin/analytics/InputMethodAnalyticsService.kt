@@ -1,7 +1,7 @@
 package analytics
 
 /**
- * Decorates another [AnalyticsService], adding an `input_method` (`console`/`mouse`/`keyboard`)
+ * Decorates another [AnalyticsService], adding an `input_method` (`mouse`/`keyboard`)
  * property to every forwarded event - lets [viewmodel.ViewModelImpl]'s existing events be
  * split by launch mode without touching its `track(...)` call sites.
  */

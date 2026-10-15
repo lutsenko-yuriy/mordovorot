@@ -9,11 +9,8 @@ import viewmodel.display
 
 /**
  * Drains a [ViewModel]'s [ViewModel.uiRequests] and answers from scripted lists - the
- * viewModel-test replacement for [FakeView]'s four prompt methods (GH-42 WU2), which moved off
- * [view.View] onto [UiRequest] once [viewmodel.ViewModelImpl] started raising requests instead
- * of calling a `View` directly. Keeps the same recording fields and "ran out of scripted
- * responses" `IllegalStateException` bound as the old `FakeView`, so no test can hang on an
- * under-scripted response list.
+ * viewModel-test stand-in for a View (GH-42 WU2). Throws `IllegalStateException` once a
+ * response list runs out, so no test can hang on an under-scripted response list.
  */
 class FakeViewModelUi(
     private val confirmRestoreResponses: MutableList<Boolean> = mutableListOf(),
@@ -21,7 +18,6 @@ class FakeViewModelUi(
     private val confirmSaveBeforeExitResponses: MutableList<Boolean> = mutableListOf(),
     private val promptSaveNameResponses: MutableList<String?> = mutableListOf(),
     private val chooseBoardSizeResponses: MutableList<Int?> = mutableListOf(),
-    private val confirmPlayAgainResponses: MutableList<Boolean> = mutableListOf(),
     private val resolveUnsolvableSaveResponses: MutableList<UnsolvableSaveChoice> = mutableListOf(),
 ) {
 
@@ -43,9 +39,6 @@ class FakeViewModelUi(
         private set
 
     var promptSaveNameCallCount = 0
-        private set
-
-    var confirmPlayAgainCallCount = 0
         private set
 
     /** Runs [block] against [viewModel] while concurrently draining its [ViewModel.uiRequests] -
@@ -87,10 +80,6 @@ class FakeViewModelUi(
                 chooseBoardSizeCalls.add(request.current)
                 chooseBoardSizeOrigins.add(request.origin)
                 request.respond(nextOrThrow(chooseBoardSizeResponses, "chooseBoardSize"))
-            }
-            is UiRequest.ConfirmPlayAgain -> {
-                confirmPlayAgainCallCount++
-                request.respond(nextOrThrow(confirmPlayAgainResponses, "confirmPlayAgain"))
             }
             is UiRequest.ResolveUnsolvableSave -> {
                 resolveUnsolvableSaveCalls.add(request.save.display() to request.atStartup)

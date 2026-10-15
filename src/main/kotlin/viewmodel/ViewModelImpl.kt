@@ -13,7 +13,7 @@ import storage.SavedBoard
 
 /** The one [ViewModel] implementation (GH-42 WU3, collapsing GH-23's `BaseViewModel` +
  *  `ConsoleViewModelImpl` + `TuiViewModelImpl` split): owns board/saves/analytics wiring and
- *  every domain-mutation flow - shift/reset/save/load/exit/restoreOnStartup plus the read-only
+ *  every domain-mutation flow - shift/new game/save/load/exit/restoreOnStartup plus the read-only
  *  query surface. Holds no `View` reference; talks to whichever View is driving it through
  *  [uiRequests] instead of a constructor-injected dependency. */
 class ViewModelImpl(
@@ -38,7 +38,7 @@ class ViewModelImpl(
 
     /** Raises [request] on [uiRequests] and suspends until the View responds. The View must
      *  never call back into a request-raising viewModel method (`saveGame`/`loadGame`/`exitGame`/
-     *  `restoreOnStartup`/`offerPlayAgain`) from inside its own request handler - doing so deadlocks, since the
+     *  `restoreOnStartup`) from inside its own request handler - doing so deadlocks, since the
      *  handler is `ask`'s only consumer and would be busy with the request that triggered the
      *  callback. */
     private suspend fun <R> ask(request: UiRequest<R>): R {
@@ -70,8 +70,6 @@ class ViewModelImpl(
         }
     }
 
-    override fun resetGame() = board.resetGame()
-
     override fun newGame(size: Int, trigger: String) {
         board.newGame(size)
         analytics.track("new_game_size_selected", mapOf("size" to size, "trigger" to trigger))
@@ -101,7 +99,7 @@ class ViewModelImpl(
         loadGame(name, trigger = "command")
     }
 
-    /** [trigger] is `"command"` for the mid-game `load` console command, or `"startup_prompt"`
+    /** [trigger] is `"command"` for a mid-game load (toolbar Load / F6), or `"startup_prompt"`
      *  when called from [restoreOnStartup] - see `load_command_used` in docs/ANALYTICS_EVENTS.md.
      *  Returns whether the board was actually restored, so [restoreOnStartup] can report an
      *  accurate `startup_restore_decision` instead of assuming success (audit on PR #14: a
@@ -186,7 +184,7 @@ class ViewModelImpl(
     }
 
     /**
-     * Ends the current session on demand (the `exit`/`quit` command), asking whether to
+     * Ends the current session on demand (toolbar Exit), asking whether to
      * save first. Declining, or a blank/EOF name, ends the session unsaved. A save *attempt*
      * that fails does **not** end the session (see below) - [exitGame] can return normally
      * instead of always throwing [ExitRequestedException].
@@ -222,26 +220,14 @@ class ViewModelImpl(
         throw ExitRequestedException()
     }
 
-    /** On accept, Enter/EOF at the size prompt still starts a fresh game at the current size -
-     *  unlike the startup prompt, where it keeps the board as is. */
-    override suspend fun offerPlayAgain() {
-        val moves = board.moveCount
-        showMessage("Congratulations, you solved this puzzle in $moves ${if (moves == 1) "move" else "moves"}!")
-        val accepted = ask(UiRequest.ConfirmPlayAgain())
-        analytics.track("play_again_decision", mapOf("decision" to if (accepted) "new_game" else "quit"))
-        if (!accepted) throw ExitRequestedException()
-        newGame(ask(UiRequest.ChooseBoardSize(board.squareSide, origin = "play_again")) ?: board.squareSide, trigger = "play_again")
-    }
-
-    /** Re-prompts until [UiRequest.PromptSaveName] returns a name usable by the `save`/`load`
-     *  commands, or `null` on a blank answer or EOF, meaning the user doesn't want to save.
+    /** Re-prompts until [UiRequest.PromptSaveName] returns a usable save name, or `null` on a blank answer or EOF, meaning the user doesn't want to save.
      *  Re-prompting on *any* invalid name (rather than treating it as "don't save" or letting
      *  it fall through to [saveGame]'s failure path) avoids silently discarding an explicit
      *  save request over a naming mistake, and keeps `save_command_used {result: error}`
      *  meaning "the save attempt failed", not "the user mistyped" (audit rounds 2 and 3 on
      *  PR #15). Checks both:
-     *  - no whitespace - `save`/`load`'s command-line parsing splits on it, see
-     *    [view.ViewImpl.nameArg], so a name with spaces could never be `load`ed back;
+     *  - no whitespace - a rule kept from the removed console's space-split `load <name>`
+     *    (GH-79 D6);
      *  - [SaveRepository.isValidName] - blank, a path separator, or `..` would make
      *    [saveGame] throw, which [promptForValidSaveName]'s caller must not confuse with a
      *    genuine save failure (e.g. a read-only `saves/` directory).
@@ -314,26 +300,9 @@ class ViewModelImpl(
                 val nameToRestore = if (saveInfos.size == 1) {
                     saveInfos[0].name.takeIf { ask(UiRequest.ConfirmRestore(saveInfos[0])) }
                 } else {
-                    var chosen: String? = null
-                    while (chosen == null) {
-                        val typed = ask(UiRequest.ChooseSaveToRestore(saveInfos)) ?: break
-                        // Matches the bare name, "name (NxN)", or the full display form with
-                        // the unsolvable mark (GH-44 WU4, audit finding on PR #54; GH-74) - a user typing back
-                        // exactly what they see must not get stuck re-prompted forever. Exact
-                        // name match tried first - only a hand-placed save file with a space in
-                        // its name (no in-app save path allows one) could make a display-form
-                        // match ambiguous, and even then this order picks the save whose actual
-                        // name was typed (round 2 audit finding on PR #54).
-                        val match = saveInfos.firstOrNull { it.name == typed }
-                            ?: saveInfos.firstOrNull { it.displayWithSize() == typed }
-                            ?: saveInfos.firstOrNull { it.display() == typed }
-                        if (match != null) {
-                            chosen = match.name
-                        } else {
-                            showMessage("No save named '$typed'. Available saves: ${saveInfos.joinToString(", ") { it.display() }}")
-                        }
-                    }
-                    chosen
+                    // The TUI answers with a listed name; anything else counts as declined (GH-79).
+                    val chosen = ask(UiRequest.ChooseSaveToRestore(saveInfos))
+                    saveInfos.firstOrNull { it.name == chosen }?.name
                 }
 
                 // loadGame can still fail here (a save deleted or corrupted since listSaves()

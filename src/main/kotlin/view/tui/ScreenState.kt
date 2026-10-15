@@ -37,7 +37,7 @@ data class ScreenState(
      *  carried on [ScreenState] rather than decided independently by each construction site. */
     val toolbarShortcuts: Boolean = false,
     /** The other input modes offered on the toolbar (GH-30) - never the mode the view is
-     *  already in. Empty in console mode (no toolbar at all); set by [TuiInput.decorateBoard]
+     *  already in. Set by [TuiInput.decorateBoard]
      *  ([MouseInput]'s WU3, `KeyboardInput`'s WU4), never by [forBoard] itself, same as
      *  [cursor]/[controlsHint]. */
     val modeButtons: List<InputMode> = emptyList(),

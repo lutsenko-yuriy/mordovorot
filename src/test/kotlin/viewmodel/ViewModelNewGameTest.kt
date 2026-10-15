@@ -16,7 +16,7 @@ class ViewModelNewGameTest {
         val board = FakeBoardModel()
         val viewModel = ViewModelImpl(board, analytics = RecordingAnalyticsService())
 
-        viewModel.newGame(5, trigger = "command")
+        viewModel.newGame(5, trigger = "toolbar")
 
         assertEquals(listOf("newGame(5)"), board.calls)
     }
@@ -36,26 +36,12 @@ class ViewModelNewGameTest {
     }
 
     @Test
-    fun `trigger defaults to command`() {
-        val board = FakeBoardModel()
-        val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, analytics = analytics)
-
-        viewModel.newGame(3)
-
-        assertEquals(
-            listOf(RecordingAnalyticsService.Event("new_game_size_selected", mapOf("size" to 3, "trigger" to "command"))),
-            analytics.events,
-        )
-    }
-
-    @Test
     fun `an out-of-range size throws and tracks nothing`() {
         val board = FakeBoardModel().apply { newGameException = IllegalArgumentException("Board size must be between 3 and 5, got 9") }
         val analytics = RecordingAnalyticsService()
         val viewModel = ViewModelImpl(board, analytics = analytics)
 
-        assertFailsWith<IllegalArgumentException> { viewModel.newGame(9) }
+        assertFailsWith<IllegalArgumentException> { viewModel.newGame(9, trigger = "toolbar") }
 
         assertEquals(emptyList(), analytics.events)
     }

@@ -2,12 +2,9 @@ package viewmodel
 
 import kotlinx.coroutines.channels.ReceiveChannel
 
-/** The one viewModel surface both `view.ViewImpl` and `view.tui.TuiView` depend on (GH-42 WU3) -
- *  shift/reset/save/load/exit plus the read-only query surface (`listSaves`/`saveExists`/
- *  `isSolved`/`boardState`/`squareSide`) the TUI needs to render/re-render outside any console
- *  loop. Superseded GH-23's `ConsoleViewModel`/`TuiViewModel` split: once `ConsoleViewModelImpl.play()`'s
- *  console loop moved into `ViewImpl` (hard problem 1 on the plan comment on GH-42), both UIs
- *  needed the identical surface, so the split no longer described anything real. */
+/** The viewModel surface `view.tui.TuiView` depends on (GH-42 WU3) - shift/new game/save/load/
+ *  exit plus the read-only query surface (`listSaves`/`saveExists`/`isSolved`/`boardState`/
+ *  `squareSide`) the TUI needs to render/re-render. */
 interface ViewModel {
 
     /** The UI interactions this viewModel is waiting on, in emission order (GH-42 WU2). Exactly
@@ -21,14 +18,11 @@ interface ViewModel {
     fun shiftUp(col: Int)
     fun shiftDown(col: Int)
 
-    fun resetGame()
-
     /** Starts a fresh shuffled game at [size] (GH-44) - throws (matching `shiftLeft`'s
      *  "Incorrect row" contract) and tracks nothing if [size] is out of range, otherwise tracks
-     *  `new_game_size_selected {size, trigger}`. [trigger] is `"startup_prompt"`, `"command"`
-     *  (`size <N>`), or `"toolbar"` (`[ New ]` -> size-picker dialog) - see
-     *  docs/ANALYTICS_EVENTS.md. */
-    fun newGame(size: Int, trigger: String = "command")
+     *  `new_game_size_selected {size, trigger}`. [trigger] is `"startup_prompt"`, `"toolbar"`
+     *  (`[ New ]` -> size-picker dialog), or `"unsolvable_save"` - see docs/ANALYTICS_EVENTS.md. */
+    fun newGame(size: Int, trigger: String)
 
     /** Returns whether the save actually succeeded - see [viewmodel.ViewModelImpl.exitGame],
      *  which needs the real outcome rather than assuming success. `suspend` (GH-42): asks the
@@ -43,11 +37,6 @@ interface ViewModel {
      *  leaving the session running, if the user asked to save but the save attempt failed -
      *  see [viewmodel.ViewModelImpl.exitGame]. */
     suspend fun exitGame()
-
-    /** The console's solved-state flow (GH-66): Congratulations message, then `Start a new
-     *  game?`. Returns normally once a fresh game has started; throws [ExitRequestedException]
-     *  on decline. The TUI never calls it - it has its own Congratulations screen. */
-    suspend fun offerPlayAgain()
 
     /** Saves with their board size (GH-44 WU4), sorted by name; empty when nothing has been
      *  saved yet, or on a storage error - lets the mouse-driven Load dialog (GH-3) show what's
@@ -65,8 +54,7 @@ interface ViewModel {
     fun isSolved(): Boolean
 
     /** Offers to restore a previous save at startup (0/1/2+ saves) before play begins. Public so
-     *  each View can run it ahead of its own event loop (`view.tui.TuiView`, GH-3;
-     *  `view.ViewImpl.play`, GH-42 WU3). Throws [ExitRequestedException] when Exit is chosen for
+     *  each View can run it ahead of its own event loop (`view.tui.TuiView`, GH-3). Throws [ExitRequestedException] when Exit is chosen for
      *  an unsolvable save (GH-74) - the caller must end the session. */
     suspend fun restoreOnStartup()
 

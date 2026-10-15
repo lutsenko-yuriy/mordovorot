@@ -70,11 +70,9 @@ class TuiViewDialogTest {
     }
 
     @Test
-    fun `a toolbar Save with a whitespace name is rejected instead of saved - console load could never split it back out`(): Unit = runBlocking {
+    fun `a toolbar Save with a whitespace name is rejected instead of saved - same rule as the exit flow`(): Unit = runBlocking {
         // Round 5 audit finding on PR #24: the exit flow's promptForValidSaveName rejects a
-        // whitespace name specifically because console mode's save/load command parsing splits
-        // on it (view.ViewImpl.nameArg) - a name saved this way could never be `load`ed back
-        // from the console. Toolbar Save skipped that same check entirely.
+        // whitespace name (GH-79 D6); toolbar Save skipped that same check entirely.
         val viewModel = FakeViewModel()
         val (saveX, saveY) = boardLayout(viewModel).saveButtonPosition()
         val dialog = Dialog(Dialog.Kind.SAVE, "Save game", buttons = listOf(DialogButtonSpec("save", "Save"), DialogButtonSpec("cancel", "Cancel")))

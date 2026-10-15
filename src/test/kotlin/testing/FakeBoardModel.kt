@@ -47,8 +47,7 @@ class FakeBoardModel(
         // Mirrors BoardImpl's own validation (audit finding on PR #46), including squareSide now
         // deriving from state's own length rather than requiring a match (GH-44 WU5) - without the
         // perfect-square check, a mis-sized fixture leaves a fake board whose array doesn't match
-        // squareSide, and ViewImpl.play()'s displayBoard call throws every iteration with nothing
-        // consuming input to ever reach EOF - an unbounded loop instead of a readable test failure.
+        // squareSide - a confusing failure far from the fixture instead of a readable one here.
         val restoredSide = Math.sqrt(state.size.toDouble()).toInt()
         require(restoredSide * restoredSide == state.size) { "Board state size must be a perfect square, got ${state.size}" }
         require(state.toSet() == (0 until state.size).toSet()) { "Board state must contain each of ${state.size} tile values exactly once" }

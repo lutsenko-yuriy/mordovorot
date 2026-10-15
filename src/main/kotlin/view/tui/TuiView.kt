@@ -138,8 +138,6 @@ class TuiView internal constructor(
             is UiRequest.ConfirmSaveBeforeExit -> request.respond(confirmSaveBeforeExit())
             is UiRequest.PromptSaveName -> request.respond(promptSaveName())
             is UiRequest.ChooseBoardSize -> request.respond(runSizeDialog(request.origin))
-            // Never raised here - the TUI has its own Congratulations screen (GH-66).
-            is UiRequest.ConfirmPlayAgain -> request.respond(false)
             is UiRequest.ResolveUnsolvableSave ->
                 request.respond(runUnsolvableDialog(request.save, if (request.atStartup) "startup" else "toolbar"))
         }
@@ -183,8 +181,8 @@ class TuiView internal constructor(
     private suspend fun handleToolbarSave() {
         when (val outcome = runSaveDialog("toolbar")) {
             is SaveOutcome.Confirm -> {
-                // Same no-whitespace rule as the exit flow's promptForValidSaveName (kept from
-                // console mode, GH-79 D6) - toolbar Save calls saveGame directly, bypassing that
+                // Same no-whitespace rule as the exit flow's promptForValidSaveName (GH-79 D6) -
+                // toolbar Save calls saveGame directly, bypassing that
                 // validation (audit round 5 on PR #24).
                 if (outcome.name.any { it.isWhitespace() }) {
                     showMessage("'${outcome.name}' isn't a usable save name (no spaces) - not saved.")
@@ -430,8 +428,7 @@ class TuiView internal constructor(
     }
 
     /** The startup restore prompt for exactly one save - the same Load-shaped modal as any
-     *  other save count (per the plan, this is where the console's 1-save yes/no split
-     *  disappears in the TUI). */
+     *  other save count. */
     internal suspend fun confirmRestore(save: SaveInfo): Boolean =
         runLoadDialog("Restore a saved game?", "startup", preloadedSaves = listOf(save)) is LoadOutcome.Confirm
 
@@ -440,7 +437,7 @@ class TuiView internal constructor(
 
     /** Consumes the answer the toolbar Exit dialog already collected - see [pendingExitAnswer].
      *  With none (an Exit from GH-74's unsolvable-save dialog), asks here instead; end of input
-     *  declines, like the console's EOF. */
+     *  declines. */
     internal suspend fun confirmSaveBeforeExit(): Boolean {
         val answer = pendingExitAnswer ?: runExitDialog(cancellable = false) ?: false
         pendingExitAnswer = null
