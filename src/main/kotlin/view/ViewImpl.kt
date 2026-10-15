@@ -263,11 +263,13 @@ class ViewImpl internal constructor(
         /** [nameArg], but also strips a trailing `(NxN)` token - what `viewmodel.SaveInfo.display`
          *  (GH-44 WU4) appends when a save's size is shown in the `load`-not-found message, so
          *  typing back exactly what's shown (`load foo (5x5)`) loads `foo` (round 2 audit finding
-         *  on PR #54). A real save name with a trailing `(NxN)`-shaped token is unreachable: every
-         *  save path rejects whitespace in a name ([viewmodel.ViewModelImpl.promptForValidSaveName],
+         *  on PR #54), and the same with a further ` unsolvable` mark (GH-74). A real save name
+         *  with a trailing `(NxN)`-shaped token is unreachable: every save path rejects whitespace
+         *  in a name ([viewmodel.ViewModelImpl.promptForValidSaveName],
          *  `view.tui.TuiView.handleToolbarSave`). */
         fun loadNameArg(): String {
-            if (parts.size == 3 && Regex("""\(\d+x\d+\)""").matches(parts[2])) return parts[1]
+            val sized = parts.size == 3 || (parts.size == 4 && parts[3] == "unsolvable")
+            if (sized && Regex("""\(\d+x\d+\)""").matches(parts[2])) return parts[1]
             return nameArg()
         }
     }

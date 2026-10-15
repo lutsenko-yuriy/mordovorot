@@ -130,6 +130,26 @@ class ViewImplCommandTest {
         assertEquals(listOf("loadGame(foo)"), viewModel.calls)
     }
 
+    /** GH-74: the not-found message lists "foo (5x5) unsolvable" - typing that back loads `foo`. */
+    @Test
+    fun `load command strips a trailing size suffix plus unsolvable mark`(): Unit = runBlocking {
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("load foo (5x5) unsolvable\n", viewModel)
+
+        view.processCommand()
+
+        assertEquals(listOf("loadGame(foo)"), viewModel.calls)
+    }
+
+    @Test
+    fun `load command with an unsolvable mark but no size suffix is rejected`(): Unit = runBlocking {
+        val viewModel = FakeViewModel()
+        val (view, _) = viewWith("load foo unsolvable\n", viewModel)
+
+        assertFailsWith<IllegalArgumentException> { view.processCommand() }
+        assertEquals(emptyList(), viewModel.calls)
+    }
+
     @Test
     fun `load command with a size suffix that doesn't match the NxN shape is rejected, not silently truncated`(): Unit = runBlocking {
         val viewModel = FakeViewModel()
