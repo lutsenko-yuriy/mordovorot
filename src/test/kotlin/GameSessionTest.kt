@@ -234,4 +234,23 @@ class GameSessionTest {
         assertIs<ViewImpl>(view)
         assertIs<ModeSwitcherImpl>(view.modeSwitcher)
     }
+
+    @Test
+    fun `the production console View tracks through the console-decorated analytics, GH-67`(): Unit = runBlocking {
+        val analytics = RecordingAnalyticsService()
+        val view = defaultView(
+            InputMode.CONSOLE,
+            FakeBoardModel(),
+            FakeSaveRepository(),
+            analytics,
+            startupRestoreDone = true,
+            sizeChosenAtLaunch = false,
+            terminalFactory = { FakeTerminal() },
+        )
+
+        assertIs<ViewImpl>(view)
+        view.analytics.track("probe")
+
+        assertEquals(listOf(mapOf("input_method" to "console")), analytics.events.map { it.properties })
+    }
 }

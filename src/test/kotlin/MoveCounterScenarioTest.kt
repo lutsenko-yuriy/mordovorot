@@ -103,7 +103,9 @@ class MoveCounterScenarioTest {
 
     @Test
     fun `a rejected shift does not change the count`() {
-        val run = session("left 1\nleft 9\n")
+        // A rejected command hides the board until the next one (GH-67); the second left 1
+        // continues the same move.
+        val run = session("left 1\nleft 9\nleft 1\n")
 
         assertTrue(run.output.contains("Row 9 is out of range for left."))
         assertEquals(listOf(0, 1, 1), run.consoleCounts)

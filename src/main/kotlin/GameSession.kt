@@ -101,7 +101,7 @@ internal fun defaultView(
     val modeSwitcherFactory = { v: View -> ModeSwitcherImpl(view = v, currentMode = mode, analytics = analytics) }
     return when (mode) {
         InputMode.CONSOLE ->
-            ViewImpl.create(modeSwitcherFactory = modeSwitcherFactory, viewModel = viewModel)
+            ViewImpl.create(modeSwitcherFactory = modeSwitcherFactory, viewModel = viewModel, analytics = decoratedAnalytics)
         InputMode.MOUSE ->
             TuiView.create(
                 terminalFactory(),

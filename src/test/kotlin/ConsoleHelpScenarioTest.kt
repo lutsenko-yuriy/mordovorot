@@ -1,79 +1,191 @@
+import analytics.AnalyticsService
+import analytics.InputMethodAnalyticsService
+import board_model.BoardImpl
+import kotlinx.coroutines.runBlocking
+import storage.FileSaveRepository
+import testing.FakeTerminal
+import testing.RecordingAnalyticsService
+import view.ConsoleCommands
+import view.View
+import view.ViewImpl
+import view.tui.KeyboardInput
+import view.tui.TerminalEvent
+import view.tui.TerminalSize
+import view.tui.TuiView
+import viewmodel.ModeSwitcherImpl
+import viewmodel.ViewModelImpl
+import java.io.BufferedReader
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
+import java.io.StringReader
+import kotlin.io.path.createTempDirectory
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /** GH-67 scenarios: console `help` command, startup hint and specific error messages. Real
  *  BoardImpl + ViewModelImpl + FileSaveRepository (temp dir) driven through the console view via
  *  GameSession, like [SolvedConsoleScenarioTest]; 4x4 with the size chosen at launch. */
 class ConsoleHelpScenarioTest {
 
+    private val nl = System.lineSeparator()
+    private val hint = ConsoleCommands.HELP_HINT
+
+    /** 4x4, far from solved - no scripted shift below can solve it by accident. */
+    private val scrambled = IntArray(16) { 15 - it }
+
+    private class Run(val output: String, val board: BoardImpl, val analytics: RecordingAnalyticsService) {
+        /** Every `Moves: N` the console printed, in order - one per board shown. */
+        val boardCounts: List<Int> get() = Regex("Moves: (\\d+)").findAll(output).map { it.groupValues[1].toInt() }.toList()
+
+        fun events(name: String) = analytics.events.filter { it.name == name }.map { it.properties }
+    }
+
+    private fun session(input: String, events: List<TerminalEvent> = emptyList()): Run = runBlocking {
+        val output = ByteArrayOutputStream()
+        val analytics = RecordingAnalyticsService()
+        val board = BoardImpl(4).apply { restoreState(scrambled) }
+        val reader = BufferedReader(StringReader(input))
+        val terminal = FakeTerminal(events.toMutableList(), TerminalSize(columns = 80, rows = 40))
+        GameSession(
+            initialMode = InputMode.CONSOLE,
+            board = board,
+            saves = FileSaveRepository(createTempDirectory("mordovorot-gh67")),
+            analytics = analytics,
+            sizeChosenAtLaunch = true,
+            buildView = { m, b, s, a: AnalyticsService, restoreDone, sizeAtLaunch ->
+                val decorated = InputMethodAnalyticsService(a, m.name.lowercase())
+                val viewModel = ViewModelImpl(b, s, decorated, restoreDone, sizeAtLaunch)
+                val switcher = { v: View -> ModeSwitcherImpl(v, m, a, hasInteractiveTerminal = { true }) }
+                when (m) {
+                    InputMode.CONSOLE -> ViewImpl.create(reader, PrintStream(output), switcher, viewModel, decorated)
+                    else -> TuiView.create(terminal, decorated, input = KeyboardInput(), modeSwitcherFactory = switcher, viewModel = viewModel)
+                }
+            },
+        ).run()
+        Run(output.toString(), board, analytics)
+    }
+
+    private fun hintCount(output: String) = Regex(Regex.escape(hint)).findAll(output).count()
+
+    private fun rejected(command: String?, reason: String): Map<String, Any?> =
+        buildMap {
+            put("reason", reason)
+            if (command != null) put("command", command)
+            put("input_method", "console")
+        }
+
     @Test
     fun `startup prints the help hint right before the first board`() {
-        // TODO: 1. Run a session with no input (immediate EOF)
-        // TODO: 2. Assert output starts with "Enter help to list all the commands", then the first board
-        // TODO: 3. Assert output does not contain "Commands:"
+        val run = session("")
+
+        assertTrue(run.output.startsWith("$hint${nl}16\t15\t14\t13\t"), run.output)
+        assertFalse(run.output.contains("Commands:"))
     }
 
     @Test
     fun `help lists every command in place of the board`() {
-        // TODO: 1. Input "help", then "left 1"
-        // TODO: 2. Assert the output after the first board is exactly the approved 4x4 command list, with no board after it
-        // TODO: 3. Assert the board and "Moves: 1" are printed after "left 1"
-        // TODO: 4. Assert help_command_used fired with scope=all
+        val run = session("help\nleft 1\n")
+
+        assertTrue(run.output.contains("Moves: 0$nl$nl${ConsoleCommands.helpText(4)}$nl"), run.output)
+        assertEquals(listOf(0, 1), run.boardCounts)
+        assertEquals(listOf(mapOf("scope" to "all", "input_method" to "console")), run.events("help_command_used"))
     }
 
     @Test
     fun `help with a command shows only that command's line`() {
-        // TODO: 1. Input "help left", then "help quit"
-        // TODO: 2. Assert "help left" prints only "  left <row 1-4>       - shift a row left"
-        // TODO: 3. Assert "help quit" prints only the "exit, quit" line
-        // TODO: 4. Assert help_command_used fired twice: scope=command with command=left, then command=exit
+        val run = session("help left\nhelp quit\n")
+
+        assertTrue(run.output.contains("Moves: 0$nl$nl  left <row 1-4>       - shift a row left$nl$nl"), run.output)
+        assertTrue(run.output.endsWith("  exit, quit           - quit, offering to save first$nl$nl"), run.output)
+        assertFalse(run.output.contains("Commands:"))
+        assertEquals(
+            listOf(
+                mapOf("scope" to "command", "command" to "left", "input_method" to "console"),
+                mapOf("scope" to "command", "command" to "exit", "input_method" to "console"),
+            ),
+            run.events("help_command_used"),
+        )
     }
 
     @Test
     fun `help with an unknown topic shows the full list`() {
-        // TODO: 1. Input "help lft"
-        // TODO: 2. Assert the output is the full list, with no "Unknown command" line
-        // TODO: 3. Assert help_command_used fired with scope=unknown_topic, no command property, and "lft" in no property
+        val run = session("help lft\n")
+
+        assertTrue(run.output.endsWith("Moves: 0$nl$nl${ConsoleCommands.helpText(4)}$nl$nl"), run.output)
+        assertFalse(run.output.contains("Unknown command"))
+        assertEquals(listOf(mapOf("scope" to "unknown_topic", "input_method" to "console")), run.events("help_command_used"))
     }
 
     @Test
     fun `unknown command shows the error and hint without the board`() {
-        // TODO: 1. Input "lft 1"
-        // TODO: 2. Assert "Unknown command: lft" then the hint are printed, with no board after them
-        // TODO: 3. Assert console_command_rejected fired with reason=unknown_command, no command property, and "lft" in no property
+        val run = session("lft 1\nleft 1\n")
+
+        assertTrue(run.output.contains("Moves: 0$nl${nl}Unknown command: lft$nl$hint$nl$nl"), run.output)
+        assertEquals(listOf(0, 1), run.boardCounts)
+        assertEquals(listOf(rejected(null, "unknown_command")), run.events("console_command_rejected"))
     }
 
     @Test
     fun `empty line shows Empty command and the hint`() {
-        // TODO: 1. Input an empty line
-        // TODO: 2. Assert "Empty command" then the hint are printed, with no board after them
-        // TODO: 3. Assert console_command_rejected fired with reason=empty
+        val run = session("\n")
+
+        assertTrue(run.output.endsWith("Moves: 0$nl${nl}Empty command$nl$hint$nl"), run.output)
+        assertEquals(listOf(rejected(null, "empty")), run.events("console_command_rejected"))
     }
 
     @Test
     fun `misused known commands show the problem, the usage line and the hint`() {
-        // TODO: 1. Input "left", "left x", "left 9", "reset now", "size 9", one per line
-        // TODO: 2. Assert in order, each followed by the hint and no board:
-        //          "Missing row number for left. Usage: left <row 1-4>"
-        //          "Row must be a number for left. Usage: left <row 1-4>"
-        //          "Row 9 is out of range for left. Usage: left <row 1-4>"
-        //          "Too many arguments for reset. Usage: reset"
-        //          "Size 9 is out of range for size. Usage: size <3-5>"
-        // TODO: 3. Assert the board is unchanged, at "Moves: 0"
-        // TODO: 4. Assert console_command_rejected fired five times: reasons missing_argument, not_a_number,
-        //          out_of_range, too_many_arguments, out_of_range; commands left, left, left, reset, size
+        val run = session("left\nleft x\nleft 9\nreset now\nsize 9\n")
+
+        val expected = listOf(
+            "Missing row number for left. Usage: left <row 1-4>",
+            "Row must be a number for left. Usage: left <row 1-4>",
+            "Row 9 is out of range for left. Usage: left <row 1-4>",
+            "Too many arguments for reset. Usage: reset",
+            "Size 9 is out of range for size. Usage: size <3-5>",
+        ).joinToString("") { "$it$nl$hint$nl" }
+        assertTrue(run.output.endsWith("Moves: 0$nl$nl$expected"), run.output)
+        assertEquals(listOf(0), run.boardCounts)
+        assertEquals(scrambled.toList(), run.board.boardArray.toList())
+        assertEquals(0, run.board.moveCount)
+        assertEquals(
+            listOf(
+                rejected("left", "missing_argument"),
+                rejected("left", "not_a_number"),
+                rejected("left", "out_of_range"),
+                rejected("reset", "too_many_arguments"),
+                rejected("size", "out_of_range"),
+            ),
+            run.events("console_command_rejected"),
+        )
     }
 
     @Test
     fun `usage ranges follow the current board size`() {
-        // TODO: 1. Input "size 5", "help left", then "left 9"
-        // TODO: 2. Assert "help left" prints "left <row 1-5>"
-        // TODO: 3. Assert the error is "Row 9 is out of range for left. Usage: left <row 1-5>"
+        val run = session("size 5\nhelp left\nleft 9\n")
+
+        assertTrue(run.output.contains("  left <row 1-5>       - shift a row left$nl"), run.output)
+        assertTrue(run.output.endsWith("Row 9 is out of range for left. Usage: left <row 1-5>$nl$hint$nl"), run.output)
     }
 
     @Test
     fun `loading an unknown save keeps its existing message without the hint`() {
-        // TODO: 1. Input "load nope"
-        // TODO: 2. Assert the existing "no save named" message is printed without the hint
-        // TODO: 3. Assert console_command_rejected did not fire
+        val run = session("load nope\n")
+
+        assertTrue(run.output.contains("No save named 'nope'"), run.output)
+        assertEquals(1, hintCount(run.output))
+        assertEquals(listOf(0, 0), run.boardCounts)
+        assertTrue(run.events("console_command_rejected").isEmpty())
+    }
+
+    /** D2 on the GH-67 plan: the hint shows on every console start, including a switch back. */
+    @Test
+    fun `switching back to the console shows the hint again`() {
+        val run = session("keyboard\nleft 1\n", events = listOf(TerminalEvent.FunctionKey(8)))
+
+        assertEquals(2, hintCount(run.output))
+        assertEquals(1, run.board.moveCount)
     }
 }

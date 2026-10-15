@@ -1,6 +1,8 @@
 package view
 
 import InputMode
+import analytics.AnalyticsService
+import analytics.NoopAnalyticsService
 import board_model.BoardSize
 import java.io.BufferedReader
 import java.io.IOException
@@ -34,6 +36,14 @@ class ViewImpl internal constructor(
     var modeSwitcher: ModeSwitcher = NoopModeSwitcher()
         internal set
 
+    /** Receives `help_command_used`/`console_command_rejected` (GH-67). */
+    var analytics: AnalyticsService = NoopAnalyticsService()
+        internal set
+
+    /** Set after `help` or a rejected command, whose output takes the board's place until the
+     *  next command (GH-67). */
+    private var skipNextBoard = false
+
     companion object {
         // The console is 1-based (row/column input, displayed tile values); board_model
         // and storage stay 0-based. This is the only translation point (GH-10).
@@ -47,10 +57,12 @@ class ViewImpl internal constructor(
             output: PrintStream = System.out,
             modeSwitcherFactory: (View) -> ModeSwitcher = { NoopModeSwitcher() },
             viewModel: ViewModel,
+            analytics: AnalyticsService = NoopAnalyticsService(),
         ): ViewImpl {
             val view = ViewImpl(input, output)
             view.modeSwitcher = modeSwitcherFactory(view)
             view.viewModel = viewModel
+            view.analytics = analytics
             return view
         }
     }
@@ -190,8 +202,19 @@ class ViewImpl internal constructor(
     private fun help(typed: Typed) {
         if (typed.parts.size > 2) throw typed.reject("Too many arguments for ${typed.verb}", "too_many_arguments")
         val side = viewModel.squareSide()
-        val topic = typed.parts.getOrNull(1)?.let { ConsoleCommands.find(it) }
+        val asked = typed.parts.getOrNull(1)
+        val topic = asked?.let { ConsoleCommands.find(it) }
         output.println(topic?.let { ConsoleCommands.helpLine(it, side) } ?: ConsoleCommands.helpText(side))
+        skipNextBoard = true
+        // The unknown word itself is never sent - free text may carry PII.
+        analytics.track(
+            "help_command_used",
+            when {
+                asked == null -> mapOf("scope" to "all")
+                topic == null -> mapOf("scope" to "unknown_topic")
+                else -> mapOf("scope" to "command", "command" to topic.name)
+            },
+        )
     }
 
     /** One parsed console line: [verb] lowercased as typed, [command] its table entry. Every
@@ -247,7 +270,8 @@ class ViewImpl internal constructor(
         }
     }
 
-    /** The console session: offers the startup restore prompt, then loops `displayBoard` plus
+    /** The console session: offers the startup restore prompt, prints the help hint (on every
+     *  console start, a switch back from the TUI included - GH-67), then loops `displayBoard` plus
      *  `processCommand` - or, once solved, `offerPlayAgain` (GH-66) - until exit or EOF (GH-42 WU3 - moved here from
      *  the old `ConsoleViewModelImpl.play()` (GH-23), since a viewModel-owned loop that called back into
      *  a `View` it also raised requests on would deadlock - see hard problem 1 on the plan
@@ -259,6 +283,7 @@ class ViewImpl internal constructor(
         val ui = launch { for (request in viewModel.uiRequests) handle(request) }
         try {
             viewModel.restoreOnStartup()
+            showMessage(ConsoleCommands.HELP_HINT)
             while (true) {
                 // Other control-flow exceptions (e.g. mode switch) propagate to GameSession.
                 try {
@@ -266,9 +291,14 @@ class ViewImpl internal constructor(
                         onError = { e ->
                             if (e is EndOfInputException) throw e
                             showMessage(e.message ?: "Error") // not System.err - keeps order with board output
+                            if (e is ConsoleCommandException) reportRejection(e)
                         },
                     ) {
-                        displayBoard(viewModel.boardState(), viewModel.squareSide(), viewModel.moveCount())
+                        if (skipNextBoard) {
+                            skipNextBoard = false
+                        } else {
+                            displayBoard(viewModel.boardState(), viewModel.squareSide(), viewModel.moveCount())
+                        }
                         if (viewModel.isSolved()) viewModel.offerPlayAgain() else processCommand()
                     }
                 } catch (e: EndOfInputException) {
@@ -280,6 +310,18 @@ class ViewImpl internal constructor(
         } finally {
             ui.cancel()
         }
+    }
+
+    private suspend fun reportRejection(e: ConsoleCommandException) {
+        showMessage(ConsoleCommands.HELP_HINT)
+        skipNextBoard = true
+        analytics.track(
+            "console_command_rejected",
+            buildMap {
+                put("reason", e.reason)
+                e.command?.let { put("command", it) }
+            },
+        )
     }
 
     private suspend fun handle(request: UiRequest<*>) {

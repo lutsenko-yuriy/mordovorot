@@ -56,7 +56,7 @@ class ViewImplPlayTest {
 
         view.play()
 
-        assertTrue(output.toString().startsWith("1\t2\t3\t4\t"))
+        assertTrue(output.toString().startsWith("${ConsoleCommands.HELP_HINT}${System.lineSeparator()}1\t2\t3\t4\t"))
         assertTrue(viewModel.calls.indexOf("boardState") < viewModel.calls.indexOf("offerPlayAgain"))
         assertFalse(viewModel.calls.any { it.startsWith("shift") })
     }
@@ -130,7 +130,7 @@ class ViewImplPlayTest {
 
         assertEquals(listOf("shiftLeft(0)"), fakeBoard.calls)
         val nl = System.lineSeparator()
-        assertTrue(output.toString().startsWith("1\t2\t3\t4\t$nl"))
+        assertTrue(output.toString().startsWith("${ConsoleCommands.HELP_HINT}${nl}1\t2\t3\t4\t$nl"))
     }
 
     @Test
@@ -228,5 +228,17 @@ class ViewImplPlayTest {
         view.play()
 
         assertTrue(output.toString().contains("Moves: 3"))
+    }
+
+    @Test
+    fun `an error that isn't a rejected command gets no hint, and the board is shown again`(): Unit = runBlocking {
+        val fakeBoard = FakeBoardModel().apply { shiftLeftException = IllegalStateException("boom") }
+        val (view, output) = viewWith("left 1\n", ViewModelImpl(fakeBoard, sizeChosenAtLaunch = true))
+
+        view.play()
+
+        val nl = System.lineSeparator()
+        assertTrue(output.toString().contains("boom${nl}1\t2\t3\t4\t"), output.toString())
+        assertEquals(1, output.toString().split(ConsoleCommands.HELP_HINT).size - 1)
     }
 }
