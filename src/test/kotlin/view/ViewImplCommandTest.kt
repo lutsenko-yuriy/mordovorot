@@ -631,4 +631,121 @@ class ViewImplCommandTest {
 
         assertEquals(listOf(RecordingModeSwitcher.Call(InputMode.MOUSE, "command")), switcher.calls)
     }
+
+    // --- GH-67: specific errors and help ---
+
+    private suspend fun rejection(input: String): ConsoleCommandException {
+        val (view, _) = viewWith(input)
+        return assertFailsWith<ConsoleCommandException> { view.processCommand() }
+    }
+
+    private fun assertRejection(input: String, message: String, reason: String, command: String?) = runBlocking {
+        val error = rejection(input)
+        assertEquals(message, error.message)
+        assertEquals(reason, error.reason)
+        assertEquals(command, error.command)
+    }
+
+    @Test
+    fun `blank line is rejected as an empty command`() =
+        assertRejection("   \n", "Empty command", "empty", null)
+
+    @Test
+    fun `unknown verb is rejected by name`() =
+        assertRejection("lft 1\n", "Unknown command: lft", "unknown_command", null)
+
+    @Test
+    fun `missing row names the problem and the usage`() =
+        assertRejection("left\n", "Missing row number for left. Usage: left <row 1-4>", "missing_argument", "left")
+
+    @Test
+    fun `missing column names the problem and the usage`() =
+        assertRejection("down\n", "Missing column number for down. Usage: down <column 1-4>", "missing_argument", "down")
+
+    @Test
+    fun `non-numeric row names the problem and the usage`() =
+        assertRejection("left x\n", "Row must be a number for left. Usage: left <row 1-4>", "not_a_number", "left")
+
+    @Test
+    fun `a number too large for Int counts as not a number`() =
+        assertRejection("left 99999999999\n", "Row must be a number for left. Usage: left <row 1-4>", "not_a_number", "left")
+
+    @Test
+    fun `missing size names the problem and the usage`() =
+        assertRejection("size\n", "Missing board size for size. Usage: size <3-5>", "missing_argument", "size")
+
+    @Test
+    fun `non-numeric size names the problem and the usage`() =
+        assertRejection("size abc\n", "Size must be a number for size. Usage: size <3-5>", "not_a_number", "size")
+
+    @Test
+    fun `missing save name names the problem and the usage`() =
+        assertRejection("save\n", "Missing name for save. Usage: save <name>", "missing_argument", "save")
+
+    @Test
+    fun `extra arguments name the command as typed`() {
+        assertRejection("reset now\n", "Too many arguments for reset. Usage: reset", "too_many_arguments", "reset")
+        assertRejection("quit now\n", "Too many arguments for quit. Usage: quit", "too_many_arguments", "exit")
+        assertRejection("left 1 2\n", "Too many arguments for left. Usage: left <row 1-4>", "too_many_arguments", "left")
+        assertRejection("help a b\n", "Too many arguments for help. Usage: help [command]", "too_many_arguments", "help")
+    }
+
+    @Test
+    fun `usage ranges follow the current board side`(): Unit = runBlocking {
+        val (view, _) = viewWith("up\n", FakeViewModel().apply { side = 5 })
+
+        val error = assertFailsWith<ConsoleCommandException> { view.processCommand() }
+
+        assertEquals("Missing column number for up. Usage: up <column 1-5>", error.message)
+    }
+
+    @Test
+    fun `help prints the full command list`(): Unit = runBlocking {
+        val (view, output) = viewWith("help\n")
+
+        view.processCommand()
+
+        assertTrue(output.toString().startsWith(ConsoleCommands.helpText(4) + System.lineSeparator()))
+    }
+
+    @Test
+    fun `help with a command prints only that command's line`(): Unit = runBlocking {
+        val (view, output) = viewWith("help LEFT\nhelp quit\n")
+
+        view.processCommand()
+        view.processCommand()
+
+        val nl = System.lineSeparator()
+        assertEquals(
+            "  left <row 1-4>       - shift a row left$nl$nl  exit, quit           - quit, offering to save first$nl$nl",
+            output.toString(),
+        )
+    }
+
+    @Test
+    fun `help with an unknown topic prints the full list with no extra line`(): Unit = runBlocking {
+        val (view, output) = viewWith("help lft\n")
+
+        view.processCommand()
+
+        assertTrue(output.toString().startsWith("Commands:"))
+        assertTrue(!output.toString().contains("lft"))
+    }
+
+    /** Guards the `when` in [ViewImpl.processCommand] against a table entry it has no branch for. */
+    @Test
+    fun `every command in the table has a handler`(): Unit = runBlocking {
+        for (command in ConsoleCommands.all) {
+            val arg = when (command.arg) {
+                ArgKind.ROW, ArgKind.COLUMN -> " 1"
+                ArgKind.SIZE -> " 3"
+                ArgKind.NAME -> " foo"
+                ArgKind.NONE, ArgKind.OPTIONAL_COMMAND -> ""
+            }
+            for (name in command.names) {
+                val (view, _) = viewWith("$name$arg\n")
+                view.processCommand()
+            }
+        }
+    }
 }

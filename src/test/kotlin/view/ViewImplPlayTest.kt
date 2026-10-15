@@ -56,7 +56,7 @@ class ViewImplPlayTest {
 
         view.play()
 
-        assertTrue(output.toString().startsWith("1\t2\t3\t4\t"))
+        assertTrue(output.toString().startsWith("${ConsoleCommands.HELP_HINT}${System.lineSeparator()}1\t2\t3\t4\t"))
         assertTrue(viewModel.calls.indexOf("boardState") < viewModel.calls.indexOf("offerPlayAgain"))
         assertFalse(viewModel.calls.any { it.startsWith("shift") })
     }
@@ -130,7 +130,7 @@ class ViewImplPlayTest {
 
         assertEquals(listOf("shiftLeft(0)"), fakeBoard.calls)
         val nl = System.lineSeparator()
-        assertTrue(output.toString().startsWith("1\t2\t3\t4\t$nl"))
+        assertTrue(output.toString().startsWith("${ConsoleCommands.HELP_HINT}${nl}1\t2\t3\t4\t$nl"))
     }
 
     @Test
@@ -170,7 +170,7 @@ class ViewImplPlayTest {
 
         view.play()
 
-        assertTrue(output.toString().contains("Incorrect input"))
+        assertTrue(output.toString().contains("Unknown command: banana"))
         assertEquals(listOf("shiftLeft(0)"), fakeBoard.calls)
     }
 
@@ -186,7 +186,7 @@ class ViewImplPlayTest {
 
         view.play()
 
-        assertTrue(output.toString().contains("Board size must be between 3 and 5, got 9"))
+        assertTrue(output.toString().contains("Size 9 is out of range for size. Usage: size <3-5>"))
         // The loop kept going past the rejected size - the subsequent "left 1" still reached
         // the board, at whatever size it was left at.
         assertEquals(listOf("shiftLeft(0)"), fakeBoard.calls)
@@ -199,7 +199,7 @@ class ViewImplPlayTest {
 
         view.play()
 
-        assertTrue(output.toString().contains("Incorrect input"))
+        assertTrue(output.toString().contains("Row must be a number for left. Usage: left <row 1-4>"))
     }
 
     /** Play-loop-specific half of `exit, save confirmed but the save itself fails` - "does not
@@ -228,5 +228,17 @@ class ViewImplPlayTest {
         view.play()
 
         assertTrue(output.toString().contains("Moves: 3"))
+    }
+
+    @Test
+    fun `an error that isn't a rejected command gets no hint, and the board is shown again`(): Unit = runBlocking {
+        val fakeBoard = FakeBoardModel().apply { shiftLeftException = IllegalStateException("boom") }
+        val (view, output) = viewWith("left 1\n", ViewModelImpl(fakeBoard, sizeChosenAtLaunch = true))
+
+        view.play()
+
+        val nl = System.lineSeparator()
+        assertTrue(output.toString().contains("boom${nl}1\t2\t3\t4\t"), output.toString())
+        assertEquals(1, output.toString().split(ConsoleCommands.HELP_HINT).size - 1)
     }
 }

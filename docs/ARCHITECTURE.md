@@ -84,7 +84,12 @@ src/main/kotlin/
     ├── View.kt          # View interface — console display + command loop contract
     ├── ViewImpl.kt      # Console I/O implementation (BufferedReader-based input). `mouse`/
     │                      # `keyboard` commands reach an injected ModeSwitcher, wired via
-    │                      # create()'s modeSwitcherFactory param (GH-30)
+    │                      # create()'s modeSwitcherFactory param (GH-30), and console
+    │                      # analytics via create()'s analytics param (GH-67)
+    ├── ConsoleCommands.kt # Pure console command table (GH-67): usage + description per
+    │                      # command; source of `help` output, error usage lines and the hint
+    ├── ConsoleCommandException.kt # IllegalArgumentException subclass for a rejected console
+    │                      # command - carries the specific message for play() to print with the hint
     └── tui/             # GH-3: a second View implementation for the mouse-driven TUI
         ├── Terminal.kt / AnsiTerminal.kt   # Raw-mode terminal I/O (stty via ProcessBuilder,
         │                                     # xterm mouse-reporting escapes) - the one seam
@@ -244,7 +249,10 @@ values, `left`/`right`/`up`/`down` row/column input); `board_model` and
 `storage` stay 0-based. `ViewImpl`'s `DISPLAY_OFFSET` constant is the single
 translation point — `+1` when rendering, `-1` when parsing a shift argument.
 Range validation still lives in `board_model` (`BoardImpl`'s bounds check),
-not `view` — the view translates, it does not validate.
+not `view` — the view translates, it does not validate. Since GH-67 the view
+rewords that rejection (and `size <N>`'s `BoardSize` one) into a
+`ConsoleCommandException` with the typed 1-based value and a usage line, but
+still never checks the range itself.
 
 `BoardImpl.restoreState` and `FileSaveRepository`'s validation errors avoid
 stating an explicit numeric range (e.g. "contain each of N tile values

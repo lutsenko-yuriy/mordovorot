@@ -57,42 +57,42 @@ class OneBasedConsoleTest {
     }
 
     @Test
-    fun `left 0 leaves the board untouched and surfaces Incorrect row`(): Unit = runBlocking {
+    fun `left 0 leaves the board untouched and reports the row as out of range`(): Unit = runBlocking {
         val (view, board, _) = stackWith("left 0\n")
 
         val error = assertFailsWith<IllegalArgumentException> { view.processCommand() }
 
-        assertEquals("Incorrect row", error.message)
+        assertEquals("Row 0 is out of range for left. Usage: left <row 1-4>", error.message)
         assertEquals(identity.toList(), board.boardArray.toList())
     }
 
     @Test
-    fun `left squareSide+1 leaves the board untouched and surfaces Incorrect row`(): Unit = runBlocking {
+    fun `left squareSide+1 leaves the board untouched and reports the row as out of range`(): Unit = runBlocking {
         val (view, board, _) = stackWith("left 5\n")
 
         val error = assertFailsWith<IllegalArgumentException> { view.processCommand() }
 
-        assertEquals("Incorrect row", error.message)
+        assertEquals("Row 5 is out of range for left. Usage: left <row 1-4>", error.message)
         assertEquals(identity.toList(), board.boardArray.toList())
     }
 
     @Test
-    fun `up 0 surfaces Incorrect column`(): Unit = runBlocking {
+    fun `up 0 reports the column as out of range`(): Unit = runBlocking {
         val (view, board, _) = stackWith("up 0\n")
 
         val error = assertFailsWith<IllegalArgumentException> { view.processCommand() }
 
-        assertEquals("Incorrect column", error.message)
+        assertEquals("Column 0 is out of range for up. Usage: up <column 1-4>", error.message)
         assertEquals(identity.toList(), board.boardArray.toList())
     }
 
     @Test
-    fun `up squareSide+1 surfaces Incorrect column`(): Unit = runBlocking {
+    fun `up squareSide+1 reports the column as out of range`(): Unit = runBlocking {
         val (view, board, _) = stackWith("up 5\n")
 
         val error = assertFailsWith<IllegalArgumentException> { view.processCommand() }
 
-        assertEquals("Incorrect column", error.message)
+        assertEquals("Column 5 is out of range for up. Usage: up <column 1-4>", error.message)
         assertEquals(identity.toList(), board.boardArray.toList())
     }
 

@@ -114,10 +114,9 @@ class FakeViewModel : ViewModel {
         return board
     }
 
-    override fun squareSide(): Int {
-        calls.add("squareSide")
-        return side
-    }
+    // Not recorded in [calls] - the console reads it to word every rejection (GH-67), and tests
+    // assert an empty call list for those.
+    override fun squareSide(): Int = side
 
     // Not recorded in [calls] - it's a read-only query like [boardState], but tests asserting
     // exact call lists predate it.
