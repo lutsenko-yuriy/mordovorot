@@ -1,13 +1,14 @@
 package viewmodel
 
-import storage.SaveFileFormatException
-import storage.SavedBoard
-import testing.FakeBoardModel
-import testing.FakeSaveRepository
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import storage.SaveFileFormatException
+import storage.SavedBoard
+import testing.FakeBoardModel
+import testing.FakeSaveRepository
+import testing.testViewModel
 
 /**
  * Covers [ViewModelImpl]'s additive, read-only query methods (`listSaves`, `saveExists`,
@@ -24,7 +25,7 @@ class ViewModelQueriesTest {
                 "bar" to SavedBoard(5, IntArray(25) { it }),
             ),
         )
-        val viewModel = ViewModelImpl(FakeBoardModel(), saves)
+        val viewModel = testViewModel(FakeBoardModel(), saves)
 
         assertEquals(listOf(SaveInfo("bar", 5), SaveInfo("foo", 4)), viewModel.listSaves())
     }
@@ -33,7 +34,7 @@ class ViewModelQueriesTest {
     fun `listSaves reports a null squareSide for a save whose size can't be read, rather than dropping it`() {
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, IntArray(16) { it })))
         saves.loadException = SaveFileFormatException("foo", "corrupted")
-        val viewModel = ViewModelImpl(FakeBoardModel(), saves)
+        val viewModel = testViewModel(FakeBoardModel(), saves)
 
         assertEquals(listOf(SaveInfo("foo", null)), viewModel.listSaves())
     }
@@ -50,7 +51,7 @@ class ViewModelQueriesTest {
                 "fine" to SavedBoard(3, IntArray(9) { it }),
             ),
         )
-        val viewModel = ViewModelImpl(FakeBoardModel(), saves)
+        val viewModel = testViewModel(FakeBoardModel(), saves)
 
         assertEquals(
             listOf(SaveInfo("even", 4), SaveInfo("fine", 3), SaveInfo("odd", 3, solvable = false)),
@@ -62,7 +63,7 @@ class ViewModelQueriesTest {
     fun `listSaves degrades to an empty list on a repository failure`() {
         val saves = FakeSaveRepository()
         saves.listSavesException = RuntimeException("unreadable saves dir")
-        val viewModel = ViewModelImpl(FakeBoardModel(), saves)
+        val viewModel = testViewModel(FakeBoardModel(), saves)
 
         assertEquals(emptyList(), viewModel.listSaves())
     }
@@ -70,7 +71,7 @@ class ViewModelQueriesTest {
     @Test
     fun `saveExists delegates to the save repository`() {
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, IntArray(16) { it })))
-        val viewModel = ViewModelImpl(FakeBoardModel(), saves)
+        val viewModel = testViewModel(FakeBoardModel(), saves)
 
         assertTrue(viewModel.saveExists("foo"))
         assertFalse(viewModel.saveExists("bar"))
@@ -80,7 +81,7 @@ class ViewModelQueriesTest {
     fun `saveExists degrades to false on a repository failure`() {
         val saves = FakeSaveRepository()
         saves.existsException = RuntimeException("a/b")
-        val viewModel = ViewModelImpl(FakeBoardModel(), saves)
+        val viewModel = testViewModel(FakeBoardModel(), saves)
 
         assertFalse(viewModel.saveExists("a/b"))
     }
@@ -88,7 +89,7 @@ class ViewModelQueriesTest {
     @Test
     fun `isSolved delegates to board isCorrect`() {
         val board = FakeBoardModel()
-        val viewModel = ViewModelImpl(board)
+        val viewModel = testViewModel(board)
 
         board.correct = false
         assertFalse(viewModel.isSolved())
@@ -100,7 +101,7 @@ class ViewModelQueriesTest {
     @Test
     fun `boardState delegates to the board's current tile array`() {
         val board = FakeBoardModel(boardArray = intArrayOf(3, 1, 0, 2))
-        val viewModel = ViewModelImpl(board)
+        val viewModel = testViewModel(board)
 
         assertEquals(listOf(3, 1, 0, 2), viewModel.boardState().toList())
     }
@@ -108,7 +109,7 @@ class ViewModelQueriesTest {
     @Test
     fun `boardState returns a defensive copy - mutating it does not affect the board`() {
         val board = FakeBoardModel(boardArray = intArrayOf(3, 1, 0, 2))
-        val viewModel = ViewModelImpl(board)
+        val viewModel = testViewModel(board)
 
         viewModel.boardState()[0] = 99
 
@@ -117,7 +118,7 @@ class ViewModelQueriesTest {
 
     @Test
     fun `squareSide delegates to the board's square side`() {
-        val viewModel = ViewModelImpl(FakeBoardModel(initialSquareSide = 4))
+        val viewModel = testViewModel(FakeBoardModel(initialSquareSide = 4))
 
         assertEquals(4, viewModel.squareSide())
     }

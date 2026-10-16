@@ -1,14 +1,15 @@
 package viewmodel
 
 import board_model.BoardImpl
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlinx.coroutines.runBlocking
 import testing.FakeBoardModel
 import testing.FakeSaveRepository
 import testing.FakeViewModelUi
 import testing.RecordingAnalyticsService
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import testing.testViewModel
 
 /** GH-62: the move count's path through the viewModel - query, save/load, and `board_solved`. */
 class ViewModelMoveCountTest {
@@ -20,14 +21,14 @@ class ViewModelMoveCountTest {
     fun `moveCount delegates to the board`() {
         val board = FakeBoardModel().apply { moveCount = 4 }
 
-        assertEquals(4, ViewModelImpl(board).moveCount())
+        assertEquals(4, testViewModel(board).moveCount())
     }
 
     @Test
     fun `saveGame persists the move count`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         val board = FakeBoardModel().apply { moveCount = 6 }
-        val viewModel = ViewModelImpl(board, saves)
+        val viewModel = testViewModel(board, saves)
 
         FakeViewModelUi().drive(viewModel) { viewModel.saveGame("foo") }
 
@@ -39,7 +40,7 @@ class ViewModelMoveCountTest {
         val saves = FakeSaveRepository()
         saves.save("foo", intArrayOf(8, 7, 6, 5, 4, 3, 2, 1, 0), 3, moveCount = 9)
         val board = BoardImpl(3)
-        val viewModel = ViewModelImpl(board, saves)
+        val viewModel = testViewModel(board, saves)
 
         FakeViewModelUi().drive(viewModel) { viewModel.loadGame("foo") }
 
@@ -49,7 +50,7 @@ class ViewModelMoveCountTest {
     @Test
     fun `board_solved fires once when a shift solves the board, with the move count and size`() {
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(oneShiftFromSolved(), FakeSaveRepository(), analytics)
+        val viewModel = testViewModel(oneShiftFromSolved(), FakeSaveRepository(), analytics)
 
         viewModel.shiftUp(2)
         viewModel.shiftDown(2)
@@ -65,7 +66,7 @@ class ViewModelMoveCountTest {
     fun `board_solved does not fire for a shift that unsolves an already-solved board`() {
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(3).apply { restoreState(IntArray(9) { it }) }
-        val viewModel = ViewModelImpl(board, FakeSaveRepository(), analytics)
+        val viewModel = testViewModel(board, FakeSaveRepository(), analytics)
 
         viewModel.shiftLeft(0)
 
@@ -77,7 +78,7 @@ class ViewModelMoveCountTest {
         val saves = FakeSaveRepository()
         saves.save("done", IntArray(9) { it }, 3, moveCount = 4)
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(oneShiftFromSolved(), saves, analytics)
+        val viewModel = testViewModel(oneShiftFromSolved(), saves, analytics)
 
         FakeViewModelUi().drive(viewModel) { viewModel.loadGame("done") }
 
@@ -87,7 +88,7 @@ class ViewModelMoveCountTest {
     @Test
     fun `a rejected shift fires nothing and still throws`() {
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(oneShiftFromSolved(), FakeSaveRepository(), analytics)
+        val viewModel = testViewModel(oneShiftFromSolved(), FakeSaveRepository(), analytics)
 
         assertFailsWith<IllegalArgumentException> { viewModel.shiftLeft(9) }
 

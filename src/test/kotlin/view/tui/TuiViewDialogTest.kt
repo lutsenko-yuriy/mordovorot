@@ -10,6 +10,8 @@ import testing.FakeSaveRepository
 import testing.FakeTerminal
 import testing.FakeViewModel
 import testing.RecordingAnalyticsService
+import testing.testTuiView
+import testing.testViewModel
 import viewmodel.ViewModelImpl
 
 /**
@@ -25,7 +27,7 @@ class TuiViewDialogTest {
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
 
     private fun view(terminal: FakeTerminal, viewModel: FakeViewModel, analytics: RecordingAnalyticsService = RecordingAnalyticsService()): TuiView =
-        TuiView.create(terminal, analytics, viewModel = viewModel)
+        testTuiView(terminal, analytics, viewModel = viewModel)
 
     private fun viewWithRealViewModel(
         terminal: FakeTerminal,
@@ -37,7 +39,7 @@ class TuiViewDialogTest {
         // scripted terminal events are built around the GH-44 size dialog's own shape pass
         // true to skip both and keep the original Save/Load/Exit-only flow.
         sizeChosenAtLaunch: Boolean = false,
-    ): TuiView = TuiView.create(terminal, analytics, viewModel = ViewModelImpl(board, saves, analytics, sizeChosenAtLaunch = sizeChosenAtLaunch))
+    ): TuiView = testTuiView(terminal, analytics, viewModel = testViewModel(board, saves, analytics, sizeChosenAtLaunch = sizeChosenAtLaunch))
 
     // Matches MouseInput.decorateBoard's GH-30 modeButtons - the mode-switch button the
     // real toolbar carries, so hardcoded positions in this file line up with what TuiView

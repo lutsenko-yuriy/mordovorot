@@ -10,6 +10,8 @@ import storage.SavedBoard
 import testing.FakeBoardModel
 import testing.FakeSaveRepository
 import testing.FakeTerminal
+import testing.testTuiView
+import testing.testViewModel
 import viewmodel.ModeSwitchRequestedException
 import viewmodel.ViewModelImpl
 
@@ -46,7 +48,7 @@ class TuiViewRequestHandlingTest {
             override fun readEvent(): TerminalEvent = TerminalEvent.EndOfInput
             override fun size(): TerminalSize = terminalSize
         }
-        val view = TuiView.create(terminal, viewModel = ViewModelImpl(board, saves))
+        val view = testTuiView(terminal, viewModel = testViewModel(board, saves))
 
         assertFailsWith<ModeSwitchRequestedException> { view.play() }
     }
@@ -79,7 +81,7 @@ class TuiViewRequestHandlingTest {
             terminalSize = terminalSize,
         )
 
-        TuiView.create(terminal, viewModel = ViewModelImpl(board, saves)).play()
+        testTuiView(terminal, viewModel = testViewModel(board, saves)).play()
 
         assertTrue(terminal.frames.first().contains("Restore a saved game?"))
         assertEquals(listOf("restoreState(${fooState.toList()})"), board.calls)
@@ -98,7 +100,7 @@ class TuiViewRequestHandlingTest {
         val board = FakeBoardModel()
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.Escape), terminalSize = terminalSize)
 
-        TuiView.create(terminal, viewModel = ViewModelImpl(board, saves)).play()
+        testTuiView(terminal, viewModel = testViewModel(board, saves)).play()
 
         assertTrue(terminal.frames.first().contains("bar (5x5)"))
         assertTrue(terminal.frames.first().contains("foo (4x4)"))

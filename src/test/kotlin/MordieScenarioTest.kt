@@ -1,4 +1,13 @@
 import board_model.BoardImpl
+import java.nio.file.Path
+import kotlin.io.path.createTempDirectory
+import kotlin.io.path.readLines
+import kotlin.io.path.writeText
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import mordie.Mordie
 import mordie.SearchProgress
@@ -13,15 +22,6 @@ import view.tui.DialogLayout
 import view.tui.HitTarget
 import view.tui.TerminalEvent
 import view.tui.TerminalSize
-import java.nio.file.Path
-import kotlin.io.path.createTempDirectory
-import kotlin.io.path.readLines
-import kotlin.io.path.writeText
-import kotlin.test.Test
-import kotlin.test.assertContentEquals
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 /** GH-83 scenarios: Mordie, the computer opponent racing the player to the shortest solution.
  *  Real BoardImpl + ViewModelImpl + FileSaveRepository (temp dir), driven through a mouse-mode
@@ -67,7 +67,7 @@ class MordieScenarioTest {
         val terminal = FakeTerminal(events, terminalSize, acts).also { this@MordieScenarioTest.terminal = it }
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(4).apply { restoreState(initial) }
-        GameSession(
+        testGameSession(
             initialMode = InputMode.MOUSE,
             board = board,
             saves = FileSaveRepository(savesDir),

@@ -1,12 +1,13 @@
 package view.tui
 
-import testing.FakeTerminal
-import testing.FakeViewModel
-import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
+import testing.FakeTerminal
+import testing.FakeViewModel
+import testing.testTuiView
 
 /**
  * Covers GH-18's keyboard-driven board interaction loop: `TuiView` dispatching arrow-key cursor
@@ -18,7 +19,7 @@ class TuiViewKeyboardBoardTest {
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
 
     private fun view(terminal: FakeTerminal, viewModel: FakeViewModel): TuiView =
-        TuiView.create(terminal, input = KeyboardInput(), viewModel = viewModel)
+        testTuiView(terminal, input = KeyboardInput(), viewModel = viewModel)
 
     @Test
     fun `an arrow-key walk around the ring followed by Enter calls the expected shift`(): Unit = runBlocking {

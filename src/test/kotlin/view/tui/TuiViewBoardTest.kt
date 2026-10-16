@@ -1,11 +1,12 @@
 package view.tui
 
-import testing.FakeViewModel
-import testing.FakeTerminal
-import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
+import testing.FakeTerminal
+import testing.FakeViewModel
+import testing.testTuiView
 
 /**
  * Covers GH-3's board interaction loop: `TuiView` dispatching mouse clicks on the board to the
@@ -20,7 +21,7 @@ class TuiViewBoardTest {
         BoardLayout(terminalSize, viewModel.side, viewModel.solved.not())
 
     private fun view(terminal: FakeTerminal, viewModel: FakeViewModel): TuiView =
-        TuiView.create(terminal, viewModel = viewModel)
+        testTuiView(terminal, viewModel = viewModel)
 
     @Test
     fun `clicking a row's left or right arrow calls shiftLeft or shiftRight with the 0-based row`(): Unit = runBlocking {

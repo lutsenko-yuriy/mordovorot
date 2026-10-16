@@ -1,16 +1,17 @@
 package viewmodel
 
-import testing.FakeBoardModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import testing.FakeBoardModel
+import testing.testViewModel
 
 class ViewModelDelegationTest {
 
     @Test
     fun `shiftLeft delegates to the board`() {
         val board = FakeBoardModel()
-        val viewModel = ViewModelImpl(board)
+        val viewModel = testViewModel(board)
 
         viewModel.shiftLeft(2)
 
@@ -20,7 +21,7 @@ class ViewModelDelegationTest {
     @Test
     fun `shiftRight delegates to the board`() {
         val board = FakeBoardModel()
-        val viewModel = ViewModelImpl(board)
+        val viewModel = testViewModel(board)
 
         viewModel.shiftRight(1)
 
@@ -30,7 +31,7 @@ class ViewModelDelegationTest {
     @Test
     fun `shiftUp delegates to the board`() {
         val board = FakeBoardModel()
-        val viewModel = ViewModelImpl(board)
+        val viewModel = testViewModel(board)
 
         viewModel.shiftUp(3)
 
@@ -40,7 +41,7 @@ class ViewModelDelegationTest {
     @Test
     fun `shiftDown delegates to the board`() {
         val board = FakeBoardModel()
-        val viewModel = ViewModelImpl(board)
+        val viewModel = testViewModel(board)
 
         viewModel.shiftDown(0)
 
@@ -51,7 +52,7 @@ class ViewModelDelegationTest {
     fun `exceptions from the board propagate unchanged`() {
         val board = FakeBoardModel()
         board.shiftLeftException = IllegalArgumentException("Incorrect row")
-        val viewModel = ViewModelImpl(board)
+        val viewModel = testViewModel(board)
 
         val exception = assertFailsWith<IllegalArgumentException> { viewModel.shiftLeft(4) }
 

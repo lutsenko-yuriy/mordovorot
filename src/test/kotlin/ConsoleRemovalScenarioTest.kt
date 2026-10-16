@@ -1,23 +1,23 @@
 import board_model.BoardImpl
-import kotlinx.coroutines.runBlocking
-import storage.FileSaveRepository
-import testing.FakeTerminal
-import testing.RecordingAnalyticsService
-import view.tui.BoardLayout
-import view.tui.HitTarget
-import view.tui.TerminalEvent
-import view.tui.TerminalSize
 import java.nio.file.Path
 import kotlin.io.path.createTempDirectory
 import kotlin.io.path.writeText
-import testing.RecordingAnalyticsService.Event
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
 import mordie.Mordie
+import storage.FileSaveRepository
 import testing.FakeMordieSearchFactory
+import testing.FakeTerminal
+import testing.RecordingAnalyticsService
+import testing.RecordingAnalyticsService.Event
+import view.tui.BoardLayout
+import view.tui.HitTarget
+import view.tui.TerminalEvent
+import view.tui.TerminalSize
 
 /** GH-79 scenarios: console mode removed - the no-terminal abort, the `--console` notice, the TUI
  *  without a console switch, the failed-switch fallback, and old saves still loading. */
@@ -124,7 +124,7 @@ class ConsoleRemovalScenarioTest {
         val terminal = FakeTerminal(events.toMutableList(), TerminalSize(80, 40))
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(4).apply { restoreState(scrambled) }
-        GameSession(
+        testGameSession(
             initialMode = mode,
             board = board,
             saves = FileSaveRepository(savesDir),
@@ -169,7 +169,7 @@ class ConsoleRemovalScenarioTest {
         )
         val board = BoardImpl(4).apply { restoreState(scrambled) }
         val builds = mutableListOf<Pair<InputMode, Boolean>>()
-        GameSession(
+        testGameSession(
             initialMode = InputMode.MOUSE,
             board = board,
             saves = FileSaveRepository(createTempDirectory("mordovorot-gh79")),

@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import testing.FakeTerminal
 import testing.FakeViewModel
 import testing.RecordingAnalyticsService
+import testing.testTuiView
 import viewmodel.ViewModel
 
 /**
@@ -22,7 +23,7 @@ class TuiViewSolvedStateTest {
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
 
     private fun view(terminal: FakeTerminal, viewModel: ViewModel, analytics: RecordingAnalyticsService = RecordingAnalyticsService()): TuiView =
-        TuiView.create(terminal, analytics, viewModel = viewModel)
+        testTuiView(terminal, analytics, viewModel = viewModel)
 
     // Matches MouseInput.decorateBoard's GH-30 modeButtons - see TuiViewDialogTest's identical
     // helper for why.

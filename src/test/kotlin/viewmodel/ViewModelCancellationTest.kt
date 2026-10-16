@@ -1,16 +1,17 @@
 package viewmodel
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.yield
 import storage.SavedBoard
 import testing.FakeBoardModel
 import testing.FakeSaveRepository
 import testing.RecordingAnalyticsService
 import testing.RecordingAnalyticsService.Event
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.yield
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import testing.testViewModel
 
 /**
  * Hard problem 3 (GH-42 WU2): `saveGame`/`loadGame`/`restoreOnStartup` all suspend inside
@@ -36,7 +37,7 @@ class ViewModelCancellationTest {
     @Test
     fun `saveGame cancelled while suspended in ask does not also track a spurious result=error`(): Unit = runBlocking {
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(FakeBoardModel(), FakeSaveRepository(), analytics)
+        val viewModel = testViewModel(FakeBoardModel(), FakeSaveRepository(), analytics)
 
         val job = launch { viewModel.saveGame("foo") }
         yield() // let saveGame reach ask()'s suspension point before cancelling
@@ -52,7 +53,7 @@ class ViewModelCancellationTest {
     fun `loadGame cancelled while suspended in ask does not also track a spurious result=error`(): Unit = runBlocking {
         val analytics = RecordingAnalyticsService()
         val saves = FakeSaveRepository(mutableMapOf("missing-on-purpose" to SavedBoard(4, IntArray(16) { it })))
-        val viewModel = ViewModelImpl(FakeBoardModel(), saves, analytics)
+        val viewModel = testViewModel(FakeBoardModel(), saves, analytics)
 
         val job = launch { viewModel.loadGame("not-found") }
         yield()
@@ -68,7 +69,7 @@ class ViewModelCancellationTest {
     fun `offerStartupRestore cancelled while suspended in ask does not track a decision`(): Unit = runBlocking {
         val analytics = RecordingAnalyticsService()
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, IntArray(16) { it })))
-        val viewModel = ViewModelImpl(FakeBoardModel(), saves, analytics)
+        val viewModel = testViewModel(FakeBoardModel(), saves, analytics)
 
         val job = launch { viewModel.restoreOnStartup() }
         yield()

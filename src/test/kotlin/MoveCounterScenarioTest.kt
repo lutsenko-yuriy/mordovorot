@@ -1,6 +1,14 @@
 import board_model.BoardImpl
+import java.nio.file.Path
+import kotlin.io.path.createTempDirectory
+import kotlin.io.path.writeText
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
+import mordie.Mordie
 import storage.FileSaveRepository
+import testing.FakeMordieSearchFactory
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
 import view.tui.BoardLayout
@@ -10,14 +18,6 @@ import view.tui.DialogLayout
 import view.tui.HitTarget
 import view.tui.TerminalEvent
 import view.tui.TerminalSize
-import java.nio.file.Path
-import kotlin.io.path.createTempDirectory
-import kotlin.io.path.writeText
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
-import mordie.Mordie
-import testing.FakeMordieSearchFactory
 
 /** GH-79: GH-62's console move-counter scenarios rewritten for the TUI - real BoardImpl +
  *  ViewModelImpl + FileSaveRepository (temp dir), driven through FakeTerminal, reading the
@@ -44,7 +44,7 @@ class MoveCounterScenarioTest {
     ): Run = runBlocking {
         val terminal = FakeTerminal(events.toMutableList(), terminalSize)
         val analytics = RecordingAnalyticsService()
-        GameSession(
+        testGameSession(
             initialMode = InputMode.MOUSE,
             board = BoardImpl(4).apply { restoreState(initial) },
             saves = FileSaveRepository(savesDir),

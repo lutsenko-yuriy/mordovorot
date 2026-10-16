@@ -1,14 +1,15 @@
 package viewmodel
 
 import board_model.BoardImpl
-import storage.SaveFileFormatException
-import testing.FakeViewModelUi
-import testing.FakeSaveRepository
-import testing.RecordingAnalyticsService
-import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
+import storage.SaveFileFormatException
+import testing.FakeSaveRepository
+import testing.FakeViewModelUi
+import testing.RecordingAnalyticsService
+import testing.testViewModel
 
 /** Covers [ViewModelImpl.saveGame]/[ViewModelImpl.loadGame] (originally GH-6's `save`/`load`
  *  commands, WU3), shared identically by both UIs (split GH-23). Driven via [FakeViewModelUi.drive]
@@ -22,7 +23,7 @@ class ViewModelSaveLoadTest {
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(3).apply { restoreState(intArrayOf(1, 0, 2, 3, 4, 5, 6, 7, 8)) }
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi()
 
         ui.drive(viewModel) { viewModel.saveGame("foo") }
@@ -49,7 +50,7 @@ class ViewModelSaveLoadTest {
         saves.save("foo", intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8), 3)
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(3).apply { restoreState(intArrayOf(8, 7, 6, 5, 4, 3, 2, 1, 0)) }
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi()
 
         ui.drive(viewModel) { viewModel.saveGame("foo") }
@@ -71,7 +72,7 @@ class ViewModelSaveLoadTest {
         val saves = FakeSaveRepository().apply { saveException = IllegalArgumentException("Save name must not be blank") }
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi()
 
         ui.drive(viewModel) { viewModel.saveGame("..") }
@@ -89,7 +90,7 @@ class ViewModelSaveLoadTest {
         saves.save("foo", intArrayOf(8, 7, 6, 5, 4, 3, 2, 1, 0), 3)
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi()
 
         ui.drive(viewModel) { viewModel.loadGame("foo") }
@@ -107,7 +108,7 @@ class ViewModelSaveLoadTest {
         saves.save("bar", intArrayOf(8, 7, 6, 5, 4, 3, 2, 1, 0), 3)
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi()
 
         ui.drive(viewModel) { viewModel.loadGame("missing") }
@@ -124,7 +125,7 @@ class ViewModelSaveLoadTest {
     fun `loadGame with no saves at all still messages cleanly`(): Unit = runBlocking {
         val saves = FakeSaveRepository()
         val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }
-        val viewModel = ViewModelImpl(board, saves, RecordingAnalyticsService())
+        val viewModel = testViewModel(board, saves, RecordingAnalyticsService())
         val ui = FakeViewModelUi()
 
         ui.drive(viewModel) { viewModel.loadGame("missing") }
@@ -138,7 +139,7 @@ class ViewModelSaveLoadTest {
         saves.save("small", intArrayOf(3, 2, 1, 0, 7, 6, 5, 4, 8), 3)
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(4).apply { restoreState((0..15).toList().toIntArray()) }
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi()
 
         ui.drive(viewModel) { viewModel.loadGame("small") }
@@ -163,7 +164,7 @@ class ViewModelSaveLoadTest {
         }
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi()
 
         ui.drive(viewModel) { viewModel.loadGame("missing") }
@@ -183,7 +184,7 @@ class ViewModelSaveLoadTest {
         }
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi()
 
         ui.drive(viewModel) { viewModel.loadGame("corrupt") }

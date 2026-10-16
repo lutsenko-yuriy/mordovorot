@@ -1,15 +1,16 @@
 package viewmodel
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlinx.coroutines.runBlocking
 import storage.SaveFileFormatException
 import storage.SavedBoard
 import testing.FakeBoardModel
-import testing.FakeViewModelUi
 import testing.FakeSaveRepository
+import testing.FakeViewModelUi
 import testing.RecordingAnalyticsService
 import testing.RecordingAnalyticsService.Event
-import kotlinx.coroutines.runBlocking
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import testing.testViewModel
 
 /**
  * Covers [ViewModelImpl.restoreOnStartup]'s branch matrix (0/1/2+ save files), driven directly -
@@ -30,7 +31,7 @@ class ViewModelStartupRestoreTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi(chooseBoardSizeResponses = mutableListOf(null))
 
         ui.drive(viewModel) { viewModel.restoreOnStartup() }
@@ -47,7 +48,7 @@ class ViewModelStartupRestoreTest {
         val savedState = intArrayOf(3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12)
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, savedState)))
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi(confirmRestoreResponses = mutableListOf(true))
 
         ui.drive(viewModel) { viewModel.restoreOnStartup() }
@@ -69,7 +70,7 @@ class ViewModelStartupRestoreTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, fourByFour)))
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi(confirmRestoreResponses = mutableListOf(false), chooseBoardSizeResponses = mutableListOf(null))
 
         ui.drive(viewModel) { viewModel.restoreOnStartup() }
@@ -95,7 +96,7 @@ class ViewModelStartupRestoreTest {
             ),
         )
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi(chooseSaveToRestoreResponses = mutableListOf("bar"))
 
         ui.drive(viewModel) { viewModel.restoreOnStartup() }
@@ -122,7 +123,7 @@ class ViewModelStartupRestoreTest {
             ),
         )
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi(chooseSaveToRestoreResponses = mutableListOf(null), chooseBoardSizeResponses = mutableListOf(null))
 
         ui.drive(viewModel) { viewModel.restoreOnStartup() }
@@ -149,7 +150,7 @@ class ViewModelStartupRestoreTest {
             ),
         )
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi(chooseSaveToRestoreResponses = mutableListOf("foo (4x4)"), chooseBoardSizeResponses = mutableListOf(null))
 
         ui.drive(viewModel) { viewModel.restoreOnStartup() }
@@ -171,7 +172,7 @@ class ViewModelStartupRestoreTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, fourByFour)))
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi(confirmRestoreResponses = mutableListOf(false), chooseBoardSizeResponses = mutableListOf(null))
 
         ui.drive(viewModel) { viewModel.restoreOnStartup() }
@@ -191,7 +192,7 @@ class ViewModelStartupRestoreTest {
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, fourByFour)))
         saves.loadException = SaveFileFormatException("foo", "corrupted save file")
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi(confirmRestoreResponses = mutableListOf(true), chooseBoardSizeResponses = mutableListOf(null))
 
         ui.drive(viewModel) { viewModel.restoreOnStartup() }
@@ -217,7 +218,7 @@ class ViewModelStartupRestoreTest {
         val savedState = intArrayOf(3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12)
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, savedState)))
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi(confirmRestoreResponses = mutableListOf(true))
 
         ui.drive(viewModel) {

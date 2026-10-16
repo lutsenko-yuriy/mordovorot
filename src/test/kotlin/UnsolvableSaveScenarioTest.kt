@@ -1,13 +1,4 @@
 import board_model.BoardImpl
-import kotlinx.coroutines.runBlocking
-import storage.FileSaveRepository
-import testing.FakeTerminal
-import testing.RecordingAnalyticsService
-import view.tui.BoardLayout
-import view.tui.TerminalEvent
-import view.tui.TerminalEvent.Enter
-import view.tui.TerminalEvent.Tab
-import view.tui.TerminalSize
 import java.nio.file.Path
 import kotlin.io.path.createTempDirectory
 import kotlin.io.path.readText
@@ -16,8 +7,17 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
 import mordie.Mordie
+import storage.FileSaveRepository
 import testing.FakeMordieSearchFactory
+import testing.FakeTerminal
+import testing.RecordingAnalyticsService
+import view.tui.BoardLayout
+import view.tui.TerminalEvent
+import view.tui.TerminalEvent.Enter
+import view.tui.TerminalEvent.Tab
+import view.tui.TerminalSize
 
 /** GH-79: GH-74's console unsolvable-save scenarios rewritten for the TUI - real BoardImpl +
  *  ViewModelImpl + FileSaveRepository (temp dir), driven through FakeTerminal in keyboard mode
@@ -35,7 +35,7 @@ class UnsolvableSaveScenarioTest {
         val terminal = FakeTerminal(events.toMutableList(), terminalSize)
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(4)
-        GameSession(
+        testGameSession(
             initialMode = InputMode.KEYBOARD,
             board = board,
             saves = FileSaveRepository(savesDir),

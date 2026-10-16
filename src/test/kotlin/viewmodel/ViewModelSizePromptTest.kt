@@ -1,13 +1,14 @@
 package viewmodel
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlinx.coroutines.runBlocking
 import testing.FakeBoardModel
 import testing.FakeSaveRepository
 import testing.FakeViewModelUi
 import testing.RecordingAnalyticsService
 import testing.RecordingAnalyticsService.Event
-import kotlinx.coroutines.runBlocking
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import testing.testViewModel
 
 /**
  * Covers GH-44's startup size prompt - the interactive size choice [ViewModelImpl.restoreOnStartup]
@@ -22,7 +23,7 @@ class ViewModelSizePromptTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi(chooseBoardSizeResponses = mutableListOf(3))
 
         ui.drive(viewModel) { viewModel.restoreOnStartup() }
@@ -40,7 +41,7 @@ class ViewModelSizePromptTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository(mutableMapOf("foo" to storage.SavedBoard(4, IntArray(16) { it })))
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi(confirmRestoreResponses = mutableListOf(false), chooseBoardSizeResponses = mutableListOf(5))
 
         ui.drive(viewModel) { viewModel.restoreOnStartup() }
@@ -58,7 +59,7 @@ class ViewModelSizePromptTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository(mutableMapOf("foo" to storage.SavedBoard(4, IntArray(16) { it })))
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi(confirmRestoreResponses = mutableListOf(true))
 
         ui.drive(viewModel) { viewModel.restoreOnStartup() }
@@ -72,7 +73,7 @@ class ViewModelSizePromptTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository(mutableMapOf("foo" to storage.SavedBoard(4, IntArray(16) { it })))
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, saves, analytics, sizeChosenAtLaunch = true)
+        val viewModel = testViewModel(board, saves, analytics, sizeChosenAtLaunch = true)
         val ui = FakeViewModelUi()
 
         ui.drive(viewModel) { viewModel.restoreOnStartup() }
@@ -88,7 +89,7 @@ class ViewModelSizePromptTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi(chooseBoardSizeResponses = mutableListOf(null))
 
         ui.drive(viewModel) { viewModel.restoreOnStartup() }
