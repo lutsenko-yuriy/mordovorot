@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.13.4] — 2026-10-17 (PR #88 merged)
+
+### Added
+- [wip] (PR #88) GH-83 (WU3/4): Mordie wired into the game - one search per session that survives mode switches and stops on exit; it starts on new game, Repair and startup, resumes from or restores a save, and sits out a loaded board that already has moves. Saves store its state; new `mordie_solution_found` event and `board_solved` gains `mordie_result`/`mordie_moves`. Nothing on screen yet - the TUI lands in WU4.
+
 ## [0.13.3] — 2026-10-16 (PR #87 merged)
 
 ### Added
