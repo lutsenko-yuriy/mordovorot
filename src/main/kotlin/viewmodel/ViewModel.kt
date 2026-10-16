@@ -67,4 +67,12 @@ interface ViewModel {
 
     /** Moves made this game (GH-62) - see [board_model.BoardModel.moveCount]. */
     fun moveCount(): Int
+
+    /** What Mordie says now, without the `Mordie:` prefix (GH-83); `null` for an empty
+     *  stretch or a solved board. */
+    fun mordieLine(): String?
+
+    /** Mordie's ending for the solved title (GH-83); `null` when Mordie has no result, and the
+     *  view falls back to `Congratulations`. */
+    fun mordieEnding(): String?
 }

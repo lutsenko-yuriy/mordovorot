@@ -7,9 +7,12 @@ import board_model.BoardModel
 import board_model.Solvability
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
+import mordie.Mordie
+import mordie.MordieSearchFactory
 import storage.FileSaveRepository
 import storage.SaveRepository
 import storage.SavedBoard
+import storage.SavedMordie
 
 /** The one [ViewModel] implementation (GH-42 WU3, collapsing GH-23's `BaseViewModel` +
  *  `ConsoleViewModelImpl` + `TuiViewModelImpl` split): owns board/saves/analytics wiring and
@@ -27,6 +30,9 @@ class ViewModelImpl(
      *  fresh at the size the board was already constructed with, regardless of what saves
      *  exist. */
     private val sizeChosenAtLaunch: Boolean = false,
+    /** Inert by default, so tests never leave a real search running; `GameSession` passes the
+     *  session's own (GH-83). */
+    private val mordie: Mordie = Mordie(MordieSearchFactory.NONE),
 ) : ViewModel {
 
     /** Rendezvous - `ask` doesn't return until the View has actually finished handling the
@@ -61,17 +67,35 @@ class ViewModelImpl(
     override fun shiftDown(col: Int) = shift { board.shiftDown(col) }
 
     /** Runs a shift and tracks `board_solved` when it turns an unsolved board into a solved one
-     *  (GH-62). Loads never pass through here, so restoring a solved save doesn't fire it. */
+     *  (GH-62). Loads never pass through here, so restoring a solved save doesn't fire it.
+     *  Mordie's check runs first, so a solution it reveals on the solving shift counts. */
     private fun shift(action: () -> Unit) {
         val wasSolved = board.isCorrect()
         action()
+        mordie.onShift()?.let { found ->
+            analytics.track(
+                "mordie_solution_found",
+                mapOf(
+                    "board_size" to board.squareSide,
+                    "solution_length" to found.moves,
+                    "player_shift_count" to mordie.shifts,
+                    "search_duration_ms" to found.elapsedMs,
+                    "resumed_from_save" to mordie.resumedFromSave,
+                ),
+            )
+        }
         if (!wasSolved && board.isCorrect()) {
-            analytics.track("board_solved", mapOf("move_count" to board.moveCount, "board_size" to board.squareSide))
+            val outcome = mordie.onSolved()
+            val mordieProps = outcome?.let {
+                mapOf("mordie_result" to it.result(board.moveCount).name.lowercase(), "mordie_moves" to it.moves)
+            }.orEmpty()
+            analytics.track("board_solved", mapOf("move_count" to board.moveCount, "board_size" to board.squareSide) + mordieProps)
         }
     }
 
     override fun newGame(size: Int, trigger: String) {
         board.newGame(size)
+        mordie.startFresh(board.boardArray)
         analytics.track("new_game_size_selected", mapOf("size" to size, "trigger" to trigger))
     }
 
@@ -88,7 +112,8 @@ class ViewModelImpl(
             },
         ) {
             val existed = saves.exists(name)
-            saves.save(name, board.boardArray, board.squareSide, board.moveCount)
+            val snapshot = mordie.snapshot()?.let { SavedMordie(it.original, it.moves, it.found) }
+            saves.save(name, board.boardArray, board.squareSide, board.moveCount, snapshot)
             analytics.track("save_command_used", mapOf("result" to "success", "overwrote_existing" to existed))
             showMessage("Saved as '$name'.")
             true
@@ -129,9 +154,22 @@ class ViewModelImpl(
             // No size-mismatch rejection (GH-44 WU5) - board.restoreState resizes the board to
             // match the save instead, so every successful saves.load() now restores.
             board.restoreState(saved.state, saved.moveCount)
+            bindMordie(saved.mordie)
             analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "success"))
             showMessage("Loaded '$name'.")
             true
+        }
+    }
+
+    /** Binds Mordie to the board just loaded from a save with [data]. A searching save with an
+     *  unsolvable original can only be hand-edited, so Mordie starts over from the board. */
+    private fun bindMordie(data: SavedMordie?) {
+        when {
+            board.isCorrect() ->
+                if (data == null) mordie.clear() else mordie.restoreSolved(data.original, data.moves, data.found)
+            data != null && (data.found || Solvability.isSolvable(data.original)) ->
+                mordie.resume(data.original, data.moves, data.found)
+            else -> mordie.startFresh(board.boardArray)
         }
     }
 
@@ -153,6 +191,7 @@ class ViewModelImpl(
                 // Restored first, so a board that can't take the save (a hand-edited size) never
                 // rewrites the file. A failed overwrite still loads - the file keeps its mark.
                 board.restoreState(fixed, saved.moveCount)
+                mordie.startFresh(board.boardArray)
                 val error = try {
                     saves.save(name, fixed, saved.squareSide, saved.moveCount)
                     null
@@ -284,8 +323,14 @@ class ViewModelImpl(
      *  a previous save (0/1/2+ saves, unchanged from GH-6), then - only if nothing was actually
      *  restored - offers a size prompt for the fresh game about to start. Skips both steps
      *  entirely when [sizeChosenAtLaunch] is set: `--size=N` *is* the answer, so the board just
-     *  keeps the size it was already constructed with, regardless of what saves exist. */
+     *  keeps the size it was already constructed with, regardless of what saves exist. Mordie
+     *  starts on whatever board play begins with, unless it is already bound (a mode switch). */
     override suspend fun restoreOnStartup() {
+        restoreOrPickSize()
+        mordie.ensureStarted(board.boardArray)
+    }
+
+    private suspend fun restoreOrPickSize() {
         if (startupRestoreDone) return
         startupRestoreDone = true
         if (sizeChosenAtLaunch) return
@@ -351,4 +396,8 @@ class ViewModelImpl(
     override fun squareSide(): Int = board.squareSide
 
     override fun moveCount(): Int = board.moveCount
+
+    override fun mordieLine(): String? = mordie.line()?.let(MordieText::line)
+
+    override fun mordieEnding(): String? = mordie.outcome()?.let { MordieText.ending(it, board.moveCount) }
 }

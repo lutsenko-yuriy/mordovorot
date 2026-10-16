@@ -36,6 +36,12 @@ class FakeViewModel : ViewModel {
     /** Scripts [moveCount]'s return value. */
     var moves: Int = 0
 
+    /** Scripts [mordieLine]'s return value. */
+    var mordieLine: String? = null
+
+    /** Scripts [mordieEnding]'s return value. */
+    var mordieEnding: String? = null
+
     override fun shiftLeft(row: Int) {
         calls.add("shiftLeft($row)")
     }
@@ -103,4 +109,9 @@ class FakeViewModel : ViewModel {
     // Not recorded in [calls] - it's a read-only query like [boardState], but tests asserting
     // exact call lists predate it.
     override fun moveCount(): Int = moves
+
+    // Not recorded in [calls] - read-only queries, like [moveCount].
+    override fun mordieLine(): String? = mordieLine
+
+    override fun mordieEnding(): String? = mordieEnding
 }
