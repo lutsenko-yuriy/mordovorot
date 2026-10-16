@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.13.2] — 2026-10-16 (PR #86 merged)
+
+### Added
+- [wip] (PR #86) GH-83 (WU1/4): Mordie's search engine - an admissible move-metric heuristic, a steppable IDA* solver (optimal against a full 3x3 BFS; O(depth) memory, resumable above a saved N) and a throttled background search (~half a core, cancellable). Not wired into the game yet - Mordie's state, text and save format land in WU2.
+
 ## [0.13.1] — 2026-10-16 (PR #84 merged)
 
 ### Changed
