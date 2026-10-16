@@ -55,7 +55,8 @@ src/main/kotlin/
 │   │                               # Dispatchers.Default, publishing a volatile snapshot
 │   ├── Mordie.kt                # Opponent state: shift count, 5-shift checks, opening/resume
 │   │                              # kind, found reveal, frozen outcome, save snapshot
-│   └── MordieLine.kt            # MordieLine (sealed) / MordieOutcome / MordieResult
+│   └── MordieLine.kt            # MordieLine (sealed) / MordieOutcome / MordieResult /
+│                                  # MordieSnapshot (what a save stores)
 ├── viewmodel/
 │   ├── ViewModel.kt          # The one viewmodel interface (GH-42 WU3) — shift/newGame/save/
 │   │                           # load/exit plus the read-only query surface (listSaves/saveExists/
@@ -231,7 +232,9 @@ game's original arrangement for its shortest solution in the GH-62 move metric, 
 one place for the GH-41 mobile port), and memory stays O(depth). A search started from a
 saved N begins at N + 1, so it never re-reports below it. `Mordie` turns the player's
 shifts into the line state: a check every 5 shifts, a reveal of "found", and the outcome
-frozen on solve, using Mordie's live state at that shift. `GameSession` owns one `Mordie`,
+frozen on solve, using Mordie's live state at that shift. Its `MordieSnapshot` mirrors
+`storage.SavedMordie` on purpose, so `mordie` never imports `storage`; `ViewModelImpl` maps
+between the two. `GameSession` owns one `Mordie`,
 so it survives mode switches. `ViewModelImpl` defaults to an inert
 `Mordie(MordieSearchFactory.NONE)`, so unit tests never leave real searches running.
 
