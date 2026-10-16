@@ -172,6 +172,8 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle
   | 25-39 | empty |
   | ...5 shown, 15 empty, repeating... | |
 
+  - A progress window is skipped (the line stays empty) when N is the same as the last N Mordie
+    told the player: its last progress line, 0 for a new game, or the saved N after a load.
   - From the 60th shift on, the progress line starts with `This one is hard! `.
   - When a check finds that Mordie has its solution, the line switches at once, even in an empty
     stretch, to `Found it! I had to make N moves to find the solution! Can you beat it?`, and

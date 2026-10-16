@@ -203,6 +203,14 @@ class MordieScenarioTest {
     }
 
     @Test
+    fun `progress is skipped when Mordie's N hasn't changed since it last said it`() {
+        session(listOf(progress(6, found = false)) + shifts(19) + snappedShifts(1) + shifts(19) + snappedShifts(1))
+
+        assertEquals("Mordie: I have already made 6 moves and have not solved it yet!", mordieShown(snaps[0])) // shift 20
+        assertEquals("", mordieShown(snaps[1])) // shift 40, still 6
+    }
+
+    @Test
     fun `found is revealed at the next 5-shift check and stays until solved`() {
         // WU3 (analytics) + WU4 (line)
         val run = session(shifts(7) + progress(11, found = true, elapsedMs = 1234) + snappedShifts(23))

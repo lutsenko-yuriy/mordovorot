@@ -17,6 +17,12 @@ class Mordie(private val factory: MordieSearchFactory = BackgroundMordieSearch.F
     private var opening: MordieLine = MordieLine.Opening
     private var checkedMoves = 0
     private var revealedMoves: Int? = null
+
+    /** The last N Mordie told the player - its opening's, or its last progress line's. */
+    private var toldMoves = 0
+
+    /** Whether this progress window has news; set at its first check. */
+    private var progressWindowShown = false
     private var outcome: MordieOutcome? = null
 
     /** Shifts since the game started or was loaded. */
@@ -43,6 +49,7 @@ class Mordie(private val factory: MordieSearchFactory = BackgroundMordieSearch.F
         bind(original)
         resumedFromSave = true
         checkedMoves = moves
+        toldMoves = moves
         if (found) {
             revealedMoves = moves
         } else {
@@ -70,6 +77,10 @@ class Mordie(private val factory: MordieSearchFactory = BackgroundMordieSearch.F
         if (revealedMoves != null || shifts % CHECK_EVERY != 0) return null
         val progress = search!!.progress()
         checkedMoves = progress.moves.coerceAtLeast(0)
+        if (shifts % PROGRESS_EVERY == 0) {
+            progressWindowShown = checkedMoves != toldMoves
+            toldMoves = checkedMoves
+        }
         if (!progress.found) return null
         revealedMoves = progress.moves
         return progress
@@ -80,7 +91,8 @@ class Mordie(private val factory: MordieSearchFactory = BackgroundMordieSearch.F
         revealedMoves?.let { return MordieLine.Found(it) }
         return when {
             shifts < CHECK_EVERY -> opening
-            shifts % PROGRESS_EVERY < CHECK_EVERY -> MordieLine.Progress(checkedMoves, hard = shifts >= HARD_FROM)
+            shifts % PROGRESS_EVERY < CHECK_EVERY && progressWindowShown ->
+                MordieLine.Progress(checkedMoves, hard = shifts >= HARD_FROM)
             else -> null
         }
     }
@@ -117,6 +129,8 @@ class Mordie(private val factory: MordieSearchFactory = BackgroundMordieSearch.F
         opening = MordieLine.Opening
         checkedMoves = 0
         revealedMoves = null
+        toldMoves = 0
+        progressWindowShown = false
         outcome = null
         shifts = 0
         resumedFromSave = false
