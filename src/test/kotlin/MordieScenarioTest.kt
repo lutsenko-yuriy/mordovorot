@@ -64,7 +64,7 @@ class MordieScenarioTest {
                 is Act -> acts.merge(events.size, step.block) { a, b -> { a(); b() } }
             }
         }
-        val terminal = FakeTerminal(events, terminalSize, acts)
+        val terminal = FakeTerminal(events, terminalSize, acts).also { this@MordieScenarioTest.terminal = it }
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(4).apply { restoreState(initial) }
         GameSession(
@@ -78,6 +78,31 @@ class MordieScenarioTest {
         ).run()
         Run(terminal, board, analytics)
     }
+
+    /** The terminal of the session running now, for [snap]. */
+    private lateinit var terminal: FakeTerminal
+
+    /** The frames [snap] captured, in order. */
+    private val snaps = mutableListOf<String>()
+
+    /** Captures the frame on screen now - after the previous event, before the next one. */
+    private fun snap() = Act { snaps += terminal.frames.last() }
+
+    /** [count] shifts, each followed by a [snap]. */
+    private fun snappedShifts(count: Int) = List(count) { listOf(up(0), snap()) }.flatten()
+
+    private fun rows(frame: String) = frame.replace(Regex("\u001B\\[[0-9;?]*[A-Za-z]"), "").split("\r\n")
+
+    /** The `Mordie:` rows' text joined into one line, `""` when they are blank. */
+    private fun mordieShown(frame: String, side: Int = 4) =
+        BoardLayout(terminalSize, side).let { rows(frame).subList(it.mordieRow, it.mordieRow + it.mordieRows) }.map { it.trim() }.filter { it.isNotEmpty() }.joinToString(" ")
+
+    private fun titleShown(frame: String) = rows(frame)[layout.titleRow].trim()
+
+    private val Run.lastFrame get() = terminal.frames.last()
+
+    private val greeting = "Mordie: Alright! Let's sort this one out!"
+    private val found11 = "Mordie: Found it! I had to make 11 moves to find the solution! Can you beat it?"
 
     private fun savesDir(vararg files: Pair<String, String>): Path = createTempDirectory("mordovorot-gh83").also { dir ->
         for ((name, content) in files) dir.resolve("$name.save").writeText(content)
@@ -158,28 +183,37 @@ class MordieScenarioTest {
 
     @Test
     fun `new game greets for shifts 0-4, then the line empties`() {
-        // WU4
-        // TODO: 1. Start a scrambled 4x4; fake progress N=3, not found.
-        // TODO: 2. Frame 0 shows "Mordie: Alright! Let's sort this one out!" under "Moves: 0".
-        // TODO: 3. After shifts 1-4 the greeting is still shown.
-        // TODO: 4. After shift 5 the Mordie row is blank.
+        session(listOf(progress(3, found = false), snap()) + snappedShifts(5))
+
+        assertEquals("Moves: 0", rows(snaps[0])[layout.movesRow].trim())
+        for (shift in 0..4) assertEquals(greeting, mordieShown(snaps[shift]), "shift $shift")
+        assertEquals("", mordieShown(snaps[5]))
     }
 
     @Test
     fun `progress shows at shifts 20-24, empties at 25, and gets the hard prefix from 60`() {
-        // WU4
-        // TODO: 1. Fake progress N=6 up to shift 19, N=7 right after the shift-20 check.
-        // TODO: 2. Shift 19: the Mordie row is blank.
-        // TODO: 3. Shift 20: "Mordie: I have already made 6 moves and have not solved it yet!" (the value at the check).
-        // TODO: 4. Shift 24: same text.
-        // TODO: 5. Shift 25: blank.
-        // TODO: 6. Set N=9 before shift 60; shift 60: "Mordie: This one is hard! I have already made 9 moves and have not solved it yet!"
+        session(
+            listOf(progress(6, found = false)) + shifts(18) + snappedShifts(2) + progress(7, found = false) +
+                shifts(3) + snappedShifts(2) + shifts(34) + progress(9, found = false) + snappedShifts(1),
+        )
+
+        val progress6 = "Mordie: I have already made 6 moves and have not solved it yet!"
+        assertEquals(listOf("", progress6, progress6, ""), snaps.take(4).map(::mordieShown)) // shifts 19, 20, 24, 25
+        assertEquals("Mordie: This one is hard! I have already made 9 moves and have not solved it yet!", mordieShown(snaps[4]))
+    }
+
+    @Test
+    fun `progress is skipped when Mordie's N hasn't changed since it last said it`() {
+        session(listOf(progress(6, found = false)) + shifts(19) + snappedShifts(1) + shifts(19) + snappedShifts(1))
+
+        assertEquals("Mordie: I have already made 6 moves and have not solved it yet!", mordieShown(snaps[0])) // shift 20
+        assertEquals("", mordieShown(snaps[1])) // shift 40, still 6
     }
 
     @Test
     fun `found is revealed at the next 5-shift check and stays until solved`() {
         // WU3 (analytics) + WU4 (line)
-        val run = session(shifts(7) + progress(11, found = true, elapsedMs = 1234) + shifts(23))
+        val run = session(shifts(7) + progress(11, found = true, elapsedMs = 1234) + snappedShifts(23))
 
         assertEquals(
             mapOf(
@@ -192,9 +226,8 @@ class MordieScenarioTest {
             ),
             run.event("mordie_solution_found"),
         )
-        // TODO (WU4): shifts 8 and 9: the Mordie row is still blank.
-        // TODO (WU4): shift 10: "Mordie: Found it! I had to make 11 moves to find the solution! Can you beat it?"
-        // TODO (WU4): shifts 11-30: the same line on every frame.
+        assertEquals(listOf("", ""), snaps.take(2).map(::mordieShown)) // shifts 8, 9
+        for (shift in 10..30) assertEquals(found11, mordieShown(snaps[shift - 8]), "shift $shift")
     }
 
     @Test
@@ -204,7 +237,8 @@ class MordieScenarioTest {
 
         assertEquals("player_won", run.event("board_solved")["mordie_result"])
         assertEquals(0, run.event("board_solved")["mordie_moves"])
-        // TODO (WU4): title is "You beat me! I was still at 0 moves."; the Mordie row is blank.
+        assertEquals("You beat me! I was still at 0 moves.", titleShown(run.lastFrame))
+        assertEquals("", mordieShown(run.lastFrame))
     }
 
     @Test
@@ -214,7 +248,7 @@ class MordieScenarioTest {
 
         assertEquals("matched", run.event("board_solved")["mordie_result"])
         assertEquals(1, run.event("board_solved")["mordie_moves"])
-        // TODO (WU4): title is "Cool, you matched me! 1 move each!" (singular).
+        assertEquals("Cool, you matched me! 1 move each!", titleShown(run.lastFrame))
     }
 
     @Test
@@ -226,7 +260,7 @@ class MordieScenarioTest {
         assertEquals(2, run.event("board_solved")["move_count"])
         assertEquals("mordie_won", run.event("board_solved")["mordie_result"])
         assertEquals(1, run.event("board_solved")["mordie_moves"])
-        // TODO (WU4): title is "Sorry, but I win: 1 move vs your 2."
+        assertEquals("Sorry, but I win: 1 move vs your 2.", titleShown(run.lastFrame))
     }
 
     @Test
@@ -238,7 +272,7 @@ class MordieScenarioTest {
 
         assertEquals("machine", run.event("board_solved")["mordie_result"])
         assertEquals(5, run.event("board_solved")["mordie_moves"])
-        // TODO (WU4): title is "I made 5 moves and you made 1 move! Are you a machine?"
+        assertEquals("I made 5 moves and you made 1 move! Are you a machine?", titleShown(run.lastFrame))
     }
 
     @Test
@@ -246,7 +280,10 @@ class MordieScenarioTest {
         // WU3 (save/resume) + WU4 (line)
         val dir = savesDir()
 
-        session(shifts(7) + progress(8, found = false) + save("m") + shifts(1) + load("m (4x4)"), savesDir = dir)
+        session(
+            shifts(7) + progress(8, found = false) + save("m") + shifts(1) + load("m (4x4)") + snap() + snappedShifts(5),
+            savesDir = dir,
+        )
 
         val lines = dir.resolve("m.save").readLines()
         assertEquals(tiles(scrambled), lines[3])
@@ -255,8 +292,9 @@ class MordieScenarioTest {
         assertTrue(factory.started[0].cancelled)
         assertContentEquals(scrambled, factory.latest.original)
         assertEquals(8, factory.latest.ruledOut)
-        // TODO (WU4): line is "Mordie: Okay, so we stopped when I was at 8 moves! What was I doing?.."
-        // TODO (WU4): the shift count restarted: after 5 more shifts the Mordie row is blank.
+        val resumed = "Mordie: Okay, so we stopped when I was at 8 moves! What was I doing?.."
+        for (shift in 0..4) assertEquals(resumed, mordieShown(snaps[shift]), "shift $shift after the load")
+        assertEquals("", mordieShown(snaps[5])) // the shift count restarted at the load
     }
 
     @Test
@@ -264,13 +302,13 @@ class MordieScenarioTest {
         // WU3 + WU4
         val dir = savesDir("m" to "4\n${tiles(oneShiftFromSolved)}\n0\n${tiles(oneShiftFromSolved)}\n11 found\n")
 
-        val run = session(load("m (4x4)") + shifts(5), savesDir = dir)
+        val run = session(load("m (4x4)") + snap() + shifts(5), savesDir = dir)
 
         run.assertLoaded()
         assertEquals(1, factory.started.size)
         assertTrue(factory.started[0].cancelled)
         assertTrue(run.events("mordie_solution_found").isEmpty())
-        // TODO (WU4): the first frame after the load shows "Mordie: Found it! I had to make 11 moves to find the solution! Can you beat it?"
+        assertEquals(found11, mordieShown(snaps.single()))
     }
 
     @Test
@@ -278,12 +316,12 @@ class MordieScenarioTest {
         // WU3 + WU4
         val dir = savesDir("old" to "4\n${tiles(oneShiftFromSolved)}\n0\n")
 
-        session(load("old (4x4)"), savesDir = dir)
+        val run = session(load("old (4x4)"), savesDir = dir)
 
         assertEquals(2, factory.started.size)
         assertContentEquals(oneShiftFromSolved, factory.latest.original)
         assertEquals(-1, factory.latest.ruledOut)
-        // TODO (WU4): the frame shows "Mordie: Alright! Let's sort this one out!"
+        assertEquals(greeting, mordieShown(run.lastFrame))
     }
 
     @Test
@@ -291,14 +329,15 @@ class MordieScenarioTest {
         // WU3 + WU4 - its N would cover only the moves after the load (audit on PR #88).
         val dir = savesDir("old" to "4\n${tiles(oneShiftFromSolved)}\n4\n")
 
-        val run = session(load("old (4x4)") + left(1), savesDir = dir)
+        val run = session(load("old (4x4)") + snap() + left(1), savesDir = dir)
 
         assertEquals(5, run.board.moveCount)
         assertEquals(1, factory.started.size)
         assertTrue(factory.started[0].cancelled)
         assertFalse("mordie_result" in run.event("board_solved"))
         assertFalse("mordie_moves" in run.event("board_solved"))
-        // TODO (WU4): no Mordie row after the load; the title is "Congratulations ✓".
+        assertEquals("", mordieShown(snaps.single()))
+        assertEquals("Congratulations ✓", titleShown(run.lastFrame))
     }
 
     @Test
@@ -313,7 +352,7 @@ class MordieScenarioTest {
         assertEquals(2, factory.started.size)
         assertContentEquals(run.board.boardArray, factory.latest.original)
         assertEquals(-1, factory.latest.ruledOut)
-        // TODO (WU4): the greeting is the fresh one.
+        assertEquals(greeting, mordieShown(run.lastFrame, side = 3))
     }
 
     @Test
@@ -327,17 +366,24 @@ class MordieScenarioTest {
         withoutData.assertLoaded()
         assertTrue(withData.events("board_solved").isEmpty())
         assertTrue(withoutData.events("board_solved").isEmpty())
-        // TODO (WU4): with data, the title is "Cool, you matched me! 3 moves each!"
-        // TODO (WU4): without data, the title is "Congratulations ✓".
+        assertEquals("Cool, you matched me! 3 moves each!", titleShown(withData.lastFrame))
+        assertEquals("Congratulations ✓", titleShown(withoutData.lastFrame))
     }
 
     @Test
     fun `switching input mode keeps the shift count and line text`() {
-        // WU4
-        // TODO: 1. Make 3 shifts, then click [ Keyboard ].
-        // TODO: 2. The first keyboard-mode frame shows the same greeting.
-        // TODO: 3. After 2 keyboard shifts (shift 5 overall) the Mordie row is blank.
-        // TODO: 4. The factory was started only once.
+        val keyboardButton = BoardLayout(terminalSize, 4, modeButtons = listOf(InputMode.KEYBOARD))
+            .toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.KEYBOARD) }
+
+        session(
+            shifts(3) + snap() + click(keyboardButton.x to keyboardButton.y) + snap() +
+                key(TerminalEvent.Enter) + snap() + key(TerminalEvent.Enter) + snap(),
+        )
+
+        assertEquals(greeting, mordieShown(snaps[0]))
+        assertTrue(rows(snaps[1]).any { "Arrows: move" in it }) // keyboard mode
+        assertEquals(listOf(greeting, greeting, ""), snaps.drop(1).map(::mordieShown)) // shifts 3, 4, 5
+        assertEquals(1, factory.started.size)
     }
 
     @Test

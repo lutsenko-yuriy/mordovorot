@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.14.0] — 2026-10-17 (PR #89 merged)
+
+### Added
+- [user] (PR #89) GH-83 (WU4/4): Mordie, the computer opponent, now appears in the TUI — a progress line showing how many moves remain as Mordie searches, ending with either "found in N moves" (a win) or "Are you a machine?" (if the player solves it first). The search is steppable (one move per turn), runs in the background (~half a core), and survives mode switches; the feature completes the Mordie work started in 0.13.1–0.13.4 (search engine, state machine, save format, game-loop integration).
+
 ## [0.13.4] — 2026-10-17 (PR #88 merged)
 
 ### Added

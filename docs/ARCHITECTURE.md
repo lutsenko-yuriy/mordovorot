@@ -270,11 +270,14 @@ structured-concurrency hygiene).
 **Mordie wiring (GH-83).** `ViewModel.mordieLine()` (the text after `Mordie:`, or `null`)
 and `mordieEnding()` (the solved title, or `null` → `Congratulations ✓`) are plain
 queries. `shift()` calls `mordie.onShift()` and then, on solve, `mordie.onSolved()`;
-`newGame` and Repair start Mordie fresh; `saveGame` passes `mordie.snapshot()`. A
+`newGame` starts Mordie fresh; `saveGame` passes `mordie.snapshot()`. A
 successful load binds Mordie through one rule: a solved save with Mordie data gets that
 outcome, a solved save without it clears Mordie, a found save resumes found, a searching
-save with a solvable original resumes at its N, and anything else starts fresh from the
-loaded board, keeping the move count. Every `restoreOnStartup` path ends with
+save with a solvable original resumes at its N, and anything else (and a Repair) starts
+fresh from the loaded board if it has no moves yet, or clears Mordie if it has. All of this
+lives in `MordieHooks`. In the TUI, `ScreenState` carries `mordieLine` and the solved
+title (`mordieEnding() ?: TITLE_SOLVED`); `BoardLayout` reserves `mordieRows` under
+`Moves:` from the longest possible line at `mordieWrapWidth`, so the grid stays put. Every `restoreOnStartup` path ends with
 `mordie.ensureStarted`, which does nothing once Mordie is bound (e.g. after a mode switch).
 
 ### view

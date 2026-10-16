@@ -43,16 +43,27 @@ data class ScreenState(
     val modeButtons: List<InputMode> = emptyList(),
     /** Moves made this game (GH-62), drawn under the title. */
     val moveCount: Int = 0,
+    /** What Mordie says under [moveCount] (GH-83), without the `Mordie:` prefix; `null` for none. */
+    val mordieLine: String? = null,
 ) {
     companion object {
         /** Builds the board screen's [ScreenState] from the viewModel's current query results. */
-        fun forBoard(board: List<Int>, squareSide: Int, solved: Boolean, moveCount: Int = 0): ScreenState =
+        fun forBoard(
+            board: List<Int>,
+            squareSide: Int,
+            solved: Boolean,
+            moveCount: Int = 0,
+            /** The title once solved - Mordie's ending (GH-83) when there is one. */
+            solvedTitle: String = TITLE_SOLVED,
+            mordieLine: String? = null,
+        ): ScreenState =
             ScreenState(
-                title = if (solved) TITLE_SOLVED else TITLE_UNSOLVED,
+                title = if (solved) solvedTitle else TITLE_UNSOLVED,
                 board = board,
                 squareSide = squareSide,
                 arrowsEnabled = !solved,
                 moveCount = moveCount,
+                mordieLine = mordieLine,
             )
     }
 }

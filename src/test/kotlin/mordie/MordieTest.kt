@@ -165,8 +165,10 @@ class MordieTest {
     @Test
     fun `progress repeats every 20 shifts and is hard from shift 60`() {
         mordie.startFresh(board)
+        factory.latest.progress = searching(7)
+        shifts(20)
         factory.latest.progress = searching(8)
-        shifts(40)
+        shifts(20)
         assertEquals(MordieLine.Progress(8, hard = false), mordie.line())
 
         factory.latest.progress = searching(9)
@@ -174,6 +176,44 @@ class MordieTest {
         assertNull(mordie.line())
         shifts(1)
         assertEquals(MordieLine.Progress(9, hard = true), mordie.line())
+    }
+
+    @Test
+    fun `progress is skipped when N hasn't changed since Mordie last said it`() {
+        mordie.startFresh(board)
+        factory.latest.progress = searching(6)
+        shifts(20)
+        assertEquals(MordieLine.Progress(6, hard = false), mordie.line())
+
+        shifts(20)
+        assertNull(mordie.line()) // still 6 at shift 40
+        shifts(4)
+        assertNull(mordie.line())
+
+        factory.latest.progress = searching(7)
+        shifts(16)
+        assertEquals(MordieLine.Progress(7, hard = true), mordie.line())
+    }
+
+    @Test
+    fun `a fresh search still at 0 moves says nothing at shift 20`() {
+        mordie.startFresh(board)
+        factory.latest.progress = searching(0)
+        shifts(20)
+
+        assertNull(mordie.line())
+    }
+
+    @Test
+    fun `a resumed search still at the saved N says nothing at shift 20`() {
+        mordie.resume(board, moves = 8, found = false)
+        factory.latest.progress = searching(8)
+        shifts(20)
+        assertNull(mordie.line())
+
+        factory.latest.progress = searching(9)
+        shifts(20)
+        assertEquals(MordieLine.Progress(9, hard = false), mordie.line())
     }
 
     @Test
