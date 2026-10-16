@@ -200,6 +200,75 @@ class FileSaveRepositoryTest {
     }
 
     @Test
+    fun `save then load round-trips Mordie data, searching and found, GH-83`() {
+        val repo = newRepository()
+        val state = intArrayOf(3, 0, 2, 1)
+        val searching = SavedMordie(intArrayOf(1, 0, 3, 2), moves = 8, found = false)
+        val found = SavedMordie(intArrayOf(2, 3, 0, 1), moves = 11, found = true)
+
+        repo.save("searching", state, 2, moveCount = 5, mordie = searching)
+        repo.save("found", state, 2, moveCount = 5, mordie = found)
+
+        assertEquals(SavedBoard(2, state, 5, searching), repo.load("searching"))
+        assertEquals(SavedBoard(2, state, 5, found), repo.load("found"))
+    }
+
+    @Test
+    fun `Mordie data goes on lines 4-5 after an unchanged first three lines`() {
+        val dir = createTempDirectory("mordovorot-saves")
+        val repo = FileSaveRepository(dir)
+
+        repo.save("a", intArrayOf(3, 0, 2, 1), 2, moveCount = 7, mordie = SavedMordie(intArrayOf(1, 0, 3, 2), 8, found = false))
+        repo.save("b", intArrayOf(3, 0, 2, 1), 2, moveCount = 7, mordie = SavedMordie(intArrayOf(1, 0, 3, 2), 1, found = true))
+
+        assertEquals("2\n3 0 2 1\n7\n1 0 3 2\n8 searching", dir.resolve("a.save").readText().trim())
+        assertEquals("2\n3 0 2 1\n7\n1 0 3 2\n1 found", dir.resolve("b.save").readText().trim())
+    }
+
+    @Test
+    fun `a save without Mordie data loads with none - legacy or blank line 4`() {
+        val dir = createTempDirectory("mordovorot-saves")
+        val repo = FileSaveRepository(dir)
+        repo.save("plain", intArrayOf(3, 0, 2, 1), 2, moveCount = 7)
+        dir.resolve("legacy.save").writeText("2\n3 0 2 1\n7\n")
+        dir.resolve("blank.save").writeText("2\n3 0 2 1\n7\n  \n")
+
+        assertNull(repo.load("plain")?.mordie)
+        assertNull(repo.load("legacy")?.mordie)
+        assertNull(repo.load("blank")?.mordie)
+    }
+
+    @Test
+    fun `load throws SaveFileFormatException on bad Mordie data`() {
+        val dir = createTempDirectory("mordovorot-saves")
+        val repo = FileSaveRepository(dir)
+        val bad = mapOf(
+            "no-status" to "1 0 3 2\n",
+            "blank-status" to "1 0 3 2\n \n",
+            "bad-keyword" to "1 0 3 2\n8 solved\n",
+            "negative" to "1 0 3 2\n-1 searching\n",
+            "not-a-number" to "1 0 3 2\neight found\n",
+            "extra-token" to "1 0 3 2\n8 found now\n",
+            "wrong-size" to "1 0 2\n8 found\n",
+            "not-a-permutation" to "1 1 3 2\n8 found\n",
+            "non-integer-tile" to "1 x 3 2\n8 found\n",
+        )
+        for ((name, mordieLines) in bad) dir.resolve("$name.save").writeText("2\n3 0 2 1\n7\n$mordieLines")
+
+        for (name in bad.keys) assertFailsWith<SaveFileFormatException>(name) { repo.load(name) }
+    }
+
+    @Test
+    fun `save rejects invalid Mordie data`() {
+        val repo = newRepository()
+        val state = intArrayOf(3, 0, 2, 1)
+
+        assertFailsWith<IllegalArgumentException> { repo.save("a", state, 2, mordie = SavedMordie(intArrayOf(0, 1, 2), 3, false)) }
+        assertFailsWith<IllegalArgumentException> { repo.save("b", state, 2, mordie = SavedMordie(intArrayOf(0, 0, 2, 3), 3, false)) }
+        assertFailsWith<IllegalArgumentException> { repo.save("c", state, 2, mordie = SavedMordie(intArrayOf(0, 1, 2, 3), -1, false)) }
+    }
+
+    @Test
     fun `load throws SaveFileFormatException on a non-integer token`() {
         val dir = createTempDirectory("mordovorot-saves")
         val repo = FileSaveRepository(dir)
