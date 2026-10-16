@@ -73,15 +73,30 @@ class ViewModelMordieTest {
     }
 
     @Test
-    fun `a save with no Mordie data starts fresh from the loaded board and keeps the move count`(): Unit = runBlocking {
-        val viewModel = viewModel(savesWith(nearlySolved, moveCount = 4))
+    fun `an unplayed save with no Mordie data starts fresh from the loaded board`(): Unit = runBlocking {
+        val viewModel = viewModel(savesWith(nearlySolved))
 
         viewModel.load()
 
         assertContentEquals(nearlySolved, factory.latest.original)
         assertEquals(-1, factory.latest.ruledOut)
-        assertEquals(4, viewModel.moveCount())
         assertEquals("Alright! Let's sort this one out!", viewModel.mordieLine())
+    }
+
+    @Test
+    fun `Mordie sits out a save with no Mordie data that already has moves`(): Unit = runBlocking {
+        val viewModel = viewModel(savesWith(nearlySolved, moveCount = 4))
+        viewModel.newGame(3, trigger = "toolbar")
+
+        viewModel.load()
+        viewModel.shiftLeft(0)
+
+        assertTrue(factory.latest.cancelled)
+        assertEquals(1, factory.started.size)
+        assertEquals(5, viewModel.moveCount())
+        assertNull(viewModel.mordieLine())
+        assertNull(viewModel.mordieEnding())
+        assertEquals(mapOf("move_count" to 5, "board_size" to 3), event("board_solved"))
     }
 
     @Test
@@ -141,16 +156,26 @@ class ViewModelMordieTest {
     }
 
     @Test
-    fun `repair starts fresh from the repaired board, keeps the move count and saves no Mordie data`(): Unit = runBlocking {
-        val saves = savesWith(unsolvable, moveCount = 5, mordie = SavedMordie(unsolvable, 2, found = false))
+    fun `repair of an unplayed save starts fresh from the repaired board and saves no Mordie data`(): Unit = runBlocking {
+        val saves = savesWith(unsolvable, mordie = SavedMordie(unsolvable, 2, found = false))
         val viewModel = viewModel(saves)
 
         viewModel.load(FakeViewModelUi(resolveUnsolvableSaveResponses = mutableListOf(UnsolvableSaveChoice.REPAIR)))
 
         assertContentEquals(viewModel.boardState(), factory.latest.original)
         assertEquals(-1, factory.latest.ruledOut)
-        assertEquals(5, viewModel.moveCount())
         assertEquals(listOf<SavedMordie?>(null), saves.savedMordies)
+    }
+
+    @Test
+    fun `Mordie sits out a repaired save that already has moves`(): Unit = runBlocking {
+        val viewModel = viewModel(savesWith(unsolvable, moveCount = 5))
+
+        viewModel.load(FakeViewModelUi(resolveUnsolvableSaveResponses = mutableListOf(UnsolvableSaveChoice.REPAIR)))
+
+        assertEquals(0, factory.started.size)
+        assertEquals(5, viewModel.moveCount())
+        assertNull(viewModel.mordieLine())
     }
 
     // --- save ---

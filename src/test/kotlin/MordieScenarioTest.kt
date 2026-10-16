@@ -269,29 +269,41 @@ class MordieScenarioTest {
     }
 
     @Test
-    fun `a pre-Mordie save starts Mordie fresh from the loaded board and keeps the move count`() {
+    fun `an unplayed pre-Mordie save starts Mordie fresh from the loaded board`() {
         // WU3 + WU4
-        val dir = savesDir("old" to "4\n${tiles(oneShiftFromSolved)}\n4\n")
+        val dir = savesDir("old" to "4\n${tiles(oneShiftFromSolved)}\n0\n")
 
-        val run = session(load("old (4x4)"), savesDir = dir)
+        session(load("old (4x4)"), savesDir = dir)
 
-        assertEquals(4, run.board.moveCount)
         assertEquals(2, factory.started.size)
         assertContentEquals(oneShiftFromSolved, factory.latest.original)
         assertEquals(-1, factory.latest.ruledOut)
-        // TODO (WU4): the frame shows "Moves: 4" and "Mordie: Alright! Let's sort this one out!"
+        // TODO (WU4): the frame shows "Mordie: Alright! Let's sort this one out!"
+    }
+
+    @Test
+    fun `Mordie sits out a pre-Mordie save that already has moves`() {
+        // WU3 + WU4 - its N would cover only the moves after the load (audit on PR #88).
+        val dir = savesDir("old" to "4\n${tiles(oneShiftFromSolved)}\n4\n")
+
+        val run = session(load("old (4x4)") + left(1), savesDir = dir)
+
+        assertEquals(5, run.board.moveCount)
+        assertEquals(1, factory.started.size)
+        assertTrue(factory.started[0].cancelled)
+        assertEquals(null, run.event("board_solved")["mordie_result"])
+        // TODO (WU4): no Mordie row after the load; the title is "Congratulations ✓".
     }
 
     @Test
     fun `a repaired unsolvable save starts Mordie fresh from the repaired board`() {
-        // WU3
+        // WU3 - a repaired save that already has moves gets no Mordie, like a pre-Mordie one.
         val odd = "2 1 0 3 4 5 6 7 8"
-        val dir = savesDir("odd" to "3\n$odd\n5\n$odd\n2 searching\n")
+        val dir = savesDir("odd" to "3\n$odd\n0\n$odd\n2 searching\n")
 
         val run = session(load("odd (3x3) unsolvable") + repair("odd (3x3)"), savesDir = dir)
 
         assertEquals(listOf(1, 2, 0, 3, 4, 5, 6, 7, 8), run.board.boardArray.toList())
-        assertEquals(5, run.board.moveCount)
         assertEquals(2, factory.started.size)
         assertContentEquals(run.board.boardArray, factory.latest.original)
         assertEquals(-1, factory.latest.ruledOut)

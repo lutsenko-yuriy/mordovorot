@@ -87,6 +87,9 @@ src/main/kotlin/
 │   │                             # same-mode no-op (GH-30)
 │   ├── ModeSwitchRequestedException.kt # Carries the requested InputMode; unwinds a running
 │   │                                      # session's play() back to GameSession's loop (GH-30)
+│   ├── MordieHooks.kt         # ViewModelImpl's Mordie part: binds it on new game/load/repair/
+│   │                             # startup (sits out a loaded board already played on), tracks
+│   │                             # its analytics, words its line and ending (GH-83)
 │   └── MordieText.kt          # Every Mordie string (line bodies + the four endings), singular
 │                                 # `1 move` included (GH-83)
 ├── storage/
