@@ -2,6 +2,7 @@ package testing
 
 import storage.SaveRepository
 import storage.SavedBoard
+import storage.SavedMordie
 
 /**
  * A [SaveRepository] test double backed by an in-memory map instead of the filesystem.
@@ -16,6 +17,9 @@ class FakeSaveRepository(
 
     /** The moveCount passed to each [save] call, parallel to [saveCalls]. */
     val savedMoveCounts = mutableListOf<Int>()
+
+    /** The Mordie data passed to each [save] call, parallel to [saveCalls]. */
+    val savedMordies = mutableListOf<SavedMordie?>()
 
     /** When set, [save] throws this instead of persisting - simulates an unsafe name or a
      *  filesystem failure (disk full, read-only directory). */
@@ -45,11 +49,12 @@ class FakeSaveRepository(
         return saves.containsKey(name)
     }
 
-    override fun save(name: String, state: IntArray, squareSide: Int, moveCount: Int) {
+    override fun save(name: String, state: IntArray, squareSide: Int, moveCount: Int, mordie: SavedMordie?) {
         saveException?.let { throw it }
         saveCalls.add(Triple(name, state.copyOf(), squareSide))
         savedMoveCounts.add(moveCount)
-        saves[name] = SavedBoard(squareSide, state.copyOf(), moveCount)
+        savedMordies.add(mordie)
+        saves[name] = SavedBoard(squareSide, state.copyOf(), moveCount, mordie)
     }
 
     override fun load(name: String): SavedBoard? {

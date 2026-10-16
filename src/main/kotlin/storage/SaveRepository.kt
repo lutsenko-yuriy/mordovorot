@@ -15,8 +15,9 @@ interface SaveRepository {
 
     fun exists(name: String): Boolean
 
-    /** [moveCount] is the board's move count (GH-62); must be non-negative. */
-    fun save(name: String, state: IntArray, squareSide: Int, moveCount: Int = 0)
+    /** [moveCount] is the board's move count (GH-62); must be non-negative. [mordie] is `null`
+     *  to save no Mordie data (GH-83); its original must be a valid arrangement too. */
+    fun save(name: String, state: IntArray, squareSide: Int, moveCount: Int = 0, mordie: SavedMordie? = null)
 
     /** Whether [name] would be accepted by [save]/[load]/[exists] rather than throwing
      *  [IllegalArgumentException] - lets a caller validate up front instead of relying on

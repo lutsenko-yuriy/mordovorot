@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.13.3] — 2026-10-16 (PR #87 merged)
+
+### Added
+- [wip] (PR #87) GH-83 (WU2/4): Mordie's opponent state machine (shift-driven line: opening, progress every 20 shifts, "hard" from 60, found revealed at the next 5-shift check; live-state outcome incl. the "Are you a machine?" case), its text with singular "1 move", and the save format - lines 4-5 store the original arrangement and `<N> found|searching`; older saves still load. Not wired into the game yet - that lands in WU3.
+
 ## [0.13.2] — 2026-10-16 (PR #86 merged)
 
 ### Added
