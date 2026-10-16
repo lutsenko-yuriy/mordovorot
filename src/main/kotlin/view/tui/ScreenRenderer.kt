@@ -19,6 +19,11 @@ private const val CURSOR_COLOR_OFF = "\u001B[39m"
 private const val SHORTCUT_COLOR_ON = "\u001B[96m"
 private const val SHORTCUT_COLOR_OFF = "\u001B[39m"
 
+/** SGR magenta foreground on/off - GH-83's `Mordie:` prefix. */
+private const val MORDIE_COLOR_ON = "\u001B[35m"
+private const val MORDIE_COLOR_OFF = "\u001B[39m"
+private const val MORDIE_PREFIX = "Mordie:"
+
 /** Appended to the Save dialog's text field when keyboard focus (GH-18) is on it. Internal,
  *  not private - [DialogLayout.structuralContentWidth] reserves room for it unconditionally so
  *  the box doesn't resize (and truncate the caret) the moment focus lands on the field. */
@@ -43,6 +48,7 @@ class ScreenRenderer {
         canvas.put(centeredX(state.title, terminalSize), layout.titleRow, state.title)
         val moves = "Moves: ${state.moveCount}"
         canvas.put(centeredX(moves, terminalSize), layout.movesRow, moves)
+        state.mordieLine?.let { drawMordieLine(canvas, layout, it, terminalSize) }
         drawGrid(canvas, layout, state)
         drawArrows(canvas, layout, state)
         drawToolbar(canvas, layout, state.toolbarShortcuts)
@@ -60,6 +66,17 @@ class ScreenRenderer {
 
     private fun centeredX(text: String, terminalSize: TerminalSize) =
         ((terminalSize.columns - text.length) / 2).coerceAtLeast(0)
+
+    /** Wrapped and centered row by row; the prefix is always on the first row, so only that row
+     *  is colored. */
+    private fun drawMordieLine(canvas: Canvas, layout: BoardLayout, text: String, terminalSize: TerminalSize) {
+        wordWrap("$MORDIE_PREFIX $text", layout.mordieWrapWidth).take(layout.mordieRows).forEachIndexed { index, line ->
+            val x = centeredX(line, terminalSize)
+            val y = layout.mordieRow + index
+            canvas.put(x, y, line)
+            if (index == 0) canvas.putColored(x, y, MORDIE_PREFIX, MORDIE_COLOR_ON, MORDIE_COLOR_OFF)
+        }
+    }
 
     private fun drawGrid(canvas: Canvas, layout: BoardLayout, state: ScreenState) {
         val (gridLeft, gridTop) = layout.gridOrigin()
