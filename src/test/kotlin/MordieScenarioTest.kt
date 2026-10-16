@@ -20,6 +20,7 @@ import kotlin.io.path.writeText
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /** GH-83 scenarios: Mordie, the computer opponent racing the player to the shortest solution.
@@ -49,6 +50,9 @@ class MordieScenarioTest {
     private class Run(val terminal: FakeTerminal, val board: BoardImpl, val analytics: RecordingAnalyticsService) {
         fun events(name: String) = analytics.events.filter { it.name == name }.map { it.properties }
         fun event(name: String) = events(name).single()
+
+        /** Fails unless the session's one load succeeded - so a load scenario can't pass without it. */
+        fun assertLoaded() = assertEquals("success", event("load_command_used")["result"])
     }
 
     private fun session(steps: List<Step>, initial: IntArray = scrambled, savesDir: Path = savesDir()): Run = runBlocking {
@@ -262,6 +266,7 @@ class MordieScenarioTest {
 
         val run = session(load("m (4x4)") + shifts(5), savesDir = dir)
 
+        run.assertLoaded()
         assertEquals(1, factory.started.size)
         assertTrue(factory.started[0].cancelled)
         assertTrue(run.events("mordie_solution_found").isEmpty())
@@ -291,7 +296,8 @@ class MordieScenarioTest {
         assertEquals(5, run.board.moveCount)
         assertEquals(1, factory.started.size)
         assertTrue(factory.started[0].cancelled)
-        assertEquals(null, run.event("board_solved")["mordie_result"])
+        assertFalse("mordie_result" in run.event("board_solved"))
+        assertFalse("mordie_moves" in run.event("board_solved"))
         // TODO (WU4): no Mordie row after the load; the title is "Congratulations ✓".
     }
 
@@ -317,6 +323,8 @@ class MordieScenarioTest {
         val withData = session(load("m (4x4)"), savesDir = savesDir("m" to "4\n$solved\n3\n${tiles(oneShiftFromSolved)}\n3 found\n"))
         val withoutData = session(load("m (4x4)"), savesDir = savesDir("m" to "4\n$solved\n3\n"))
 
+        withData.assertLoaded()
+        withoutData.assertLoaded()
         assertTrue(withData.events("board_solved").isEmpty())
         assertTrue(withoutData.events("board_solved").isEmpty())
         // TODO (WU4): with data, the title is "Cool, you matched me! 3 moves each!"
