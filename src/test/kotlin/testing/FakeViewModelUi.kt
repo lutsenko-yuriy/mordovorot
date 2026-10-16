@@ -2,6 +2,8 @@ package testing
 
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
+import kotlin.time.Duration.Companion.seconds
 import viewmodel.UiRequest
 import viewmodel.UnsolvableSaveChoice
 import viewmodel.ViewModel
@@ -44,13 +46,16 @@ class FakeViewModelUi(
     /** Runs [block] against [viewModel] while concurrently draining its [ViewModel.uiRequests] -
      *  without this, a suspended `ask()` call (e.g. inside `saveGame`/`exitGame`) would hang
      *  forever, since [ViewModel.uiRequests] is a rendezvous channel with no other consumer. Any
-     *  exception [block] throws propagates out of [drive] once the handler is cancelled. */
-    suspend fun drive(viewModel: ViewModel, block: suspend () -> Unit) = coroutineScope {
-        val handler = launch { for (request in viewModel.uiRequests) handle(request) }
-        try {
-            block()
-        } finally {
-            handler.cancel()
+     *  exception [block] throws propagates out of [drive] once the handler is cancelled. The
+     *  timeout fails a request sent on a channel nobody drains instead of hanging the build. */
+    suspend fun drive(viewModel: ViewModel, block: suspend () -> Unit) = withTimeout(DRIVE_TIMEOUT) {
+        coroutineScope {
+            val handler = launch { for (request in viewModel.uiRequests) handle(request) }
+            try {
+                block()
+            } finally {
+                handler.cancel()
+            }
         }
     }
 
@@ -93,5 +98,9 @@ class FakeViewModelUi(
             throw IllegalStateException("FakeViewModelUi ran out of scripted $name responses")
         }
         return responses.removeAt(0)
+    }
+
+    private companion object {
+        val DRIVE_TIMEOUT = 10.seconds
     }
 }
