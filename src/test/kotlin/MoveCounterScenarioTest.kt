@@ -16,6 +16,8 @@ import kotlin.io.path.writeText
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import mordie.Mordie
+import testing.FakeMordieSearchFactory
 
 /** GH-79: GH-62's console move-counter scenarios rewritten for the TUI - real BoardImpl +
  *  ViewModelImpl + FileSaveRepository (temp dir), driven through FakeTerminal, reading the
@@ -49,6 +51,7 @@ class MoveCounterScenarioTest {
             analytics = analytics,
             sizeChosenAtLaunch = true,
             terminalFactory = { terminal },
+            mordie = Mordie(FakeMordieSearchFactory()),
         ).run()
         Run(terminal, analytics)
     }
@@ -152,7 +155,16 @@ class MoveCounterScenarioTest {
         val run = session(listOf(left(0)), initial = oneShiftFromSolved)
 
         assertEquals(
-            listOf(mapOf("move_count" to 1, "board_size" to 4, "input_method" to "mouse")),
+            // GH-83 adds Mordie's result; the fake search is still at 0 moves, not found.
+            listOf(
+                mapOf(
+                    "move_count" to 1,
+                    "board_size" to 4,
+                    "mordie_result" to "player_won",
+                    "mordie_moves" to 0,
+                    "input_method" to "mouse",
+                ),
+            ),
             run.analytics.events.filter { it.name == "board_solved" }.map { it.properties },
         )
     }

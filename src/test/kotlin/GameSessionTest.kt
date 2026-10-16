@@ -6,6 +6,8 @@ import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
+import mordie.Mordie
+import testing.FakeMordieSearchFactory
 import storage.SaveRepository
 import testing.FakeBoardModel
 import testing.FakeSaveRepository
@@ -42,7 +44,7 @@ class GameSessionTest {
         val session = GameSession(
             initialMode = InputMode.KEYBOARD,
             board = board,
-            buildView = { mode, b, s, _, restoreDone, _ ->
+            buildView = { mode, b, s, _, restoreDone, _, _ ->
                 calls.add(BuildCall(mode, b, s, restoreDone))
                 built++
                 ScriptedView {
@@ -68,7 +70,7 @@ class GameSessionTest {
         val session = GameSession(
             initialMode = InputMode.MOUSE,
             saves = saves,
-            buildView = { mode, b, s, _, restoreDone, _ ->
+            buildView = { mode, b, s, _, restoreDone, _, _ ->
                 calls.add(BuildCall(mode, b, s, restoreDone))
                 built++
                 ScriptedView {
@@ -90,7 +92,7 @@ class GameSessionTest {
         val session = GameSession(
             initialMode = InputMode.KEYBOARD,
             sizeChosenAtLaunch = true,
-            buildView = { _, _, _, _, _, sizeAtLaunch ->
+            buildView = { _, _, _, _, _, sizeAtLaunch, _ ->
                 sizeFlags.add(sizeAtLaunch)
                 built++
                 ScriptedView {
@@ -111,7 +113,7 @@ class GameSessionTest {
 
         val session = GameSession(
             initialMode = InputMode.MOUSE,
-            buildView = { mode, _, _, _, _, _ ->
+            buildView = { mode, _, _, _, _, _, _ ->
                 modesBuilt.add(mode)
                 built++
                 ScriptedView {
@@ -136,7 +138,7 @@ class GameSessionTest {
 
         val session = GameSession(
             initialMode = InputMode.MOUSE,
-            buildView = { _, _, _, _, _, _ ->
+            buildView = { _, _, _, _, _, _, _ ->
                 built++
                 ScriptedView {} // returns normally - simulates exit
             },
@@ -155,7 +157,7 @@ class GameSessionTest {
 
         val session = GameSession(
             initialMode = InputMode.KEYBOARD,
-            buildView = { mode, b, s, _, restoreDone, _ ->
+            buildView = { mode, b, s, _, restoreDone, _, _ ->
                 calls.add(BuildCall(mode, b, s, restoreDone))
                 built++
                 when (built) {
@@ -178,7 +180,7 @@ class GameSessionTest {
     fun `a failure on the very first session still throws - no game in progress to protect`(): Unit = runBlocking {
         val session = GameSession(
             initialMode = InputMode.MOUSE,
-            buildView = { _, _, _, _, _, _ -> ScriptedView { throw RuntimeException("stty not found") } },
+            buildView = { _, _, _, _, _, _, _ -> ScriptedView { throw RuntimeException("stty not found") } },
         )
 
         assertFailsWith<RuntimeException> { session.run() }
@@ -191,7 +193,7 @@ class GameSessionTest {
 
         val session = GameSession(
             initialMode = InputMode.MOUSE,
-            buildView = { mode, _, _, _, _, _ ->
+            buildView = { mode, _, _, _, _, _, _ ->
                 modesBuilt.add(mode)
                 built++
                 when (built) {
@@ -212,7 +214,7 @@ class GameSessionTest {
     fun `ExitRequestedException escaping a rebuild reaches the caller, not swallowed as a failed switch`(): Unit = runBlocking {
         val session = GameSession(
             initialMode = InputMode.KEYBOARD,
-            buildView = { mode, _, _, _, _, _ ->
+            buildView = { mode, _, _, _, _, _, _ ->
                 ScriptedView {
                     if (mode == InputMode.KEYBOARD) throw ModeSwitchRequestedException(InputMode.MOUSE)
                     throw ExitRequestedException()
@@ -233,11 +235,56 @@ class GameSessionTest {
                 RecordingAnalyticsService(),
                 startupRestoreDone = true,
                 sizeChosenAtLaunch = false,
+                mordie = Mordie(FakeMordieSearchFactory()),
                 terminalFactory = { FakeTerminal() },
             )
 
             assertIs<TuiView>(view)
             assertIs<ModeSwitcherImpl>(view.modeSwitcher)
         }
+    }
+
+    @Test
+    fun `every rebuild gets the session's one Mordie`(): Unit = runBlocking {
+        val mordie = Mordie(FakeMordieSearchFactory())
+        val received = mutableListOf<Mordie>()
+        var built = 0
+
+        GameSession(
+            initialMode = InputMode.MOUSE,
+            mordie = mordie,
+            buildView = { _, _, _, _, _, _, m ->
+                received += m
+                built++
+                ScriptedView { if (built == 1) throw ModeSwitchRequestedException(InputMode.KEYBOARD) }
+            },
+        ).run()
+
+        assertEquals(2, received.size)
+        assertTrue(received.all { it === mordie })
+    }
+
+    @Test
+    fun `the search is stopped when the session ends`(): Unit = runBlocking {
+        val factory = FakeMordieSearchFactory()
+        val mordie = Mordie(factory).apply { startFresh(IntArray(16) { 15 - it }) }
+
+        GameSession(initialMode = InputMode.MOUSE, mordie = mordie, buildView = { _, _, _, _, _, _, _ -> ScriptedView {} }).run()
+
+        assertTrue(factory.latest.cancelled)
+    }
+
+    @Test
+    fun `the search is stopped when the session ends by throwing`(): Unit = runBlocking {
+        val factory = FakeMordieSearchFactory()
+        val mordie = Mordie(factory).apply { startFresh(IntArray(16) { 15 - it }) }
+        val session = GameSession(
+            initialMode = InputMode.MOUSE,
+            mordie = mordie,
+            buildView = { _, _, _, _, _, _, _ -> ScriptedView { throw ExitRequestedException() } },
+        )
+
+        assertFailsWith<ExitRequestedException> { session.run() }
+        assertTrue(factory.latest.cancelled)
     }
 }
