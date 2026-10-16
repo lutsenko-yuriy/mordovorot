@@ -1,5 +1,7 @@
 package mordie
 
+import kotlin.math.sqrt
+
 /** Admissible lower bound on the moves (GH-62: one row or column rotated by any amount) still
  *  needed to solve a board. A row move never changes a tile's row and changes the column of at
  *  most n tiles, a column move the reverse - so at least ceil(wrong-column tiles / n) row moves
@@ -20,7 +22,7 @@ object MoveMetricHeuristic {
     internal fun of(n: Int, wrongRow: Int, wrongCol: Int): Int = (wrongRow + n - 1) / n + (wrongCol + n - 1) / n
 
     internal fun sideOf(state: IntArray): Int {
-        val n = Math.sqrt(state.size.toDouble()).toInt()
+        val n = sqrt(state.size.toDouble()).toInt()
         require(n * n == state.size) { "Board state size must be a perfect square, got ${state.size}" }
         return n
     }

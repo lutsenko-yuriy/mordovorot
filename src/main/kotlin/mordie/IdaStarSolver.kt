@@ -14,7 +14,8 @@ internal data class SolutionMove(val isRow: Boolean, val index: Int, val amount:
  * row moves - which commute - go in increasing index order, the same for columns.
  *
  * [ruledOut] (a saved N) skips every bound up to it, so a resumed search never redoes or
- * reports lengths below it.
+ * reports lengths below it. It must be a proven lower bound - one past the true minimum (a
+ * hand-edited save) can yield a non-minimal length.
  */
 class IdaStarSolver(original: IntArray, ruledOut: Int = -1) {
 
