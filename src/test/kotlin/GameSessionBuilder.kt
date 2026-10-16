@@ -1,9 +1,9 @@
 import analytics.AnalyticsService
-import board_model.BoardImpl
 import board_model.BoardModel
 import mordie.Mordie
 import mordie.MordieSearchFactory
 import storage.SaveRepository
+import testing.FakeBoardModel
 import testing.FakeSaveRepository
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
@@ -14,7 +14,7 @@ import view.tui.Terminal
  *  [buildView] it wires the production View over [terminalFactory]. */
 fun testGameSession(
     initialMode: InputMode,
-    board: BoardModel = BoardImpl(),
+    board: BoardModel = FakeBoardModel(),
     saves: SaveRepository = FakeSaveRepository(),
     analytics: AnalyticsService = RecordingAnalyticsService(),
     sizeChosenAtLaunch: Boolean = false,
