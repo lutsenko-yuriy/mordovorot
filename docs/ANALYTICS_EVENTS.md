@@ -203,6 +203,10 @@ loaded. *(GH-83)*
 | `resumed_from_save` | `boolean` | Whether the search resumed from a saved N. |
 | `input_method` | `string` | `mouse` or `keyboard`. |
 
+*Known gap:* a save stores Mordie's live state, so a solution found between two checks and then
+saved is stored as found; loading that save reveals it at once, and this event never fires for
+that game. Likewise, a board solved before the next check never fires it.
+
 <!-- All events above are sent through `analytics.AnalyticsService`, currently backed by
      `analytics.NoopAnalyticsService` (no real SDK wired up yet). -->
 
