@@ -25,7 +25,7 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle
 - **Move counter (GH-62):** a *move* is a run of consecutive shifts on the same row or column, in
   either direction - shifting row 1 left, left, then right is one move; row 1, then column 1,
   then row 1 again is three. Row 1 and column 1 are different lines.
-  - Shown as `Moves: N` on the row under the title (still there under `Congratulations ✓`).
+  - Shown as `Moves: N` on the row under the title (still there under the solved title).
   - A new game (`[ New ]`, the startup size prompt) starts at `Moves: 0`.
   - Switching input mode keeps the count.
   - Saves store the count; loading restores it, and the next shift always starts a new move. A
@@ -120,7 +120,8 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle
   which then behaves like the Exit dialog's Yes/No.
 - **Startup restore**, when saves exist, is the same Load-shaped dialog (titled "Restore a saved
   game?") regardless of how many saves there are; Cancel starts a new game.
-- **Solved state:** once the board is solved, the title switches to `Congratulations ✓`, the
+- **Solved state:** once the board is solved, the title switches to Mordie's ending (Feature 8),
+  or to `Congratulations ✓` when Mordie sat the game out, the
   shift arrows are shown dimmed and stop responding to clicks, and the toolbar (New/Save/Load/Exit)
   stays fully clickable. Loading a different, unsolved save from the Congratulations screen
   brings the arrows and title straight back — the screen doesn't need a fresh launch or a
@@ -148,3 +149,49 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle
 - All other dialog and startup-restore behavior (validation, re-prompting) is identical to
   Feature 6 — only the input method differs, which shows up in analytics as an `input_method`
   property of `keyboard` instead of `mouse`.
+
+### Feature 8 — Mordie, the computer opponent (GH-83)
+- **Search:** when a game starts (`[ New ]`, the startup size prompt, `--size=N`), Mordie starts
+  searching in the background for the shortest solution of the game's original arrangement,
+  counted in moves (Feature 2). The player's moves don't affect it, and the board stays fully
+  playable. Mordie's N is the longest solution length it has ruled out so far; once it has found
+  a solution, N is that solution's length, the true minimum. On 5x5 the search may never finish
+  within a game; Mordie then just keeps reporting progress.
+- **Mordie's line** sits under `Moves: N`: `Mordie:` in magenta, then the text, word-wrapped to
+  about the width of the board and toolbar, each row centered. Its rows are always reserved, so
+  the board doesn't move as the line comes and goes. Mouse and keyboard mode show the same text,
+  and switching mode keeps all of Mordie's state.
+- The line follows the player's **shifts** (not moves, no timer). The count starts at 0 when a
+  game starts or a save is loaded, and isn't saved. Progress is checked every 5 shifts:
+
+  | Shifts | Mordie's line |
+  |---|---|
+  | 0-4 | `Alright! Let's sort this one out!` (after a load, the load line below) |
+  | 5-19 | empty |
+  | 20-24 | `I have already made N moves and have not solved it yet!` |
+  | 25-39 | empty |
+  | ...5 shown, 15 empty, repeating... | |
+
+  - From the 60th shift on, the progress line starts with `This one is hard! `.
+  - When a check finds that Mordie has its solution, the line switches at once, even in an empty
+    stretch, to `Found it! I had to make N moves to find the solution! Can you beat it?`, and
+    stays until the board is solved.
+- **Endings:** when the player solves the board in M moves, the title shows one of these instead
+  of `Congratulations ✓`, and the line disappears:
+  - Mordie hasn't found its solution: `You beat me! I was still at N moves.`
+  - M = N: `Cool, you matched me! N moves each!`
+  - M > N: `Sorry, but I win: N moves vs your M.`
+  - M < N (only possible with a hand-edited save):
+    `I made N moves and you made M moves! Are you a machine?`
+  - A count of 1 reads `1 move`.
+- **Saves** also store the original arrangement, Mordie's N and whether it had found its
+  solution (two extra lines; older saves still load).
+  - Loading a save where Mordie was still searching resumes the search past the saved N, and the
+    first line (shifts 0-4) is `Okay, so we stopped when I was at N moves! What was I doing?..`
+  - Loading a save where Mordie had found its solution shows the `Found it!` line at once.
+  - Loading a solved save shows its ending, or `Congratulations ✓` if it has no Mordie data.
+  - A save with no Mordie data (made before GH-83), or one fixed by Repair (GH-74): if no moves
+    have been made on it, Mordie starts fresh from the loaded board. If moves have been made,
+    Mordie sits the game out: no line, the solved title is `Congratulations ✓`, and the move
+    count is kept. Its N would only cover the moves from the load on, so the race wouldn't be
+    fair.
