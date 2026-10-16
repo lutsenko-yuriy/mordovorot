@@ -13,7 +13,8 @@ internal const val CELL_WIDTH = 4
  * coordinate to a [HitTarget]. No terminal or viewModel involved - [ScreenRenderer] draws to
  * these same coordinates so what's drawn is exactly what's clickable.
  *
- * Layout, top to bottom: title row, the moves row (GH-62), a blank row, the up-arrows row, the grid (box-drawing
+ * Layout, top to bottom: title row, the moves row (GH-62), the Mordie rows (GH-83, [mordieRows]),
+ * a blank row, the up-arrows row, the grid (box-drawing
  * borders around [squareSide] x [squareSide] cells, with left/right arrows flanking each row),
  * the down-arrows row, a blank row, the toolbar row, and (GH-30) the mode row directly below it
  * for the mode-switch button - kept on their own row, not appended to the toolbar
@@ -38,19 +39,38 @@ class BoardLayout(
     private val innerRows = squareSide * 2 + 1
 
     private val fullWidth = LEFT_GUTTER + innerCols + RIGHT_GUTTER
-    private val fullHeight = TOP_EXTRA + innerRows + BOTTOM_EXTRA
+
+    private val primaryEntries = primaryButtons(toolbarShortcuts)
+    private val modeEntries = modeButtons.map { HitTarget.ToolbarMode(it) to modeButtonLabel(it, toolbarShortcuts) }
+
+    /** The Mordie line's wrap width (GH-83): about as wide as the board and toolbar, never the
+     *  full terminal. */
+    internal val mordieWrapWidth =
+        minOf(maxOf(fullWidth, rowWidth(primaryEntries), rowWidth(modeEntries)), terminalSize.columns - 2).coerceAtLeast(1)
+
+    /** Rows reserved for the Mordie line: the wrapped height of the longest line it can say. Fixed
+     *  per layout, not per text, so the board doesn't jump as the line comes and goes. */
+    internal val mordieRows = wordWrap(LONGEST_MORDIE_LINE, mordieWrapWidth).size
+
+    private val topExtra = TOP_EXTRA + mordieRows
+    private val fullHeight = topExtra + innerRows + BOTTOM_EXTRA
 
     private val originX = ((terminalSize.columns - fullWidth) / 2).coerceAtLeast(0)
-    private val originY = ((terminalSize.rows - fullHeight) / 2).coerceAtLeast(0)
+    // Centered with the rows under the toolbar counted too, so the Mordie rows (GH-83) don't push
+    // keyboard mode's controls hint off a 24-row terminal at 5x5.
+    private val originY = ((terminalSize.rows - fullHeight - BELOW_TOOLBAR) / 2).coerceAtLeast(0)
 
     private val gridLeft = originX + LEFT_GUTTER
-    private val gridTop = originY + 4
+    private val gridTop = originY + topExtra
 
     val titleRow: Int get() = originY
 
     /** `Moves: N`, directly under the title (GH-62). */
     val movesRow: Int get() = originY + 1
-    private val upArrowRow = originY + 3
+
+    /** The first of the [mordieRows] Mordie rows, directly under [movesRow] (GH-83). */
+    internal val mordieRow: Int get() = originY + 2
+    private val upArrowRow = gridTop - 1
     private val downArrowRow = gridTop + innerRows
     internal val toolbarRow = downArrowRow + 2
 
@@ -102,8 +122,11 @@ class BoardLayout(
      *  independently centered - shared by [hitTest] (via [ToolbarButton.range]/[ToolbarButton.y])
      *  and [ScreenRenderer] (via [ToolbarButton.text]). Internal, not private, so [ScreenRenderer]
      *  can draw exactly what's clickable. */
-    internal fun toolbarButtons(): List<ToolbarButton> {
-        val primary = if (toolbarShortcuts) {
+    internal fun toolbarButtons(): List<ToolbarButton> =
+        layoutRow(primaryEntries, toolbarRow) + layoutRow(modeEntries, modeRow)
+
+    private fun primaryButtons(shortcuts: Boolean): List<Pair<HitTarget, String>> =
+        if (shortcuts) {
             listOf(
                 HitTarget.ToolbarNew to "[New F9]",
                 HitTarget.ToolbarSave to "[Save F5]",
@@ -118,13 +141,11 @@ class BoardLayout(
                 HitTarget.ToolbarExit to "[ Exit ]",
             )
         }
-        val modeEntries = modeButtons.map { HitTarget.ToolbarMode(it) to modeButtonLabel(it, toolbarShortcuts) }
-        return layoutRow(primary, toolbarRow) + layoutRow(modeEntries, modeRow)
-    }
+
+    private fun rowWidth(entries: List<Pair<HitTarget, String>>) = entries.sumOf { it.second.length } + (entries.size - 1)
 
     private fun layoutRow(entries: List<Pair<HitTarget, String>>, row: Int): List<ToolbarButton> {
-        val totalWidth = entries.sumOf { it.second.length } + (entries.size - 1)
-        var x = (originX + (fullWidth - totalWidth) / 2).coerceAtLeast(0)
+        var x = (originX + (fullWidth - rowWidth(entries)) / 2).coerceAtLeast(0)
         return entries.map { (target, text) ->
             val button = ToolbarButton(target, text, x, row, x until (x + text.length))
             x += text.length + 1
@@ -153,10 +174,16 @@ class BoardLayout(
         const val LEFT_GUTTER = 2
         const val RIGHT_GUTTER = 2
 
-        /** Title row, moves row, a blank row, the up-arrows row. */
+        /** Title row, moves row, a blank row, the up-arrows row - plus [mordieRows]. */
         const val TOP_EXTRA = 4
+
+        /** The longest line Mordie says, at a 2-digit move count (GH-83). */
+        const val LONGEST_MORDIE_LINE = "Mordie: This one is hard! I have already made 99 moves and have not solved it yet!"
 
         /** The down-arrows row, a blank row, the toolbar row. */
         const val BOTTOM_EXTRA = 3
+
+        /** The mode row, the status message and the controls hint (see [ScreenRenderer.render]). */
+        const val BELOW_TOOLBAR = 3
     }
 }

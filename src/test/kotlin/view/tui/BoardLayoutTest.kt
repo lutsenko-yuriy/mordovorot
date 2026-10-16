@@ -172,10 +172,10 @@ class BoardLayoutTest {
     }
 
     @Test
-    fun `the moves row sits directly under the title, with a blank row before the up arrows (GH-62)`() {
+    fun `the moves row sits directly under the title (GH-62)`() {
         val layout = BoardLayout(ampleTerminal, squareSide = 4)
 
+        // The rows under it, down to the up arrows, are GH-83's - see BoardLayoutMordieTest.
         assertEquals(layout.titleRow + 1, layout.movesRow)
-        assertEquals(layout.movesRow + 2, layout.upArrowPosition(0).second)
     }
 }
