@@ -34,9 +34,16 @@ class BackgroundMordieSearch(original: IntArray, ruledOut: Int) : MordieSearch {
         }
     }
 
-    override fun progress(): SearchProgress = snapshot
+    /** Set by [cancel]: a slice still running at that moment may publish one more snapshot. */
+    @Volatile
+    private var frozen: SearchProgress? = null
 
-    override fun cancel() = job.cancel()
+    override fun progress(): SearchProgress = frozen ?: snapshot
+
+    override fun cancel() {
+        if (frozen == null) frozen = snapshot
+        job.cancel()
+    }
 
     internal suspend fun join() = job.join()
 

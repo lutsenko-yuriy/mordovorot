@@ -50,8 +50,8 @@ class BackgroundMordieSearchTest {
         delay(50)
 
         search.cancel()
-        withTimeout(5_000) { search.join() }
         val stopped = search.progress()
+        withTimeout(5_000) { search.join() }
         delay(50)
 
         assertEquals(stopped, search.progress())
