@@ -16,6 +16,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import mordie.Mordie
+import testing.FakeMordieSearchFactory
 
 /** GH-79: GH-74's console unsolvable-save scenarios rewritten for the TUI - real BoardImpl +
  *  ViewModelImpl + FileSaveRepository (temp dir), driven through FakeTerminal in keyboard mode
@@ -40,6 +42,7 @@ class UnsolvableSaveScenarioTest {
             analytics = analytics,
             sizeChosenAtLaunch = sizeChosenAtLaunch,
             terminalFactory = { terminal },
+            mordie = Mordie(FakeMordieSearchFactory()),
         ).run()
         Run(terminal, board, analytics)
     }

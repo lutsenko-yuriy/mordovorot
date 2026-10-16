@@ -7,6 +7,8 @@ import board_model.BoardModel
 import board_model.Solvability
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
+import mordie.Mordie
+import mordie.MordieSearchFactory
 import storage.FileSaveRepository
 import storage.SaveRepository
 import storage.SavedBoard
@@ -27,7 +29,12 @@ class ViewModelImpl(
      *  fresh at the size the board was already constructed with, regardless of what saves
      *  exist. */
     private val sizeChosenAtLaunch: Boolean = false,
+    /** Inert by default, so tests never leave a real search running; `GameSession` passes the
+     *  session's own (GH-83). */
+    mordie: Mordie = Mordie(MordieSearchFactory.NONE),
 ) : ViewModel {
+
+    private val mordieHooks = MordieHooks(mordie, board, analytics)
 
     /** Rendezvous - `ask` doesn't return until the View has actually finished handling the
      *  request, which is what keeps message/prompt ordering identical to the old direct blocking
@@ -61,17 +68,21 @@ class ViewModelImpl(
     override fun shiftDown(col: Int) = shift { board.shiftDown(col) }
 
     /** Runs a shift and tracks `board_solved` when it turns an unsolved board into a solved one
-     *  (GH-62). Loads never pass through here, so restoring a solved save doesn't fire it. */
+     *  (GH-62). Loads never pass through here, so restoring a solved save doesn't fire it.
+     *  Mordie's check runs first, so a solution it reveals on the solving shift counts. */
     private fun shift(action: () -> Unit) {
         val wasSolved = board.isCorrect()
         action()
+        mordieHooks.onShift()
         if (!wasSolved && board.isCorrect()) {
-            analytics.track("board_solved", mapOf("move_count" to board.moveCount, "board_size" to board.squareSide))
+            val mordieProps = mordieHooks.onSolved()
+            analytics.track("board_solved", mapOf("move_count" to board.moveCount, "board_size" to board.squareSide) + mordieProps)
         }
     }
 
     override fun newGame(size: Int, trigger: String) {
         board.newGame(size)
+        mordieHooks.onNewGame()
         analytics.track("new_game_size_selected", mapOf("size" to size, "trigger" to trigger))
     }
 
@@ -88,7 +99,7 @@ class ViewModelImpl(
             },
         ) {
             val existed = saves.exists(name)
-            saves.save(name, board.boardArray, board.squareSide, board.moveCount)
+            saves.save(name, board.boardArray, board.squareSide, board.moveCount, mordieHooks.snapshot())
             analytics.track("save_command_used", mapOf("result" to "success", "overwrote_existing" to existed))
             showMessage("Saved as '$name'.")
             true
@@ -129,6 +140,7 @@ class ViewModelImpl(
             // No size-mismatch rejection (GH-44 WU5) - board.restoreState resizes the board to
             // match the save instead, so every successful saves.load() now restores.
             board.restoreState(saved.state, saved.moveCount)
+            mordieHooks.onLoaded(saved.mordie)
             analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "success"))
             showMessage("Loaded '$name'.")
             true
@@ -153,6 +165,7 @@ class ViewModelImpl(
                 // Restored first, so a board that can't take the save (a hand-edited size) never
                 // rewrites the file. A failed overwrite still loads - the file keeps its mark.
                 board.restoreState(fixed, saved.moveCount)
+                mordieHooks.onRepaired()
                 val error = try {
                     saves.save(name, fixed, saved.squareSide, saved.moveCount)
                     null
@@ -284,8 +297,14 @@ class ViewModelImpl(
      *  a previous save (0/1/2+ saves, unchanged from GH-6), then - only if nothing was actually
      *  restored - offers a size prompt for the fresh game about to start. Skips both steps
      *  entirely when [sizeChosenAtLaunch] is set: `--size=N` *is* the answer, so the board just
-     *  keeps the size it was already constructed with, regardless of what saves exist. */
+     *  keeps the size it was already constructed with, regardless of what saves exist. Mordie
+     *  starts on whatever board play begins with, unless it is already bound (a mode switch). */
     override suspend fun restoreOnStartup() {
+        restoreOrPickSize()
+        mordieHooks.onStartup()
+    }
+
+    private suspend fun restoreOrPickSize() {
         if (startupRestoreDone) return
         startupRestoreDone = true
         if (sizeChosenAtLaunch) return
@@ -351,4 +370,8 @@ class ViewModelImpl(
     override fun squareSide(): Int = board.squareSide
 
     override fun moveCount(): Int = board.moveCount
+
+    override fun mordieLine(): String? = mordieHooks.line()
+
+    override fun mordieEnding(): String? = mordieHooks.ending()
 }

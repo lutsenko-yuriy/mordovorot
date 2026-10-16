@@ -16,6 +16,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import mordie.Mordie
+import testing.FakeMordieSearchFactory
 
 /** GH-79 scenarios: console mode removed - the no-terminal abort, the `--console` notice, the TUI
  *  without a console switch, the failed-switch fallback, and old saves still loading. */
@@ -129,6 +131,7 @@ class ConsoleRemovalScenarioTest {
             analytics = analytics,
             sizeChosenAtLaunch = sizeChosenAtLaunch,
             terminalFactory = { terminal },
+            mordie = Mordie(FakeMordieSearchFactory()),
         ).run()
         Run(terminal, board, analytics)
     }
@@ -171,10 +174,11 @@ class ConsoleRemovalScenarioTest {
             board = board,
             saves = FileSaveRepository(createTempDirectory("mordovorot-gh79")),
             sizeChosenAtLaunch = true,
-            buildView = { mode, b, s, a, restoreDone, sizeAtLaunch ->
+            mordie = Mordie(FakeMordieSearchFactory()),
+            buildView = { mode, b, s, a, restoreDone, sizeAtLaunch, m ->
                 builds += mode to restoreDone
                 if (mode == InputMode.KEYBOARD) throw RuntimeException("stty not found")
-                defaultView(mode, b, s, a, restoreDone, sizeAtLaunch, terminalFactory = { terminal })
+                defaultView(mode, b, s, a, restoreDone, sizeAtLaunch, m, terminalFactory = { terminal })
             },
         ).run()
 

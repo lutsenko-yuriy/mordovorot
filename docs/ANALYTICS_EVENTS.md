@@ -138,7 +138,7 @@ Fired once when a shift solves the board during play, in either input mode. Like
 | `board_size` | `number` | The board side (3-5). |
 | `input_method` | `string` | `mouse` or `keyboard` — which UI mode the session was running in. *(`console` retired — GH-79)* |
 
-*GH-83:* new properties `mordie_result` (`string`: `player_won` - Mordie hadn't found its solution, `matched` - the move count equals Mordie's N, `mordie_won` - the move count exceeds N, or `machine` - the move count is below N, found or not, which only an inconsistent save can produce) and `mordie_moves` (`number`: Mordie's N when the board was solved - the true minimum if found, otherwise its progress).
+*GH-83:* new properties `mordie_result` (`string`: `player_won` - Mordie hadn't found its solution, `matched` - the move count equals Mordie's N, `mordie_won` - the move count exceeds N, or `machine` - the move count is below N, found or not, which only an inconsistent save can produce) and `mordie_moves` (`number`: Mordie's N when the board was solved - the true minimum if found, otherwise its progress). Both are absent when Mordie sat the game out - a save from before GH-83, or a repaired one, loaded with moves already made.
 
 ### `play_again_decision`
 
@@ -202,6 +202,10 @@ loaded. *(GH-83)*
 | `search_duration_ms` | `number` | Wall-clock search time in this session (time from earlier sessions before a save isn't included). |
 | `resumed_from_save` | `boolean` | Whether the search resumed from a saved N. |
 | `input_method` | `string` | `mouse` or `keyboard`. |
+
+*Known gap:* a save stores Mordie's live state, so a solution found between two checks and then
+saved is stored as found; loading that save reveals it at once, and this event never fires for
+that game. Likewise, a board solved before the next check never fires it.
 
 <!-- All events above are sent through `analytics.AnalyticsService`, currently backed by
      `analytics.NoopAnalyticsService` (no real SDK wired up yet). -->

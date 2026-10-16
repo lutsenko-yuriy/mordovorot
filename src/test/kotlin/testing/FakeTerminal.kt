@@ -9,7 +9,12 @@ import view.tui.TerminalSize
 class FakeTerminal(
     private val events: MutableList<TerminalEvent> = mutableListOf(),
     private val terminalSize: TerminalSize = TerminalSize(80, 24),
+    /** Run just before the event at that (0-based) index is read - lets a scenario change the
+     *  world between events, e.g. script a search's progress. */
+    private val beforeEvent: Map<Int, () -> Unit> = emptyMap(),
 ) : Terminal {
+
+    private var eventsRead = 0
 
     val frames = mutableListOf<String>()
 
@@ -38,8 +43,10 @@ class FakeTerminal(
         frames += frame
     }
 
-    override fun readEvent(): TerminalEvent =
-        if (events.isEmpty()) TerminalEvent.EndOfInput else events.removeAt(0)
+    override fun readEvent(): TerminalEvent {
+        beforeEvent[eventsRead++]?.invoke()
+        return if (events.isEmpty()) TerminalEvent.EndOfInput else events.removeAt(0)
+    }
 
     override fun size(): TerminalSize = terminalSize
 }

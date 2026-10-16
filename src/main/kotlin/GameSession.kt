@@ -3,6 +3,7 @@ import analytics.InputMethodAnalyticsService
 import analytics.NoopAnalyticsService
 import board_model.BoardImpl
 import board_model.BoardModel
+import mordie.Mordie
 import storage.FileSaveRepository
 import storage.SaveRepository
 import view.View
@@ -19,7 +20,8 @@ import viewmodel.ViewModelImpl
 /** The session loop extracted out of [main] for GH-30: owns the [BoardModel]/[SaveRepository]
  *  that survive every mode switch, rebuilds `View`+viewModel+analytics per [InputMode] on
  *  [ModeSwitchRequestedException], and stops when `play()` returns normally. [buildView] is the
- *  test seam; it defaults to [defaultView]'s real wiring. */
+ *  test seam; it defaults to [defaultView]'s real wiring. Also owns [mordie] (GH-83), whose
+ *  search outlives a mode switch and is stopped when the session ends. */
 class GameSession(
     initialMode: InputMode,
     private val board: BoardModel = BoardImpl(),
@@ -30,6 +32,7 @@ class GameSession(
      *  prompts stay skipped across a mode switch too. */
     private val sizeChosenAtLaunch: Boolean = false,
     private val terminalFactory: () -> Terminal = { AnsiTerminal() },
+    private val mordie: Mordie = Mordie(),
     private val buildView: (
         mode: InputMode,
         board: BoardModel,
@@ -37,8 +40,9 @@ class GameSession(
         analytics: AnalyticsService,
         startupRestoreDone: Boolean,
         sizeChosenAtLaunch: Boolean,
-    ) -> View = { mode, b, s, a, restoreDone, sizeAtLaunch ->
-        defaultView(mode, b, s, a, restoreDone, sizeAtLaunch, terminalFactory)
+        mordie: Mordie,
+    ) -> View = { mode, b, s, a, restoreDone, sizeAtLaunch, m ->
+        defaultView(mode, b, s, a, restoreDone, sizeAtLaunch, m, terminalFactory)
     },
 ) {
 
@@ -49,6 +53,14 @@ class GameSession(
     private var startupRestoreDone = false
 
     suspend fun run() {
+        try {
+            loop()
+        } finally {
+            mordie.stop()
+        }
+    }
+
+    private suspend fun loop() {
         var isFirstSession = true
         // The mode to fall back to if the current build fails - null when there's none: the
         // first session, or a build that is itself already a fallback.
@@ -73,7 +85,7 @@ class GameSession(
                 ) {
                     // Undecorated analytics - defaultView decorates per mode. buildView is guarded too,
                     // so a rebuild failure falls back like a play() failure (PR #37).
-                    val view = buildView(mode, board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch)
+                    val view = buildView(mode, board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie)
                     view.play(notice.also { notice = null })
                     return
                 }
@@ -98,12 +110,13 @@ internal fun defaultView(
     analytics: AnalyticsService,
     startupRestoreDone: Boolean,
     sizeChosenAtLaunch: Boolean,
+    mordie: Mordie,
     terminalFactory: () -> Terminal,
 ): View {
     val decoratedAnalytics = InputMethodAnalyticsService(analytics, mode.name.lowercase())
     // Built once per rebuild and handed to the View - the viewModel no longer needs a View to
     // exist first (GH-42 WU3: ViewModelImpl holds no View reference at all).
-    val viewModel = ViewModelImpl(board, saves, decoratedAnalytics, startupRestoreDone, sizeChosenAtLaunch)
+    val viewModel = ViewModelImpl(board, saves, decoratedAnalytics, startupRestoreDone, sizeChosenAtLaunch, mordie)
     return TuiView.create(
         terminalFactory(),
         analytics = decoratedAnalytics,
