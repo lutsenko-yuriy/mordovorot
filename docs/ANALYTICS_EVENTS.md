@@ -138,6 +138,8 @@ Fired once when a shift solves the board during play, in either input mode. Like
 | `board_size` | `number` | The board side (3-5). |
 | `input_method` | `string` | `mouse` or `keyboard` — which UI mode the session was running in. *(`console` retired — GH-79)* |
 
+*GH-83:* new properties `mordie_result` (`string`: `player_won` - Mordie hadn't found its solution, `matched` - the move count equals Mordie's N, `mordie_won` - the move count exceeds N, or `machine` - the move count is below N, found or not, which only an inconsistent save can produce) and `mordie_moves` (`number`: Mordie's N when the board was solved - the true minimum if found, otherwise its progress).
+
 ### `play_again_decision`
 
 **Retired — GH-79:** console mode was removed, so this event is no longer fired.
@@ -185,6 +187,21 @@ message and exits - instead of `app_launched`, which only fires when a game star
 |---|---|---|
 | `reason` | `string` | Always `no_interactive_terminal` for now. |
 | `requested_mode` | `string` | `mouse`, `keyboard`, `console`, or `none` - the mode flag passed at launch (`none` when no flag was given). With several flags, `keyboard` beats `mouse` beats `console`. |
+
+### `mordie_solution_found`
+
+Fired when a 5-shift check first reveals that Mordie has found its solution, so the `Found it!`
+line appears during play. Not fired when a save with Mordie's solution already found is
+loaded. *(GH-83)*
+
+| Property | Type | Description |
+|---|---|---|
+| `board_size` | `number` | The board side (3-5). |
+| `solution_length` | `number` | Mordie's N - the true minimum solution length. |
+| `player_shift_count` | `number` | The player's shift count at the revealing check. |
+| `search_duration_ms` | `number` | Wall-clock search time in this session (time from earlier sessions before a save isn't included). |
+| `resumed_from_save` | `boolean` | Whether the search resumed from a saved N. |
+| `input_method` | `string` | `mouse` or `keyboard`. |
 
 <!-- All events above are sent through `analytics.AnalyticsService`, currently backed by
      `analytics.NoopAnalyticsService` (no real SDK wired up yet). -->

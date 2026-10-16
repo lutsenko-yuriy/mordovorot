@@ -8,7 +8,8 @@
 
 ## Overview
 
-MVVM (Model-View-ViewModel): board_model + viewmodel + view packages
+MVVM (Model-View-ViewModel): board_model + viewmodel + view packages, plus the `mordie`
+opponent package (GH-83).
 
 ## Directory structure
 
@@ -25,7 +26,9 @@ src/main/kotlin/
 │                          # runs play(), and re-enters on ModeSwitchRequestedException. A
 │                          # rebuild's play() throwing anything else falls back to the previous
 │                          # mode (GH-79) instead of crashing and losing the in-progress game -
-│                          # a first-session failure, or a failed fallback, still throws (GH-30)
+│                          # a first-session failure, or a failed fallback, still throws (GH-30).
+│                          # Also owns the one `Mordie` (GH-83), passed to every rebuilt
+│                          # ViewModelImpl, and stops its search in run()'s `finally`
 ├── analytics/
 │   ├── AnalyticsService.kt             # Analytics abstraction — track(event, properties)
 │   ├── NoopAnalyticsService.kt         # Default implementation; no SDK wired up yet
@@ -41,6 +44,18 @@ src/main/kotlin/
 │                          # `squareSide` is a read-only view over a private mutable field:
 │                          # `newGame(side)` is the only thing that ever changes it (GH-44),
 │                          # `resetGame()` reshuffles at the same size, always to a solvable board (GH-74)
+├── mordie/              # GH-83: the computer opponent - pure domain, no project imports
+│   ├── MoveMetricHeuristic.kt   # Admissible lower bound in the GH-62 move metric:
+│   │                              # ceil(wrong-row tiles/n) + ceil(wrong-column tiles/n)
+│   ├── IdaStarSolver.kt         # Steppable IDA* (explicit stack, O(depth) memory): ruledOut,
+│   │                              # solutionLength; can resume above a saved N
+│   ├── MordieSearch.kt          # MordieSearch / SearchProgress / MordieSearchFactory (+ NONE) -
+│   │                              # the seam tests replace with FakeMordieSearchFactory
+│   ├── BackgroundMordieSearch.kt # The real search: one throttled coroutine on
+│   │                               # Dispatchers.Default, publishing a volatile snapshot
+│   ├── Mordie.kt                # Opponent state: shift count, 5-shift checks, opening/resume
+│   │                              # kind, found reveal, frozen outcome, save snapshot
+│   └── MordieLine.kt            # MordieLine (sealed) / MordieOutcome / MordieResult
 ├── viewmodel/
 │   ├── ViewModel.kt          # The one viewmodel interface (GH-42 WU3) — shift/newGame/save/
 │   │                           # load/exit plus the read-only query surface (listSaves/saveExists/
@@ -69,11 +84,15 @@ src/main/kotlin/
 │   ├── ModeSwitcher.kt        # ModeSwitcher / ModeSwitcherImpl / NoopModeSwitcher — tracks
 │   │                             # input_mode_switched and throws ModeSwitchRequestedException;
 │   │                             # same-mode no-op (GH-30)
-│   └── ModeSwitchRequestedException.kt # Carries the requested InputMode; unwinds a running
-│                                          # session's play() back to GameSession's loop (GH-30)
+│   ├── ModeSwitchRequestedException.kt # Carries the requested InputMode; unwinds a running
+│   │                                      # session's play() back to GameSession's loop (GH-30)
+│   └── MordieText.kt          # Every Mordie string (line bodies + the four endings), singular
+│                                 # `1 move` included (GH-83)
 ├── storage/
 │   ├── SaveRepository.kt          # Persistence contract: list/exists/save/load
-│   ├── SavedBoard.kt              # Data carrier: square side + tile arrangement
+│   ├── SavedBoard.kt              # Data carrier: square side + tile arrangement (+ optional
+│   │                                # SavedMordie, GH-83)
+│   ├── SavedMordie.kt             # Original arrangement + Mordie's N + found flag (GH-83)
 │   ├── FileSaveRepository.kt      # Plain-text file implementation (the only class
 │   │                                touching the filesystem); rejects unsafe file names
 │   └── SaveFileFormatException.kt # Thrown on a malformed save file
@@ -91,7 +110,9 @@ src/main/kotlin/
         │                                               # (GH-18, GH-30)
         ├── BoardLayout.kt / HitTarget.kt   # Pure board geometry + click hit-testing, incl. the
         │                                     # toolbar's mode-switch buttons
-        │                                     # (HitTarget.ToolbarMode) (GH-30)
+        │                                     # (HitTarget.ToolbarMode) (GH-30) and the reserved
+        │                                     # Mordie rows under `Moves:` (GH-83)
+        ├── WordWrap.kt      # Shared word wrap for dialogs and the Mordie line (GH-83)
         ├── ArrowRing.kt     # Pure perimeter-ring cursor logic for keyboard board navigation:
         │                      # ArrowCursor(edge, index) + Edge{LEFT,RIGHT,TOP,BOTTOM}, one
         │                      # move per arrow key, wrapping at corners (GH-18)
@@ -136,12 +157,15 @@ src/test/kotlin/
 │                            # console switch in the TUI, failed-switch fallback, old saves
 ├── MoveCounterScenarioTest.kt / UnsolvableSaveScenarioTest.kt # GH-62/GH-74 end to end
 │                            # through the TUI over a real board and temp-dir saves
+├── MordieScenarioTest.kt  # GH-83 end to end with a scripted FakeMordieSearchFactory
 ├── GameSessionTest.kt     # Session loop: switch rebuilds around the same BoardModel
 │                            # instance, startupRestoreDone seeding, multi-switch chains (GH-30)
 ├── ModeSwitcherTest.kt    # input_mode_switched tracking, trigger pass-through, same-mode
 │                            # no-op (GH-30)
 ├── analytics/            # NoopAnalyticsService, InputMethodAnalyticsService coverage
 ├── board_model/         # BoardImpl coverage: reset/shuffle, isCorrect, all four shifts, restoreState
+├── mordie/                # Heuristic admissibility + solver optimality against a 3x3 BFS oracle,
+│                            # background search, Mordie state machine (GH-83)
 ├── viewmodel/            # One test file per ViewModelImpl concern (GH-42 WU3, collapsing GH-23's
 │                           # split): ViewModelDelegationTest / ViewModelSaveLoadTest /
 │                           # ViewModelExitTest drive ViewModelImpl directly, no play()
@@ -157,7 +181,8 @@ src/test/kotlin/
                             # FakeViewModel (recording double, collapsing GH-23's
                             # RecordingViewModel/FakeConsoleViewModel/FakeTuiViewModel split in
                             # GH-42 WU3) / FakeViewModelUi (scripted UiRequest responder, GH-42
-                            # WU2) / RecordingModeSwitcher (GH-30)
+                            # WU2) / RecordingModeSwitcher (GH-30) / FakeMordieSearch +
+                            # FakeMordieSearchFactory (scripted progress, GH-83)
 ```
 
 Gradle's standard source-set convention (`src/main/kotlin`, `src/test/kotlin`) is used —
@@ -197,6 +222,19 @@ zero the count; `restoreState(state, moveCount)` sets it and clears the last lin
 so the first shift after a load always starts a new move. Because the count lives
 on the board, it survives mode switches with no extra wiring.
 
+### mordie (GH-83: the computer opponent)
+Pure domain: plain `IntArray` arrangements, no dependency on `board_model`,
+`storage`, `viewmodel` or `view` (`viewmodel` → `mordie`). `IdaStarSolver` searches the
+game's original arrangement for its shortest solution in the GH-62 move metric, with
+`MoveMetricHeuristic` as the admissible bound. It runs in slices, so
+`BackgroundMordieSearch` can throttle it (about half of one core; the constants sit in
+one place for the GH-41 mobile port), and memory stays O(depth). A search started from a
+saved N begins at N + 1, so it never re-reports below it. `Mordie` turns the player's
+shifts into the line state: a check every 5 shifts, a reveal of "found", and the outcome
+frozen on solve, using Mordie's live state at that shift. `GameSession` owns one `Mordie`,
+so it survives mode switches. `ViewModelImpl` defaults to an inert
+`Mordie(MordieSearchFactory.NONE)`, so unit tests never leave real searches running.
+
 ### viewmodel (GH-42: ViewModel-style, no View reference)
 **Status: landed (WU4/4 of the GH-42 redesign — final WU).** Everything described below is
 real and in use; the `presenter` package/naming this superseded is gone.
@@ -223,6 +261,16 @@ itself — only the plain query methods are safe there. All five are `suspend`; 
 each method's catch-all (`catchingNonControl`) rethrows rather than swallows (ordinary
 structured-concurrency hygiene).
 
+**Mordie wiring (GH-83).** `ViewModel.mordieLine()` (the text after `Mordie:`, or `null`)
+and `mordieEnding()` (the solved title, or `null` → `Congratulations ✓`) are plain
+queries. `shift()` calls `mordie.onShift()` and then, on solve, `mordie.onSolved()`;
+`newGame` and Repair start Mordie fresh; `saveGame` passes `mordie.snapshot()`. A
+successful load binds Mordie through one rule: a solved save with Mordie data gets that
+outcome, a solved save without it clears Mordie, a found save resumes found, a searching
+save with a solvable original resumes at its N, and anything else starts fresh from the
+loaded board, keeping the move count. Every `restoreOnStartup` path ends with
+`mordie.ensureStarted`, which does nothing once Mordie is bound (e.g. after a mode switch).
+
 ### view
 UI only: `view.tui.TuiView` drives the mouse/keyboard TUI, renders the board and
 calls into `ViewModel`. Should not manipulate `board_model` directly. The line-based
@@ -248,7 +296,10 @@ deals in plain data (`SavedBoard`), not domain objects.
 Save file format: line 1 is the square side, line 2 the space-separated tile
 values, line 3 the move count (GH-62). A missing or blank line 3 (a save from
 before GH-62) loads as 0; a non-integer or negative one is a
-`SaveFileFormatException`.
+`SaveFileFormatException`. GH-83 adds two optional lines: line 4 is the original
+arrangement and line 5 is `<N> found` or `<N> searching`. A missing or blank line 4 (an
+older save, or a GH-74 Repair write) means no Mordie data. Once line 4 is present, a bad
+line 4 or 5 is a `SaveFileFormatException`.
 
 ### analytics
 Cross-cutting: `AnalyticsService` is injected into `viewmodel` (and any layer
@@ -262,7 +313,9 @@ running.
 `board_solved` (GH-62) is tracked in `ViewModelImpl`, not a View: every shift goes
 through one private `shift` helper that fires it when the shift turns an unsolved
 board into a solved one, so it covers both modes. Loads bypass that helper,
-so restoring a solved save never fires it.
+so restoring a solved save never fires it. GH-83 adds `mordie_result`/`mordie_moves` to it
+and tracks `mordie_solution_found` from the same helper, when a 5-shift check reveals
+the solution.
 
 ### Board-size surfaces (GH-44)
 Three entry points, all of which *start a fresh game* rather than resizing the
@@ -372,6 +425,10 @@ initial resolution in `Main`; each subsequent switch fires
   real concurrency to exploit here (every I/O call is blocking, single-consumer), so
   a thread pool (`Dispatchers.Default`/`IO`) or `Dispatchers.Unconfined` would only
   add nondeterminism to the request/response ordering for no benefit.
+  **One exception (GH-83):** `BackgroundMordieSearch` runs the Mordie search as one
+  throttled coroutine on `Dispatchers.Default`. It never touches the UI request channel;
+  the event loop only reads its volatile progress snapshot. That keeps the request/response
+  ordering above deterministic.
 - Beyond that, production code has no dependencies past the Kotlin standard library
   (board shuffling uses `kotlin.collections.shuffle()`, not a custom implementation).
 - **JLine considered and rejected (GH-6):** save/load filename tab-autocompletion
