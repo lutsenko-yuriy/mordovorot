@@ -8,9 +8,11 @@ cyclically wrapping around, until the board is back in ascending order.
 
 ## Credits
 
-Mordovorot is based on [Loopover](https://loopover.xyz), a puzzle created by Cary Huang
-(carykh). Mordovorot is an independent reimplementation for the terminal. It uses the same
-rules (cyclic row/column shifts on a square board), but none of Loopover's code or assets.
+Mordovorot is based on Loopover, a puzzle created by Cary Huang (carykh). The original
+is on [OpenProcessing](https://openprocessing.org/@carykh/580366), and the community site is
+[loopover.xyz](https://loopover.xyz). Mordovorot is an independent reimplementation for the
+terminal. It uses the same rules (cyclic row/column shifts on a square board), but none of
+Loopover's code or assets.
 
 ## Running it
 
