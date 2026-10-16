@@ -17,7 +17,7 @@ internal class MordieHooks(
     fun onNewGame() = mordie.startFresh(board.boardArray)
 
     /** Binds Mordie to the board just loaded from a save with [data]. A searching save with an
-     *  unsolvable original can only be hand-edited, so Mordie starts over from the board. */
+     *  unsolvable original can only be hand-edited, so it is treated like a save with no data. */
     fun onLoaded(data: SavedMordie?) {
         when {
             board.isCorrect() ->
