@@ -1,10 +1,11 @@
 package viewmodel
 
-import testing.FakeBoardModel
-import testing.RecordingAnalyticsService
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import testing.FakeBoardModel
+import testing.RecordingAnalyticsService
+import testing.testViewModel
 
 /** Covers [ViewModelImpl.newGame] (GH-44): delegates to [board_model.BoardModel.newGame],
  *  then tracks `new_game_size_selected` - unless the board rejects the size, in which case
@@ -14,7 +15,7 @@ class ViewModelNewGameTest {
     @Test
     fun `newGame delegates to board_newGame with the given size`() {
         val board = FakeBoardModel()
-        val viewModel = ViewModelImpl(board, analytics = RecordingAnalyticsService())
+        val viewModel = testViewModel(board, analytics = RecordingAnalyticsService())
 
         viewModel.newGame(5, trigger = "toolbar")
 
@@ -25,7 +26,7 @@ class ViewModelNewGameTest {
     fun `newGame tracks new_game_size_selected with the size and trigger`() {
         val board = FakeBoardModel()
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, analytics = analytics)
+        val viewModel = testViewModel(board, analytics = analytics)
 
         viewModel.newGame(3, trigger = "toolbar")
 
@@ -39,7 +40,7 @@ class ViewModelNewGameTest {
     fun `an out-of-range size throws and tracks nothing`() {
         val board = FakeBoardModel().apply { newGameException = IllegalArgumentException("Board size must be between 3 and 5, got 9") }
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, analytics = analytics)
+        val viewModel = testViewModel(board, analytics = analytics)
 
         assertFailsWith<IllegalArgumentException> { viewModel.newGame(9, trigger = "toolbar") }
 

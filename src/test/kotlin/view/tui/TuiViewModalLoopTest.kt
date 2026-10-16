@@ -7,6 +7,7 @@ import kotlinx.coroutines.runBlocking
 import testing.FakeTerminal
 import testing.FakeViewModel
 import testing.RecordingAnalyticsService
+import testing.testTuiView
 
 /** Pins the cancel/quit contract all four toolbar dialogs share (GH-64): Escape and the Cancel
  *  button each track `dialog_cancelled` exactly once; end of input closes without tracking. */
@@ -34,7 +35,7 @@ class TuiViewModalLoopTest {
         val (x, y) = case.open(BoardLayout(terminalSize, viewModel.side, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD)))
         val events = mutableListOf<TerminalEvent>(TerminalEvent.MouseClick(x, y))
         afterOpen.forEach { events += it(case.dialog) }
-        runBlocking { TuiView.create(FakeTerminal(events = events, terminalSize = terminalSize), analytics, viewModel = viewModel).play() }
+        runBlocking { testTuiView(FakeTerminal(events = events, terminalSize = terminalSize), analytics, viewModel = viewModel).play() }
         return analytics.events.count { it.name == "dialog_cancelled" && it.properties["dialog"] == case.name }
     }
 

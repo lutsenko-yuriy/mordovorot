@@ -10,7 +10,8 @@ import testing.FakeBoardModel
 import testing.FakeSaveRepository
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
-import viewmodel.ViewModelImpl
+import testing.testTuiView
+import testing.testViewModel
 
 /**
  * Covers GH-18's keyboard-driven Save/Load/Exit dialogs and the startup restore prompt, plus
@@ -29,7 +30,7 @@ class TuiViewKeyboardDialogTest {
         // See TuiViewDialogTest's identical parameter for why this defaults to false but most
         // call sites here override it to true.
         sizeChosenAtLaunch: Boolean = false,
-    ): TuiView = TuiView.create(terminal, analytics, input = KeyboardInput(), viewModel = ViewModelImpl(board, saves, analytics, sizeChosenAtLaunch = sizeChosenAtLaunch))
+    ): TuiView = testTuiView(terminal, analytics, input = KeyboardInput(), viewModel = testViewModel(board, saves, analytics, sizeChosenAtLaunch = sizeChosenAtLaunch))
 
     @Test
     fun `the exit flow's Save re-prompt after a rejected name starts focus back on the text field`(): Unit = runBlocking {
@@ -53,7 +54,7 @@ class TuiViewKeyboardDialogTest {
             terminalSize = terminalSize,
         )
 
-        TuiView.create(terminal, input = KeyboardInput(), viewModel = ViewModelImpl(board, saves, sizeChosenAtLaunch = true)).play()
+        testTuiView(terminal, input = KeyboardInput(), viewModel = testViewModel(board, saves, sizeChosenAtLaunch = true)).play()
 
         assertTrue(saves.saveCalls.any { it.first == "ok" })
     }

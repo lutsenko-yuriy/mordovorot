@@ -6,6 +6,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import testing.FakeTerminal
 import testing.FakeViewModel
+import testing.testTuiView
 import viewmodel.ViewModel
 
 /**
@@ -19,7 +20,7 @@ class TuiViewKeyboardSolvedStateTest {
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
 
     private fun view(terminal: FakeTerminal, viewModel: ViewModel): TuiView =
-        TuiView.create(terminal, input = KeyboardInput(), viewModel = viewModel)
+        testTuiView(terminal, input = KeyboardInput(), viewModel = viewModel)
 
     @Test
     fun `once solved, no cursor is rendered and arrow keys and Enter are inert`(): Unit = runBlocking {

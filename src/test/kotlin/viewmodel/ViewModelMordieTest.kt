@@ -1,6 +1,11 @@
 package viewmodel
 
 import board_model.BoardImpl
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import mordie.Mordie
 import mordie.SearchProgress
@@ -10,11 +15,7 @@ import testing.FakeMordieSearchFactory
 import testing.FakeSaveRepository
 import testing.FakeViewModelUi
 import testing.RecordingAnalyticsService
-import kotlin.test.Test
-import kotlin.test.assertContentEquals
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import testing.testViewModel
 
 /** GH-83: Mordie's wiring through the viewModel - binding on new game/load/repair/startup,
  *  the save snapshot, its two analytics changes and the line/ending queries. */
@@ -36,7 +37,7 @@ class ViewModelMordieTest {
         sizeChosenAtLaunch: Boolean = false,
         startupRestoreDone: Boolean = false,
         mordie: Mordie = Mordie(factory),
-    ) = ViewModelImpl(board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie)
+    ) = testViewModel(board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie)
 
     private fun savesWith(state: IntArray, moveCount: Int = 0, mordie: SavedMordie? = null) =
         FakeSaveRepository(mutableMapOf("m" to SavedBoard(3, state.copyOf(), moveCount, mordie)))

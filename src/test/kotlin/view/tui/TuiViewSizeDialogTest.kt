@@ -11,6 +11,8 @@ import testing.FakeSaveRepository
 import testing.FakeTerminal
 import testing.FakeViewModel
 import testing.RecordingAnalyticsService
+import testing.testTuiView
+import testing.testViewModel
 import viewmodel.ViewModelImpl
 
 /**
@@ -54,7 +56,7 @@ class TuiViewSizeDialogTest {
             terminalSize = terminalSize,
         )
 
-        TuiView.create(terminal, analytics, viewModel = ViewModelImpl(board, saves, analytics, sizeChosenAtLaunch = true)).play()
+        testTuiView(terminal, analytics, viewModel = testViewModel(board, saves, analytics, sizeChosenAtLaunch = true)).play()
 
         assertTrue(board.calls.contains("newGame(5)"))
         assertTrue(analytics.events.any { it.name == "new_game_size_selected" && it.properties["size"] == 5 && it.properties["trigger"] == "toolbar" })
@@ -77,7 +79,7 @@ class TuiViewSizeDialogTest {
             terminalSize = terminalSize,
         )
 
-        TuiView.create(terminal, analytics, viewModel = ViewModelImpl(board, saves, analytics, sizeChosenAtLaunch = true)).play()
+        testTuiView(terminal, analytics, viewModel = testViewModel(board, saves, analytics, sizeChosenAtLaunch = true)).play()
 
         assertTrue(board.calls.none { it.startsWith("newGame") })
         assertTrue(analytics.events.any { it.name == "dialog_cancelled" && it.properties["dialog"] == "size" })
@@ -96,7 +98,7 @@ class TuiViewSizeDialogTest {
             terminalSize = terminalSize,
         )
 
-        TuiView.create(terminal, analytics, input = KeyboardInput(), viewModel = ViewModelImpl(board, saves, analytics, sizeChosenAtLaunch = true)).play()
+        testTuiView(terminal, analytics, input = KeyboardInput(), viewModel = testViewModel(board, saves, analytics, sizeChosenAtLaunch = true)).play()
 
         assertTrue(terminal.frames.any { it.contains("New game size") })
         assertTrue(board.calls.contains("newGame(3)"))
@@ -109,7 +111,7 @@ class TuiViewSizeDialogTest {
         val (newX, newY) = boardLayout(viewModel.side).newButtonPosition()
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.MouseClick(newX, newY), TerminalEvent.Escape), terminalSize = terminalSize)
 
-        TuiView.create(terminal, analytics, viewModel = viewModel).play()
+        testTuiView(terminal, analytics, viewModel = viewModel).play()
 
         assertTrue(analytics.events.any { it.name == "screen_size_dialog" && it.properties["opened_from"] == "toolbar" })
     }
@@ -133,7 +135,7 @@ class TuiViewSizeDialogTest {
             terminalSize = terminalSize,
         )
 
-        TuiView.create(terminal, analytics, viewModel = ViewModelImpl(board, saves, analytics)).play()
+        testTuiView(terminal, analytics, viewModel = testViewModel(board, saves, analytics)).play()
 
         assertTrue(terminal.frames.first().contains("New game size"))
         assertEquals(listOf("newGame(5)"), board.calls)

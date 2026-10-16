@@ -1,13 +1,14 @@
 package viewmodel
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import testing.FakeBoardModel
 import testing.FakeSaveRepository
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import testing.testViewModel
 
 /**
  * Pins the property the whole request-channel design rests on (GH-42 WU2, see the plan comment's
@@ -22,7 +23,7 @@ class ViewModelOrderingTest {
 
     @Test
     fun `a message emitted before a prompt is observed before the prompt request arrives`(): Unit = runBlocking {
-        val viewModel = ViewModelImpl(FakeBoardModel(), FakeSaveRepository())
+        val viewModel = testViewModel(FakeBoardModel(), FakeSaveRepository())
         val events = mutableListOf<String>()
         var promptSaveNameCalls = 0
 

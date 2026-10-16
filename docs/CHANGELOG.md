@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.14.1] — 2026-10-17 (PR #91 merged)
+
+### Changed
+- [wip] (PR #91) GH-78 (WU1/8): tests now build `ViewModelImpl`, `TuiView` and `GameSession` only through `testViewModel`/`testTuiView`/`testGameSession` builders with fake defaults, and `FakeViewModelUi.drive` times out after 10s instead of hanging. Test-only - no production change; WU2 moves all wiring into one composition root.
+
 ## [0.14.0] — 2026-10-17 (PR #89 merged)
 
 ### Added

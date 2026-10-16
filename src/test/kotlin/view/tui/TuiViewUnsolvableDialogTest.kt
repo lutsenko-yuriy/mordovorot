@@ -1,16 +1,17 @@
 package view.tui
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import storage.SavedBoard
 import testing.FakeBoardModel
 import testing.FakeSaveRepository
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
-import viewmodel.ViewModelImpl
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import testing.testTuiView
+import testing.testViewModel
 
 /** GH-74: the TUI's non-cancellable "Can't be solved" dialog (Repair & load / New game / Exit),
  *  reached from the startup restore and the toolbar Load, plus the Save-before-quitting dialog
@@ -33,7 +34,7 @@ class TuiViewUnsolvableDialogTest {
         val board = FakeBoardModel()
         val analytics = RecordingAnalyticsService()
         val terminal = FakeTerminal(events.toMutableList(), terminalSize)
-        TuiView.create(terminal, analytics, input, viewModel = ViewModelImpl(board, saves, analytics, sizeChosenAtLaunch = midGame)).play()
+        testTuiView(terminal, analytics, input, viewModel = testViewModel(board, saves, analytics, sizeChosenAtLaunch = midGame)).play()
         Run(terminal, board, saves, analytics)
     }
 

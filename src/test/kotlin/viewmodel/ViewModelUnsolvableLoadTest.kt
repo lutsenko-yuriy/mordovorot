@@ -2,17 +2,18 @@ package viewmodel
 
 import board_model.BoardImpl
 import board_model.Solvability
+import java.io.IOException
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import storage.SavedBoard
 import testing.FakeSaveRepository
 import testing.FakeViewModelUi
 import testing.RecordingAnalyticsService
 import testing.RecordingAnalyticsService.Event
-import java.io.IOException
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
+import testing.testViewModel
 
 /** GH-74: [ViewModelImpl.loadGame] and [ViewModelImpl.restoreOnStartup] on an unsolvable save -
  *  the [UiRequest.ResolveUnsolvableSave] choice and each of its three branches. */
@@ -29,7 +30,7 @@ class ViewModelUnsolvableLoadTest {
     fun `loading an unsolvable save explains why and asks what to do`(): Unit = runBlocking {
         val board = BoardImpl(4)
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, saves(), analytics)
+        val viewModel = testViewModel(board, saves(), analytics)
         val ui = FakeViewModelUi(
             resolveUnsolvableSaveResponses = mutableListOf(UnsolvableSaveChoice.NEW_GAME),
             chooseBoardSizeResponses = mutableListOf(null),
@@ -47,7 +48,7 @@ class ViewModelUnsolvableLoadTest {
         val board = BoardImpl(4)
         val saves = saves()
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi(resolveUnsolvableSaveResponses = mutableListOf(UnsolvableSaveChoice.REPAIR))
 
         ui.drive(viewModel) { viewModel.loadGame("odd") }
@@ -75,7 +76,7 @@ class ViewModelUnsolvableLoadTest {
         val board = BoardImpl(4)
         val saves = saves().apply { saveException = IOException("disk full") }
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi(resolveUnsolvableSaveResponses = mutableListOf(UnsolvableSaveChoice.REPAIR))
 
         ui.drive(viewModel) { viewModel.loadGame("odd") }
@@ -98,7 +99,7 @@ class ViewModelUnsolvableLoadTest {
     fun `repair leaves the save untouched when the board can't take it`(): Unit = runBlocking {
         val sevenBySeven = IntArray(49) { it }.also { it[0] = 1; it[1] = 0 }
         val saves = FakeSaveRepository(mutableMapOf("big" to SavedBoard(7, sevenBySeven.copyOf(), 2)))
-        val viewModel = ViewModelImpl(BoardImpl(4), saves, RecordingAnalyticsService())
+        val viewModel = testViewModel(BoardImpl(4), saves, RecordingAnalyticsService())
         val ui = FakeViewModelUi(resolveUnsolvableSaveResponses = mutableListOf(UnsolvableSaveChoice.REPAIR))
 
         ui.drive(viewModel) { viewModel.loadGame("big") }
@@ -111,7 +112,7 @@ class ViewModelUnsolvableLoadTest {
     fun `new game mid-game asks for the size and starts a fresh game`(): Unit = runBlocking {
         val board = BoardImpl(4)
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, saves(), analytics)
+        val viewModel = testViewModel(board, saves(), analytics)
         val ui = FakeViewModelUi(
             resolveUnsolvableSaveResponses = mutableListOf(UnsolvableSaveChoice.NEW_GAME),
             chooseBoardSizeResponses = mutableListOf(5),
@@ -136,7 +137,7 @@ class ViewModelUnsolvableLoadTest {
     @Test
     fun `new game mid-game with no size answer starts fresh at the current size`(): Unit = runBlocking {
         val board = BoardImpl(4).apply { shiftLeft(0) }
-        val viewModel = ViewModelImpl(board, saves(), RecordingAnalyticsService())
+        val viewModel = testViewModel(board, saves(), RecordingAnalyticsService())
         val ui = FakeViewModelUi(
             resolveUnsolvableSaveResponses = mutableListOf(UnsolvableSaveChoice.NEW_GAME),
             chooseBoardSizeResponses = mutableListOf(null),
@@ -151,7 +152,7 @@ class ViewModelUnsolvableLoadTest {
     @Test
     fun `exit mid-game runs the normal exit flow`(): Unit = runBlocking {
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(BoardImpl(4), saves(), analytics)
+        val viewModel = testViewModel(BoardImpl(4), saves(), analytics)
         val ui = FakeViewModelUi(
             resolveUnsolvableSaveResponses = mutableListOf(UnsolvableSaveChoice.EXIT),
             confirmSaveBeforeExitResponses = mutableListOf(false),
@@ -175,7 +176,7 @@ class ViewModelUnsolvableLoadTest {
         val board = BoardImpl(4)
         val before = board.boardArray.toList()
         val saves = saves().apply { saveException = IOException("read-only") }
-        val viewModel = ViewModelImpl(board, saves, RecordingAnalyticsService())
+        val viewModel = testViewModel(board, saves, RecordingAnalyticsService())
         val ui = FakeViewModelUi(
             resolveUnsolvableSaveResponses = mutableListOf(UnsolvableSaveChoice.EXIT),
             confirmSaveBeforeExitResponses = mutableListOf(true),
@@ -192,7 +193,7 @@ class ViewModelUnsolvableLoadTest {
     fun `repair at startup counts as restored`(): Unit = runBlocking {
         val board = BoardImpl(4)
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, saves(), analytics)
+        val viewModel = testViewModel(board, saves(), analytics)
         val ui = FakeViewModelUi(
             confirmRestoreResponses = mutableListOf(true),
             resolveUnsolvableSaveResponses = mutableListOf(UnsolvableSaveChoice.REPAIR),
@@ -221,7 +222,7 @@ class ViewModelUnsolvableLoadTest {
     fun `new game at startup falls through to the startup size prompt`(): Unit = runBlocking {
         val board = BoardImpl(4)
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(board, saves(), analytics)
+        val viewModel = testViewModel(board, saves(), analytics)
         val ui = FakeViewModelUi(
             confirmRestoreResponses = mutableListOf(true),
             resolveUnsolvableSaveResponses = mutableListOf(UnsolvableSaveChoice.NEW_GAME),
@@ -247,7 +248,7 @@ class ViewModelUnsolvableLoadTest {
     @Test
     fun `exit at startup quits without asking to save`(): Unit = runBlocking {
         val analytics = RecordingAnalyticsService()
-        val viewModel = ViewModelImpl(BoardImpl(4), saves(), analytics)
+        val viewModel = testViewModel(BoardImpl(4), saves(), analytics)
         val ui = FakeViewModelUi(
             confirmRestoreResponses = mutableListOf(true),
             resolveUnsolvableSaveResponses = mutableListOf(UnsolvableSaveChoice.EXIT),
@@ -271,7 +272,7 @@ class ViewModelUnsolvableLoadTest {
     @Test
     fun `a solvable save loads without asking`(): Unit = runBlocking {
         val saves = FakeSaveRepository(mutableMapOf("ok" to SavedBoard(3, intArrayOf(1, 2, 0, 3, 4, 5, 6, 7, 8))))
-        val viewModel = ViewModelImpl(BoardImpl(4), saves, RecordingAnalyticsService())
+        val viewModel = testViewModel(BoardImpl(4), saves, RecordingAnalyticsService())
         val ui = FakeViewModelUi()
 
         ui.drive(viewModel) { viewModel.loadGame("ok") }

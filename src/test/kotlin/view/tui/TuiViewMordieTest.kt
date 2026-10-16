@@ -5,6 +5,7 @@ import kotlin.test.assertEquals
 import kotlinx.coroutines.runBlocking
 import testing.FakeTerminal
 import testing.FakeViewModel
+import testing.testTuiView
 
 /** GH-83: the viewModel's Mordie line and ending reach the frame, identically in both input modes. */
 class TuiViewMordieTest {
@@ -14,7 +15,7 @@ class TuiViewMordieTest {
 
     private fun lastFrame(input: TuiInput, viewModel: FakeViewModel): List<String> = runBlocking {
         val terminal = FakeTerminal(terminalSize = terminalSize)
-        TuiView.create(terminal, input = input, viewModel = viewModel).play()
+        testTuiView(terminal, input = input, viewModel = viewModel).play()
         terminal.frames.last().replace(Regex("\u001B\\[[0-9;?]*[A-Za-z]"), "").split("\r\n")
     }
 

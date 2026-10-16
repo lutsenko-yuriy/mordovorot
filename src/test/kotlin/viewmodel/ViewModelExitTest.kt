@@ -1,14 +1,15 @@
 package viewmodel
 
-import testing.FakeBoardModel
-import testing.FakeViewModelUi
-import testing.FakeSaveRepository
-import testing.RecordingAnalyticsService
-import testing.RecordingAnalyticsService.Event
-import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlinx.coroutines.runBlocking
+import testing.FakeBoardModel
+import testing.FakeSaveRepository
+import testing.FakeViewModelUi
+import testing.RecordingAnalyticsService
+import testing.RecordingAnalyticsService.Event
+import testing.testViewModel
 
 /**
  * Covers [ViewModelImpl.exitGame] (toolbar Exit) directly against [ViewModelImpl], driven with
@@ -27,7 +28,7 @@ class ViewModelExitTest {
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
         val ui = FakeViewModelUi(confirmSaveBeforeExitResponses = mutableListOf(false))
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
 
         assertFailsWith<ExitRequestedException> { ui.drive(viewModel) { viewModel.exitGame() } }
 
@@ -47,7 +48,7 @@ class ViewModelExitTest {
             confirmSaveBeforeExitResponses = mutableListOf(true),
             promptSaveNameResponses = mutableListOf("foo"),
         )
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
 
         assertFailsWith<ExitRequestedException> { ui.drive(viewModel) { viewModel.exitGame() } }
 
@@ -78,7 +79,7 @@ class ViewModelExitTest {
             confirmSaveBeforeExitResponses = mutableListOf(true),
             promptSaveNameResponses = mutableListOf("foo"),
         )
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
 
         ui.drive(viewModel) { viewModel.exitGame() }
 
@@ -112,7 +113,7 @@ class ViewModelExitTest {
             confirmSaveBeforeExitResponses = mutableListOf(true),
             promptSaveNameResponses = mutableListOf("my game", "foo"),
         )
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
 
         assertFailsWith<ExitRequestedException> { ui.drive(viewModel) { viewModel.exitGame() } }
 
@@ -144,7 +145,7 @@ class ViewModelExitTest {
             confirmSaveBeforeExitResponses = mutableListOf(true),
             promptSaveNameResponses = mutableListOf("my game", null),
         )
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
 
         assertFailsWith<ExitRequestedException> { ui.drive(viewModel) { viewModel.exitGame() } }
 
@@ -168,7 +169,7 @@ class ViewModelExitTest {
             confirmSaveBeforeExitResponses = mutableListOf(true),
             promptSaveNameResponses = mutableListOf("a/b", "foo"),
         )
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
 
         assertFailsWith<ExitRequestedException> { ui.drive(viewModel) { viewModel.exitGame() } }
 
@@ -192,7 +193,7 @@ class ViewModelExitTest {
             confirmSaveBeforeExitResponses = mutableListOf(true),
             promptSaveNameResponses = mutableListOf(null),
         )
-        val viewModel = ViewModelImpl(board, saves, analytics)
+        val viewModel = testViewModel(board, saves, analytics)
 
         assertFailsWith<ExitRequestedException> { ui.drive(viewModel) { viewModel.exitGame() } }
 
