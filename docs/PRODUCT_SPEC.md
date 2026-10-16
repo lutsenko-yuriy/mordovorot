@@ -6,7 +6,7 @@
 
 ## Overview
 
-Mordovorot — A terminal prototype of a sliding-row/column puzzle board game
+Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle
 
 ## Features
 

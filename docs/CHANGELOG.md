@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.13.1] — 2026-10-16 (PR #84 merged)
+
+### Changed
+- [meta] (PR #84) GH-82: credited Loopover and its creator Cary Huang in README; described Mordovorot as "a terminal version of Loopover" in README, AGENTS.md, PRODUCT_SPEC.md, and skill_router.toml.
+
 ## [0.13.0] — 2026-10-15 (PR #80 merged)
 
 ### Removed

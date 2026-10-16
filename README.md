@@ -1,10 +1,18 @@
 # Mordovorot
 
-A terminal prototype of a sliding-row/column puzzle board game, written in Kotlin.
+A terminal version of Loopover, a sliding-row/column puzzle, written in Kotlin.
 
 The board is a `SQUARE_SIDE × SQUARE_SIDE` grid (3×3 to 5×5, default 4×4) holding a
 shuffled permutation of numbers. Rows shift left/right and columns shift up/down,
 cyclically wrapping around, until the board is back in ascending order.
+
+## Credits
+
+Mordovorot is based on Loopover, a puzzle created by Cary Huang (carykh). The original
+is on [OpenProcessing](https://openprocessing.org/@carykh/580366), and the community site is
+[loopover.xyz](https://loopover.xyz). Mordovorot is an independent reimplementation for the
+terminal. It uses the same rules (cyclic row/column shifts on a square board), but none of
+Loopover's code or assets.
 
 ## Running it
 
