@@ -100,7 +100,7 @@ class MordieScenarioTest {
         // WU3 + WU4
         // TODO: 1. Hand-write a 3-line save (side, tiles, move count 4).
         // TODO: 2. Load it; the frame shows "Moves: 4" and "Mordie: Alright! Let's sort this one out!"
-        // TODO: 3. The factory was started with the loaded arrangement and ruledOut = 0.
+        // TODO: 3. The factory was started with the loaded arrangement and ruledOut = -1 (fresh).
     }
 
     @Test
@@ -108,7 +108,7 @@ class MordieScenarioTest {
         // WU3
         // TODO: 1. Hand-write an unsolvable 3x3 save (with Mordie lines 4-5) and a nonzero move count.
         // TODO: 2. Load it; choose Repair in the "Can't be solved" dialog.
-        // TODO: 3. The factory was started with the repaired arrangement and ruledOut = 0.
+        // TODO: 3. The factory was started with the repaired arrangement and ruledOut = -1 (fresh).
         // TODO: 4. The greeting is the fresh one; the move count is kept.
     }
 
