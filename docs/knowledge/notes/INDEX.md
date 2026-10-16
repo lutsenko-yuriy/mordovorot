@@ -51,3 +51,4 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-67: Console help command and specific error messages](GH-67.md)
 - [GH-74: Solvable boards on odd sizes and unsolvable-save handling](GH-74.md)
 - [GH-79: Remove console mode](GH-79.md)
+- [GH-82: [trivial] Credit Loopover and describe Mordovorot as its terminal version](GH-82.md)
