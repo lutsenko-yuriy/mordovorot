@@ -7,9 +7,8 @@ kotlin {
     jvm {
         testRuns["test"].executionTask.configure { useJUnitPlatform() }
     }
-    // Compile-only (GH-41): no JS environment, so no Node download and no JS tests - it exists so
-    // a JVM-only API in commonMain fails the build.
-    js()
+    // GH-103: a real JS target, running the common tests on Node.js.
+    js { nodejs() }
 
     sourceSets {
         // api: GameViewModel's public surface exposes BoardModel, AnalyticsService,
