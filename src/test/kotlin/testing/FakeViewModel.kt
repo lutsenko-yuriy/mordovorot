@@ -62,6 +62,14 @@ class FakeViewModel : ViewModel {
         calls.add("shiftDown($col" + sourceSuffix(source) + ")")
     }
 
+    override fun shiftRow(row: Int, steps: Int, source: ShiftSource?) {
+        calls.add("shiftRow($row, $steps" + sourceSuffix(source) + ")")
+    }
+
+    override fun shiftColumn(col: Int, steps: Int, source: ShiftSource?) {
+        calls.add("shiftColumn($col, $steps" + sourceSuffix(source) + ")")
+    }
+
     /** A keyboard shift records its key (GH-101): `shiftLeft(0, HJKL)`; a click stays `shiftLeft(0)`. */
     private fun sourceSuffix(source: ShiftSource?) = source?.let { ", $it" } ?: ""
 

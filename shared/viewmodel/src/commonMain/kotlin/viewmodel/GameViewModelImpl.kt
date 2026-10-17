@@ -3,6 +3,7 @@ package viewmodel
 import analytics.AnalyticsService
 import board_model.BoardModel
 import kotlinx.coroutines.channels.ReceiveChannel
+import kotlin.math.abs
 import viewmodel.usecase.LoadGameUseCase
 import viewmodel.usecase.LoadResult
 import viewmodel.usecase.NewGameUseCase
@@ -39,15 +40,26 @@ class GameViewModelImpl internal constructor(
 
     override fun shiftDown(col: Int, source: ShiftSource?) = shift(source) { board.shiftDown(col) }
 
+    override fun shiftRow(row: Int, steps: Int, source: ShiftSource?) =
+        shift(source, steps) { if (steps > 0) board.shiftRight(row) else board.shiftLeft(row) }
+
+    override fun shiftColumn(col: Int, steps: Int, source: ShiftSource?) =
+        shift(source, steps) { if (steps > 0) board.shiftDown(col) else board.shiftUp(col) }
+
     /** Runs a shift and tracks `board_solved` when it turns an unsolved board into a solved one
      *  (GH-62). Loads never pass through here, so restoring a solved save doesn't fire it.
      *  Mordie's check runs first, so a solution it reveals on the solving shift counts.
-     *  `shift_keys` (GH-101) and `shift_input` (GH-110) follow the solving shift's [source]. */
-    private fun shift(source: ShiftSource?, action: () -> Unit) {
+     *  `shift_keys` (GH-101) and `shift_input` (GH-110) follow the solving shift's [source].
+     *  [action] runs `|steps|` times (GH-110), each one counted by Mordie, and solved is checked
+     *  once at the end, so a drag passing through the solved board doesn't count. */
+    private fun shift(source: ShiftSource?, steps: Int = 1, action: () -> Unit) {
+        if (steps == 0) return
         val wasSolved = board.isCorrect()
-        action()
+        repeat(abs(steps)) {
+            action()
+            mordieHooks.onShift()
+        }
         source?.let(gameShiftSources::record)
-        mordieHooks.onShift()
         if (!wasSolved && board.isCorrect()) {
             val mordieProps = mordieHooks.onSolved()
             analytics.track(

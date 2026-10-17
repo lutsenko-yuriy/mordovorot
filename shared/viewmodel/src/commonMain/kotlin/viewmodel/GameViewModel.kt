@@ -20,6 +20,13 @@ interface GameViewModel {
     fun shiftUp(col: Int, source: ShiftSource? = null)
     fun shiftDown(col: Int, source: ShiftSource? = null)
 
+    /** Shifts [row] by [steps] tiles, right when positive (GH-110, a drag): `|steps|` shifts, one
+     *  move, with the board checked for solved only once it lands. Zero steps does nothing. */
+    fun shiftRow(row: Int, steps: Int, source: ShiftSource? = null)
+
+    /** [shiftRow] for a column, down when [steps] is positive. */
+    fun shiftColumn(col: Int, steps: Int, source: ShiftSource? = null)
+
     /** Starts a fresh shuffled game at [size] (GH-44) - throws (matching `shiftLeft`'s
      *  "Incorrect row" contract) and tracks nothing if [size] is out of range, otherwise tracks
      *  `new_game_size_selected {size, trigger}`. [trigger] is `"startup_prompt"`, `"toolbar"`
