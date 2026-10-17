@@ -9,7 +9,7 @@ When a new term is introduced during a `brief` session, add it here before creat
 |---|---|---|
 | Board | The square side × square side grid of tiles holding the puzzle state | `BoardModel`, `BoardImpl` |
 | Board size | The valid range of square sides a game can use: 3–5, default 4. Chosen via `--size=N`, the startup size prompt, or `[ New ]` | `BoardSize` |
-| Current save name | The name of the save the current game was most recently loaded from or saved to; prefills the Save dialog. Cleared by a new game, not kept across launches (GH-99) | — |
+| Current save name | The name of the save the current game was most recently loaded from or saved to; prefills the Save dialog. Cleared by a new game, not kept across launches (GH-99) | `CurrentSaveName`, `ViewModel.currentSaveName()` |
 | Dialog | A modal box in the TUI (Save, Load, Exit, New-game size picker, Startup restore) that takes over input until confirmed or cancelled | `Dialog`, `DialogLayout` |
 | Input mode | Which front-end is driving the game: mouse TUI or keyboard TUI. Switchable mid-session without losing the game | `InputMode` |
 | Move | A run of consecutive shifts on the same row or column, in any direction; shifting a different line starts a new move, and so does the first shift after a load. Counted and shown as `Moves: N` | `BoardModel.moveCount` / `ViewModel.moveCount()` |

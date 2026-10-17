@@ -65,7 +65,7 @@ src/main/kotlin/
 │                                  # MordieSnapshot (what a save stores)
 ├── viewmodel/
 │   ├── ViewModel.kt          # The one viewmodel interface (GH-42 WU3) — shift/newGame/save/
-│   │                           # load/exit plus the read-only query surface (listSaves/saveExists/
+│   │                           # load/exit plus the read-only query surface (listSaves/saveExists/currentSaveName/
 │   │                           # isSolved/boardState/squareSide/moveCount) and restoreOnStartup
 │   ├── ViewModelImpl.kt      # The one implementation (GH-42 WU3, collapsing BaseViewModel +
 │   │                           # ConsoleViewModelImpl + TuiViewModelImpl). Keeps shifts and the
