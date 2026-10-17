@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.16.0] — 2026-10-17 (PR #102 merged)
+
+### Added
+- [user] GH-101: Keyboard mode now selects a row or column with WASD and shifts it with HJKL or the arrow keys; the arrows are gone and the selected line is highlighted, with key hints on either side of the board.
+
 ## [0.15.0] — 2026-10-17 (PR #100 merged)
 
 ### Added
