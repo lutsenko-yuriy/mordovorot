@@ -11,7 +11,7 @@ kotlin {
     js { nodejs() }
 
     sourceSets {
-        jvmTest {
+        commonTest {
             dependencies {
                 implementation(kotlin("test"))
                 implementation(project(":shared:testing"))
