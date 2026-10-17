@@ -35,9 +35,12 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       ├── NoopAnalyticsService.kt         # Default implementation; no SDK wired up yet
 │       └── InputMethodAnalyticsService.kt  # Decorator adding `input_method` to every forwarded
 │                                             # event, without touching the viewmodel's call sites (GH-3)
-├── storage/             # :shared:storage - the save contract only; the file I/O is the app's
+├── storage/             # :shared:storage - the save contract and text format; the file I/O is the app's
 │   └── storage/
 │       ├── SaveRepository.kt          # Persistence contract: list/exists/save/load
+│       ├── SaveFileCodec.kt           # The save text format: encode/decode with all its validation (GH-110)
+│       ├── SaveNames.kt               # Which save names are accepted, on every platform (GH-110)
+│       ├── SaveFileFormatException.kt # Thrown on a malformed save (from the app, GH-110)
 │       ├── SavedBoard.kt              # Data carrier: square side + tile arrangement (+ optional
 │       │                                # SavedMordie, GH-83)
 │       └── SavedMordie.kt             # Original arrangement + Mordie's N + found flag (GH-83)
@@ -160,11 +163,10 @@ src/main/kotlin/                # the terminal app (the root project)
 │   └── usecase/
 │       └── ExitGameUseCase.kt # The toolbar Exit flow: Save before quitting?, then
 │                                # ExitRequestedException (GH-12); delegated to by ViewModelImpl (GH-41)
-├── storage/                       # the contract (SaveRepository/SavedBoard/SavedMordie) is in
+├── storage/                       # the contract, the format and the name rules are in
 │   │                                # shared/storage
-│   ├── FileSaveRepository.kt      # Plain-text file implementation (the only class
-│   │                                touching the filesystem); rejects unsafe file names
-│   └── SaveFileFormatException.kt # Thrown on a malformed save file
+│   └── FileSaveRepository.kt      # Plain-text file implementation (the only class
+│                                    touching the filesystem); atomic writes via a temp file
 └── view/
     ├── View.kt          # View interface — play() (GH-79 removed the console-only members)
     └── tui/             # GH-3: the View implementation, the mouse/keyboard TUI
@@ -259,7 +261,7 @@ src/test/kotlin/                # the terminal app's tests; board_model / analyt
 │                            # no-op (GH-30)
 ├── viewmodel/            # One test file per viewmodel concern (GH-42 WU3), driving ViewModelImpl
 │                           # directly, no play() loop involved. The ones here exercise Exit or
-│                           # build the terminal-only SaveFileFormatException (ViewModelExitTest/
+│                           # build SaveFileFormatException (ViewModelExitTest/
 │                           # OrderingTest/UnsolvableLoadTest/SaveLoadTest/CurrentSaveNameTest/
 │                           # QueriesTest/StartupRestoreTest) and still cover the shared code
 │                           # through ViewModelImpl's delegation; CatchingNonControlTest pins
@@ -392,7 +394,7 @@ constant is the single translation point (`+1` when rendering). Clicks and key
 presses resolve to 0-based `HitTarget`s directly, so nothing parses a typed index.
 Range validation lives in `board_model` (`BoardImpl`'s bounds check), not `view`.
 
-`BoardImpl.restoreState` and `FileSaveRepository`'s validation errors avoid
+`BoardImpl.restoreState` and `SaveFileCodec`'s validation errors avoid
 stating an explicit numeric range (e.g. "contain each of N tile values
 exactly once" rather than "permutation of 0..N-1") so they read correctly
 next to the 1-based board when shown in a Load dialog message.
@@ -400,7 +402,8 @@ next to the 1-based board when shown in a Load dialog message.
 ### storage
 File persistence for save games. `SaveRepository` is the contract `viewmodel`
 depends on; `FileSaveRepository` is the only class in the codebase that touches
-the filesystem. No dependency on `board_model`, `viewmodel`, or `view` — it
+the filesystem. The text format (`SaveFileCodec`) and the accepted names (`SaveNames`)
+live in `:shared:storage` so every platform reads and writes the same saves (GH-110). No dependency on `board_model`, `viewmodel`, or `view` — it
 deals in plain data (`SavedBoard`), not domain objects.
 
 Save file format: line 1 is the square side, line 2 the space-separated tile
@@ -562,7 +565,8 @@ alert when a session waits on the user, toggled per machine in the gitignored `.
   webpack and webpack-dev-server (build time only, pinned in the same `yarn.lock`); the
   browser test task is off, so CI needs no headless browser.
   Known follow-up for the first non-JVM port: seven viewmodel test files stay in the app
-  because they use Exit or `SaveFileFormatException`, so they don't run on other targets.
+  because they use Exit or `SaveFileFormatException`, so they don't run on other targets
+  (`SaveFileFormatException` is in `:shared:storage` since GH-110).
 - **Test framework:** `kotlin("test")` on the JUnit 5 platform (`useJUnitPlatform()`).
   No mocking library — hand-written fakes in `src/test/kotlin/testing/` and, for doubles of
   shared types, the `:shared:testing` module.
