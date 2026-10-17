@@ -12,7 +12,8 @@ kotlin {
     js {
         browser {
             // Saves live in localStorage, which is per origin, so a moving port would hide them.
-            commonWebpackConfig { devServer = devServer?.copy(port = 8080) }
+            // open = false: the server never opens a tab in the default browser by itself.
+            commonWebpackConfig { devServer = devServer?.copy(port = 8080, open = false) }
             // No headless browser in CI: the common tests run on Node.js instead.
             testTask { enabled = false }
         }

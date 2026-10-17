@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.16.9] — 2026-10-18 (PR #118 merged)
+
+### Changed
+- [wip] (PR #118) GH-110 (WU2/7): the save text format (SaveFileCodec), the save-name rules (SaveNames) and SaveFileFormatException move into :shared:storage so the browser client can share the terminal's saves (behaviour unchanged); the web dev server no longer opens a browser tab by itself.
+
 ## [0.16.8] — 2026-10-18 (PR #117 merged)
 
 ### Changed
