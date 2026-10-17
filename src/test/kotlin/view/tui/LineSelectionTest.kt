@@ -57,6 +57,12 @@ class LineSelectionTest {
     }
 
     @Test
+    fun `covers is the active line's tiles only`() {
+        assertEquals(listOf(true, true, false), listOf(1 to 0, 1 to 3, 0 to 2).map { (r, c) -> LineSelection(1, 2, ROW).covers(r, c) })
+        assertEquals(listOf(true, true, false), listOf(0 to 2, 3 to 2, 1 to 0).map { (r, c) -> LineSelection(1, 2, COLUMN).covers(r, c) })
+    }
+
+    @Test
     fun `clampedTo pulls each index inside a smaller board and keeps the axis`() {
         assertEquals(LineSelection(2, 1, COLUMN), LineSelection(3, 1, COLUMN).clampedTo(3))
         assertEquals(LineSelection(2, 2, ROW), LineSelection(4, 4, ROW).clampedTo(3))

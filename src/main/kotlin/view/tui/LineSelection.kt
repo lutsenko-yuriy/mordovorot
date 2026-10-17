@@ -29,6 +29,9 @@ data class LineSelection(val row: Int, val col: Int, val axis: Axis) {
         Direction.DOWN -> if (axis == Axis.COLUMN) ShiftOutcome.Shift(HitTarget.ShiftDown(col)) else switched()
     }
 
+    /** Whether the tile at [row], [col] belongs to the active line. */
+    fun covers(row: Int, col: Int): Boolean = if (axis == Axis.ROW) row == this.row else col == this.col
+
     fun clampedTo(side: Int): LineSelection = copy(row = row.coerceAtMost(side - 1), col = col.coerceAtMost(side - 1))
 
     private fun switched() = ShiftOutcome.Switched(copy(axis = if (axis == Axis.ROW) Axis.COLUMN else Axis.ROW))

@@ -109,9 +109,6 @@ class ScreenRenderer {
         return builder.toString()
     }
 
-    private fun LineSelection.covers(row: Int, col: Int) =
-        if (axis == LineSelection.Axis.ROW) row == this.row else col == this.col
-
     private fun drawArrows(canvas: Canvas, layout: BoardLayout, state: ScreenState) {
         fun glyph(g: String) = if (state.arrowsEnabled) g else "$DIM_ON$g$DIM_OFF"
 

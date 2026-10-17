@@ -209,4 +209,20 @@ class KeyboardLineSelectionScenarioTest {
         assertContentEquals(solved, run.board.boardArray)
         assertEquals("mixed", run.event("board_solved")["shift_keys"])
     }
+
+    @Test
+    fun `shift_keys keeps counting across a switch to mouse mode and back`() {
+        val solved = IntArray(16) { it }
+        val twoFromSolved = shifted(solved) { shiftRight(0); shiftDown(0) }
+        val keyboardButton = BoardLayout(terminalSize, 4, modeButtons = listOf(InputMode.KEYBOARD))
+            .toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.KEYBOARD) }
+
+        val run = session(
+            keys("d") + Arrow(Direction.UP) + FunctionKey(7) + TerminalEvent.MouseClick(keyboardButton.x, keyboardButton.y) + keys("wh"),
+            start = twoFromSolved,
+        )
+
+        assertContentEquals(solved, run.board.boardArray)
+        assertEquals("mixed", run.event("board_solved")["shift_keys"])
+    }
 }
