@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.15.0] — 2026-10-17 (PR #100 merged)
+
+### Added
+- [user] GH-99: The Save dialog now opens with the name of the game you last loaded or saved already filled in, so saving your progress is just Enter.
+
 ## [0.14.8] — 2026-10-17 (PR #98 merged)
 
 ### Changed
