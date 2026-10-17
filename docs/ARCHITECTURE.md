@@ -15,7 +15,7 @@ opponent package (GH-83).
 
 ```
 shared/                  # GH-41: the platform-independent game as Kotlin Multiplatform modules
-│                          # (`:shared:<name>`), each `jvm()` + a compile-only `js(IR)` that fails
+│                          # (`:shared:<name>`), each `jvm()` + a compile-only `js()` that fails
 │                          # the build on a JVM-only API. Packages are unchanged; main code is in
 │                          # `<module>/src/commonMain/kotlin/`, tests in `src/jvmTest/kotlin/`
 ├── core/                # :shared:core
@@ -529,12 +529,12 @@ alert when a session waits on the user, toggled per machine in the gitignored `.
 
 ## Dependencies
 
-- **Build tool:** Gradle (Kotlin DSL), via the wrapper (`./gradlew`) — pinned to 8.7.
+- **Build tool:** Gradle (Kotlin DSL), via the wrapper (`./gradlew`) — pinned to 9.7.1.
   The terminal app (root project) uses `kotlin("jvm")` + `application`; JVM toolchain 17.
 - **Kotlin Multiplatform (GH-41).** The `shared/` modules use `kotlin("multiplatform")`, the
   same first-party JetBrains plugin and version as `kotlin("jvm")` (declared once in the root
   `plugins {}` with `apply false`), so nothing new reaches the runtime classpath. Each module
-  has a `jvm()` target and a bare `js(IR)`: with only `jvm()`, `commonMain` would accept
+  has a `jvm()` target and a bare `js()`: with only `jvm()`, `commonMain` would accept
   `java.lang.Math` and the like, so the JS target is the compiler check that shared code
   stays platform-independent. It has no JS environment (no Node download, no JS tests), at
   the cost of one KGP warning per module; a future Web ticket (GH-103) replaces it with a
