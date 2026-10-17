@@ -291,7 +291,7 @@ class TuiView internal constructor(
      *  via click. Shared by the toolbar's Load and the startup restore prompt (same shape for
      *  any save count, per the plan). [preloadedSaves], when given, is shown as-is instead of
      *  a fresh [ViewModel.listSaves] call - [confirmRestore]/[chooseSaveToRestore] already
-     *  receive the save list [viewmodel.ViewModelImpl.restoreOnStartup] queried, and re-querying
+     *  receive the save list [viewmodel.usecase.StartupRestoreUseCase.restoreOnStartup] queried, and re-querying
      *  instead risked disagreeing with it (audit finding on PR #24). Each row shows its size
      *  (GH-44 WU4) via [display]. */
     private fun runLoadDialog(title: String, openedFrom: String, preloadedSaves: List<SaveInfo>? = null): LoadOutcome {

@@ -70,10 +70,7 @@ src/main/kotlin/
 │   │                           # ConsoleViewModelImpl + TuiViewModelImpl). Keeps shifts and the
 │   │                           # queries; delegates every other flow to a usecase/ class. All
 │   │                           # collaborators are injected, with no defaults (GH-78) - built only
-│   │                           # by buildViewModel. `startupRestoreDone` is also a constructor param
-│   │                           # (default false) so GameSession can seed it true on every session
-│   │                           # after the first, skipping a re-shown startup restore prompt after
-│   │                           # a mode switch (GH-30). Holds no `View` reference — see the
+│   │                           # by buildViewModel. Holds no `View` reference — see the
 │   │                           # "viewmodel" section below
 │   ├── UiRequest.kt          # Sealed request/response type for the seven viewmodel→UI
 │   │                           # interactions (ShowMessage/ConfirmRestore/ChooseSaveToRestore/
@@ -105,7 +102,10 @@ src/main/kotlin/
 │   └── usecase/               # One class per ViewModel flow, delegated to by ViewModelImpl
 │                                 # (GH-78): NewGameUseCase, SaveGameUseCase, ExitGameUseCase,
 │                                 # LoadGameUseCase -> ResolveUnsolvableSaveUseCase (repair /
-│                                 # new game / exit, GH-74)
+│                                 # new game / exit, GH-74), StartupRestoreUseCase (restore or
+│                                 # size prompt, then Mordie; takes `startupRestoreDone`, which
+│                                 # GameSession seeds true after a mode switch (GH-30), and
+│                                 # `sizeChosenAtLaunch`)
 ├── storage/
 │   ├── SaveRepository.kt          # Persistence contract: list/exists/save/load
 │   ├── SavedBoard.kt              # Data carrier: square side + tile arrangement (+ optional
@@ -367,7 +367,7 @@ running one: the `--size=N` launch flag (`Main.resolveBoardSize` returns `Int?`
 - `null` for a missing, non-numeric, or out-of-range value, distinct from "asked
 for exactly the default" - warning and falling back to 4 on `null`; reported as
 `app_launched.board_size`); a startup prompt raised by
-`ViewModelImpl.restoreOnStartup` as `UiRequest.ChooseBoardSize`, answered by
+`StartupRestoreUseCase.restoreOnStartup` as `UiRequest.ChooseBoardSize`, answered by
 the TUI's `Dialog.Kind.SIZE` picker; and the TUI's `[ New ]`
 toolbar button (`HitTarget.ToolbarNew`, F9 in keyboard mode), which opens the
 same picker. All of them funnel into `ViewModel.newGame(size, trigger)` →
@@ -408,7 +408,7 @@ answer is pending.
 
 **`--size=N` bypasses the *entire* startup sequence, not just the size prompt.**
 A usable `--size=N` sets `sizeChosenAtLaunch` (captured by `buildGameSession`
-and passed through `defaultView` → `ViewModelImpl` on every rebuild), and `restoreOnStartup` returns immediately when
+and passed through `defaultView` → `StartupRestoreUseCase` on every rebuild), and `restoreOnStartup` returns immediately when
 it's set — no restore prompt, no size prompt, no `startup_restore_prompt_shown`/
 `startup_restore_decision`, regardless of what saves exist on disk. Without the
 flag (or with an unusable one - `sizeChosenAtLaunch` is `false` in that case
