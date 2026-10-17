@@ -22,7 +22,7 @@ import view.tui.dialog.SizeDialogController
 import view.tui.dialog.UnsolvableDialogController
 import viewmodel.CurrentSaveName
 import viewmodel.ExitRequestedException
-import viewmodel.GameShiftKeys
+import viewmodel.GameShiftSources
 import viewmodel.ModeSwitcher
 import viewmodel.ModeSwitcherImpl
 import viewmodel.UiRequestChannel
@@ -37,7 +37,7 @@ import viewmodel.usecase.ExitGameUseCase
 // these same functions with fakes, so tests and production can't wire things differently.
 
 /** A [GameSession] whose every rebuild shares [board], [saves], [mordie], one
- *  [CurrentSaveName] (GH-99), one [GameShiftKeys] and one [KeyboardSelection] (GH-101). */
+ *  [CurrentSaveName] (GH-99), one [GameShiftSources] and one [KeyboardSelection] (GH-101). */
 internal fun buildGameSession(
     initialMode: InputMode,
     board: BoardModel,
@@ -48,11 +48,11 @@ internal fun buildGameSession(
     terminalFactory: () -> Terminal,
 ): GameSession {
     val currentSaveName = CurrentSaveName()
-    val gameShiftKeys = GameShiftKeys()
+    val gameShiftSources = GameShiftSources()
     val keyboardSelection = KeyboardSelection()
     return GameSession(initialMode, mordie) { mode, startupRestoreDone ->
         defaultView(
-            mode, board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftKeys,
+            mode, board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftSources,
             keyboardSelection, terminalFactory,
         )
     }
@@ -69,13 +69,13 @@ internal fun defaultView(
     sizeChosenAtLaunch: Boolean,
     mordie: Mordie,
     currentSaveName: CurrentSaveName,
-    gameShiftKeys: GameShiftKeys,
+    gameShiftSources: GameShiftSources,
     keyboardSelection: KeyboardSelection,
     terminalFactory: () -> Terminal,
 ): View {
     val decoratedAnalytics = InputMethodAnalyticsService(analytics, mode.name.lowercase())
     val viewModel = buildViewModel(
-        board, saves, decoratedAnalytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftKeys,
+        board, saves, decoratedAnalytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftSources,
     )
     return buildTuiView(
         terminalFactory(),
@@ -97,7 +97,7 @@ internal fun buildViewModel(
     sizeChosenAtLaunch: Boolean,
     mordie: Mordie,
     currentSaveName: CurrentSaveName,
-    gameShiftKeys: GameShiftKeys,
+    gameShiftSources: GameShiftSources,
 ): ViewModelImpl {
     val ui = UiRequestChannel()
     val exitGame = ExitGameUseCase(saves, analytics, ui)
@@ -106,7 +106,7 @@ internal fun buildViewModel(
         exitGame.exitGame(viewModel::saveGame)
     }
     val game = buildGameViewModel(
-        board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftKeys, ui,
+        board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftSources, ui,
         unsolvableExit,
     )
     return ViewModelImpl(game, exitGame)

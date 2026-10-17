@@ -21,7 +21,7 @@ import view.tui.HitTarget
 import view.tui.TerminalEvent
 import view.tui.TerminalSize
 import viewmodel.CurrentSaveName
-import viewmodel.GameShiftKeys
+import viewmodel.GameShiftSources
 
 /** GH-79 scenarios: console mode removed - the no-terminal abort, the `--console` notice, the TUI
  *  without a console switch, the failed-switch fallback, and old saves still loading. */
@@ -181,7 +181,7 @@ class ConsoleRemovalScenarioTest {
             buildView = { mode, restoreDone ->
                 builds += mode to restoreDone
                 if (mode == InputMode.KEYBOARD) throw RuntimeException("stty not found")
-                defaultView(mode, board, saves, RecordingAnalyticsService(), restoreDone, sizeChosenAtLaunch = true, mordie, CurrentSaveName(), GameShiftKeys(), KeyboardSelection()) { terminal }
+                defaultView(mode, board, saves, RecordingAnalyticsService(), restoreDone, sizeChosenAtLaunch = true, mordie, CurrentSaveName(), GameShiftSources(), KeyboardSelection()) { terminal }
             },
         ).run()
 

@@ -9,7 +9,7 @@ import testing.FakeTerminal
 import testing.FakeViewModel
 import testing.RecordingAnalyticsService
 import testing.testTuiView
-import viewmodel.ShiftKey
+import viewmodel.ShiftSource
 import viewmodel.ViewModel
 
 /**
@@ -79,8 +79,8 @@ class TuiViewSolvedStateTest {
         // reached by playing, not by loading an already-solved save (see the next test).
         val delegate = FakeViewModel()
         val viewModel = object : ViewModel by delegate {
-            override fun shiftLeft(row: Int, key: ShiftKey?) {
-                delegate.shiftLeft(row, key)
+            override fun shiftLeft(row: Int, source: ShiftSource?) {
+                delegate.shiftLeft(row, source)
                 delegate.solved = true
             }
         }

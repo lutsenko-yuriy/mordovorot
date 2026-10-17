@@ -12,14 +12,18 @@ import testing.RecordingAnalyticsService
 import testing.testViewModel
 
 /** GH-101: `board_solved.shift_keys` - which keys made this game's shifts, keyboard mode only.
- *  Reset by a new game, a load or a repair, not by a save. */
-class ViewModelShiftKeysTest {
+ *  GH-110: `shift_input` - arrow clicks or drags, on the web. Both are reset by a new game, a
+ *  load or a repair, not by a save. */
+class ViewModelShiftSourcesTest {
 
     /** 3x3, solved by shifting row 0 left twice (or right once). */
     private fun nearlySolved() = BoardImpl(3).apply { restoreState(intArrayOf(1, 2, 0, 3, 4, 5, 6, 7, 8)) }
 
-    private fun shiftKeys(analytics: RecordingAnalyticsService) =
-        analytics.events.single { it.name == "board_solved" }.properties["shift_keys"]
+    private fun solved(analytics: RecordingAnalyticsService) = analytics.events.single { it.name == "board_solved" }.properties
+
+    private fun shiftKeys(analytics: RecordingAnalyticsService) = solved(analytics)["shift_keys"]
+
+    private fun shiftInput(analytics: RecordingAnalyticsService) = solved(analytics)["shift_input"]
 
     @Test
     fun `shifts made with the arrow keys report arrows`() {
@@ -111,5 +115,73 @@ class ViewModelShiftKeysTest {
         }
 
         assertEquals("hjkl", shiftKeys(analytics))
+    }
+
+    @Test
+    fun `shifts made with arrow clicks report shift_input arrows`() {
+        val analytics = RecordingAnalyticsService()
+        val viewModel = testViewModel(nearlySolved(), analytics = analytics)
+
+        viewModel.shiftRight(0, PointerShift.ARROW)
+
+        assertEquals("arrows", shiftInput(analytics))
+        assertFalse("shift_keys" in solved(analytics))
+    }
+
+    @Test
+    fun `shifts made by dragging report shift_input drag`() {
+        val analytics = RecordingAnalyticsService()
+        val viewModel = testViewModel(nearlySolved(), analytics = analytics)
+
+        viewModel.shiftLeft(0, PointerShift.DRAG)
+        viewModel.shiftLeft(0, PointerShift.DRAG)
+
+        assertEquals("drag", shiftInput(analytics))
+    }
+
+    @Test
+    fun `arrow clicks and drags report shift_input mixed`() {
+        val analytics = RecordingAnalyticsService()
+        val viewModel = testViewModel(nearlySolved(), analytics = analytics)
+
+        viewModel.shiftLeft(0, PointerShift.DRAG)
+        viewModel.shiftLeft(0, PointerShift.ARROW)
+
+        assertEquals("mixed", shiftInput(analytics))
+    }
+
+    @Test
+    fun `a keyboard solve reports shift_keys and no shift_input`() {
+        val analytics = RecordingAnalyticsService()
+        val viewModel = testViewModel(nearlySolved(), analytics = analytics)
+
+        viewModel.shiftRight(0, ShiftKey.ARROW)
+
+        assertFalse("shift_input" in solved(analytics))
+    }
+
+    @Test
+    fun `a solving shift with no source sends neither property`() {
+        val analytics = RecordingAnalyticsService()
+        val viewModel = testViewModel(nearlySolved(), analytics = analytics)
+
+        viewModel.shiftRight(0)
+
+        assertFalse("shift_keys" in solved(analytics))
+        assertFalse("shift_input" in solved(analytics))
+    }
+
+    @Test
+    fun `a new game resets shift_input`() {
+        val analytics = RecordingAnalyticsService()
+        val board = BoardImpl(3)
+        val viewModel = testViewModel(board, analytics = analytics)
+
+        viewModel.shiftUp(0, PointerShift.DRAG)
+        viewModel.newGame(3, trigger = "toolbar")
+        board.restoreState(intArrayOf(1, 2, 0, 3, 4, 5, 6, 7, 8))
+        viewModel.shiftRight(0, PointerShift.ARROW)
+
+        assertEquals("arrows", shiftInput(analytics))
     }
 }

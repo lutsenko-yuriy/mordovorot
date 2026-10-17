@@ -25,35 +25,35 @@ class GameViewModelImpl internal constructor(
     private val loadGameUseCase: LoadGameUseCase,
     private val startupRestoreUseCase: StartupRestoreUseCase,
     private val currentSaveName: CurrentSaveName,
-    private val gameShiftKeys: GameShiftKeys,
+    private val gameShiftSources: GameShiftSources,
     private val unsolvableExit: UnsolvableSaveExit,
 ) : GameViewModel {
 
     override val uiRequests: ReceiveChannel<UiRequest<*>> = ui.requests
 
-    override fun shiftLeft(row: Int, key: ShiftKey?) = shift(key) { board.shiftLeft(row) }
+    override fun shiftLeft(row: Int, source: ShiftSource?) = shift(source) { board.shiftLeft(row) }
 
-    override fun shiftRight(row: Int, key: ShiftKey?) = shift(key) { board.shiftRight(row) }
+    override fun shiftRight(row: Int, source: ShiftSource?) = shift(source) { board.shiftRight(row) }
 
-    override fun shiftUp(col: Int, key: ShiftKey?) = shift(key) { board.shiftUp(col) }
+    override fun shiftUp(col: Int, source: ShiftSource?) = shift(source) { board.shiftUp(col) }
 
-    override fun shiftDown(col: Int, key: ShiftKey?) = shift(key) { board.shiftDown(col) }
+    override fun shiftDown(col: Int, source: ShiftSource?) = shift(source) { board.shiftDown(col) }
 
     /** Runs a shift and tracks `board_solved` when it turns an unsolved board into a solved one
      *  (GH-62). Loads never pass through here, so restoring a solved save doesn't fire it.
      *  Mordie's check runs first, so a solution it reveals on the solving shift counts.
-     *  `shift_keys` (GH-101) only rides on a keyboard solve, so mouse mode never sends it. */
-    private fun shift(key: ShiftKey?, action: () -> Unit) {
+     *  `shift_keys` (GH-101) and `shift_input` (GH-110) follow the solving shift's [source]. */
+    private fun shift(source: ShiftSource?, action: () -> Unit) {
         val wasSolved = board.isCorrect()
         action()
-        key?.let(gameShiftKeys::record)
+        source?.let(gameShiftSources::record)
         mordieHooks.onShift()
         if (!wasSolved && board.isCorrect()) {
             val mordieProps = mordieHooks.onSolved()
-            val shiftKeyProps = gameShiftKeys.value?.takeIf { key != null }?.let { mapOf("shift_keys" to it) }.orEmpty()
             analytics.track(
                 "board_solved",
-                mapOf("move_count" to board.moveCount, "board_size" to board.squareSide) + mordieProps + shiftKeyProps,
+                mapOf("move_count" to board.moveCount, "board_size" to board.squareSide) + mordieProps +
+                    gameShiftSources.propertiesFor(source),
             )
         }
     }

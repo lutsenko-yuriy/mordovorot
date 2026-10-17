@@ -3,7 +3,7 @@ package testing
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import viewmodel.SaveInfo
-import viewmodel.ShiftKey
+import viewmodel.ShiftSource
 import viewmodel.UiRequest
 import viewmodel.ViewModel
 
@@ -46,24 +46,24 @@ class FakeViewModel : ViewModel {
     /** Scripts [mordieEnding]'s return value. */
     var mordieEnding: String? = null
 
-    override fun shiftLeft(row: Int, key: ShiftKey?) {
-        calls.add("shiftLeft($row" + keySuffix(key) + ")")
+    override fun shiftLeft(row: Int, source: ShiftSource?) {
+        calls.add("shiftLeft($row" + sourceSuffix(source) + ")")
     }
 
-    override fun shiftRight(row: Int, key: ShiftKey?) {
-        calls.add("shiftRight($row" + keySuffix(key) + ")")
+    override fun shiftRight(row: Int, source: ShiftSource?) {
+        calls.add("shiftRight($row" + sourceSuffix(source) + ")")
     }
 
-    override fun shiftUp(col: Int, key: ShiftKey?) {
-        calls.add("shiftUp($col" + keySuffix(key) + ")")
+    override fun shiftUp(col: Int, source: ShiftSource?) {
+        calls.add("shiftUp($col" + sourceSuffix(source) + ")")
     }
 
-    override fun shiftDown(col: Int, key: ShiftKey?) {
-        calls.add("shiftDown($col" + keySuffix(key) + ")")
+    override fun shiftDown(col: Int, source: ShiftSource?) {
+        calls.add("shiftDown($col" + sourceSuffix(source) + ")")
     }
 
     /** A keyboard shift records its key (GH-101): `shiftLeft(0, HJKL)`; a click stays `shiftLeft(0)`. */
-    private fun keySuffix(key: ShiftKey?) = key?.let { ", $it" } ?: ""
+    private fun sourceSuffix(source: ShiftSource?) = source?.let { ", $it" } ?: ""
 
     override fun newGame(size: Int, trigger: String) {
         calls.add("newGame($size, $trigger)")

@@ -34,7 +34,7 @@ class ViewModelUnsolvableExitHookTest {
         sizeChosenAtLaunch = false,
         mordie = Mordie(factory),
         currentSaveName = CurrentSaveName(),
-        gameShiftKeys = GameShiftKeys(),
+        gameShiftSources = GameShiftSources(),
         ui = UiRequestChannel(),
         unsolvableExit = unsolvableExit,
     )
