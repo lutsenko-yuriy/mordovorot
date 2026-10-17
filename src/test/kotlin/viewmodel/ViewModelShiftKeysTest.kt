@@ -64,6 +64,17 @@ class ViewModelShiftKeysTest {
     }
 
     @Test
+    fun `mouse clicks earlier in the game aren't counted - only the keys are`() {
+        val analytics = RecordingAnalyticsService()
+        val viewModel = testViewModel(nearlySolved(), analytics = analytics)
+
+        viewModel.shiftLeft(0)
+        viewModel.shiftLeft(0, ShiftKey.ARROW)
+
+        assertEquals("arrows", shiftKeys(analytics))
+    }
+
+    @Test
     fun `a new game resets the tally`() {
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(3)

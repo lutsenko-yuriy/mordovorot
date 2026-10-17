@@ -142,7 +142,7 @@ Fired once when a shift solves the board during play, in either input mode. Like
 
 *GH-83:* new properties `mordie_result` (`string`: `player_won` - Mordie hadn't found its solution, `matched` - the move count equals Mordie's N, `mordie_won` - the move count exceeds N, or `machine` - the move count is below N, found or not, which only an inconsistent save can produce) and `mordie_moves` (`number`: Mordie's N when the board was solved - the true minimum if found, otherwise its progress). Both are absent when Mordie sat the game out - a save from before GH-83, or a repaired one, loaded with moves already made.
 
-*GH-101:* new property `shift_keys` (`string`, keyboard mode only - absent in mouse mode): which keys made this game's shifts - `arrows` (only the arrow keys), `hjkl` (only H/J/K/L) or `mixed` (both). Only solved games report it.
+*GH-101:* new property `shift_keys` (`string`, keyboard mode only - absent in mouse mode): which keys made this game's keyboard shifts - `arrows` (only the arrow keys), `hjkl` (only H/J/K/L) or `mixed` (both). Mouse clicks aren't counted, so a game shifted partly by mouse reports only its keys. Sent only when the solving shift is a keyboard one; only solved games report it.
 
 ### `play_again_decision`
 
