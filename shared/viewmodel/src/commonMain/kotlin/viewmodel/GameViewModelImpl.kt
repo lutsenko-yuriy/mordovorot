@@ -2,8 +2,8 @@ package viewmodel
 
 import analytics.AnalyticsService
 import board_model.BoardModel
-import kotlinx.coroutines.channels.ReceiveChannel
 import kotlin.math.abs
+import kotlinx.coroutines.channels.ReceiveChannel
 import viewmodel.usecase.LoadGameUseCase
 import viewmodel.usecase.LoadResult
 import viewmodel.usecase.NewGameUseCase

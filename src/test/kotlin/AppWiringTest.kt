@@ -18,8 +18,8 @@ import view.tui.TerminalEvent
 import view.tui.TerminalSize
 import viewmodel.CurrentSaveName
 import viewmodel.GameShiftSources
-import viewmodel.UnsavedProgress
 import viewmodel.ModeSwitchRequestedException
+import viewmodel.UnsavedProgress
 
 /** Covers the composition root (GH-78): what production wiring builds and what every rebuild
  *  shares. */
@@ -106,5 +106,36 @@ class AppWiringTest {
 
         val opened = analytics.events.first { it.name == "screen_size_dialog" }
         assertEquals("mouse", opened.properties["input_method"])
+    }
+
+    @Test
+    fun `terminal analytics tag every event with platform terminal, launch and mode switch included`(): Unit = runBlocking {
+        val terminalSize = TerminalSize(80, 40)
+        val layout = BoardLayout(terminalSize, 4, modeButtons = listOf(InputMode.KEYBOARD))
+        val newButton = layout.toolbarButtons().first { it.target == HitTarget.ToolbarNew }
+        val keyboardButton = layout.toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.KEYBOARD) }
+        val terminal = FakeTerminal(
+            mutableListOf(
+                TerminalEvent.MouseClick(newButton.x, newButton.y),
+                TerminalEvent.Escape,
+                TerminalEvent.MouseClick(keyboardButton.x, keyboardButton.y),
+            ),
+            terminalSize,
+        )
+        val recording = RecordingAnalyticsService()
+        val analytics = terminalAnalytics(recording)
+
+        resolveInputMode(emptyArray(), analytics, hasInteractiveTerminal = { true })
+        testGameSession(
+            initialMode = InputMode.MOUSE,
+            board = BoardImpl(4),
+            analytics = analytics,
+            sizeChosenAtLaunch = true,
+            terminalFactory = { terminal },
+        ).run()
+
+        val names = recording.events.map { it.name }
+        assertTrue(listOf("app_launched", "screen_size_dialog", "input_mode_switched").all { it in names }, "$names")
+        assertTrue(recording.events.all { it.properties["platform"] == "terminal" }, "${recording.events}")
     }
 }

@@ -1,5 +1,6 @@
 import analytics.AnalyticsService
 import analytics.InputMethodAnalyticsService
+import analytics.PlatformAnalyticsService
 import board_model.BoardModel
 import mordie.Mordie
 import storage.SaveRepository
@@ -36,6 +37,11 @@ import viewmodel.usecase.ExitGameUseCase
 // The composition root (GH-78): the only production code that constructs collaborators. `main`
 // builds the session-lifetime objects; everything below is rebuilt per mode. Test builders call
 // these same functions with fakes, so tests and production can't wire things differently.
+
+/** The terminal's outermost analytics (GH-110): every event, the launch and mode-switch ones
+ *  included, carries `platform: terminal`. */
+internal fun terminalAnalytics(delegate: AnalyticsService): AnalyticsService =
+    PlatformAnalyticsService(delegate, "terminal")
 
 /** A [GameSession] whose every rebuild shares [board], [saves], [mordie], one
  *  [CurrentSaveName] (GH-99), one [GameShiftSources] and one [KeyboardSelection] (GH-101), and
