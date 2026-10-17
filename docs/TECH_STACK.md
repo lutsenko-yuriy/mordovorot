@@ -28,5 +28,6 @@
 - **Agent alert hook (GH-107):** `scripts/alert/alert.sh` runs on Claude Code's `Notification` and `Stop`
   hooks and alerts by macOS notification and `say`. Per-machine toggles go in the gitignored
   `.claude/alert.env` (`YAB_ALERT_NOTIFY`, `YAB_ALERT_SPEAK`, `YAB_ALERT_SUPPRESS_FOCUSED`, all `on` by
-  default; set both channels `off` to opt out). Needs `jq`; does nothing off macOS
+  default; set both channels `off` to opt out). The file is per checkout, so an opt-out does not
+  carry over to worktrees or fresh clones. Needs `jq`; does nothing off macOS
 - **CI:** GitHub Actions: `build.yml` (`./gradlew build`), `tests.yml` (onboard and alert Python tests)

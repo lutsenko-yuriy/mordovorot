@@ -29,6 +29,8 @@ YAB_ALERT_SPEAK=on
 YAB_ALERT_SUPPRESS_FOCUSED=on
 # shellcheck source=/dev/null
 [ -f "$alert_env" ] && . "$alert_env"
+# Opted out: skip the osascript query below (and its Automation consent prompt).
+[ "$YAB_ALERT_NOTIFY" = "on" ] || [ "$YAB_ALERT_SPEAK" = "on" ] || exit 0
 
 # Gate 2: a frontmost terminal means the user is already watching.
 if [ "$YAB_ALERT_SUPPRESS_FOCUSED" = "on" ]; then

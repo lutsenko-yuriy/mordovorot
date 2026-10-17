@@ -7,7 +7,7 @@ Behaviour table:
     event          | toggles               | frontmost | expect
     Notification   | none                  | other     | NOTIFY + SPEAK with the hook's message (fallback text if absent)
     Stop           | none                  | other     | "Session in <repo> stopped and is waiting"
-    Notification   | NOTIFY/SPEAK/both off | other     | only the channels left on
+    Notification   | NOTIFY/SPEAK/both off | other     | only the channels left on; both off never queries osascript
     other / junk   | any                   | other     | silent, exit 0
     Notification   | none                  | terminal  | silent; fires when SUPPRESS_FOCUSED=off
     toggle file    | from $CLAUDE_PROJECT_DIR, else two levels above the script
@@ -86,6 +86,18 @@ class AlertTests(unittest.TestCase):
 
     def test_both_off_is_silent(self):
         self.assertSilent(self.run_alert(notification(), "YAB_ALERT_NOTIFY=off\nYAB_ALERT_SPEAK=off\n"))
+
+    def test_both_off_skips_the_frontmost_query(self):
+        stub_dir = self.tmp / "stub"
+        stub_dir.mkdir()
+        called = self.tmp / "osascript-called"
+        stub = stub_dir / "osascript"
+        stub.write_text("#!/bin/sh\ntouch '%s'\n" % called, encoding="utf-8")
+        stub.chmod(0o755)
+        result = self.run_alert(notification(), "YAB_ALERT_NOTIFY=off\nYAB_ALERT_SPEAK=off\n", YAB_ALERT_FRONTMOST=None,
+                                PATH="%s:%s" % (stub_dir, os.environ["PATH"]))
+        self.assertSilent(result)
+        self.assertFalse(called.exists())
 
     def test_other_events_are_silent(self):
         self.assertSilent(self.run_alert(json.dumps({"hook_event_name": "PreToolUse", "cwd": "/tmp/x"})))
