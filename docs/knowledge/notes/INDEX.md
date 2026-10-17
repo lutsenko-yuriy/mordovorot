@@ -43,6 +43,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 
 - [GH-10: 1-based tile values and row/column indices](GH-10.md)
 - [GH-101: Keyboard mode: select a row/column with WASD, shift with HJKL/arrows](GH-101.md)
+- [GH-103: Run the shared KMP modules on a real JS target](GH-103.md)
 - [GH-107: Alert when the session is waiting on the user (port Habit Loop's alert hook)](GH-107.md)
 - [GH-109: Upgrade Kotlin to the latest stable 2.x](GH-109.md)
 - [GH-12: Exit command](GH-12.md)
