@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.14.8] — 2026-10-17 (PR #98 merged)
+
+### Changed
+- [app] (PR #98) GH-78 (WU8/8): the size and unsolvable-save dialogs get their own controllers, and two routers take over answering viewmodel requests and toolbar buttons, leaving `TuiView` with just its event loop and shifts. This completes 0.14.1–0.14.7: `TuiView` (460 → 102 lines) and `ViewModelImpl` (377 → 83 lines) are split by feature into use cases and dialog controllers, and `AppWiring.kt` is the one composition root, with no production class defaulting to a real implementation. No behaviour change.
+- [meta] (PR #98) GH-78 debrief: new `docs/workflows/REFACTOR.md` for behaviour-preserving multi-WU tickets (no user questions between plan approval and debrief); `plan` proposes it and checks the changelog tag list; `ship` merges only on fully passed checks; `audit` never checks out in the shared working tree.
+
 ## [0.14.7] — 2026-10-17 (PR #97 merged)
 
 ### Changed
