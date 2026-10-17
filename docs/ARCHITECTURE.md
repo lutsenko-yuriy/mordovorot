@@ -164,14 +164,21 @@ src/main/kotlin/
         │                      # name prompt), ExitDialogController (owns the toolbar answer the
         │                      # viewModel's ConfirmSaveBeforeExit then consumes),
         │                      # LoadDialogController (toolbar Load + the Load-shaped dialog),
-        │                      # RestoreDialogController (startup restore prompt over it)
+        │                      # RestoreDialogController (startup restore prompt over it),
+        │                      # SizeDialogController (toolbar New/F9 + ChooseBoardSize),
+        │                      # UnsolvableDialogController (GH-74's repair/new game/exit)
+        ├── UiRequestRouter.kt # Answers each UiRequest with the dialog that owns it - an
+        │                      # exhaustive `when`, so a new request needs an answer to compile
+        ├── ToolbarRouter.kt # Runs the activated toolbar button: Save/Load/Exit/New and the
+        │                      # mode switch (GH-78)
         ├── TuiScreen.kt     # What the TUI draws (GH-78): the last-drawn BoardLayout/DialogLayout,
         │                      # the parked status message, wasSolved, repaint, and runModal -
         │                      # the one blocking dialog loop (inline, calls
         │                      # TuiInput.onDialogOpened first)
-        └── TuiView.kt   # Owns its own event loop and routes toolbar clicks and UiRequests to
-                          # the dialog controllers; every dialog shares TuiScreen's blocking
-                          # modal loop over Terminal (WU4, GH-64). State-driven solved screen (WU5): every
+        └── TuiView.kt   # Owns its own event loop: runs startup restore, the board loop and
+                          # shifts, and hands toolbar targets to ToolbarRouter and UiRequests to
+                          # UiRequestRouter; every dialog shares TuiScreen's blocking modal loop
+                          # over Terminal (WU4, GH-64). State-driven solved screen (WU5): every
                           # repaint asks ViewModel.isSolved() fresh rather than tracking a phase
                           # flag, so the Congratulations title/dimmed arrows and a load back to an
                           # unsolved board both fall out of the same repaint path with no extra
@@ -189,8 +196,9 @@ src/test/kotlin/
 ├── MordieScenarioTest.kt  # GH-83 end to end with a scripted FakeMordieSearchFactory
 ├── GameSessionTest.kt     # Session loop: startupRestoreDone seeding, multi-switch chains,
 │                            # failed-switch fallback, Mordie stopped on exit (GH-30)
-├── AppWiringTest.kt      # Composition root: real ModeSwitcher wired, a mode switch rebuilds
-│                            # around the session's one board and Mordie (GH-78)
+├── AppWiringTest.kt      # Composition root: each mode's switch key really switches, a mode
+│                            # switch rebuilds around the session's one board and Mordie, which
+│                            # analytics each collaborator gets (GH-78)
 ├── ModeSwitcherTest.kt    # input_mode_switched tracking, trigger pass-through, same-mode
 │                            # no-op (GH-30)
 ├── analytics/            # NoopAnalyticsService, InputMethodAnalyticsService coverage
@@ -289,8 +297,9 @@ Five interactions that used to be blocking calls into `View` (`showMessage`,
 `confirmRestore`, `chooseSaveToRestore`, `confirmSaveBeforeExit`, `promptSaveName`)
 are now `viewmodel.UiRequest<R>` values sent on `ViewModel.uiRequests`, a
 `Channel.RENDEZVOUS` the owning `View` drains in a sibling coroutine and answers via
-`UiRequest.respond`. `TuiView`'s request handler routes each to the dialog controller
-that answers it (`view.tui.dialog`, GH-78); `ShowMessage` parks the text on `TuiScreen`. Rendezvous delivery
+`UiRequest.respond`. `TuiView` hands each to `UiRequestRouter`, which routes it to the
+dialog controller that answers it (`view.tui.dialog`, GH-78); `ShowMessage` parks the text on
+`TuiScreen`. Rendezvous delivery
 (the channel has zero buffer, and `UiRequestChannel.ask()` doesn't return until the View has actually
 handled the request) is what keeps message/prompt ordering identical to the old
 blocking-call behavior. The one invariant that keeps this deadlock-free: a View's
@@ -445,7 +454,7 @@ a real terminal.
 `InputMode` no longer only decides where a session *begins* — `GameSession`
 lets it switch mid-session, driven by `ModeSwitcher`. `TuiView`'s toolbar
 `[ Keyboard ]` button (mouse mode) and F7 (keyboard mode), reached via
-`HitTarget.ToolbarMode`/`ScreenState.modeButtons`, call `ModeSwitcherImpl`,
+`HitTarget.ToolbarMode`/`ScreenState.modeButtons`, go through `ToolbarRouter` to `ModeSwitcherImpl`,
 which tracks `input_mode_switched` and throws `ModeSwitchRequestedException`.
 `GameSession` catches the exception, rebuilds the `View`/viewmodel/analytics
 stack for the new mode (through `buildGameSession`'s closure) around the *same*
