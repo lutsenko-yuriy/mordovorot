@@ -77,7 +77,8 @@ src/main/kotlin/
 │   ├── GameViewModelFactory.kt # buildGameViewModel — builds GameViewModelImpl and its use
 │   │                             # cases; the only way a platform gets one (GH-41)
 │   ├── UnsolvableSaveExit.kt # The platform hook for Exit on an unsolvable save, run after the
-│   │                           # shared flow returns (GH-41); NONE offers no Exit
+│   │                           # shared flow returns (GH-41); with NONE, Exit
+│   │                           # just ends the load
 │   ├── ViewModel.kt          # The terminal's viewmodel: GameViewModel + exitGame() (GH-41)
 │   ├── ViewModelImpl.kt      # Delegates to GameViewModelImpl, adds ExitGameUseCase; built
 │   │                           # only by buildViewModel (GH-41)
@@ -444,7 +445,7 @@ being listed.
 `UiRequest.ResolveUnsolvableSave` (`atStartup` set from the startup restore) and
 acts on the `UnsolvableSaveChoice`. REPAIR writes `Solvability.repaired` back
 through `saves.save` and loads it. NEW_GAME raises
-`ChooseBoardSize(origin = "unsolvable_save")` mid-game, or returns `false` at
+`ChooseBoardSize(origin = "unsolvable_save")` mid-game, or returns `LoadResult.NOT_LOADED` at
 startup so `restoreOnStartup`'s own size prompt runs. EXIT only reports
 `LoadResult.EXIT_CHOSEN` (GH-41); once the load has returned, `GameViewModelImpl` hands it to
 its `UnsolvableSaveExit` hook. The terminal's hook (built in `buildViewModel`) runs

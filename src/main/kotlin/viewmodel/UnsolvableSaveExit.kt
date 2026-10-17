@@ -1,8 +1,8 @@
 package viewmodel
 
 /** What a platform does when the player picks Exit for an unsolvable save (GH-41). Called once
- *  the shared flow has finished, so nothing shared catches what it throws. [NONE]: no Exit
- *  offered. */
+ *  the shared flow has finished, so nothing shared catches what it throws. With [NONE], Exit just
+ *  ends the load. */
 fun interface UnsolvableSaveExit {
     suspend fun onExit(viewModel: GameViewModel, atStartup: Boolean)
 
