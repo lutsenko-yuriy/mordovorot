@@ -115,6 +115,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                          # page in src/jsMain. `./gradlew :web:serve` serves it on localhost:8080
 ├── src/jsMain/kotlin/Main.kt           # Entry point (a placeholder until GH-110 WU4)
 ├── src/jsMain/resources/index.html     # The page: `<title>Mordovorot</title>`, loads web.js
+├── src/commonTest/kotlin/web/scenario/ # GH-110 end to end: WebGame driven through a fake renderer
+│                                       # (startup, play, save/load, unsaved progress, drag, analytics)
 └── src/jvmTest/kotlin/web/IndexPageTest.kt # Pins the title rule (the title appears only in the tab)
 
 src/main/kotlin/                # the terminal app (the root project)
