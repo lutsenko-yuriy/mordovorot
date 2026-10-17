@@ -5,7 +5,7 @@ import kotlinx.coroutines.channels.ReceiveChannel
 
 /** The viewmodel side of [ViewModel.uiRequests] (GH-78): one per rebuild, shared by
  *  [ViewModelImpl] and every use case so their requests reach the one View draining it. */
-class UiRequestChannel {
+internal class UiRequestChannel {
 
     /** Rendezvous - `ask` doesn't return until the View has actually finished handling the
      *  request, which is what keeps message/prompt ordering identical to the old direct blocking
