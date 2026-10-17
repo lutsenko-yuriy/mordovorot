@@ -16,16 +16,15 @@ internal class ToolbarRouter(
     private val input: TuiInput,
 ) {
 
-    /** Returns whether [target] was a toolbar button. */
-    suspend fun handle(target: HitTarget): Boolean {
+    /** Any other target is ignored. */
+    suspend fun handle(target: HitTarget) {
         when (target) {
             HitTarget.ToolbarSave -> saveDialog.onToolbar()
             HitTarget.ToolbarLoad -> loadDialog.onToolbar()
             HitTarget.ToolbarExit -> exitDialog.onToolbar()
             HitTarget.ToolbarNew -> sizeDialog.onToolbar()
             is HitTarget.ToolbarMode -> modeSwitcher.switchTo(target.mode, trigger = input.switchTrigger)
-            else -> return false
+            else -> {}
         }
-        return true
     }
 }
