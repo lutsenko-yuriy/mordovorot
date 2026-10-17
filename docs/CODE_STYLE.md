@@ -18,7 +18,7 @@ None configured for any language (no ktlint/detekt, ruff, or shellcheck).
 
 - Packages follow MVVM layers: `board_model`, `viewmodel`, `view` (+ `view/tui`), plus `storage` and `analytics`
 - Interface + `Impl` pairs (`BoardModel`/`BoardImpl`, `ViewModel`/`ViewModelImpl`)
-- Tests mirror the main package path, named class + aspect under test (e.g. `BoardImplShiftTest.kt`); fakes (`Fake*`, `Recording*`) of a shared-module type go in the `:shared:testing` module (`shared/testing/src/main/kotlin/testing/`), so every module's tests can use them; app-only fakes go in `src/test/kotlin/testing/`
+- Tests mirror the main package path, named class + aspect under test (e.g. `BoardImplShiftTest.kt`); fakes (`Fake*`, `Recording*`) of a shared-module type go in the `:shared:testing` module (`shared/testing/src/commonMain/kotlin/testing/`), so every module's tests can use them; app-only fakes go in `src/test/kotlin/testing/`
 - Aim to keep source files under ~300 lines. This is a guideline, not a hard limit: a file over it
   is a split candidate worth a look (split it, or note why not in a follow-up ticket), not a rule
   violation.

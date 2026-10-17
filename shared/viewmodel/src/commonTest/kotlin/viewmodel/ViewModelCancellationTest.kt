@@ -4,8 +4,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
+import kotlinx.coroutines.test.runTest
 import storage.SavedBoard
 import testing.FakeBoardModel
 import testing.FakeSaveRepository
@@ -35,7 +35,7 @@ import testing.testViewModel
 class ViewModelCancellationTest {
 
     @Test
-    fun `saveGame cancelled while suspended in ask does not also track a spurious result=error`(): Unit = runBlocking {
+    fun `saveGame cancelled while suspended in ask does not also track a spurious result=error`() = runTest {
         val analytics = RecordingAnalyticsService()
         val viewModel = testViewModel(FakeBoardModel(), FakeSaveRepository(), analytics)
 
@@ -50,7 +50,7 @@ class ViewModelCancellationTest {
     }
 
     @Test
-    fun `loadGame cancelled while suspended in ask does not also track a spurious result=error`(): Unit = runBlocking {
+    fun `loadGame cancelled while suspended in ask does not also track a spurious result=error`() = runTest {
         val analytics = RecordingAnalyticsService()
         val saves = FakeSaveRepository(mutableMapOf("missing-on-purpose" to SavedBoard(4, IntArray(16) { it })))
         val viewModel = testViewModel(FakeBoardModel(), saves, analytics)
@@ -66,7 +66,7 @@ class ViewModelCancellationTest {
     }
 
     @Test
-    fun `offerStartupRestore cancelled while suspended in ask does not track a decision`(): Unit = runBlocking {
+    fun `offerStartupRestore cancelled while suspended in ask does not track a decision`() = runTest {
         val analytics = RecordingAnalyticsService()
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, IntArray(16) { it })))
         val viewModel = testViewModel(FakeBoardModel(), saves, analytics)
