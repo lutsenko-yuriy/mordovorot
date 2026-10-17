@@ -15,8 +15,8 @@ opponent package (GH-83).
 
 ```
 shared/                  # GH-41: the platform-independent game as Kotlin Multiplatform modules
-│                          # (`:shared:<name>`), each `jvm()` + a compile-only `js()` that fails
-│                          # the build on a JVM-only API. Packages are unchanged; main code is in
+│                          # (`:shared:<name>`), each `jvm()` + `js { nodejs() }` (GH-103), so a
+│                          # JVM-only API fails the build. Packages are unchanged; main code is in
 │                          # `<module>/src/commonMain/kotlin/`, tests in `src/jvmTest/kotlin/`
 ├── core/                # :shared:core
 │   └── board_model/
@@ -536,11 +536,11 @@ alert when a session waits on the user, toggled per machine in the gitignored `.
 - **Kotlin Multiplatform (GH-41).** The `shared/` modules use `kotlin("multiplatform")`, the
   same first-party JetBrains plugin and version as `kotlin("jvm")` (declared once in the root
   `plugins {}` with `apply false`), so nothing new reaches the runtime classpath. Each module
-  has a `jvm()` target and a bare `js()`: with only `jvm()`, `commonMain` would accept
-  `java.lang.Math` and the like, so the JS target is the compiler check that shared code
-  stays platform-independent. It has no JS environment (no Node download, no JS tests), at
-  the cost of one KGP warning per module; a future Web ticket (GH-103) replaces it with a
-  real target. No `expect`/`actual` — every platform seam is a plain interface. The app
+  has a `jvm()` target and a `js { nodejs() }` one: with only `jvm()`, `commonMain` would
+  accept `java.lang.Math` and the like, so the JS target is the compiler check that shared
+  code stays platform-independent. Since GH-103 it is a real target with a Node.js test task;
+  KGP downloads Node.js and yarn, and `kotlin-js-store/yarn.lock` pins the npm packages.
+  `:shared:testing` (the test doubles) is multiplatform too, so common tests can use them. No `expect`/`actual` — every platform seam is a plain interface. The app
   depends on the modules' JVM jars, which `installDist` bundles into `lib/`. Tests stay in
   `jvmTest` (they use `runBlocking`, `java.io` and backtick names), so `./gradlew check` —
   not `./gradlew test`, which only runs the root project's — runs them all. Module graph:
