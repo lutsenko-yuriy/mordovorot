@@ -27,7 +27,8 @@ src/main/kotlin/
 │                          # mid-session (GH-3, GH-18, renamed from LaunchMode for GH-30)
 ├── GameSession.kt       # Session loop extracted out of Main: builds a fresh View per mode
 │                          # through its buildView(mode, startupRestoreDone) - wired by
-│                          # buildGameSession so every rebuild shares one board and saves -
+│                          # buildGameSession so every rebuild shares one board, saves and
+│                          # CurrentSaveName (GH-99) -
 │                          # runs play(), and re-enters on ModeSwitchRequestedException. A
 │                          # rebuild's play() throwing anything else falls back to the previous
 │                          # mode (GH-79) instead of crashing and losing the in-progress game -
@@ -80,6 +81,10 @@ src/main/kotlin/
 │   │                           # ViewModel.uiRequests (GH-42 WU2)
 │   ├── UiRequestChannel.kt   # The rendezvous channel behind uiRequests: ask/showMessage. One
 │   │                           # per rebuild, shared by ViewModelImpl and every use case (GH-78)
+│   ├── CurrentSaveName.kt    # The session's current save name (`var name: String?`): set on
+│   │                           # save/load/repair, cleared on new game, prefills the Save dialog.
+│   │                           # One per session, made by buildGameSession, so it survives mode
+│   │                           # switches; never persisted (GH-99)
 │   ├── SaveCatalog.kt        # Read-only SaveInfo views of the saves: infos (throws) /
 │   │                           # listSaves / saveExists (swallow) / availableSavesMessage (GH-78)
 │   ├── SessionControlException.kt # Sealed marker base for control-flow exceptions that unwind
