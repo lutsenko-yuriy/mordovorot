@@ -159,9 +159,13 @@ src/main/kotlin/
         │                      # (GH-18)
         ├── KeyboardInput.kt # TuiInput impl: owns the board ArrowCursor and DialogFocus state
         │                      # for --keyboard mode (GH-18)
+        ├── TuiScreen.kt     # What the TUI draws (GH-78): the last-drawn BoardLayout/DialogLayout,
+        │                      # the parked status message, wasSolved, repaint, and runModal -
+        │                      # the one blocking dialog loop (inline, calls
+        │                      # TuiInput.onDialogOpened first)
         └── TuiView.kt   # Owns its own event loop. Save/Load/
-                          # Exit/Size and the startup restore prompt share one blocking modal
-                          # loop over Terminal, runModal (WU4, GH-64). State-driven solved screen (WU5): every
+                          # Exit/Size and the startup restore prompt share TuiScreen's blocking
+                          # modal loop over Terminal (WU4, GH-64). State-driven solved screen (WU5): every
                           # repaint asks ViewModel.isSolved() fresh rather than tracking a phase
                           # flag, so the Congratulations title/dimmed arrows and a load back to an
                           # unsolved board both fall out of the same repaint path with no extra
