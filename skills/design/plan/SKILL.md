@@ -37,6 +37,8 @@ Use this format exactly. Omit a section entirely if it has no content.
 
 When the plan decides where a user-facing message goes (stderr, a status line, a dialog), check that the user can actually see it there while the active UI is running - e.g. a full-screen TUI hides stderr (GH-79).
 
+Dependency and tool-version updates get a work unit of their own, never mixed into feature work. That unit's verification runs the full test suite plus any scenario/integration suite. Before bumping, search the build files for every place each version is written. If a version appears more than once, the same unit moves it into a single source, such as the `gradle/libs.versions.toml` version catalog (GH-109).
+
 If no work unit changes observable behaviour (UI, text, analytics, save format), propose `Workflow: REFACTOR` (`docs/workflows/REFACTOR.md`) in the plan, so the WUs can run without user questions until the debrief. Put it at the top of the plan and ask about it as its own question when presenting the plan, never as one item in a list of technical decisions: it decides whether the user is consulted again before the final PR (GH-41: approved as "D7" without being noticed).
 
 Before proposing a CHANGELOG tag, read `skills/manage/ship/resources/changelog-tags.md` - GH-78's plan claimed no refactor tag existed while `[app]` did.
