@@ -20,8 +20,10 @@
 ## Tooling
 
 - **Build / package manager:** Gradle 9.7.1 (wrapper), Kotlin JVM + `application` plugins for the
-  terminal app, Kotlin Multiplatform for the `shared/` modules (GH-41: `jvm()` + a compile-only
-  `js()`)
+  terminal app, Kotlin Multiplatform for the `shared/` modules (GH-41: `jvm()` + `js { nodejs() }`,
+  GH-103; the Kotlin Gradle plugin downloads Node.js and yarn, `kotlin-js-store/yarn.lock` pins
+  the npm packages; a Kotlin upgrade that changes them fails the build until
+  `./gradlew kotlinUpgradeYarnLock` is run and the new lock committed)
 - **Test runner:** `./gradlew check` (JUnit Platform) - runs the root `test` and every shared
   module's `jvmTest`; plain `./gradlew test` skips the shared modules; Python: `python -m unittest`
 - **Linter / formatter:** none configured
