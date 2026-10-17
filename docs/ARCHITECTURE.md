@@ -543,8 +543,10 @@ alert when a session waits on the user, toggled per machine in the gitignored `.
   `:shared:testing` (the test doubles) is multiplatform too, so common tests can use them.
   No `expect`/`actual` — every platform seam is a plain interface. The app
   depends on the modules' JVM jars, which `installDist` bundles into `lib/`. Their tests are in
-  `commonTest` and run on both the JVM and Node.js (GH-103), so `./gradlew check` — not
-  `./gradlew test`, which only runs the root project's — runs them all. Module graph:
+  `commonTest` and run on both the JVM and Node.js (GH-103); only mordie's
+  `BackgroundMordieSearchThreadTest` stays in `jvmTest`, since it reads the search from a
+  second thread. `./gradlew check` — not `./gradlew test`, which only runs the root
+  project's — runs them all. Module graph:
   `core`, `analytics`, `storage` and `mordie` depend on no other module; `viewmodel` has an
   `api` dependency on all four (its public types expose them); the app depends on all five.
   Known follow-up for the first non-JVM port: seven viewmodel test files stay in the app

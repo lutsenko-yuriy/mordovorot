@@ -25,7 +25,7 @@ class BackgroundMordieSearchTest {
     }
 
     @Test
-    fun `a 3x3 search is found and visible from the calling thread`() = realTime {
+    fun `a 3x3 search is found`() = realTime {
         val search = BackgroundMordieSearch.Factory().start(twoMoves, ruledOut = -1)
 
         withTimeout(10_000) { while (!search.progress().found) delay(5) }
