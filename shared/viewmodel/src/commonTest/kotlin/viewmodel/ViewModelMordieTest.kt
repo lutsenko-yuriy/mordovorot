@@ -1,12 +1,12 @@
 package viewmodel
 
+import kotlinx.coroutines.test.runTest
 import board_model.BoardImpl
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlinx.coroutines.runBlocking
 import mordie.Mordie
 import mordie.SearchProgress
 import storage.SavedBoard
@@ -74,7 +74,7 @@ class ViewModelMordieTest {
     }
 
     @Test
-    fun `an unplayed save with no Mordie data starts fresh from the loaded board`(): Unit = runBlocking {
+    fun `an unplayed save with no Mordie data starts fresh from the loaded board`() = runTest {
         val viewModel = viewModel(savesWith(nearlySolved))
 
         viewModel.load()
@@ -85,7 +85,7 @@ class ViewModelMordieTest {
     }
 
     @Test
-    fun `Mordie sits out a save with no Mordie data that already has moves`(): Unit = runBlocking {
+    fun `Mordie sits out a save with no Mordie data that already has moves`() = runTest {
         val viewModel = viewModel(savesWith(nearlySolved, moveCount = 4))
         viewModel.newGame(3, trigger = "toolbar")
 
@@ -101,7 +101,7 @@ class ViewModelMordieTest {
     }
 
     @Test
-    fun `a searching save resumes above its N from the saved original`(): Unit = runBlocking {
+    fun `a searching save resumes above its N from the saved original`() = runTest {
         val original = intArrayOf(8, 7, 6, 5, 4, 3, 2, 1, 0)
         val viewModel = viewModel(savesWith(nearlySolved, mordie = SavedMordie(original, 8, found = false)))
 
@@ -113,7 +113,7 @@ class ViewModelMordieTest {
     }
 
     @Test
-    fun `a searching save with an unsolvable original starts fresh from the loaded board`(): Unit = runBlocking {
+    fun `a searching save with an unsolvable original starts fresh from the loaded board`() = runTest {
         val viewModel = viewModel(savesWith(nearlySolved, mordie = SavedMordie(unsolvable, 8, found = false)))
 
         viewModel.load()
@@ -123,7 +123,7 @@ class ViewModelMordieTest {
     }
 
     @Test
-    fun `a found save shows Found at once, starts no search and never fires mordie_solution_found`(): Unit = runBlocking {
+    fun `a found save shows Found at once, starts no search and never fires mordie_solution_found`() = runTest {
         val viewModel = viewModel(savesWith(intArrayOf(8, 7, 6, 5, 4, 3, 2, 1, 0), mordie = SavedMordie(nearlySolved, 11, found = true)))
 
         viewModel.load()
@@ -135,7 +135,7 @@ class ViewModelMordieTest {
     }
 
     @Test
-    fun `a solved save with Mordie data shows its ending with no line or search`(): Unit = runBlocking {
+    fun `a solved save with Mordie data shows its ending with no line or search`() = runTest {
         val viewModel = viewModel(savesWith(solved, moveCount = 3, mordie = SavedMordie(nearlySolved, 3, found = true)))
 
         viewModel.load()
@@ -146,7 +146,7 @@ class ViewModelMordieTest {
     }
 
     @Test
-    fun `a solved save without Mordie data has no ending, so the title falls back`(): Unit = runBlocking {
+    fun `a solved save without Mordie data has no ending, so the title falls back`() = runTest {
         val viewModel = viewModel(savesWith(solved, moveCount = 3))
 
         viewModel.load()
@@ -157,7 +157,7 @@ class ViewModelMordieTest {
     }
 
     @Test
-    fun `repair of an unplayed save starts fresh from the repaired board and saves no Mordie data`(): Unit = runBlocking {
+    fun `repair of an unplayed save starts fresh from the repaired board and saves no Mordie data`() = runTest {
         val saves = savesWith(unsolvable, mordie = SavedMordie(unsolvable, 2, found = false))
         val viewModel = viewModel(saves)
 
@@ -169,7 +169,7 @@ class ViewModelMordieTest {
     }
 
     @Test
-    fun `Mordie sits out a repaired save that already has moves`(): Unit = runBlocking {
+    fun `Mordie sits out a repaired save that already has moves`() = runTest {
         val viewModel = viewModel(savesWith(unsolvable, moveCount = 5))
 
         viewModel.load(FakeViewModelUi(resolveUnsolvableSaveResponses = mutableListOf(UnsolvableSaveChoice.REPAIR)))
@@ -182,7 +182,7 @@ class ViewModelMordieTest {
     // --- save ---
 
     @Test
-    fun `saveGame stores the original arrangement and the live progress`(): Unit = runBlocking {
+    fun `saveGame stores the original arrangement and the live progress`() = runTest {
         val saves = FakeSaveRepository()
         val viewModel = viewModel(saves)
         viewModel.newGame(3, trigger = "toolbar")
@@ -196,7 +196,7 @@ class ViewModelMordieTest {
     }
 
     @Test
-    fun `saveGame stores no Mordie data when Mordie is unbound`(): Unit = runBlocking {
+    fun `saveGame stores no Mordie data when Mordie is unbound`() = runTest {
         val saves = FakeSaveRepository()
         val viewModel = viewModel(saves)
 
@@ -208,7 +208,7 @@ class ViewModelMordieTest {
     // --- startup ---
 
     @Test
-    fun `restoreOnStartup with --size starts Mordie on the board as constructed`(): Unit = runBlocking {
+    fun `restoreOnStartup with --size starts Mordie on the board as constructed`() = runTest {
         val viewModel = viewModel(sizeChosenAtLaunch = true)
 
         FakeViewModelUi().drive(viewModel) { viewModel.restoreOnStartup() }
@@ -217,7 +217,7 @@ class ViewModelMordieTest {
     }
 
     @Test
-    fun `restoreOnStartup with a cancelled size prompt starts Mordie on the current board`(): Unit = runBlocking {
+    fun `restoreOnStartup with a cancelled size prompt starts Mordie on the current board`() = runTest {
         val viewModel = viewModel()
 
         FakeViewModelUi(chooseBoardSizeResponses = mutableListOf(null)).drive(viewModel) { viewModel.restoreOnStartup() }
@@ -227,7 +227,7 @@ class ViewModelMordieTest {
     }
 
     @Test
-    fun `restoreOnStartup with a chosen size starts exactly one search`(): Unit = runBlocking {
+    fun `restoreOnStartup with a chosen size starts exactly one search`() = runTest {
         val viewModel = viewModel()
 
         FakeViewModelUi(chooseBoardSizeResponses = mutableListOf(4)).drive(viewModel) { viewModel.restoreOnStartup() }
@@ -237,7 +237,7 @@ class ViewModelMordieTest {
     }
 
     @Test
-    fun `restoreOnStartup that restores a save binds Mordie from it`(): Unit = runBlocking {
+    fun `restoreOnStartup that restores a save binds Mordie from it`() = runTest {
         val viewModel = viewModel(savesWith(nearlySolved, mordie = SavedMordie(nearlySolved, 8, found = false)))
 
         FakeViewModelUi(confirmRestoreResponses = mutableListOf(true)).drive(viewModel) { viewModel.restoreOnStartup() }
@@ -247,7 +247,7 @@ class ViewModelMordieTest {
     }
 
     @Test
-    fun `a rebuild after a mode switch keeps the already bound Mordie`(): Unit = runBlocking {
+    fun `a rebuild after a mode switch keeps the already bound Mordie`() = runTest {
         val mordie = Mordie(factory)
         val first = viewModel(sizeChosenAtLaunch = true, mordie = mordie)
         FakeViewModelUi().drive(first) { first.restoreOnStartup() }
@@ -284,7 +284,7 @@ class ViewModelMordieTest {
     }
 
     @Test
-    fun `mordie_solution_found reports a resumed search`(): Unit = runBlocking {
+    fun `mordie_solution_found reports a resumed search`() = runTest {
         val viewModel = viewModel(savesWith(intArrayOf(8, 7, 6, 5, 4, 3, 2, 1, 0), mordie = SavedMordie(nearlySolved, 8, found = false)))
         viewModel.load()
         factory.latest.progress = found(9)
@@ -295,7 +295,7 @@ class ViewModelMordieTest {
     }
 
     @Test
-    fun `board_solved reports player_won when Mordie hadn't found it`(): Unit = runBlocking {
+    fun `board_solved reports player_won when Mordie hadn't found it`() = runTest {
         val viewModel = viewModel(savesWith(nearlySolved))
         viewModel.load()
         factory.latest.progress = SearchProgress(0, found = false, elapsedMs = 0)
@@ -309,7 +309,7 @@ class ViewModelMordieTest {
     }
 
     @Test
-    fun `board_solved reports matched`(): Unit = runBlocking {
+    fun `board_solved reports matched`() = runTest {
         val viewModel = viewModel(savesWith(nearlySolved))
         viewModel.load()
         factory.latest.progress = found(1)
@@ -322,7 +322,7 @@ class ViewModelMordieTest {
     }
 
     @Test
-    fun `board_solved reports mordie_won`(): Unit = runBlocking {
+    fun `board_solved reports mordie_won`() = runTest {
         val viewModel = viewModel(savesWith(nearlySolved))
         viewModel.load()
         factory.latest.progress = found(1)
@@ -336,7 +336,7 @@ class ViewModelMordieTest {
     }
 
     @Test
-    fun `board_solved reports machine for fewer moves than a saved N`(): Unit = runBlocking {
+    fun `board_solved reports machine for fewer moves than a saved N`() = runTest {
         val viewModel = viewModel(savesWith(nearlySolved, mordie = SavedMordie(nearlySolved, 5, found = true)))
         viewModel.load()
 

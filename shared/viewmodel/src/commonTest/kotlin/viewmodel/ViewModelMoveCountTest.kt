@@ -1,10 +1,10 @@
 package viewmodel
 
+import kotlinx.coroutines.test.runTest
 import board_model.BoardImpl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlinx.coroutines.runBlocking
 import testing.FakeBoardModel
 import testing.FakeSaveRepository
 import testing.FakeViewModelUi
@@ -25,7 +25,7 @@ class ViewModelMoveCountTest {
     }
 
     @Test
-    fun `saveGame persists the move count`(): Unit = runBlocking {
+    fun `saveGame persists the move count`() = runTest {
         val saves = FakeSaveRepository()
         val board = FakeBoardModel().apply { moveCount = 6 }
         val viewModel = testViewModel(board, saves)
@@ -36,7 +36,7 @@ class ViewModelMoveCountTest {
     }
 
     @Test
-    fun `loadGame restores the saved move count`(): Unit = runBlocking {
+    fun `loadGame restores the saved move count`() = runTest {
         val saves = FakeSaveRepository()
         saves.save("foo", intArrayOf(8, 7, 6, 5, 4, 3, 2, 1, 0), 3, moveCount = 9)
         val board = BoardImpl(3)
@@ -74,7 +74,7 @@ class ViewModelMoveCountTest {
     }
 
     @Test
-    fun `board_solved does not fire when loading a solved save`(): Unit = runBlocking {
+    fun `board_solved does not fire when loading a solved save`() = runTest {
         val saves = FakeSaveRepository()
         saves.save("done", IntArray(9) { it }, 3, moveCount = 4)
         val analytics = RecordingAnalyticsService()

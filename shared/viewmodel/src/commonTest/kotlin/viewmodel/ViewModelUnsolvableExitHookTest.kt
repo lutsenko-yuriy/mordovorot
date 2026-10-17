@@ -1,10 +1,10 @@
 package viewmodel
 
+import kotlinx.coroutines.test.runTest
 import board_model.BoardImpl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlinx.coroutines.runBlocking
 import mordie.Mordie
 import storage.SavedBoard
 import testing.FakeMordieSearchFactory
@@ -40,7 +40,7 @@ class ViewModelUnsolvableExitHookTest {
     )
 
     @Test
-    fun `exit mid-game calls the hook once the choice is tracked`(): Unit = runBlocking {
+    fun `exit mid-game calls the hook once the choice is tracked`() = runTest {
         val viewModel = viewModel()
         val ui = FakeViewModelUi(resolveUnsolvableSaveResponses = mutableListOf(UnsolvableSaveChoice.EXIT))
 
@@ -51,7 +51,7 @@ class ViewModelUnsolvableExitHookTest {
     }
 
     @Test
-    fun `exit at startup tracks quit, skips the size prompt and Mordie, then calls the hook`(): Unit = runBlocking {
+    fun `exit at startup tracks quit, skips the size prompt and Mordie, then calls the hook`() = runTest {
         val viewModel = viewModel()
         val ui = FakeViewModelUi(
             confirmRestoreResponses = mutableListOf(true),
@@ -72,7 +72,7 @@ class ViewModelUnsolvableExitHookTest {
     }
 
     @Test
-    fun `with no hook, exit mid-game just ends the load`(): Unit = runBlocking {
+    fun `with no hook, exit mid-game just ends the load`() = runTest {
         val viewModel = viewModel(UnsolvableSaveExit.NONE)
         val ui = FakeViewModelUi(resolveUnsolvableSaveResponses = mutableListOf(UnsolvableSaveChoice.EXIT))
 

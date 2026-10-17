@@ -1,8 +1,8 @@
 package viewmodel
 
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlinx.coroutines.runBlocking
 import testing.FakeBoardModel
 import testing.FakeSaveRepository
 import testing.FakeViewModelUi
@@ -19,7 +19,7 @@ import testing.testViewModel
 class ViewModelSizePromptTest {
 
     @Test
-    fun `no saves, no --size given - prompts for a size and starts a new game at the chosen size`(): Unit = runBlocking {
+    fun `no saves, no --size given - prompts for a size and starts a new game at the chosen size`() = runTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
@@ -37,7 +37,7 @@ class ViewModelSizePromptTest {
     }
 
     @Test
-    fun `saves exist but restore is declined - the size prompt runs after and starts a new game at the chosen size`(): Unit = runBlocking {
+    fun `saves exist but restore is declined - the size prompt runs after and starts a new game at the chosen size`() = runTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository(mutableMapOf("foo" to storage.SavedBoard(4, IntArray(16) { it })))
         val analytics = RecordingAnalyticsService()
@@ -55,7 +55,7 @@ class ViewModelSizePromptTest {
     }
 
     @Test
-    fun `restore is accepted - the size prompt never runs, the restored save's size applies`(): Unit = runBlocking {
+    fun `restore is accepted - the size prompt never runs, the restored save's size applies`() = runTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository(mutableMapOf("foo" to storage.SavedBoard(4, IntArray(16) { it })))
         val analytics = RecordingAnalyticsService()
@@ -69,7 +69,7 @@ class ViewModelSizePromptTest {
     }
 
     @Test
-    fun `--size given at launch - restore and the size prompt never run`(): Unit = runBlocking {
+    fun `--size given at launch - restore and the size prompt never run`() = runTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository(mutableMapOf("foo" to storage.SavedBoard(4, IntArray(16) { it })))
         val analytics = RecordingAnalyticsService()
@@ -85,7 +85,7 @@ class ViewModelSizePromptTest {
     }
 
     @Test
-    fun `size prompt - blank input-EOF keeps the current size without starting a new game`(): Unit = runBlocking {
+    fun `size prompt - blank input-EOF keeps the current size without starting a new game`() = runTest {
         val board = FakeBoardModel()
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()

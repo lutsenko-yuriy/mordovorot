@@ -1,10 +1,10 @@
 package viewmodel
 
+import kotlinx.coroutines.test.runTest
 import board_model.BoardImpl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlinx.coroutines.runBlocking
 import storage.SavedBoard
 import testing.FakeSaveRepository
 import testing.FakeViewModelUi
@@ -89,7 +89,7 @@ class ViewModelShiftKeysTest {
     }
 
     @Test
-    fun `a load and a repair reset the tally, a save doesn't`(): Unit = runBlocking {
+    fun `a load and a repair reset the tally, a save doesn't`() = runTest {
         val saves = FakeSaveRepository(
             mutableMapOf(
                 "near" to SavedBoard(3, intArrayOf(1, 2, 0, 3, 4, 5, 6, 7, 8), 0),
