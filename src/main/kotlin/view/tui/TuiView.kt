@@ -65,7 +65,7 @@ class TuiView internal constructor(
 
     /** Drains [viewModel]'s [viewmodel.ViewModel.uiRequests] alongside the board's own event
      *  loop (GH-42 WU2) - what lets `saveGame`/`loadGame`/`exitGame`/`restoreOnStartup` suspend
-     *  on [viewmodel.ViewModelImpl.ask] instead of calling back into this view directly. */
+     *  on [viewmodel.UiRequestChannel.ask] instead of calling back into this view directly. */
     override suspend fun play(notice: String?) = coroutineScope {
         pendingMessage = notice
         val ui = launch { for (request in viewModel.uiRequests) handle(request) }
@@ -325,7 +325,7 @@ class TuiView internal constructor(
      *  or `null` on Cancel/Escape/EOF - deliberately returns a value instead of calling
      *  `viewModel.newGame` itself, so the startup call site stays outside the deadlock-prone
      *  "View calls a request-raising viewModel method from its own request handler" shape (see
-     *  [viewmodel.ViewModelImpl.ask]'s KDoc). */
+     *  [viewmodel.UiRequestChannel.ask]'s KDoc). */
     private fun runSizeDialog(openedFrom: String): Int? {
         analytics.track("screen_size_dialog", mapOf("opened_from" to openedFrom))
         input.onDialogOpened()

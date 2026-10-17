@@ -15,7 +15,7 @@ import testing.testViewModel
 
 /**
  * Hard problem 3 (GH-42 WU2): `saveGame`/`loadGame`/`restoreOnStartup` all suspend inside
- * [ViewModelImpl.ask], whose `catch (e: Exception)` catch-all would otherwise swallow a
+ * [UiRequestChannel.ask], whose `catch (e: Exception)` catch-all would otherwise swallow a
  * [kotlinx.coroutines.CancellationException] - `CancellationException` *is* a `java.lang.Exception`
  * on the JVM (via `IllegalStateException`). Each method's `catch (e: CancellationException) {
  * throw e }` guard, immediately before its catch-all, is what these tests pin: cancelling the
