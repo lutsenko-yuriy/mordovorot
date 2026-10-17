@@ -17,6 +17,7 @@ A record of all versioned releases. For planned work and known issues, see @docs
 
 ### Changed
 - [test] (PR #114) GH-103 (WU2/2): the shared modules' tests moved from `jvmTest` to `commonTest` and now run on Node.js too (186 tests on JS; `runBlocking` → `runTest`), with one JVM-only cross-thread test kept in mordie's `jvmTest`.
+- [non-user] GH-103: the Node.js test runner's per-test timeout is raised from Mocha's 2 s default to 30 s; the 3x3 solver test went past 2 s on a CI runner.
 - [non-user] Debrief workflow changes: bounded CI wait in ship (poll checks every 30s, max 30 times), checking on long-running subagents, `/note` front matter, debrief opens with the ticket's notes. No behaviour change.
 
 ## [0.16.5] — 2026-10-17 (PR #113 merged)
