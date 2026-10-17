@@ -54,3 +54,4 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-79: Remove console mode](GH-79.md)
 - [GH-82: [trivial] Credit Loopover and describe Mordovorot as its terminal version](GH-82.md)
 - [GH-83: Mordie: a computer opponent racing the player to the shortest solution](GH-83.md)
+- [GH-99: Prefill the Save dialog with the current save name](GH-99.md)
