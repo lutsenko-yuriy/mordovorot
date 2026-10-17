@@ -12,11 +12,12 @@ interface ViewModel {
      *  alongside its own event loop. See [viewmodel.UiRequestChannel.ask]. */
     val uiRequests: ReceiveChannel<UiRequest<*>>
 
-    fun shiftLeft(row: Int)
-    fun shiftRight(row: Int)
+    /** [key] is the keyboard key that made the shift (GH-101), `null` for a mouse click. */
+    fun shiftLeft(row: Int, key: ShiftKey? = null)
+    fun shiftRight(row: Int, key: ShiftKey? = null)
 
-    fun shiftUp(col: Int)
-    fun shiftDown(col: Int)
+    fun shiftUp(col: Int, key: ShiftKey? = null)
+    fun shiftDown(col: Int, key: ShiftKey? = null)
 
     /** Starts a fresh shuffled game at [size] (GH-44) - throws (matching `shiftLeft`'s
      *  "Incorrect row" contract) and tracks nothing if [size] is out of range, otherwise tracks
