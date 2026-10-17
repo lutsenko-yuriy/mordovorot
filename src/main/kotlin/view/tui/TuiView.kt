@@ -1,14 +1,12 @@
 package view.tui
 
 import analytics.AnalyticsService
-import analytics.NoopAnalyticsService
 import board_model.BoardSize
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import view.View
 import viewmodel.ExitRequestedException
 import viewmodel.ModeSwitcher
-import viewmodel.NoopModeSwitcher
 import viewmodel.SaveInfo
 import viewmodel.UiRequest
 import viewmodel.UnsolvableSaveChoice
@@ -32,19 +30,13 @@ import viewmodel.displayWithSize
  */
 class TuiView internal constructor(
     private val terminal: Terminal,
-    private val analytics: AnalyticsService = NoopAnalyticsService(),
-    private val input: TuiInput = MouseInput(),
+    private val analytics: AnalyticsService,
+    private val input: TuiInput,
+    /** Internal so a test can check the production wiring isn't a no-op (GH-30). */
+    internal val modeSwitcher: ModeSwitcher,
+    private val viewModel: ViewModel,
+    private val renderer: ScreenRenderer,
 ) : View {
-
-    /** Must be assigned before [play] is called - use [create]. */
-    lateinit var viewModel: ViewModel
-        internal set
-
-    /** Wired alongside [viewModel] in [create] - defaults to a no-op (GH-30). */
-    var modeSwitcher: ModeSwitcher = NoopModeSwitcher()
-        internal set
-
-    private val renderer = ScreenRenderer()
 
     /** The layout the most recent repaint was drawn against - hit-tested on the next click, so
      *  what's clickable always matches what's on screen. Null only before the first repaint. */
@@ -70,22 +62,6 @@ class TuiView internal constructor(
      *  decide whether `screen_congratulations` (WU5) fires - see its KDoc for why the firing
      *  decision itself lives there instead of here. */
     private var wasSolved = false
-
-    companion object {
-        /** The only public way to obtain a [TuiView] - wires [viewModel] atomically. */
-        fun create(
-            terminal: Terminal,
-            analytics: AnalyticsService = NoopAnalyticsService(),
-            input: TuiInput = MouseInput(),
-            modeSwitcher: ModeSwitcher = NoopModeSwitcher(),
-            viewModel: ViewModel,
-        ): TuiView {
-            val view = TuiView(terminal, analytics, input)
-            view.modeSwitcher = modeSwitcher
-            view.viewModel = viewModel
-            return view
-        }
-    }
 
     /** Drains [viewModel]'s [viewmodel.ViewModel.uiRequests] alongside the board's own event
      *  loop (GH-42 WU2) - what lets `saveGame`/`loadGame`/`exitGame`/`restoreOnStartup` suspend

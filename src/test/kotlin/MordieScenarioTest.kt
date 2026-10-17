@@ -15,6 +15,7 @@ import storage.FileSaveRepository
 import testing.FakeMordieSearchFactory
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
+import testing.testGameSession
 import view.tui.BoardLayout
 import view.tui.Dialog
 import view.tui.DialogButtonSpec
