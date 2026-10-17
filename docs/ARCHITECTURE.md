@@ -55,9 +55,60 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                              # kind, found reveal, frozen outcome, save snapshot
 │       └── MordieLine.kt            # MordieLine (sealed) / MordieOutcome / MordieResult /
 │                                      # MordieSnapshot (what a save stores)
+├── viewmodel/           # :shared:viewmodel - everything but Exit and session control (api
+│   │                      # dependency on the four modules above + coroutines)
+│   └── viewmodel/
+│       ├── GameViewModel.kt      # The shared viewmodel interface (GH-42 WU3; Exit split out for
+│       │                           # GH-41) — shift/newGame/save/load plus the read-only query
+│       │                           # surface (listSaves/saveExists/currentSaveName/isSolved/
+│       │                           # boardState/squareSide/moveCount) and restoreOnStartup
+│       ├── GameViewModelImpl.kt  # Its one implementation (GH-42 WU3, collapsing BaseViewModel +
+│       │                           # ConsoleViewModelImpl + TuiViewModelImpl). Keeps shifts and the
+│       │                           # queries; delegates every other flow to a usecase/ class. All
+│       │                           # collaborators are injected, with no defaults (GH-78). Holds no
+│       │                           # `View` reference — see the "viewmodel" section below
+│       ├── GameViewModelFactory.kt # buildGameViewModel — builds GameViewModelImpl and its use
+│       │                             # cases; the only way a platform gets one (GH-41)
+│       ├── UnsolvableSaveExit.kt # The platform hook for Exit on an unsolvable save, run after the
+│       │                           # shared flow returns (GH-41); with NONE, Exit
+│       │                           # just ends the load
+│       ├── UiRequest.kt          # Sealed request/response type for the seven viewmodel→UI
+│       │                           # interactions (ShowMessage/ConfirmRestore/ChooseSaveToRestore/
+│       │                           # ConfirmSaveBeforeExit/PromptSaveName/ChooseBoardSize (GH-44)/
+│       │                           # ResolveUnsolvableSave (GH-74) + UnsolvableSaveChoice),
+│       │                           # sent on
+│       │                           # GameViewModel.uiRequests (GH-42 WU2)
+│       ├── UiRequestChannel.kt   # The rendezvous channel behind uiRequests: ask/showMessage. One
+│       │                           # per rebuild, shared by GameViewModelImpl, every use case and
+│       │                           # the terminal's Exit (GH-78, GH-41)
+│       ├── CurrentSaveName.kt    # The session's current save name (`var name: String?`): set on
+│       │                           # save/load/repair, cleared on new game, prefills the Save dialog.
+│       │                           # One per session, made by buildGameSession, so it survives mode
+│       │                           # switches; never persisted (GH-99)
+│       ├── GameShiftKeys.kt      # ShiftKey {ARROW, HJKL} + GameShiftKeys: which keys made this
+│       │                           # game's shifts, for board_solved.shift_keys. Reset on new game/
+│       │                           # load/repair; one per session, made by buildGameSession (GH-101)
+│       ├── SaveCatalog.kt        # Read-only SaveInfo views of the saves: infos (throws) /
+│       │                           # listSaves / saveExists (swallow) / availableSavesMessage (GH-78)
+│       ├── CatchingNonCancellation.kt # catchingNonCancellation — the use cases' catch-all: rethrows
+│       │                                 # only CancellationException, since no session-control
+│       │                                 # exception passes through shared flows (GH-41)
+│       ├── MordieHooks.kt         # GameViewModelImpl's Mordie part: binds it on new game/load/repair/
+│       │                             # startup (sits out a loaded board already played on), tracks
+│       │                             # its analytics, words its line and ending (GH-83)
+│       ├── MordieText.kt          # Every Mordie string (line bodies + the four endings), singular
+│       │                             # `1 move` included (GH-83)
+│       └── usecase/               # One class per viewmodel flow, delegated to by GameViewModelImpl
+│                                     # (GH-78): NewGameUseCase, SaveGameUseCase, LoadGameUseCase ->
+│                                     # ResolveUnsolvableSaveUseCase (repair / new game / exit, GH-74;
+│                                     # both return LoadResult, GH-41), StartupRestoreUseCase (restore or
+│                                     # size prompt, then Mordie; takes `startupRestoreDone`, which
+│                                     # GameSession seeds true after a mode switch (GH-30), and
+│                                     # `sizeChosenAtLaunch`)
 └── testing/             # :shared:testing - plain JVM module of test doubles shared by every
                            # module's tests: FakeBoardModel / FakeSaveRepository /
-                           # RecordingAnalyticsService / FakeMordieSearch + FakeMordieSearchFactory
+                           # RecordingAnalyticsService / FakeMordieSearch + FakeMordieSearchFactory /
+                           # FakeViewModelUi (scripted UiRequest responder, GH-42 WU2)
 
 src/main/kotlin/                # the terminal app (the root project)
 ├── Main.kt              # Entry point — resolves the starting InputMode (or aborts with no
@@ -81,70 +132,25 @@ src/main/kotlin/                # the terminal app (the root project)
 │                          # a first-session failure, or a failed fallback, still throws (GH-30).
 │                          # Also holds the one `Mordie` (GH-83) and stops its search in
 │                          # run()'s `finally`
-├── viewmodel/
-│   ├── GameViewModel.kt      # The shared viewmodel interface (GH-42 WU3; Exit split out for
-│   │                           # GH-41) — shift/newGame/save/load plus the read-only query
-│   │                           # surface (listSaves/saveExists/currentSaveName/isSolved/
-│   │                           # boardState/squareSide/moveCount) and restoreOnStartup
-│   ├── GameViewModelImpl.kt  # Its one implementation (GH-42 WU3, collapsing BaseViewModel +
-│   │                           # ConsoleViewModelImpl + TuiViewModelImpl). Keeps shifts and the
-│   │                           # queries; delegates every other flow to a usecase/ class. All
-│   │                           # collaborators are injected, with no defaults (GH-78). Holds no
-│   │                           # `View` reference — see the "viewmodel" section below
-│   ├── GameViewModelFactory.kt # buildGameViewModel — builds GameViewModelImpl and its use
-│   │                             # cases; the only way a platform gets one (GH-41)
-│   ├── UnsolvableSaveExit.kt # The platform hook for Exit on an unsolvable save, run after the
-│   │                           # shared flow returns (GH-41); with NONE, Exit
-│   │                           # just ends the load
+├── viewmodel/           # the terminal-only part; the shared rest is in shared/viewmodel
 │   ├── ViewModel.kt          # The terminal's viewmodel: GameViewModel + exitGame() (GH-41)
 │   ├── ViewModelImpl.kt      # Delegates to GameViewModelImpl, adds ExitGameUseCase; built
 │   │                           # only by buildViewModel (GH-41)
-│   ├── UiRequest.kt          # Sealed request/response type for the seven viewmodel→UI
-│   │                           # interactions (ShowMessage/ConfirmRestore/ChooseSaveToRestore/
-│   │                           # ConfirmSaveBeforeExit/PromptSaveName/ChooseBoardSize (GH-44)/
-│   │                           # ResolveUnsolvableSave (GH-74) + UnsolvableSaveChoice),
-│   │                           # sent on
-│   │                           # GameViewModel.uiRequests (GH-42 WU2)
-│   ├── UiRequestChannel.kt   # The rendezvous channel behind uiRequests: ask/showMessage. One
-│   │                           # per rebuild, shared by GameViewModelImpl, every use case and
-│   │                           # the terminal's Exit (GH-78, GH-41)
-│   ├── CurrentSaveName.kt    # The session's current save name (`var name: String?`): set on
-│   │                           # save/load/repair, cleared on new game, prefills the Save dialog.
-│   │                           # One per session, made by buildGameSession, so it survives mode
-│   │                           # switches; never persisted (GH-99)
-│   ├── GameShiftKeys.kt      # ShiftKey {ARROW, HJKL} + GameShiftKeys: which keys made this
-│   │                           # game's shifts, for board_solved.shift_keys. Reset on new game/
-│   │                           # load/repair; one per session, made by buildGameSession (GH-101)
-│   ├── SaveCatalog.kt        # Read-only SaveInfo views of the saves: infos (throws) /
-│   │                           # listSaves / saveExists (swallow) / availableSavesMessage (GH-78)
 │   ├── SessionControlException.kt # Sealed marker base for control-flow exceptions that unwind
 │   │                                 # play() intentionally — lets a catch-all rethrow via this
 │   │                                 # one type instead of naming each subtype (GH-30)
 │   ├── CatchingNonControl.kt # catchingNonControl — GameSession's catch-all: rethrows
 │   │                           # SessionControlException/CancellationException, routes any
 │   │                           # other Exception to onError (GH-65)
-│   ├── CatchingNonCancellation.kt # catchingNonCancellation — the use cases' catch-all: rethrows
-│   │                                 # only CancellationException, since no session-control
-│   │                                 # exception passes through shared flows (GH-41)
 │   ├── ExitRequestedException.kt # Signals play() (or view.tui.TuiView's own loop, GH-3) to stop
 │   ├── ModeSwitcher.kt        # ModeSwitcher / ModeSwitcherImpl — tracks
 │   │                             # input_mode_switched and throws ModeSwitchRequestedException;
 │   │                             # same-mode no-op (GH-30)
 │   ├── ModeSwitchRequestedException.kt # Carries the requested InputMode; unwinds a running
 │   │                                      # session's play() back to GameSession's loop (GH-30)
-│   ├── MordieHooks.kt         # GameViewModelImpl's Mordie part: binds it on new game/load/repair/
-│   │                             # startup (sits out a loaded board already played on), tracks
-│   │                             # its analytics, words its line and ending (GH-83)
-│   ├── MordieText.kt          # Every Mordie string (line bodies + the four endings), singular
-│   │                             # `1 move` included (GH-83)
-│   └── usecase/               # One class per viewmodel flow, delegated to by GameViewModelImpl
-│                                 # (GH-78): NewGameUseCase, SaveGameUseCase, ExitGameUseCase
-│                                 # (terminal-only, delegated to by ViewModelImpl, GH-41),
-│                                 # LoadGameUseCase -> ResolveUnsolvableSaveUseCase (repair /
-│                                 # new game / exit, GH-74; both return LoadResult, GH-41), StartupRestoreUseCase (restore or
-│                                 # size prompt, then Mordie; takes `startupRestoreDone`, which
-│                                 # GameSession seeds true after a mode switch (GH-30), and
-│                                 # `sizeChosenAtLaunch`)
+│   └── usecase/
+│       └── ExitGameUseCase.kt # The toolbar Exit flow: Save before quitting?, then
+│                                # ExitRequestedException (GH-12); delegated to by ViewModelImpl (GH-41)
 ├── storage/                       # the contract (SaveRepository/SavedBoard/SavedMordie) is in
 │   │                                # shared/storage
 │   ├── FileSaveRepository.kt      # Plain-text file implementation (the only class
@@ -225,8 +231,9 @@ src/main/kotlin/                # the terminal app (the root project)
                           # (MouseInput or KeyboardInput, picked per mode in defaultView) so
                           # mouse and keyboard modes share one event loop (GH-18).
 
-src/test/kotlin/                # the terminal app's tests; board_model / analytics / mordie tests
-│                            # live in their shared/ module's src/jvmTest/kotlin (GH-41)
+src/test/kotlin/                # the terminal app's tests; board_model / analytics / mordie /
+│                            # most viewmodel tests live in their shared/ module's
+│                            # src/jvmTest/kotlin (GH-41)
 ├── InputModeTest.kt       # InputMode resolution + app_launched tracking (GH-3, renamed
 │                            # from LaunchModeTest for GH-30)
 ├── ConsoleRemovalScenarioTest.kt # GH-79 end to end: no-terminal abort, --console notice, no
@@ -241,15 +248,16 @@ src/test/kotlin/                # the terminal app's tests; board_model / analyt
 │                            # analytics each collaborator gets (GH-78)
 ├── ModeSwitcherTest.kt    # input_mode_switched tracking, trigger pass-through, same-mode
 │                            # no-op (GH-30)
-├── viewmodel/            # One test file per ViewModelImpl concern (GH-42 WU3, collapsing GH-23's
-│                           # split): ViewModelDelegationTest / ViewModelSaveLoadTest /
-│                           # ViewModelExitTest drive ViewModelImpl directly, no play()
-│                           # loop involved; ViewModelStartupRestoreTest covers restoreOnStartup's
-│                           # branch matrix plus the idempotence guard; ViewModelQueriesTest covers
-│                           # the read-only query surface; ViewModelCancellationTest/
-│                           # ViewModelOrderingTest pin the request-channel's CancellationException
-│                           # guard and rendezvous ordering (GH-42 WU2); CatchingNonControlTest
-│                           # pins the shared catch-all helper (GH-65)
+├── viewmodel/            # One test file per viewmodel concern (GH-42 WU3), driving ViewModelImpl
+│                           # directly, no play() loop involved. The ones here exercise Exit or
+│                           # build the terminal-only SaveFileFormatException (ViewModelExitTest/
+│                           # OrderingTest/UnsolvableLoadTest/SaveLoadTest/CurrentSaveNameTest/
+│                           # QueriesTest/StartupRestoreTest) and still cover the shared code
+│                           # through ViewModelImpl's delegation; CatchingNonControlTest pins
+│                           # GameSession's catch-all (GH-65). The rest (Delegation, Cancellation,
+│                           # Mordie, MoveCount, NewGame, ShiftKeys, SizePrompt, UnsolvableExitHook,
+│                           # CatchingNonCancellation, MordieText, SaveInfo) are in
+│                           # shared/viewmodel's jvmTest, built by its own testViewModel (GH-41)
 ├── storage/               # FileSaveRepository coverage
 ├── view/tui/              # TUI coverage (GH-3, WU2-WU5)
 └── testing/              # testViewModel / testTuiView / testGameSession - the only way tests
@@ -257,9 +265,9 @@ src/test/kotlin/                # the terminal app's tests; board_model / analyt
                             # NoopModeSwitcher / FakeTerminal /
                             # FakeViewModel (recording double, collapsing GH-23's
                             # RecordingViewModel/FakeConsoleViewModel/FakeTuiViewModel split in
-                            # GH-42 WU3) / FakeViewModelUi (scripted UiRequest responder, GH-42
-                            # WU2) / RecordingModeSwitcher (GH-30). The shared doubles
-                            # (FakeBoardModel, FakeSaveRepository, ...) are in shared/testing
+                            # GH-42 WU3) / RecordingModeSwitcher (GH-30). The shared doubles
+                            # (FakeBoardModel, FakeSaveRepository, FakeViewModelUi, ...) are in
+                            # shared/testing
 ```
 
 The terminal app uses Gradle's standard source sets (`src/main/kotlin`, `src/test/kotlin`);
@@ -270,7 +278,8 @@ each `shared/` module uses KMP's (`src/commonMain/kotlin`, `src/jvmTest/kotlin`)
 
 Classic MVVM. `board_model` and `view` are each an interface + one implementation
 (`view`'s is the TUI, `view.tui.TuiView`).
-`viewmodel` (GH-42) is the shared `GameViewModel` interface + one `GameViewModelImpl`,
+`viewmodel` (GH-42) is the shared `GameViewModel` interface + one `GameViewModelImpl`
+(`:shared:viewmodel`, GH-41),
 holding no reference to any `View` — it communicates with whichever `View` is driving it
 through a request channel instead of a constructor-injected dependency. The terminal's
 `ViewModel` adds Exit on top (GH-41), implemented by `ViewModelImpl`, which delegates the
@@ -399,10 +408,10 @@ that needs to track an event), currently backed by `NoopAnalyticsService`.
 `InputMethodAnalyticsService` (GH-3) decorates another `AnalyticsService`,
 adding an `input_method` (`mouse`/`keyboard`, GH-18) property to
 every forwarded event — the decorator pattern lets `Main` distinguish events
-by launch mode without `ViewModelImpl` itself knowing which UI mode is
+by launch mode without `GameViewModelImpl` itself knowing which UI mode is
 running.
 
-`board_solved` (GH-62) is tracked in `ViewModelImpl`, not a View: every shift goes
+`board_solved` (GH-62) is tracked in `GameViewModelImpl`, not a View: every shift goes
 through one private `shift` helper that fires it when the shift turns an unsolved
 board into a solved one, so it covers both modes. Loads bypass that helper,
 so restoring a solved save never fires it. GH-83 adds `mordie_result`/`mordie_moves` to it
@@ -524,7 +533,11 @@ initial resolution in `Main`; each subsequent switch fires
   real target. No `expect`/`actual` — every platform seam is a plain interface. The app
   depends on the modules' JVM jars, which `installDist` bundles into `lib/`. Tests stay in
   `jvmTest` (they use `runBlocking`, `java.io` and backtick names), so `./gradlew check` —
-  not `./gradlew test`, which only runs the root project's — runs them all.
+  not `./gradlew test`, which only runs the root project's — runs them all. Module graph:
+  `core`, `analytics`, `storage` and `mordie` depend on no other module; `viewmodel` has an
+  `api` dependency on all four (its public types expose them); the app depends on all five.
+  Known follow-up for the first non-JVM port: seven viewmodel test files stay in the app
+  because they use Exit or `SaveFileFormatException`, so they don't run on other targets.
 - **Test framework:** `kotlin("test")` on the JUnit 5 platform (`useJUnitPlatform()`).
   No mocking library — hand-written fakes in `src/test/kotlin/testing/` and, for doubles of
   shared types, the `:shared:testing` module.

@@ -53,7 +53,7 @@ Full product specifications: docs/PRODUCT_SPEC.md
 
 ## Architecture
 
-MVVM (Model-View-ViewModel): board_model + viewmodel + view packages
+MVVM (Model-View-ViewModel): board_model + viewmodel + view packages. Everything platform-independent (board, analytics, the save contract, Mordie, and the viewmodel minus Exit and session control) is in Kotlin Multiplatform modules under `shared/`; the terminal app is the root project (GH-41)
 
 Details and directory layout: @docs/ARCHITECTURE.md. Languages and tooling: docs/TECH_STACK.md.
 
