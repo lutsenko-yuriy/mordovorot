@@ -1,5 +1,7 @@
 package board_model
 
+import kotlin.math.sqrt
+
 public class BoardImpl(initialSide: Int = BoardSize.DEFAULT) : BoardModel {
 
     private var side: Int = BoardSize.require(initialSide)
@@ -45,7 +47,7 @@ public class BoardImpl(initialSide: Int = BoardSize.DEFAULT) : BoardModel {
         // squareSide comes from state's own length, not the board's current side (GH-44 WU5) -
         // a valid save is whatever size it says it is; loading one resizes the board to match
         // instead of requiring a coincidental match to what the board happened to be at.
-        val restoredSide = Math.sqrt(state.size.toDouble()).toInt()
+        val restoredSide = sqrt(state.size.toDouble()).toInt()
         require(restoredSide * restoredSide == state.size) { "Board state size must be a perfect square, got ${state.size}" }
         require(state.toSet() == (0 until state.size).toSet()) { "Board state must contain each of ${state.size} tile values exactly once" }
         // BoardSize.require, same as newGame (audit finding on PR #55) - without it, a
