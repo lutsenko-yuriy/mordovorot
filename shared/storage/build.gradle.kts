@@ -9,12 +9,4 @@ kotlin {
     }
     // GH-103: a real JS target, running the common tests on Node.js.
     js { nodejs() }
-
-    sourceSets {
-        jvmTest {
-            dependencies {
-                implementation(kotlin("test"))
-            }
-        }
-    }
 }
