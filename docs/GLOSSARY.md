@@ -13,6 +13,7 @@ When a new term is introduced during a `brief` session, add it here before creat
 | Dialog | A modal box in the TUI (Save, Load, Exit, New-game size picker, Startup restore) that takes over input until confirmed or cancelled | `Dialog`, `DialogLayout` |
 | Input mode | Which front-end is driving the game: mouse TUI or keyboard TUI. Switchable mid-session without losing the game | `InputMode` |
 | Move | A run of consecutive shifts on the same row or column, in any direction; shifting a different line starts a new move, and so does the first shift after a load. Counted and shown as `Moves: N` | `BoardModel.moveCount` / `ViewModel.moveCount()` |
+| Line selection | Keyboard mode's selected row and selected column, one of them active; WASD selects, HJKL/arrows shift the active line. Its tiles are highlighted (GH-101) | — |
 | Mordie | The computer opponent: searches in the background for the shortest solution of the game's original arrangement (in moves), reports its progress under `Moves:`, and its result against the player's move count becomes the solved title | `Mordie`, `MordieHooks`, `MordieText` |
 | Save file | A local `.save` file under `saves/` storing a board's size and tile arrangement, created/updated via the Save dialog or the exit flow and restored via the Load dialog or the startup restore prompt | `SavedBoard`, `SaveRepository`, `FileSaveRepository` |
 | Save info | A save's name plus its board size, as shown in every save listing (e.g. `foo (5x5)`) | `SaveInfo` |
