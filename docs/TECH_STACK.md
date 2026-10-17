@@ -6,7 +6,7 @@
 |---|---|---|
 | Kotlin | 1.9.24 (`build.gradle.kts`), JVM toolchain 17 | Game application code and tests |
 | Python | 3.11+ (3.9 for `probe`; CI runs 3.9 and 3.12 in `.github/workflows/tests.yml`) | Agent workflow tooling under `scripts/` |
-| Shell | bash | Onboarding gate hook (`scripts/onboard/gate.sh`) |
+| Shell | bash | Claude Code hooks: onboarding gate (`scripts/onboard/gate.sh`), session-waiting alert (`scripts/alert/alert.sh`, GH-107) |
 
 ## Frameworks and libraries
 
@@ -25,4 +25,8 @@
 - **Test runner:** `./gradlew check` (JUnit Platform) - runs the root `test` and every shared
   module's `jvmTest`; plain `./gradlew test` skips the shared modules; Python: `python -m unittest`
 - **Linter / formatter:** none configured
-- **CI:** GitHub Actions: `build.yml` (`./gradlew build`), `tests.yml` (onboard Python tests)
+- **Agent alert hook (GH-107):** `scripts/alert/alert.sh` runs on Claude Code's `Notification` and `Stop`
+  hooks and alerts by macOS notification and `say`. Per-machine toggles go in the gitignored
+  `.claude/alert.env` (`YAB_ALERT_NOTIFY`, `YAB_ALERT_SPEAK`, `YAB_ALERT_SUPPRESS_FOCUSED`, all `on` by
+  default; set both channels `off` to opt out). Needs `jq`; does nothing off macOS
+- **CI:** GitHub Actions: `build.yml` (`./gradlew build`), `tests.yml` (onboard and alert Python tests)
