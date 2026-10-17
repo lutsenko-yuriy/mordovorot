@@ -5,7 +5,7 @@ import storage.SaveRepository
 
 /** Read-only view of [saves] as the viewmodel shows them (GH-78): [SaveInfo]s and the
  *  "available saves" message. */
-class SaveCatalog(private val saves: SaveRepository) {
+internal class SaveCatalog(private val saves: SaveRepository) {
 
     /** Every save's [SaveInfo]. Throws if the listing itself fails - unlike [listSaves], for a
      *  caller that must tell "no saves" apart from "couldn't list them". */

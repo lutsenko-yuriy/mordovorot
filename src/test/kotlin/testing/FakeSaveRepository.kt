@@ -63,7 +63,7 @@ class FakeSaveRepository(
     }
 
     /** Mirrors [storage.FileSaveRepository]'s real safety rule, so tests exercising name
-     *  validation (e.g. [viewmodel.ViewModelImpl.exitGame]'s re-prompt loop) don't need the
+     *  validation (e.g. [viewmodel.usecase.ExitGameUseCase.exitGame]'s re-prompt loop) don't need the
      *  real filesystem-backed repository. */
     override fun isValidName(name: String): Boolean =
         name.isNotBlank() &&

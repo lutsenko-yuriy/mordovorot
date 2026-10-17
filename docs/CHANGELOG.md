@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.14.4] — 2026-10-17 (PR #94 merged)
+
+### Changed
+- [wip] (PR #94) GH-78 (WU4/8): the load, unsolvable-save (repair / new game / exit) and exit flows move out of `ViewModelImpl` into `LoadGameUseCase`, `ResolveUnsolvableSaveUseCase` and `ExitGameUseCase`; `ViewModelImpl` no longer touches the saves directly. No behaviour change; the startup sequence follows in WU5.
+
 ## [0.14.3] — 2026-10-17 (PR #93 merged)
 
 ### Changed

@@ -24,7 +24,7 @@ interface ViewModel {
      *  (`[ New ]` -> size-picker dialog), or `"unsolvable_save"` - see docs/ANALYTICS_EVENTS.md. */
     fun newGame(size: Int, trigger: String)
 
-    /** Returns whether the save actually succeeded - see [viewmodel.ViewModelImpl.exitGame],
+    /** Returns whether the save actually succeeded - see [viewmodel.usecase.ExitGameUseCase.exitGame],
      *  which needs the real outcome rather than assuming success. `suspend` (GH-42): asks the
      *  View for confirmation/messages instead of returning synchronously. */
     suspend fun saveGame(name: String): Boolean
@@ -35,7 +35,7 @@ interface ViewModel {
     /** Ends the current session (the `exit`/`quit` command) after an optional save-first
      *  dialogue. Usually ends the owning View's play loop outright; returns normally instead,
      *  leaving the session running, if the user asked to save but the save attempt failed -
-     *  see [viewmodel.ViewModelImpl.exitGame]. */
+     *  see [viewmodel.usecase.ExitGameUseCase.exitGame]. */
     suspend fun exitGame()
 
     /** Saves with their board size (GH-44 WU4), sorted by name; empty when nothing has been
