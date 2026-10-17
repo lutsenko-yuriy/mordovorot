@@ -1,6 +1,7 @@
 import board_model.BoardImpl
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
@@ -53,10 +54,12 @@ class AppWiringTest {
         val scrambled = IntArray(16) { 15 - it }
         val board = BoardImpl(4).apply { restoreState(scrambled) }
         val factory = FakeMordieSearchFactory()
+        val analytics = RecordingAnalyticsService()
 
         testGameSession(
             initialMode = InputMode.MOUSE,
             board = board,
+            analytics = analytics,
             sizeChosenAtLaunch = true,
             terminalFactory = { terminal },
             mordie = Mordie(factory),
@@ -67,5 +70,27 @@ class AppWiringTest {
         val keyboardFrame = terminal.frames.last { it.contains("[Mouse F7]") }
         assertTrue(keyboardFrame.contains("Moves: 1"), "the keyboard View reads the same board")
         assertEquals(1, factory.started.size, "the keyboard rebuild reuses Mordie's running search")
+        val switched = analytics.events.single { it.name == "input_mode_switched" }
+        assertFalse("input_method" in switched.properties, "the ModeSwitcher tracks undecorated")
+    }
+
+    @Test
+    fun `the View tracks with the mode's input_method`(): Unit = runBlocking {
+        val terminalSize = TerminalSize(80, 40)
+        val layout = BoardLayout(terminalSize, 4, modeButtons = listOf(InputMode.KEYBOARD))
+        val newButton = layout.toolbarButtons().first { it.target == HitTarget.ToolbarNew }
+        val terminal = FakeTerminal(mutableListOf(TerminalEvent.MouseClick(newButton.x, newButton.y)), terminalSize)
+        val analytics = RecordingAnalyticsService()
+
+        testGameSession(
+            initialMode = InputMode.MOUSE,
+            board = BoardImpl(4),
+            analytics = analytics,
+            sizeChosenAtLaunch = true,
+            terminalFactory = { terminal },
+        ).run()
+
+        val opened = analytics.events.first { it.name == "screen_size_dialog" }
+        assertEquals("mouse", opened.properties["input_method"])
     }
 }
