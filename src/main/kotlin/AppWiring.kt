@@ -17,7 +17,10 @@ import viewmodel.SaveCatalog
 import viewmodel.UiRequestChannel
 import viewmodel.ViewModel
 import viewmodel.ViewModelImpl
+import viewmodel.usecase.ExitGameUseCase
+import viewmodel.usecase.LoadGameUseCase
 import viewmodel.usecase.NewGameUseCase
+import viewmodel.usecase.ResolveUnsolvableSaveUseCase
 import viewmodel.usecase.SaveGameUseCase
 
 // The composition root (GH-78): the only production code that constructs collaborators. `main`
@@ -72,17 +75,23 @@ internal fun buildViewModel(
 ): ViewModelImpl {
     val mordieHooks = MordieHooks(mordie, board, analytics)
     val ui = UiRequestChannel()
+    val catalog = SaveCatalog(saves)
+    val newGame = NewGameUseCase(board, mordieHooks, analytics)
+    val saveGame = SaveGameUseCase(board, saves, mordieHooks, analytics, ui)
+    val exitGame = ExitGameUseCase(saves, saveGame, analytics, ui)
+    val resolveUnsolvable = ResolveUnsolvableSaveUseCase(board, saves, mordieHooks, analytics, ui, newGame, exitGame)
     return ViewModelImpl(
         board,
-        saves,
         analytics,
         startupRestoreDone,
         sizeChosenAtLaunch,
         mordieHooks,
         ui,
-        SaveCatalog(saves),
-        NewGameUseCase(board, mordieHooks, analytics),
-        SaveGameUseCase(board, saves, mordieHooks, analytics, ui),
+        catalog,
+        newGame,
+        saveGame,
+        LoadGameUseCase(board, saves, mordieHooks, analytics, ui, catalog, resolveUnsolvable),
+        exitGame,
     )
 }
 

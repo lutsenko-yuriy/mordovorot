@@ -67,8 +67,9 @@ src/main/kotlin/
 │   │                           # load/exit plus the read-only query surface (listSaves/saveExists/
 │   │                           # isSolved/boardState/squareSide/moveCount) and restoreOnStartup
 │   ├── ViewModelImpl.kt      # The one implementation (GH-42 WU3, collapsing BaseViewModel +
-│   │                           # ConsoleViewModelImpl + TuiViewModelImpl). board/saves/analytics/
-│   │                           # MordieHooks are injected, with no defaults (GH-78) - built only
+│   │                           # ConsoleViewModelImpl + TuiViewModelImpl). Keeps shifts and the
+│   │                           # queries; delegates every other flow to a usecase/ class. All
+│   │                           # collaborators are injected, with no defaults (GH-78) - built only
 │   │                           # by buildViewModel. `startupRestoreDone` is also a constructor param
 │   │                           # (default false) so GameSession can seed it true on every session
 │   │                           # after the first, skipping a re-shown startup restore prompt after
@@ -102,7 +103,9 @@ src/main/kotlin/
 │   ├── MordieText.kt          # Every Mordie string (line bodies + the four endings), singular
 │   │                             # `1 move` included (GH-83)
 │   └── usecase/               # One class per ViewModel flow, delegated to by ViewModelImpl
-│                                 # (GH-78): NewGameUseCase, SaveGameUseCase
+│                                 # (GH-78): NewGameUseCase, SaveGameUseCase, ExitGameUseCase,
+│                                 # LoadGameUseCase -> ResolveUnsolvableSaveUseCase (repair /
+│                                 # new game / exit, GH-74)
 ├── storage/
 │   ├── SaveRepository.kt          # Persistence contract: list/exists/save/load
 │   ├── SavedBoard.kt              # Data carrier: square side + tile arrangement (+ optional
@@ -253,7 +256,7 @@ one place for the GH-41 mobile port), and memory stays O(depth). A search starte
 saved N begins at N + 1, so it never re-reports below it. `Mordie` turns the player's
 shifts into the line state: a check every 5 shifts, a reveal of "found", and the outcome
 frozen on solve, using Mordie's live state at that shift. Its `MordieSnapshot` mirrors
-`storage.SavedMordie` on purpose, so `mordie` never imports `storage`; `ViewModelImpl` maps
+`storage.SavedMordie` on purpose, so `mordie` never imports `storage`; `MordieHooks` maps
 between the two. `Main` builds one `Mordie` per session, so it survives mode switches;
 `GameSession` stops it. `ViewModelImpl` reaches it through `MordieHooks`, which
 `buildViewModel` builds per rebuild so it tracks through that mode's decorated analytics.
@@ -267,9 +270,10 @@ real and in use; the `presenter` package/naming this superseded is gone.
 Mediates between `view`, `board_model`, and `storage`, but never calls into `view`
 directly. `ViewModel` is one interface (shift/newGame/save/load/exit plus the
 query surface the TUI needs — `isSolved`/`boardState`/`squareSide`/`moveCount`/`listSaves`/
-`saveExists`), and `ViewModelImpl` is its one implementation, taking `board`/`saves`/
-`analytics`/`MordieHooks` as constructor params with no defaults (GH-78): production
-wires them in `AppWiring`, tests through `testViewModel`'s fakes.
+`saveExists`), and `ViewModelImpl` is its one implementation. It keeps the shifts and
+queries and delegates each other flow to a use case in `viewmodel.usecase` (GH-78), all
+sharing one `UiRequestChannel`. Every collaborator is a constructor param with no
+default: production wires them in `buildViewModel`, tests through `testViewModel`'s fakes.
 
 Five interactions that used to be blocking calls into `View` (`showMessage`,
 `confirmRestore`, `chooseSaveToRestore`, `confirmSaveBeforeExit`, `promptSaveName`)
@@ -277,7 +281,7 @@ are now `viewmodel.UiRequest<R>` values sent on `ViewModel.uiRequests`, a
 `Channel.RENDEZVOUS` the owning `View` drains in a sibling coroutine and answers via
 `UiRequest.respond`. `TuiView` answers each from its own request handler (the prompts
 are `internal` methods there, `showMessage` a private one). Rendezvous delivery
-(the channel has zero buffer, and `ask()` doesn't return until the View has actually
+(the channel has zero buffer, and `UiRequestChannel.ask()` doesn't return until the View has actually
 handled the request) is what keeps message/prompt ordering identical to the old
 blocking-call behavior. The one invariant that keeps this deadlock-free: a View's
 request handler must never call a request-raising `ViewModel` method
@@ -383,12 +387,12 @@ player can tell up front what size loading it will resize the board to.
 `squareSide`, `viewmodel/SaveInfo.kt`) instead of bare names; `squareSide` is
 `null` when the save can't be read (corrupted/IO error) rather than dropping
 the entry. `UiRequest.ConfirmRestore`/`ChooseSaveToRestore` now carry
-`SaveInfo` too. No save-file-format change — `ViewModelImpl` derives each
+`SaveInfo` too. No save-file-format change — `SaveCatalog` derives each
 size from `saves.load(name)?.squareSide`, one extra read per save already
 being listed.
 `SaveInfo.solvable` (GH-74) comes from the same read via `Solvability`;
 `display()` appends `UNSOLVABLE_MARK` for a save that can't be solved.
-`ViewModelImpl.loadGame` never restores an unsolvable save directly: it raises
+`LoadGameUseCase` never restores an unsolvable save directly: it raises
 `UiRequest.ResolveUnsolvableSave` (`atStartup` set from the startup restore) and
 acts on the `UnsolvableSaveChoice`. REPAIR writes `Solvability.repaired` back
 through `saves.save` and loads it. NEW_GAME raises
