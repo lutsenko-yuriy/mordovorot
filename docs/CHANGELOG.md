@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.16.3] — 2026-10-17 (PR #106 merged)
+
+### Changed
+- [app] (PR #106) GH-41 (WU3/3): the shared viewmodel moves into :shared:viewmodel - the game's platform-independent code (board, analytics, save contract, Mordie, viewmodel minus Exit and session control) now lives in five Kotlin Multiplatform modules; no behaviour change.
+
 ## [0.16.2] — 2026-10-17 (PR #105 merged)
 
 ### Changed
