@@ -32,6 +32,8 @@ The Git host is **GitHub**. The tech stack is described in `docs/TECH_STACK.md`.
 
 Read the full source of any changed domain, data, or integration files. Do not rely on the diff alone.
 
+Never run `git checkout`, `git switch` or `git stash` in the working tree - other sessions may share it with uncommitted work (GH-78). Read other revisions with `git show <rev>:<path>`.
+
 ### 3. Check configuration files
 
 Look for related changes in manifests, lock files, env files, platform config.
