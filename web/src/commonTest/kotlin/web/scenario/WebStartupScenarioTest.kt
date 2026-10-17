@@ -9,12 +9,20 @@ import kotlin.test.Test
 class WebStartupScenarioTest {
 
     @Test
-    fun `no saves - the page opens the size picker, with no Cancel`() {
+    fun `no saves - the page opens the size picker`() {
         // WU4
         // TODO: 1. Start with an empty store.
-        // TODO: 2. The first dialog is the size picker (3-5) with no Cancel.
+        // TODO: 2. The first dialog is the size picker (3-5) with Cancel, as in the terminal.
         // TODO: 3. Pick 4: a 4x4 board, "Moves: 0", no dialog.
         // TODO: 4. screen_size_dialog {opened_from: startup} fired.
+    }
+
+    @Test
+    fun `no saves - Cancel on the startup size picker keeps the current board`() {
+        // WU4
+        // TODO: 1. restoreState a known 4x4 on the BoardImpl before WebGame starts; empty store.
+        // TODO: 2. Cancel the startup size picker: that known 4x4 is shown, "Moves: 0", no dialog.
+        // TODO: 3. dialog_cancelled {dialog: size} fired.
     }
 
     @Test
@@ -43,7 +51,7 @@ class WebStartupScenarioTest {
     @Test
     fun `unsolvable save at startup - Repair & load or New game, no Exit`() {
         // WU5
-        // TODO: 1. Seed "odd" (3x3 "2 1 0 3 4 5 6 7 8", 5 moves); pick it.
+        // TODO: 1. Seed "odd" (3x3 "2 1 0 3 4 5 6 7 8", 5 moves); answer yes to restore it.
         // TODO: 2. The "Can't be solved" dialog has exactly [ Repair & load ] [ New game ].
         // TODO: 3. Repair & load: the board is "1 2 0 3 4 5 6 7 8"; the status is
         //          "Repaired 'odd' (two tiles swapped) and loaded it."

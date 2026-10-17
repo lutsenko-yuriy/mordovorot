@@ -15,10 +15,12 @@ class WebSaveLoadScenarioTest {
     }
 
     @Test
-    fun `Save rejects whitespace, slash, dot-dot and blank names`() {
-        // WU5
-        // TODO: 1. For each of "a b", "a/b", "..", "": confirm Save.
-        // TODO: 2. Nothing is stored; the dialog stays open with the terminal's message.
+    fun `Save rejects whitespace, slash and dot-dot names, and a blank name is Cancel`() {
+        // WU5 (as the terminal: the dialog closes; the message goes to the status line, D4)
+        // TODO: 1. Save as "a b": nothing stored; status "'a b' isn't a usable save name (no spaces) - not saved."
+        // TODO: 2. Save as "a/b" and "..": nothing stored; status "Could not save as '…': Save name must not be
+        //          blank, contain a path separator, or contain '..'".
+        // TODO: 3. Save with a blank name: nothing stored, no status, as Cancel.
     }
 
     @Test
@@ -39,7 +41,7 @@ class WebSaveLoadScenarioTest {
     @Test
     fun `Load with no saves says so`() {
         // WU5
-        // TODO: 1. Empty store; press Load: "No saves available."
+        // TODO: 1. Empty store; press Load: the Load dialog says "No saves found."
     }
 
     @Test

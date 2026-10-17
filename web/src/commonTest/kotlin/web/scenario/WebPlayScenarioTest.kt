@@ -9,7 +9,7 @@ class WebPlayScenarioTest {
     @Test
     fun `an arrow click shifts the line by one, wrapping around`() {
         // WU4
-        // TODO: 1. Start a known 4x4.
+        // TODO: 1. Start a known 4x4 (restoreState on the BoardImpl, then Cancel the startup size picker).
         // TODO: 2. Click ▶ on row 0: the row wraps one tile right (tiles shown 1-based).
         // TODO: 3. Click ▲ on column 2: the column shifts up, its top tile moves to the bottom.
     }
@@ -42,10 +42,18 @@ class WebPlayScenarioTest {
     @Test
     fun `solving fades the arrows and stops shifts`() {
         // WU4
-        // TODO: 1. Start one shift from solved; make the solving shift.
-        // TODO: 2. arrowsEnabled is false; Mordie's spot is "Congratulations ✓" (Mordie sat out).
+        // TODO: 1. Start one shift from solved (known board as above); make the solving shift.
+        // TODO: 2. arrowsEnabled is false.
         // TODO: 3. Click an arrow: the board and Moves are unchanged.
         // TODO: 4. screen_congratulations fired once.
+    }
+
+    @Test
+    fun `solving a game Mordie sat out shows Congratulations`() {
+        // WU5 (Mordie sits out only a loaded save with no usable Mordie data and moves > 0)
+        // TODO: 1. Seed a save one shift from solved, 3 moves, no Mordie lines; load it.
+        // TODO: 2. Make the solving shift.
+        // TODO: 3. Mordie's spot is "Congratulations ✓".
     }
 
     @Test
@@ -60,7 +68,8 @@ class WebPlayScenarioTest {
     @Test
     fun `solving before Mordie finds it - Mordie's ending replaces its text`() {
         // WU4
-        // TODO: 1. Fake progress N=0, not found; make the solving shift.
+        // TODO: 1. Start one shift from solved (known board as above); fake progress N=0, not found.
+        // TODO:    Make the solving shift.
         // TODO: 2. Mordie's spot is "You beat me! I was still at 0 moves.", not "Congratulations ✓".
     }
 }
