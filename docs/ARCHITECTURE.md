@@ -540,7 +540,8 @@ alert when a session waits on the user, toggled per machine in the gitignored `.
   accept `java.lang.Math` and the like, so the JS target is the compiler check that shared
   code stays platform-independent. Since GH-103 it is a real target with a Node.js test task;
   KGP downloads Node.js and yarn, and `kotlin-js-store/yarn.lock` pins the npm packages.
-  `:shared:testing` (the test doubles) is multiplatform too, so common tests can use them. No `expect`/`actual` — every platform seam is a plain interface. The app
+  `:shared:testing` (the test doubles) is multiplatform too, so common tests can use them.
+  No `expect`/`actual` — every platform seam is a plain interface. The app
   depends on the modules' JVM jars, which `installDist` bundles into `lib/`. Tests stay in
   `jvmTest` (they use `runBlocking`, `java.io` and backtick names), so `./gradlew check` —
   not `./gradlew test`, which only runs the root project's — runs them all. Module graph:
