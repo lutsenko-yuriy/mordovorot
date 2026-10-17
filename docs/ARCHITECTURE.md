@@ -156,8 +156,9 @@ src/main/kotlin/
                           # repaint asks ViewModel.isSolved() fresh rather than tracking a phase
                           # flag, so the Congratulations title/dimmed arrows and a load back to an
                           # unsolved board both fall out of the same repaint path with no extra
-                          # branching. Delegates input handling to an injected TuiInput (default
-                          # MouseInput()) so mouse and keyboard modes share one event loop (GH-18).
+                          # branching. Delegates input handling to an injected TuiInput
+                          # (MouseInput or KeyboardInput, picked per mode in defaultView) so
+                          # mouse and keyboard modes share one event loop (GH-18).
 
 src/test/kotlin/
 ├── InputModeTest.kt       # InputMode resolution + app_launched tracking (GH-3, renamed
