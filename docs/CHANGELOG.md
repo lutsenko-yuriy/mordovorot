@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.14.6] — 2026-10-17 (PR #96 merged)
+
+### Changed
+- [wip] (PR #96) GH-78 (WU6/8): first TUI split - the TUI's shared drawing state (last-drawn layouts, the pending status message, the solved flag), repaint, and the one dialog loop move from `TuiView` into a new `TuiScreen`; the dialog loop now resets keyboard focus itself. No behaviour change; the dialog controllers follow in WU7.
+
 ## [0.14.5] — 2026-10-17 (PR #95 merged)
 
 ### Changed
