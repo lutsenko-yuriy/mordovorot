@@ -17,7 +17,7 @@ opponent package (GH-83).
 shared/                  # GH-41: the platform-independent game as Kotlin Multiplatform modules
 │                          # (`:shared:<name>`), each `jvm()` + `js { nodejs() }` (GH-103), so a
 │                          # JVM-only API fails the build. Packages are unchanged; main code is in
-│                          # `<module>/src/commonMain/kotlin/`, tests in `src/jvmTest/kotlin/`
+│                          # `<module>/src/commonMain/kotlin/`, tests in `src/commonTest/kotlin/`
 ├── core/                # :shared:core
 │   └── board_model/
 │       ├── BoardModel.kt    # Board interface (domain contract)
@@ -233,7 +233,7 @@ src/main/kotlin/                # the terminal app (the root project)
 
 src/test/kotlin/                # the terminal app's tests; board_model / analytics / mordie /
 │                            # most viewmodel tests live in their shared/ module's
-│                            # src/jvmTest/kotlin (GH-41)
+│                            # src/commonTest/kotlin (GH-41, GH-103)
 ├── InputModeTest.kt       # InputMode resolution + app_launched tracking (GH-3, renamed
 │                            # from LaunchModeTest for GH-30)
 ├── ConsoleRemovalScenarioTest.kt # GH-79 end to end: no-terminal abort, --console notice, no
@@ -257,7 +257,7 @@ src/test/kotlin/                # the terminal app's tests; board_model / analyt
 │                           # GameSession's catch-all (GH-65). The rest (Delegation, Cancellation,
 │                           # Mordie, MoveCount, NewGame, ShiftKeys, SizePrompt, UnsolvableExitHook,
 │                           # CatchingNonCancellation, MordieText, SaveInfo) are in
-│                           # shared/viewmodel's jvmTest, built by its own testViewModel (GH-41)
+│                           # shared/viewmodel's commonTest, built by its own testViewModel (GH-41)
 ├── storage/               # FileSaveRepository coverage
 ├── view/tui/              # TUI coverage (GH-3, WU2-WU5)
 └── testing/              # testViewModel / testTuiView / testGameSession - the only way tests
@@ -271,7 +271,7 @@ src/test/kotlin/                # the terminal app's tests; board_model / analyt
 ```
 
 The terminal app uses Gradle's standard source sets (`src/main/kotlin`, `src/test/kotlin`);
-each `shared/` module uses KMP's (`src/commonMain/kotlin`, `src/jvmTest/kotlin`) — see
+each `shared/` module uses KMP's (`src/commonMain/kotlin`, `src/commonTest/kotlin`) — see
 "Dependencies" below.
 
 ## Layers
@@ -542,9 +542,9 @@ alert when a session waits on the user, toggled per machine in the gitignored `.
   KGP downloads Node.js and yarn, and `kotlin-js-store/yarn.lock` pins the npm packages.
   `:shared:testing` (the test doubles) is multiplatform too, so common tests can use them.
   No `expect`/`actual` — every platform seam is a plain interface. The app
-  depends on the modules' JVM jars, which `installDist` bundles into `lib/`. Tests stay in
-  `jvmTest` (they use `runBlocking`, `java.io` and backtick names), so `./gradlew check` —
-  not `./gradlew test`, which only runs the root project's — runs them all. Module graph:
+  depends on the modules' JVM jars, which `installDist` bundles into `lib/`. Their tests are in
+  `commonTest` and run on both the JVM and Node.js (GH-103), so `./gradlew check` — not
+  `./gradlew test`, which only runs the root project's — runs them all. Module graph:
   `core`, `analytics`, `storage` and `mordie` depend on no other module; `viewmodel` has an
   `api` dependency on all four (its public types expose them); the app depends on all five.
   Known follow-up for the first non-JVM port: seven viewmodel test files stay in the app
@@ -559,9 +559,10 @@ alert when a session waits on the user, toggled per machine in the gitignored `.
   JetBrains-maintained concurrency primitive the eventual KMP UI layer needs anyway,
   not a terminal-handling convenience — and it's the multiplatform artifact, so the
   same coordinate resolves per-target once other platforms are added, with no
-  declaration change. Tests run on plain `runBlocking`; `kotlinx-coroutines-test` was
-  dropped unused (checkup CHK-2026-10-14-light-2), with `withTimeout` guarding the
-  tests where a deadlock would otherwise hang silently. Run on a single `runBlocking` event
+  declaration change. The app's tests run on plain `runBlocking`. The shared modules'
+  common tests use `kotlinx-coroutines-test`'s `runTest` (GH-103), since `runBlocking` doesn't
+  exist on JS; checkup CHK-2026-10-14-light-2 had dropped it as unused. `withTimeout` guards
+  the tests where a deadlock would otherwise hang silently. Run on a single `runBlocking` event
   loop with no dispatcher — there's no
   real concurrency to exploit here (every I/O call is blocking, single-consumer), so
   a thread pool (`Dispatchers.Default`/`IO`) or `Dispatchers.Unconfined` would only

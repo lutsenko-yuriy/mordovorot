@@ -11,7 +11,8 @@
 ## Frameworks and libraries
 
 - [kotlinx.coroutines](https://github.com/Kotlin/kotlinx.coroutines) 1.11.0: ViewModel ↔ View request channel
-- [kotlin.test](https://kotlinlang.org/api/latest/kotlin.test/) on JUnit 5
+- [kotlin.test](https://kotlinlang.org/api/latest/kotlin.test/) on JUnit 5 (JVM) and Mocha (Node.js)
+- [kotlinx-coroutines-test](https://github.com/Kotlin/kotlinx.coroutines/tree/master/kotlinx-coroutines-test) 1.11.0: `runTest` for the shared modules' common tests (test only, GH-103)
 
 ## Platforms
 
@@ -25,7 +26,7 @@
   the npm packages; a Kotlin upgrade that changes them fails the build until
   `./gradlew kotlinUpgradeYarnLock` is run and the new lock committed)
 - **Test runner:** `./gradlew check` (JUnit Platform) - runs the root `test` and every shared
-  module's `jvmTest`; plain `./gradlew test` skips the shared modules; Python: `python -m unittest`
+  module's common tests on both the JVM (`jvmTest`) and Node.js (`jsNodeTest`, GH-103); plain `./gradlew test` skips the shared modules; Python: `python -m unittest`
 - **Linter / formatter:** none configured
 - **Agent alert hook (GH-107):** `scripts/alert/alert.sh` runs on Claude Code's `Notification` and `Stop`
   hooks and alerts by macOS notification and `say`. Per-machine toggles go in the gitignored
