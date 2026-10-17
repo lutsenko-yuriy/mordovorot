@@ -80,6 +80,10 @@ src/main/kotlin/
 │   │                           # ResolveUnsolvableSave (GH-74) + UnsolvableSaveChoice),
 │   │                           # sent on
 │   │                           # ViewModel.uiRequests (GH-42 WU2)
+│   ├── UiRequestChannel.kt   # The rendezvous channel behind uiRequests: ask/showMessage. One
+│   │                           # per rebuild, shared by ViewModelImpl and every use case (GH-78)
+│   ├── SaveCatalog.kt        # Read-only SaveInfo views of the saves: infos (throws) /
+│   │                           # listSaves / saveExists (swallow) / availableSavesMessage (GH-78)
 │   ├── SessionControlException.kt # Sealed marker base for control-flow exceptions that unwind
 │   │                                 # play() intentionally — lets a catch-all rethrow via this
 │   │                                 # one type instead of naming each subtype (GH-30)
@@ -95,8 +99,10 @@ src/main/kotlin/
 │   ├── MordieHooks.kt         # ViewModelImpl's Mordie part: binds it on new game/load/repair/
 │   │                             # startup (sits out a loaded board already played on), tracks
 │   │                             # its analytics, words its line and ending (GH-83)
-│   └── MordieText.kt          # Every Mordie string (line bodies + the four endings), singular
-│                                 # `1 move` included (GH-83)
+│   ├── MordieText.kt          # Every Mordie string (line bodies + the four endings), singular
+│   │                             # `1 move` included (GH-83)
+│   └── usecase/               # One class per ViewModel flow, delegated to by ViewModelImpl
+│                                 # (GH-78): NewGameUseCase, SaveGameUseCase
 ├── storage/
 │   ├── SaveRepository.kt          # Persistence contract: list/exists/save/load
 │   ├── SavedBoard.kt              # Data carrier: square side + tile arrangement (+ optional

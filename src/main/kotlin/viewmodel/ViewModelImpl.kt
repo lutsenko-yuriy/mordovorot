@@ -3,10 +3,11 @@ package viewmodel
 import analytics.AnalyticsService
 import board_model.BoardModel
 import board_model.Solvability
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import storage.SaveRepository
 import storage.SavedBoard
+import viewmodel.usecase.NewGameUseCase
+import viewmodel.usecase.SaveGameUseCase
 
 /** The one [ViewModel] implementation (GH-42 WU3, collapsing GH-23's `BaseViewModel` +
  *  `ConsoleViewModelImpl` + `TuiViewModelImpl` split): owns board/saves/analytics wiring and
@@ -25,30 +26,17 @@ class ViewModelImpl internal constructor(
      *  exist. */
     private val sizeChosenAtLaunch: Boolean = false,
     private val mordieHooks: MordieHooks,
+    private val ui: UiRequestChannel,
+    private val catalog: SaveCatalog,
+    private val newGameUseCase: NewGameUseCase,
+    private val saveGameUseCase: SaveGameUseCase,
 ) : ViewModel {
 
-    /** Rendezvous - `ask` doesn't return until the View has actually finished handling the
-     *  request, which is what keeps message/prompt ordering identical to the old direct blocking
-     *  calls into `View` (GH-42 WU2, see docs/ARCHITECTURE.md's viewModel section). */
-    private val requests = Channel<UiRequest<*>>(Channel.RENDEZVOUS)
+    override val uiRequests: ReceiveChannel<UiRequest<*>> = ui.requests
 
-    override val uiRequests: ReceiveChannel<UiRequest<*>> = requests
+    private suspend fun <R> ask(request: UiRequest<R>): R = ui.ask(request)
 
-    /** Raises [request] on [uiRequests] and suspends until the View responds. The View must
-     *  never call back into a request-raising viewModel method (`saveGame`/`loadGame`/`exitGame`/
-     *  `restoreOnStartup`) from inside its own request handler - doing so deadlocks, since the
-     *  handler is `ask`'s only consumer and would be busy with the request that triggered the
-     *  callback. */
-    private suspend fun <R> ask(request: UiRequest<R>): R {
-        requests.send(request)
-        return request.awaitResponse()
-    }
-
-    /** The one place [UiRequest.ShowMessage] is raised - every other message in this class goes
-     *  through this, not a bare `ask` call, so a future new message site can't forget it. */
-    private suspend fun showMessage(text: String) {
-        ask(UiRequest.ShowMessage(text))
-    }
+    private suspend fun showMessage(text: String) = ui.showMessage(text)
 
     override fun shiftLeft(row: Int) = shift { board.shiftLeft(row) }
 
@@ -71,31 +59,9 @@ class ViewModelImpl internal constructor(
         }
     }
 
-    override fun newGame(size: Int, trigger: String) {
-        board.newGame(size)
-        mordieHooks.onNewGame()
-        analytics.track("new_game_size_selected", mapOf("size" to size, "trigger" to trigger))
-    }
+    override fun newGame(size: Int, trigger: String) = newGameUseCase.newGame(size, trigger)
 
-    override suspend fun saveGame(name: String): Boolean {
-        // saves.exists/save can throw (bad name, IOException) - caught here rather than left to
-        // play()'s generic handler, so a failed save is still tracked and gets its own message
-        // instead of silently missing from save_command_used (audit finding on PR #13).
-        return catchingNonControl(
-            onError = { e ->
-                analytics.track("save_command_used", mapOf("result" to "error"))
-                // Always say the save failed - e.message alone can be just a path (PR #15).
-                showMessage("Could not save as '$name': ${e.message ?: e::class.simpleName}")
-                false
-            },
-        ) {
-            val existed = saves.exists(name)
-            saves.save(name, board.boardArray, board.squareSide, board.moveCount, mordieHooks.snapshot())
-            analytics.track("save_command_used", mapOf("result" to "success", "overwrote_existing" to existed))
-            showMessage("Saved as '$name'.")
-            true
-        }
-    }
+    override suspend fun saveGame(name: String): Boolean = saveGameUseCase.saveGame(name)
 
     override suspend fun loadGame(name: String) {
         loadGame(name, trigger = "command")
@@ -107,7 +73,7 @@ class ViewModelImpl internal constructor(
      *  accurate `startup_restore_decision` instead of assuming success (audit on PR #14: a
      *  corrupted/mismatched save offered at startup was being recorded as "restored"). */
     private suspend fun loadGame(name: String, trigger: String): Boolean {
-        // The whole body is guarded, not just saves.load - availableSavesMessage() (itself
+        // The whole body is guarded, not just saves.load - catalog.availableSavesMessage() (itself
         // saves.listSaves()) and board.restoreState can also throw, and the startup restore
         // flow calls this before any View's own try/catch exists, so loadGame must not throw
         // regardless of which step fails (audit on PR #13).
@@ -121,7 +87,7 @@ class ViewModelImpl internal constructor(
             val saved = saves.load(name)
             if (saved == null) {
                 analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "not_found"))
-                showMessage("No save named '$name'. ${availableSavesMessage()}")
+                showMessage("No save named '$name'. ${catalog.availableSavesMessage()}")
                 return false
             }
             if (!Solvability.isSolvable(saved.state)) {
@@ -250,37 +216,6 @@ class ViewModelImpl internal constructor(
         }
     }
 
-    private fun availableSavesMessage(): String {
-        // Guarded on its own - a failure here (e.g. an unreadable saves/ directory) shouldn't
-        // change the load's actual result (it was still "not found"), just degrade the message.
-        // No CancellationException guard needed here (unlike the suspend methods above) -
-        // saves.listSaves() isn't suspend, so this catch-all can never observe one; revisit if
-        // that ever changes (audit finding on PR #45).
-        val names = try {
-            saves.listSaves()
-        } catch (e: Exception) {
-            return "Could not list available saves."
-        }
-        return if (names.isEmpty()) {
-            "No saves available."
-        } else {
-            "Available saves: ${names.joinToString(", ") { infoOf(it).display() }}"
-        }
-    }
-
-    /** [SaveInfo] for [name] from one [SaveRepository.load]. A save that can't be read (corrupted
-     *  or an IO error) gets a `null` size and no unsolvable mark - a listing degrades to showing
-     *  the name alone rather than dropping the save or failing the whole listing (GH-44 WU4). No CancellationException guard needed here -
-     *  same reasoning as [availableSavesMessage]'s: [SaveRepository.load] isn't suspend, so this
-     *  catch-all can never observe one, even though this is reachable from suspend callers
-     *  (audit finding on PR #54). */
-    private fun infoOf(name: String): SaveInfo =
-        try {
-            saves.load(name)?.let { SaveInfo(name, it.squareSide, Solvability.isSolvable(it.state)) } ?: SaveInfo(name, null)
-        } catch (e: Exception) {
-            SaveInfo(name, null)
-        }
-
     /** Guards [restoreOnStartup] against running twice - including across a mode switch. */
     private var startupRestoreDone = startupRestoreDone
 
@@ -301,7 +236,7 @@ class ViewModelImpl internal constructor(
         if (sizeChosenAtLaunch) return
         // Any failure here just starts a fresh game instead of crashing at boot.
         catchingNonControl(onError = {}) {
-            val saveInfos = saves.listSaves().map(::infoOf)
+            val saveInfos = catalog.infos()
             val restored = if (saveInfos.isEmpty()) {
                 false
             } else {
@@ -337,19 +272,9 @@ class ViewModelImpl internal constructor(
         }
     }
 
-    override fun listSaves(): List<SaveInfo> =
-        try {
-            saves.listSaves().map(::infoOf)
-        } catch (e: Exception) {
-            emptyList()
-        }
+    override fun listSaves(): List<SaveInfo> = catalog.listSaves()
 
-    override fun saveExists(name: String): Boolean =
-        try {
-            saves.exists(name)
-        } catch (e: Exception) {
-            false
-        }
+    override fun saveExists(name: String): Boolean = catalog.saveExists(name)
 
     override fun isSolved(): Boolean = board.isCorrect()
 
