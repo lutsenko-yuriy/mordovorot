@@ -11,7 +11,7 @@ import viewmodel.ViewModelImpl
 
 /** The one place tests build a [ViewModelImpl] (GH-78): the production wiring with fake
  *  defaults. */
-fun testViewModel(
+internal fun testViewModel(
     board: BoardModel = FakeBoardModel(),
     saves: SaveRepository = FakeSaveRepository(),
     analytics: AnalyticsService = RecordingAnalyticsService(),

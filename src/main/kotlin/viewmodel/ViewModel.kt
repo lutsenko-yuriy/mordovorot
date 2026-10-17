@@ -3,8 +3,8 @@ package viewmodel
 import kotlinx.coroutines.channels.ReceiveChannel
 
 /** The viewModel surface `view.tui.TuiView` depends on (GH-42 WU3) - shift/new game/save/load/
- *  exit plus the read-only query surface (`listSaves`/`saveExists`/`isSolved`/`boardState`/
- *  `squareSide`) the TUI needs to render/re-render. */
+ *  exit plus the read-only query surface (`listSaves`/`saveExists`/`currentSaveName`/
+ *  `isSolved`/`boardState`/`squareSide`) the TUI needs to render/re-render. */
 interface ViewModel {
 
     /** The UI interactions this viewModel is waiting on, in emission order (GH-42 WU2). Exactly
