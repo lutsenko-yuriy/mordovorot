@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.14.7] — 2026-10-17 (PR #97 merged)
+
+### Changed
+- [wip] (PR #97) GH-78 (WU7/8): the Save, Exit, Load and startup Restore dialogs move out of `TuiView` into their own controllers (`view.tui.dialog`); `TuiView` routes toolbar clicks and viewmodel requests to them (339 lines down to 194). No behaviour change; the size and unsolvable dialogs and the routers follow in WU8.
+
 ## [0.14.6] — 2026-10-17 (PR #96 merged)
 
 ### Changed
