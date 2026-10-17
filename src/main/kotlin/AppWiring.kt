@@ -11,6 +11,10 @@ import view.tui.Terminal
 import view.tui.TuiInput
 import view.tui.TuiScreen
 import view.tui.TuiView
+import view.tui.dialog.ExitDialogController
+import view.tui.dialog.LoadDialogController
+import view.tui.dialog.RestoreDialogController
+import view.tui.dialog.SaveDialogController
 import viewmodel.ModeSwitcher
 import viewmodel.ModeSwitcherImpl
 import viewmodel.MordieHooks
@@ -99,5 +103,17 @@ internal fun buildTuiView(
     viewModel: ViewModel,
 ): TuiView {
     val screen = TuiScreen(terminal, input, ScreenRenderer(), viewModel, analytics)
-    return TuiView(terminal, analytics, input, modeSwitcher, viewModel, screen)
+    val loadDialog = LoadDialogController(screen, analytics, viewModel)
+    return TuiView(
+        terminal,
+        analytics,
+        input,
+        modeSwitcher,
+        viewModel,
+        screen,
+        SaveDialogController(screen, analytics, viewModel),
+        ExitDialogController(screen, analytics, viewModel),
+        loadDialog,
+        RestoreDialogController(loadDialog),
+    )
 }
