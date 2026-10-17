@@ -4,7 +4,9 @@ import analytics.AnalyticsService
 import viewmodel.ViewModel
 
 /** What the TUI draws and the dialog loop over it (GH-78): the last-drawn geometry, the parked
- *  status message and the solved flag, shared by `TuiView`'s board loop and every dialog. */
+ *  status message and the solved flag, shared by `TuiView`'s board loop and every dialog.
+ *  [terminal], [input] and [analytics] are public only because the inline [runModal] reads
+ *  them - dialogs go through [runModal] and [repaint], never read events themselves. */
 internal class TuiScreen(
     val terminal: Terminal,
     val input: TuiInput,
