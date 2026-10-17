@@ -14,7 +14,52 @@ opponent package (GH-83).
 ## Directory structure
 
 ```
-src/main/kotlin/
+shared/                  # GH-41: the platform-independent game as Kotlin Multiplatform modules
+│                          # (`:shared:<name>`), each `jvm()` + a compile-only `js(IR)` that fails
+│                          # the build on a JVM-only API. Packages are unchanged; main code is in
+│                          # `<module>/src/commonMain/kotlin/`, tests in `src/jvmTest/kotlin/`
+├── core/                # :shared:core
+│   └── board_model/
+│       ├── BoardModel.kt    # Board interface (domain contract)
+│       ├── BoardSize.kt     # The valid board side range (MIN 3 / MAX 5 / DEFAULT 4) and its
+│       │                      # validation - the one place the range lives (GH-44)
+│       ├── Solvability.kt   # Which boards shifts can solve (permutation parity on odd sides)
+│       │                      # and the two-tile repair - the one place the rule lives (GH-74)
+│       └── BoardImpl.kt     # IntArray-backed board state + shift/reset/newGame/isCorrect logic + move count.
+│                              # `squareSide` is a read-only view over a private mutable field:
+│                              # `newGame(side)` is the only thing that ever changes it (GH-44),
+│                              # `resetGame()` reshuffles at the same size, always to a solvable board (GH-74)
+├── analytics/           # :shared:analytics
+│   └── analytics/
+│       ├── AnalyticsService.kt             # Analytics abstraction — track(event, properties)
+│       ├── NoopAnalyticsService.kt         # Default implementation; no SDK wired up yet
+│       └── InputMethodAnalyticsService.kt  # Decorator adding `input_method` to every forwarded
+│                                             # event, without touching the viewmodel's call sites (GH-3)
+├── storage/             # :shared:storage - the save contract only; the file I/O is the app's
+│   └── storage/
+│       ├── SaveRepository.kt          # Persistence contract: list/exists/save/load
+│       ├── SavedBoard.kt              # Data carrier: square side + tile arrangement (+ optional
+│       │                                # SavedMordie, GH-83)
+│       └── SavedMordie.kt             # Original arrangement + Mordie's N + found flag (GH-83)
+├── mordie/              # :shared:mordie (depends on kotlinx-coroutines-core)
+│   └── mordie/              # GH-83: the computer opponent - pure domain, no project imports
+│       ├── MoveMetricHeuristic.kt   # Admissible lower bound in the GH-62 move metric:
+│       │                              # ceil(wrong-row tiles/n) + ceil(wrong-column tiles/n)
+│       ├── IdaStarSolver.kt         # Steppable IDA* (explicit stack, O(depth) memory): ruledOut,
+│       │                              # solutionLength; can resume above a saved N
+│       ├── MordieSearch.kt          # MordieSearch / SearchProgress / MordieSearchFactory (+ NONE) -
+│       │                              # the seam tests replace with FakeMordieSearchFactory
+│       ├── BackgroundMordieSearch.kt # The real search: one throttled coroutine on
+│       │                               # Dispatchers.Default, publishing a volatile snapshot
+│       ├── Mordie.kt                # Opponent state: shift count, 5-shift checks, opening/resume
+│       │                              # kind, found reveal, frozen outcome, save snapshot
+│       └── MordieLine.kt            # MordieLine (sealed) / MordieOutcome / MordieResult /
+│                                      # MordieSnapshot (what a save stores)
+└── testing/             # :shared:testing - plain JVM module of test doubles shared by every
+                           # module's tests: FakeBoardModel / FakeSaveRepository /
+                           # RecordingAnalyticsService / FakeMordieSearch + FakeMordieSearchFactory
+
+src/main/kotlin/                # the terminal app (the root project)
 ├── Main.kt              # Entry point — resolves the starting InputMode (or aborts with no
 │                          # terminal, GH-79), builds the session-lifetime objects (BoardImpl,
 │                          # FileSaveRepository, Mordie) and runs buildGameSession (GH-3, GH-30)
@@ -36,34 +81,6 @@ src/main/kotlin/
 │                          # a first-session failure, or a failed fallback, still throws (GH-30).
 │                          # Also holds the one `Mordie` (GH-83) and stops its search in
 │                          # run()'s `finally`
-├── analytics/
-│   ├── AnalyticsService.kt             # Analytics abstraction — track(event, properties)
-│   ├── NoopAnalyticsService.kt         # Default implementation; no SDK wired up yet
-│   └── InputMethodAnalyticsService.kt  # Decorator adding `input_method` to every forwarded
-│                                         # event, without touching ViewModelImpl's call sites (GH-3)
-├── board_model/
-│   ├── BoardModel.kt    # Board interface (domain contract)
-│   ├── BoardSize.kt     # The valid board side range (MIN 3 / MAX 5 / DEFAULT 4) and its
-│   │                      # validation - the one place the range lives (GH-44)
-│   ├── Solvability.kt   # Which boards shifts can solve (permutation parity on odd sides)
-│   │                      # and the two-tile repair - the one place the rule lives (GH-74)
-│   └── BoardImpl.kt     # IntArray-backed board state + shift/reset/newGame/isCorrect logic + move count.
-│                          # `squareSide` is a read-only view over a private mutable field:
-│                          # `newGame(side)` is the only thing that ever changes it (GH-44),
-│                          # `resetGame()` reshuffles at the same size, always to a solvable board (GH-74)
-├── mordie/              # GH-83: the computer opponent - pure domain, no project imports
-│   ├── MoveMetricHeuristic.kt   # Admissible lower bound in the GH-62 move metric:
-│   │                              # ceil(wrong-row tiles/n) + ceil(wrong-column tiles/n)
-│   ├── IdaStarSolver.kt         # Steppable IDA* (explicit stack, O(depth) memory): ruledOut,
-│   │                              # solutionLength; can resume above a saved N
-│   ├── MordieSearch.kt          # MordieSearch / SearchProgress / MordieSearchFactory (+ NONE) -
-│   │                              # the seam tests replace with FakeMordieSearchFactory
-│   ├── BackgroundMordieSearch.kt # The real search: one throttled coroutine on
-│   │                               # Dispatchers.Default, publishing a volatile snapshot
-│   ├── Mordie.kt                # Opponent state: shift count, 5-shift checks, opening/resume
-│   │                              # kind, found reveal, frozen outcome, save snapshot
-│   └── MordieLine.kt            # MordieLine (sealed) / MordieOutcome / MordieResult /
-│                                  # MordieSnapshot (what a save stores)
 ├── viewmodel/
 │   ├── GameViewModel.kt      # The shared viewmodel interface (GH-42 WU3; Exit split out for
 │   │                           # GH-41) — shift/newGame/save/load plus the read-only query
@@ -128,11 +145,8 @@ src/main/kotlin/
 │                                 # size prompt, then Mordie; takes `startupRestoreDone`, which
 │                                 # GameSession seeds true after a mode switch (GH-30), and
 │                                 # `sizeChosenAtLaunch`)
-├── storage/
-│   ├── SaveRepository.kt          # Persistence contract: list/exists/save/load
-│   ├── SavedBoard.kt              # Data carrier: square side + tile arrangement (+ optional
-│   │                                # SavedMordie, GH-83)
-│   ├── SavedMordie.kt             # Original arrangement + Mordie's N + found flag (GH-83)
+├── storage/                       # the contract (SaveRepository/SavedBoard/SavedMordie) is in
+│   │                                # shared/storage
 │   ├── FileSaveRepository.kt      # Plain-text file implementation (the only class
 │   │                                touching the filesystem); rejects unsafe file names
 │   └── SaveFileFormatException.kt # Thrown on a malformed save file
@@ -211,7 +225,8 @@ src/main/kotlin/
                           # (MouseInput or KeyboardInput, picked per mode in defaultView) so
                           # mouse and keyboard modes share one event loop (GH-18).
 
-src/test/kotlin/
+src/test/kotlin/                # the terminal app's tests; board_model / analytics / mordie tests
+│                            # live in their shared/ module's src/jvmTest/kotlin (GH-41)
 ├── InputModeTest.kt       # InputMode resolution + app_launched tracking (GH-3, renamed
 │                            # from LaunchModeTest for GH-30)
 ├── ConsoleRemovalScenarioTest.kt # GH-79 end to end: no-terminal abort, --console notice, no
@@ -226,10 +241,6 @@ src/test/kotlin/
 │                            # analytics each collaborator gets (GH-78)
 ├── ModeSwitcherTest.kt    # input_mode_switched tracking, trigger pass-through, same-mode
 │                            # no-op (GH-30)
-├── analytics/            # NoopAnalyticsService, InputMethodAnalyticsService coverage
-├── board_model/         # BoardImpl coverage: reset/shuffle, isCorrect, all four shifts, restoreState
-├── mordie/                # Heuristic admissibility + solver optimality against a 3x3 BFS oracle,
-│                            # background search, Mordie state machine (GH-83)
 ├── viewmodel/            # One test file per ViewModelImpl concern (GH-42 WU3, collapsing GH-23's
 │                           # split): ViewModelDelegationTest / ViewModelSaveLoadTest /
 │                           # ViewModelExitTest drive ViewModelImpl directly, no play()
@@ -243,17 +254,17 @@ src/test/kotlin/
 ├── view/tui/              # TUI coverage (GH-3, WU2-WU5)
 └── testing/              # testViewModel / testTuiView / testGameSession - the only way tests
                             # build these, calling AppWiring with fake defaults (GH-78) /
-                            # NoopModeSwitcher /
-                            # FakeBoardModel / FakeTerminal / FakeSaveRepository / RecordingAnalyticsService /
+                            # NoopModeSwitcher / FakeTerminal /
                             # FakeViewModel (recording double, collapsing GH-23's
                             # RecordingViewModel/FakeConsoleViewModel/FakeTuiViewModel split in
                             # GH-42 WU3) / FakeViewModelUi (scripted UiRequest responder, GH-42
-                            # WU2) / RecordingModeSwitcher (GH-30) / FakeMordieSearch +
-                            # FakeMordieSearchFactory (scripted progress, GH-83)
+                            # WU2) / RecordingModeSwitcher (GH-30). The shared doubles
+                            # (FakeBoardModel, FakeSaveRepository, ...) are in shared/testing
 ```
 
-Gradle's standard source-set convention (`src/main/kotlin`, `src/test/kotlin`) is used —
-see "Dependencies" below.
+The terminal app uses Gradle's standard source sets (`src/main/kotlin`, `src/test/kotlin`);
+each `shared/` module uses KMP's (`src/commonMain/kotlin`, `src/jvmTest/kotlin`) — see
+"Dependencies" below.
 
 ## Layers
 
@@ -502,9 +513,21 @@ initial resolution in `Main`; each subsequent switch fires
 ## Dependencies
 
 - **Build tool:** Gradle (Kotlin DSL), via the wrapper (`./gradlew`) — pinned to 8.7.
-  `kotlin("jvm")` + `application` plugins; JVM toolchain 17.
+  The terminal app (root project) uses `kotlin("jvm")` + `application`; JVM toolchain 17.
+- **Kotlin Multiplatform (GH-41).** The `shared/` modules use `kotlin("multiplatform")`, the
+  same first-party JetBrains plugin and version as `kotlin("jvm")` (declared once in the root
+  `plugins {}` with `apply false`), so nothing new reaches the runtime classpath. Each module
+  has a `jvm()` target and a bare `js(IR)`: with only `jvm()`, `commonMain` would accept
+  `java.lang.Math` and the like, so the JS target is the compiler check that shared code
+  stays platform-independent. It has no JS environment (no Node download, no JS tests), at
+  the cost of one KGP warning per module; a future Web ticket (GH-103) replaces it with a
+  real target. No `expect`/`actual` — every platform seam is a plain interface. The app
+  depends on the modules' JVM jars, which `installDist` bundles into `lib/`. Tests stay in
+  `jvmTest` (they use `runBlocking`, `java.io` and backtick names), so `./gradlew check` —
+  not `./gradlew test`, which only runs the root project's — runs them all.
 - **Test framework:** `kotlin("test")` on the JUnit 5 platform (`useJUnitPlatform()`).
-  No mocking library — hand-written fakes in `src/test/kotlin/testing/`.
+  No mocking library — hand-written fakes in `src/test/kotlin/testing/` and, for doubles of
+  shared types, the `:shared:testing` module.
 - **`kotlinx-coroutines-core` (GH-42) — the project's first third-party runtime
   dependency.** Powers `viewmodel`'s View-request channel (see above): `ViewModel`'s
   suspend functions, `Channel`, and `runBlocking` at `Main`'s entry point. Unlike
