@@ -11,6 +11,7 @@ import viewmodel.MordieHooks
 import viewmodel.SaveInfo
 import viewmodel.UiRequest
 import viewmodel.UiRequestChannel
+import viewmodel.UnsavedProgress
 import viewmodel.UnsolvableSaveChoice
 import viewmodel.displayWithSize
 
@@ -24,6 +25,7 @@ internal class ResolveUnsolvableSaveUseCase(
     private val newGame: NewGameUseCase,
     private val currentSaveName: CurrentSaveName,
     private val gameShiftSources: GameShiftSources,
+    private val unsavedProgress: UnsavedProgress,
 ) {
 
     /** The repair / new game / exit choice for an unsolvable save (GH-74). At startup, New game
@@ -47,6 +49,7 @@ internal class ResolveUnsolvableSaveUseCase(
                 mordieHooks.onRepaired()
                 currentSaveName.name = name
                 gameShiftSources.reset()
+                unsavedProgress.unsaved = false
                 val error = try {
                     saves.save(name, fixed, saved.squareSide, saved.moveCount)
                     null

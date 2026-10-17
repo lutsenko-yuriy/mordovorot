@@ -6,6 +6,7 @@ import storage.SaveRepository
 import viewmodel.CurrentSaveName
 import viewmodel.MordieHooks
 import viewmodel.UiRequestChannel
+import viewmodel.UnsavedProgress
 import viewmodel.catchingNonCancellation
 
 /** Saves the current game under a name, Mordie's progress included (GH-83). */
@@ -16,6 +17,7 @@ internal class SaveGameUseCase(
     private val analytics: AnalyticsService,
     private val ui: UiRequestChannel,
     private val currentSaveName: CurrentSaveName,
+    private val unsavedProgress: UnsavedProgress,
 ) {
 
     /** Returns whether the save succeeded; a failure is tracked and shown, never thrown. */
@@ -41,6 +43,7 @@ internal class SaveGameUseCase(
             val existed = saves.exists(name)
             saves.save(name, board.boardArray, board.squareSide, board.moveCount, mordieHooks.snapshot())
             currentSaveName.name = name
+            unsavedProgress.unsaved = false
             analytics.track(
                 "save_command_used",
                 mapOf("result" to "success", "overwrote_existing" to existed, "name_source" to nameSource),

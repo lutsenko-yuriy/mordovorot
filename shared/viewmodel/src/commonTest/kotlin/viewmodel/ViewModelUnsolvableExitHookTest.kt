@@ -35,6 +35,7 @@ class ViewModelUnsolvableExitHookTest {
         mordie = Mordie(factory),
         currentSaveName = CurrentSaveName(),
         gameShiftSources = GameShiftSources(),
+        unsavedProgress = UnsavedProgress(),
         ui = UiRequestChannel(),
         unsolvableExit = unsolvableExit,
     )

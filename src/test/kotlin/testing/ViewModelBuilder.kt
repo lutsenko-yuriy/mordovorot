@@ -8,6 +8,7 @@ import mordie.MordieSearchFactory
 import storage.SaveRepository
 import viewmodel.CurrentSaveName
 import viewmodel.GameShiftSources
+import viewmodel.UnsavedProgress
 import viewmodel.ViewModelImpl
 
 /** The one place tests build a [ViewModelImpl] (GH-78): the production wiring with fake
@@ -21,5 +22,8 @@ internal fun testViewModel(
     mordie: Mordie = Mordie(MordieSearchFactory.NONE),
     currentSaveName: CurrentSaveName = CurrentSaveName(),
     gameShiftSources: GameShiftSources = GameShiftSources(),
+    unsavedProgress: UnsavedProgress = UnsavedProgress(),
 ): ViewModelImpl =
-    buildViewModel(board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftSources)
+    buildViewModel(board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftSources,
+        unsavedProgress,
+    )

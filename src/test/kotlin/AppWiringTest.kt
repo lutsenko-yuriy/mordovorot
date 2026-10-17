@@ -18,6 +18,7 @@ import view.tui.TerminalEvent
 import view.tui.TerminalSize
 import viewmodel.CurrentSaveName
 import viewmodel.GameShiftSources
+import viewmodel.UnsavedProgress
 import viewmodel.ModeSwitchRequestedException
 
 /** Covers the composition root (GH-78): what production wiring builds and what every rebuild
@@ -44,6 +45,7 @@ class AppWiringTest {
                 mordie = Mordie(FakeMordieSearchFactory()),
                 currentSaveName = CurrentSaveName(),
                 gameShiftSources = GameShiftSources(),
+                unsavedProgress = UnsavedProgress(),
                 keyboardSelection = KeyboardSelection(),
                 terminalFactory = { FakeTerminal(mutableListOf(switchKey.getValue(mode)), terminalSize) },
             )

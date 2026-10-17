@@ -56,6 +56,10 @@ interface GameViewModel {
      *  (GH-99); `null` after a new game or at launch. */
     fun currentSaveName(): String?
 
+    /** Whether the game has shifts no save holds yet (GH-110) - backs the web's leave-site
+     *  prompt; see [UnsavedProgress]. */
+    fun hasUnsavedProgress(): Boolean
+
     /** Whether the board is currently solved - lets the mouse-driven TUI (GH-3) show the
      *  Congratulations screen and disable the shift arrows. */
     fun isSolved(): Boolean

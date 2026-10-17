@@ -27,6 +27,7 @@ class GameViewModelImpl internal constructor(
     private val startupRestoreUseCase: StartupRestoreUseCase,
     private val currentSaveName: CurrentSaveName,
     private val gameShiftSources: GameShiftSources,
+    private val unsavedProgress: UnsavedProgress,
     private val unsolvableExit: UnsolvableSaveExit,
 ) : GameViewModel {
 
@@ -60,6 +61,7 @@ class GameViewModelImpl internal constructor(
             mordieHooks.onShift()
         }
         source?.let(gameShiftSources::record)
+        unsavedProgress.unsaved = true
         if (!wasSolved && board.isCorrect()) {
             val mordieProps = mordieHooks.onSolved()
             analytics.track(
@@ -88,6 +90,8 @@ class GameViewModelImpl internal constructor(
     override fun saveExists(name: String): Boolean = catalog.saveExists(name)
 
     override fun currentSaveName(): String? = currentSaveName.name
+
+    override fun hasUnsavedProgress(): Boolean = unsavedProgress.unsaved
 
     override fun isSolved(): Boolean = board.isCorrect()
 

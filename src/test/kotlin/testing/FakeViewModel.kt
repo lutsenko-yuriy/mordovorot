@@ -28,6 +28,9 @@ class FakeViewModel : ViewModel {
     /** Scripts which names [saveExists] reports as already taken. */
     var existingSaveNames: Set<String> = emptySet()
 
+    /** Scripts [hasUnsavedProgress]'s return value (GH-110). */
+    var unsavedProgress: Boolean = false
+
     /** Scripts [isSolved]'s return value. */
     var solved: Boolean = false
 
@@ -105,6 +108,8 @@ class FakeViewModel : ViewModel {
         calls.add("saveExists($name)")
         return name in existingSaveNames
     }
+
+    override fun hasUnsavedProgress(): Boolean = unsavedProgress
 
     override fun isSolved(): Boolean {
         calls.add("isSolved")
