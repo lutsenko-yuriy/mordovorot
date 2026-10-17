@@ -20,7 +20,7 @@ kotlin {
                 api(project(":shared:analytics"))
                 api(project(":shared:storage"))
                 api(project(":shared:mordie"))
-                api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+                api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
             }
         }
         val jvmTest by getting {

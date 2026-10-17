@@ -1,7 +1,7 @@
 plugins {
-    kotlin("jvm") version "1.9.24"
+    kotlin("jvm") version "2.4.21"
     // GH-41: the shared/ modules' plugin, declared here so they share this one version.
-    kotlin("multiplatform") version "1.9.24" apply false
+    kotlin("multiplatform") version "2.4.21" apply false
     application
 }
 
@@ -13,9 +13,8 @@ kotlin {
 
 dependencies {
     // GH-42: the project's first third-party runtime dependency - powers ViewModel's
-    // View-request channel. 1.8.1 is the last kotlinx.coroutines line built against
-    // Kotlin 1.9.x (1.9.0 moved to Kotlin 2.0); confirmed empirically by this build.
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+    // View-request channel. Keep in step with the shared modules' copies (GH-109).
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
     implementation(project(":shared:core"))
     implementation(project(":shared:analytics"))
     implementation(project(":shared:storage"))
