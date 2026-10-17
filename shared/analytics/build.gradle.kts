@@ -9,10 +9,10 @@ kotlin {
     }
     // Compile-only (GH-41): no JS environment, so no Node download and no JS tests - it exists so
     // a JVM-only API in commonMain fails the build.
-    js(IR)
+    js()
 
     sourceSets {
-        val jvmTest by getting {
+        jvmTest {
             dependencies {
                 implementation(kotlin("test"))
                 implementation(project(":shared:testing"))
