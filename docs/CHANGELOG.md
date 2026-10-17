@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.14.2] — 2026-10-17 (PR #92 merged)
+
+### Changed
+- [wip] (PR #92) GH-78 (WU2/8): one composition root - `AppWiring.kt` is now the only production code that constructs collaborators; `ViewModelImpl` gets `MordieHooks` injected, `TuiView` takes its view model, mode switcher and renderer as constructor parameters (`TuiView.create` is gone), `GameSession` narrows to the mode, Mordie and a view builder, and no production class defaults to a real implementation any more. No behaviour change; the viewmodel split starts in WU3.
+
 ## [0.14.1] — 2026-10-17 (PR #91 merged)
 
 ### Changed
