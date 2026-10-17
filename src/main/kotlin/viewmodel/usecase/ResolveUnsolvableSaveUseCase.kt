@@ -5,6 +5,7 @@ import board_model.BoardModel
 import board_model.Solvability
 import storage.SaveRepository
 import storage.SavedBoard
+import viewmodel.CurrentSaveName
 import viewmodel.ExitRequestedException
 import viewmodel.MordieHooks
 import viewmodel.SaveInfo
@@ -22,6 +23,7 @@ internal class ResolveUnsolvableSaveUseCase(
     private val ui: UiRequestChannel,
     private val newGame: NewGameUseCase,
     private val exitGame: ExitGameUseCase,
+    private val currentSaveName: CurrentSaveName,
 ) {
 
     /** The repair / new game / exit choice for an unsolvable save (GH-74). Returns whether the
@@ -43,6 +45,7 @@ internal class ResolveUnsolvableSaveUseCase(
                 // rewrites the file. A failed overwrite still loads - the file keeps its mark.
                 board.restoreState(fixed, saved.moveCount)
                 mordieHooks.onRepaired()
+                currentSaveName.name = name
                 val error = try {
                     saves.save(name, fixed, saved.squareSide, saved.moveCount)
                     null

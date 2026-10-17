@@ -59,7 +59,7 @@ class ViewModelExitTest {
         assertEquals(board.squareSide, squareSide)
         assertEquals(
             listOf(
-                Event("save_command_used", mapOf("result" to "success", "overwrote_existing" to false)),
+                Event("save_command_used", mapOf("result" to "success", "overwrote_existing" to false, "name_source" to "typed")),
                 Event("exit_command_used", mapOf("save_choice" to "saved")),
             ),
             analytics.events,
@@ -84,7 +84,7 @@ class ViewModelExitTest {
         ui.drive(viewModel) { viewModel.exitGame() }
 
         assertEquals(
-            listOf(Event("save_command_used", mapOf("result" to "error"))),
+            listOf(Event("save_command_used", mapOf("result" to "error", "name_source" to "typed"))),
             analytics.events,
         )
         // saveGame's own error message, then exitGame's explicit "your quit was cancelled" -
@@ -129,7 +129,7 @@ class ViewModelExitTest {
         )
         assertEquals(
             listOf(
-                Event("save_command_used", mapOf("result" to "success", "overwrote_existing" to false)),
+                Event("save_command_used", mapOf("result" to "success", "overwrote_existing" to false, "name_source" to "typed")),
                 Event("exit_command_used", mapOf("save_choice" to "saved")),
             ),
             analytics.events,
@@ -177,7 +177,7 @@ class ViewModelExitTest {
         assertEquals("foo", saves.saveCalls[0].first)
         assertEquals(
             listOf(
-                Event("save_command_used", mapOf("result" to "success", "overwrote_existing" to false)),
+                Event("save_command_used", mapOf("result" to "success", "overwrote_existing" to false, "name_source" to "typed")),
                 Event("exit_command_used", mapOf("save_choice" to "saved")),
             ),
             analytics.events,

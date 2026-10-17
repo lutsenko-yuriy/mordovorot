@@ -6,6 +6,7 @@ import buildViewModel
 import mordie.Mordie
 import mordie.MordieSearchFactory
 import storage.SaveRepository
+import viewmodel.CurrentSaveName
 import viewmodel.ViewModelImpl
 
 /** The one place tests build a [ViewModelImpl] (GH-78): the production wiring with fake
@@ -17,4 +18,5 @@ fun testViewModel(
     startupRestoreDone: Boolean = false,
     sizeChosenAtLaunch: Boolean = false,
     mordie: Mordie = Mordie(MordieSearchFactory.NONE),
-): ViewModelImpl = buildViewModel(board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie)
+    currentSaveName: CurrentSaveName = CurrentSaveName(),
+): ViewModelImpl = buildViewModel(board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName)

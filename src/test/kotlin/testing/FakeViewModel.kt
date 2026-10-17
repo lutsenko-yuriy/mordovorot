@@ -21,6 +21,9 @@ class FakeViewModel : ViewModel {
     /** Scripts [listSaves]'s return value. */
     var saveNames: List<String> = emptyList()
 
+    /** Scripts [currentSaveName]'s return value (GH-99). */
+    var currentSaveName: String? = null
+
     /** Scripts which names [saveExists] reports as already taken. */
     var existingSaveNames: Set<String> = emptySet()
 
@@ -83,6 +86,8 @@ class FakeViewModel : ViewModel {
         calls.add("listSaves")
         return saveNames.map { SaveInfo(it, null) }
     }
+
+    override fun currentSaveName(): String? = currentSaveName
 
     override fun saveExists(name: String): Boolean {
         calls.add("saveExists($name)")

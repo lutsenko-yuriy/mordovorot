@@ -37,7 +37,7 @@ class ViewModelSaveLoadTest {
             listOf(
                 RecordingAnalyticsService.Event(
                     "save_command_used",
-                    mapOf("result" to "success", "overwrote_existing" to false),
+                    mapOf("result" to "success", "overwrote_existing" to false, "name_source" to "typed"),
                 ),
             ),
             analytics.events,
@@ -60,7 +60,7 @@ class ViewModelSaveLoadTest {
             listOf(
                 RecordingAnalyticsService.Event(
                     "save_command_used",
-                    mapOf("result" to "success", "overwrote_existing" to true),
+                    mapOf("result" to "success", "overwrote_existing" to true, "name_source" to "typed"),
                 ),
             ),
             analytics.events,
@@ -79,7 +79,7 @@ class ViewModelSaveLoadTest {
 
         assertTrue(ui.shownMessages.any { it.contains("Save name must not be blank") })
         assertEquals(
-            listOf(RecordingAnalyticsService.Event("save_command_used", mapOf("result" to "error"))),
+            listOf(RecordingAnalyticsService.Event("save_command_used", mapOf("result" to "error", "name_source" to "typed"))),
             analytics.events,
         )
     }
