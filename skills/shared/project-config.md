@@ -29,7 +29,7 @@ Languages, frameworks, platforms and tooling: `docs/TECH_STACK.md`.
 | Setting | Value |
 |---|---|
 | Integration test directory | `src/test/kotlin/` (unit tests only — no separate integration suite yet) |
-| Test harness file | N/A — no scripted end-to-end harness; `src/test/kotlin/testing/` holds shared fakes (`FakeBoardModel`, `FakeView`) |
+| Test harness file | N/A — no scripted end-to-end harness; fakes of shared-module types (`FakeBoardModel`, `FakeSaveRepository`, ...) live in the `:shared:testing` module (`shared/testing/src/main/kotlin/testing/`), app-only fakes (`FakeTerminal`, `FakeViewModel`, ...) in `src/test/kotlin/testing/` |
 | Harness class / entry point | N/A |
 | Unit / integration test command | `./gradlew check` (or `./gradlew build` to also compile + assemble); `./gradlew test` skips the `shared/` modules' tests |
 
