@@ -39,18 +39,19 @@ internal class SaveDialogController(
     /** Runs the Save dialog's own blocking loop: typed name via key events, Save/Cancel via
      *  click. Shared by the toolbar's direct save and [promptSaveName] (the exit flow). */
     private fun runSaveDialog(openedFrom: String): SaveOutcome {
-        analytics.track("screen_save_dialog", mapOf("opened_from" to openedFrom))
-        // Consumed once, then kept sticky for the whole dialog session (overridden by a live
-        // overwrite warning when one applies) - clearing it every iteration made the exit
-        // flow's invalid-name explanation vanish after the user's very first keystroke, before
-        // they'd typed a full corrected name (audit round 2 on PR #24).
+        // Prefilled with the current save name (GH-99), caret at the end.
+        var typed = viewModel.currentSaveName() ?: ""
+        analytics.track("screen_save_dialog", mapOf("opened_from" to openedFrom, "prefilled" to typed.isNotEmpty()))
+        // Consumed once, then kept sticky for the whole dialog session - clearing it every
+        // iteration made the exit flow's invalid-name explanation vanish after the user's very
+        // first keystroke (audit round 2 on PR #24). Shown before any overwrite warning, which
+        // a prefill makes live from the start (GH-99).
         val initialMessage = screen.takeMessage()
-        var typed = ""
         val dialog = {
             Dialog(
                 kind = Dialog.Kind.SAVE,
                 title = "Save game",
-                message = overwriteWarning(typed) ?: initialMessage,
+                message = listOfNotNull(initialMessage, overwriteWarning(typed)).joinToString(" ").ifEmpty { null },
                 textFieldValue = typed,
                 buttons = listOf(DialogButtonSpec("save", "Save"), DialogButtonSpec("cancel", "Cancel")),
             )

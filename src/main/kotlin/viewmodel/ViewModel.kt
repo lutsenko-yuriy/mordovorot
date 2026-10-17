@@ -3,8 +3,8 @@ package viewmodel
 import kotlinx.coroutines.channels.ReceiveChannel
 
 /** The viewModel surface `view.tui.TuiView` depends on (GH-42 WU3) - shift/new game/save/load/
- *  exit plus the read-only query surface (`listSaves`/`saveExists`/`isSolved`/`boardState`/
- *  `squareSide`) the TUI needs to render/re-render. */
+ *  exit plus the read-only query surface (`listSaves`/`saveExists`/`currentSaveName`/
+ *  `isSolved`/`boardState`/`squareSide`) the TUI needs to render/re-render. */
 interface ViewModel {
 
     /** The UI interactions this viewModel is waiting on, in emission order (GH-42 WU2). Exactly
@@ -48,6 +48,10 @@ interface ViewModel {
      *  overwrite warning (GH-3); degrades to `false` on a storage error, same non-throwing
      *  discipline as [listSaves]. */
     fun saveExists(name: String): Boolean
+
+    /** The name the current game was last loaded from or saved to - the Save dialog's prefill
+     *  (GH-99); `null` after a new game or at launch. */
+    fun currentSaveName(): String?
 
     /** Whether the board is currently solved - lets the mouse-driven TUI (GH-3) show the
      *  Congratulations screen and disable the shift arrows. */

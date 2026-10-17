@@ -25,6 +25,7 @@ class ViewModelImpl internal constructor(
     private val loadGameUseCase: LoadGameUseCase,
     private val exitGameUseCase: ExitGameUseCase,
     private val startupRestoreUseCase: StartupRestoreUseCase,
+    private val currentSaveName: CurrentSaveName,
 ) : ViewModel {
 
     override val uiRequests: ReceiveChannel<UiRequest<*>> = ui.requests
@@ -65,6 +66,8 @@ class ViewModelImpl internal constructor(
     override fun listSaves(): List<SaveInfo> = catalog.listSaves()
 
     override fun saveExists(name: String): Boolean = catalog.saveExists(name)
+
+    override fun currentSaveName(): String? = currentSaveName.name
 
     override fun isSolved(): Boolean = board.isCorrect()
 

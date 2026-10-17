@@ -19,6 +19,7 @@ import view.tui.dialog.RestoreDialogController
 import view.tui.dialog.SaveDialogController
 import view.tui.dialog.SizeDialogController
 import view.tui.dialog.UnsolvableDialogController
+import viewmodel.CurrentSaveName
 import viewmodel.ModeSwitcher
 import viewmodel.ModeSwitcherImpl
 import viewmodel.MordieHooks
@@ -37,7 +38,8 @@ import viewmodel.usecase.StartupRestoreUseCase
 // builds the session-lifetime objects; everything below is rebuilt per mode. Test builders call
 // these same functions with fakes, so tests and production can't wire things differently.
 
-/** A [GameSession] whose every rebuild shares [board], [saves] and [mordie]. */
+/** A [GameSession] whose every rebuild shares [board], [saves], [mordie] and one
+ *  [CurrentSaveName] (GH-99). */
 internal fun buildGameSession(
     initialMode: InputMode,
     board: BoardModel,
@@ -46,8 +48,11 @@ internal fun buildGameSession(
     sizeChosenAtLaunch: Boolean,
     mordie: Mordie,
     terminalFactory: () -> Terminal,
-): GameSession = GameSession(initialMode, mordie) { mode, startupRestoreDone ->
-    defaultView(mode, board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, terminalFactory)
+): GameSession {
+    val currentSaveName = CurrentSaveName()
+    return GameSession(initialMode, mordie) { mode, startupRestoreDone ->
+        defaultView(mode, board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, terminalFactory)
+    }
 }
 
 /** The production `View` for one [mode]. [analytics] is undecorated: the viewModel and View get
@@ -60,10 +65,11 @@ internal fun defaultView(
     startupRestoreDone: Boolean,
     sizeChosenAtLaunch: Boolean,
     mordie: Mordie,
+    currentSaveName: CurrentSaveName,
     terminalFactory: () -> Terminal,
 ): View {
     val decoratedAnalytics = InputMethodAnalyticsService(analytics, mode.name.lowercase())
-    val viewModel = buildViewModel(board, saves, decoratedAnalytics, startupRestoreDone, sizeChosenAtLaunch, mordie)
+    val viewModel = buildViewModel(board, saves, decoratedAnalytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName)
     return buildTuiView(
         terminalFactory(),
         decoratedAnalytics,
@@ -82,20 +88,21 @@ internal fun buildViewModel(
     startupRestoreDone: Boolean,
     sizeChosenAtLaunch: Boolean,
     mordie: Mordie,
+    currentSaveName: CurrentSaveName,
 ): ViewModelImpl {
     val mordieHooks = MordieHooks(mordie, board, analytics)
     val ui = UiRequestChannel()
     val catalog = SaveCatalog(saves)
-    val newGame = NewGameUseCase(board, mordieHooks, analytics)
-    val saveGame = SaveGameUseCase(board, saves, mordieHooks, analytics, ui)
+    val newGame = NewGameUseCase(board, mordieHooks, analytics, currentSaveName)
+    val saveGame = SaveGameUseCase(board, saves, mordieHooks, analytics, ui, currentSaveName)
     val exitGame = ExitGameUseCase(saves, saveGame, analytics, ui)
-    val resolveUnsolvable = ResolveUnsolvableSaveUseCase(board, saves, mordieHooks, analytics, ui, newGame, exitGame)
-    val loadGame = LoadGameUseCase(board, saves, mordieHooks, analytics, ui, catalog, resolveUnsolvable)
+    val resolveUnsolvable = ResolveUnsolvableSaveUseCase(board, saves, mordieHooks, analytics, ui, newGame, exitGame, currentSaveName)
+    val loadGame = LoadGameUseCase(board, saves, mordieHooks, analytics, ui, catalog, resolveUnsolvable, currentSaveName)
     val startupRestore = StartupRestoreUseCase(
         board, catalog, analytics, ui, loadGame, newGame, mordieHooks, startupRestoreDone, sizeChosenAtLaunch,
     )
     return ViewModelImpl(
-        board, analytics, mordieHooks, ui, catalog, newGame, saveGame, loadGame, exitGame, startupRestore,
+        board, analytics, mordieHooks, ui, catalog, newGame, saveGame, loadGame, exitGame, startupRestore, currentSaveName,
     )
 }
 

@@ -2,6 +2,7 @@ package view.tui
 
 import InputMode
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
@@ -114,6 +115,60 @@ class TuiViewDialogTest {
         view(terminal, viewModel).play()
 
         assertTrue(terminal.frames.any { it.contains("already exists") })
+    }
+
+    @Test
+    fun `Save dialog opens prefilled with the current save name, the warning, and typing appends`(): Unit = runBlocking {
+        val viewModel = FakeViewModel().apply { currentSaveName = "foo"; existingSaveNames = setOf("foo") }
+        val analytics = RecordingAnalyticsService()
+        val (saveX, saveY) = boardLayout(viewModel).saveButtonPosition()
+        val terminal = FakeTerminal(
+            events = mutableListOf(TerminalEvent.MouseClick(saveX, saveY), TerminalEvent.KeyPress('x'), TerminalEvent.Enter),
+            terminalSize = terminalSize,
+        )
+
+        view(terminal, viewModel, analytics).play()
+
+        val opened = terminal.frames.first { it.contains("Save game") }
+        assertTrue(opened.contains("Name: foo_"))
+        assertTrue(opened.contains("already exists"))
+        assertTrue(viewModel.calls.contains("saveGame(foox)"))
+        assertEquals(
+            mapOf<String, Any>("opened_from" to "toolbar", "prefilled" to true),
+            analytics.events.single { it.name == "screen_save_dialog" }.properties,
+        )
+    }
+
+    @Test
+    fun `clearing the prefilled name and pressing Enter cancels without saving`(): Unit = runBlocking {
+        val viewModel = FakeViewModel().apply { currentSaveName = "foo" }
+        val (saveX, saveY) = boardLayout(viewModel).saveButtonPosition()
+        val terminal = FakeTerminal(
+            events = mutableListOf(
+                TerminalEvent.MouseClick(saveX, saveY),
+                TerminalEvent.Backspace, TerminalEvent.Backspace, TerminalEvent.Backspace,
+                TerminalEvent.Enter,
+            ),
+            terminalSize = terminalSize,
+        )
+
+        view(terminal, viewModel).play()
+
+        assertTrue(terminal.frames.any { it.contains("Name: _") })
+        assertTrue(viewModel.calls.none { it.startsWith("saveGame") })
+    }
+
+    @Test
+    fun `Save dialog with no current save name opens empty and tracks prefilled false`(): Unit = runBlocking {
+        val viewModel = FakeViewModel()
+        val analytics = RecordingAnalyticsService()
+        val (saveX, saveY) = boardLayout(viewModel).saveButtonPosition()
+        val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.MouseClick(saveX, saveY)), terminalSize = terminalSize)
+
+        view(terminal, viewModel, analytics).play()
+
+        assertTrue(terminal.frames.last { it.contains("Save game") }.contains("Name: _"))
+        assertEquals(false, analytics.events.single { it.name == "screen_save_dialog" }.properties["prefilled"])
     }
 
     @Test

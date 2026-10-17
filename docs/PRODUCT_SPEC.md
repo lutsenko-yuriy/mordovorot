@@ -66,6 +66,15 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle
   - **New game** opens the board-size picker.
   - **Exit** at startup quits right away, since there's no game to save. Mid-game, it runs the
     `Save before quitting?` flow (Feature 5); a failed save keeps the current game going.
+- **Current save name (GH-99):** the Save dialog opens with the name of the save the game was
+  last loaded from or saved to already typed in, so saving back to it is just Enter.
+  - A successful load sets it (Load dialog, startup restore, Repair & load), and so does a
+    successful save under any name: load `foo`, save as `bar`, and the next Save dialog shows
+    `bar`.
+  - A new game clears it (`[ New ]`/F9, the startup size prompt, New game from the
+    `Can't be solved` dialog), as does a fresh launch - it isn't stored anywhere.
+  - A failed save or load, or a cancelled dialog, leaves it unchanged. Switching input mode
+    keeps it.
 - Saves are stored as `.save` files in a `saves/` directory relative to wherever the app is
   launched from (the process's current working directory) — running from a different directory
   will not see saves made from another one. The save file format is unchanged by GH-79, so older
@@ -81,11 +90,12 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle
 ### Feature 5 — Exit (GH-12)
 - The toolbar Exit (Escape in keyboard mode) ends the current session on demand after asking
   `Save before quitting?`:
-  - **Yes** opens the Save dialog and saves under the typed name, then quits. An empty name
-    quits without saving.
+  - **Yes** opens the Save dialog (prefilled with the current save name, GH-99) and saves under
+    the typed name, then quits. An empty name quits without saving.
   - A name that isn't usable as a save identifier - containing spaces, a path separator, or
     `..` - is rejected with a message and asked for again, rather than silently discarding the
-    save request.
+    save request. The message stays above any overwrite warning while the name is retyped
+    (GH-99).
   - If the save itself fails (e.g. a read-only `saves/` directory), the session **does not
     quit** — the error is shown and play continues, so an explicit save request never costs the
     player their game.
@@ -103,8 +113,10 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle
   current mode with the same game and shows `Could not switch to <mode> mode (<reason>) -
   staying in <current> mode.` on its status line (GH-79).
 - **Save/Load/Exit dialogs**, opened from the toolbar:
-  - **Save** — a typed name field; an existing name shows an inline "already exists - it will
-    be overwritten" warning before saving over it. A name containing spaces is rejected with an
+  - **Save** — a typed name field, prefilled with the current save name (Feature 4, GH-99)
+    with the cursor at the end: typing appends, Backspace deletes one character. An existing
+    name shows an inline "already exists - it will be overwritten" warning before saving over
+    it - straight away when the field is prefilled. A name containing spaces is rejected with an
     on-screen message instead of being saved. An empty name (Enter, or clicking Save with
     nothing typed) cancels without saving.
   - **Load** — a clickable list of save names and sizes (e.g. `foo (5x5)`, GH-44 - `No saves

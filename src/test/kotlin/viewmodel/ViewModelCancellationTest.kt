@@ -44,7 +44,7 @@ class ViewModelCancellationTest {
         job.cancelAndJoin()
 
         assertEquals(
-            listOf(Event("save_command_used", mapOf("result" to "success", "overwrote_existing" to false))),
+            listOf(Event("save_command_used", mapOf("result" to "success", "overwrote_existing" to false, "name_source" to "typed"))),
             analytics.events,
         )
     }

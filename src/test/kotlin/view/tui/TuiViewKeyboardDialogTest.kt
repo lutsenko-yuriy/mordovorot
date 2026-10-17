@@ -9,9 +9,11 @@ import kotlinx.coroutines.runBlocking
 import testing.FakeBoardModel
 import testing.FakeSaveRepository
 import testing.FakeTerminal
+import testing.FakeViewModel
 import testing.RecordingAnalyticsService
 import testing.testTuiView
 import testing.testViewModel
+import viewmodel.CurrentSaveName
 
 /**
  * Covers GH-18's keyboard-driven Save/Load/Exit dialogs and the startup restore prompt, plus
@@ -57,6 +59,43 @@ class TuiViewKeyboardDialogTest {
         testTuiView(terminal, input = KeyboardInput(), viewModel = testViewModel(board, saves, sizeChosenAtLaunch = true)).play()
 
         assertTrue(saves.saveCalls.any { it.first == "ok" })
+    }
+
+    @Test
+    fun `the exit flow's re-prompt shows its explanation and the prefill's overwrite warning together`(): Unit = runBlocking {
+        val saves = FakeSaveRepository().apply { save("foo", IntArray(16) { it }, 4) }
+        val currentSaveName = CurrentSaveName().apply { name = "foo" }
+        val terminal = FakeTerminal(
+            events = mutableListOf(
+                TerminalEvent.Escape, // open the Exit dialog, focus on Yes
+                TerminalEvent.Enter, // Yes - the Save dialog opens prefilled with "foo"
+                TerminalEvent.KeyPress(' '), TerminalEvent.KeyPress('b'), // "foo b": a space
+                TerminalEvent.Enter, // rejected - re-prompts, prefilled with "foo" again
+            ),
+            terminalSize = terminalSize,
+        )
+        val viewModel = testViewModel(FakeBoardModel(), saves, sizeChosenAtLaunch = true, currentSaveName = currentSaveName)
+
+        testTuiView(terminal, input = KeyboardInput(), viewModel = viewModel).play()
+
+        val reprompt = terminal.frames.last { it.contains("Save game") }
+        assertTrue(reprompt.contains("Name: foo_"))
+        assertTrue(reprompt.contains("isn't a usable save name"))
+        assertTrue(reprompt.contains("already exists"))
+    }
+
+    @Test
+    fun `Save dialog opens prefilled in keyboard mode and typing appends`(): Unit = runBlocking {
+        val viewModel = FakeViewModel().apply { currentSaveName = "foo" }
+        val terminal = FakeTerminal(
+            events = mutableListOf(TerminalEvent.FunctionKey(5), TerminalEvent.KeyPress('x'), TerminalEvent.Enter),
+            terminalSize = terminalSize,
+        )
+
+        testTuiView(terminal, input = KeyboardInput(), viewModel = viewModel).play()
+
+        assertTrue(terminal.frames.any { it.contains("Name: foo_") })
+        assertTrue(viewModel.calls.contains("saveGame(foox)"))
     }
 
     @Test

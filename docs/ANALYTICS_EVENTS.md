@@ -28,6 +28,8 @@ Fired when the user saves via the Save dialog (toolbar Save / F5) or the exit fl
 | `overwrote_existing` | `boolean` | Whether a file with that name already existed. Only present when `result` is `success` - on `error` it may not be known (e.g. the name check itself failed). |
 | `input_method` | `string` | `mouse` or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* *(`console` retired — GH-79)* |
 
+*GH-99:* new property `name_source` (`string`, sent on `success` and `error`): `prefill` - saved under the prefilled current save name unchanged, `edited` - the field opened prefilled and the name was changed, or `typed` - the field opened empty. The name itself is never sent.
+
 ### `load_command_used`
 
 Fired when the board is restored from a save file, either via the `load` command mid-game or from the startup restore prompt. *(GH-6)*
@@ -230,3 +232,5 @@ that game. Likewise, a board solved before the next check never fires it.
 | `screen_congratulations` | A shift (click or keyboard Enter/Space) solves the board while the TUI is active - fires once on that transition. Does **not** fire when an already-solved save is restored (toolbar Load or startup restore); the Congratulations screen still renders, but nothing was solved *by playing* this session. *(GH-3)* |
 | `screen_size_dialog` | TUI size-picker dialog opens. Property `opened_from`: `toolbar` (via `[ New ]`), `startup` (no `--size` given, restore prompt declined/empty), or `unsolvable_save` (New game chosen for an unsolvable save mid-game, GH-74). *(GH-44)* |
 | `screen_unsolvable_dialog` | TUI `Can't be solved` dialog opens for an unsolvable save. Property `opened_from`: `toolbar` (Load button/F6) or `startup` (restore dialog). *(GH-74)* |
+
+*GH-99:* `screen_save_dialog` takes a new property `prefilled` (`boolean`) - whether the name field opened with the current save name in it.
