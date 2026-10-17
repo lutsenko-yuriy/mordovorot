@@ -530,6 +530,8 @@ alert when a session waits on the user, toggled per machine in the gitignored `.
 ## Dependencies
 
 - **Build tool:** Gradle (Kotlin DSL), via the wrapper (`./gradlew`) — pinned to 9.7.1.
+  Versions shared across modules (Kotlin, kotlinx-coroutines) live in the
+  `gradle/libs.versions.toml` version catalog (GH-109).
   The terminal app (root project) uses `kotlin("jvm")` + `application`; JVM toolchain 17.
 - **Kotlin Multiplatform (GH-41).** The `shared/` modules use `kotlin("multiplatform")`, the
   same first-party JetBrains plugin and version as `kotlin("jvm")` (declared once in the root

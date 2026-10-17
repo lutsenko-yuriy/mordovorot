@@ -4,7 +4,7 @@
 
 | Language | Version | Used for |
 |---|---|---|
-| Kotlin | 2.4.21 (`build.gradle.kts`), JVM toolchain 17 | Game application code and tests |
+| Kotlin | 2.4.21 (`gradle/libs.versions.toml`), JVM toolchain 17 | Game application code and tests |
 | Python | 3.11+ (3.9 for `probe`; CI runs 3.9 and 3.12 in `.github/workflows/tests.yml`) | Agent workflow tooling under `scripts/` |
 | Shell | bash | Claude Code hooks: onboarding gate (`scripts/onboard/gate.sh`), session-waiting alert (`scripts/alert/alert.sh`, GH-107) |
 

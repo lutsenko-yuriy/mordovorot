@@ -1,7 +1,7 @@
 plugins {
-    kotlin("jvm") version "2.4.21"
+    alias(libs.plugins.kotlin.jvm)
     // GH-41: the shared/ modules' plugin, declared here so they share this one version.
-    kotlin("multiplatform") version "2.4.21" apply false
+    alias(libs.plugins.kotlin.multiplatform) apply false
     application
 }
 
@@ -13,8 +13,8 @@ kotlin {
 
 dependencies {
     // GH-42: the project's first third-party runtime dependency - powers ViewModel's
-    // View-request channel. Keep in step with the shared modules' copies (GH-109).
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
+    // View-request channel. Versions live in gradle/libs.versions.toml (GH-109).
+    implementation(libs.kotlinx.coroutines.core)
     implementation(project(":shared:core"))
     implementation(project(":shared:analytics"))
     implementation(project(":shared:storage"))
