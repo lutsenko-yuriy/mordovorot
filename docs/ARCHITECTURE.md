@@ -16,19 +16,24 @@ opponent package (GH-83).
 ```
 src/main/kotlin/
 ├── Main.kt              # Entry point — resolves the starting InputMode (or aborts with no
-│                          # terminal, GH-79), then hands off to GameSession.run() (GH-3, GH-30)
+│                          # terminal, GH-79), builds the session-lifetime objects (BoardImpl,
+│                          # FileSaveRepository, Mordie) and runs buildGameSession (GH-3, GH-30)
+├── AppWiring.kt         # The composition root (GH-78): buildGameSession / defaultView /
+│                          # buildViewModel / buildTuiView - the only production code that
+│                          # constructs collaborators (MordieHooks, ScreenRenderer,
+│                          # ModeSwitcherImpl, TuiInputs). Test builders call the same functions
 ├── InputMode.kt         # MOUSE / KEYBOARD — parses the starting mode from `--keyboard`/
 │                          # `--mouse`; also the type GameSession/ModeSwitcher pass around
 │                          # mid-session (GH-3, GH-18, renamed from LaunchMode for GH-30)
-├── GameSession.kt       # Session loop extracted out of Main: owns the one BoardImpl and
-│                          # one FileSaveRepository that survive every mode switch; builds a
-│                          # fresh View + viewmodel + InputMethodAnalyticsService per mode,
+├── GameSession.kt       # Session loop extracted out of Main: builds a fresh View per mode
+│                          # through its buildView(mode, startupRestoreDone) - wired by
+│                          # buildGameSession so every rebuild shares one board and saves -
 │                          # runs play(), and re-enters on ModeSwitchRequestedException. A
 │                          # rebuild's play() throwing anything else falls back to the previous
 │                          # mode (GH-79) instead of crashing and losing the in-progress game -
 │                          # a first-session failure, or a failed fallback, still throws (GH-30).
-│                          # Also owns the one `Mordie` (GH-83), passed to every rebuilt
-│                          # ViewModelImpl, and stops its search in run()'s `finally`
+│                          # Also holds the one `Mordie` (GH-83) and stops its search in
+│                          # run()'s `finally`
 ├── analytics/
 │   ├── AnalyticsService.kt             # Analytics abstraction — track(event, properties)
 │   ├── NoopAnalyticsService.kt         # Default implementation; no SDK wired up yet
@@ -62,9 +67,9 @@ src/main/kotlin/
 │   │                           # load/exit plus the read-only query surface (listSaves/saveExists/
 │   │                           # isSolved/boardState/squareSide/moveCount) and restoreOnStartup
 │   ├── ViewModelImpl.kt      # The one implementation (GH-42 WU3, collapsing BaseViewModel +
-│   │                           # ConsoleViewModelImpl + TuiViewModelImpl). board/saves/analytics
-│   │                           # are constructor params (each defaulted to a real impl) so fakes
-│   │                           # can be injected. `startupRestoreDone` is also a constructor param
+│   │                           # ConsoleViewModelImpl + TuiViewModelImpl). board/saves/analytics/
+│   │                           # MordieHooks are injected, with no defaults (GH-78) - built only
+│   │                           # by buildViewModel. `startupRestoreDone` is also a constructor param
 │   │                           # (default false) so GameSession can seed it true on every session
 │   │                           # after the first, skipping a re-shown startup restore prompt after
 │   │                           # a mode switch (GH-30). Holds no `View` reference — see the
@@ -82,7 +87,7 @@ src/main/kotlin/
 │   │                           # SessionControlException/CancellationException, routes any
 │   │                           # other Exception to onError (GH-65)
 │   ├── ExitRequestedException.kt # Signals play() (or view.tui.TuiView's own loop, GH-3) to stop
-│   ├── ModeSwitcher.kt        # ModeSwitcher / ModeSwitcherImpl / NoopModeSwitcher — tracks
+│   ├── ModeSwitcher.kt        # ModeSwitcher / ModeSwitcherImpl — tracks
 │   │                             # input_mode_switched and throws ModeSwitchRequestedException;
 │   │                             # same-mode no-op (GH-30)
 │   ├── ModeSwitchRequestedException.kt # Carries the requested InputMode; unwinds a running
@@ -162,8 +167,10 @@ src/test/kotlin/
 ├── MoveCounterScenarioTest.kt / UnsolvableSaveScenarioTest.kt # GH-62/GH-74 end to end
 │                            # through the TUI over a real board and temp-dir saves
 ├── MordieScenarioTest.kt  # GH-83 end to end with a scripted FakeMordieSearchFactory
-├── GameSessionTest.kt     # Session loop: switch rebuilds around the same BoardModel
-│                            # instance, startupRestoreDone seeding, multi-switch chains (GH-30)
+├── GameSessionTest.kt     # Session loop: startupRestoreDone seeding, multi-switch chains,
+│                            # failed-switch fallback, Mordie stopped on exit (GH-30)
+├── AppWiringTest.kt      # Composition root: real ModeSwitcher wired, a mode switch rebuilds
+│                            # around the session's one board and Mordie (GH-78)
 ├── ModeSwitcherTest.kt    # input_mode_switched tracking, trigger pass-through, same-mode
 │                            # no-op (GH-30)
 ├── analytics/            # NoopAnalyticsService, InputMethodAnalyticsService coverage
@@ -181,7 +188,10 @@ src/test/kotlin/
 │                           # pins the shared catch-all helper (GH-65)
 ├── storage/               # FileSaveRepository coverage
 ├── view/tui/              # TUI coverage (GH-3, WU2-WU5)
-└── testing/              # FakeBoardModel / FakeTerminal / FakeSaveRepository / RecordingAnalyticsService /
+└── testing/              # testViewModel / testTuiView / testGameSession - the only way tests
+                            # build these, calling AppWiring with fake defaults (GH-78) /
+                            # NoopModeSwitcher /
+                            # FakeBoardModel / FakeTerminal / FakeSaveRepository / RecordingAnalyticsService /
                             # FakeViewModel (recording double, collapsing GH-23's
                             # RecordingViewModel/FakeConsoleViewModel/FakeTuiViewModel split in
                             # GH-42 WU3) / FakeViewModelUi (scripted UiRequest responder, GH-42
@@ -216,7 +226,7 @@ reshuffle at the same size. Every shuffle is solvable (GH-74): `Solvability`
 holds the parity rule, and `resetGame()` swaps tiles 0/1 when the shuffle lands
 on an unsolvable board. Nothing resizes an *in-progress* board: every
 size-setting surface starts a fresh game instead. The board instance itself is
-still the one `GameSession` holds across mode switches (GH-30) — the side mutates
+still the one every rebuild shares across mode switches (GH-30) — the side mutates
 in place rather than the instance being swapped, so that invariant is unaffected.
 
 **Move count (GH-62):** `BoardImpl` owns the move rule — a move is a run of
@@ -237,9 +247,11 @@ saved N begins at N + 1, so it never re-reports below it. `Mordie` turns the pla
 shifts into the line state: a check every 5 shifts, a reveal of "found", and the outcome
 frozen on solve, using Mordie's live state at that shift. Its `MordieSnapshot` mirrors
 `storage.SavedMordie` on purpose, so `mordie` never imports `storage`; `ViewModelImpl` maps
-between the two. `GameSession` owns one `Mordie`,
-so it survives mode switches. `ViewModelImpl` defaults to an inert
-`Mordie(MordieSearchFactory.NONE)`, so unit tests never leave real searches running.
+between the two. `Main` builds one `Mordie` per session, so it survives mode switches;
+`GameSession` stops it. `ViewModelImpl` reaches it through `MordieHooks`, which
+`buildViewModel` builds per rebuild so it tracks through that mode's decorated analytics.
+Test builders default to an inert `Mordie(MordieSearchFactory.NONE)`, so unit tests never
+leave real searches running.
 
 ### viewmodel (GH-42: ViewModel-style, no View reference)
 **Status: landed (WU4/4 of the GH-42 redesign — final WU).** Everything described below is
@@ -249,8 +261,8 @@ Mediates between `view`, `board_model`, and `storage`, but never calls into `vie
 directly. `ViewModel` is one interface (shift/newGame/save/load/exit plus the
 query surface the TUI needs — `isSolved`/`boardState`/`squareSide`/`moveCount`/`listSaves`/
 `saveExists`), and `ViewModelImpl` is its one implementation, taking `board`/`saves`/
-`analytics` as constructor params (each defaulted to a real implementation) so
-tests can inject fakes without touching the filesystem or a real analytics SDK.
+`analytics`/`MordieHooks` as constructor params with no defaults (GH-78): production
+wires them in `AppWiring`, tests through `testViewModel`'s fakes.
 
 Five interactions that used to be blocking calls into `View` (`showMessage`,
 `confirmRestore`, `chooseSaveToRestore`, `confirmSaveBeforeExit`, `promptSaveName`)
@@ -326,6 +338,18 @@ so restoring a solved save never fires it. GH-83 adds `mordie_result`/`mordie_mo
 and tracks `mordie_solution_found` from the same helper, when a 5-shift check reveals
 the solution.
 
+### Composition root (GH-78)
+`AppWiring.kt` is the only production code that constructs collaborators. `Main` builds
+the session-lifetime objects (`BoardImpl`, `FileSaveRepository`, `NoopAnalyticsService`,
+`Mordie(BackgroundMordieSearch.Factory())`) and hands them to `buildGameSession`, whose
+`buildView` closure calls `defaultView` per mode: it decorates analytics, then builds the
+viewmodel (`buildViewModel`, including `MordieHooks`) and the TUI (`buildTuiView`, including
+`ScreenRenderer`, the mode's `TuiInput` and a `ModeSwitcherImpl`). Production classes take
+every collaborator as a constructor parameter with no real-implementation default; value
+defaults (a board side, a save directory, a flag) are fine. Tests build through
+`testing/`'s `testViewModel`/`testTuiView`/`testGameSession`, which call the same
+functions with fakes.
+
 ### Board-size surfaces (GH-44)
 Three entry points, all of which *start a fresh game* rather than resizing the
 running one: the `--size=N` launch flag (`Main.resolveBoardSize` returns `Int?`
@@ -372,9 +396,8 @@ mid-game, or throws `ExitRequestedException` at startup, which
 answer is pending.
 
 **`--size=N` bypasses the *entire* startup sequence, not just the size prompt.**
-A usable `--size=N` sets `sizeChosenAtLaunch` (threaded `GameSession` →
-`defaultView` → `ViewModelImpl`, the same path `startupRestoreDone` already
-takes across a mode switch), and `restoreOnStartup` returns immediately when
+A usable `--size=N` sets `sizeChosenAtLaunch` (captured by `buildGameSession`
+and passed through `defaultView` → `ViewModelImpl` on every rebuild), and `restoreOnStartup` returns immediately when
 it's set — no restore prompt, no size prompt, no `startup_restore_prompt_shown`/
 `startup_restore_decision`, regardless of what saves exist on disk. Without the
 flag (or with an unusable one - `sizeChosenAtLaunch` is `false` in that case
@@ -404,8 +427,8 @@ lets it switch mid-session, driven by `ModeSwitcher`. `TuiView`'s toolbar
 `HitTarget.ToolbarMode`/`ScreenState.modeButtons`, call `ModeSwitcherImpl`,
 which tracks `input_mode_switched` and throws `ModeSwitchRequestedException`.
 `GameSession` catches the exception, rebuilds the `View`/viewmodel/analytics
-stack for the new mode around the *same* `BoardImpl`/`FileSaveRepository`
-instances, and re-enters `play()` — so switching preserves board state and
+stack for the new mode (through `buildGameSession`'s closure) around the *same*
+`BoardImpl`/`FileSaveRepository` instances, and re-enters `play()` — so switching preserves board state and
 never reshuffles. If that rebuild fails (e.g. no `stty`), `GameSession`
 rebuilds the previous mode and hands it `Could not switch to <target> mode
 (<reason>) - staying in <previous> mode.` via `View.play(notice)`, shown as the
