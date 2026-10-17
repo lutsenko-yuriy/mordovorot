@@ -1,5 +1,6 @@
 import analytics.AnalyticsService
 import analytics.InputMethodAnalyticsService
+import analytics.PlatformAnalyticsService
 import board_model.BoardModel
 import mordie.Mordie
 import storage.SaveRepository
@@ -22,10 +23,11 @@ import view.tui.dialog.SizeDialogController
 import view.tui.dialog.UnsolvableDialogController
 import viewmodel.CurrentSaveName
 import viewmodel.ExitRequestedException
-import viewmodel.GameShiftKeys
+import viewmodel.GameShiftSources
 import viewmodel.ModeSwitcher
 import viewmodel.ModeSwitcherImpl
 import viewmodel.UiRequestChannel
+import viewmodel.UnsavedProgress
 import viewmodel.UnsolvableSaveExit
 import viewmodel.ViewModel
 import viewmodel.ViewModelImpl
@@ -36,8 +38,14 @@ import viewmodel.usecase.ExitGameUseCase
 // builds the session-lifetime objects; everything below is rebuilt per mode. Test builders call
 // these same functions with fakes, so tests and production can't wire things differently.
 
+/** The terminal's outermost analytics (GH-110): every event, the launch and mode-switch ones
+ *  included, carries `platform: terminal`. */
+internal fun terminalAnalytics(delegate: AnalyticsService): AnalyticsService =
+    PlatformAnalyticsService(delegate, "terminal")
+
 /** A [GameSession] whose every rebuild shares [board], [saves], [mordie], one
- *  [CurrentSaveName] (GH-99), one [GameShiftKeys] and one [KeyboardSelection] (GH-101). */
+ *  [CurrentSaveName] (GH-99), one [GameShiftSources] and one [KeyboardSelection] (GH-101), and
+ *  one [UnsavedProgress] (GH-110), which the terminal never reads. */
 internal fun buildGameSession(
     initialMode: InputMode,
     board: BoardModel,
@@ -48,12 +56,13 @@ internal fun buildGameSession(
     terminalFactory: () -> Terminal,
 ): GameSession {
     val currentSaveName = CurrentSaveName()
-    val gameShiftKeys = GameShiftKeys()
+    val gameShiftSources = GameShiftSources()
+    val unsavedProgress = UnsavedProgress()
     val keyboardSelection = KeyboardSelection()
     return GameSession(initialMode, mordie) { mode, startupRestoreDone ->
         defaultView(
-            mode, board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftKeys,
-            keyboardSelection, terminalFactory,
+            mode, board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftSources,
+            unsavedProgress, keyboardSelection, terminalFactory,
         )
     }
 }
@@ -69,13 +78,15 @@ internal fun defaultView(
     sizeChosenAtLaunch: Boolean,
     mordie: Mordie,
     currentSaveName: CurrentSaveName,
-    gameShiftKeys: GameShiftKeys,
+    gameShiftSources: GameShiftSources,
+    unsavedProgress: UnsavedProgress,
     keyboardSelection: KeyboardSelection,
     terminalFactory: () -> Terminal,
 ): View {
     val decoratedAnalytics = InputMethodAnalyticsService(analytics, mode.name.lowercase())
     val viewModel = buildViewModel(
-        board, saves, decoratedAnalytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftKeys,
+        board, saves, decoratedAnalytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftSources,
+        unsavedProgress,
     )
     return buildTuiView(
         terminalFactory(),
@@ -97,7 +108,8 @@ internal fun buildViewModel(
     sizeChosenAtLaunch: Boolean,
     mordie: Mordie,
     currentSaveName: CurrentSaveName,
-    gameShiftKeys: GameShiftKeys,
+    gameShiftSources: GameShiftSources,
+    unsavedProgress: UnsavedProgress,
 ): ViewModelImpl {
     val ui = UiRequestChannel()
     val exitGame = ExitGameUseCase(saves, analytics, ui)
@@ -106,8 +118,8 @@ internal fun buildViewModel(
         exitGame.exitGame(viewModel::saveGame)
     }
     val game = buildGameViewModel(
-        board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftKeys, ui,
-        unsolvableExit,
+        board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftSources,
+        unsavedProgress, ui, unsolvableExit,
     )
     return ViewModelImpl(game, exitGame)
 }

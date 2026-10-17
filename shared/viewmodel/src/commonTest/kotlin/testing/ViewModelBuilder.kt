@@ -6,9 +6,10 @@ import mordie.Mordie
 import mordie.MordieSearchFactory
 import storage.SaveRepository
 import viewmodel.CurrentSaveName
-import viewmodel.GameShiftKeys
+import viewmodel.GameShiftSources
 import viewmodel.GameViewModelImpl
 import viewmodel.UiRequestChannel
+import viewmodel.UnsavedProgress
 import viewmodel.UnsolvableSaveExit
 import viewmodel.buildGameViewModel
 
@@ -22,8 +23,9 @@ internal fun testViewModel(
     sizeChosenAtLaunch: Boolean = false,
     mordie: Mordie = Mordie(MordieSearchFactory.NONE),
     currentSaveName: CurrentSaveName = CurrentSaveName(),
-    gameShiftKeys: GameShiftKeys = GameShiftKeys(),
+    gameShiftSources: GameShiftSources = GameShiftSources(),
+    unsavedProgress: UnsavedProgress = UnsavedProgress(),
 ): GameViewModelImpl = buildGameViewModel(
-    board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftKeys,
-    UiRequestChannel(), UnsolvableSaveExit.NONE,
+    board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftSources,
+    unsavedProgress, UiRequestChannel(), UnsolvableSaveExit.NONE,
 )

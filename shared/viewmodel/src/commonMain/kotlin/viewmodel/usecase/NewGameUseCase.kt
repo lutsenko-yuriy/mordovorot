@@ -3,8 +3,9 @@ package viewmodel.usecase
 import analytics.AnalyticsService
 import board_model.BoardModel
 import viewmodel.CurrentSaveName
-import viewmodel.GameShiftKeys
+import viewmodel.GameShiftSources
 import viewmodel.MordieHooks
+import viewmodel.UnsavedProgress
 
 /** Starts a fresh game at a chosen size (GH-44), with Mordie racing it (GH-83). */
 internal class NewGameUseCase(
@@ -12,14 +13,16 @@ internal class NewGameUseCase(
     private val mordieHooks: MordieHooks,
     private val analytics: AnalyticsService,
     private val currentSaveName: CurrentSaveName,
-    private val gameShiftKeys: GameShiftKeys,
+    private val gameShiftSources: GameShiftSources,
+    private val unsavedProgress: UnsavedProgress,
 ) {
 
     fun newGame(size: Int, trigger: String) {
         board.newGame(size)
         mordieHooks.onNewGame()
         currentSaveName.name = null
-        gameShiftKeys.reset()
+        gameShiftSources.reset()
+        unsavedProgress.unsaved = false
         analytics.track("new_game_size_selected", mapOf("size" to size, "trigger" to trigger))
     }
 }

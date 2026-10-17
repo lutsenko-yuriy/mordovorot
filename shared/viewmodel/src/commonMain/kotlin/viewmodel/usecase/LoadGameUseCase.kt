@@ -5,10 +5,11 @@ import board_model.BoardModel
 import board_model.Solvability
 import storage.SaveRepository
 import viewmodel.CurrentSaveName
-import viewmodel.GameShiftKeys
+import viewmodel.GameShiftSources
 import viewmodel.MordieHooks
 import viewmodel.SaveCatalog
 import viewmodel.UiRequestChannel
+import viewmodel.UnsavedProgress
 import viewmodel.catchingNonCancellation
 
 /** Loads a save by name; an unsolvable one goes to [ResolveUnsolvableSaveUseCase] (GH-74). */
@@ -21,7 +22,8 @@ internal class LoadGameUseCase(
     private val catalog: SaveCatalog,
     private val resolveUnsolvable: ResolveUnsolvableSaveUseCase,
     private val currentSaveName: CurrentSaveName,
-    private val gameShiftKeys: GameShiftKeys,
+    private val gameShiftSources: GameShiftSources,
+    private val unsavedProgress: UnsavedProgress,
 ) {
 
     /** [trigger] is `"command"` for a mid-game load (toolbar Load / F6), or `"startup_prompt"`
@@ -57,7 +59,8 @@ internal class LoadGameUseCase(
             board.restoreState(saved.state, saved.moveCount)
             mordieHooks.onLoaded(saved.mordie)
             currentSaveName.name = name
-            gameShiftKeys.reset()
+            gameShiftSources.reset()
+            unsavedProgress.unsaved = false
             analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "success"))
             ui.showMessage("Loaded '$name'.")
             LoadResult.LOADED

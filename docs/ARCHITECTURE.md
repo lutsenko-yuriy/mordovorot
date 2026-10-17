@@ -33,8 +33,10 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │   └── analytics/
 │       ├── AnalyticsService.kt             # Analytics abstraction — track(event, properties)
 │       ├── NoopAnalyticsService.kt         # Default implementation; no SDK wired up yet
-│       └── InputMethodAnalyticsService.kt  # Decorator adding `input_method` to every forwarded
-│                                             # event, without touching the viewmodel's call sites (GH-3)
+│       ├── InputMethodAnalyticsService.kt  # Decorator adding `input_method` to every forwarded
+│       │                                     # event, without touching the viewmodel's call sites (GH-3)
+│       └── PlatformAnalyticsService.kt     # Decorator adding `platform` (`terminal`/`web`) the
+│                                             # same way (GH-110)
 ├── storage/             # :shared:storage - the save contract and text format; the file I/O is the app's
 │   └── storage/
 │       ├── SaveRepository.kt          # Persistence contract: list/exists/save/load
@@ -88,9 +90,14 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                           # save/load/repair, cleared on new game, prefills the Save dialog.
 │       │                           # One per session, made by buildGameSession, so it survives mode
 │       │                           # switches; never persisted (GH-99)
-│       ├── GameShiftKeys.kt      # ShiftKey {ARROW, HJKL} + GameShiftKeys: which keys made this
-│       │                           # game's shifts, for board_solved.shift_keys. Reset on new game/
-│       │                           # load/repair; one per session, made by buildGameSession (GH-101)
+│       ├── ShiftSource.kt        # What made a shift: ShiftKey {ARROW, HJKL} (GH-101) or
+│       │                           # PointerShift {ARROW, DRAG} (web, GH-110); null for a click
+│       ├── GameShiftSources.kt   # Which ShiftSources made this game's shifts, for board_solved.
+│       │                           # shift_keys / shift_input. Reset on new game/load/repair; one
+│       │                           # per session, made by buildGameSession (GH-101, GH-110)
+│       ├── UnsavedProgress.kt    # Whether the game has shifts no save holds: set by a shift,
+│       │                           # cleared by new game/save/load/repair. Backs the web's
+│       │                           # leave-site prompt; one per session, the terminal never reads it (GH-110)
 │       ├── SaveCatalog.kt        # Read-only SaveInfo views of the saves: infos (throws) /
 │       │                           # listSaves / saveExists (swallow) / availableSavesMessage (GH-78)
 │       ├── CatchingNonCancellation.kt # catchingNonCancellation — the use cases' catch-all: rethrows
@@ -136,8 +143,8 @@ src/main/kotlin/                # the terminal app (the root project)
 ├── GameSession.kt       # Session loop extracted out of Main: builds a fresh View per mode
 │                          # through its buildView(mode, startupRestoreDone) - wired by
 │                          # buildGameSession so every rebuild shares one board, saves and
-│                          # CurrentSaveName (GH-99), KeyboardSelection and GameShiftKeys
-│                          # (GH-101) -
+│                          # CurrentSaveName (GH-99), KeyboardSelection and GameShiftSources
+│                          # (GH-101), UnsavedProgress (GH-110) -
 │                          # runs play(), and re-enters on ModeSwitchRequestedException. A
 │                          # rebuild's play() throwing anything else falls back to the previous
 │                          # mode (GH-79) instead of crashing and losing the in-progress game -
@@ -266,7 +273,8 @@ src/test/kotlin/                # the terminal app's tests; board_model / analyt
 │                           # QueriesTest/StartupRestoreTest) and still cover the shared code
 │                           # through ViewModelImpl's delegation; CatchingNonControlTest pins
 │                           # GameSession's catch-all (GH-65). The rest (Delegation, Cancellation,
-│                           # Mordie, MoveCount, NewGame, ShiftKeys, SizePrompt, UnsolvableExitHook,
+│                           # Mordie, MoveCount, NewGame, ShiftSources, ShiftSteps, SizePrompt,
+│                           # UnsavedProgress, UnsolvableExitHook,
 │                           # CatchingNonCancellation, MordieText, SaveInfo) are in
 │                           # shared/viewmodel's commonTest, built by its own testViewModel (GH-41)
 ├── storage/               # FileSaveRepository coverage
@@ -421,18 +429,24 @@ that needs to track an event), currently backed by `NoopAnalyticsService`.
 adding an `input_method` (`mouse`/`keyboard`, GH-18) property to
 every forwarded event — the decorator pattern lets `Main` distinguish events
 by launch mode without `GameViewModelImpl` itself knowing which UI mode is
-running.
+running. `PlatformAnalyticsService` (GH-110) adds `platform` the same way; it is the
+innermost decorator, wrapping the outermost service in `Main` (`terminalAnalytics`), so
+`app_launched`, `app_launch_aborted` and `input_mode_switched` carry it too.
 
 `board_solved` (GH-62) is tracked in `GameViewModelImpl`, not a View: every shift goes
 through one private `shift` helper that fires it when the shift turns an unsolved
 board into a solved one, so it covers both modes. Loads bypass that helper,
 so restoring a solved save never fires it. GH-83 adds `mordie_result`/`mordie_moves` to it
 and tracks `mordie_solution_found` from the same helper, when a 5-shift check reveals
-the solution.
+the solution. `shiftRow`/`shiftColumn` (GH-110, a web drag) run the same helper over several
+steps: each is a board shift Mordie counts, and solved is checked once at the end, so a drag
+passing through the solved board doesn't fire it. `shift_keys`/`shift_input` follow the solving
+shift's `ShiftSource`.
 
 ### Composition root (GH-78)
 `AppWiring.kt` is the only production code that constructs collaborators. `Main` builds
-the session-lifetime objects (`BoardImpl`, `FileSaveRepository`, `NoopAnalyticsService`,
+the session-lifetime objects (`BoardImpl`, `FileSaveRepository`, `NoopAnalyticsService` with
+`platform: terminal`,
 `Mordie(BackgroundMordieSearch.Factory())`) and hands them to `buildGameSession`, whose
 `buildView` closure calls `defaultView` per mode: it decorates analytics, then builds the
 viewmodel (`buildViewModel`, including `MordieHooks`) and the TUI (`buildTuiView`, including

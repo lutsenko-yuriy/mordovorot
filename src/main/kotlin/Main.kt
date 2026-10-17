@@ -12,7 +12,7 @@ import view.tui.AnsiTerminal
  * Created by yurich on 02.12.16.
  */
 fun main(args: Array<String>): Unit = runBlocking {
-    val analytics = NoopAnalyticsService()
+    val analytics = terminalAnalytics(NoopAnalyticsService())
     val parsedSize = resolveBoardSize(args)
     val boardSize = parsedSize ?: BoardSize.DEFAULT
     // No terminal: the abort message is already printed - return normally, so the exit is 0.

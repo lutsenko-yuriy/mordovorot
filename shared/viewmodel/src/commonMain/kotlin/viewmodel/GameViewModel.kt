@@ -3,8 +3,9 @@ package viewmodel
 import kotlinx.coroutines.channels.ReceiveChannel
 
 /** The platform-independent viewModel surface (GH-41, split out of GH-42's `ViewModel`) -
- *  shift/new game/save/load plus the read-only query surface (`listSaves`/`saveExists`/
- *  `currentSaveName`/`isSolved`/`boardState`/`squareSide`) a View needs to render/re-render.
+ *  shift (one step, or several with `shiftRow`/`shiftColumn`)/new game/save/load plus the
+ *  read-only query surface (`listSaves`/`saveExists`/`currentSaveName`/`hasUnsavedProgress`/
+ *  `isSolved`/`boardState`/`squareSide`) a View needs to render/re-render.
  *  Exit is not here: it is terminal-only, on the terminal's `ViewModel`. */
 interface GameViewModel {
 
@@ -13,12 +14,19 @@ interface GameViewModel {
      *  alongside its own event loop. See [UiRequestChannel.ask]. */
     val uiRequests: ReceiveChannel<UiRequest<*>>
 
-    /** [key] is the keyboard key that made the shift (GH-101), `null` for a mouse click. */
-    fun shiftLeft(row: Int, key: ShiftKey? = null)
-    fun shiftRight(row: Int, key: ShiftKey? = null)
+    /** [source] is what made the shift (GH-101, GH-110), `null` for a terminal mouse click. */
+    fun shiftLeft(row: Int, source: ShiftSource? = null)
+    fun shiftRight(row: Int, source: ShiftSource? = null)
 
-    fun shiftUp(col: Int, key: ShiftKey? = null)
-    fun shiftDown(col: Int, key: ShiftKey? = null)
+    fun shiftUp(col: Int, source: ShiftSource? = null)
+    fun shiftDown(col: Int, source: ShiftSource? = null)
+
+    /** Shifts [row] by [steps] tiles, right when positive (GH-110, a drag): `|steps|` shifts, one
+     *  move, with the board checked for solved only once it lands. Zero steps does nothing. */
+    fun shiftRow(row: Int, steps: Int, source: ShiftSource? = null)
+
+    /** [shiftRow] for a column, down when [steps] is positive. */
+    fun shiftColumn(col: Int, steps: Int, source: ShiftSource? = null)
 
     /** Starts a fresh shuffled game at [size] (GH-44) - throws (matching `shiftLeft`'s
      *  "Incorrect row" contract) and tracks nothing if [size] is out of range, otherwise tracks
@@ -48,6 +56,10 @@ interface GameViewModel {
     /** The name the current game was last loaded from or saved to - the Save dialog's prefill
      *  (GH-99); `null` after a new game or at launch. */
     fun currentSaveName(): String?
+
+    /** Whether the game has shifts no save holds yet (GH-110) - backs the web's leave-site
+     *  prompt; see [UnsavedProgress]. */
+    fun hasUnsavedProgress(): Boolean
 
     /** Whether the board is currently solved - lets the mouse-driven TUI (GH-3) show the
      *  Congratulations screen and disable the shift arrows. */

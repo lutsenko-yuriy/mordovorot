@@ -22,21 +22,22 @@ fun buildGameViewModel(
     sizeChosenAtLaunch: Boolean,
     mordie: Mordie,
     currentSaveName: CurrentSaveName,
-    gameShiftKeys: GameShiftKeys,
+    gameShiftSources: GameShiftSources,
+    unsavedProgress: UnsavedProgress,
     ui: UiRequestChannel,
     unsolvableExit: UnsolvableSaveExit,
 ): GameViewModelImpl {
     val mordieHooks = MordieHooks(mordie, board, analytics)
     val catalog = SaveCatalog(saves)
-    val newGame = NewGameUseCase(board, mordieHooks, analytics, currentSaveName, gameShiftKeys)
-    val saveGame = SaveGameUseCase(board, saves, mordieHooks, analytics, ui, currentSaveName)
-    val resolveUnsolvable = ResolveUnsolvableSaveUseCase(board, saves, mordieHooks, analytics, ui, newGame, currentSaveName, gameShiftKeys)
-    val loadGame = LoadGameUseCase(board, saves, mordieHooks, analytics, ui, catalog, resolveUnsolvable, currentSaveName, gameShiftKeys)
+    val newGame = NewGameUseCase(board, mordieHooks, analytics, currentSaveName, gameShiftSources, unsavedProgress)
+    val saveGame = SaveGameUseCase(board, saves, mordieHooks, analytics, ui, currentSaveName, unsavedProgress)
+    val resolveUnsolvable = ResolveUnsolvableSaveUseCase(board, saves, mordieHooks, analytics, ui, newGame, currentSaveName, gameShiftSources, unsavedProgress)
+    val loadGame = LoadGameUseCase(board, saves, mordieHooks, analytics, ui, catalog, resolveUnsolvable, currentSaveName, gameShiftSources, unsavedProgress)
     val startupRestore = StartupRestoreUseCase(
         board, catalog, analytics, ui, loadGame, newGame, mordieHooks, startupRestoreDone, sizeChosenAtLaunch,
     )
     return GameViewModelImpl(
         board, analytics, mordieHooks, ui, catalog, newGame, saveGame, loadGame, startupRestore, currentSaveName,
-        gameShiftKeys, unsolvableExit,
+        gameShiftSources, unsavedProgress, unsolvableExit,
     )
 }
