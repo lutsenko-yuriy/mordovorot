@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.16.3] — 2026-10-17 (PR #108 merged)
+
+### Changed
+- [meta] (PR #108) GH-107: Alert when the session is waiting on the user — desktop + spoken alert (Notification/Stop hook with toggles in .claude/alert.env).
+
 ## [0.16.3] — 2026-10-17 (PR #106 merged)
 
 ### Changed
