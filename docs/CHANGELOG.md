@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.16.1] — 2026-10-17 (PR #104 merged)
+
+### Changed
+- [wip] (PR #104) GH-41 (WU1/3): split Exit and session control out of the shared viewmodel (GameViewModel + UnsolvableSaveExit hook, catchingNonCancellation); no behaviour change.
+
 ## [0.16.0] — 2026-10-17 (PR #102 merged)
 
 ### Added
