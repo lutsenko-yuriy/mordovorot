@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.16.2] — 2026-10-17 (PR #105 merged)
+
+### Changed
+- [wip] (PR #105) GH-41 (WU2/3): board_model, analytics, the storage contract and mordie move into Kotlin Multiplatform modules (:shared:core/analytics/storage/mordie, jvm() + compile-only js(IR)) with shared test doubles in :shared:testing; the documented test command is now ./gradlew check; no behaviour change.
+
 ## [0.16.1] — 2026-10-17 (PR #104 merged)
 
 ### Changed
