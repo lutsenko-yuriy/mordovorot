@@ -155,8 +155,9 @@ src/main/kotlin/
         ├── DialogFocus.kt   # Pure focus ring over a dialog's controls (text field/list rows,
         │                      # then buttons) for Tab/arrow-key dialog navigation (GH-18)
         ├── ScreenState.kt / ScreenRenderer.kt # Pure ScreenState -> frame String rendering,
-        │                                        # including the dialog overlay, the keyboard
-        │                                        # cursor highlight, the controls hint, and
+        │                                        # including the dialog overlay, keyboard mode's
+        │                                        # selected-line highlight and side hints
+        │                                        # (GH-101, arrows hidden), the controls hint, and
         │                                        # toolbar shortcut labels (GH-18)
         ├── TuiInput.kt      # Per-mode input strategy interface (prepare/onBoardEvent/
         │                      # onDialogEvent/decorateBoard/decorateDialog/onDialogOpened) +

@@ -143,17 +143,30 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle
 - `--keyboard` runs the same TUI screens as Feature 6 (board, toolbar, dialogs, Congratulations
   screen), but driven entirely from the keyboard instead of the mouse. Launch rules are the same
   as mouse mode (Feature 3).
-- **Board navigation:** arrow keys move a highlighted cursor around the ring of shift arrows
-  (`◀`/`▶`/`▲`/`▼`); the cursored arrow is shown in yellow on a reverse-video cell, so it stays visible without color. Enter or Space activates whichever
-  arrow is highlighted, same effect as clicking it. Once solved, the cursor disappears and arrow
-  keys/Enter go inert, matching the mouse mode's dimmed-arrows behavior.
+- **Line selection (GH-101):** keyboard mode doesn't draw the `◀`/`▶`/`▲`/`▼` arrows. It
+  remembers a selected row and a selected column, one of them active, and shows the active
+  line's tiles in reverse video.
+  - **W/S** move the row selection up/down; with a column active they switch to the remembered
+    row without moving it. **A/D** do the same for columns. Movement wraps at the edges.
+  - **H/L** or **←/→** shift the selected row left/right; **J/K** or **↓/↑** shift the selected
+    column down/up. A shift key on the other axis switches the selection to the remembered line
+    on that axis instead of shifting. Letters work in either case; Enter and Space do nothing
+    on the board.
+  - Row 1 is active at launch, with column 1 remembered. A new game, a load or a size change
+    keeps the selection, each number clamped to a smaller board (row 4 / column 2 on 5x5 becomes
+    row 3 / column 2 on 3x3); switching to mouse mode and back keeps it too.
+  - The board stays centred: `W/S row` / `A/D column` sit to its left, `←/→ H/L shift row` /
+    `↑/↓ K/J shift column` to its right.
+  - Once solved, the highlight disappears and the selection and shift keys go inert, matching
+    mouse mode's dimmed arrows; the hints stay.
 - **Toolbar shortcuts**, shown in light blue on the toolbar buttons — including a second row
   below `[ New ] [ Save ] [ Load ] [ Exit ]` for `[Mouse F7]` (GH-30), mirroring the mouse
-  mode's `[ Keyboard ]` row — and always live regardless of cursor position or solved state:
+  mode's `[ Keyboard ]` row — and always live regardless of the selection or solved state:
   **F5** opens Save, **F6** opens Load, **F9** opens the New-game size picker (GH-44), **F7**
   switches to mouse mode, and **Escape** opens the Exit dialog. F8 does nothing (it switched to
   console mode before GH-79). A controls-hint line below the toolbar spells these out in plain
-  text: `Arrows: move · Enter: shift · F5/F6/F9 Save/Load/New · F7 Mouse · Esc`.
+  text: `F5/F6/F9 Save/Load/New · F7 Mouse · Esc` (the board keys have their own side hints,
+  GH-101).
 - **Dialog navigation:** Tab/Shift+Tab (or the arrow keys) cycle focus between a dialog's
   controls (text field, list rows, buttons); Enter activates whatever has focus; Escape cancels
   the dialog, same as clicking Cancel. Typing and Backspace work on the focused text field as in

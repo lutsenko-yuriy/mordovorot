@@ -28,7 +28,7 @@ sealed class InputAction {
 /**
  * The per-mode input strategy [TuiView] delegates to (GH-18): translating a raw [TerminalEvent]
  * into an [InputAction], and decorating the [ScreenState]/[Dialog] each repaint draws with
- * whatever presentation the mode owns (a keyboard cursor, focus highlight, toolbar shortcut
+ * whatever presentation the mode owns (a selected line, focus highlight, toolbar shortcut
  * labels). [MouseInput] is today's mouse behaviour, extracted verbatim; GH-18's `KeyboardInput`
  * is the other implementation.
  */
@@ -57,7 +57,7 @@ interface TuiInput {
      *  exit flow's Yes -> Save handoff). Default no-op - [MouseInput] has no per-session state. */
     fun onDialogOpened() {}
 
-    /** Decorates a freshly-built board [ScreenState] with this mode's presentation (cursor,
+    /** Decorates a freshly-built board [ScreenState] with this mode's presentation (selection,
      *  controls hint, toolbar shortcut labels) before it's rendered and laid out. Identity for
      *  [MouseInput]. */
     fun decorateBoard(state: ScreenState): ScreenState
