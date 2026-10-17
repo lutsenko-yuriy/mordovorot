@@ -1,8 +1,8 @@
 import board_model.BoardImpl
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
-import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import mordie.Mordie
@@ -15,15 +15,21 @@ import view.tui.BoardLayout
 import view.tui.HitTarget
 import view.tui.TerminalEvent
 import view.tui.TerminalSize
-import view.tui.TuiView
-import viewmodel.ModeSwitcherImpl
+import viewmodel.ModeSwitchRequestedException
 
 /** Covers the composition root (GH-78): what production wiring builds and what every rebuild
  *  shares. */
 class AppWiringTest {
 
     @Test
-    fun `the production View is wired with a real ModeSwitcher, not a silent no-op`() {
+    fun `the production View is wired with a real ModeSwitcher, not a silent no-op`(): Unit = runBlocking {
+        val terminalSize = TerminalSize(80, 40)
+        val keyboardButton = BoardLayout(terminalSize, 4, modeButtons = listOf(InputMode.KEYBOARD))
+            .toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.KEYBOARD) }
+        val switchKey = mapOf(
+            InputMode.MOUSE to TerminalEvent.MouseClick(keyboardButton.x, keyboardButton.y),
+            InputMode.KEYBOARD to TerminalEvent.FunctionKey(7),
+        )
         for (mode in InputMode.entries) {
             val view = defaultView(
                 mode,
@@ -33,11 +39,11 @@ class AppWiringTest {
                 startupRestoreDone = true,
                 sizeChosenAtLaunch = false,
                 mordie = Mordie(FakeMordieSearchFactory()),
-                terminalFactory = { FakeTerminal() },
+                terminalFactory = { FakeTerminal(mutableListOf(switchKey.getValue(mode)), terminalSize) },
             )
 
-            assertIs<TuiView>(view)
-            assertIs<ModeSwitcherImpl>(view.modeSwitcher)
+            val switch = assertFailsWith<ModeSwitchRequestedException> { view.play(null) }
+            assertEquals(InputMode.entries.single { it != mode }, switch.target)
         }
     }
 

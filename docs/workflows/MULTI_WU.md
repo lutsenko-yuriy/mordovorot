@@ -2,7 +2,8 @@
 
 Appendix to `docs/workflows/FEATURE.md` — read this when the approved plan (that workflow's
 step 1.3) contains more than one production work unit (WU1+). Follow these rules in addition
-to the standard workflow's steps 2–12, which each WU repeats in full.
+to the standard workflow's steps 2–12, which each WU repeats in full. If no WU changes
+observable behaviour, see `docs/workflows/REFACTOR.md`.
 
 ## WU-splitting guidelines
 

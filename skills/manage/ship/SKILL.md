@@ -81,6 +81,8 @@ git commit -m "chore: release GH-XX, bump version to X.Y.Z"
 git push
 ```
 
+Before merging, confirm every check on the PR/MR has finished and passed - for GitHub, `gh pr checks {number}` exits 0 with nothing pending (exit 8 means still running). Never merge on a pending check (GH-78: PR #96 merged mid-build).
+
 Then merge the PR/MR on your Git host:
 
 | Host | Command |

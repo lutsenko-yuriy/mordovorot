@@ -37,6 +37,10 @@ Use this format exactly. Omit a section entirely if it has no content.
 
 When the plan decides where a user-facing message goes (stderr, a status line, a dialog), check that the user can actually see it there while the active UI is running - e.g. a full-screen TUI hides stderr (GH-79).
 
+If no work unit changes observable behaviour (UI, text, analytics, save format), propose `Workflow: REFACTOR` (`docs/workflows/REFACTOR.md`) in the plan, so the WUs can run without user questions until the debrief.
+
+Before proposing a CHANGELOG tag, read `skills/manage/ship/resources/changelog-tags.md` - GH-78's plan claimed no refactor tag existed while `[app]` did.
+
 ### 4. Post the plan as a PM comment
 
 Post the full plan text as a comment on the primary issue so `implement` can reference it.

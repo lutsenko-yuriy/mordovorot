@@ -30,6 +30,7 @@ Full product specifications: docs/PRODUCT_SPEC.md
 | docs/workflows/RESEARCH.md | Step-by-step workflow for research-only tickets — alternatives survey, constraint evaluation, debrief |
 | docs/workflows/POSTMORTEM.md | Post-fix root-cause investigation workflow — reconstructing when/why a shipped bug was introduced, after `TROUBLESHOOT.md` produced the fix |
 | docs/workflows/MULTI_WU.md | Multi-WU ticket appendix to `FEATURE.md` — WU-splitting guidelines, pre-implementation WU types, branch/PR-per-WU rules, WU cycle |
+| docs/workflows/REFACTOR.md | Behaviour-preserving multi-WU tickets — MULTI_WU with no user questions between plan approval and debrief |
 | CLAUDE.local.md | Local machine settings (binary paths, MCP auth, model tier mappings) — not committed |
 | skills/configure/onboard/SKILL.md | First-session onboarding: project config, tech stack, code style and constraints, first model mapping, then the onboarded marker; orientation for later clones |
 | skills/configure/calibrate/SKILL.md | Re-map models to tiers when the available models change (the first mapping happens in `/onboard`) |
@@ -93,7 +94,8 @@ At the beginning of every new session, before doing anything else:
 
 Reactive work (bugs, CI failures, regressions, infrastructure breakage) uses
 `docs/workflows/TROUBLESHOOT.md` instead of the above. Research-only tickets use
-`docs/workflows/RESEARCH.md`. Post-fix root-cause investigation (reconstructing when/why a
+`docs/workflows/RESEARCH.md`. Behaviour-preserving multi-WU refactors use
+`docs/workflows/REFACTOR.md`. Post-fix root-cause investigation (reconstructing when/why a
 shipped bug was introduced, after `TROUBLESHOOT.md` produced the fix) uses
 `docs/workflows/POSTMORTEM.md`. Read whichever one applies by path when its trigger condition
 is met — they are not preloaded every session.
