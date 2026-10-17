@@ -9,6 +9,7 @@ import view.tui.MouseInput
 import view.tui.ScreenRenderer
 import view.tui.Terminal
 import view.tui.TuiInput
+import view.tui.TuiScreen
 import view.tui.TuiView
 import viewmodel.ModeSwitcher
 import viewmodel.ModeSwitcherImpl
@@ -85,7 +86,9 @@ internal fun buildViewModel(
     val startupRestore = StartupRestoreUseCase(
         board, catalog, analytics, ui, loadGame, newGame, mordieHooks, startupRestoreDone, sizeChosenAtLaunch,
     )
-    return ViewModelImpl(board, analytics, mordieHooks, ui, catalog, newGame, saveGame, loadGame, exitGame, startupRestore)
+    return ViewModelImpl(
+        board, analytics, mordieHooks, ui, catalog, newGame, saveGame, loadGame, exitGame, startupRestore,
+    )
 }
 
 internal fun buildTuiView(
@@ -94,4 +97,7 @@ internal fun buildTuiView(
     input: TuiInput,
     modeSwitcher: ModeSwitcher,
     viewModel: ViewModel,
-): TuiView = TuiView(terminal, analytics, input, modeSwitcher, viewModel, ScreenRenderer())
+): TuiView {
+    val screen = TuiScreen(terminal, input, ScreenRenderer(), viewModel, analytics)
+    return TuiView(terminal, analytics, input, modeSwitcher, viewModel, screen)
+}

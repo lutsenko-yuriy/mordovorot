@@ -19,13 +19,13 @@ import viewmodel.displayWithSize
  * own event loop, which is what lets a Congratulations screen exist at all. Every gesture
  * resolves to an existing [ViewModel] call. WU4 adds the Save/Load/
  * Exit dialogs and the startup restore prompt: [confirmSaveBeforeExit]/[promptSaveName]/
- * [confirmRestore]/[chooseSaveToRestore] block in the shared [runModal] loop over
+ * [confirmRestore]/[chooseSaveToRestore] block in the shared [TuiScreen.runModal] loop over
  * [terminal] (GH-64). Confirmed
  * product decision: once solved, the arrows go dead ([ScreenState.arrowsEnabled] false) - see
  * [ScreenState]'s KDoc. WU5 adds the Congratulations screen itself: since every repaint asks
  * [ViewModel.isSolved] fresh rather than tracking a phase flag, the toolbar stays fully live
  * and a load from the Congratulations screen that restores an unsolved board flips the title and
- * arrows straight back - see [wasSolved] for the one bit of state analytics needs that the
+ * arrows straight back - see [TuiScreen.wasSolved] for the one bit of state analytics needs that the
  * rendering doesn't.
  */
 class TuiView internal constructor(
@@ -35,39 +35,19 @@ class TuiView internal constructor(
     /** Internal so a test can check the production wiring isn't a no-op (GH-30). */
     internal val modeSwitcher: ModeSwitcher,
     private val viewModel: ViewModel,
-    private val renderer: ScreenRenderer,
+    private val screen: TuiScreen,
 ) : View {
-
-    /** The layout the most recent repaint was drawn against - hit-tested on the next click, so
-     *  what's clickable always matches what's on screen. Null only before the first repaint. */
-    private var layout: BoardLayout? = null
-
-    /** The dialog geometry the most recent dialog repaint was drawn against - hit-tested on the
-     *  next click inside a dialog loop, same reasoning as [layout]. A fresh `terminal.size()`
-     *  read at click time could disagree with the size the frame was actually drawn at (audit
-     *  finding on PR #24). Null whenever no dialog is open. */
-    private var dialogLayout: DialogLayout? = null
 
     /** Set by a toolbar Exit click just before calling [viewModel.exitGame], consumed once by
      *  [confirmSaveBeforeExit] - the dialog already collected the answer, so exitGame's
      *  callback doesn't prompt a second time. */
     private var pendingExitAnswer: Boolean? = null
 
-    /** Set by [showMessage] so the next dialog (the exit flow's invalid-name re-prompt) can
-     *  surface it, since this view has no separate message line of its own. */
-    private var pendingMessage: String? = null
-
-    /** Whether the previous repaint saw the board solved - synced on every repaint regardless
-     *  of cause (shift, Load, startup restore). [shift] reads this just before its own action to
-     *  decide whether `screen_congratulations` (WU5) fires - see its KDoc for why the firing
-     *  decision itself lives there instead of here. */
-    private var wasSolved = false
-
     /** Drains [viewModel]'s [viewmodel.ViewModel.uiRequests] alongside the board's own event
      *  loop (GH-42 WU2) - what lets `saveGame`/`loadGame`/`exitGame`/`restoreOnStartup` suspend
      *  on [viewmodel.UiRequestChannel.ask] instead of calling back into this view directly. */
     override suspend fun play(notice: String?) = coroutineScope {
-        pendingMessage = notice
+        notice?.let { screen.showMessage(it) }
         val ui = launch { for (request in viewModel.uiRequests) handle(request) }
         try {
             terminal.enterRawMode()
@@ -79,20 +59,20 @@ class TuiView internal constructor(
             } catch (e: ExitRequestedException) {
                 return@coroutineScope // Exit from an unsolvable save at startup (GH-74).
             }
-            repaint()
+            screen.repaint()
             while (true) {
-                // layout is always non-null here - the repaint() call just above (or the one at
+                // layout is always non-null here - the screen.repaint() call just above (or the one at
                 // the end of every loop iteration below) always runs before the next readEvent.
-                when (val action = input.onBoardEvent(terminal.readEvent(), checkNotNull(layout))) {
+                when (val action = input.onBoardEvent(terminal.readEvent(), checkNotNull(screen.layout))) {
                     is InputAction.Activate -> {
                         try {
                             handleTarget(action.target)
                         } catch (e: ExitRequestedException) {
                             return@coroutineScope
                         }
-                        repaint()
+                        screen.repaint()
                     }
-                    InputAction.Redraw -> repaint()
+                    InputAction.Redraw -> screen.repaint()
                     InputAction.Quit -> return@coroutineScope
                     else -> {}
                 }
@@ -107,7 +87,7 @@ class TuiView internal constructor(
     private suspend fun handle(request: UiRequest<*>) {
         when (request) {
             is UiRequest.ShowMessage -> {
-                showMessage(request.text)
+                screen.showMessage(request.text)
                 request.respond(Unit)
             }
             is UiRequest.ConfirmRestore -> request.respond(confirmRestore(request.save))
@@ -141,10 +121,10 @@ class TuiView internal constructor(
      *  [viewmodel.ViewModel.isSolved] at repaint time alone fired the event on every restore of
      *  a pre-solved save).
      *
-     *  Today, [wasSolved] is guaranteed `false` on every call here - [shift] is only reachable
+     *  Today, [TuiScreen.wasSolved] is guaranteed `false` on every call here - [shift] is only reachable
      *  through a click [BoardLayout.hitTest] resolves to a `HitTarget.Shift*`, which only
      *  happens when the layout it was built against had `arrowsEnabled = true`, which
-     *  [repaintWithDialog] only sets when the same [wasSolved] sync came out `false`. The
+     *  [TuiScreen.repaintWithDialog] only sets when the same [TuiScreen.wasSolved] sync came out `false`. The
      *  "fires exactly once" property currently rests on that arrows-disabled gate, not on this
      *  check (round 2 audit finding on PR #25). The check stays anyway as the one line standing
      *  between a correct single fire and a silent double-count the day arrows stop going dead on
@@ -152,7 +132,7 @@ class TuiView internal constructor(
      *  cost real correctness the day that assumption breaks. */
     private fun shift(action: () -> Unit) {
         action()
-        if (viewModel.isSolved() && !wasSolved) analytics.track("screen_congratulations")
+        if (viewModel.isSolved() && !screen.wasSolved) analytics.track("screen_congratulations")
     }
 
     private suspend fun handleToolbarSave() {
@@ -162,7 +142,7 @@ class TuiView internal constructor(
                 // toolbar Save calls saveGame directly, bypassing that
                 // validation (audit round 5 on PR #24).
                 if (outcome.name.any { it.isWhitespace() }) {
-                    showMessage("'${outcome.name}' isn't a usable save name (no spaces) - not saved.")
+                    screen.showMessage("'${outcome.name}' isn't a usable save name (no spaces) - not saved.")
                 } else {
                     viewModel.saveGame(outcome.name)
                 }
@@ -195,14 +175,13 @@ class TuiView internal constructor(
      *  save) Escape is ignored. */
     private fun runExitDialog(cancellable: Boolean): Boolean? {
         analytics.track("screen_exit_dialog")
-        input.onDialogOpened()
         val buttons = listOf(DialogButtonSpec("yes", "Yes"), DialogButtonSpec("no", "No"))
         val dialog = Dialog(
             kind = Dialog.Kind.EXIT,
             title = "Save before quitting?",
             buttons = if (cancellable) buttons + DialogButtonSpec("cancel", "Cancel") else buttons,
         )
-        return runModal<Boolean?>("exit", cancelled = null, cancellable = cancellable, dialog = { dialog }) { action ->
+        return screen.runModal<Boolean?>("exit", cancelled = null, cancellable = cancellable, dialog = { dialog }) { action ->
             when ((action as? InputAction.Activate)?.target) {
                 HitTarget.DialogButton("yes") -> return true
                 HitTarget.DialogButton("no") -> return false
@@ -213,12 +192,10 @@ class TuiView internal constructor(
 
     /** GH-74's choice for an unsolvable save. Non-cancellable - the ticket offers exactly these
      *  three outcomes; end of input means Exit. Shows the viewModel's can't-be-solved message,
-     *  which [showMessage] just parked in [pendingMessage]. */
+     *  which [TuiScreen.showMessage] just parked. */
     private fun runUnsolvableDialog(save: SaveInfo, openedFrom: String): UnsolvableSaveChoice {
         analytics.track("screen_unsolvable_dialog", mapOf("opened_from" to openedFrom))
-        input.onDialogOpened()
-        val message = pendingMessage ?: "'${save.displayWithSize()}' can't be solved by any sequence of shifts."
-        pendingMessage = null
+        val message = screen.takeMessage() ?: "'${save.displayWithSize()}' can't be solved by any sequence of shifts."
         val dialog = Dialog(
             kind = Dialog.Kind.UNSOLVABLE,
             title = "Can't be solved",
@@ -229,7 +206,7 @@ class TuiView internal constructor(
                 DialogButtonSpec("exit", "Exit"),
             ),
         )
-        return runModal("unsolvable", cancelled = UnsolvableSaveChoice.EXIT, cancellable = false, dialog = { dialog }) { action ->
+        return screen.runModal("unsolvable", cancelled = UnsolvableSaveChoice.EXIT, cancellable = false, dialog = { dialog }) { action ->
             when ((action as? InputAction.Activate)?.target) {
                 HitTarget.DialogButton("repair") -> return UnsolvableSaveChoice.REPAIR
                 HitTarget.DialogButton("new") -> return UnsolvableSaveChoice.NEW_GAME
@@ -248,13 +225,11 @@ class TuiView internal constructor(
      *  click. Shared by the toolbar's direct save and [promptSaveName] (the exit flow). */
     private fun runSaveDialog(openedFrom: String): SaveOutcome {
         analytics.track("screen_save_dialog", mapOf("opened_from" to openedFrom))
-        input.onDialogOpened()
         // Consumed once, then kept sticky for the whole dialog session (overridden by a live
         // overwrite warning when one applies) - clearing it every iteration made the exit
         // flow's invalid-name explanation vanish after the user's very first keystroke, before
         // they'd typed a full corrected name (audit round 2 on PR #24).
-        val initialMessage = pendingMessage
-        pendingMessage = null
+        val initialMessage = screen.takeMessage()
         var typed = ""
         val dialog = {
             Dialog(
@@ -265,7 +240,7 @@ class TuiView internal constructor(
                 buttons = listOf(DialogButtonSpec("save", "Save"), DialogButtonSpec("cancel", "Cancel")),
             )
         }
-        return runModal("save", cancelled = SaveOutcome.Cancel, dialog = dialog) { action ->
+        return screen.runModal("save", cancelled = SaveOutcome.Cancel, dialog = dialog) { action ->
             when (action) {
                 is InputAction.TextChar -> typed += action.char
                 InputAction.EraseChar -> typed = typed.dropLast(1)
@@ -297,7 +272,6 @@ class TuiView internal constructor(
     private fun runLoadDialog(title: String, openedFrom: String, preloadedSaves: List<SaveInfo>? = null): LoadOutcome {
         val saves = preloadedSaves ?: viewModel.listSaves()
         analytics.track("screen_load_dialog", mapOf("opened_from" to openedFrom, "save_file_count" to saves.size))
-        input.onDialogOpened()
         var selected = if (saves.isNotEmpty()) 0 else -1
         val dialog = {
             Dialog(
@@ -309,7 +283,7 @@ class TuiView internal constructor(
                 buttons = listOf(DialogButtonSpec("load", "Load"), DialogButtonSpec("cancel", "Cancel")),
             )
         }
-        return runModal("load", cancelled = LoadOutcome.Cancel, dialog = dialog) { action ->
+        return screen.runModal("load", cancelled = LoadOutcome.Cancel, dialog = dialog) { action ->
             when (val target = (action as? InputAction.Activate)?.target) {
                 is HitTarget.DialogListRow -> selected = target.index
                 HitTarget.DialogButton("load") -> if (selected in saves.indices) return LoadOutcome.Confirm(saves[selected].name)
@@ -328,87 +302,16 @@ class TuiView internal constructor(
      *  [viewmodel.UiRequestChannel.ask]'s KDoc). */
     private fun runSizeDialog(openedFrom: String): Int? {
         analytics.track("screen_size_dialog", mapOf("opened_from" to openedFrom))
-        input.onDialogOpened()
         val dialog = Dialog(
             kind = Dialog.Kind.SIZE,
             title = "New game size",
             buttons = (BoardSize.MIN..BoardSize.MAX).map { DialogButtonSpec(it.toString(), "${it}x$it") } +
                 DialogButtonSpec("cancel", "Cancel"),
         )
-        return runModal<Int?>("size", cancelled = null, dialog = { dialog }) { action ->
+        return screen.runModal<Int?>("size", cancelled = null, dialog = { dialog }) { action ->
             val target = (action as? InputAction.Activate)?.target
             (target as? HitTarget.DialogButton)?.id?.toIntOrNull()?.let { return it }
         }
-    }
-
-    /** Shared dialog loop: repaints [dialog] and passes each event to [onAction], which returns
-     *  from the caller when done. Escape or the "cancel" button tracks `dialog_cancelled` and
-     *  returns [cancelled] - unless not [cancellable], when Escape is ignored. End of input
-     *  returns [cancelled] untracked either way. */
-    private inline fun <T> runModal(
-        name: String,
-        cancelled: T,
-        cancellable: Boolean = true,
-        dialog: () -> Dialog,
-        onAction: (InputAction) -> Unit,
-    ): T {
-        while (true) {
-            val current = dialog()
-            repaintWithDialog(current)
-            val action = input.onDialogEvent(terminal.readEvent(), current, checkNotNull(dialogLayout))
-            when {
-                action == InputAction.Quit -> return cancelled
-                action == InputAction.Cancel && !cancellable -> {}
-                action == InputAction.Cancel || (action as? InputAction.Activate)?.target == HitTarget.DialogButton("cancel") -> {
-                    analytics.track("dialog_cancelled", mapOf("dialog" to name))
-                    return cancelled
-                }
-                else -> onAction(action)
-            }
-        }
-    }
-
-    private fun repaint() = repaintWithDialog(null)
-
-    private fun repaintWithDialog(dialog: Dialog?) {
-        val terminalSize = terminal.size()
-        // The board-level status line is only shown once no dialog is up (dialogs show their
-        // own Dialog.message instead) - consumed here so a stale message can't leak into a
-        // dialog opened by the very next click (audit finding on PR #24).
-        val message = if (dialog == null) pendingMessage.also { pendingMessage = null } else null
-        // Only syncs wasSolved here - the actual screen_congratulations firing decision lives
-        // in shift() so a Load doesn't count as the transition (see its KDoc).
-        val solved = viewModel.isSolved()
-        wasSolved = solved
-        // Both the state and dialog run through the active input's decoration (cursor, focus
-        // highlight, toolbar shortcut labels) before layout is built from them - draw and
-        // hit-test must always agree on the same geometry, same invariant every layout class in
-        // this package already keeps. MouseInput's decoration is the identity, so this is a
-        // no-op for mouse mode (WU3's "no behaviour change" requirement).
-        val decoratedDialog = dialog?.let { input.decorateDialog(it) }
-        val state = input.decorateBoard(
-            ScreenState
-                .forBoard(
-                    viewModel.boardState().toList(),
-                    viewModel.squareSide(),
-                    solved,
-                    viewModel.moveCount(),
-                    solvedTitle = viewModel.mordieEnding() ?: TITLE_SOLVED,
-                    mordieLine = viewModel.mordieLine(),
-                )
-                .copy(dialog = decoratedDialog, message = message),
-        )
-        layout = BoardLayout(terminalSize, state.squareSide, state.arrowsEnabled, state.toolbarShortcuts, state.modeButtons)
-        // Built from state.dialog (post-decorateBoard), not decoratedDialog directly - the two
-        // are the same object for MouseInput today, but a future decorateBoard that touches the
-        // dialog (e.g. a keyboard mode collapsing decoration into one pass) must not be able to
-        // desync what's hit-tested from what's actually drawn (audit finding on GH-18 WU3 PR #32).
-        dialogLayout = state.dialog?.let { DialogLayout(it, terminalSize) }
-        terminal.write(renderer.render(state, terminalSize))
-    }
-
-    private fun showMessage(message: String) {
-        pendingMessage = message
     }
 
     /** The startup restore prompt for exactly one save - the same Load-shaped modal as any
