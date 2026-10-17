@@ -1,6 +1,7 @@
 package mordie
 
 import board_model.BoardImpl
+import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -25,7 +26,7 @@ class IdaStarSolverTest {
 
     /** Plays [solver]'s solution on a real board from [state]. */
     private fun replay(state: IntArray, solver: IdaStarSolver): BoardImpl {
-        val side = Math.sqrt(state.size.toDouble()).toInt()
+        val side = sqrt(state.size.toDouble()).toInt()
         val board = BoardImpl(side).apply { restoreState(state) }
         for (move in solver.solution()) repeat(move.amount) {
             if (move.isRow) board.shiftRight(move.index) else board.shiftDown(move.index)

@@ -1,7 +1,10 @@
 package mordie
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -16,8 +19,13 @@ class BackgroundMordieSearchTest {
     /** 5x5 reversed (an even permutation, so solvable) - its search never finishes within a test. */
     private val hard = IntArray(25) { 24 - it }
 
+    /** runTest skips delays in virtual time, but the search runs on Dispatchers.Default, so wait in real time. */
+    private fun realTime(block: suspend CoroutineScope.() -> Unit) = runTest {
+        withContext(Dispatchers.Default) { block() }
+    }
+
     @Test
-    fun `a 3x3 search is found and visible from the calling thread`() = runBlocking<Unit> {
+    fun `a 3x3 search is found and visible from the calling thread`() = realTime {
         val search = BackgroundMordieSearch.Factory().start(twoMoves, ruledOut = -1)
 
         withTimeout(10_000) { while (!search.progress().found) delay(5) }
@@ -26,7 +34,7 @@ class BackgroundMordieSearchTest {
     }
 
     @Test
-    fun `elapsed time freezes once found`() = runBlocking<Unit> {
+    fun `elapsed time freezes once found`() = realTime {
         val search = BackgroundMordieSearch.Factory().start(twoMoves, ruledOut = -1)
         withTimeout(10_000) { while (!search.progress().found) delay(5) }
         val elapsed = search.progress().elapsedMs
@@ -45,7 +53,7 @@ class BackgroundMordieSearchTest {
     }
 
     @Test
-    fun `cancel stops the search`() = runBlocking<Unit> {
+    fun `cancel stops the search`() = realTime {
         val search = BackgroundMordieSearch(hard, ruledOut = -1)
         delay(50)
 

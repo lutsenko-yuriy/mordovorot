@@ -16,11 +16,12 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.core)
             }
         }
-        jvmTest {
+        commonTest {
             dependencies {
                 implementation(kotlin("test"))
                 implementation(project(":shared:core"))
                 implementation(project(":shared:testing"))
+                implementation(libs.kotlinx.coroutines.test)
             }
         }
     }
