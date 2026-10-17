@@ -8,7 +8,7 @@ package mordie
  * Not thread-safe - called only from the game's event loop. The search itself runs elsewhere
  * behind [MordieSearch].
  */
-class Mordie(private val factory: MordieSearchFactory = BackgroundMordieSearch.Factory()) {
+class Mordie(private val factory: MordieSearchFactory) {
 
     /** Whether any game has been bound, even one [clear]ed of Mordie data. */
     private var bound = false

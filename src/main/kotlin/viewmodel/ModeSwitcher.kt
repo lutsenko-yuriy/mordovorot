@@ -2,7 +2,6 @@ package viewmodel
 
 import InputMode
 import analytics.AnalyticsService
-import analytics.NoopAnalyticsService
 
 /**
  * Requests a switch to a different [InputMode] mid-session: tracks `input_mode_switched` and
@@ -18,10 +17,10 @@ interface ModeSwitcher {
     suspend fun switchTo(target: InputMode, trigger: String)
 }
 
-/** [currentMode] is fixed per instance - `GameSession` builds a fresh one on every rebuild. */
+/** [currentMode] is fixed per instance - `defaultView` builds a fresh one on every rebuild. */
 class ModeSwitcherImpl(
     private val currentMode: InputMode,
-    private val analytics: AnalyticsService = NoopAnalyticsService(),
+    private val analytics: AnalyticsService,
 ) : ModeSwitcher {
 
     override suspend fun switchTo(target: InputMode, trigger: String) {
@@ -38,9 +37,4 @@ class ModeSwitcherImpl(
         )
         throw ModeSwitchRequestedException(target)
     }
-}
-
-/** No-op [ModeSwitcher] - default for a `View` with no mode-switch affordance wired in yet. */
-class NoopModeSwitcher : ModeSwitcher {
-    override suspend fun switchTo(target: InputMode, trigger: String) {}
 }

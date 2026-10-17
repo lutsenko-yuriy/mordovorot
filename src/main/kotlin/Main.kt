@@ -3,6 +3,10 @@ import analytics.NoopAnalyticsService
 import board_model.BoardImpl
 import board_model.BoardSize
 import kotlinx.coroutines.runBlocking
+import mordie.BackgroundMordieSearch
+import mordie.Mordie
+import storage.FileSaveRepository
+import view.tui.AnsiTerminal
 
 /**
  * Created by yurich on 02.12.16.
@@ -18,11 +22,14 @@ fun main(args: Array<String>): Unit = runBlocking {
     // present, or a typo'd flag would silently suppress the restore/size prompts on top of
     // falling back to the default size (audit finding on PR #52).
     val sizeChosenAtLaunch = parsedSize != null
-    GameSession(
+    buildGameSession(
         initialMode = mode,
         board = BoardImpl(boardSize),
-        sizeChosenAtLaunch = sizeChosenAtLaunch,
+        saves = FileSaveRepository(),
         analytics = analytics,
+        sizeChosenAtLaunch = sizeChosenAtLaunch,
+        mordie = Mordie(BackgroundMordieSearch.Factory()),
+        terminalFactory = { AnsiTerminal() },
     ).run()
 }
 

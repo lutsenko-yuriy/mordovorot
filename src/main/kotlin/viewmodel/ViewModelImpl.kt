@@ -1,15 +1,10 @@
 package viewmodel
 
 import analytics.AnalyticsService
-import analytics.NoopAnalyticsService
-import board_model.BoardImpl
 import board_model.BoardModel
 import board_model.Solvability
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
-import mordie.Mordie
-import mordie.MordieSearchFactory
-import storage.FileSaveRepository
 import storage.SaveRepository
 import storage.SavedBoard
 
@@ -18,10 +13,10 @@ import storage.SavedBoard
  *  every domain-mutation flow - shift/new game/save/load/exit/restoreOnStartup plus the read-only
  *  query surface. Holds no `View` reference; talks to whichever View is driving it through
  *  [uiRequests] instead of a constructor-injected dependency. */
-class ViewModelImpl(
-    private val board: BoardModel = BoardImpl(),
-    private val saves: SaveRepository = FileSaveRepository(),
-    private val analytics: AnalyticsService = NoopAnalyticsService(),
+class ViewModelImpl internal constructor(
+    private val board: BoardModel,
+    private val saves: SaveRepository,
+    private val analytics: AnalyticsService,
     /** Seeded `true` by `GameSession` after a mode switch, so the prompt doesn't re-show. */
     startupRestoreDone: Boolean = false,
     /** `true` when `--size=N` was given at launch (GH-44) - the flag *is* the answer, so
@@ -29,12 +24,8 @@ class ViewModelImpl(
      *  fresh at the size the board was already constructed with, regardless of what saves
      *  exist. */
     private val sizeChosenAtLaunch: Boolean = false,
-    /** Inert by default, so tests never leave a real search running; `GameSession` passes the
-     *  session's own (GH-83). */
-    mordie: Mordie = Mordie(MordieSearchFactory.NONE),
+    private val mordieHooks: MordieHooks,
 ) : ViewModel {
-
-    private val mordieHooks = MordieHooks(mordie, board, analytics)
 
     /** Rendezvous - `ask` doesn't return until the View has actually finished handling the
      *  request, which is what keeps message/prompt ordering identical to the old direct blocking

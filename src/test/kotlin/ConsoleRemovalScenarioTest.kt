@@ -14,6 +14,7 @@ import testing.FakeMordieSearchFactory
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
 import testing.RecordingAnalyticsService.Event
+import testing.testGameSession
 import view.tui.BoardLayout
 import view.tui.HitTarget
 import view.tui.TerminalEvent
@@ -168,17 +169,16 @@ class ConsoleRemovalScenarioTest {
             terminalSize,
         )
         val board = BoardImpl(4).apply { restoreState(scrambled) }
+        val saves = FileSaveRepository(createTempDirectory("mordovorot-gh79"))
+        val mordie = Mordie(FakeMordieSearchFactory())
         val builds = mutableListOf<Pair<InputMode, Boolean>>()
         testGameSession(
             initialMode = InputMode.MOUSE,
-            board = board,
-            saves = FileSaveRepository(createTempDirectory("mordovorot-gh79")),
-            sizeChosenAtLaunch = true,
-            mordie = Mordie(FakeMordieSearchFactory()),
-            buildView = { mode, b, s, a, restoreDone, sizeAtLaunch, m ->
+            mordie = mordie,
+            buildView = { mode, restoreDone ->
                 builds += mode to restoreDone
                 if (mode == InputMode.KEYBOARD) throw RuntimeException("stty not found")
-                defaultView(mode, b, s, a, restoreDone, sizeAtLaunch, m, terminalFactory = { terminal })
+                defaultView(mode, board, saves, RecordingAnalyticsService(), restoreDone, sizeChosenAtLaunch = true, mordie) { terminal }
             },
         ).run()
 

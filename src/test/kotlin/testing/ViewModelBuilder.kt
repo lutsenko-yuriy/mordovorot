@@ -2,13 +2,14 @@ package testing
 
 import analytics.AnalyticsService
 import board_model.BoardModel
+import buildViewModel
 import mordie.Mordie
 import mordie.MordieSearchFactory
 import storage.SaveRepository
 import viewmodel.ViewModelImpl
 
-/** The one place tests build a [ViewModelImpl] (GH-78): defaults are fakes, never real
- *  implementations, so production constructors can drop their own defaults. */
+/** The one place tests build a [ViewModelImpl] (GH-78): the production wiring with fake
+ *  defaults. */
 fun testViewModel(
     board: BoardModel = FakeBoardModel(),
     saves: SaveRepository = FakeSaveRepository(),
@@ -16,4 +17,4 @@ fun testViewModel(
     startupRestoreDone: Boolean = false,
     sizeChosenAtLaunch: Boolean = false,
     mordie: Mordie = Mordie(MordieSearchFactory.NONE),
-): ViewModelImpl = ViewModelImpl(board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie)
+): ViewModelImpl = buildViewModel(board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie)

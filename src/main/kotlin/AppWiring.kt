@@ -1,0 +1,82 @@
+import analytics.AnalyticsService
+import analytics.InputMethodAnalyticsService
+import board_model.BoardModel
+import mordie.Mordie
+import storage.SaveRepository
+import view.View
+import view.tui.KeyboardInput
+import view.tui.MouseInput
+import view.tui.ScreenRenderer
+import view.tui.Terminal
+import view.tui.TuiInput
+import view.tui.TuiView
+import viewmodel.ModeSwitcher
+import viewmodel.ModeSwitcherImpl
+import viewmodel.MordieHooks
+import viewmodel.ViewModel
+import viewmodel.ViewModelImpl
+
+// The composition root (GH-78): the only production code that constructs collaborators. `main`
+// builds the session-lifetime objects; everything below is rebuilt per mode. Test builders call
+// these same functions with fakes, so tests and production can't wire things differently.
+
+/** A [GameSession] whose every rebuild shares [board], [saves] and [mordie]. */
+internal fun buildGameSession(
+    initialMode: InputMode,
+    board: BoardModel,
+    saves: SaveRepository,
+    analytics: AnalyticsService,
+    sizeChosenAtLaunch: Boolean,
+    mordie: Mordie,
+    terminalFactory: () -> Terminal,
+): GameSession = GameSession(initialMode, mordie) { mode, startupRestoreDone ->
+    defaultView(mode, board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, terminalFactory)
+}
+
+/** The production `View` for one [mode]. [analytics] is undecorated: the viewModel and View get
+ *  it decorated with `input_method`, the [ModeSwitcherImpl] doesn't (see [ModeSwitcher]). */
+internal fun defaultView(
+    mode: InputMode,
+    board: BoardModel,
+    saves: SaveRepository,
+    analytics: AnalyticsService,
+    startupRestoreDone: Boolean,
+    sizeChosenAtLaunch: Boolean,
+    mordie: Mordie,
+    terminalFactory: () -> Terminal,
+): View {
+    val decoratedAnalytics = InputMethodAnalyticsService(analytics, mode.name.lowercase())
+    val viewModel = buildViewModel(board, saves, decoratedAnalytics, startupRestoreDone, sizeChosenAtLaunch, mordie)
+    return buildTuiView(
+        terminalFactory(),
+        decoratedAnalytics,
+        if (mode == InputMode.KEYBOARD) KeyboardInput() else MouseInput(),
+        ModeSwitcherImpl(currentMode = mode, analytics = analytics),
+        viewModel,
+    )
+}
+
+/** [MordieHooks] is built here, per rebuild, so it tracks through this mode's [analytics]. */
+internal fun buildViewModel(
+    board: BoardModel,
+    saves: SaveRepository,
+    analytics: AnalyticsService,
+    startupRestoreDone: Boolean,
+    sizeChosenAtLaunch: Boolean,
+    mordie: Mordie,
+): ViewModelImpl = ViewModelImpl(
+    board,
+    saves,
+    analytics,
+    startupRestoreDone,
+    sizeChosenAtLaunch,
+    MordieHooks(mordie, board, analytics),
+)
+
+internal fun buildTuiView(
+    terminal: Terminal,
+    analytics: AnalyticsService,
+    input: TuiInput,
+    modeSwitcher: ModeSwitcher,
+    viewModel: ViewModel,
+): TuiView = TuiView(terminal, analytics, input, modeSwitcher, viewModel, ScreenRenderer())
