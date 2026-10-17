@@ -12,6 +12,8 @@ __pycache__/
 .gradle/
 build/
 !gradle/wrapper/gradle-wrapper.jar
+# Kotlin 2.x per-project data (compiler error logs, session files)
+.kotlin/
 
 # Local save files (GH-6)
 saves/

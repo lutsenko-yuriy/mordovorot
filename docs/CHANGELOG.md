@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.16.4] — 2026-10-17 (PR #112 merged)
+
+### Changed
+- [app] GH-109: Kotlin 2.4.21 (from 1.9.24), kotlinx-coroutines 1.11.0 and Gradle 9.7.1, with versions now in `gradle/libs.versions.toml`; no behaviour change.
+
 ## [0.16.3] — 2026-10-17 (PR #108 merged)
 
 ### Changed

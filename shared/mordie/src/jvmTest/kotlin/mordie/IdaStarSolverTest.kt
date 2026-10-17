@@ -11,7 +11,7 @@ import kotlin.test.assertTrue
 class IdaStarSolverTest {
 
     private fun solve(state: IntArray, ruledOut: Int = -1): IdaStarSolver =
-        IdaStarSolver(state, ruledOut).also { while (!it.step(10_000)) Unit }
+        IdaStarSolver(state, ruledOut).also { while (!it.step(10_000)) { } }
 
     /** [moves] random rotations from the solved [side]x[side] board. */
     private fun scramble(side: Int, moves: Int, random: Random): IntArray {

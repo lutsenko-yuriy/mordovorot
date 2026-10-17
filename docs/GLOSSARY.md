@@ -11,6 +11,7 @@ When a new term is introduced during a `brief` session, add it here before creat
 | Board size | The valid range of square sides a game can use: 3–5, default 4. Chosen via `--size=N`, the startup size prompt, or `[ New ]` | `BoardSize` |
 | Current save name | The name of the save the current game was most recently loaded from or saved to; prefills the Save dialog. Cleared by a new game, not kept across launches (GH-99) | `CurrentSaveName`, `ViewModel.currentSaveName()` |
 | Dialog | A modal box in the TUI (Save, Load, Exit, New-game size picker, Startup restore) that takes over input until confirmed or cancelled | `Dialog`, `DialogLayout` |
+| Drag | Web client only: pressing on a tile and dragging slides its row (horizontal drag) or column (vertical drag) under the pointer, snapping to whole tiles on release. Each tile of distance is one shift; the whole drag is one move (GH-110) | — |
 | Input mode | Which front-end is driving the game: mouse TUI or keyboard TUI. Switchable mid-session without losing the game | `InputMode` |
 | Move | A run of consecutive shifts on the same row or column, in any direction; shifting a different line starts a new move, and so does the first shift after a load. Counted and shown as `Moves: N` | `BoardModel.moveCount` / `ViewModel.moveCount()` |
 | Line selection | Keyboard mode's selected row and selected column, one of them active; WASD selects, HJKL/arrows shift the active line. Its tiles are highlighted (GH-101) | — |
@@ -23,6 +24,8 @@ When a new term is introduced during a `brief` session, add it here before creat
 | Square side | The board's edge length (default 4, giving a 4×4 board) | `squareSide` |
 | Startup restore prompt | The launch-time offer to restore an existing save before the first move (a TUI dialog) | `restoreOnStartup()` |
 | Toolbar | The TUI's row of buttons below the board — `[ New ] [ Save ] [ Load ] [ Exit ]` — plus the input-mode switch row beneath it | `HitTarget.Toolbar*` |
+| Unsaved progress | At least one shift since the last New game, successful save or successful load. The web client asks before the tab is closed or reloaded with it (GH-110) | — |
+| Web client | The browser version of the game, mouse only and built on the shared modules, with its saves kept in the browser (GH-110) | — |
 
 ## Known aliases to avoid
 

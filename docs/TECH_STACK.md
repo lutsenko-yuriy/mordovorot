@@ -4,13 +4,13 @@
 
 | Language | Version | Used for |
 |---|---|---|
-| Kotlin | 1.9.24 (`build.gradle.kts`), JVM toolchain 17 | Game application code and tests |
+| Kotlin | 2.4.21 (`gradle/libs.versions.toml`), JVM toolchain 17 | Game application code and tests |
 | Python | 3.11+ (3.9 for `probe`; CI runs 3.9 and 3.12 in `.github/workflows/tests.yml`) | Agent workflow tooling under `scripts/` |
 | Shell | bash | Claude Code hooks: onboarding gate (`scripts/onboard/gate.sh`), session-waiting alert (`scripts/alert/alert.sh`, GH-107) |
 
 ## Frameworks and libraries
 
-- [kotlinx.coroutines](https://github.com/Kotlin/kotlinx.coroutines) 1.8.1: ViewModel ↔ View request channel
+- [kotlinx.coroutines](https://github.com/Kotlin/kotlinx.coroutines) 1.11.0: ViewModel ↔ View request channel
 - [kotlin.test](https://kotlinlang.org/api/latest/kotlin.test/) on JUnit 5
 
 ## Platforms
@@ -19,9 +19,9 @@
 
 ## Tooling
 
-- **Build / package manager:** Gradle 8.7 (wrapper), Kotlin JVM + `application` plugins for the
+- **Build / package manager:** Gradle 9.7.1 (wrapper), Kotlin JVM + `application` plugins for the
   terminal app, Kotlin Multiplatform for the `shared/` modules (GH-41: `jvm()` + a compile-only
-  `js(IR)`)
+  `js()`)
 - **Test runner:** `./gradlew check` (JUnit Platform) - runs the root `test` and every shared
   module's `jvmTest`; plain `./gradlew test` skips the shared modules; Python: `python -m unittest`
 - **Linter / formatter:** none configured
