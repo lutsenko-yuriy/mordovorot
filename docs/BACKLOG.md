@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-_(nothing in progress)_
+- GH-110: Add web client (WU2/7 merged; WU3-7 pending)
 
 ---
 
