@@ -40,6 +40,10 @@ Resolve the target file: `docs/knowledge/notes/GH-XX.md` (using the ticket ID fr
 **If the file does not exist:** create it with this structure:
 
 ```markdown
+---
+bookmarks: []
+---
+
 # GH-XX: <ticket title>
 
 ## Notes
@@ -54,6 +58,8 @@ Resolve the target file: `docs/knowledge/notes/GH-XX.md` (using the ticket ID fr
 ```
 
 Use today's date in `YYYY-MM-DD` format.
+
+If the file was new, `git add` it, then run `python3 scripts/notes/index.py && python3 scripts/notes/index.py --check`. CI rejects a note without a `bookmarks:` key or a stale `INDEX.md`, and the index lists git-tracked notes only (GH-103).
 
 ### 4. Report back
 

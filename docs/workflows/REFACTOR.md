@@ -24,6 +24,11 @@ From plan approval to the final WU's PR, the agent does not ask the user anythin
 5. Ship it as an intermediate WU: a `[wip]` entry, a patch bump and a squash-merge. No
    `/debrief`.
 
+Nobody watches the WUs in this window, so check on routed subagents that run long: if one
+hasn't reported back within ~10 minutes, check what it should have changed by now (commits,
+PR state, checks). If it is stuck, stop it, finish the step yourself and tell the user
+(GH-103).
+
 ## Stop and ask only when
 
 - a WU needs a behaviour change, or the plan turns out to be wrong;

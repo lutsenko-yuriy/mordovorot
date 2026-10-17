@@ -83,6 +83,8 @@ git push
 
 Before merging, confirm every check on the PR/MR has finished and passed - for GitHub, `gh pr checks {number}` exits 0 with nothing pending (exit 8 means still running). Never merge on a pending check (GH-78: PR #96 merged mid-build).
 
+Bound the wait: poll `gh pr checks {number}` every 30 s, at most 30 times (~15 min), rather than an open-ended `--watch`. If checks are still pending after that, stop and report back with the PR URL and check state instead of waiting on (GH-103: a ship subagent sat ~18 min after every check had passed).
+
 Then merge the PR/MR on your Git host:
 
 | Host | Command |

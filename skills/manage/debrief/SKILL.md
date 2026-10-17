@@ -19,8 +19,11 @@ This skill produces workflow improvements and a retrospective record, not code.
 
 - `git log --oneline -20` to see the recent commit history
 - Read `AGENTS.md` and any other workflow docs referenced there
+- Read `docs/knowledge/notes/GH-XX.md` if it exists
 
 ### 2. Open the dialog
+
+If the ticket's notes file has entries under `## Notes`, first show a short summary of them (one line per note), so the dialog builds on what was already captured instead of asking for it again.
 
 Ask one open question:
 
