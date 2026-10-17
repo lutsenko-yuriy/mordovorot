@@ -20,13 +20,13 @@ class TuiViewKeyboardSolvedStateTest {
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
 
     private fun view(terminal: FakeTerminal, viewModel: ViewModel): TuiView =
-        testTuiView(terminal, input = KeyboardInput(), viewModel = viewModel)
+        testTuiView(terminal, input = KeyboardInput(KeyboardSelection()), viewModel = viewModel)
 
     @Test
-    fun `once solved, no cursor is rendered and arrow keys and Enter are inert`(): Unit = runBlocking {
+    fun `once solved, no selection is highlighted and the selection and shift keys are inert`(): Unit = runBlocking {
         val viewModel = FakeViewModel().apply { solved = true }
         val terminal = FakeTerminal(
-            events = mutableListOf(TerminalEvent.Arrow(Direction.DOWN), TerminalEvent.Enter),
+            events = mutableListOf(TerminalEvent.KeyPress('s'), TerminalEvent.KeyPress('l'), TerminalEvent.Arrow(Direction.DOWN)),
             terminalSize = terminalSize,
         )
 
@@ -34,6 +34,7 @@ class TuiViewKeyboardSolvedStateTest {
 
         assertTrue(viewModel.calls.none { it.startsWith("shift") })
         assertTrue(terminal.frames.last().contains("Congratulations ✓"))
+        assertTrue(terminal.frames.none { it.contains("\u001B[7m") })
     }
 
     @Test
@@ -52,7 +53,7 @@ class TuiViewKeyboardSolvedStateTest {
     }
 
     @Test
-    fun `loading an unsolved save from the Congratulations screen restores the cursor and re-enables navigation`(): Unit = runBlocking {
+    fun `loading an unsolved save from the Congratulations screen brings back the selection and the shift keys`(): Unit = runBlocking {
         val delegate = FakeViewModel().apply { solved = true; saveNames = listOf("save1") }
         val viewModel = object : ViewModel by delegate {
             override suspend fun loadGame(name: String) {
@@ -65,7 +66,7 @@ class TuiViewKeyboardSolvedStateTest {
                 TerminalEvent.FunctionKey(6), // open the Load dialog - focus starts on its only row
                 TerminalEvent.Tab, // move focus from the row to the Load button
                 TerminalEvent.Enter, // confirm - loads "save1", flipping solved to false
-                TerminalEvent.Enter, // the cursor reset to LEFT[0] on the transition - activate it
+                TerminalEvent.KeyPress('h'), // row 1 is selected again - shift it
             ),
             terminalSize = terminalSize,
         )
@@ -73,7 +74,7 @@ class TuiViewKeyboardSolvedStateTest {
         view(terminal, viewModel).play()
 
         assertTrue(delegate.calls.contains("loadGame(save1)"))
-        assertTrue(delegate.calls.contains("shiftLeft(0)"))
+        assertTrue(delegate.calls.contains("shiftLeft(0, HJKL)"))
         val boardFrame = terminal.frames.last()
         assertTrue(boardFrame.contains("Mordovorot"))
         assertFalse(boardFrame.contains("Congratulations"))

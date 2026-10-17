@@ -3,11 +3,13 @@ package view.tui
 import InputMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import viewmodel.ShiftKey
 
 /**
- * Direct coverage of GH-18's [KeyboardInput] board and dialog translation, in isolation from
+ * Direct coverage of [KeyboardInput]'s board (GH-101's WASD/HJKL) and dialog (GH-18) translation, in isolation from
  * [TuiView] - [TuiViewKeyboardBoardTest]/[TuiViewKeyboardSolvedStateTest] cover the same ground
  * end-to-end, this file pins the translation itself.
  */
@@ -22,29 +24,79 @@ class KeyboardInputTest {
     private fun solvedBoard(squareSide: Int = 4) =
         ScreenState.forBoard(board = (0 until squareSide * squareSide).toList(), squareSide = squareSide, solved = true)
 
-    @Test
-    fun `an arrow key moves the cursor per the ArrowRing table`() {
-        val input = KeyboardInput()
-        input.decorateBoard(unsolvedBoard())
+    private fun key(c: Char) = TerminalEvent.KeyPress(c)
 
-        assertEquals(InputAction.Redraw, input.onBoardEvent(TerminalEvent.Arrow(Direction.DOWN), boardLayout))
-        // LEFT[0] + Down -> LEFT[1] (ArrowRing's table) - confirmed via the next decoration.
-        assertEquals(ArrowCursor(Edge.LEFT, 1), input.decorateBoard(unsolvedBoard()).cursor)
+    private fun arrow(d: Direction) = TerminalEvent.Arrow(d)
+
+    private fun input(selection: KeyboardSelection = KeyboardSelection()) =
+        KeyboardInput(selection).also { it.decorateBoard(unsolvedBoard()) }
+
+    @Test
+    fun `W A S D move or switch the selection and redraw`() {
+        val selection = KeyboardSelection()
+        val input = input(selection)
+
+        assertEquals(InputAction.Redraw, input.onBoardEvent(key('s'), boardLayout))
+        assertEquals(LineSelection(1, 0, LineSelection.Axis.ROW), selection.current)
+        assertEquals(InputAction.Redraw, input.onBoardEvent(key('d'), boardLayout))
+        assertEquals(LineSelection(1, 0, LineSelection.Axis.COLUMN), selection.current)
+        input.onBoardEvent(key('a'), boardLayout)
+        assertEquals(LineSelection(1, 3, LineSelection.Axis.COLUMN), selection.current)
+        input.onBoardEvent(key('w'), boardLayout)
+        assertEquals(LineSelection(1, 3, LineSelection.Axis.ROW), selection.current)
     }
 
     @Test
-    fun `Enter and Space both activate whatever arrow the cursor is currently on`() {
-        val input = KeyboardInput()
-        input.decorateBoard(unsolvedBoard())
+    fun `H L and the left right arrows shift the selected row, tagged with the key that did it`() {
+        val input = input()
 
-        assertEquals(InputAction.Activate(HitTarget.ShiftLeft(0)), input.onBoardEvent(TerminalEvent.Enter, boardLayout))
-        assertEquals(InputAction.Activate(HitTarget.ShiftLeft(0)), input.onBoardEvent(TerminalEvent.KeyPress(' '), boardLayout))
+        assertEquals(InputAction.Shift(HitTarget.ShiftLeft(0), ShiftKey.HJKL), input.onBoardEvent(key('h'), boardLayout))
+        assertEquals(InputAction.Shift(HitTarget.ShiftRight(0), ShiftKey.HJKL), input.onBoardEvent(key('l'), boardLayout))
+        assertEquals(InputAction.Shift(HitTarget.ShiftLeft(0), ShiftKey.ARROW), input.onBoardEvent(arrow(Direction.LEFT), boardLayout))
+        assertEquals(InputAction.Shift(HitTarget.ShiftRight(0), ShiftKey.ARROW), input.onBoardEvent(arrow(Direction.RIGHT), boardLayout))
+    }
+
+    @Test
+    fun `J K and the down up arrows shift the selected column`() {
+        val input = input(KeyboardSelection().apply { current = LineSelection(0, 2, LineSelection.Axis.COLUMN) })
+
+        assertEquals(InputAction.Shift(HitTarget.ShiftDown(2), ShiftKey.HJKL), input.onBoardEvent(key('j'), boardLayout))
+        assertEquals(InputAction.Shift(HitTarget.ShiftUp(2), ShiftKey.HJKL), input.onBoardEvent(key('k'), boardLayout))
+        assertEquals(InputAction.Shift(HitTarget.ShiftDown(2), ShiftKey.ARROW), input.onBoardEvent(arrow(Direction.DOWN), boardLayout))
+        assertEquals(InputAction.Shift(HitTarget.ShiftUp(2), ShiftKey.ARROW), input.onBoardEvent(arrow(Direction.UP), boardLayout))
+    }
+
+    @Test
+    fun `a shift key on the other axis switches the selection instead of shifting`() {
+        val selection = KeyboardSelection()
+        val input = input(selection)
+
+        assertEquals(InputAction.Redraw, input.onBoardEvent(key('j'), boardLayout))
+        assertEquals(LineSelection(0, 0, LineSelection.Axis.COLUMN), selection.current)
+        assertEquals(InputAction.Redraw, input.onBoardEvent(arrow(Direction.RIGHT), boardLayout))
+        assertEquals(LineSelection(0, 0, LineSelection.Axis.ROW), selection.current)
+    }
+
+    @Test
+    fun `upper case letters work the same`() {
+        val selection = KeyboardSelection()
+        val input = input(selection)
+
+        input.onBoardEvent(key('S'), boardLayout)
+        assertEquals(InputAction.Shift(HitTarget.ShiftRight(1), ShiftKey.HJKL), input.onBoardEvent(key('L'), boardLayout))
+    }
+
+    @Test
+    fun `Enter and Space no longer do anything on the board`() {
+        val input = input()
+
+        assertEquals(InputAction.None, input.onBoardEvent(TerminalEvent.Enter, boardLayout))
+        assertEquals(InputAction.None, input.onBoardEvent(key(' '), boardLayout))
     }
 
     @Test
     fun `F5 and F6 activate Save and Load, Escape activates Exit`() {
-        val input = KeyboardInput()
-        input.decorateBoard(unsolvedBoard())
+        val input = input()
 
         assertEquals(InputAction.Activate(HitTarget.ToolbarSave), input.onBoardEvent(TerminalEvent.FunctionKey(5), boardLayout))
         assertEquals(InputAction.Activate(HitTarget.ToolbarLoad), input.onBoardEvent(TerminalEvent.FunctionKey(6), boardLayout))
@@ -53,8 +105,7 @@ class KeyboardInputTest {
 
     @Test
     fun `F7 requests a switch to mouse mode, F8 does nothing (GH-79)`() {
-        val input = KeyboardInput()
-        input.decorateBoard(unsolvedBoard())
+        val input = input()
 
         assertEquals(InputAction.Activate(HitTarget.ToolbarMode(InputMode.MOUSE)), input.onBoardEvent(TerminalEvent.FunctionKey(7), boardLayout))
         assertEquals(InputAction.None, input.onBoardEvent(TerminalEvent.FunctionKey(8), boardLayout))
@@ -62,97 +113,76 @@ class KeyboardInputTest {
 
     @Test
     fun `F9 activates the New toolbar button (GH-44 WU3)`() {
-        val input = KeyboardInput()
-        input.decorateBoard(unsolvedBoard())
-
-        assertEquals(InputAction.Activate(HitTarget.ToolbarNew), input.onBoardEvent(TerminalEvent.FunctionKey(9), boardLayout))
+        assertEquals(InputAction.Activate(HitTarget.ToolbarNew), input().onBoardEvent(TerminalEvent.FunctionKey(9), boardLayout))
     }
 
     @Test
     fun `EndOfInput quits, an unrelated key is None`() {
-        val input = KeyboardInput()
-        input.decorateBoard(unsolvedBoard())
+        val input = input()
 
         assertEquals(InputAction.Quit, input.onBoardEvent(TerminalEvent.EndOfInput, boardLayout))
         assertEquals(InputAction.None, input.onBoardEvent(TerminalEvent.Tab, boardLayout))
+        assertEquals(InputAction.None, input.onBoardEvent(key('x'), boardLayout))
     }
 
     @Test
-    fun `once solved, arrow keys and Enter are None but the toolbar shortcuts stay live`() {
-        val input = KeyboardInput()
+    fun `once solved, selection and shift keys are None but the toolbar shortcuts stay live`() {
+        val selection = KeyboardSelection()
+        val input = KeyboardInput(selection)
         input.decorateBoard(solvedBoard())
 
-        assertEquals(InputAction.None, input.onBoardEvent(TerminalEvent.Arrow(Direction.DOWN), boardLayout))
-        assertEquals(InputAction.None, input.onBoardEvent(TerminalEvent.Enter, boardLayout))
+        for (event in listOf(key('s'), key('d'), key('h'), key('L'), arrow(Direction.DOWN), arrow(Direction.LEFT))) {
+            assertEquals(InputAction.None, input.onBoardEvent(event, boardLayout), "$event")
+        }
+        assertEquals(LineSelection.INITIAL, selection.current)
         assertEquals(InputAction.Activate(HitTarget.ToolbarSave), input.onBoardEvent(TerminalEvent.FunctionKey(5), boardLayout))
         assertEquals(InputAction.Activate(HitTarget.ToolbarExit), input.onBoardEvent(TerminalEvent.Escape, boardLayout))
-        // F7's mode-switch request, unlike arrows/Enter, stays live even when solved (GH-30).
         assertEquals(InputAction.Activate(HitTarget.ToolbarMode(InputMode.MOUSE)), input.onBoardEvent(TerminalEvent.FunctionKey(7), boardLayout))
-        // F9's New-game dialog also stays live once solved (GH-44 WU3) - it starts a fresh game,
-        // same reasoning as F5/F6/F7 never going dead.
         assertEquals(InputAction.Activate(HitTarget.ToolbarNew), input.onBoardEvent(TerminalEvent.FunctionKey(9), boardLayout))
     }
 
     @Test
-    fun `decorateBoard drops the cursor once solved and always sets the controls hint, toolbar shortcuts, and mode buttons`() {
-        val input = KeyboardInput()
+    fun `decorateBoard shows the selection, hides the arrows and sets the hints, toolbar shortcuts and mode buttons`() {
+        val input = KeyboardInput(KeyboardSelection())
 
         val unsolved = input.decorateBoard(unsolvedBoard())
-        assertEquals(ArrowCursor(Edge.LEFT, 0), unsolved.cursor)
+        assertEquals(LineSelection.INITIAL, unsolved.selection)
+        assertFalse(unsolved.showArrows)
+        assertEquals(listOf("W/S  row", "A/D  column"), unsolved.selectionHint)
+        assertEquals(listOf("←/→ H/L  shift row", "↑/↓ K/J  shift column"), unsolved.shiftHint)
+        assertEquals("F5/F6/F9 Save/Load/New · F7 Mouse · Esc", unsolved.controlsHint)
+        assertEquals(true, unsolved.toolbarShortcuts)
+        assertEquals(listOf(InputMode.MOUSE), unsolved.modeButtons)
 
         val solved = input.decorateBoard(solvedBoard())
-        assertNull(solved.cursor)
-        assertEquals(true, solved.toolbarShortcuts)
-        assertEquals("Arrows: move · Enter: shift · F5/F6/F9 Save/Load/New · F7 Mouse · Esc", solved.controlsHint)
-        assertEquals(listOf(InputMode.MOUSE), solved.modeButtons)
+        assertNull(solved.selection)
+        assertEquals(unsolved.selectionHint, solved.selectionHint)
     }
 
     @Test
     fun `the controls hint fits inside an 80-column terminal (audit finding on PR #40)`() {
-        // ScreenRenderer draws it with Canvas.put, which clips silently past the terminal width -
-        // no wrap, no ellipsis. 80 is both the classic default and AnsiTerminal's hardcoded
-        // fallback when `stty size` fails, so this is the narrowest width that must never clip.
-        val hint = KeyboardInput().decorateBoard(unsolvedBoard()).controlsHint
+        val hint = KeyboardInput(KeyboardSelection()).decorateBoard(unsolvedBoard()).controlsHint
 
         assertTrue((hint?.length ?: 0) <= 80)
     }
 
     @Test
-    fun `the cursor resets to LEFT-0 when the board goes from solved back to unsolved`() {
-        val input = KeyboardInput()
-        input.decorateBoard(unsolvedBoard())
-        input.onBoardEvent(TerminalEvent.Arrow(Direction.DOWN), boardLayout) // moves off LEFT[0]
-        input.decorateBoard(unsolvedBoard())
-        input.decorateBoard(solvedBoard())
+    fun `a smaller board clamps the selection, and a solved spell doesn't reset it`() {
+        val selection = KeyboardSelection().apply { current = LineSelection(4, 1, LineSelection.Axis.COLUMN) }
+        val input = KeyboardInput(selection)
 
-        assertEquals(ArrowCursor(Edge.LEFT, 0), input.decorateBoard(unsolvedBoard()).cursor)
+        input.decorateBoard(solvedBoard(squareSide = 5))
+        assertEquals(LineSelection(4, 1, LineSelection.Axis.COLUMN), input.decorateBoard(unsolvedBoard(squareSide = 5)).selection)
+        assertEquals(LineSelection(2, 1, LineSelection.Axis.COLUMN), input.decorateBoard(unsolvedBoard(squareSide = 3)).selection)
+        assertEquals(LineSelection(2, 1, LineSelection.Axis.COLUMN), selection.current)
     }
 
     @Test
-    fun `the cursor resets to LEFT-0 when squareSide changes, even mid-game (GH-44 WU3)`() {
-        // A cursor left over from a larger board (e.g. LEFT[4] on a 5x5 board) is out of range
-        // the moment [ New ]/`size <N>` starts a fresh game at a smaller side (3x3 here) -
-        // unlike the solved/unsolved transition above, this can happen while arrowsEnabled never
-        // toggles at all.
-        val input = KeyboardInput()
-        input.decorateBoard(unsolvedBoard(squareSide = 5))
-        repeat(4) { input.onBoardEvent(TerminalEvent.Arrow(Direction.DOWN), boardLayout) } // LEFT[0] -> LEFT[4]
-        assertEquals(ArrowCursor(Edge.LEFT, 4), input.decorateBoard(unsolvedBoard(squareSide = 5)).cursor)
+    fun `two KeyboardInputs over one KeyboardSelection share it - a mode switch keeps it`() {
+        val selection = KeyboardSelection()
+        input(selection).onBoardEvent(key('s'), boardLayout)
 
-        val decorated = input.decorateBoard(unsolvedBoard(squareSide = 3))
-
-        assertEquals(ArrowCursor(Edge.LEFT, 0), decorated.cursor)
-    }
-
-    @Test
-    fun `the cursor is left alone across an ordinary repaint at the same squareSide`() {
-        val input = KeyboardInput()
-        input.decorateBoard(unsolvedBoard())
-        input.onBoardEvent(TerminalEvent.Arrow(Direction.DOWN), boardLayout) // moves off LEFT[0]
-
-        val decorated = input.decorateBoard(unsolvedBoard())
-
-        assertEquals(ArrowCursor(Edge.LEFT, 1), decorated.cursor)
+        assertEquals(LineSelection(1, 0, LineSelection.Axis.ROW), input(selection).decorateBoard(unsolvedBoard()).selection)
     }
 
     private fun saveDialog(typed: String = "") = Dialog(
@@ -166,7 +196,7 @@ class KeyboardInputTest {
 
     @Test
     fun `a fresh dialog focuses the text field, so printable keys type and F-keys are ignored`() {
-        val input = KeyboardInput()
+        val input = KeyboardInput(KeyboardSelection())
         input.decorateBoard(unsolvedBoard().copy(dialog = saveDialog()))
         val dialog = saveDialog()
 
@@ -177,7 +207,7 @@ class KeyboardInputTest {
 
     @Test
     fun `Tab moves focus from the text field to the Save button, then Enter submits`() {
-        val input = KeyboardInput()
+        val input = KeyboardInput(KeyboardSelection())
         input.decorateBoard(unsolvedBoard().copy(dialog = saveDialog("hi")))
         val dialog = saveDialog("hi")
 
@@ -188,7 +218,7 @@ class KeyboardInputTest {
 
     @Test
     fun `Escape cancels and EndOfInput quits a dialog session regardless of focus`() {
-        val input = KeyboardInput()
+        val input = KeyboardInput(KeyboardSelection())
         val dialog = saveDialog()
         input.decorateBoard(unsolvedBoard().copy(dialog = dialog))
 
@@ -206,7 +236,7 @@ class KeyboardInputTest {
 
     @Test
     fun `Down on a Load dialog selects the next row, same target a click on it would produce`() {
-        val input = KeyboardInput()
+        val input = KeyboardInput(KeyboardSelection())
         val dialog = loadDialog(listOf("foo", "bar"), selected = 0)
         input.decorateBoard(unsolvedBoard().copy(dialog = dialog))
 
@@ -217,7 +247,7 @@ class KeyboardInputTest {
 
     @Test
     fun `dialogFocusIndex resets to the first control once decorateBoard sees no dialog`() {
-        val input = KeyboardInput()
+        val input = KeyboardInput(KeyboardSelection())
         val dialog = saveDialog()
         input.decorateBoard(unsolvedBoard().copy(dialog = dialog))
         input.onDialogEvent(TerminalEvent.Tab, dialog, dialogLayoutFor(dialog)) // focus -> the Save button
@@ -232,7 +262,7 @@ class KeyboardInputTest {
     fun `onDialogOpened resets focus to the first control, even with no board repaint in between`() {
         // Regression: the exit flow's Yes -> Save handoff chains straight into a new dialog
         // session with no decorateBoard(dialog = null) repaint in between.
-        val input = KeyboardInput()
+        val input = KeyboardInput(KeyboardSelection())
         val exitDialog = Dialog(
             kind = Dialog.Kind.EXIT,
             title = "Save before quitting?",

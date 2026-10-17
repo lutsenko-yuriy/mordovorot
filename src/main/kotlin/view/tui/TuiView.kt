@@ -5,6 +5,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import view.View
 import viewmodel.ExitRequestedException
+import viewmodel.ShiftKey
 import viewmodel.ViewModel
 
 /**
@@ -58,6 +59,10 @@ class TuiView internal constructor(
                         }
                         screen.repaint()
                     }
+                    is InputAction.Shift -> {
+                        handleTarget(action.target, action.key)
+                        screen.repaint()
+                    }
                     InputAction.Redraw -> screen.repaint()
                     InputAction.Quit -> return@coroutineScope
                     else -> {}
@@ -70,12 +75,13 @@ class TuiView internal constructor(
         }
     }
 
-    private suspend fun handleTarget(target: HitTarget) {
+    /** [key] is the keyboard key behind a shift (GH-101), `null` for a click. */
+    private suspend fun handleTarget(target: HitTarget, key: ShiftKey? = null) {
         when (target) {
-            is HitTarget.ShiftLeft -> shift { viewModel.shiftLeft(target.row) }
-            is HitTarget.ShiftRight -> shift { viewModel.shiftRight(target.row) }
-            is HitTarget.ShiftUp -> shift { viewModel.shiftUp(target.col) }
-            is HitTarget.ShiftDown -> shift { viewModel.shiftDown(target.col) }
+            is HitTarget.ShiftLeft -> shift { viewModel.shiftLeft(target.row, key) }
+            is HitTarget.ShiftRight -> shift { viewModel.shiftRight(target.row, key) }
+            is HitTarget.ShiftUp -> shift { viewModel.shiftUp(target.col, key) }
+            is HitTarget.ShiftDown -> shift { viewModel.shiftDown(target.col, key) }
             else -> toolbar.handle(target)
         }
     }
@@ -88,9 +94,10 @@ class TuiView internal constructor(
      *
      *  Today, [TuiScreen.wasSolved] is guaranteed `false` on every call here - [shift] is only reachable
      *  through a click [BoardLayout.hitTest] resolves to a `HitTarget.Shift*`, which only
-     *  happens when the layout it was built against had `arrowsEnabled = true`, which
-     *  [TuiScreen.repaintWithDialog] only sets when the same [TuiScreen.wasSolved] sync came out `false`. The
-     *  "fires exactly once" property currently rests on that arrows-disabled gate, not on this
+     *  happens when the layout it was built against had `arrowsEnabled = true`, or a keyboard
+     *  shift key, which `KeyboardInput` makes inert once solved (GH-101); both gates track
+     *  [TuiScreen.repaintWithDialog]'s own [TuiScreen.wasSolved] sync. The
+     *  "fires exactly once" property currently rests on those gates, not on this
      *  check (round 2 audit finding on PR #25). The check stays anyway as the one line standing
      *  between a correct single fire and a silent double-count the day arrows stop going dead on
      *  solve (e.g. a future "keep playing" affordance) - deleting it would save nothing today and

@@ -26,10 +26,17 @@ data class ScreenState(
     /** A one-shot status line from the viewModel (e.g. "Saved as 'x'.", "Not quitting - ...") -
      *  board-only, since dialogs show their own [Dialog.message] instead (WU4). */
     val message: String? = null,
-    /** The highlighted shift arrow in keyboard mode (GH-18) - `null` in mouse mode and whenever
-     *  [arrowsEnabled] is false (the board is solved, so there's nothing for a cursor to land
-     *  on). Set by [view.tui.KeyboardInput.decorateBoard], never by [forBoard] itself. */
-    val cursor: ArrowCursor? = null,
+    /** Keyboard mode's selected line (GH-101), its tiles drawn highlighted - `null` in mouse
+     *  mode and whenever [arrowsEnabled] is false (solved). Set by
+     *  [view.tui.KeyboardInput.decorateBoard], never by [forBoard] itself. */
+    val selection: LineSelection? = null,
+    /** Whether the shift arrows are drawn - keyboard mode hides them (GH-101). Their space stays
+     *  reserved, so the board doesn't move on a mode switch. */
+    val showArrows: Boolean = true,
+    /** Keyboard mode's selection hint lines, left of the board (GH-101). */
+    val selectionHint: List<String> = emptyList(),
+    /** Keyboard mode's shift hint lines, right of the board (GH-101). */
+    val shiftHint: List<String> = emptyList(),
     /** A bottom-left reminder of the keyboard controls (GH-18), or `null` in mouse mode. */
     val controlsHint: String? = null,
     /** Whether the toolbar shows `[Save F5]`-style labels (keyboard mode) instead of
@@ -39,7 +46,7 @@ data class ScreenState(
     /** The other input modes offered on the toolbar (GH-30) - never the mode the view is
      *  already in. Set by [TuiInput.decorateBoard]
      *  ([MouseInput]'s WU3, `KeyboardInput`'s WU4), never by [forBoard] itself, same as
-     *  [cursor]/[controlsHint]. */
+     *  [selection]/[controlsHint]. */
     val modeButtons: List<InputMode> = emptyList(),
     /** Moves made this game (GH-62), drawn under the title. */
     val moveCount: Int = 0,

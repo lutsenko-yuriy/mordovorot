@@ -1,5 +1,7 @@
 package view.tui
 
+import viewmodel.ShiftKey
+
 /**
  * What [TuiView] does in response to one [TerminalEvent], as decided by whichever [TuiInput] is
  * active - the single vocabulary both the board loop and every dialog loop consume, so neither
@@ -9,12 +11,15 @@ package view.tui
  */
 sealed class InputAction {
     data class Activate(val target: HitTarget) : InputAction()
+    /** A keyboard shift (GH-101), tagged with the [key] that made it - kept apart from
+     *  [Activate] so a click or toolbar target never carries one. */
+    data class Shift(val target: HitTarget, val key: ShiftKey) : InputAction()
     data class TextChar(val char: Char) : InputAction()
     object EraseChar : InputAction()
     object Submit : InputAction()
     object Cancel : InputAction()
-    /** Redraw without otherwise acting - a keyboard cursor move (GH-18) is the only source of
-     *  this today; a mouse click never produces it (see [MouseInput]). */
+    /** Redraw without otherwise acting - a keyboard selection change (GH-101) is the only
+     *  source of this today; a mouse click never produces it (see [MouseInput]). */
     object Redraw : InputAction()
     object Quit : InputAction()
     object None : InputAction()
@@ -23,7 +28,7 @@ sealed class InputAction {
 /**
  * The per-mode input strategy [TuiView] delegates to (GH-18): translating a raw [TerminalEvent]
  * into an [InputAction], and decorating the [ScreenState]/[Dialog] each repaint draws with
- * whatever presentation the mode owns (a keyboard cursor, focus highlight, toolbar shortcut
+ * whatever presentation the mode owns (a selected line, focus highlight, toolbar shortcut
  * labels). [MouseInput] is today's mouse behaviour, extracted verbatim; GH-18's `KeyboardInput`
  * is the other implementation.
  */
@@ -52,7 +57,7 @@ interface TuiInput {
      *  exit flow's Yes -> Save handoff). Default no-op - [MouseInput] has no per-session state. */
     fun onDialogOpened() {}
 
-    /** Decorates a freshly-built board [ScreenState] with this mode's presentation (cursor,
+    /** Decorates a freshly-built board [ScreenState] with this mode's presentation (selection,
      *  controls hint, toolbar shortcut labels) before it's rendered and laid out. Identity for
      *  [MouseInput]. */
     fun decorateBoard(state: ScreenState): ScreenState

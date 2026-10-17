@@ -26,28 +26,35 @@ class ViewModelImpl internal constructor(
     private val exitGameUseCase: ExitGameUseCase,
     private val startupRestoreUseCase: StartupRestoreUseCase,
     private val currentSaveName: CurrentSaveName,
+    private val gameShiftKeys: GameShiftKeys,
 ) : ViewModel {
 
     override val uiRequests: ReceiveChannel<UiRequest<*>> = ui.requests
 
-    override fun shiftLeft(row: Int) = shift { board.shiftLeft(row) }
+    override fun shiftLeft(row: Int, key: ShiftKey?) = shift(key) { board.shiftLeft(row) }
 
-    override fun shiftRight(row: Int) = shift { board.shiftRight(row) }
+    override fun shiftRight(row: Int, key: ShiftKey?) = shift(key) { board.shiftRight(row) }
 
-    override fun shiftUp(col: Int) = shift { board.shiftUp(col) }
+    override fun shiftUp(col: Int, key: ShiftKey?) = shift(key) { board.shiftUp(col) }
 
-    override fun shiftDown(col: Int) = shift { board.shiftDown(col) }
+    override fun shiftDown(col: Int, key: ShiftKey?) = shift(key) { board.shiftDown(col) }
 
     /** Runs a shift and tracks `board_solved` when it turns an unsolved board into a solved one
      *  (GH-62). Loads never pass through here, so restoring a solved save doesn't fire it.
-     *  Mordie's check runs first, so a solution it reveals on the solving shift counts. */
-    private fun shift(action: () -> Unit) {
+     *  Mordie's check runs first, so a solution it reveals on the solving shift counts.
+     *  `shift_keys` (GH-101) only rides on a keyboard solve, so mouse mode never sends it. */
+    private fun shift(key: ShiftKey?, action: () -> Unit) {
         val wasSolved = board.isCorrect()
         action()
+        key?.let(gameShiftKeys::record)
         mordieHooks.onShift()
         if (!wasSolved && board.isCorrect()) {
             val mordieProps = mordieHooks.onSolved()
-            analytics.track("board_solved", mapOf("move_count" to board.moveCount, "board_size" to board.squareSide) + mordieProps)
+            val shiftKeyProps = gameShiftKeys.value?.takeIf { key != null }?.let { mapOf("shift_keys" to it) }.orEmpty()
+            analytics.track(
+                "board_solved",
+                mapOf("move_count" to board.moveCount, "board_size" to board.squareSide) + mordieProps + shiftKeyProps,
+            )
         }
     }
 

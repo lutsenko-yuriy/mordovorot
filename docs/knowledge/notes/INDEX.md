@@ -42,6 +42,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 ## Reviewed — nothing noteworthy
 
 - [GH-10: 1-based tile values and row/column indices](GH-10.md)
+- [GH-101: Keyboard mode: select a row/column with WASD, shift with HJKL/arrows](GH-101.md)
 - [GH-12: Exit command](GH-12.md)
 - [GH-23: Split Presenter into console/TUI-specific presenters](GH-23.md)
 - [GH-6: Save and load game state to/from local files](GH-6.md)

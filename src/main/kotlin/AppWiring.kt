@@ -5,6 +5,7 @@ import mordie.Mordie
 import storage.SaveRepository
 import view.View
 import view.tui.KeyboardInput
+import view.tui.KeyboardSelection
 import view.tui.MouseInput
 import view.tui.ScreenRenderer
 import view.tui.Terminal
@@ -20,6 +21,7 @@ import view.tui.dialog.SaveDialogController
 import view.tui.dialog.SizeDialogController
 import view.tui.dialog.UnsolvableDialogController
 import viewmodel.CurrentSaveName
+import viewmodel.GameShiftKeys
 import viewmodel.ModeSwitcher
 import viewmodel.ModeSwitcherImpl
 import viewmodel.MordieHooks
@@ -38,8 +40,8 @@ import viewmodel.usecase.StartupRestoreUseCase
 // builds the session-lifetime objects; everything below is rebuilt per mode. Test builders call
 // these same functions with fakes, so tests and production can't wire things differently.
 
-/** A [GameSession] whose every rebuild shares [board], [saves], [mordie] and one
- *  [CurrentSaveName] (GH-99). */
+/** A [GameSession] whose every rebuild shares [board], [saves], [mordie], one
+ *  [CurrentSaveName] (GH-99), one [GameShiftKeys] and one [KeyboardSelection] (GH-101). */
 internal fun buildGameSession(
     initialMode: InputMode,
     board: BoardModel,
@@ -50,8 +52,13 @@ internal fun buildGameSession(
     terminalFactory: () -> Terminal,
 ): GameSession {
     val currentSaveName = CurrentSaveName()
+    val gameShiftKeys = GameShiftKeys()
+    val keyboardSelection = KeyboardSelection()
     return GameSession(initialMode, mordie) { mode, startupRestoreDone ->
-        defaultView(mode, board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, terminalFactory)
+        defaultView(
+            mode, board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftKeys,
+            keyboardSelection, terminalFactory,
+        )
     }
 }
 
@@ -66,14 +73,18 @@ internal fun defaultView(
     sizeChosenAtLaunch: Boolean,
     mordie: Mordie,
     currentSaveName: CurrentSaveName,
+    gameShiftKeys: GameShiftKeys,
+    keyboardSelection: KeyboardSelection,
     terminalFactory: () -> Terminal,
 ): View {
     val decoratedAnalytics = InputMethodAnalyticsService(analytics, mode.name.lowercase())
-    val viewModel = buildViewModel(board, saves, decoratedAnalytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName)
+    val viewModel = buildViewModel(
+        board, saves, decoratedAnalytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftKeys,
+    )
     return buildTuiView(
         terminalFactory(),
         decoratedAnalytics,
-        if (mode == InputMode.KEYBOARD) KeyboardInput() else MouseInput(),
+        if (mode == InputMode.KEYBOARD) KeyboardInput(keyboardSelection) else MouseInput(),
         ModeSwitcherImpl(currentMode = mode, analytics = analytics),
         viewModel,
     )
@@ -89,20 +100,22 @@ internal fun buildViewModel(
     sizeChosenAtLaunch: Boolean,
     mordie: Mordie,
     currentSaveName: CurrentSaveName,
+    gameShiftKeys: GameShiftKeys,
 ): ViewModelImpl {
     val mordieHooks = MordieHooks(mordie, board, analytics)
     val ui = UiRequestChannel()
     val catalog = SaveCatalog(saves)
-    val newGame = NewGameUseCase(board, mordieHooks, analytics, currentSaveName)
+    val newGame = NewGameUseCase(board, mordieHooks, analytics, currentSaveName, gameShiftKeys)
     val saveGame = SaveGameUseCase(board, saves, mordieHooks, analytics, ui, currentSaveName)
     val exitGame = ExitGameUseCase(saves, saveGame, analytics, ui)
-    val resolveUnsolvable = ResolveUnsolvableSaveUseCase(board, saves, mordieHooks, analytics, ui, newGame, exitGame, currentSaveName)
-    val loadGame = LoadGameUseCase(board, saves, mordieHooks, analytics, ui, catalog, resolveUnsolvable, currentSaveName)
+    val resolveUnsolvable = ResolveUnsolvableSaveUseCase(board, saves, mordieHooks, analytics, ui, newGame, exitGame, currentSaveName, gameShiftKeys)
+    val loadGame = LoadGameUseCase(board, saves, mordieHooks, analytics, ui, catalog, resolveUnsolvable, currentSaveName, gameShiftKeys)
     val startupRestore = StartupRestoreUseCase(
         board, catalog, analytics, ui, loadGame, newGame, mordieHooks, startupRestoreDone, sizeChosenAtLaunch,
     )
     return ViewModelImpl(
         board, analytics, mordieHooks, ui, catalog, newGame, saveGame, loadGame, exitGame, startupRestore, currentSaveName,
+        gameShiftKeys,
     )
 }
 

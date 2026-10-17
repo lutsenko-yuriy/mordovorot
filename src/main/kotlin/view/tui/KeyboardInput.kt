@@ -2,34 +2,39 @@ package view.tui
 
 import InputMode
 import board_model.BoardSize
+import viewmodel.ShiftKey
 
 /** Bottom-left controls reminder (GH-18/GH-30/GH-44) - F5/F6/F9/F7/Esc stay live even when
- *  the arrows/cursor don't. Must fit 80 chars, the default/fallback terminal width
+ *  the selection keys don't. Must fit 80 chars, the default/fallback terminal width
  *  ([ScreenRenderer.Canvas.put] has no wrap or ellipsis, unlike dialog content - audit findings
- *  on PR #40 and PR #53). */
-private const val CONTROLS_HINT =
-    "Arrows: move · Enter: shift · F5/F6/F9 Save/Load/New · F7 Mouse · Esc"
+ *  on PR #40 and PR #53). The board keys have their own side hints (GH-101). */
+private const val CONTROLS_HINT = "F5/F6/F9 Save/Load/New · F7 Mouse · Esc"
+
+private val SELECTION_HINT = listOf("W/S  row", "A/D  column")
+private val SHIFT_HINT = listOf("←/→ H/L  shift row", "↑/↓ K/J  shift column")
+
+private val SELECT_KEYS = mapOf('w' to Direction.UP, 's' to Direction.DOWN, 'a' to Direction.LEFT, 'd' to Direction.RIGHT)
+private val HJKL_KEYS = mapOf('h' to Direction.LEFT, 'j' to Direction.DOWN, 'k' to Direction.UP, 'l' to Direction.RIGHT)
 
 /**
- * GH-18's keyboard-driven [TuiInput] - the only stateful one, owning the board [ArrowCursor] and
- * the dialog's focus index into its [DialogFocus] ring.
+ * GH-18's keyboard-driven [TuiInput] - the only stateful one, working the session's shared
+ * [KeyboardSelection] and owning the dialog's focus index into its [DialogFocus] ring.
  *
- * Board: arrows move the cursor around the perimeter ring; Enter/Space activates the highlighted
- * arrow; F5/F6 open Save/Load, F9 (GH-44 WU3) opens the New-game size picker, F7 (GH-30)
- * requests a switch to mouse mode, and Escape opens Exit - all regardless of cursor
- * position, staying live even when solved (arrows/Enter go inert instead, cursor stops
- * rendering). Escape replaces a function key for Exit - board and dialog events are mutually
- * exclusive, so it can't collide with Escape's dialog-level Cancel.
+ * Board (GH-101): W/A/S/D select a row or column, H/J/K/L and the arrow keys shift it (see
+ * [LineSelection]), letters in either case; F5/F6 open Save/Load, F9 (GH-44 WU3) opens the
+ * New-game size picker, F7 (GH-30) requests a switch to mouse mode, and Escape opens Exit - all
+ * staying live even when solved (the selection and shift keys go inert instead, the highlight
+ * stops rendering). Escape replaces a function key for Exit - board and dialog events are
+ * mutually exclusive, so it can't collide with Escape's dialog-level Cancel.
  *
  * Dialog: Tab/Down/Right advance the focus ring, Shift-Tab/Up/Left go back, Enter activates
  * whatever's focused (submit, select a row, or click a button), Escape cancels, typing only ever
  * edits the text field. Space is always text inside a dialog, never an activator.
  */
-class KeyboardInput : TuiInput {
+class KeyboardInput(private val selection: KeyboardSelection) : TuiInput {
 
     override val switchTrigger = "shortcut"
 
-    private var cursor = ArrowCursor(Edge.LEFT, 0)
     private var squareSide = BoardSize.DEFAULT
     private var arrowsEnabled = true
 
@@ -41,20 +46,32 @@ class KeyboardInput : TuiInput {
         // Keyboard mode never enables mouse reporting.
     }
 
-    override fun onBoardEvent(event: TerminalEvent, layout: BoardLayout): InputAction = when {
-        event is TerminalEvent.Arrow && arrowsEnabled -> {
-            cursor = ArrowRing(squareSide).move(cursor, event.direction)
-            InputAction.Redraw
+    override fun onBoardEvent(event: TerminalEvent, layout: BoardLayout): InputAction {
+        val letter = (event as? TerminalEvent.KeyPress)?.char?.lowercaseChar()
+        return when {
+            // F5/F6/F7/F9/Escape stay live regardless of arrowsEnabled - the toolbar never goes dead.
+            event is TerminalEvent.FunctionKey -> functionKeyAction(event.n)
+            event == TerminalEvent.Escape -> InputAction.Activate(HitTarget.ToolbarExit)
+            event == TerminalEvent.EndOfInput -> InputAction.Quit
+            !arrowsEnabled -> InputAction.None // solved: nothing to select or shift
+            letter in SELECT_KEYS -> {
+                selection.current = selection.current.select(SELECT_KEYS.getValue(letter!!), squareSide)
+                InputAction.Redraw
+            }
+            letter in HJKL_KEYS -> shift(HJKL_KEYS.getValue(letter!!), ShiftKey.HJKL)
+            event is TerminalEvent.Arrow -> shift(event.direction, ShiftKey.ARROW)
+            else -> InputAction.None
         }
-        event is TerminalEvent.Arrow -> InputAction.None // solved: nothing to land on
-        isActivateKey(event) ->
-            if (arrowsEnabled) InputAction.Activate(ArrowRing(squareSide).toHitTarget(cursor)) else InputAction.None
-        // F5/F6/F7/F9/Escape stay live regardless of arrowsEnabled - the toolbar never goes dead.
-        event is TerminalEvent.FunctionKey -> functionKeyAction(event.n)
-        event == TerminalEvent.Escape -> InputAction.Activate(HitTarget.ToolbarExit)
-        event == TerminalEvent.EndOfInput -> InputAction.Quit
-        else -> InputAction.None
     }
+
+    private fun shift(direction: Direction, key: ShiftKey): InputAction =
+        when (val outcome = selection.current.shift(direction)) {
+            is LineSelection.ShiftOutcome.Shift -> InputAction.Shift(outcome.target, key)
+            is LineSelection.ShiftOutcome.Switched -> {
+                selection.current = outcome.selection
+                InputAction.Redraw
+            }
+        }
 
     override fun onDialogEvent(event: TerminalEvent, dialog: Dialog, layout: DialogLayout): InputAction {
         val focus = DialogFocus(dialog)
@@ -83,20 +100,17 @@ class KeyboardInput : TuiInput {
     }
 
     override fun decorateBoard(state: ScreenState): ScreenState {
-        val previousSquareSide = squareSide
         squareSide = state.squareSide
-        val wasEnabled = arrowsEnabled
         arrowsEnabled = state.arrowsEnabled
-        // Resets the cursor on the disabled -> enabled transition (e.g. loading an unsolved save
-        // from the Congratulations screen), and whenever squareSide itself changes ([ ToolbarNew ]
-        // /`size <N>`, GH-44 WU3, can start a fresh game at a different side mid-session) - the
-        // old cursor's index could otherwise point past the new, smaller ring (e.g. LEFT[4] left
-        // over from a 5x5 board is out of range on a fresh 3x3 one). Never resets on an ordinary
-        // mid-game repaint at the same side.
-        if ((arrowsEnabled && !wasEnabled) || squareSide != previousSquareSide) cursor = ArrowCursor(Edge.LEFT, 0)
+        // Kept across new games, loads and solved spells (GH-101), only pulled inside a smaller
+        // board - every repaint sees the current side, whichever mode changed it.
+        selection.current = selection.current.clampedTo(squareSide)
         if (state.dialog == null) dialogFocusIndex = 0
         return state.copy(
-            cursor = if (arrowsEnabled) cursor else null,
+            selection = if (arrowsEnabled) selection.current else null,
+            showArrows = false,
+            selectionHint = SELECTION_HINT,
+            shiftHint = SHIFT_HINT,
             controlsHint = CONTROLS_HINT,
             toolbarShortcuts = true,
             modeButtons = listOf(InputMode.MOUSE),
@@ -136,9 +150,6 @@ class KeyboardInput : TuiInput {
         is DialogFocusTarget.Button -> InputAction.Activate(target.hitTarget)
         null -> InputAction.None
     }
-
-    private fun isActivateKey(event: TerminalEvent): Boolean =
-        event == TerminalEvent.Enter || event == TerminalEvent.KeyPress(' ')
 
     private fun functionKeyAction(n: Int): InputAction = when (n) {
         5 -> InputAction.Activate(HitTarget.ToolbarSave)

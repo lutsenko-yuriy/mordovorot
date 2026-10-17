@@ -32,7 +32,7 @@ class TuiViewKeyboardDialogTest {
         // See TuiViewDialogTest's identical parameter for why this defaults to false but most
         // call sites here override it to true.
         sizeChosenAtLaunch: Boolean = false,
-    ): TuiView = testTuiView(terminal, analytics, input = KeyboardInput(), viewModel = testViewModel(board, saves, analytics, sizeChosenAtLaunch = sizeChosenAtLaunch))
+    ): TuiView = testTuiView(terminal, analytics, input = KeyboardInput(KeyboardSelection()), viewModel = testViewModel(board, saves, analytics, sizeChosenAtLaunch = sizeChosenAtLaunch))
 
     @Test
     fun `the exit flow's Save re-prompt after a rejected name starts focus back on the text field`(): Unit = runBlocking {
@@ -56,7 +56,7 @@ class TuiViewKeyboardDialogTest {
             terminalSize = terminalSize,
         )
 
-        testTuiView(terminal, input = KeyboardInput(), viewModel = testViewModel(board, saves, sizeChosenAtLaunch = true)).play()
+        testTuiView(terminal, input = KeyboardInput(KeyboardSelection()), viewModel = testViewModel(board, saves, sizeChosenAtLaunch = true)).play()
 
         assertTrue(saves.saveCalls.any { it.first == "ok" })
     }
@@ -76,7 +76,7 @@ class TuiViewKeyboardDialogTest {
         )
         val viewModel = testViewModel(FakeBoardModel(), saves, sizeChosenAtLaunch = true, currentSaveName = currentSaveName)
 
-        testTuiView(terminal, input = KeyboardInput(), viewModel = viewModel).play()
+        testTuiView(terminal, input = KeyboardInput(KeyboardSelection()), viewModel = viewModel).play()
 
         val reprompt = terminal.frames.last { it.contains("Save game") }
         assertTrue(reprompt.contains("Name: foo_"))
@@ -92,7 +92,7 @@ class TuiViewKeyboardDialogTest {
             terminalSize = terminalSize,
         )
 
-        testTuiView(terminal, input = KeyboardInput(), viewModel = viewModel).play()
+        testTuiView(terminal, input = KeyboardInput(KeyboardSelection()), viewModel = viewModel).play()
 
         assertTrue(terminal.frames.any { it.contains("Name: foo_") })
         assertTrue(viewModel.calls.contains("saveGame(foox)"))

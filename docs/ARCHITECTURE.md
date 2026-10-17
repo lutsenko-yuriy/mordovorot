@@ -28,7 +28,8 @@ src/main/kotlin/
 ├── GameSession.kt       # Session loop extracted out of Main: builds a fresh View per mode
 │                          # through its buildView(mode, startupRestoreDone) - wired by
 │                          # buildGameSession so every rebuild shares one board, saves and
-│                          # CurrentSaveName (GH-99) -
+│                          # CurrentSaveName (GH-99), KeyboardSelection and GameShiftKeys
+│                          # (GH-101) -
 │                          # runs play(), and re-enters on ModeSwitchRequestedException. A
 │                          # rebuild's play() throwing anything else falls back to the previous
 │                          # mode (GH-79) instead of crashing and losing the in-progress game -
@@ -85,6 +86,9 @@ src/main/kotlin/
 │   │                           # save/load/repair, cleared on new game, prefills the Save dialog.
 │   │                           # One per session, made by buildGameSession, so it survives mode
 │   │                           # switches; never persisted (GH-99)
+│   ├── GameShiftKeys.kt      # ShiftKey {ARROW, HJKL} + GameShiftKeys: which keys made this
+│   │                           # game's shifts, for board_solved.shift_keys. Reset on new game/
+│   │                           # load/repair; one per session, made by buildGameSession (GH-101)
 │   ├── SaveCatalog.kt        # Read-only SaveInfo views of the saves: infos (throws) /
 │   │                           # listSaves / saveExists (swallow) / availableSavesMessage (GH-78)
 │   ├── SessionControlException.kt # Sealed marker base for control-flow exceptions that unwind
@@ -136,9 +140,11 @@ src/main/kotlin/
         │                                     # (HitTarget.ToolbarMode) (GH-30) and the reserved
         │                                     # Mordie rows under `Moves:` (GH-83)
         ├── WordWrap.kt      # Shared word wrap for dialogs and the Mordie line (GH-83)
-        ├── ArrowRing.kt     # Pure perimeter-ring cursor logic for keyboard board navigation:
-        │                      # ArrowCursor(edge, index) + Edge{LEFT,RIGHT,TOP,BOTTOM}, one
-        │                      # move per arrow key, wrapping at corners (GH-18)
+        ├── LineSelection.kt # Pure keyboard line selection (GH-101, replaced GH-18's ArrowRing):
+        │                      # LineSelection(row, col, axis) - WASD select with wraparound,
+        │                      # HJKL/arrows shift the active line or switch axis, clampedTo(side).
+        │                      # Plus KeyboardSelection, its session-lifetime holder (made by
+        │                      # buildGameSession, so it survives mode switches)
         ├── Dialog.kt / DialogLayout.kt     # One model + one geometry class for all four
         │                                     # modal dialogs (Save/Load/Exit/Size (GH-44, a
         │                                     # buttons-only kind, so DialogLayout/DialogFocus
@@ -149,8 +155,9 @@ src/main/kotlin/
         ├── DialogFocus.kt   # Pure focus ring over a dialog's controls (text field/list rows,
         │                      # then buttons) for Tab/arrow-key dialog navigation (GH-18)
         ├── ScreenState.kt / ScreenRenderer.kt # Pure ScreenState -> frame String rendering,
-        │                                        # including the dialog overlay, the keyboard
-        │                                        # cursor highlight, the controls hint, and
+        │                                        # including the dialog overlay, keyboard mode's
+        │                                        # selected-line highlight and side hints
+        │                                        # (GH-101, arrows hidden), the controls hint, and
         │                                        # toolbar shortcut labels (GH-18)
         ├── TuiInput.kt      # Per-mode input strategy interface (prepare/onBoardEvent/
         │                      # onDialogEvent/decorateBoard/decorateDialog/onDialogOpened) +
@@ -162,8 +169,8 @@ src/main/kotlin/
         ├── MouseInput.kt    # TuiInput impl: today's click-driven behaviour, stateless. Used
         │                      # by both the default mouse mode and the explicit --mouse flag
         │                      # (GH-18)
-        ├── KeyboardInput.kt # TuiInput impl: owns the board ArrowCursor and DialogFocus state
-        │                      # for --keyboard mode (GH-18)
+        ├── KeyboardInput.kt # TuiInput impl for --keyboard mode (GH-18): the WASD/HJKL key map
+        │                      # over the shared KeyboardSelection (GH-101) and DialogFocus state
         ├── dialog/          # One controller per dialog flow (GH-78), each over TuiScreen's
         │                      # runModal: SaveDialogController (toolbar Save + the exit flow's
         │                      # name prompt), ExitDialogController (owns the toolbar answer the

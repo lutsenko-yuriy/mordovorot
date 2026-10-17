@@ -79,7 +79,7 @@ internal class TuiScreen(
         // in `TuiView.shift` so a Load doesn't count as the transition (see its KDoc).
         val solved = viewModel.isSolved()
         wasSolved = solved
-        // Both the state and dialog run through the active input's decoration (cursor, focus
+        // Both the state and dialog run through the active input's decoration (selection, focus
         // highlight, toolbar shortcut labels) before layout is built from them - draw and
         // hit-test must always agree on the same geometry, same invariant every layout class in
         // this package already keeps. MouseInput's decoration is the identity, so this is a

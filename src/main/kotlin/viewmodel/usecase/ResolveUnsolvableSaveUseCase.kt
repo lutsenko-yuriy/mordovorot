@@ -6,6 +6,7 @@ import board_model.Solvability
 import storage.SaveRepository
 import storage.SavedBoard
 import viewmodel.CurrentSaveName
+import viewmodel.GameShiftKeys
 import viewmodel.ExitRequestedException
 import viewmodel.MordieHooks
 import viewmodel.SaveInfo
@@ -24,6 +25,7 @@ internal class ResolveUnsolvableSaveUseCase(
     private val newGame: NewGameUseCase,
     private val exitGame: ExitGameUseCase,
     private val currentSaveName: CurrentSaveName,
+    private val gameShiftKeys: GameShiftKeys,
 ) {
 
     /** The repair / new game / exit choice for an unsolvable save (GH-74). Returns whether the
@@ -46,6 +48,7 @@ internal class ResolveUnsolvableSaveUseCase(
                 board.restoreState(fixed, saved.moveCount)
                 mordieHooks.onRepaired()
                 currentSaveName.name = name
+                gameShiftKeys.reset()
                 val error = try {
                     saves.save(name, fixed, saved.squareSide, saved.moveCount)
                     null

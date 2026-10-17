@@ -378,11 +378,11 @@ class MordieScenarioTest {
 
         session(
             shifts(3) + snap() + click(keyboardButton.x to keyboardButton.y) + snap() +
-                key(TerminalEvent.Enter) + snap() + key(TerminalEvent.Enter) + snap(),
+                key(TerminalEvent.KeyPress('h')) + snap() + key(TerminalEvent.KeyPress('h')) + snap(),
         )
 
         assertEquals(greeting, mordieShown(snaps[0]))
-        assertTrue(rows(snaps[1]).any { "Arrows: move" in it }) // keyboard mode
+        assertTrue(rows(snaps[1]).any { "F7 Mouse" in it }) // keyboard mode
         assertEquals(listOf(greeting, greeting, ""), snaps.drop(1).map(::mordieShown)) // shifts 3, 4, 5
         assertEquals(1, factory.started.size)
     }

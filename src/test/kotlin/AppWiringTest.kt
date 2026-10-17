@@ -13,9 +13,11 @@ import testing.RecordingAnalyticsService
 import testing.testGameSession
 import view.tui.BoardLayout
 import view.tui.HitTarget
+import view.tui.KeyboardSelection
 import view.tui.TerminalEvent
 import view.tui.TerminalSize
 import viewmodel.CurrentSaveName
+import viewmodel.GameShiftKeys
 import viewmodel.ModeSwitchRequestedException
 
 /** Covers the composition root (GH-78): what production wiring builds and what every rebuild
@@ -41,6 +43,8 @@ class AppWiringTest {
                 sizeChosenAtLaunch = false,
                 mordie = Mordie(FakeMordieSearchFactory()),
                 currentSaveName = CurrentSaveName(),
+                gameShiftKeys = GameShiftKeys(),
+                keyboardSelection = KeyboardSelection(),
                 terminalFactory = { FakeTerminal(mutableListOf(switchKey.getValue(mode)), terminalSize) },
             )
 
