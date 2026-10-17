@@ -10,11 +10,15 @@ import view.tui.ScreenRenderer
 import view.tui.Terminal
 import view.tui.TuiInput
 import view.tui.TuiScreen
+import view.tui.ToolbarRouter
 import view.tui.TuiView
+import view.tui.UiRequestRouter
 import view.tui.dialog.ExitDialogController
 import view.tui.dialog.LoadDialogController
 import view.tui.dialog.RestoreDialogController
 import view.tui.dialog.SaveDialogController
+import view.tui.dialog.SizeDialogController
+import view.tui.dialog.UnsolvableDialogController
 import viewmodel.ModeSwitcher
 import viewmodel.ModeSwitcherImpl
 import viewmodel.MordieHooks
@@ -103,17 +107,18 @@ internal fun buildTuiView(
     viewModel: ViewModel,
 ): TuiView {
     val screen = TuiScreen(terminal, input, ScreenRenderer(), viewModel, analytics)
+    val saveDialog = SaveDialogController(screen, analytics, viewModel)
+    val exitDialog = ExitDialogController(screen, analytics, viewModel)
     val loadDialog = LoadDialogController(screen, analytics, viewModel)
-    return TuiView(
-        terminal,
-        analytics,
-        input,
-        modeSwitcher,
-        viewModel,
+    val sizeDialog = SizeDialogController(screen, analytics, viewModel)
+    val requests = UiRequestRouter(
         screen,
-        SaveDialogController(screen, analytics, viewModel),
-        ExitDialogController(screen, analytics, viewModel),
-        loadDialog,
+        saveDialog,
+        exitDialog,
         RestoreDialogController(loadDialog),
+        sizeDialog,
+        UnsolvableDialogController(screen, analytics),
     )
+    val toolbar = ToolbarRouter(saveDialog, loadDialog, exitDialog, sizeDialog, modeSwitcher, input)
+    return TuiView(terminal, analytics, input, viewModel, screen, requests, toolbar)
 }
