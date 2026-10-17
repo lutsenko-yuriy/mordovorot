@@ -17,6 +17,7 @@
 ## Platforms
 
 - JVM 17 desktop terminal app: an ANSI mouse/keyboard TUI that needs a real terminal (`installDist` launcher, not `./gradlew run`)
+- Web browser (GH-110, in progress): the `:web` Kotlin/JS client, served on `http://localhost:8080` by `./gradlew :web:serve` (the Kotlin plugin's webpack dev server; the port is pinned because browser saves are per origin)
 
 ## Tooling
 
@@ -24,7 +25,9 @@
   terminal app, Kotlin Multiplatform for the `shared/` modules (GH-41: `jvm()` + `js { nodejs() }`,
   GH-103; the Kotlin Gradle plugin downloads Node.js and yarn, `kotlin-js-store/yarn.lock` pins
   the npm packages; a Kotlin upgrade that changes them fails the build until
-  `./gradlew kotlinUpgradeYarnLock` is run and the new lock committed)
+  `./gradlew kotlinUpgradeYarnLock` is run and the new lock committed); the `:web` module (GH-110) adds
+  `js { browser() }`, whose webpack, webpack-cli and webpack-dev-server are build-time npm packages in
+  the same lock
 - **Test runner:** `./gradlew check` (JUnit Platform) - runs the root `test` and every shared
   module's common tests on both the JVM (`jvmTest`) and Node.js (`jsNodeTest`, GH-103); plain `./gradlew test` skips the shared modules; Python: `python -m unittest`
 - **Linter / formatter:** none configured

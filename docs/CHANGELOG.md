@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.16.7] — 2026-10-18 (PR #115 merged)
+
+### Changed
+- [wip] (PR #115) GH-110 (WU1/7): the `:web` Kotlin Multiplatform module is added with `jvm()` + `js { browser(); nodejs() }` targets, webpack dev server on port 8080, and a placeholder page; no behaviour change.
+
 ## [0.16.6] — 2026-10-17 (PR #114 merged)
 
 ### Changed

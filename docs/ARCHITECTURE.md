@@ -110,6 +110,13 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
                            # RecordingAnalyticsService / FakeMordieSearch + FakeMordieSearchFactory /
                            # FakeViewModelUi (scripted UiRequest responder, GH-42 WU2)
 
+web/                     # :web - the browser client (GH-110): `jvm()` + `js { browser(); nodejs() }`.
+│                          # DOM-free code in src/commonMain (tested on the JVM and Node.js), the
+│                          # page in src/jsMain. `./gradlew :web:serve` serves it on localhost:8080
+├── src/jsMain/kotlin/Main.kt           # Entry point (a placeholder until GH-110 WU4)
+├── src/jsMain/resources/index.html     # The page: `<title>Mordovorot</title>`, loads web.js
+└── src/jvmTest/kotlin/web/IndexPageTest.kt # Pins the title rule (the title appears only in the tab)
+
 src/main/kotlin/                # the terminal app (the root project)
 ├── Main.kt              # Entry point — resolves the starting InputMode (or aborts with no
 │                          # terminal, GH-79), builds the session-lifetime objects (BoardImpl,
@@ -549,6 +556,9 @@ alert when a session waits on the user, toggled per machine in the gitignored `.
   project's — runs them all. Module graph:
   `core`, `analytics`, `storage` and `mordie` depend on no other module; `viewmodel` has an
   `api` dependency on all four (its public types expose them); the app depends on all five.
+  `:web` (GH-110) depends on `viewmodel`, like the app. Its `browser()` target makes KGP add
+  webpack and webpack-dev-server (build time only, pinned in the same `yarn.lock`); the
+  browser test task is off, so CI needs no headless browser.
   Known follow-up for the first non-JVM port: seven viewmodel test files stay in the app
   because they use Exit or `SaveFileFormatException`, so they don't run on other targets.
 - **Test framework:** `kotlin("test")` on the JUnit 5 platform (`useJUnitPlatform()`).

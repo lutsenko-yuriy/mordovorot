@@ -4,6 +4,8 @@ rootProject.name = "mordovorot"
 // client can build on. The terminal app stays the root project.
 include(
     ":shared:core", ":shared:analytics", ":shared:storage", ":shared:mordie", ":shared:viewmodel", ":shared:testing",
+    // GH-110: the browser client.
+    ":web",
 )
 
 dependencyResolutionManagement {
