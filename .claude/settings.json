@@ -21,6 +21,20 @@
           {"type": "command", "command": "\"${CLAUDE_PROJECT_DIR}/scripts/onboard/gate.sh\" PreToolUse", "timeout": 5}
         ]
       }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {"type": "command", "command": "\"${CLAUDE_PROJECT_DIR}/scripts/alert/alert.sh\"", "timeout": 15}
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {"type": "command", "command": "\"${CLAUDE_PROJECT_DIR}/scripts/alert/alert.sh\"", "timeout": 15}
+        ]
+      }
     ]
   }
 }

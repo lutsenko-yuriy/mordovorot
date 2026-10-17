@@ -12,6 +12,9 @@ Behaviour table:
     Notification   | none                  | terminal  | silent; fires when SUPPRESS_FOCUSED=off
     toggle file    | from $CLAUDE_PROJECT_DIR, else two levels above the script
     real run       | no osascript/say on PATH -> exit 0, no output
+
+Wiring: Notification and Stop each run "${CLAUDE_PROJECT_DIR}/scripts/alert/alert.sh" exactly once, unfiltered;
+alert.sh is tracked executable; .claude/alert.env is ignored.
 """
 
 import json
@@ -131,6 +134,28 @@ class AlertTests(unittest.TestCase):
             (bin_dir / tool).symlink_to(found)
         result = self.run_alert(notification(), YAB_ALERT_DRY_RUN=None, PATH=str(bin_dir))
         self.assertSilent(result)
+
+
+class WiringTests(unittest.TestCase):
+    COMMAND = '"${CLAUDE_PROJECT_DIR}/scripts/alert/alert.sh"'
+
+    def test_notification_and_stop_each_wired_once(self):
+        hooks = json.loads((ROOT / ".claude" / "settings.json").read_text(encoding="utf-8"))["hooks"]
+        rows = [(event, group, hook) for event, groups in hooks.items() for group in groups
+                for hook in group["hooks"] if hook.get("command") == self.COMMAND]
+        self.assertEqual(["Notification", "Stop"], sorted(e for e, _, _ in rows))
+        for event, group, hook in rows:
+            self.assertEqual("command", hook["type"])
+            self.assertIn(group.get("matcher", ""), ("", "*"), event)
+            self.assertGreaterEqual(hook["timeout"], 10, event)
+
+    def test_alert_sh_is_tracked_executable(self):
+        out = subprocess.run(["git", "-C", str(ROOT), "ls-files", "-s", "scripts/alert/alert.sh"],
+                             capture_output=True, text=True, check=True).stdout
+        self.assertTrue(out.startswith("100755"), out)
+
+    def test_toggle_file_is_ignored(self):
+        self.assertEqual(0, subprocess.run(["git", "-C", str(ROOT), "check-ignore", "-q", ".claude/alert.env"]).returncode)
 
 
 if __name__ == "__main__":
