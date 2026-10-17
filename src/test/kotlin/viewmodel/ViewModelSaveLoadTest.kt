@@ -13,7 +13,7 @@ import testing.testViewModel
 
 /** Covers [ViewModelImpl.saveGame]/[ViewModelImpl.loadGame] (originally GH-6's `save`/`load`
  *  commands, WU3), shared identically by both UIs (split GH-23). Driven via [FakeViewModelUi.drive]
- *  (GH-42 WU2) - both methods always call `showMessage`, which suspends on [ViewModelImpl.ask],
+ *  (GH-42 WU2) - both methods always call `showMessage`, which suspends on [UiRequestChannel.ask],
  *  so every test here needs something draining [ViewModel.uiRequests] concurrently, not just the
  *  ones that previously asserted on a message. */
 class ViewModelSaveLoadTest {

@@ -17,7 +17,7 @@ import testing.testViewModel
  * on GH-12 for `exit_command_used`.
  *
  * Driven via [FakeViewModelUi.drive] (GH-42 WU2) - [exitGame] suspends on
- * [ViewModelImpl.ask], so something must be draining [ViewModel.uiRequests] concurrently or the
+ * [UiRequestChannel.ask], so something must be draining [ViewModel.uiRequests] concurrently or the
  * `ask` call hangs forever.
  */
 class ViewModelExitTest {

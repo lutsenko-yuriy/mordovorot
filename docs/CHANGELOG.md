@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.14.3] — 2026-10-17 (PR #93 merged)
+
+### Changed
+- [wip] (PR #93) GH-78 (WU3/8): first viewmodel split - the request channel (`UiRequestChannel`), the save listings (`SaveCatalog`) and the new-game and save flows (`NewGameUseCase`, `SaveGameUseCase`) move out of `ViewModelImpl` into their own classes, wired once in `buildViewModel`. No behaviour change; load, unsolvable-save and exit follow in WU4.
+
 ## [0.14.2] — 2026-10-17 (PR #92 merged)
 
 ### Changed

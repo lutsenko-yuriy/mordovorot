@@ -9,7 +9,7 @@ interface ViewModel {
 
     /** The UI interactions this viewModel is waiting on, in emission order (GH-42 WU2). Exactly
      *  one consumer - the View that owns this viewModel's session, draining it in a coroutine
-     *  alongside its own event loop. See [viewmodel.ViewModelImpl.ask]. */
+     *  alongside its own event loop. See [viewmodel.UiRequestChannel.ask]. */
     val uiRequests: ReceiveChannel<UiRequest<*>>
 
     fun shiftLeft(row: Int)

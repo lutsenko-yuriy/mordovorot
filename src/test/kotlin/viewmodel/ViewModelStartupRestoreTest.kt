@@ -19,7 +19,7 @@ import testing.testViewModel
  * for the full branch matrix.
  *
  * Driven via [FakeViewModelUi.drive] (GH-42 WU2) - `restoreOnStartup` suspends on
- * [ViewModelImpl.ask], so something must drain [ViewModel.uiRequests] concurrently, or the `ask`
+ * [UiRequestChannel.ask], so something must drain [ViewModel.uiRequests] concurrently, or the `ask`
  * call hangs forever.
  */
 class ViewModelStartupRestoreTest {

@@ -13,8 +13,12 @@ import view.tui.TuiView
 import viewmodel.ModeSwitcher
 import viewmodel.ModeSwitcherImpl
 import viewmodel.MordieHooks
+import viewmodel.SaveCatalog
+import viewmodel.UiRequestChannel
 import viewmodel.ViewModel
 import viewmodel.ViewModelImpl
+import viewmodel.usecase.NewGameUseCase
+import viewmodel.usecase.SaveGameUseCase
 
 // The composition root (GH-78): the only production code that constructs collaborators. `main`
 // builds the session-lifetime objects; everything below is rebuilt per mode. Test builders call
@@ -56,7 +60,8 @@ internal fun defaultView(
     )
 }
 
-/** [MordieHooks] is built here, per rebuild, so it tracks through this mode's [analytics]. */
+/** [MordieHooks] is built here, per rebuild, so it tracks through this mode's [analytics]. The
+ *  one [UiRequestChannel] is shared by the viewModel and every use case. */
 internal fun buildViewModel(
     board: BoardModel,
     saves: SaveRepository,
@@ -64,14 +69,22 @@ internal fun buildViewModel(
     startupRestoreDone: Boolean,
     sizeChosenAtLaunch: Boolean,
     mordie: Mordie,
-): ViewModelImpl = ViewModelImpl(
-    board,
-    saves,
-    analytics,
-    startupRestoreDone,
-    sizeChosenAtLaunch,
-    MordieHooks(mordie, board, analytics),
-)
+): ViewModelImpl {
+    val mordieHooks = MordieHooks(mordie, board, analytics)
+    val ui = UiRequestChannel()
+    return ViewModelImpl(
+        board,
+        saves,
+        analytics,
+        startupRestoreDone,
+        sizeChosenAtLaunch,
+        mordieHooks,
+        ui,
+        SaveCatalog(saves),
+        NewGameUseCase(board, mordieHooks, analytics),
+        SaveGameUseCase(board, saves, mordieHooks, analytics, ui),
+    )
+}
 
 internal fun buildTuiView(
     terminal: Terminal,
