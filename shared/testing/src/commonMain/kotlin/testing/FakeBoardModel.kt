@@ -2,6 +2,7 @@ package testing
 
 import board_model.BoardModel
 import board_model.BoardSize
+import kotlin.math.sqrt
 
 /**
  * A [BoardModel] test double that records every call it receives instead of
@@ -48,7 +49,7 @@ class FakeBoardModel(
         // deriving from state's own length rather than requiring a match (GH-44 WU5) - without the
         // perfect-square check, a mis-sized fixture leaves a fake board whose array doesn't match
         // squareSide - a confusing failure far from the fixture instead of a readable one here.
-        val restoredSide = Math.sqrt(state.size.toDouble()).toInt()
+        val restoredSide = sqrt(state.size.toDouble()).toInt()
         require(restoredSide * restoredSide == state.size) { "Board state size must be a perfect square, got ${state.size}" }
         require(state.toSet() == (0 until state.size).toSet()) { "Board state must contain each of ${state.size} tile values exactly once" }
         BoardSize.require(restoredSide) // mirrors BoardImpl's own BoardSize check (audit finding on PR #55)
