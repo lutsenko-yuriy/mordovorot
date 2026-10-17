@@ -2,14 +2,15 @@ package viewmodel
 
 import kotlinx.coroutines.channels.ReceiveChannel
 
-/** The viewModel surface `view.tui.TuiView` depends on (GH-42 WU3) - shift/new game/save/load/
- *  exit plus the read-only query surface (`listSaves`/`saveExists`/`currentSaveName`/
- *  `isSolved`/`boardState`/`squareSide`) the TUI needs to render/re-render. */
-interface ViewModel {
+/** The platform-independent viewModel surface (GH-41, split out of GH-42's `ViewModel`) -
+ *  shift/new game/save/load plus the read-only query surface (`listSaves`/`saveExists`/
+ *  `currentSaveName`/`isSolved`/`boardState`/`squareSide`) a View needs to render/re-render.
+ *  Exit is not here: it is terminal-only, on the terminal's `ViewModel`. */
+interface GameViewModel {
 
     /** The UI interactions this viewModel is waiting on, in emission order (GH-42 WU2). Exactly
      *  one consumer - the View that owns this viewModel's session, draining it in a coroutine
-     *  alongside its own event loop. See [viewmodel.UiRequestChannel.ask]. */
+     *  alongside its own event loop. See [UiRequestChannel.ask]. */
     val uiRequests: ReceiveChannel<UiRequest<*>>
 
     /** [key] is the keyboard key that made the shift (GH-101), `null` for a mouse click. */
@@ -25,19 +26,13 @@ interface ViewModel {
      *  (`[ New ]` -> size-picker dialog), or `"unsolvable_save"` - see docs/ANALYTICS_EVENTS.md. */
     fun newGame(size: Int, trigger: String)
 
-    /** Returns whether the save actually succeeded - see [viewmodel.usecase.ExitGameUseCase.exitGame],
-     *  which needs the real outcome rather than assuming success. `suspend` (GH-42): asks the
+    /** Returns whether the save actually succeeded - the terminal's Exit flow needs the real
+     *  outcome rather than assuming success. `suspend` (GH-42): asks the
      *  View for confirmation/messages instead of returning synchronously. */
     suspend fun saveGame(name: String): Boolean
-    /** Throws [ExitRequestedException] when Exit is chosen for an unsolvable save (GH-74) and
-     *  the exit flow ends the session. */
+    /** Exit chosen for an unsolvable save (GH-74) runs the [UnsolvableSaveExit] hook after the
+     *  load has finished (GH-41) - whatever it throws propagates from here. */
     suspend fun loadGame(name: String)
-
-    /** Ends the current session (the `exit`/`quit` command) after an optional save-first
-     *  dialogue. Usually ends the owning View's play loop outright; returns normally instead,
-     *  leaving the session running, if the user asked to save but the save attempt failed -
-     *  see [viewmodel.usecase.ExitGameUseCase.exitGame]. */
-    suspend fun exitGame()
 
     /** Saves with their board size (GH-44 WU4), sorted by name; empty when nothing has been
      *  saved yet, or on a storage error - lets the mouse-driven Load dialog (GH-3) show what's
@@ -59,8 +54,9 @@ interface ViewModel {
     fun isSolved(): Boolean
 
     /** Offers to restore a previous save at startup (0/1/2+ saves) before play begins. Public so
-     *  each View can run it ahead of its own event loop (`view.tui.TuiView`, GH-3). Throws [ExitRequestedException] when Exit is chosen for
-     *  an unsolvable save (GH-74) - the caller must end the session. */
+     *  each View can run it ahead of its own event loop (GH-3). Exit chosen for an unsolvable
+     *  save (GH-74) runs the [UnsolvableSaveExit] hook last (GH-41) - whatever it throws
+     *  propagates from here. */
     suspend fun restoreOnStartup()
 
     /** Current board tile values (0-based, GH-10 dialect) - lets a View render/re-render after

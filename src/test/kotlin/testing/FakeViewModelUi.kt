@@ -6,11 +6,11 @@ import kotlinx.coroutines.withTimeout
 import kotlin.time.Duration.Companion.seconds
 import viewmodel.UiRequest
 import viewmodel.UnsolvableSaveChoice
-import viewmodel.ViewModel
+import viewmodel.GameViewModel
 import viewmodel.display
 
 /**
- * Drains a [ViewModel]'s [ViewModel.uiRequests] and answers from scripted lists - the
+ * Drains a [GameViewModel]'s [GameViewModel.uiRequests] and answers from scripted lists - the
  * viewModel-test stand-in for a View (GH-42 WU2). Throws `IllegalStateException` once a
  * response list runs out, so no test can hang on an under-scripted response list.
  */
@@ -43,12 +43,12 @@ class FakeViewModelUi(
     var promptSaveNameCallCount = 0
         private set
 
-    /** Runs [block] against [viewModel] while concurrently draining its [ViewModel.uiRequests] -
+    /** Runs [block] against [viewModel] while concurrently draining its [GameViewModel.uiRequests] -
      *  without this, a suspended `ask()` call (e.g. inside `saveGame`/`exitGame`) would hang
-     *  forever, since [ViewModel.uiRequests] is a rendezvous channel with no other consumer. Any
+     *  forever, since [GameViewModel.uiRequests] is a rendezvous channel with no other consumer. Any
      *  exception [block] throws propagates out of [drive] once the handler is cancelled. The
      *  timeout fails a request sent on a channel nobody drains instead of hanging the build. */
-    suspend fun drive(viewModel: ViewModel, block: suspend () -> Unit) = withTimeout(DRIVE_TIMEOUT) {
+    suspend fun drive(viewModel: GameViewModel, block: suspend () -> Unit) = withTimeout(DRIVE_TIMEOUT) {
         coroutineScope {
             val handler = launch { for (request in viewModel.uiRequests) handle(request) }
             try {

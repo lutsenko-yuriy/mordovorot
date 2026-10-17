@@ -6,7 +6,7 @@ import board_model.Solvability
 import mordie.Mordie
 import storage.SavedMordie
 
-/** Mordie's part of [ViewModelImpl] (GH-83): binds it to each game, tracks its analytics and
+/** Mordie's part of [GameViewModelImpl] (GH-83): binds it to each game, tracks its analytics and
  *  words its line and ending. */
 internal class MordieHooks(
     private val mordie: Mordie,

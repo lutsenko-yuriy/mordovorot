@@ -9,7 +9,7 @@ import viewmodel.GameShiftKeys
 import viewmodel.MordieHooks
 import viewmodel.SaveCatalog
 import viewmodel.UiRequestChannel
-import viewmodel.catchingNonControl
+import viewmodel.catchingNonCancellation
 
 /** Loads a save by name; an unsolvable one goes to [ResolveUnsolvableSaveUseCase] (GH-74). */
 internal class LoadGameUseCase(
@@ -28,24 +28,25 @@ internal class LoadGameUseCase(
      *  when called from `restoreOnStartup` - see `load_command_used` in docs/ANALYTICS_EVENTS.md.
      *  Returns whether the board was actually restored, so `restoreOnStartup` can report an
      *  accurate `startup_restore_decision` instead of assuming success (audit on PR #14: a
-     *  corrupted/mismatched save offered at startup was being recorded as "restored"). */
-    suspend fun loadGame(name: String, trigger: String = "command"): Boolean {
+     *  corrupted/mismatched save offered at startup was being recorded as "restored") - or that
+     *  Exit was chosen for an unsolvable save (GH-41). */
+    suspend fun loadGame(name: String, trigger: String = "command"): LoadResult {
         // The whole body is guarded, not just saves.load - catalog.availableSavesMessage() (itself
         // saves.listSaves()) and board.restoreState can also throw, and the startup restore
         // flow calls this before any View's own try/catch exists, so loadGame must not throw
         // regardless of which step fails (audit on PR #13).
-        return catchingNonControl(
+        return catchingNonCancellation(
             onError = { e ->
                 analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "error"))
                 ui.showMessage(e.message ?: "Could not load '$name'.")
-                false
+                LoadResult.NOT_LOADED
             },
         ) {
             val saved = saves.load(name)
             if (saved == null) {
                 analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "not_found"))
                 ui.showMessage("No save named '$name'. ${catalog.availableSavesMessage()}")
-                return false
+                return LoadResult.NOT_LOADED
             }
             if (!Solvability.isSolvable(saved.state)) {
                 analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "unsolvable"))
@@ -59,7 +60,7 @@ internal class LoadGameUseCase(
             gameShiftKeys.reset()
             analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "success"))
             ui.showMessage("Loaded '$name'.")
-            true
+            LoadResult.LOADED
         }
     }
 }

@@ -6,7 +6,7 @@ import storage.SaveRepository
 import viewmodel.CurrentSaveName
 import viewmodel.MordieHooks
 import viewmodel.UiRequestChannel
-import viewmodel.catchingNonControl
+import viewmodel.catchingNonCancellation
 
 /** Saves the current game under a name, Mordie's progress included (GH-83). */
 internal class SaveGameUseCase(
@@ -30,7 +30,7 @@ internal class SaveGameUseCase(
         // saves.exists/save can throw (bad name, IOException) - caught here rather than left to
         // play()'s generic handler, so a failed save is still tracked and gets its own message
         // instead of silently missing from save_command_used (audit finding on PR #13).
-        return catchingNonControl(
+        return catchingNonCancellation(
             onError = { e ->
                 analytics.track("save_command_used", mapOf("result" to "error", "name_source" to nameSource))
                 // Always say the save failed - e.message alone can be just a path (PR #15).

@@ -21,20 +21,16 @@ import view.tui.dialog.SaveDialogController
 import view.tui.dialog.SizeDialogController
 import view.tui.dialog.UnsolvableDialogController
 import viewmodel.CurrentSaveName
+import viewmodel.ExitRequestedException
 import viewmodel.GameShiftKeys
 import viewmodel.ModeSwitcher
 import viewmodel.ModeSwitcherImpl
-import viewmodel.MordieHooks
-import viewmodel.SaveCatalog
 import viewmodel.UiRequestChannel
+import viewmodel.UnsolvableSaveExit
 import viewmodel.ViewModel
 import viewmodel.ViewModelImpl
+import viewmodel.buildGameViewModel
 import viewmodel.usecase.ExitGameUseCase
-import viewmodel.usecase.LoadGameUseCase
-import viewmodel.usecase.NewGameUseCase
-import viewmodel.usecase.ResolveUnsolvableSaveUseCase
-import viewmodel.usecase.SaveGameUseCase
-import viewmodel.usecase.StartupRestoreUseCase
 
 // The composition root (GH-78): the only production code that constructs collaborators. `main`
 // builds the session-lifetime objects; everything below is rebuilt per mode. Test builders call
@@ -90,8 +86,9 @@ internal fun defaultView(
     )
 }
 
-/** [MordieHooks] is built here, per rebuild, so it tracks through this mode's [analytics]. The
- *  one [UiRequestChannel] is shared by the viewModel and every use case. */
+/** The terminal viewModel: [buildGameViewModel] plus Exit (GH-41), which raises its requests on
+ *  the same [UiRequestChannel]. Exit for an unsolvable save quits at once at startup, where
+ *  there's no game to save, and runs the Exit flow mid-game. */
 internal fun buildViewModel(
     board: BoardModel,
     saves: SaveRepository,
@@ -102,21 +99,17 @@ internal fun buildViewModel(
     currentSaveName: CurrentSaveName,
     gameShiftKeys: GameShiftKeys,
 ): ViewModelImpl {
-    val mordieHooks = MordieHooks(mordie, board, analytics)
     val ui = UiRequestChannel()
-    val catalog = SaveCatalog(saves)
-    val newGame = NewGameUseCase(board, mordieHooks, analytics, currentSaveName, gameShiftKeys)
-    val saveGame = SaveGameUseCase(board, saves, mordieHooks, analytics, ui, currentSaveName)
-    val exitGame = ExitGameUseCase(saves, saveGame, analytics, ui)
-    val resolveUnsolvable = ResolveUnsolvableSaveUseCase(board, saves, mordieHooks, analytics, ui, newGame, exitGame, currentSaveName, gameShiftKeys)
-    val loadGame = LoadGameUseCase(board, saves, mordieHooks, analytics, ui, catalog, resolveUnsolvable, currentSaveName, gameShiftKeys)
-    val startupRestore = StartupRestoreUseCase(
-        board, catalog, analytics, ui, loadGame, newGame, mordieHooks, startupRestoreDone, sizeChosenAtLaunch,
+    val exitGame = ExitGameUseCase(saves, analytics, ui)
+    val unsolvableExit = UnsolvableSaveExit { viewModel, atStartup ->
+        if (atStartup) throw ExitRequestedException()
+        exitGame.exitGame(viewModel::saveGame)
+    }
+    val game = buildGameViewModel(
+        board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftKeys, ui,
+        unsolvableExit,
     )
-    return ViewModelImpl(
-        board, analytics, mordieHooks, ui, catalog, newGame, saveGame, loadGame, exitGame, startupRestore, currentSaveName,
-        gameShiftKeys,
-    )
+    return ViewModelImpl(game, exitGame)
 }
 
 internal fun buildTuiView(

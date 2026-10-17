@@ -4,9 +4,9 @@ import kotlinx.coroutines.CompletableDeferred
 
 /** One outstanding viewModel->UI interaction plus the slot its answer lands in (GH-42 WU2).
  *  [R] makes [respond] type-checked per branch in the View's `when` over a received request.
- *  Travels on [ViewModel.uiRequests], a rendezvous channel - see [viewmodel.UiRequestChannel.ask]
- *  for why that ordering is what keeps message/prompt sequencing identical to the old direct
- *  blocking calls into [view.View]. */
+ *  Travels on [GameViewModel.uiRequests], a rendezvous channel - see [UiRequestChannel.ask] for
+ *  why that ordering is what keeps message/prompt sequencing identical to the old direct
+ *  blocking calls into the View. */
 sealed class UiRequest<R> {
     private val response = CompletableDeferred<R>()
 
@@ -32,7 +32,7 @@ sealed class UiRequest<R> {
     class ChooseBoardSize(val current: Int, val origin: String = "startup") : UiRequest<Int?>()
 
     /** "Repair, new game or exit?" when a load hits an unsolvable save (GH-74) - raised by
-     *  [ViewModelImpl]'s `loadGame`. [atStartup] is `true` for the startup restore. */
+     *  [GameViewModelImpl]'s `loadGame`. [atStartup] is `true` for the startup restore. */
     class ResolveUnsolvableSave(val save: SaveInfo, val atStartup: Boolean) : UiRequest<UnsolvableSaveChoice>()
 }
 

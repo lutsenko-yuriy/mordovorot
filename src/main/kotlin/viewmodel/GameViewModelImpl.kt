@@ -3,18 +3,18 @@ package viewmodel
 import analytics.AnalyticsService
 import board_model.BoardModel
 import kotlinx.coroutines.channels.ReceiveChannel
-import viewmodel.usecase.ExitGameUseCase
 import viewmodel.usecase.LoadGameUseCase
+import viewmodel.usecase.LoadResult
 import viewmodel.usecase.NewGameUseCase
 import viewmodel.usecase.SaveGameUseCase
 import viewmodel.usecase.StartupRestoreUseCase
 
-/** The one [ViewModel] implementation (GH-42 WU3, collapsing GH-23's `BaseViewModel` +
- *  `ConsoleViewModelImpl` + `TuiViewModelImpl` split): shifts and the read-only query surface
- *  live here, and each other flow is a use case in `viewmodel.usecase` (GH-78). Holds no `View`
- *  reference; talks to whichever View is driving it through [uiRequests] instead of a
- *  constructor-injected dependency. */
-class ViewModelImpl internal constructor(
+/** The one [GameViewModel] implementation (GH-42 WU3, collapsing GH-23's `BaseViewModel` +
+ *  `ConsoleViewModelImpl` + `TuiViewModelImpl` split; Exit split out for GH-41): shifts and the
+ *  read-only query surface live here, and each other flow is a use case in `viewmodel.usecase`
+ *  (GH-78). Holds no `View` reference; talks to whichever View is driving it through
+ *  [uiRequests] instead of a constructor-injected dependency. Built by [buildGameViewModel]. */
+class GameViewModelImpl internal constructor(
     private val board: BoardModel,
     private val analytics: AnalyticsService,
     private val mordieHooks: MordieHooks,
@@ -23,11 +23,11 @@ class ViewModelImpl internal constructor(
     private val newGameUseCase: NewGameUseCase,
     private val saveGameUseCase: SaveGameUseCase,
     private val loadGameUseCase: LoadGameUseCase,
-    private val exitGameUseCase: ExitGameUseCase,
     private val startupRestoreUseCase: StartupRestoreUseCase,
     private val currentSaveName: CurrentSaveName,
     private val gameShiftKeys: GameShiftKeys,
-) : ViewModel {
+    private val unsolvableExit: UnsolvableSaveExit,
+) : GameViewModel {
 
     override val uiRequests: ReceiveChannel<UiRequest<*>> = ui.requests
 
@@ -63,12 +63,13 @@ class ViewModelImpl internal constructor(
     override suspend fun saveGame(name: String): Boolean = saveGameUseCase.saveGame(name)
 
     override suspend fun loadGame(name: String) {
-        loadGameUseCase.loadGame(name)
+        if (loadGameUseCase.loadGame(name) == LoadResult.EXIT_CHOSEN) unsolvableExit.onExit(this, atStartup = false)
     }
 
-    override suspend fun exitGame() = exitGameUseCase.exitGame()
-
-    override suspend fun restoreOnStartup() = startupRestoreUseCase.restoreOnStartup()
+    override suspend fun restoreOnStartup() {
+        val exitChosen = startupRestoreUseCase.restoreOnStartup()
+        if (exitChosen) unsolvableExit.onExit(this, atStartup = true)
+    }
 
     override fun listSaves(): List<SaveInfo> = catalog.listSaves()
 

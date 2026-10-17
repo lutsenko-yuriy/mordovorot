@@ -2,12 +2,11 @@ package viewmodel.usecase
 
 import analytics.AnalyticsService
 import board_model.BoardModel
-import viewmodel.ExitRequestedException
 import viewmodel.MordieHooks
 import viewmodel.SaveCatalog
 import viewmodel.UiRequest
 import viewmodel.UiRequestChannel
-import viewmodel.catchingNonControl
+import viewmodel.catchingNonCancellation
 
 /** What happens before play starts: restore a save or pick a size, then start Mordie. */
 internal class StartupRestoreUseCase(
@@ -35,18 +34,22 @@ internal class StartupRestoreUseCase(
      *  restored - offers a size prompt for the fresh game about to start. Skips both steps
      *  entirely when [sizeChosenAtLaunch] is set: `--size=N` *is* the answer, so the board just
      *  keeps the size it was already constructed with, regardless of what saves exist. Mordie
-     *  starts on whatever board play begins with, unless it is already bound (a mode switch). */
-    suspend fun restoreOnStartup() {
-        restoreOrPickSize()
-        mordieHooks.onStartup()
+     *  starts on whatever board play begins with, unless it is already bound (a mode switch).
+     *  Returns whether Exit was chosen for an unsolvable save (GH-41) - then neither the size
+     *  prompt nor Mordie runs, and the caller ends the session. */
+    suspend fun restoreOnStartup(): Boolean {
+        val exitChosen = restoreOrPickSize()
+        if (!exitChosen) mordieHooks.onStartup()
+        return exitChosen
     }
 
-    private suspend fun restoreOrPickSize() {
-        if (startupRestoreDone) return
+    /** Returns whether Exit was chosen for an unsolvable save. */
+    private suspend fun restoreOrPickSize(): Boolean {
+        if (startupRestoreDone) return false
         startupRestoreDone = true
-        if (sizeChosenAtLaunch) return
+        if (sizeChosenAtLaunch) return false
         // Any failure here just starts a fresh game instead of crashing at boot.
-        catchingNonControl(onError = {}) {
+        return catchingNonCancellation(onError = { false }) {
             val saveInfos = catalog.infos()
             val restored = if (saveInfos.isEmpty()) {
                 false
@@ -66,20 +69,20 @@ internal class StartupRestoreUseCase(
                 // picked.
                 fun trackDecision(decision: String) =
                     analytics.track("startup_restore_decision", mapOf("decision" to decision, "save_file_count" to saveInfos.size))
-                val didRestore = try {
-                    nameToRestore?.let { loadGame.loadGame(it, trigger = "startup_prompt") } ?: false
-                } catch (e: ExitRequestedException) {
+                val result = nameToRestore?.let { loadGame.loadGame(it, trigger = "startup_prompt") } ?: LoadResult.NOT_LOADED
+                if (result == LoadResult.EXIT_CHOSEN) {
                     // Exit from the unsolvable-save choice (GH-74).
                     trackDecision("quit")
-                    throw e
+                    return@catchingNonCancellation true
                 }
-                trackDecision(if (didRestore) "restored" else "new_game")
-                didRestore
+                trackDecision(if (result == LoadResult.LOADED) "restored" else "new_game")
+                result == LoadResult.LOADED
             }
 
             if (!restored) {
                 ui.ask(UiRequest.ChooseBoardSize(board.squareSide))?.let { newGame.newGame(it, trigger = "startup_prompt") }
             }
+            false
         }
     }
 }
