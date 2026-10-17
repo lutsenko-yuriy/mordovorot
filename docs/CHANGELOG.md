@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.16.5] — 2026-10-17 (PR #113 merged)
+
+### Changed
+- [wip] (PR #113) GH-103 (WU1/2): the shared modules get a real `js { nodejs() }` target (Node.js test task, `kotlin-js-store/yarn.lock`), `:shared:testing` becomes multiplatform, and `kotlinx-coroutines-test` joins the version catalog; no behaviour change.
+
 ## [0.16.4] — 2026-10-17 (PR #112 merged)
 
 ### Changed
