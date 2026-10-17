@@ -86,6 +86,15 @@ class BoardLayout(
     fun leftArrowPosition(row: Int): Pair<Int, Int> = originX to contentRowY(row)
     fun rightArrowPosition(row: Int): Pair<Int, Int> = (gridLeft + innerCols + 1) to contentRowY(row)
     fun upArrowPosition(col: Int): Pair<Int, Int> = cellCenterX(col) to upArrowRow
+
+    /** Row of keyboard mode's [index]th side-hint line (GH-101), centred on the grid. */
+    fun sideHintRow(index: Int): Int = gridTop + innerRows / 2 - 1 + index
+
+    /** The left hints end just before this column, a gap left of the arrow gutter (GH-101). */
+    val leftHintEndX: Int get() = originX - HINT_GAP
+
+    /** The right hints start here, a gap right of the arrow gutter (GH-101). */
+    val rightHintX: Int get() = originX + fullWidth + HINT_GAP
     fun downArrowPosition(col: Int): Pair<Int, Int> = cellCenterX(col) to downArrowRow
 
     fun saveButtonPosition(): Pair<Int, Int> = buttonPosition(HitTarget.ToolbarSave)
@@ -172,6 +181,7 @@ class BoardLayout(
     private companion object {
         /** Arrow char + one gap column, on each side of the grid. */
         const val LEFT_GUTTER = 2
+        const val HINT_GAP = 2
         const val RIGHT_GUTTER = 2
 
         /** Title row, moves row, a blank row, the up-arrows row - plus [mordieRows]. */

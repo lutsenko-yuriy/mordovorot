@@ -11,7 +11,7 @@ import testing.testTuiView
 class TuiViewMordieTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
-    private val inputs = listOf<() -> TuiInput>(::MouseInput, ::KeyboardInput)
+    private val inputs = listOf<() -> TuiInput>(::MouseInput, { KeyboardInput(KeyboardSelection()) })
 
     private fun lastFrame(input: TuiInput, viewModel: FakeViewModel): List<String> = runBlocking {
         val terminal = FakeTerminal(terminalSize = terminalSize)

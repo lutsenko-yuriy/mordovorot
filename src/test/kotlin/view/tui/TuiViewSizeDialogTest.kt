@@ -98,7 +98,7 @@ class TuiViewSizeDialogTest {
             terminalSize = terminalSize,
         )
 
-        testTuiView(terminal, analytics, input = KeyboardInput(), viewModel = testViewModel(board, saves, analytics, sizeChosenAtLaunch = true)).play()
+        testTuiView(terminal, analytics, input = KeyboardInput(KeyboardSelection()), viewModel = testViewModel(board, saves, analytics, sizeChosenAtLaunch = true)).play()
 
         assertTrue(terminal.frames.any { it.contains("New game size") })
         assertTrue(board.calls.contains("newGame(3)"))

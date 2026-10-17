@@ -13,6 +13,7 @@ import testing.RecordingAnalyticsService
 import testing.testGameSession
 import view.tui.BoardLayout
 import view.tui.HitTarget
+import view.tui.KeyboardSelection
 import view.tui.TerminalEvent
 import view.tui.TerminalSize
 import viewmodel.CurrentSaveName
@@ -43,6 +44,7 @@ class AppWiringTest {
                 mordie = Mordie(FakeMordieSearchFactory()),
                 currentSaveName = CurrentSaveName(),
                 gameShiftKeys = GameShiftKeys(),
+                keyboardSelection = KeyboardSelection(),
                 terminalFactory = { FakeTerminal(mutableListOf(switchKey.getValue(mode)), terminalSize) },
             )
 

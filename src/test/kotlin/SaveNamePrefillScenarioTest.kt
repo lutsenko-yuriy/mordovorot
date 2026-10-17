@@ -76,8 +76,8 @@ class SaveNamePrefillScenarioTest {
         return listOf(FunctionKey(6)) + toLoad + Enter
     }
 
-    /** Enter on the cursored arrow. */
-    private val shift = listOf(Enter)
+    /** H: shift the selected row (GH-101). */
+    private val shift = listOf(KeyPress('h'))
 
     /** Startup restore dialog with one save: Tab to Load, Enter. */
     private val restoreAtStartup = listOf(Tab, Enter)

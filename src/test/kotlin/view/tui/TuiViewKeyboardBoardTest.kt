@@ -10,42 +10,41 @@ import testing.FakeViewModel
 import testing.testTuiView
 
 /**
- * Covers GH-18's keyboard-driven board interaction loop: `TuiView` dispatching arrow-key cursor
- * movement and Enter/Space activation on the perimeter ring, in `--keyboard` mode. Mirrors
- * `TuiViewBoardTest` (GH-3's mouse equivalent) but driven via keyboard events - no clicks.
+ * Covers the keyboard-driven board interaction loop (GH-18, GH-101): `TuiView` dispatching
+ * WASD selection and HJKL/arrow shifts in `--keyboard` mode. Mirrors `TuiViewBoardTest`
+ * (GH-3's mouse equivalent) but driven via keyboard events - no clicks.
  */
 class TuiViewKeyboardBoardTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
 
     private fun view(terminal: FakeTerminal, viewModel: FakeViewModel): TuiView =
-        testTuiView(terminal, input = KeyboardInput(), viewModel = viewModel)
+        testTuiView(terminal, input = KeyboardInput(KeyboardSelection()), viewModel = viewModel)
 
     @Test
-    fun `an arrow-key walk around the ring followed by Enter calls the expected shift`(): Unit = runBlocking {
+    fun `S then H shifts row 2 left, passing the HJKL key to the viewModel`(): Unit = runBlocking {
         val viewModel = FakeViewModel()
-        // LEFT[0] (start) -> Down -> LEFT[1], per ArrowRing's movement table.
         val terminal = FakeTerminal(
-            events = mutableListOf(TerminalEvent.Arrow(Direction.DOWN), TerminalEvent.Enter),
+            events = mutableListOf(TerminalEvent.KeyPress('s'), TerminalEvent.KeyPress('h')),
             terminalSize = terminalSize,
         )
 
         view(terminal, viewModel).play()
 
-        assertTrue(viewModel.calls.contains("shiftLeft(1)"))
+        assertEquals(listOf("shiftLeft(1, HJKL)"), viewModel.calls.filter { it.startsWith("shift") })
     }
 
     @Test
-    fun `Space also activates the highlighted arrow, same as Enter`(): Unit = runBlocking {
+    fun `D then the down arrow shifts column 1 down, passing the ARROW key`(): Unit = runBlocking {
         val viewModel = FakeViewModel()
         val terminal = FakeTerminal(
-            events = mutableListOf(TerminalEvent.Arrow(Direction.DOWN), TerminalEvent.KeyPress(' ')),
+            events = mutableListOf(TerminalEvent.KeyPress('d'), TerminalEvent.Arrow(Direction.DOWN)),
             terminalSize = terminalSize,
         )
 
         view(terminal, viewModel).play()
 
-        assertTrue(viewModel.calls.contains("shiftLeft(1)"))
+        assertEquals(listOf("shiftDown(0, ARROW)"), viewModel.calls.filter { it.startsWith("shift") })
     }
 
     @Test

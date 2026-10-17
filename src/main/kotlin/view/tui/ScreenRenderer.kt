@@ -6,14 +6,10 @@ private const val DISPLAY_OFFSET = 1
 private const val DIM_ON = "\u001B[2m"
 private const val DIM_OFF = "\u001B[22m"
 
-/** SGR reverse-video on/off - GH-18's dialog focus highlight (a focused button). */
+/** SGR reverse-video on/off - GH-18's dialog focus highlight (a focused button) and GH-101's
+ *  selected line. */
 private const val REVERSE_ON = "\u001B[7m"
 private const val REVERSE_OFF = "\u001B[27m"
-
-/** SGR bright-yellow foreground on/off - GH-18's board cursor, drawn inside reverse video so
- *  it stays visible without color (CHK-2026-10-14-heavy-5). */
-private const val CURSOR_COLOR_ON = "\u001B[93m"
-private const val CURSOR_COLOR_OFF = "\u001B[39m"
 
 /** SGR bright-cyan foreground on/off - GH-18's keyboard-mode toolbar shortcut labels. */
 private const val SHORTCUT_COLOR_ON = "\u001B[96m"
@@ -50,7 +46,8 @@ class ScreenRenderer {
         canvas.put(centeredX(moves, terminalSize), layout.movesRow, moves)
         state.mordieLine?.let { drawMordieLine(canvas, layout, it, terminalSize) }
         drawGrid(canvas, layout, state)
-        drawArrows(canvas, layout, state)
+        if (state.showArrows) drawArrows(canvas, layout, state)
+        drawSideHints(canvas, layout, state)
         drawToolbar(canvas, layout, state.toolbarShortcuts)
         state.message?.let { canvas.put(2, layout.toolbarRow + 2, it) }
         // Anchored to layout.toolbarRow (one row below the status message), not the raw
@@ -96,7 +93,9 @@ class ScreenRenderer {
             for (col in 0 until state.squareSide) {
                 val value = state.board[row * state.squareSide + col] + DISPLAY_OFFSET
                 val text = value.toString().padStart(CELL_WIDTH - 1).padEnd(CELL_WIDTH)
-                canvas.put(gridLeft + 1 + col * (CELL_WIDTH + 1), gridTop + 1 + 2 * row, text)
+                val x = gridLeft + 1 + col * (CELL_WIDTH + 1)
+                val y = gridTop + 1 + 2 * row
+                if (state.selection?.covers(row, col) == true) canvas.putHighlighted(x, y, text) else canvas.put(x, y, text)
             }
         }
     }
@@ -110,28 +109,31 @@ class ScreenRenderer {
         return builder.toString()
     }
 
+    private fun LineSelection.covers(row: Int, col: Int) =
+        if (axis == LineSelection.Axis.ROW) row == this.row else col == this.col
+
     private fun drawArrows(canvas: Canvas, layout: BoardLayout, state: ScreenState) {
-        // The keyboard-mode cursor (GH-18) always wins over dimming - state.cursor is only ever
-        // non-null when arrowsEnabled is true (ScreenState's own KDoc), so the two never compete
-        // for the same arrow.
-        fun glyph(g: String, isCursor: Boolean) = when {
-            isCursor -> "$REVERSE_ON$CURSOR_COLOR_ON$g$CURSOR_COLOR_OFF$REVERSE_OFF"
-            state.arrowsEnabled -> g
-            else -> "$DIM_ON$g$DIM_OFF"
-        }
+        fun glyph(g: String) = if (state.arrowsEnabled) g else "$DIM_ON$g$DIM_OFF"
 
         for (row in 0 until state.squareSide) {
             val (lx, ly) = layout.leftArrowPosition(row)
-            canvas.putGlyph(lx, ly, glyph("◀", state.cursor == ArrowCursor(Edge.LEFT, row)))
+            canvas.putGlyph(lx, ly, glyph("◀"))
             val (rx, ry) = layout.rightArrowPosition(row)
-            canvas.putGlyph(rx, ry, glyph("▶", state.cursor == ArrowCursor(Edge.RIGHT, row)))
+            canvas.putGlyph(rx, ry, glyph("▶"))
         }
         for (col in 0 until state.squareSide) {
             val (ux, uy) = layout.upArrowPosition(col)
-            canvas.putGlyph(ux, uy, glyph("▲", state.cursor == ArrowCursor(Edge.TOP, col)))
+            canvas.putGlyph(ux, uy, glyph("▲"))
             val (dx, dy) = layout.downArrowPosition(col)
-            canvas.putGlyph(dx, dy, glyph("▼", state.cursor == ArrowCursor(Edge.BOTTOM, col)))
+            canvas.putGlyph(dx, dy, glyph("▼"))
         }
+    }
+
+    /** Keyboard mode's hints (GH-101): selection keys right-aligned left of the board, shift
+     *  keys right of it. A too-narrow terminal clips them, like every other off-canvas text. */
+    private fun drawSideHints(canvas: Canvas, layout: BoardLayout, state: ScreenState) {
+        state.selectionHint.forEachIndexed { i, line -> canvas.put(layout.leftHintEndX - line.length, layout.sideHintRow(i), line) }
+        state.shiftHint.forEachIndexed { i, line -> canvas.put(layout.rightHintX, layout.sideHintRow(i), line) }
     }
 
     private fun drawToolbar(canvas: Canvas, layout: BoardLayout, toolbarShortcuts: Boolean) {

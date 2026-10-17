@@ -148,31 +148,65 @@ class ScreenRendererTest {
         assertTrue(frame.contains("Cancel"))
     }
 
+    private fun keyboardState(side: Int = 4, selection: LineSelection? = LineSelection.INITIAL) =
+        ScreenState.forBoard(board = (0 until side * side).toList(), squareSide = side, solved = false).copy(
+            selection = selection,
+            showArrows = false,
+            selectionHint = listOf("W/S  row", "A/D  column"),
+            shiftHint = listOf("←/→ H/L  shift row", "↑/↓ K/J  shift column"),
+        )
+
+    private fun highlighted(frame: String) =
+        Regex("\u001B\\[7m(.*?)\u001B\\[27m").findAll(frame).map { it.groupValues[1].trim() }.toList()
+
     @Test
-    fun `the keyboard cursor highlights exactly its arrow, in the cursor color, and no other`() {
-        val state = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false)
-            .copy(cursor = ArrowCursor(Edge.TOP, 2))
+    fun `keyboard mode draws no arrows (GH-101)`() {
+        val frame = renderer.render(keyboardState(), terminalSize)
 
-        val frame = renderer.render(state, terminalSize)
-
-        val coloredUpArrow = "[93m▲[39m"
-        assertTrue(frame.contains(coloredUpArrow))
-        // Only one arrow is colored - a bug highlighting every arrow can't pass this by accident.
-        assertEquals(1, Regex(Regex.escape(coloredUpArrow)).findAll(frame).count())
-        val plainFrame = renderer.render(state.copy(cursor = null), terminalSize)
-        assertFalse(plainFrame.contains(coloredUpArrow))
+        for (glyph in listOf("◀", "▶", "▲", "▼")) assertFalse(frame.contains(glyph), "unexpected $glyph")
     }
 
     @Test
-    fun `the keyboard cursor is also reverse-video, so it is visible without color`() {
-        val state = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false)
-            .copy(cursor = ArrowCursor(Edge.TOP, 2))
+    fun `mouse mode still draws every arrow`() {
+        val frame = renderer.render(ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false), terminalSize)
 
-        val frame = renderer.render(state, terminalSize)
+        for (glyph in listOf("◀", "▶", "▲", "▼")) assertEquals(4, frame.count { it.toString() == glyph }, glyph)
+    }
 
-        // WCAG 1.4.1 - color must not be the only cue (CHK-2026-10-14-heavy-5).
-        assertTrue(frame.contains("\u001B[7m\u001B[93m▲\u001B[39m\u001B[27m"))
-        assertFalse(renderer.render(state.copy(cursor = null), terminalSize).contains("\u001B[7m"))
+    @Test
+    fun `a selected row's tiles, and only those, are reverse video`() {
+        val frame = renderer.render(keyboardState(selection = LineSelection(1, 3, LineSelection.Axis.ROW)), terminalSize)
+
+        assertEquals(listOf("5", "6", "7", "8"), highlighted(frame))
+    }
+
+    @Test
+    fun `a selected column's tiles, and only those, are reverse video`() {
+        val frame = renderer.render(keyboardState(selection = LineSelection(1, 2, LineSelection.Axis.COLUMN)), terminalSize)
+
+        assertEquals(listOf("3", "7", "11", "15"), highlighted(frame))
+    }
+
+    @Test
+    fun `no selection means no highlight`() {
+        assertEquals(emptyList(), highlighted(renderer.render(keyboardState(selection = null), terminalSize)))
+    }
+
+    @Test
+    fun `the side hints sit left and right of the board and fit 80 columns even on 5x5`() {
+        val frame = renderer.render(keyboardState(side = 5), terminalSize)
+        val rows = frame.removePrefix("\u001B[2J\u001B[H").replace(Regex("\u001B\\[[0-9;]*m"), "").split("\r\n")
+        val layout = BoardLayout(terminalSize, 5)
+        val (gridLeft, _) = layout.gridOrigin()
+
+        for ((index, hint) in listOf("W/S  row", "A/D  column").withIndex()) {
+            val row = rows[layout.sideHintRow(index)]
+            assertTrue(row.indexOf(hint) in 0 until gridLeft, "left hint '$hint' in: $row")
+        }
+        for ((index, hint) in listOf("←/→ H/L  shift row", "↑/↓ K/J  shift column").withIndex()) {
+            val row = rows[layout.sideHintRow(index)]
+            assertTrue(row.indexOf(hint) > gridLeft + layout.gridWidth, "right hint '$hint' in: $row")
+        }
     }
 
     @Test
