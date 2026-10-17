@@ -93,6 +93,7 @@ behaviour beyond a literal value, it is not trivial — use the full workflow in
 5. After all TDD micro-cycles are complete, apply formatting in a dedicated commit before opening the PR/MR: run your stack's formatter and, if any files changed, stage and commit them separately with a `style:` prefix. This keeps style changes reviewable in isolation from logic changes.
 6. Update documentation if affected by the changes:
    - `AGENTS.md`/`CLAUDE.md` — architecture, conventions, or workflow changed
+   - `README.md` — what the app is, the platforms it runs on, or how to run it changed (GH-110)
    - `docs/PRODUCT_SPEC.md` — functionality added, removed, or changed
    - `docs/ARCHITECTURE.md` — code structure or dependencies changed
    - `docs/VERSIONING.md` — versioning process impacted
@@ -107,10 +108,10 @@ behaviour beyond a literal value, it is not trivial — use the full workflow in
    - Push the branch to the remote.
    - Open a PR/MR.
    - Move the ticket to **In Review**.
-   - Inform the user of the PR/MR URL and open it in the browser.
+   - Inform the user of the PR/MR URL and open it in Safari (`open -a Safari <url>`), not the default browser, which holds the user's own tabs (GH-110).
    - The review loop (step 10) starts automatically once the PR/MR is open, unless the user says otherwise beforehand.
 10. **Review loop** — starts automatically once the PR/MR is open (see step 9), unless the user asked to hold; repeat until the user explicitly approves:
-    0. **Before starting:** smoke-test the change on your own initiative — confirm it builds/boots, then exercise the specific flow the PR/MR touches. Report the result, then proceed into the loop.
+    0. **Before starting:** smoke-test the change on your own initiative — confirm it builds/boots, then exercise the specific flow the PR/MR touches. Report the result, then proceed into the loop. Never drive the user's own browser for this. For the web client, use headless Chrome with a throwaway profile (`"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --user-data-dir=<tmp dir> --dump-dom` or `--screenshot <url>`), which opens no window (GH-110).
     1. Wait for the review skills (`review`, `audit`), any coverage report, and the user to finish leaving comments.
        - **Immediately after invoking each routed skill, confirm its subagent actually spawned** before moving on to anything else. A skill's routing message is an instruction to act on, not content to just read — treat it the same way you'd treat a TODO you haven't checked off.
        - **Check on routed subagents that run long.** If one hasn't reported back within ~10 minutes, check what it should have changed by now (commits, PR state, checks). If it is stuck, stop it and finish the step yourself, then tell the user. Don't wait silently for its completion notice (GH-103).
