@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.16.10] — 2026-10-18 (PR #119 merged)
+
+### Changed
+- [wip] (PR #119) GH-110 (WU3/7): shared hooks for the web client. Every event gets a `platform` tag (`terminal` on the terminal). Shift sources: `PointerShift` and `GameShiftSources`, which add `board_solved.shift_input` on the web. Multi-step `shiftRow`/`shiftColumn` count as one move and check for solved once. `UnsavedProgress`/`hasUnsavedProgress` for the leave-site prompt. The terminal behaves the same apart from the new property.
+
 ## [0.16.9] — 2026-10-18 (PR #118 merged)
 
 ### Changed
