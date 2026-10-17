@@ -50,6 +50,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-65: Extract shared non-control exception catch helper](GH-65.md)
 - [GH-67: Console help command and specific error messages](GH-67.md)
 - [GH-74: Solvable boards on odd sizes and unsolvable-save handling](GH-74.md)
+- [GH-78: Split TuiView and ViewModelImpl by feature, inject collaborators from one composition root](GH-78.md)
 - [GH-79: Remove console mode](GH-79.md)
 - [GH-82: [trivial] Credit Loopover and describe Mordovorot as its terminal version](GH-82.md)
 - [GH-83: Mordie: a computer opponent racing the player to the shortest solution](GH-83.md)
