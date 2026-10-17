@@ -1,13 +1,11 @@
 plugins {
     kotlin("jvm") version "1.9.24"
+    // GH-41: the shared/ modules' plugin, declared here so they share this one version.
+    kotlin("multiplatform") version "1.9.24" apply false
     application
 }
 
-version = "0.16.1"
-
-repositories {
-    mavenCentral()
-}
+version = "0.16.2"
 
 kotlin {
     jvmToolchain(17)
@@ -18,7 +16,12 @@ dependencies {
     // View-request channel. 1.8.1 is the last kotlinx.coroutines line built against
     // Kotlin 1.9.x (1.9.0 moved to Kotlin 2.0); confirmed empirically by this build.
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+    implementation(project(":shared:core"))
+    implementation(project(":shared:analytics"))
+    implementation(project(":shared:storage"))
+    implementation(project(":shared:mordie"))
     testImplementation(kotlin("test"))
+    testImplementation(project(":shared:testing"))
 }
 
 application {

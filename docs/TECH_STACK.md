@@ -19,7 +19,10 @@
 
 ## Tooling
 
-- **Build / package manager:** Gradle 8.7 (wrapper), Kotlin JVM + `application` plugins
-- **Test runner:** `./gradlew test` (JUnit Platform); Python: `python -m unittest`
+- **Build / package manager:** Gradle 8.7 (wrapper), Kotlin JVM + `application` plugins for the
+  terminal app, Kotlin Multiplatform for the `shared/` modules (GH-41: `jvm()` + a compile-only
+  `js(IR)`)
+- **Test runner:** `./gradlew check` (JUnit Platform) - runs the root `test` and every shared
+  module's `jvmTest`; plain `./gradlew test` skips the shared modules; Python: `python -m unittest`
 - **Linter / formatter:** none configured
 - **CI:** GitHub Actions: `build.yml` (`./gradlew build`), `tests.yml` (onboard Python tests)

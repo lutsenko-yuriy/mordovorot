@@ -59,7 +59,7 @@ Details and directory layout: @docs/ARCHITECTURE.md. Languages and tooling: docs
 
 ## Common Commands
 
-- **Run tests:** `./gradlew test`
+- **Run tests:** `./gradlew check` (`./gradlew test` skips the `shared/` modules' tests)
 - **Lint:** none configured
 - **Build:** `./gradlew build`
 - **Run the game:** `./gradlew installDist && ./build/install/mordovorot/bin/mordovorot` (`./gradlew run` has no terminal, so it only prints the no-terminal message; see `docs/TECH_STACK.md`)
