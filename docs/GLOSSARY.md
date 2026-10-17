@@ -17,6 +17,7 @@ When a new term is introduced during a `brief` session, add it here before creat
 | Mordie | The computer opponent: searches in the background for the shortest solution of the game's original arrangement (in moves), reports its progress under `Moves:`, and its result against the player's move count becomes the solved title | `Mordie`, `MordieHooks`, `MordieText` |
 | Save file | A local `.save` file under `saves/` storing a board's size and tile arrangement, created/updated via the Save dialog or the exit flow and restored via the Load dialog or the startup restore prompt | `SavedBoard`, `SaveRepository`, `FileSaveRepository` |
 | Save info | A save's name plus its board size, as shown in every save listing (e.g. `foo (5x5)`) | `SaveInfo` |
+| Shared module | One of the five Kotlin Multiplatform modules future Web/Android/iOS clients build on: Core (board), Analytics, Mordie, Storage (save contract only), ViewModel (game flows minus Exit and session control). Everything else stays in the terminal app (GH-41) | — |
 | Shift | Cyclically rotating one row (left/right) or column (up/down) by one position | `shiftLeft`, `shiftRight`, `shiftUp`, `shiftDown` |
 | Solved | The board state where all values are in ascending order. "Correct" is the board-model name for the same check | `isSolved()`, `isCorrect()` |
 | Square side | The board's edge length (default 4, giving a 4×4 board) | `squareSide` |

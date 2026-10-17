@@ -5,7 +5,7 @@ enum class ShiftKey { ARROW, HJKL }
 
 /** Which [ShiftKey]s made the current game's shifts, for `board_solved.shift_keys` (GH-101).
  *  One per session, so a mode switch keeps it; reset when a new game, load or repair starts. */
-internal class GameShiftKeys {
+class GameShiftKeys {
     private val used = mutableSetOf<ShiftKey>()
 
     fun record(key: ShiftKey) {

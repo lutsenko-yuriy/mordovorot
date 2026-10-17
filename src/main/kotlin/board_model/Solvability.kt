@@ -1,5 +1,7 @@
 package board_model
 
+import kotlin.math.sqrt
+
 /** The single home for which boards can be solved by shifts (GH-74). A shift is an n-cycle,
  *  sign (-1)^(n-1): on even sides shifts are odd and every board is solvable; on odd sides
  *  every shift is even, so a board is solvable iff its permutation from the solved order is
@@ -8,7 +10,7 @@ object Solvability {
 
     /** The side comes from [state]'s size, same as [BoardModel.restoreState]. */
     fun isSolvable(state: IntArray): Boolean {
-        val side = Math.sqrt(state.size.toDouble()).toInt()
+        val side = sqrt(state.size.toDouble()).toInt()
         return side % 2 == 0 || isEvenPermutation(state)
     }
 

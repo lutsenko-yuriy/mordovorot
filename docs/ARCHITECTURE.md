@@ -65,23 +65,32 @@ src/main/kotlin/
 │   └── MordieLine.kt            # MordieLine (sealed) / MordieOutcome / MordieResult /
 │                                  # MordieSnapshot (what a save stores)
 ├── viewmodel/
-│   ├── ViewModel.kt          # The one viewmodel interface (GH-42 WU3) — shift/newGame/save/
-│   │                           # load/exit plus the read-only query surface (listSaves/saveExists/currentSaveName/
-│   │                           # isSolved/boardState/squareSide/moveCount) and restoreOnStartup
-│   ├── ViewModelImpl.kt      # The one implementation (GH-42 WU3, collapsing BaseViewModel +
+│   ├── GameViewModel.kt      # The shared viewmodel interface (GH-42 WU3; Exit split out for
+│   │                           # GH-41) — shift/newGame/save/load plus the read-only query
+│   │                           # surface (listSaves/saveExists/currentSaveName/isSolved/
+│   │                           # boardState/squareSide/moveCount) and restoreOnStartup
+│   ├── GameViewModelImpl.kt  # Its one implementation (GH-42 WU3, collapsing BaseViewModel +
 │   │                           # ConsoleViewModelImpl + TuiViewModelImpl). Keeps shifts and the
 │   │                           # queries; delegates every other flow to a usecase/ class. All
-│   │                           # collaborators are injected, with no defaults (GH-78) - built only
-│   │                           # by buildViewModel. Holds no `View` reference — see the
-│   │                           # "viewmodel" section below
+│   │                           # collaborators are injected, with no defaults (GH-78). Holds no
+│   │                           # `View` reference — see the "viewmodel" section below
+│   ├── GameViewModelFactory.kt # buildGameViewModel — builds GameViewModelImpl and its use
+│   │                             # cases; the only way a platform gets one (GH-41)
+│   ├── UnsolvableSaveExit.kt # The platform hook for Exit on an unsolvable save, run after the
+│   │                           # shared flow returns (GH-41); with NONE, Exit
+│   │                           # just ends the load
+│   ├── ViewModel.kt          # The terminal's viewmodel: GameViewModel + exitGame() (GH-41)
+│   ├── ViewModelImpl.kt      # Delegates to GameViewModelImpl, adds ExitGameUseCase; built
+│   │                           # only by buildViewModel (GH-41)
 │   ├── UiRequest.kt          # Sealed request/response type for the seven viewmodel→UI
 │   │                           # interactions (ShowMessage/ConfirmRestore/ChooseSaveToRestore/
 │   │                           # ConfirmSaveBeforeExit/PromptSaveName/ChooseBoardSize (GH-44)/
 │   │                           # ResolveUnsolvableSave (GH-74) + UnsolvableSaveChoice),
 │   │                           # sent on
-│   │                           # ViewModel.uiRequests (GH-42 WU2)
+│   │                           # GameViewModel.uiRequests (GH-42 WU2)
 │   ├── UiRequestChannel.kt   # The rendezvous channel behind uiRequests: ask/showMessage. One
-│   │                           # per rebuild, shared by ViewModelImpl and every use case (GH-78)
+│   │                           # per rebuild, shared by GameViewModelImpl, every use case and
+│   │                           # the terminal's Exit (GH-78, GH-41)
 │   ├── CurrentSaveName.kt    # The session's current save name (`var name: String?`): set on
 │   │                           # save/load/repair, cleared on new game, prefills the Save dialog.
 │   │                           # One per session, made by buildGameSession, so it survives mode
@@ -94,24 +103,28 @@ src/main/kotlin/
 │   ├── SessionControlException.kt # Sealed marker base for control-flow exceptions that unwind
 │   │                                 # play() intentionally — lets a catch-all rethrow via this
 │   │                                 # one type instead of naming each subtype (GH-30)
-│   ├── CatchingNonControl.kt # catchingNonControl — the shared catch-all: rethrows
+│   ├── CatchingNonControl.kt # catchingNonControl — GameSession's catch-all: rethrows
 │   │                           # SessionControlException/CancellationException, routes any
 │   │                           # other Exception to onError (GH-65)
+│   ├── CatchingNonCancellation.kt # catchingNonCancellation — the use cases' catch-all: rethrows
+│   │                                 # only CancellationException, since no session-control
+│   │                                 # exception passes through shared flows (GH-41)
 │   ├── ExitRequestedException.kt # Signals play() (or view.tui.TuiView's own loop, GH-3) to stop
 │   ├── ModeSwitcher.kt        # ModeSwitcher / ModeSwitcherImpl — tracks
 │   │                             # input_mode_switched and throws ModeSwitchRequestedException;
 │   │                             # same-mode no-op (GH-30)
 │   ├── ModeSwitchRequestedException.kt # Carries the requested InputMode; unwinds a running
 │   │                                      # session's play() back to GameSession's loop (GH-30)
-│   ├── MordieHooks.kt         # ViewModelImpl's Mordie part: binds it on new game/load/repair/
+│   ├── MordieHooks.kt         # GameViewModelImpl's Mordie part: binds it on new game/load/repair/
 │   │                             # startup (sits out a loaded board already played on), tracks
 │   │                             # its analytics, words its line and ending (GH-83)
 │   ├── MordieText.kt          # Every Mordie string (line bodies + the four endings), singular
 │   │                             # `1 move` included (GH-83)
-│   └── usecase/               # One class per ViewModel flow, delegated to by ViewModelImpl
-│                                 # (GH-78): NewGameUseCase, SaveGameUseCase, ExitGameUseCase,
+│   └── usecase/               # One class per viewmodel flow, delegated to by GameViewModelImpl
+│                                 # (GH-78): NewGameUseCase, SaveGameUseCase, ExitGameUseCase
+│                                 # (terminal-only, delegated to by ViewModelImpl, GH-41),
 │                                 # LoadGameUseCase -> ResolveUnsolvableSaveUseCase (repair /
-│                                 # new game / exit, GH-74), StartupRestoreUseCase (restore or
+│                                 # new game / exit, GH-74; both return LoadResult, GH-41), StartupRestoreUseCase (restore or
 │                                 # size prompt, then Mordie; takes `startupRestoreDone`, which
 │                                 # GameSession seeds true after a mode switch (GH-30), and
 │                                 # `sizeChosenAtLaunch`)
@@ -246,10 +259,12 @@ see "Dependencies" below.
 
 Classic MVVM. `board_model` and `view` are each an interface + one implementation
 (`view`'s is the TUI, `view.tui.TuiView`).
-`viewmodel` (GH-42) is a single `ViewModel` interface + one `ViewModelImpl`, holding
-no reference to any `View` — it communicates with whichever `View` is driving it
-through a request channel instead of a constructor-injected dependency. Callers
-should always depend on the interface, not `ViewModelImpl`, to keep layers swappable.
+`viewmodel` (GH-42) is the shared `GameViewModel` interface + one `GameViewModelImpl`,
+holding no reference to any `View` — it communicates with whichever `View` is driving it
+through a request channel instead of a constructor-injected dependency. The terminal's
+`ViewModel` adds Exit on top (GH-41), implemented by `ViewModelImpl`, which delegates the
+rest to `GameViewModelImpl`. Callers should always depend on an interface, not an impl,
+to keep layers swappable.
 
 ### board_model (Domain)
 Core game state and rules: board array, shifting, reset, and the win check
@@ -288,8 +303,8 @@ shifts into the line state: a check every 5 shifts, a reveal of "found", and the
 frozen on solve, using Mordie's live state at that shift. Its `MordieSnapshot` mirrors
 `storage.SavedMordie` on purpose, so `mordie` never imports `storage`; `MordieHooks` maps
 between the two. `Main` builds one `Mordie` per session, so it survives mode switches;
-`GameSession` stops it. `ViewModelImpl` reaches it through `MordieHooks`, which
-`buildViewModel` builds per rebuild so it tracks through that mode's decorated analytics.
+`GameSession` stops it. `GameViewModelImpl` reaches it through `MordieHooks`, which
+`buildGameViewModel` builds per rebuild so it tracks through that mode's decorated analytics.
 Test builders default to an inert `Mordie(MordieSearchFactory.NONE)`, so unit tests never
 leave real searches running.
 
@@ -298,12 +313,14 @@ leave real searches running.
 real and in use; the `presenter` package/naming this superseded is gone.
 
 Mediates between `view`, `board_model`, and `storage`, but never calls into `view`
-directly. `ViewModel` is one interface (shift/newGame/save/load/exit plus the
-query surface the TUI needs — `isSolved`/`boardState`/`squareSide`/`moveCount`/`listSaves`/
-`saveExists`), and `ViewModelImpl` is its one implementation. It keeps the shifts and
+directly. `GameViewModel` is one interface (shift/newGame/save/load plus the
+query surface a View needs — `isSolved`/`boardState`/`squareSide`/`moveCount`/`listSaves`/
+`saveExists`), and `GameViewModelImpl` is its one implementation. It keeps the shifts and
 queries and delegates each other flow to a use case in `viewmodel.usecase` (GH-78), all
 sharing one `UiRequestChannel`. Every collaborator is a constructor param with no
-default: production wires them in `buildViewModel`, tests through `testViewModel`'s fakes.
+default: `buildGameViewModel` wires them. The terminal's `ViewModel` adds `exitGame()`
+(GH-41): `buildViewModel` builds `ExitGameUseCase` on the same `UiRequestChannel` and wraps
+the `GameViewModelImpl` in `ViewModelImpl`; tests build it through `testViewModel`'s fakes.
 
 Five interactions that used to be blocking calls into `View` (`showMessage`,
 `confirmRestore`, `chooseSaveToRestore`, `confirmSaveBeforeExit`, `promptSaveName`)
@@ -318,8 +335,9 @@ blocking-call behavior. The one invariant that keeps this deadlock-free: a View'
 request handler must never call a request-raising `ViewModel` method
 (`saveGame`/`loadGame`/`exitGame`/`restoreOnStartup`) from inside
 itself — only the plain query methods are safe there. All five are `suspend`; a cancelled coroutine resumes them with `CancellationException`, which
-each method's catch-all (`catchingNonControl`) rethrows rather than swallows (ordinary
-structured-concurrency hygiene).
+each use case's catch-all (`catchingNonCancellation`) rethrows rather than swallows (ordinary
+structured-concurrency hygiene). No session-control exception passes through a use case
+(GH-41), so that catch-all doesn't need to know about one.
 
 **Mordie wiring (GH-83).** `ViewModel.mordieLine()` (the text after `Mordie:`, or `null`)
 and `mordieEnding()` (the solved title, or `null` → `Congratulations ✓`) are plain
@@ -427,9 +445,11 @@ being listed.
 `UiRequest.ResolveUnsolvableSave` (`atStartup` set from the startup restore) and
 acts on the `UnsolvableSaveChoice`. REPAIR writes `Solvability.repaired` back
 through `saves.save` and loads it. NEW_GAME raises
-`ChooseBoardSize(origin = "unsolvable_save")` mid-game, or returns `false` at
-startup so `restoreOnStartup`'s own size prompt runs. EXIT calls `exitGame()`
-mid-game, or throws `ExitRequestedException` at startup, which
+`ChooseBoardSize(origin = "unsolvable_save")` mid-game, or returns `LoadResult.NOT_LOADED` at
+startup so `restoreOnStartup`'s own size prompt runs. EXIT only reports
+`LoadResult.EXIT_CHOSEN` (GH-41); once the load has returned, `GameViewModelImpl` hands it to
+its `UnsolvableSaveExit` hook. The terminal's hook (built in `buildViewModel`) runs
+`exitGame()` mid-game, or throws `ExitRequestedException` at startup, which
 `TuiView.play` catches around `restoreOnStartup`.
 `ChooseBoardSize.origin` is what the TUI reports as
 `screen_size_dialog.opened_from`. The TUI answers with a non-cancellable

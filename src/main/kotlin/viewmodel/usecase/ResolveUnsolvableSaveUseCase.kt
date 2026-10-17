@@ -7,7 +7,6 @@ import storage.SaveRepository
 import storage.SavedBoard
 import viewmodel.CurrentSaveName
 import viewmodel.GameShiftKeys
-import viewmodel.ExitRequestedException
 import viewmodel.MordieHooks
 import viewmodel.SaveInfo
 import viewmodel.UiRequest
@@ -23,15 +22,14 @@ internal class ResolveUnsolvableSaveUseCase(
     private val analytics: AnalyticsService,
     private val ui: UiRequestChannel,
     private val newGame: NewGameUseCase,
-    private val exitGame: ExitGameUseCase,
     private val currentSaveName: CurrentSaveName,
     private val gameShiftKeys: GameShiftKeys,
 ) {
 
-    /** The repair / new game / exit choice for an unsolvable save (GH-74). Returns whether the
-     *  (repaired) save was loaded. At startup, New game returns `false` so `restoreOnStartup`'s
-     *  own size prompt runs, and Exit throws [ExitRequestedException] - there is no game to save. */
-    suspend fun resolve(name: String, saved: SavedBoard, trigger: String): Boolean {
+    /** The repair / new game / exit choice for an unsolvable save (GH-74). At startup, New game
+     *  returns [LoadResult.NOT_LOADED] so `restoreOnStartup`'s own size prompt runs. Exit only
+     *  reports [LoadResult.EXIT_CHOSEN] (GH-41): the platform runs it once the load returns. */
+    suspend fun resolve(name: String, saved: SavedBoard, trigger: String): LoadResult {
         val atStartup = trigger == "startup_prompt"
         val info = SaveInfo(name, saved.squareSide, solvable = false)
         ui.showMessage("'${info.displayWithSize()}' can't be solved - no sequence of shifts reaches the solved board.")
@@ -60,7 +58,7 @@ internal class ResolveUnsolvableSaveUseCase(
                     if (error == null) "Repaired '$name' (two tiles swapped) and loaded it."
                     else "Repaired and loaded '$name', but could not update the save file: ${error.message ?: error::class.simpleName}"
                 )
-                return true
+                return LoadResult.LOADED
             }
             UnsolvableSaveChoice.NEW_GAME -> {
                 track()
@@ -68,13 +66,11 @@ internal class ResolveUnsolvableSaveUseCase(
                     val size = ui.ask(UiRequest.ChooseBoardSize(board.squareSide, origin = "unsolvable_save"))
                     newGame.newGame(size ?: board.squareSide, trigger = "unsolvable_save")
                 }
-                return false
+                return LoadResult.NOT_LOADED
             }
             UnsolvableSaveChoice.EXIT -> {
                 track()
-                if (atStartup) throw ExitRequestedException()
-                exitGame.exitGame()
-                return false
+                return LoadResult.EXIT_CHOSEN
             }
         }
     }
