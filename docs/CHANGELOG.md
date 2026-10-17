@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.14.5] — 2026-10-17 (PR #95 merged)
+
+### Changed
+- [wip] (PR #95) GH-78 (WU5/8): the startup sequence (restore prompt or size prompt, then Mordie) moves into `StartupRestoreUseCase`, which completes the viewmodel split. `ViewModelImpl` is now a thin facade that keeps the shifts and the queries and hands every other flow to its use case (368 lines down to 83). No behaviour change; the TUI split starts in WU6.
+
 ## [0.14.4] — 2026-10-17 (PR #94 merged)
 
 ### Changed

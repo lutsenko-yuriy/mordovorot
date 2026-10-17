@@ -7,6 +7,7 @@ import viewmodel.usecase.ExitGameUseCase
 import viewmodel.usecase.LoadGameUseCase
 import viewmodel.usecase.NewGameUseCase
 import viewmodel.usecase.SaveGameUseCase
+import viewmodel.usecase.StartupRestoreUseCase
 
 /** The one [ViewModel] implementation (GH-42 WU3, collapsing GH-23's `BaseViewModel` +
  *  `ConsoleViewModelImpl` + `TuiViewModelImpl` split): shifts and the read-only query surface
@@ -16,13 +17,6 @@ import viewmodel.usecase.SaveGameUseCase
 class ViewModelImpl internal constructor(
     private val board: BoardModel,
     private val analytics: AnalyticsService,
-    /** Seeded `true` by `GameSession` after a mode switch, so the prompt doesn't re-show. */
-    startupRestoreDone: Boolean = false,
-    /** `true` when `--size=N` was given at launch (GH-44) - the flag *is* the answer, so
-     *  [restoreOnStartup] skips both the restore prompt and the size prompt entirely and starts
-     *  fresh at the size the board was already constructed with, regardless of what saves
-     *  exist. */
-    private val sizeChosenAtLaunch: Boolean = false,
     private val mordieHooks: MordieHooks,
     private val ui: UiRequestChannel,
     private val catalog: SaveCatalog,
@@ -30,11 +24,10 @@ class ViewModelImpl internal constructor(
     private val saveGameUseCase: SaveGameUseCase,
     private val loadGameUseCase: LoadGameUseCase,
     private val exitGameUseCase: ExitGameUseCase,
+    private val startupRestoreUseCase: StartupRestoreUseCase,
 ) : ViewModel {
 
     override val uiRequests: ReceiveChannel<UiRequest<*>> = ui.requests
-
-    private suspend fun <R> ask(request: UiRequest<R>): R = ui.ask(request)
 
     override fun shiftLeft(row: Int) = shift { board.shiftLeft(row) }
 
@@ -67,61 +60,7 @@ class ViewModelImpl internal constructor(
 
     override suspend fun exitGame() = exitGameUseCase.exitGame()
 
-    /** Guards [restoreOnStartup] against running twice - including across a mode switch. */
-    private var startupRestoreDone = startupRestoreDone
-
-    /** The startup sequence (GH-44 grew this beyond just the restore prompt): offers to restore
-     *  a previous save (0/1/2+ saves, unchanged from GH-6), then - only if nothing was actually
-     *  restored - offers a size prompt for the fresh game about to start. Skips both steps
-     *  entirely when [sizeChosenAtLaunch] is set: `--size=N` *is* the answer, so the board just
-     *  keeps the size it was already constructed with, regardless of what saves exist. Mordie
-     *  starts on whatever board play begins with, unless it is already bound (a mode switch). */
-    override suspend fun restoreOnStartup() {
-        restoreOrPickSize()
-        mordieHooks.onStartup()
-    }
-
-    private suspend fun restoreOrPickSize() {
-        if (startupRestoreDone) return
-        startupRestoreDone = true
-        if (sizeChosenAtLaunch) return
-        // Any failure here just starts a fresh game instead of crashing at boot.
-        catchingNonControl(onError = {}) {
-            val saveInfos = catalog.infos()
-            val restored = if (saveInfos.isEmpty()) {
-                false
-            } else {
-                analytics.track("startup_restore_prompt_shown", mapOf("save_file_count" to saveInfos.size))
-
-                val nameToRestore = if (saveInfos.size == 1) {
-                    saveInfos[0].name.takeIf { ask(UiRequest.ConfirmRestore(saveInfos[0])) }
-                } else {
-                    // The TUI answers with a listed name; anything else counts as declined (GH-79).
-                    val chosen = ask(UiRequest.ChooseSaveToRestore(saveInfos))
-                    saveInfos.firstOrNull { it.name == chosen }?.name
-                }
-
-                // loadGame can still fail here (a save deleted or corrupted since listSaves()
-                // ran just above) - decision reflects what actually happened, not just what was
-                // picked.
-                fun trackDecision(decision: String) =
-                    analytics.track("startup_restore_decision", mapOf("decision" to decision, "save_file_count" to saveInfos.size))
-                val didRestore = try {
-                    nameToRestore?.let { loadGameUseCase.loadGame(it, trigger = "startup_prompt") } ?: false
-                } catch (e: ExitRequestedException) {
-                    // Exit from the unsolvable-save choice (GH-74).
-                    trackDecision("quit")
-                    throw e
-                }
-                trackDecision(if (didRestore) "restored" else "new_game")
-                didRestore
-            }
-
-            if (!restored) {
-                ask(UiRequest.ChooseBoardSize(board.squareSide))?.let { newGame(it, trigger = "startup_prompt") }
-            }
-        }
-    }
+    override suspend fun restoreOnStartup() = startupRestoreUseCase.restoreOnStartup()
 
     override fun listSaves(): List<SaveInfo> = catalog.listSaves()
 

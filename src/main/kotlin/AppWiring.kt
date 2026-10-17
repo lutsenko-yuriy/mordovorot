@@ -22,6 +22,7 @@ import viewmodel.usecase.LoadGameUseCase
 import viewmodel.usecase.NewGameUseCase
 import viewmodel.usecase.ResolveUnsolvableSaveUseCase
 import viewmodel.usecase.SaveGameUseCase
+import viewmodel.usecase.StartupRestoreUseCase
 
 // The composition root (GH-78): the only production code that constructs collaborators. `main`
 // builds the session-lifetime objects; everything below is rebuilt per mode. Test builders call
@@ -80,19 +81,11 @@ internal fun buildViewModel(
     val saveGame = SaveGameUseCase(board, saves, mordieHooks, analytics, ui)
     val exitGame = ExitGameUseCase(saves, saveGame, analytics, ui)
     val resolveUnsolvable = ResolveUnsolvableSaveUseCase(board, saves, mordieHooks, analytics, ui, newGame, exitGame)
-    return ViewModelImpl(
-        board,
-        analytics,
-        startupRestoreDone,
-        sizeChosenAtLaunch,
-        mordieHooks,
-        ui,
-        catalog,
-        newGame,
-        saveGame,
-        LoadGameUseCase(board, saves, mordieHooks, analytics, ui, catalog, resolveUnsolvable),
-        exitGame,
+    val loadGame = LoadGameUseCase(board, saves, mordieHooks, analytics, ui, catalog, resolveUnsolvable)
+    val startupRestore = StartupRestoreUseCase(
+        board, catalog, analytics, ui, loadGame, newGame, mordieHooks, startupRestoreDone, sizeChosenAtLaunch,
     )
+    return ViewModelImpl(board, analytics, mordieHooks, ui, catalog, newGame, saveGame, loadGame, exitGame, startupRestore)
 }
 
 internal fun buildTuiView(

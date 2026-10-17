@@ -25,7 +25,7 @@ sealed class UiRequest<R> {
     class ConfirmSaveBeforeExit : UiRequest<Boolean>()
     class PromptSaveName : UiRequest<String?>()
 
-    /** "Which size for the fresh game?" (GH-44) - raised by [ViewModelImpl.restoreOnStartup]
+    /** "Which size for the fresh game?" (GH-44) - raised by [viewmodel.usecase.StartupRestoreUseCase.restoreOnStartup]
      *  once it's established restore didn't happen. Answered with a chosen side, or `null` to
      *  keep [current]. [origin] is `startup` or `unsolvable_save` - what the TUI
      *  reports as `screen_size_dialog.opened_from`. */
