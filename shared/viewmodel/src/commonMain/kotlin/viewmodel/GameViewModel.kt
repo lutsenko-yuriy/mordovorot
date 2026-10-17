@@ -3,8 +3,9 @@ package viewmodel
 import kotlinx.coroutines.channels.ReceiveChannel
 
 /** The platform-independent viewModel surface (GH-41, split out of GH-42's `ViewModel`) -
- *  shift/new game/save/load plus the read-only query surface (`listSaves`/`saveExists`/
- *  `currentSaveName`/`isSolved`/`boardState`/`squareSide`) a View needs to render/re-render.
+ *  shift (one step, or several with `shiftRow`/`shiftColumn`)/new game/save/load plus the
+ *  read-only query surface (`listSaves`/`saveExists`/`currentSaveName`/`hasUnsavedProgress`/
+ *  `isSolved`/`boardState`/`squareSide`) a View needs to render/re-render.
  *  Exit is not here: it is terminal-only, on the terminal's `ViewModel`. */
 interface GameViewModel {
 
