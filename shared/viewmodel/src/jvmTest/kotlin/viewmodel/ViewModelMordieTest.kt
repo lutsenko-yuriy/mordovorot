@@ -42,7 +42,7 @@ class ViewModelMordieTest {
     private fun savesWith(state: IntArray, moveCount: Int = 0, mordie: SavedMordie? = null) =
         FakeSaveRepository(mutableMapOf("m" to SavedBoard(3, state.copyOf(), moveCount, mordie)))
 
-    private suspend fun ViewModelImpl.load(ui: FakeViewModelUi = FakeViewModelUi()) = ui.drive(this) { loadGame("m") }
+    private suspend fun GameViewModelImpl.load(ui: FakeViewModelUi = FakeViewModelUi()) = ui.drive(this) { loadGame("m") }
 
     private fun event(name: String) = analytics.events.single { it.name == name }.properties
 

@@ -17,9 +17,9 @@ class UiRequestChannel {
 
     /** Raises [request] on [requests] and suspends until the View responds. The View must
      *  never call back into a request-raising viewModel method (`saveGame`/`loadGame`/
-     *  `restoreOnStartup`, or the terminal's `exitGame`) from inside its own request handler - doing so deadlocks, since the
-     *  handler is `ask`'s only consumer and would be busy with the request that triggered the
-     *  callback. */
+     *  `restoreOnStartup`, or a platform flow raising requests here) from inside its own
+     *  request handler - doing so deadlocks, since the handler is `ask`'s only consumer and
+     *  would be busy with the request that triggered the callback. */
     suspend fun <R> ask(request: UiRequest<R>): R {
         channel.send(request)
         return request.awaitResponse()

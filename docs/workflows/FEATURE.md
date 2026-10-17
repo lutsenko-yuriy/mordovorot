@@ -39,7 +39,7 @@ behaviour beyond a literal value, it is not trivial — use the full workflow in
 ## Steps
 
 1. **Planning & setup gates** — work through in order; skip any that don't apply. If this scoping is expected to span multiple sessions/days, move the ticket to **Brief** first and back to Backlog/Todo once it's done, before step 1.5 moves it to In Progress:
-   1. **Sharpen the spec.** If the ticket lacks a clear spec (no explicit description of behaviour, interaction, or layout), or predates the `/brief` skill: run `/brief` first, before anything else below.
+   1. **Sharpen the spec.** If the ticket lacks a clear spec (no explicit description of behaviour, interaction, or layout), predates the `/brief` skill, or names code or behaviour that has changed since it was written (e.g. classes a later refactor removed): run `/brief` first, before anything else below. With an existing ticket, `/brief` checks the description against the current code and offers to revise it; any earlier plan comment is then superseded and `/plan` re-runs (GH-41).
    2. **Analytics planning.** For features with user-visible screens or interactions: invoke `analyze` and wait for approval.
       ```
       Invoke the analyze skill for GH-XX: <issue title>

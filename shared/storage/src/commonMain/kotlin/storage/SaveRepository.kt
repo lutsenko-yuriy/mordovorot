@@ -5,8 +5,8 @@ package storage
  *
  * [save] and [load] throw [IllegalArgumentException] for an unsafe/blank name or (on
  * [save]) a state that isn't a valid `squareSide`-sized permutation; [load] additionally
- * throws a format exception for a corrupted file (`FileSaveRepository`'s
- * `SaveFileFormatException`). Filesystem errors propagate as the platform's I/O exception.
+ * throws an implementation-specific format exception for a corrupted file. Filesystem
+ * errors propagate as the platform's I/O exception.
  */
 interface SaveRepository {
 

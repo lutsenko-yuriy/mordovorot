@@ -12,4 +12,5 @@ dependencies {
     implementation(project(":shared:analytics"))
     implementation(project(":shared:storage"))
     implementation(project(":shared:mordie"))
+    implementation(project(":shared:viewmodel"))
 }

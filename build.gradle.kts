@@ -5,7 +5,7 @@ plugins {
     application
 }
 
-version = "0.16.2"
+version = "0.16.3"
 
 kotlin {
     jvmToolchain(17)
@@ -20,6 +20,7 @@ dependencies {
     implementation(project(":shared:analytics"))
     implementation(project(":shared:storage"))
     implementation(project(":shared:mordie"))
+    implementation(project(":shared:viewmodel"))
     testImplementation(kotlin("test"))
     testImplementation(project(":shared:testing"))
 }
