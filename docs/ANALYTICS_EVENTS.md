@@ -2,6 +2,12 @@
 
 All events are sent via the analytics service abstraction (a thin wrapper around the underlying analytics SDK).
 
+*GH-110:* every event and screen view also carries `platform` (`string`): `terminal` or `web`
+(`ios` and `android` are reserved for future clients). A decorator adds it, the same way
+`InputMethodAnalyticsService` adds `input_method`. On `web`, `input_method` is `rich_ui`, since the
+browser client has a single pointer-driven UI with no keyboard mode. The web client also uses
+`NoopAnalyticsService`; no SDK is wired up there either.
+
 ---
 
 ## Events
@@ -81,6 +87,8 @@ Fired once at startup, after the launch mode is resolved (default mouse TUI or `
 
 *GH-79:* new property `console_flag_ignored` (`boolean`, always sent) - `true` when `--console` was passed and the `Console mode was removed` notice was shown before the TUI started.
 
+*GH-110:* on `web`, it fires on page load. `mode` is `rich_ui`, and `board_size` and `console_flag_ignored` are absent: there are no CLI flags, and `new_game_size_selected` reports the size picked later. New property `layout` (`string`, web only): `wide` (window wider than tall) or `tall` (taller than wide, or square), as of page load.
+
 ### `dialog_cancelled`
 
 Fired when the user cancels the Save, Load, Exit, or Size dialog in the mouse-driven or keyboard-driven TUI (mouse click, or Escape/Cancel-control in keyboard mode) without completing the action. *(GH-3, GH-18, GH-44)*
@@ -143,6 +151,8 @@ Fired once when a shift solves the board during play, in either input mode. Like
 *GH-83:* new properties `mordie_result` (`string`: `player_won` - Mordie hadn't found its solution, `matched` - the move count equals Mordie's N, `mordie_won` - the move count exceeds N, or `machine` - the move count is below N, found or not, which only an inconsistent save can produce) and `mordie_moves` (`number`: Mordie's N when the board was solved - the true minimum if found, otherwise its progress). Both are absent when Mordie sat the game out - a save from before GH-83, or a repaired one, loaded with moves already made.
 
 *GH-101:* new property `shift_keys` (`string`, keyboard mode only - absent in mouse mode): which keys made this game's keyboard shifts - `arrows` (only the arrow keys), `hjkl` (only H/J/K/L) or `mixed` (both). Mouse clicks aren't counted, so a game shifted partly by mouse reports only its keys. Sent only when the solving shift is a keyboard one; only solved games report it.
+
+*GH-110:* new property `shift_input` (`string`, `web` only - absent on `terminal`): how this game's shifts were made - `arrows` (only arrow clicks), `drag` (only drags) or `mixed` (both).
 
 ### `play_again_decision`
 
@@ -211,6 +221,12 @@ loaded. *(GH-83)*
 saved is stored as found; loading that save reveals it at once, and this event never fires for
 that game. Likewise, a board solved before the next check never fires it.
 
+*GH-110 (web):* the web client has no Exit, so `exit_command_used`, `input_mode_switched` and
+`app_launch_aborted` never fire there. `startup_restore_decision.decision` never takes `quit`,
+`unsolvable_save_resolved.choice` never takes `exit`, and `dialog_cancelled.dialog` never takes
+`exit`. Closing the tab and the leave-site prompt are not tracked: a page can't reliably send
+anything while it unloads.
+
 <!-- All events above are sent through `analytics.AnalyticsService`, currently backed by
      `analytics.NoopAnalyticsService` (no real SDK wired up yet). -->
 
@@ -236,3 +252,5 @@ that game. Likewise, a board solved before the next check never fires it.
 | `screen_unsolvable_dialog` | TUI `Can't be solved` dialog opens for an unsolvable save. Property `opened_from`: `toolbar` (Load button/F6) or `startup` (restore dialog). *(GH-74)* |
 
 *GH-99:* `screen_save_dialog` takes a new property `prefilled` (`boolean`) - whether the name field opened with the current save name in it.
+
+*GH-110:* on `web`, the screen views fire on the same triggers as in the TUI. `screen_exit_dialog` never fires there, and `screen_save_dialog.opened_from` never takes `exit_flow`.

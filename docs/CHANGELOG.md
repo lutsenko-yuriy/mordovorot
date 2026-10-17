@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.16.8] — 2026-10-18 (PR #117 merged)
+
+### Changed
+- [test] (PR #117) GH-110 (WU0/7): 31 browser scenario stubs (startup, play, save/load, unsaved progress, drag, analytics) in `web/src/commonTest/kotlin/web/scenario/`, made green by WU4–WU6; `docs/ANALYTICS_EVENTS.md` records the approved web analytics (`platform`, `input_method: rich_ui`, `app_launched.layout`, `board_solved.shift_input`).
+
 ## [0.16.7] — 2026-10-18 (PR #115 merged)
 
 ### Changed
