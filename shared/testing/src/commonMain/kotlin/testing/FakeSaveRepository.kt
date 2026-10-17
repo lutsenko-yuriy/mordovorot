@@ -36,7 +36,7 @@ class FakeSaveRepository(
 
     /** When set, [listSaves] throws this instead of returning - simulates an unreadable
      *  saves directory (e.g. permissions), which [storage.FileSaveRepository.listSaves]
-     *  can raise via [java.io.IOException]. */
+     *  can raise as an `IOException`. */
     var listSavesException: Throwable? = null
 
     override fun listSaves(): List<String> {
