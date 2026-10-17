@@ -12,6 +12,8 @@ import testing.FakeViewModel
 import testing.RecordingAnalyticsService
 import testing.testTuiView
 import testing.testViewModel
+import view.tui.dialog.LoadDialogController
+import view.tui.dialog.RestoreDialogController
 import viewmodel.ViewModelImpl
 
 /**
@@ -447,7 +449,9 @@ class TuiViewDialogTest {
         viewModel.saveNames = listOf("stale-name")
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.Escape), terminalSize = terminalSize)
 
-        view(terminal, viewModel).confirmRestore(viewmodel.SaveInfo("real-name", null))
+        val screen = TuiScreen(terminal, MouseInput(), ScreenRenderer(), viewModel, RecordingAnalyticsService())
+        val loadDialog = LoadDialogController(screen, RecordingAnalyticsService(), viewModel)
+        RestoreDialogController(loadDialog).confirmRestore(viewmodel.SaveInfo("real-name", null))
 
         assertTrue(terminal.frames.first().contains("real-name"))
         assertFalse(terminal.frames.first().contains("stale-name"))

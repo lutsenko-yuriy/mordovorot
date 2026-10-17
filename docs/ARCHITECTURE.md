@@ -159,12 +159,18 @@ src/main/kotlin/
         │                      # (GH-18)
         ├── KeyboardInput.kt # TuiInput impl: owns the board ArrowCursor and DialogFocus state
         │                      # for --keyboard mode (GH-18)
+        ├── dialog/          # One controller per dialog flow (GH-78), each over TuiScreen's
+        │                      # runModal: SaveDialogController (toolbar Save + the exit flow's
+        │                      # name prompt), ExitDialogController (owns the toolbar answer the
+        │                      # viewModel's ConfirmSaveBeforeExit then consumes),
+        │                      # LoadDialogController (toolbar Load + the Load-shaped dialog),
+        │                      # RestoreDialogController (startup restore prompt over it)
         ├── TuiScreen.kt     # What the TUI draws (GH-78): the last-drawn BoardLayout/DialogLayout,
         │                      # the parked status message, wasSolved, repaint, and runModal -
         │                      # the one blocking dialog loop (inline, calls
         │                      # TuiInput.onDialogOpened first)
-        └── TuiView.kt   # Owns its own event loop. Save/Load/
-                          # Exit/Size and the startup restore prompt share TuiScreen's blocking
+        └── TuiView.kt   # Owns its own event loop and routes toolbar clicks and UiRequests to
+                          # the dialog controllers; every dialog shares TuiScreen's blocking
                           # modal loop over Terminal (WU4, GH-64). State-driven solved screen (WU5): every
                           # repaint asks ViewModel.isSolved() fresh rather than tracking a phase
                           # flag, so the Congratulations title/dimmed arrows and a load back to an
@@ -283,8 +289,8 @@ Five interactions that used to be blocking calls into `View` (`showMessage`,
 `confirmRestore`, `chooseSaveToRestore`, `confirmSaveBeforeExit`, `promptSaveName`)
 are now `viewmodel.UiRequest<R>` values sent on `ViewModel.uiRequests`, a
 `Channel.RENDEZVOUS` the owning `View` drains in a sibling coroutine and answers via
-`UiRequest.respond`. `TuiView` answers each from its own request handler (the prompts
-are `internal` methods there, `showMessage` a private one). Rendezvous delivery
+`UiRequest.respond`. `TuiView`'s request handler routes each to the dialog controller
+that answers it (`view.tui.dialog`, GH-78); `ShowMessage` parks the text on `TuiScreen`. Rendezvous delivery
 (the channel has zero buffer, and `UiRequestChannel.ask()` doesn't return until the View has actually
 handled the request) is what keeps message/prompt ordering identical to the old
 blocking-call behavior. The one invariant that keeps this deadlock-free: a View's
@@ -406,9 +412,9 @@ mid-game, or throws `ExitRequestedException` at startup, which
 `TuiView.play` catches around `restoreOnStartup`.
 `ChooseBoardSize.origin` is what the TUI reports as
 `screen_size_dialog.opened_from`. The TUI answers with a non-cancellable
-`Dialog.Kind.UNSOLVABLE` (`runModal(cancellable = false)`), and its
-`confirmSaveBeforeExit` opens a Yes/No dialog itself when no toolbar Exit
-answer is pending.
+`Dialog.Kind.UNSOLVABLE` (`runModal(cancellable = false)`), and
+`ExitDialogController.confirmSaveBeforeExit` opens a Yes/No dialog itself when no toolbar
+Exit answer is pending.
 
 **`--size=N` bypasses the *entire* startup sequence, not just the size prompt.**
 A usable `--size=N` sets `sizeChosenAtLaunch` (captured by `buildGameSession`
