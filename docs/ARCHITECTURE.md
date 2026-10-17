@@ -519,6 +519,14 @@ fallback, still throws. `app_launched` still fires exactly once, from the
 initial resolution in `Main`; each subsequent switch fires
 `input_mode_switched` instead (`docs/ANALYTICS_EVENTS.md`).
 
+## Agent tooling (not part of the game)
+
+`scripts/` holds the Claude Code workflow tooling, tested with Python `unittest` in `tests.yml`. Two
+bash hooks are wired in the committed `.claude/settings.json` through `${CLAUDE_PROJECT_DIR}`:
+`scripts/onboard/gate.sh` (SessionStart/UserPromptExpansion/PreToolUse, blocks work until `/onboard`
+has run) and `scripts/alert/alert.sh` (GH-107: Notification/Stop, a macOS notification and spoken
+alert when a session waits on the user, toggled per machine in the gitignored `.claude/alert.env`).
+
 ## Dependencies
 
 - **Build tool:** Gradle (Kotlin DSL), via the wrapper (`./gradlew`) — pinned to 8.7.

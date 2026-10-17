@@ -4,9 +4,10 @@ Readers of .claude/settings.json: Claude Code (hooks), this file. Readers of .ya
 (check, apply, mark), test_skill.make_clone (writes its own), this file.
 
 State table (what must hold for the committed files):
-    settings.json   | events SessionStart/UserPromptExpansion/PreToolUse each present exactly once
+    settings.json   | gate.sh rows: events SessionStart/UserPromptExpansion/PreToolUse each present exactly once
                     | command = "${CLAUDE_PROJECT_DIR}/scripts/onboard/gate.sh <Event>" (event == its own row)
                     | timeout >= 4 and > gate.sh watchdog default; gate.sh tracked executable
+                    | rows for other hooks (e.g. scripts/alert/alert.sh, GH-107) are not checked here
     .yab-template   | parses to YAB_REPO; with origin YAB -> template mode, with another origin -> not
 """
 
@@ -33,7 +34,8 @@ def gate_rows():
     for event, groups in hooks.items():
         for group in groups:
             for hook in group["hooks"]:
-                rows.append((event, group, hook))
+                if "scripts/onboard/gate.sh" in hook.get("command", ""):
+                    rows.append((event, group, hook))
     return rows
 
 
