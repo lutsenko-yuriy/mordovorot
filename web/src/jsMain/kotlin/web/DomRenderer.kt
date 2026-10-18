@@ -15,7 +15,7 @@ import web.drag.WrapPositions
  *  Plain DOM, rebuilt every frame; the look comes in WU7. */
 class DomRenderer(private val root: Element) : WebRenderer {
 
-    /** Set once the game is built; only clicks read it, and none can come before then. */
+    /** Set once the game is built; only the page's events read it, and none can come before then. */
     lateinit var game: WebGame
 
     /** The open Save dialog's warning line, updated in place while the player types. */
