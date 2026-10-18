@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.16.11] — 2026-10-18 (PR #120 merged)
+
+### Changed
+- [wip] (PR #120) GH-110 (WU4/7): playable web board on localhost:8080 - WebGame over the shared viewmodel, arrow shifts, New with the size picker, Moves, Mordie's lines and the solved state, plain DOM renderer, web analytics wiring (platform: web, input_method: rich_ui, app_launched {mode, layout}).
+
 ## [0.16.10] — 2026-10-18 (PR #119 merged)
 
 ### Changed
