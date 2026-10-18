@@ -53,7 +53,7 @@ body {
 
 /* Sized so the board and its arrows fit the window beside (wide) or under (tall) the rest. */
 .app {
-    --tile: clamp(28px, min(calc((100vw - 40px) / (var(--side) * 1.1 + 2)), calc((100vh - 250px) / (var(--side) * 1.1 + 2))), 84px);
+    --tile: clamp(28px, min(calc((100vw - 40px) / (var(--side) * 1.1 + 2)), calc((100vh - 270px) / (var(--side) * 1.1 + 2))), 84px);
     --gap: calc(var(--tile) * 0.1);
     --pitch: calc(var(--tile) + var(--gap));
     --arrow: calc(var(--tile) * 0.7);
@@ -69,9 +69,9 @@ body {
 /* Wider than tall, as layoutOf counts it: the board on the left, the rest on the right. */
 @media (orientation: landscape) {
     .app {
-        --tile: clamp(28px, min(calc((100vw - 360px) / (var(--side) * 1.1 + 2)), calc((100vh - 48px) / (var(--side) * 1.1 + 2))), 84px);
+        --tile: clamp(28px, min(calc((100vw - 392px) / (var(--side) * 1.1 + 2)), calc((100vh - 48px) / (var(--side) * 1.1 + 2))), 84px);
         grid-template-areas: "board panel";
-        grid-template-columns: auto 18rem;
+        grid-template-columns: auto 20rem;
         justify-content: center;
         column-gap: 40px;
     }
@@ -107,7 +107,8 @@ body {
 .mordie {
     grid-area: mordie;
     max-width: 22rem;
-    min-height: 2.8em;
+    /* Mordie's longest lines take three, so the rest doesn't jump as they change. */
+    min-height: calc(3em * 1.4);
     color: var(--muted);
     text-align: center;
 }
