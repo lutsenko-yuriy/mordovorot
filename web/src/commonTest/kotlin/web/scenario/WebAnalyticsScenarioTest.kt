@@ -38,6 +38,21 @@ class WebAnalyticsScenarioTest {
     }
 
     @Test
+    fun `app_launched also carries app_version and host`() = webTest {
+        // TODO: start a harness with version 9.9.9, host LOCALHOST and the wide layout
+        // TODO: verify app_launched is exactly {mode: rich_ui, layout: wide, platform: web, app_version: 9.9.9, host: localhost}
+        // TODO: start one with the tall layout; verify the same map with layout: tall
+        // TODO: fold the test above into this one in the same commit (GH-111 WU1)
+    }
+
+    @Test
+    fun `app_launched reports the host bucket, never the hostname`() = webTest {
+        // TODO: start harnesses with host PUBLIC_SITE, LOCALHOST and OTHER
+        // TODO: verify app_launched.host is public_site, localhost and other respectively
+        // TODO: verify no event in any of them has a property value containing github.io
+    }
+
+    @Test
     fun `no Exit events ever fire on web`() = webTest {
         val page = WebHarness(backgroundScope).seed("foo", ONE_SHIFT_FROM_SOLVED).seed("odd", UNSOLVABLE_3X3).start()
         page.game.onLoadChosen("odd")
