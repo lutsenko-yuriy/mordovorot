@@ -135,21 +135,25 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── Launch.kt        # startWebGame: the page's wiring (PlatformAnalyticsService "web" wrapped
 │   │                    # by InputMethodAnalyticsService "rich_ui"), app_launched {mode, layout}
 │   ├── drag/            # LineDrag: one drag in pixels - axis lock past a threshold, live offset,
-│   │                    # snap to whole tiles mod the side; WrapPositions: a part-shifted line's tiles
+│   │                    # snap to whole tiles mod the side; WrapPositions: a part-shifted line's tiles;
+│   │                    # Slides: the eased slide after an arrow shift or a drag release
 │   └── storage/         # BrowserSaveRepository: one KeyValueStore entry per save under
 │                        # `mordovorot.save.<name>`, in SaveFileCodec's format, SaveNames' rules
 ├── src/jsMain/kotlin/web/Main.kt       # The page's composition root: BoardImpl, saves in
 │                                       # localStorage, Mordie with the background search,
 │                                       # MainScope, the window's Layout, the beforeunload prompt
 ├── src/jsMain/kotlin/web/DomRenderer.kt # WebState -> DOM, clicks and pointer drags -> WebGame
-│                                       # intents; the page root holds a drag's pointer capture
+│                                       # intents; the page root holds a drag's pointer capture;
+│                                       # runs Slides on animation frames, redrawing only the tiles
 ├── src/jsMain/kotlin/web/storage/LocalStorageStore.kt # KeyValueStore over window.localStorage
 ├── src/jsMain/resources/index.html     # The page: `<title>Mordovorot</title>`, loads web.js
+├── src/jsMain/resources/styles.css     # The look: tile colours by home row/column, modal
+│                                       # dialogs, wide/tall by `orientation` (as layoutOf counts)
 ├── src/commonTest/kotlin/web/scenario/ # GH-110 end to end: WebGame over startWebGame's wiring
 │                                       # (WebHarness), recording each WebState (startup, play,
 │                                       # save/load, unsaved progress, drag, analytics)
 ├── src/commonTest/kotlin/web/LayoutTest.kt
-├── src/commonTest/kotlin/web/drag/     # LineDragTest, WrapPositionsTest
+├── src/commonTest/kotlin/web/drag/     # LineDragTest, WrapPositionsTest, SlidesTest
 ├── src/commonTest/kotlin/web/storage/  # BrowserSaveRepositoryTest over InMemoryKeyValueStore
 └── src/jvmTest/kotlin/web/IndexPageTest.kt # Pins the title rule (the title appears only in the tab)
 

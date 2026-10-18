@@ -1,6 +1,7 @@
 # Mordovorot
 
-A terminal version of Loopover, a sliding-row/column puzzle, written in Kotlin.
+A version of Loopover, a sliding-row/column puzzle, written in Kotlin. It runs in a terminal
+and, on `localhost`, in a web browser.
 
 The board is a `SQUARE_SIDE × SQUARE_SIDE` grid (3×3 to 5×5, default 4×4) holding a
 shuffled permutation of numbers. Rows shift left/right and columns shift up/down,
@@ -11,12 +12,14 @@ cyclically wrapping around, until the board is back in ascending order.
 Mordovorot is based on Loopover, a puzzle created by Cary Huang (carykh). The original
 is on [OpenProcessing](https://openprocessing.org/@carykh/580366), and the community site is
 [loopover.xyz](https://loopover.xyz). Mordovorot is an independent reimplementation for the
-terminal. It uses the same rules (cyclic row/column shifts on a square board), but none of
-Loopover's code or assets.
+terminal and the browser. It uses the same rules (cyclic row/column shifts on a square board),
+but none of Loopover's code or assets.
 
 ## Running it
 
 **Requires:** JDK 17. Gradle comes with the wrapper, so you don't need to install it.
+
+### In a terminal
 
 The game is a terminal UI (mouse or keyboard) and needs a real terminal, so launch it
 through the `installDist` launcher:
@@ -41,6 +44,17 @@ Flags:
 Saves go to `saves/`, relative to the directory you launch from. See
 `docs/PRODUCT_SPEC.md` for the full behaviour.
 
+### In a browser
+
+```bash
+./gradlew :web:serve    # then open http://localhost:8080
+```
+
+The browser game plays with the mouse: click the arrows, or drag a row or column. It has the
+same rules, saves, and Mordie as the terminal game, but no keyboard mode, no flags and no Exit
+(close the tab). Saves are kept in the browser (`localStorage` for `localhost:8080`), separate
+from the terminal's `saves/`. The server doesn't rebuild on its own, so restart it after a code change.
+
 ## Testing
 
 ```bash
@@ -57,7 +71,7 @@ The game uses MVVM (Model-View-ViewModel):
 
 - `board_model`: game state and rules.
 - `viewmodel`: mediates between view and model.
-- `view`: the terminal UI.
+- `view`: the terminal UI; `web/` is the browser client.
 - `storage` and `analytics`: supporting services.
 
 See `docs/ARCHITECTURE.md` for the full layout and the layer rules.

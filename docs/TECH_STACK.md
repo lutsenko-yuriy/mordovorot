@@ -17,7 +17,7 @@
 ## Platforms
 
 - JVM 17 desktop terminal app: an ANSI mouse/keyboard TUI that needs a real terminal (`installDist` launcher, not `./gradlew run`)
-- Web browser (GH-110, in progress): the `:web` Kotlin/JS client, served on `http://localhost:8080` by `./gradlew :web:serve` (the Kotlin plugin's webpack dev server; the port is pinned because browser saves are per origin)
+- Web browser (GH-110): the `:web` Kotlin/JS client (plain DOM and CSS, no UI framework), served on `http://localhost:8080` by `./gradlew :web:serve` (the Kotlin plugin's webpack dev server; the port is pinned because browser saves are per origin)
 
 ## Tooling
 
