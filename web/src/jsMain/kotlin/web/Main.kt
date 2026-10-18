@@ -7,12 +7,13 @@ import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
 import mordie.BackgroundMordieSearch
 import mordie.Mordie
+import org.w3c.dom.HTMLElement
 import web.storage.BrowserSaveRepository
 import web.storage.LocalStorageStore
 
 /** The page's composition root (GH-110). */
 fun main() {
-    val root = document.getElementById("app") ?: return
+    val root = document.getElementById("app") as? HTMLElement ?: return
     val renderer = DomRenderer(root)
     val game = startWebGame(
         BoardImpl(),

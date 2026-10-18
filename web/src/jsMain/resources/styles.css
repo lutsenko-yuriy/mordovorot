@@ -1,0 +1,363 @@
+/* GH-110: the browser game's look. DomRenderer sets --side on #app and each tile's --x/--y (where it
+   sits) and --row/--col (where it belongs, which picks its colour). */
+
+:root {
+    --page: #f5f1ea;
+    --ink: #4a4239;
+    --muted: #8a7f73;
+    --frame: #ddd4c7;
+    --button: #8f7a66;
+    --button-ink: #fff;
+    --button-hover: #7c6957;
+    --card: #fffdf9;
+    --scrim: rgba(40, 32, 24, 0.45);
+    --warning: #b4572e;
+    --tile-ink: #2e2822;
+    --tile-light: 76%;
+    color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --page: #1d1b19;
+        --ink: #ece6dd;
+        --muted: #a39a8f;
+        --frame: #34302b;
+        --button: #a58d76;
+        --button-ink: #1d1b19;
+        --button-hover: #bba28a;
+        --card: #2a2724;
+        --scrim: rgba(0, 0, 0, 0.6);
+        --warning: #f0a27a;
+        --tile-light: 70%;
+        color-scheme: dark;
+    }
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    min-height: 100%;
+}
+
+body {
+    background: var(--page);
+    color: var(--ink);
+    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Sized so the board and its arrows fit the window beside (wide) or under (tall) the rest. */
+.app {
+    --tile: clamp(28px, min(calc((100vw - 40px) / (var(--side) * 1.1 + 2)), calc((100vh - 250px) / (var(--side) * 1.1 + 2))), 84px);
+    --gap: calc(var(--tile) * 0.1);
+    --pitch: calc(var(--tile) + var(--gap));
+    --arrow: calc(var(--tile) * 0.7);
+    display: grid;
+    grid-template-areas: "moves" "mordie" "board" "toolbar" "status";
+    justify-items: center;
+    align-content: center;
+    gap: 14px;
+    min-height: 100vh;
+    padding: 20px 16px;
+}
+
+/* Wider than tall, as layoutOf counts it: the board on the left, the rest on the right. */
+@media (orientation: landscape) {
+    .app {
+        --tile: clamp(28px, min(calc((100vw - 360px) / (var(--side) * 1.1 + 2)), calc((100vh - 48px) / (var(--side) * 1.1 + 2))), 84px);
+        grid-template-areas: "board panel";
+        grid-template-columns: auto 18rem;
+        justify-content: center;
+        column-gap: 40px;
+    }
+
+    .panel {
+        grid-area: panel;
+        display: flex;
+        flex-direction: column;
+        align-self: start;
+        gap: 14px;
+        /* Level with the first row of tiles. */
+        margin-top: calc(var(--arrow) + var(--gap) * 1.5);
+    }
+
+    .panel > .mordie {
+        text-align: left;
+    }
+}
+
+/* Tall: the panel's items stack around the board, in the app's own grid. */
+@media (orientation: portrait) {
+    .panel {
+        display: contents;
+    }
+}
+
+.moves {
+    grid-area: moves;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.mordie {
+    grid-area: mordie;
+    max-width: 22rem;
+    min-height: 2.8em;
+    color: var(--muted);
+    text-align: center;
+}
+
+.app.solved .mordie {
+    color: var(--ink);
+    font-weight: 600;
+}
+
+.toolbar {
+    grid-area: toolbar;
+    display: flex;
+    gap: 10px;
+}
+
+.status {
+    grid-area: status;
+    min-height: 1.4em;
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+/* ---- Buttons ---- */
+
+button {
+    font: inherit;
+    font-weight: 600;
+    border: 0;
+    border-radius: 8px;
+    padding: 0.55em 1.1em;
+    background: var(--button);
+    color: var(--button-ink);
+    cursor: pointer;
+    transition: background-color 0.15s, transform 0.1s;
+}
+
+button:hover:not(:disabled) {
+    background: var(--button-hover);
+}
+
+button:active:not(:disabled) {
+    transform: scale(0.96);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+button:focus-visible {
+    outline: 3px solid var(--warning);
+    outline-offset: 2px;
+}
+
+/* ---- Board ---- */
+
+.board {
+    grid-area: board;
+    display: grid;
+    grid-template-columns: var(--arrow) auto var(--arrow);
+    grid-template-rows: var(--arrow) auto var(--arrow);
+    gap: calc(var(--gap) * 1.5);
+}
+
+.arrows {
+    display: flex;
+    gap: var(--gap);
+}
+
+.arrows.row {
+    padding: 0 calc(var(--gap) / 2);
+}
+
+.arrows.column {
+    flex-direction: column;
+    padding: calc(var(--gap) / 2) 0;
+}
+
+.arrow {
+    flex: 0 0 var(--tile);
+    padding: 0;
+    background: transparent;
+    color: var(--muted);
+    font-size: calc(var(--arrow) * 0.5);
+    line-height: 1;
+}
+
+.arrow:hover:not(:disabled) {
+    background: var(--frame);
+    color: var(--ink);
+}
+
+.arrow:disabled {
+    opacity: 0.35;
+}
+
+.board.solved .arrow {
+    opacity: 0;
+}
+
+/* Only on the shift that solves it: later frames are drawn already faded. */
+.board.just-solved .arrow {
+    animation: fade 0.8s ease-out;
+}
+
+@keyframes fade {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+.tiles {
+    position: relative;
+    overflow: hidden;
+    width: calc(var(--side) * var(--pitch));
+    height: calc(var(--side) * var(--pitch));
+    border-radius: calc(var(--tile) * 0.2);
+    background: var(--frame);
+}
+
+.tile {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--tile);
+    height: var(--tile);
+    transform: translate(calc(var(--x) * var(--pitch) + var(--gap) / 2), calc(var(--y) * var(--pitch) + var(--gap) / 2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: calc(var(--tile) * 0.16);
+    /* Each row its own hue, darker along the row, so where a tile belongs shows at a glance. */
+    background: hsl(calc(var(--row) * 360deg / var(--side) + 8deg) 68% calc(var(--tile-light) - var(--col) * 22% / (var(--side) - 1)));
+    color: var(--tile-ink);
+    font-size: calc(var(--tile) * 0.4);
+    font-weight: 700;
+    box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    cursor: grab;
+}
+
+.board.solved .tile {
+    cursor: default;
+}
+
+.board.just-solved .tiles {
+    animation: glow 0.9s ease-out;
+}
+
+@keyframes glow {
+    from { box-shadow: 0 0 0 0 hsl(45 90% 60% / 0.9); }
+    to { box-shadow: 0 0 0 18px hsl(45 90% 60% / 0); }
+}
+
+.app.dragging, .app.dragging * {
+    cursor: grabbing;
+}
+
+/* ---- Dialogs ---- */
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: var(--scrim);
+    animation: appear 0.15s ease-out;
+}
+
+.dialog {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: min(24rem, 100%);
+    max-height: calc(100vh - 32px);
+    overflow: auto;
+    padding: 22px;
+    border-radius: 14px;
+    background: var(--card);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.dialog .title {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.dialog .message {
+    color: var(--muted);
+}
+
+.dialog .warning {
+    min-height: 1.4em;
+    color: var(--warning);
+    font-size: 0.9rem;
+}
+
+.dialog input {
+    font: inherit;
+    padding: 0.5em 0.7em;
+    border: 2px solid var(--frame);
+    border-radius: 8px;
+    background: var(--page);
+    color: var(--ink);
+}
+
+.dialog input:focus {
+    outline: none;
+    border-color: var(--button);
+}
+
+.dialog .choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.dialog .choices.list {
+    flex-direction: column;
+}
+
+.dialog .choices.list button {
+    text-align: left;
+}
+
+.dialog .actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.dialog .actions .secondary {
+    background: transparent;
+    color: var(--ink);
+    box-shadow: inset 0 0 0 2px var(--frame);
+}
+
+.dialog .actions .secondary:hover {
+    background: var(--frame);
+}
+
+@keyframes appear {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+}
