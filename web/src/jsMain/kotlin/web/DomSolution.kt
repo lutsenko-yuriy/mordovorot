@@ -16,22 +16,23 @@ internal fun stepList(solution: SolutionState): Element = element("div", "steps"
     }
 }
 
-/** Prev / Next / Restart, each disabled where it has nowhere to go (GH-126). */
-internal fun replayButtons(solution: SolutionState, game: WebGame, dialogOpen: Boolean): Element = element("div", "replay").apply {
+/** Prev / Next / Restart, each disabled where it has nowhere to go (GH-126). [game] is read only on a
+ *  click: the first frame is drawn before the renderer has its game. */
+internal fun replayButtons(solution: SolutionState, game: () -> WebGame, dialogOpen: Boolean): Element = element("div", "replay").apply {
     append(
-        button("◀ Prev") { game.onReplayPrevious() }.also { it.disabled = dialogOpen || solution.atStart },
-        button("Next ▶") { game.onReplayNext() }.also { it.disabled = dialogOpen || solution.atEnd },
-        button("↻ Restart") { game.onReplayRestart() }.also { it.disabled = dialogOpen || solution.atStart },
+        button("◀ Prev") { game().onReplayPrevious() }.also { it.disabled = dialogOpen || solution.atStart },
+        button("Next ▶") { game().onReplayNext() }.also { it.disabled = dialogOpen || solution.atEnd },
+        button("↻ Restart") { game().onReplayRestart() }.also { it.disabled = dialogOpen || solution.atStart },
     )
 }
 
 /** `Give Up`, disabled until Mordie's solution is revealed, or `Mordie's solution` after a win;
- *  `null` when the row is empty (GH-126). */
-internal fun giveUpRow(giveUp: GiveUpButton, game: WebGame, dialogOpen: Boolean): Element? {
+ *  `null` when the row is empty (GH-126). [game] is read only on a click, as in [replayButtons]. */
+internal fun giveUpRow(giveUp: GiveUpButton, game: () -> WebGame, dialogOpen: Boolean): Element? {
     val button = when (giveUp) {
         GiveUpButton.HIDDEN -> return null
-        GiveUpButton.MORDIES_SOLUTION -> button("Mordie's solution") { game.onMordiesSolution() }
-        GiveUpButton.GIVE_UP, GiveUpButton.DIMMED -> button("Give Up") { game.onGiveUp() }
+        GiveUpButton.MORDIES_SOLUTION -> button("Mordie's solution") { game().onMordiesSolution() }
+        GiveUpButton.GIVE_UP, GiveUpButton.DIMMED -> button("Give Up") { game().onGiveUp() }
     }
     button.disabled = dialogOpen || giveUp == GiveUpButton.DIMMED
     return element("div", "give-up").apply { append(button) }

@@ -91,7 +91,7 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
                 append(
                     text("moves", if (state.movesShown) "Moves: ${state.moves}" else "").also { moves = it },
                     element("div", "mordie").apply { append(element("div", "line")) }.also { mordie = it },
-                    *listOfNotNull(state.solution?.let { replayButtons(it, game, dialog != null) }, giveUpRow(state.giveUp, game, dialog != null)).toTypedArray(),
+                    *listOfNotNull(state.solution?.let { replayButtons(it, { game }, dialog != null) }, giveUpRow(state.giveUp, { game }, dialog != null)).toTypedArray(),
                     element("div", "toolbar").also { toolbar = it }.apply {
                         append(
                             button("New") { game.onNew() }.also { it.disabled = dialog != null },
