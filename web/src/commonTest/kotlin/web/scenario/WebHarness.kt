@@ -34,6 +34,7 @@ internal class WebHarness(
     val saves = BrowserSaveRepository(store)
     val analytics = RecordingAnalyticsService()
     val mordieSearches = FakeMordieSearchFactory()
+    val mordie = Mordie(mordieSearches)
     private val renderer = FakeWebRenderer()
     lateinit var game: WebGame
         private set
@@ -41,7 +42,7 @@ internal class WebHarness(
     val state: WebState get() = renderer.frames.last()
 
     fun start(): WebHarness {
-        game = startWebGame(board, saves, analytics, Mordie(mordieSearches), renderer, scope, layout)
+        game = startWebGame(board, saves, analytics, mordie, renderer, scope, layout)
         return this
     }
 
