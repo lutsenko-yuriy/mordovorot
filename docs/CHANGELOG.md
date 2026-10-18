@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.17.0] — 2026-10-18 (PR #123 merged)
+
+### Added
+- [user] (PR #123) GH-110 (WU7/7): Mordie's lines appear and disappear like chat messages in the browser; the browser client is now complete and playable on localhost:8080 with tiles, drag interactions, saves, and Mordie's responses.
+
 ## [0.16.13] — 2026-10-18 (PR #122 merged)
 
 ### Changed
