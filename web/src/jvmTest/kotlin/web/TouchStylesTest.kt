@@ -11,8 +11,16 @@ class TouchStylesTest {
         .find(styles)?.groupValues?.get(1).orEmpty()
 
     @Test
-    fun `touch screens hide the arrows and the board's empty corners`() {
-        assertTrue(Regex("""\.board > :not\(\.tiles\) \{\s*display: none;""").containsMatchIn(touch), touch)
+    fun `touch screens hide the board's empty corners`() {
+        assertTrue(Regex("""\.board > span \{\s*display: none;""").containsMatchIn(touch), touch)
+    }
+
+    @Test
+    fun `touch screens hide the arrows from sight but not from screen readers`() {
+        val arrows = Regex("""\.board > \.arrows \{([^}]*)}""").find(touch)?.groupValues?.get(1).orEmpty()
+
+        assertTrue("position: absolute;" in arrows && "clip-path: inset(50%);" in arrows, arrows)
+        assertTrue("display: none" !in arrows, arrows)
     }
 
     @Test
