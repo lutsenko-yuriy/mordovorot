@@ -74,4 +74,10 @@ class MouseInputTest {
         val dialog = Dialog(Dialog.Kind.EXIT, "Save before quitting?", buttons = listOf(DialogButtonSpec("yes", "Yes")))
         assertEquals(dialog, input.decorateDialog(dialog))
     }
+
+    @Test
+    fun `a wheel notch on the board scrolls the step list (GH-126)`() {
+        assertEquals(InputAction.Scroll(-1), input.onBoardEvent(TerminalEvent.Wheel(up = true), boardLayout))
+        assertEquals(InputAction.Scroll(1), input.onBoardEvent(TerminalEvent.Wheel(up = false), boardLayout))
+    }
 }
