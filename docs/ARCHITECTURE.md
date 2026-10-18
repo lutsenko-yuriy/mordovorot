@@ -132,11 +132,11 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── WebRenderer.kt   # fun interface render(WebState) - the DOM on the page, a recorder in tests
 │   ├── WebRequestRouter.kt # Answers each UiRequest (exhaustive `when`, like UiRequestRouter)
 │   ├── Layout.kt        # layoutOf(width, height): WIDE (wider than tall) or TALL
+│   ├── Slides.kt        # The eased slide after an arrow shift or a drag release, drawn by WrapPositions
 │   ├── Launch.kt        # startWebGame: the page's wiring (PlatformAnalyticsService "web" wrapped
 │   │                    # by InputMethodAnalyticsService "rich_ui"), app_launched {mode, layout}
 │   ├── drag/            # LineDrag: one drag in pixels - axis lock past a threshold, live offset,
-│   │                    # snap to whole tiles mod the side; WrapPositions: a part-shifted line's tiles;
-│   │                    # Slides: the eased slide after an arrow shift or a drag release
+│   │                    # snap to whole tiles mod the side; WrapPositions: a part-shifted line's tiles
 │   └── storage/         # BrowserSaveRepository: one KeyValueStore entry per save under
 │                        # `mordovorot.save.<name>`, in SaveFileCodec's format, SaveNames' rules
 ├── src/jsMain/kotlin/web/Main.kt       # The page's composition root: BoardImpl, saves in
@@ -152,8 +152,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/commonTest/kotlin/web/scenario/ # GH-110 end to end: WebGame over startWebGame's wiring
 │                                       # (WebHarness), recording each WebState (startup, play,
 │                                       # save/load, unsaved progress, drag, analytics)
-├── src/commonTest/kotlin/web/LayoutTest.kt
-├── src/commonTest/kotlin/web/drag/     # LineDragTest, WrapPositionsTest, SlidesTest
+├── src/commonTest/kotlin/web/LayoutTest.kt, SlidesTest.kt
+├── src/commonTest/kotlin/web/drag/     # LineDragTest, WrapPositionsTest
 ├── src/commonTest/kotlin/web/storage/  # BrowserSaveRepositoryTest over InMemoryKeyValueStore
 └── src/jvmTest/kotlin/web/IndexPageTest.kt # Pins the title rule (the title appears only in the tab)
 

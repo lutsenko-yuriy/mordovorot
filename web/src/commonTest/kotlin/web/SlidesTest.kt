@@ -1,9 +1,10 @@
-package web.drag
+package web
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import web.Arrow
+import web.drag.Axis
+import web.drag.LineOffset
 
 class SlidesTest {
 
@@ -53,5 +54,12 @@ class SlidesTest {
         assertEquals(LineOffset(Axis.ROW, line = 1, tiles = -0.125), Slides.at(start, progress = 0.5))
         assertNull(Slides.at(start, progress = 1.0))
         assertNull(Slides.at(start, progress = 1.5))
+    }
+
+    @Test
+    fun `a frame stamped just before the slide began shows its start, not past it`() {
+        val start = LineOffset(Axis.ROW, line = 1, tiles = -1.0)
+
+        assertEquals(start, Slides.at(start, progress = -0.05))
     }
 }

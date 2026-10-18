@@ -12,7 +12,6 @@ import org.w3c.dom.pointerevents.PointerEvent
 import viewmodel.UnsolvableSaveChoice
 import web.drag.Axis
 import web.drag.LineOffset
-import web.drag.Slides
 import web.drag.WrapPositions
 
 /** Draws each [WebState] into [root] and turns clicks and drags into [game] intents (GH-110).
@@ -35,6 +34,8 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
 
     /** The line easing into place, redrawn every animation frame until it gets there. */
     private var slide: Slide? = null
+    /** An animation frame is queued, so starting another slide doesn't queue a second. */
+    private var framePending = false
     private var tiles: Element? = null
 
     private class Slide(val start: LineOffset, val startedAt: Double)
@@ -112,14 +113,23 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
         }
         val reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
         val next = start?.takeUnless { reduced }?.let { Slide(it, window.performance.now()) }
-        if (next != null && slide == null) window.requestAnimationFrame(::frame)
         slide = next
+        if (next != null && !framePending) {
+            framePending = true
+            window.requestAnimationFrame(::frame)
+        }
     }
 
     private fun frame(time: Double) {
+        framePending = false
         val running = slide ?: return
         val offset = Slides.at(running.start, (time - running.startedAt) / SLIDE_MS)
-        if (offset == null) slide = null else window.requestAnimationFrame(::frame)
+        if (offset == null) {
+            slide = null
+        } else {
+            framePending = true
+            window.requestAnimationFrame(::frame)
+        }
         val state = shown ?: return
         tiles?.let { drawTiles(it, state, offset) }
     }
