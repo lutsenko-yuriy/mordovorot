@@ -81,6 +81,8 @@ body {
         display: flex;
         flex-direction: column;
         align-self: start;
+        /* The column's full width, not its text's, so the panel's left edge never moves. */
+        justify-self: stretch;
         gap: 14px;
         /* Level with the first row of tiles. */
         margin-top: calc(var(--arrow) + var(--gap) * 1.5);
