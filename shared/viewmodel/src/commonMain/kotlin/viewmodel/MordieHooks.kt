@@ -14,14 +14,17 @@ internal class MordieHooks(
     private val mordie: Mordie,
     private val board: BoardModel,
     private val analytics: AnalyticsService,
+    private val solutionScreen: SolutionScreen,
 ) {
 
     fun onNewGame() = mordie.startFresh(board.boardArray)
 
-    /** Binds Mordie to the board just loaded from a save with [data]. A searching save with an
-     *  unsolvable original can only be hand-edited, so it is treated like a save with no data. */
+    /** Binds Mordie to the board just loaded from a save with [data]. A solution-screen save
+     *  (GH-126) resumes found, whatever the board. A searching save with an unsolvable original
+     *  can only be hand-edited, so it is treated like a save with no data. */
     fun onLoaded(data: SavedMordie?) {
         when {
+            data != null && data.solutionScreen -> mordie.resume(data.original, data.moves, found = true, data.solutionMoves())
             board.isCorrect() ->
                 if (data == null) mordie.clear() else mordie.restoreSolved(data.original, data.moves, data.found, data.solutionMoves())
             data != null && (data.found || Solvability.isSolvable(data.original)) ->
@@ -58,7 +61,7 @@ internal class MordieHooks(
 
     fun snapshot(): SavedMordie? = mordie.snapshot()?.let { snapshot ->
         val solution = snapshot.solution?.map { SavedMove(it.isRow, it.index, it.amount) }
-        SavedMordie(snapshot.original, snapshot.moves, snapshot.found, solution)
+        SavedMordie(snapshot.original, snapshot.moves, snapshot.found, solution, solutionScreen = solutionScreen.replay != null)
     }
 
     fun line(): String? = mordie.line()?.let(MordieText::line)

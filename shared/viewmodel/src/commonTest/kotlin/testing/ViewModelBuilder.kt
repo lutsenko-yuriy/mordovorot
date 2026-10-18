@@ -8,6 +8,7 @@ import storage.SaveRepository
 import viewmodel.CurrentSaveName
 import viewmodel.GameShiftSources
 import viewmodel.GameViewModelImpl
+import viewmodel.SolutionScreen
 import viewmodel.UiRequestChannel
 import viewmodel.UnsavedProgress
 import viewmodel.UnsolvableSaveExit
@@ -25,7 +26,8 @@ internal fun testViewModel(
     currentSaveName: CurrentSaveName = CurrentSaveName(),
     gameShiftSources: GameShiftSources = GameShiftSources(),
     unsavedProgress: UnsavedProgress = UnsavedProgress(),
+    solutionScreen: SolutionScreen = SolutionScreen(),
 ): GameViewModelImpl = buildGameViewModel(
     board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftSources,
-    unsavedProgress, UiRequestChannel(), UnsolvableSaveExit.NONE,
+    unsavedProgress, solutionScreen, UiRequestChannel(), UnsolvableSaveExit.NONE,
 )

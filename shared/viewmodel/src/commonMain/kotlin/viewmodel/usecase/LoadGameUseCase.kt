@@ -12,7 +12,8 @@ import viewmodel.UiRequestChannel
 import viewmodel.UnsavedProgress
 import viewmodel.catchingNonCancellation
 
-/** Loads a save by name; an unsolvable one goes to [ResolveUnsolvableSaveUseCase] (GH-74). */
+/** Loads a save by name; an unsolvable one goes to [ResolveUnsolvableSaveUseCase] (GH-74), and a
+ *  solution-screen one reopens the screen (GH-126). */
 internal class LoadGameUseCase(
     private val board: BoardModel,
     private val saves: SaveRepository,
@@ -24,6 +25,7 @@ internal class LoadGameUseCase(
     private val currentSaveName: CurrentSaveName,
     private val gameShiftSources: GameShiftSources,
     private val unsavedProgress: UnsavedProgress,
+    private val solution: SolutionUseCase,
 ) {
 
     /** [trigger] is `"command"` for a mid-game load (toolbar Load / F6), or `"startup_prompt"`
@@ -57,11 +59,13 @@ internal class LoadGameUseCase(
             // No size-mismatch rejection (GH-44 WU5) - board.restoreState resizes the board to
             // match the save instead, so every successful saves.load() now restores.
             board.restoreState(saved.state, saved.moveCount)
+            solution.leave()
             mordieHooks.onLoaded(saved.mordie)
             currentSaveName.name = name
             gameShiftSources.reset()
             unsavedProgress.unsaved = false
             analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "success"))
+            if (saved.mordie?.solutionScreen == true) solution.enterLoaded(trigger)
             ui.showMessage("Loaded '$name'.")
             LoadResult.LOADED
         }

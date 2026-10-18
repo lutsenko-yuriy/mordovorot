@@ -88,4 +88,31 @@ interface GameViewModel {
     /** Mordie's ending for the solved title (GH-83); `null` when Mordie has no result, and the
      *  view falls back to `Congratulations`. */
     fun mordieEnding(): String?
+
+    /** The row above the toolbar (GH-126) - see [GiveUpButton]. */
+    fun giveUpButton(): GiveUpButton
+
+    /** Gives up for Mordie's solution once the player has confirmed, when [giveUpButton] is
+     *  [GiveUpButton.GIVE_UP]: tracks `game_given_up` and opens the solution screen on the
+     *  original arrangement, discarding the player's moves. Otherwise does nothing. */
+    fun giveUp()
+
+    /** Opens the solution screen after a win, when [giveUpButton] is
+     *  [GiveUpButton.MORDIES_SOLUTION]; otherwise does nothing. */
+    fun showSolution()
+
+    /** The solution screen to draw (GH-126); `null` off it. On it, [boardState] is the replay's,
+     *  [mordieLine] says how many moves Mordie made, and shifts do nothing. */
+    fun solution(): SolutionState?
+
+    /** The solution screen's Play / Pause / Play again; nothing off the screen. */
+    fun playPause()
+
+    /** One shift of the replay while it plays (the terminal's clock); returns whether it
+     *  finished a step. */
+    fun replayShift(): Boolean
+
+    /** The rest of the replay's current step, or all of the next, while it plays (the web's
+     *  clock); returns what it played, `null` when nothing played. */
+    fun replayMove(): SolutionStep?
 }

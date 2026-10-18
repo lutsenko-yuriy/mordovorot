@@ -73,4 +73,10 @@ class MordieTextTest {
             MordieText.ending(MordieOutcome(5, found = false), 1),
         )
     }
+
+    @Test
+    fun `the solution screen's line, GH-126`() {
+        assertEquals("Here's how I did it in 7 moves!", MordieText.solution(7))
+        assertEquals("Here's how I did it in 1 move!", MordieText.solution(1))
+    }
 }

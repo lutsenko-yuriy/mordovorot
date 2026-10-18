@@ -26,6 +26,7 @@ import viewmodel.ExitRequestedException
 import viewmodel.GameShiftSources
 import viewmodel.ModeSwitcher
 import viewmodel.ModeSwitcherImpl
+import viewmodel.SolutionScreen
 import viewmodel.UiRequestChannel
 import viewmodel.UnsavedProgress
 import viewmodel.UnsolvableSaveExit
@@ -44,8 +45,8 @@ internal fun terminalAnalytics(delegate: AnalyticsService): AnalyticsService =
     PlatformAnalyticsService(delegate, "terminal")
 
 /** A [GameSession] whose every rebuild shares [board], [saves], [mordie], one
- *  [CurrentSaveName] (GH-99), one [GameShiftSources] and one [KeyboardSelection] (GH-101), and
- *  one [UnsavedProgress] (GH-110), which the terminal never reads. */
+ *  [CurrentSaveName] (GH-99), one [GameShiftSources] and one [KeyboardSelection] (GH-101), one
+ *  [UnsavedProgress] (GH-110), which the terminal never reads, and one [SolutionScreen] (GH-126). */
 internal fun buildGameSession(
     initialMode: InputMode,
     board: BoardModel,
@@ -58,11 +59,12 @@ internal fun buildGameSession(
     val currentSaveName = CurrentSaveName()
     val gameShiftSources = GameShiftSources()
     val unsavedProgress = UnsavedProgress()
+    val solutionScreen = SolutionScreen()
     val keyboardSelection = KeyboardSelection()
     return GameSession(initialMode, mordie) { mode, startupRestoreDone ->
         defaultView(
             mode, board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftSources,
-            unsavedProgress, keyboardSelection, terminalFactory,
+            unsavedProgress, solutionScreen, keyboardSelection, terminalFactory,
         )
     }
 }
@@ -80,13 +82,14 @@ internal fun defaultView(
     currentSaveName: CurrentSaveName,
     gameShiftSources: GameShiftSources,
     unsavedProgress: UnsavedProgress,
+    solutionScreen: SolutionScreen,
     keyboardSelection: KeyboardSelection,
     terminalFactory: () -> Terminal,
 ): View {
     val decoratedAnalytics = InputMethodAnalyticsService(analytics, mode.name.lowercase())
     val viewModel = buildViewModel(
         board, saves, decoratedAnalytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftSources,
-        unsavedProgress,
+        unsavedProgress, solutionScreen,
     )
     return buildTuiView(
         terminalFactory(),
@@ -110,6 +113,7 @@ internal fun buildViewModel(
     currentSaveName: CurrentSaveName,
     gameShiftSources: GameShiftSources,
     unsavedProgress: UnsavedProgress,
+    solutionScreen: SolutionScreen,
 ): ViewModelImpl {
     val ui = UiRequestChannel()
     val exitGame = ExitGameUseCase(saves, analytics, ui)
@@ -119,7 +123,7 @@ internal fun buildViewModel(
     }
     val game = buildGameViewModel(
         board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftSources,
-        unsavedProgress, ui, unsolvableExit,
+        unsavedProgress, solutionScreen, ui, unsolvableExit,
     )
     return ViewModelImpl(game, exitGame)
 }

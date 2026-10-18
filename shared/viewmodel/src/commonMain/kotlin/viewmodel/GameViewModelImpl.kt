@@ -8,6 +8,7 @@ import viewmodel.usecase.LoadGameUseCase
 import viewmodel.usecase.LoadResult
 import viewmodel.usecase.NewGameUseCase
 import viewmodel.usecase.SaveGameUseCase
+import viewmodel.usecase.SolutionUseCase
 import viewmodel.usecase.StartupRestoreUseCase
 
 /** The one [GameViewModel] implementation (GH-42 WU3, collapsing GH-23's `BaseViewModel` +
@@ -25,6 +26,7 @@ class GameViewModelImpl internal constructor(
     private val saveGameUseCase: SaveGameUseCase,
     private val loadGameUseCase: LoadGameUseCase,
     private val startupRestoreUseCase: StartupRestoreUseCase,
+    private val solutionUseCase: SolutionUseCase,
     private val currentSaveName: CurrentSaveName,
     private val gameShiftSources: GameShiftSources,
     private val unsavedProgress: UnsavedProgress,
@@ -52,9 +54,10 @@ class GameViewModelImpl internal constructor(
      *  Mordie's check runs first, so a solution it reveals on the solving shift counts.
      *  `shift_keys` (GH-101) and `shift_input` (GH-110) follow the solving shift's [source].
      *  [action] runs `|steps|` times (GH-110), each one counted by Mordie, and solved is checked
-     *  once at the end, so a drag passing through the solved board doesn't count. */
+     *  once at the end, so a drag passing through the solved board doesn't count. The solution
+     *  screen (GH-126) takes no shifts; the views don't offer any there. */
     private fun shift(source: ShiftSource?, steps: Int = 1, action: () -> Unit) {
-        if (steps == 0) return
+        if (steps == 0 || solutionUseCase.onScreen) return
         val wasSolved = board.isCorrect()
         repeat(abs(steps)) {
             action()
@@ -98,13 +101,28 @@ class GameViewModelImpl internal constructor(
     // A defensive copy - board.boardArray is the live, mutable backing array; handing it out
     // directly would let a caller (or a future one) mutate board state without going through
     // shiftLeft/Right/Up/Down (audit finding on PR #22).
-    override fun boardState(): IntArray = board.boardArray.copyOf()
+    // On the solution screen (GH-126), the replay's tiles.
+    override fun boardState(): IntArray = solutionUseCase.tiles() ?: board.boardArray.copyOf()
 
     override fun squareSide(): Int = board.squareSide
 
     override fun moveCount(): Int = board.moveCount
 
-    override fun mordieLine(): String? = mordieHooks.line()
+    override fun mordieLine(): String? = solutionUseCase.line() ?: mordieHooks.line()
 
-    override fun mordieEnding(): String? = mordieHooks.ending()
+    override fun mordieEnding(): String? = if (solutionUseCase.onScreen) null else mordieHooks.ending()
+
+    override fun giveUpButton(): GiveUpButton = solutionUseCase.button()
+
+    override fun giveUp() = solutionUseCase.giveUp()
+
+    override fun showSolution() = solutionUseCase.showAfterWin()
+
+    override fun solution(): SolutionState? = solutionUseCase.state()
+
+    override fun playPause() = solutionUseCase.playPause()
+
+    override fun replayShift(): Boolean = solutionUseCase.replayShift()
+
+    override fun replayMove(): SolutionStep? = solutionUseCase.replayMove()
 }
