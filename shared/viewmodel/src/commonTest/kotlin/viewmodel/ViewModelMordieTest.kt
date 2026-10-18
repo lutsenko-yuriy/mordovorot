@@ -7,10 +7,16 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import mordie.IdaStarSolver
 import mordie.Mordie
+import mordie.MordieSearch
+import mordie.MordieSearchFactory
 import mordie.SearchProgress
+import mordie.SolutionMove
+import storage.SaveFileCodec
 import storage.SavedBoard
 import storage.SavedMordie
+import storage.SavedMove
 import testing.FakeMordieSearchFactory
 import testing.FakeSaveRepository
 import testing.FakeViewModelUi
@@ -47,6 +53,9 @@ class ViewModelMordieTest {
     private fun event(name: String) = analytics.events.single { it.name == name }.properties
 
     private fun found(moves: Int, elapsedMs: Long = 0) = SearchProgress(moves, found = true, elapsedMs)
+
+    /** Solves [nearlySolved]: row 0 rotated right twice. */
+    private val path = listOf(SavedMove(isRow = true, index = 0, amount = 2))
 
     // --- binding ---
 
@@ -193,6 +202,55 @@ class ViewModelMordieTest {
         FakeViewModelUi().drive(viewModel) { viewModel.saveGame("m") }
 
         assertEquals(listOf<SavedMordie?>(SavedMordie(original, 6, found = false)), saves.savedMordies)
+    }
+
+    @Test
+    fun `saveGame stores Mordie's solution once found, GH-126`() = runTest {
+        val saves = FakeSaveRepository()
+        val viewModel = viewModel(saves)
+        viewModel.newGame(3, trigger = "toolbar")
+        val original = viewModel.boardState()
+        factory.latest.progress = SearchProgress(1, found = true, elapsedMs = 0, solution = listOf(SolutionMove(isRow = true, index = 0, amount = 2)))
+
+        FakeViewModelUi().drive(viewModel) { viewModel.saveGame("m") }
+
+        assertEquals(listOf<SavedMordie?>(SavedMordie(original, 1, found = true, solution = path)), saves.savedMordies)
+    }
+
+    @Test
+    fun `a real solver's solution passes the save codec's check, GH-126`() = runTest {
+        val solving = MordieSearchFactory { original, _ ->
+            val solver = IdaStarSolver(original).also { while (!it.step(10_000)) { } }
+            val progress = SearchProgress(solver.solutionLength!!, found = true, elapsedMs = 0, solver.solution())
+            object : MordieSearch {
+                override fun progress() = progress
+                override fun cancel() = Unit
+            }
+        }
+        val saves = FakeSaveRepository()
+        val viewModel = viewModel(saves, mordie = Mordie(solving))
+        viewModel.newGame(3, trigger = "toolbar")
+
+        FakeViewModelUi().drive(viewModel) { viewModel.saveGame("m") }
+
+        val mordie = saves.savedMordies.single()!!
+        val text = SaveFileCodec.encode(3, viewModel.boardState(), 0, mordie)
+        assertEquals(mordie, SaveFileCodec.decode("m", text).mordie)
+        assertTrue(mordie.solution!!.isNotEmpty())
+    }
+
+    @Test
+    fun `a loaded solution is saved again, found or solved, GH-126`() = runTest {
+        for ((state, moveCount) in listOf(intArrayOf(8, 7, 6, 5, 4, 3, 2, 1, 0) to 0, solved to 1)) {
+            val mordie = SavedMordie(nearlySolved, 1, found = true, solution = path)
+            val saves = savesWith(state, moveCount, mordie)
+            val viewModel = viewModel(saves)
+            viewModel.load()
+
+            FakeViewModelUi().drive(viewModel) { viewModel.saveGame("again") }
+
+            assertEquals(listOf<SavedMordie?>(mordie), saves.savedMordies)
+        }
     }
 
     @Test

@@ -1,8 +1,14 @@
 package mordie
 
 /** A snapshot of Mordie's search. [moves] is the largest length ruled out so far, or the
- *  solution's length once [found]; [elapsedMs] stops counting at the moment it was found. */
-data class SearchProgress(val moves: Int, val found: Boolean, val elapsedMs: Long)
+ *  solution's length once [found]; [elapsedMs] stops counting at the moment it was found.
+ *  [solution] is the solution's moves once [found] (GH-126). */
+data class SearchProgress(
+    val moves: Int,
+    val found: Boolean,
+    val elapsedMs: Long,
+    val solution: List<SolutionMove>? = null,
+)
 
 /** One running search for the shortest solution of a game's original arrangement. */
 interface MordieSearch {

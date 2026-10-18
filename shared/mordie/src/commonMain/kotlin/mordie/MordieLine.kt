@@ -30,5 +30,5 @@ data class MordieOutcome(val moves: Int, val found: Boolean) {
 
 enum class MordieResult { PLAYER_WON, MATCHED, MORDIE_WON, MACHINE }
 
-/** What a save stores about Mordie. */
-class MordieSnapshot(val original: IntArray, val moves: Int, val found: Boolean)
+/** What a save stores about Mordie; [solution] is its path when known (GH-126). */
+class MordieSnapshot(val original: IntArray, val moves: Int, val found: Boolean, val solution: List<SolutionMove>?)

@@ -49,7 +49,12 @@ class BackgroundMordieSearch(original: IntArray, ruledOut: Int) : MordieSearch {
 
     private fun snapshotOf(solver: IdaStarSolver): SearchProgress {
         val length = solver.solutionLength
-        return SearchProgress(length ?: solver.ruledOut, found = length != null, started.elapsedNow().inWholeMilliseconds)
+        return SearchProgress(
+            length ?: solver.ruledOut,
+            found = length != null,
+            started.elapsedNow().inWholeMilliseconds,
+            solution = length?.let { solver.solution() },
+        )
     }
 
     /** The production [MordieSearchFactory]. */

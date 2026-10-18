@@ -14,7 +14,7 @@ class MordieTest {
     private val mordie = Mordie(factory)
     private val board = intArrayOf(1, 0, 2, 3, 4, 5, 6, 7, 8)
 
-    private fun shifts(count: Int) = repeat(count) { mordie.onShift() }
+    private fun shifts(count: Int) = repeat(count) { mordie.onShift(0) }
 
     private fun found(moves: Int) = SearchProgress(moves, found = true, elapsedMs = 1234)
     private fun searching(moves: Int) = SearchProgress(moves, found = false, elapsedMs = 0)
@@ -23,7 +23,7 @@ class MordieTest {
 
     @Test
     fun `an unbound Mordie has no line, outcome or snapshot and ignores shifts`() {
-        assertNull(mordie.onShift())
+        assertNull(mordie.onShift(0))
         assertNull(mordie.line())
         assertNull(mordie.onSolved())
         assertNull(mordie.outcome())
@@ -222,13 +222,13 @@ class MordieTest {
         shifts(7)
         factory.latest.progress = found(11)
 
-        assertNull(mordie.onShift())
-        assertNull(mordie.onShift())
+        assertNull(mordie.onShift(0))
+        assertNull(mordie.onShift(0))
         assertNull(mordie.line())
 
-        assertEquals(found(11), mordie.onShift())
+        assertEquals(found(11), mordie.onShift(0))
         assertEquals(MordieLine.Found(11), mordie.line())
-        repeat(20) { assertNull(mordie.onShift()) }
+        repeat(20) { assertNull(mordie.onShift(0)) }
         assertEquals(MordieLine.Found(11), mordie.line())
     }
 

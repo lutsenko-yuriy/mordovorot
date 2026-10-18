@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.17.2] — 2026-10-18 (PR #128 merged)
+
+### Changed
+- [wip] (PR #128) GH-126 (WU1/5): Mordie keeps the moves of the solution it found, and saves store them (line 6) plus a solution-screen flag (line 7); old saves load as before, with no solution.
+
 ## [0.17.1] — 2026-10-18 (PR #125 merged)
 
 ### Changed

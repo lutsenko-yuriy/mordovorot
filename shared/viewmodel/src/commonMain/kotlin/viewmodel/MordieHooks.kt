@@ -4,7 +4,9 @@ import analytics.AnalyticsService
 import board_model.BoardModel
 import board_model.Solvability
 import mordie.Mordie
+import mordie.SolutionMove
 import storage.SavedMordie
+import storage.SavedMove
 
 /** Mordie's part of [GameViewModelImpl] (GH-83): binds it to each game, tracks its analytics and
  *  words its line and ending. */
@@ -21,9 +23,9 @@ internal class MordieHooks(
     fun onLoaded(data: SavedMordie?) {
         when {
             board.isCorrect() ->
-                if (data == null) mordie.clear() else mordie.restoreSolved(data.original, data.moves, data.found)
+                if (data == null) mordie.clear() else mordie.restoreSolved(data.original, data.moves, data.found, data.solutionMoves())
             data != null && (data.found || Solvability.isSolvable(data.original)) ->
-                mordie.resume(data.original, data.moves, data.found)
+                mordie.resume(data.original, data.moves, data.found, data.solutionMoves())
             else -> startOnLoadedBoard()
         }
     }
@@ -35,7 +37,7 @@ internal class MordieHooks(
 
     /** Call after every shift; tracks `mordie_solution_found` when this shift's check reveals it. */
     fun onShift() {
-        val found = mordie.onShift() ?: return
+        val found = mordie.onShift(board.moveCount) ?: return
         analytics.track(
             "mordie_solution_found",
             mapOf(
@@ -54,11 +56,16 @@ internal class MordieHooks(
         return mapOf("mordie_result" to outcome.result(board.moveCount).name.lowercase(), "mordie_moves" to outcome.moves)
     }
 
-    fun snapshot(): SavedMordie? = mordie.snapshot()?.let { SavedMordie(it.original, it.moves, it.found) }
+    fun snapshot(): SavedMordie? = mordie.snapshot()?.let { snapshot ->
+        val solution = snapshot.solution?.map { SavedMove(it.isRow, it.index, it.amount) }
+        SavedMordie(snapshot.original, snapshot.moves, snapshot.found, solution)
+    }
 
     fun line(): String? = mordie.line()?.let(MordieText::line)
 
     fun ending(): String? = mordie.outcome()?.let { MordieText.ending(it, board.moveCount) }
+
+    private fun SavedMordie.solutionMoves() = solution?.map { SolutionMove(it.isRow, it.index, it.amount) }
 
     /** Mordie's N would cover only the moves from here, so it sits out a board already played on. */
     private fun startOnLoadedBoard() {
