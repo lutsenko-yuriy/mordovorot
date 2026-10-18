@@ -47,13 +47,14 @@ Saves go to `saves/`, relative to the directory you launch from. See
 ### In a browser
 
 ```bash
-./gradlew :web:serve    # then open http://localhost:8080
+./gradlew :web:serve -t    # then open http://localhost:8080
 ```
 
 The browser game plays with the mouse: click the arrows, or drag a row or column. It has the
 same rules, saves, and Mordie as the terminal game, but no keyboard mode, no flags and no Exit
 (close the tab). Saves are kept in the browser (`localStorage` for `localhost:8080`), separate
-from the terminal's `saves/`. The server doesn't rebuild on its own, so restart it after a code change.
+from the terminal's `saves/`. With `-t` the server rebuilds when the code changes; reload the tab if it
+doesn't reload by itself.
 
 ## Testing
 

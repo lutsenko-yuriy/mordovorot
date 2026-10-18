@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.17.1] — 2026-10-18 (PR #125 merged)
+
+### Changed
+- [app] (PR #125) GH-124: `./gradlew :web:serve -t` rebuilds the browser game on change and can run alongside `check`/`build` (serve's outputs go to `build-serve/`; the Kotlin daemon gets 2 GB); a bare `serve` fails fast with the `-t` hint.
+
 ## [0.17.0] — 2026-10-18 (PR #123 merged)
 
 ### Added

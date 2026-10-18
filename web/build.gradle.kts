@@ -39,6 +39,6 @@ kotlin {
 
 tasks.register("serve") {
     group = "application"
-    description = "Serves the browser game on http://localhost:8080."
+    description = "Serves the browser game on http://localhost:8080 and rebuilds on change; run with -t."
     dependsOn("jsBrowserDevelopmentRun")
 }

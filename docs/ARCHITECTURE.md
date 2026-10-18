@@ -122,7 +122,7 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 
 web/                     # :web - the browser client (GH-110): `jvm()` + `js { browser(); nodejs() }`.
 │                          # DOM-free code in src/commonMain (tested on the JVM and Node.js), the
-│                          # page in src/jsMain. `./gradlew :web:serve` serves it on localhost:8080
+│                          # page in src/jsMain. `./gradlew :web:serve -t` serves it on localhost:8080
 ├── src/commonMain/kotlin/web/
 │   ├── WebGame.kt       # The browser's View: page intents (onArrow/onDrag*/onNew/onSave/onLoad/dialog answers) ->
 │   │                    # GameViewModel, a WebState to the WebRenderer after every change; drains
@@ -614,7 +614,11 @@ alert when a session waits on the user, toggled per machine in the gitignored `.
   `api` dependency on all four (its public types expose them); the app depends on all five.
   `:web` (GH-110) depends on `viewmodel`, like the app. Its `browser()` target makes KGP add
   webpack and webpack-dev-server (build time only, pinned in the same `yarn.lock`); the
-  browser test task is off, so CI needs no headless browser.
+  browser test task is off, so CI needs no headless browser. `serve` (GH-124) needs `-t`:
+  `settings.gradle.kts` fails it fast without, and points every project's build directory to
+  `build-serve` (outside `build/`, so `clean` leaves it), so its outputs don't collide with a
+  `check`/`build` running alongside; one Kotlin compile daemon serves both, so
+  `gradle.properties` sets `kotlin.daemon.jvmargs=-Xmx2g`.
   Known follow-up for the first non-JVM port: seven viewmodel test files stay in the app
   because they use Exit or `SaveFileFormatException`, so they don't run on other targets
   (`SaveFileFormatException` is in `:shared:storage` since GH-110).
