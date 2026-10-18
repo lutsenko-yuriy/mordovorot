@@ -115,18 +115,31 @@ body {
     text-align: center;
 }
 
+.mordie {
+    position: relative;
+}
+
+/* Moved and faded by DomRenderer as Mordie's lines come and go. */
+.mordie .line {
+    pointer-events: none;
+    will-change: transform, opacity;
+}
+
+.mordie .line.ending {
+    color: var(--ink);
+    font-weight: 600;
+}
+
 .mordie .name {
     color: var(--mordie);
     font-weight: 700;
 }
 
-.app.solved .mordie {
-    color: var(--ink);
-    font-weight: 600;
-}
-
 .toolbar {
     grid-area: toolbar;
+    /* Above Mordie's line as it rises in from underneath. */
+    position: relative;
+    z-index: 1;
     display: flex;
     gap: 10px;
 }
@@ -280,6 +293,7 @@ button:focus-visible {
 .overlay {
     position: fixed;
     inset: 0;
+    z-index: 10;
     display: flex;
     align-items: center;
     justify-content: center;

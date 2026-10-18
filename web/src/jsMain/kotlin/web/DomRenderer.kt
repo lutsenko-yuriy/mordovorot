@@ -34,11 +34,22 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
 
     /** The line easing into place, redrawn every animation frame until it gets there. */
     private var slide: Slide? = null
-    /** An animation frame is queued, so starting another slide doesn't queue a second. */
+    /** An animation frame is queued, so another slide or Mordie line doesn't queue a second. */
     private var framePending = false
     private var tiles: Element? = null
 
     private class Slide(val start: LineOffset, val startedAt: Double)
+
+    /** Mordie's line, or its [ending] once solved. */
+    private data class MordieLine(val text: String, val ending: Boolean)
+
+    /** Mordie's lines come and go like chat messages; at once when the system asks for less motion. */
+    private val feed = if (reducedMotion()) MessageFeed<MordieLine>(0.0, 0.0) else MessageFeed(MORDIE_OUT_MS, MORDIE_IN_MS)
+
+    /** This frame's Moves, Mordie's spot and toolbar: the feed measures how far its lines travel. */
+    private var moves: Element? = null
+    private var mordie: Element? = null
+    private var toolbar: Element? = null
 
     init {
         root.className = "app"
@@ -56,11 +67,15 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
         val before = shown
         shown = state
         startSlide(before, state)
+        val now = window.performance.now()
+        feed.show(state.mordie?.let { MordieLine(it, ending = state.solved) }, now)
+        if (feed.moving(now)) schedule()
         val dialog = state.dialog
         // A rebuild would drop the name field's focus and caret, and nothing else changes while
         // the Save dialog is open, so typing only updates the warning.
         if (dialog is WebDialog.Save && saveWarning != null) {
             saveWarning?.textContent = dialog.warning ?: ""
+            drawMordie(now)
             return
         }
         saveWarning = null
@@ -73,9 +88,9 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
             // Beside the board when the window is wide; when tall, its items stack around it (styles.css).
             element("div", "panel").apply {
                 append(
-                    text("moves", "Moves: ${state.moves}"),
-                    mordie(state),
-                    element("div", "toolbar").apply {
+                    text("moves", "Moves: ${state.moves}").also { moves = it },
+                    element("div", "mordie").apply { append(element("div", "line")) }.also { mordie = it },
+                    element("div", "toolbar").also { toolbar = it }.apply {
                         append(
                             button("New") { game.onNew() }.also { it.disabled = dialog != null },
                             button("Save") { game.onSave() }.also { it.disabled = dialog != null },
@@ -87,17 +102,36 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
             },
         )
         dialog?.let { root.append(element("div", "overlay").apply { append(dialog(it)) }) }
+        drawMordie(now)
         root.querySelector("input")?.let { (it as HTMLInputElement).focus() }
     }
 
-    /** Mordie's spot: its line after its highlighted name, or the ending once solved. */
-    private fun mordie(state: WebState) = element("div", "mordie").apply {
-        val line = state.mordie ?: return@apply
-        if (state.solved) {
-            textContent = line
-        } else {
-            append(element("span", "name").apply { textContent = "Mordie:" }, " $line")
+    /** Mordie's spot as the feed has it at [time]: a leaving line rises towards Moves; an arriving
+     *  one rises from under the toolbar when it is beside Mordie (wide), else from just below. */
+    private fun drawMordie(time: Double) {
+        val spot = mordie ?: return
+        val line = spot.firstElementChild as? HTMLElement ?: return
+        val frame = feed.at(time)
+        val message = frame.message
+        if (line.getAttribute("data-text") != message?.toString()) {
+            line.setAttribute("data-text", message.toString())
+            line.clear()
+            line.className = if (message?.ending == true) "line ending" else "line"
+            when {
+                message == null -> {}
+                message.ending -> line.textContent = message.text
+                else -> line.append(element("span", "name").apply { textContent = "Mordie:" }, " ${message.text}")
+            }
         }
+        val place = spot.getBoundingClientRect()
+        val distance = when {
+            frame.rise < 0 -> moves?.let { place.top - it.getBoundingClientRect().top } ?: 0.0
+            frame.rise > 0 && window.matchMedia("(orientation: landscape)").matches ->
+                toolbar?.let { it.getBoundingClientRect().bottom - place.top } ?: 0.0
+            else -> place.height
+        }
+        line.style.transform = "translateY(${frame.rise * distance}px)"
+        line.style.opacity = frame.alpha.toString()
     }
 
     /** Eases the line a shift moved into place: one tile after an arrow, the rest of the way after a
@@ -111,27 +145,29 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
             state.tiles != before.tiles -> null
             else -> return
         }
-        val reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-        val next = start?.takeUnless { reduced }?.let { Slide(it, window.performance.now()) }
+        val next = start?.takeUnless { reducedMotion() }?.let { Slide(it, window.performance.now()) }
         slide = next
-        if (next != null && !framePending) {
-            framePending = true
-            window.requestAnimationFrame(::frame)
-        }
+        if (next != null) schedule()
+    }
+
+    private fun reducedMotion() = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+
+    private fun schedule() {
+        if (framePending) return
+        framePending = true
+        window.requestAnimationFrame(::frame)
     }
 
     private fun frame(time: Double) {
         framePending = false
-        val running = slide ?: return
-        val offset = Slides.at(running.start, (time - running.startedAt) / SLIDE_MS)
-        if (offset == null) {
-            slide = null
-        } else {
-            framePending = true
-            window.requestAnimationFrame(::frame)
+        slide?.let { running ->
+            val offset = Slides.at(running.start, (time - running.startedAt) / SLIDE_MS)
+            if (offset == null) slide = null
+            val state = shown
+            if (state != null) tiles?.let { drawTiles(it, state, offset) }
         }
-        val state = shown ?: return
-        tiles?.let { drawTiles(it, state, offset) }
+        drawMordie(time)
+        if (slide != null || feed.moving(time)) schedule()
     }
 
     /** The current slide's offset, before its next animation frame. */
@@ -284,5 +320,7 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
 
     private companion object {
         const val SLIDE_MS = 160.0
+        const val MORDIE_OUT_MS = 220.0
+        const val MORDIE_IN_MS = 340.0
     }
 }

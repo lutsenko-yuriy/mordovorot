@@ -265,6 +265,10 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle. A br
     drag is released.
 - **Solved:** the arrows fade out, and neither clicks nor drags shift anything. Mordie's ending,
   or `Congratulations ✓` when Mordie sat the game out, replaces Mordie's text in the same spot.
+- **Mordie's lines come and go like chat messages:** the old line rises towards `Moves: N` and
+  fades out; only once it has gone does the new one rise into place and fade in, from under the
+  toolbar in the wide layout, from just below its spot in the tall one. A change while one is
+  moving waits for it, then the latest line follows. `Mordie:` is bold and coloured.
 - **Look:** rounded coloured tiles (each row its own hue, darker along the row, so a tile's home
   shows at a glance), real buttons and modal dialogs, in light or dark to match the system.
 - **Layout:**
