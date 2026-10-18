@@ -8,6 +8,7 @@ For new features, enhancements, and planned changes, use `docs/workflows/FEATURE
 ## 1. Identify and reproduce
 
 - Confirm the problem is real by checking CI logs or reproducing locally.
+  A web page is reproduced per the browser rule in `docs/CONSTRAINTS.md` (GH-110).
 - Note the first failing commit or PR/MR if identifiable.
 - State the problem in one sentence before going further.
 

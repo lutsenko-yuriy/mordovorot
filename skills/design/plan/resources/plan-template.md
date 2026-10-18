@@ -18,6 +18,11 @@
 ### Test strategy
 - <what to test and how; name the test files>
 
+### Docs to update
+- <doc>: <what changes> — check `README.md` whenever the ticket adds a platform, a run
+  command or a way to install (GH-110), plus `docs/PRODUCT_SPEC.md`, `docs/ARCHITECTURE.md`,
+  `docs/TECH_STACK.md` and `AGENTS.md` Common Commands; `none` if nothing changes
+
 ### Implementation phases
 1. **Phase 1 — <name>**: <what gets done; deliverable>
 2. **Phase 2 — <name>**: <what gets done; deliverable>

@@ -11,6 +11,10 @@
 ## Environment
 
 - Local macOS terminal for manual play-testing; GitHub Actions ubuntu runner for build and test
+- The user's main browser holds their own tabs: never open URLs in it or drive it (GH-110). Open
+  PR/MR links in another browser and smoke-test web pages in a headless one with a throwaway
+  profile. The commands for this machine are in `CLAUDE.local.md` (`## Browser`); without them,
+  give the URL and don't open it.
 
 ## Budget & compliance
 

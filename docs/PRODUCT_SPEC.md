@@ -6,7 +6,8 @@
 
 ## Overview
 
-Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle
+Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle. A browser client on
+`localhost` plays the same game with the mouse (Feature 9).
 
 ## Features
 
@@ -32,7 +33,8 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle
     save made before GH-62 loads as `Moves: 0`.
 
 ### Feature 3 — Launch (GH-79)
-- The game only runs as a terminal UI (Features 6 and 7). The line-based console mode was
+- The terminal game only runs as a terminal UI (Features 6 and 7); the browser client
+  (Feature 9) is launched separately. The line-based console mode was
   removed in GH-79.
 - Launching without an interactive terminal (e.g. `./gradlew run`, piped or scripted input), with
   any flags, prints `No interactive terminal found - Mordovorot only runs as a terminal UI.` to
@@ -222,3 +224,58 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle
     Mordie sits the game out: no line, the solved title is `Congratulations ✓`, and the move
     count is kept. Its N would only cover the moves from the load on, so the race wouldn't be
     fair.
+
+### Feature 9 — Browser client (GH-110)
+- **Running it:** `./gradlew :web:serve` serves the game on `http://localhost:8080`; opening that
+  address starts it. The tab title is `Mordovorot`, and the title appears nowhere else on the page.
+  The terminal game is unchanged.
+- **Same game, mouse only:** the rules, board sizes 3-5, solvable new games, `Moves: N` and its
+  move rule (Feature 2), Save/Load (Feature 4) and Mordie (Feature 8) work as in the terminal
+  game. There is no keyboard mode, no command-line flags and no Exit.
+- **Toolbar:** `[ New ] [ Save ] [ Load ]`; the player leaves by closing the tab.
+  - **New** opens the size picker (3x3, 4x4, 5x5); Cancel leaves the current game untouched.
+  - **Save** prefills the current save name and warns before overwriting. A blank name counts as
+    Cancel. A rejected name (spaces, a path separator, `..`) saves nothing, and the message
+    shows on the status line.
+  - **Load** lists each save as `foo (5x5)`, marking unsolvable ones; `No saves found.` when
+    there are none.
+  - The `Can't be solved` dialog offers `[ Repair & load ] [ New game ]`, with no Exit.
+- **Status line** under the toolbar: messages such as `Saved as 'x'.` and load errors. The next
+  action clears it.
+- **Saves** are kept in the browser's `localStorage` for `localhost:8080`, one entry per save in
+  the terminal's save format. They survive reloads and browser restarts, and are separate from
+  the terminal game's `saves/`.
+- **Startup:** with saves, the page opens with `Restore a saved game?` (Cancel opens the size
+  picker); without, it opens the size picker, whose Cancel keeps the board already shown.
+- **Leave-site prompt:** with unsaved progress (at least one shift since the last New game,
+  successful save or successful load), closing or reloading the tab shows the browser's own
+  "Leave site?" prompt. Safari shows it on reload but not when the tab is closed; that is
+  Safari's choice, and the page can't change it.
+- **Arrows:** `▲` above and `▼` below each column, `◀`/`▶` at both ends of each row. A click
+  shifts the line by one tile, sliding it with wrap-around.
+- **Dragging:** press a tile and drag. Once the pointer has moved a few pixels, the larger
+  direction picks the tile's row or column. The line follows the pointer with wrap-around, and
+  on release it slides to the nearest whole tile.
+  - Each tile of distance is one shift (Mordie counts them all), and the whole drag is one move.
+  - A drag of a full loop or more counts modulo the side, keeping its direction: a full loop
+    changes nothing.
+  - Only where the drag is released counts: passing through the solved arrangement mid-drag
+    doesn't solve the board.
+  - Releasing at the starting position changes nothing. The toolbar and arrows wait until the
+    drag is released.
+- **Solved:** the arrows fade out, and neither clicks nor drags shift anything. Mordie's ending,
+  or `Congratulations ✓` when Mordie sat the game out, replaces Mordie's text in the same spot.
+- **Mordie's lines come and go like chat messages:** the old line rises towards `Moves: N` and
+  fades out; only once it has gone does the new one rise into place and fade in, from under the
+  toolbar in the wide layout, from just below its spot in the tall one. A change while one is
+  moving waits for it, then the latest line follows. `Mordie:` is bold and coloured.
+- **Look:** rounded coloured tiles (each row its own hue, darker along the row, so a tile's home
+  shows at a glance), real buttons and modal dialogs, in light or dark to match the system.
+- **Layout:**
+  - **Wider than tall:** the board with its arrows on the left; on the right, top to bottom,
+    `Moves: N`, Mordie's text, the toolbar and the status line.
+  - **Taller than wide, or square:** top to bottom, `Moves: N`, Mordie's text, the board, the
+    toolbar and the status line.
+  - The board scales to fit the window.
+- **Analytics:** every event carries `platform: web` and `input_method: rich_ui`;
+  see `docs/ANALYTICS_EVENTS.md`.
