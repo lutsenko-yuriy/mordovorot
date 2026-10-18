@@ -6,6 +6,8 @@ import org.w3c.dom.Element
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.HTMLInputElement
 import org.w3c.dom.pointerevents.PointerEvent
+import viewmodel.GiveUpButton
+import viewmodel.SolutionState
 import web.drag.Axis
 import web.drag.LineOffset
 import web.drag.WrapPositions
@@ -85,11 +87,13 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
         root.classList.toggle("dragging", state.drag != null)
         root.append(
             board(state, justSolved = state.solved && before?.solved == false),
+            *listOfNotNull(state.solution?.let { steps(it) }).toTypedArray(),
             // Beside the board when the window is wide; when tall, its items stack around it (styles.css).
             element("div", "panel").apply {
                 append(
-                    text("moves", "Moves: ${state.moves}").also { moves = it },
+                    text("moves", if (state.movesShown) "Moves: ${state.moves}" else "").also { moves = it },
                     element("div", "mordie").apply { append(element("div", "line")) }.also { mordie = it },
+                    *listOfNotNull(state.solution?.let { replayButtons(it, dialog != null) }, giveUpRow(state.giveUp, dialog != null)).toTypedArray(),
                     element("div", "toolbar").also { toolbar = it }.apply {
                         append(
                             button("New") { game.onNew() }.also { it.disabled = dialog != null },
@@ -105,6 +109,34 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
         drawMordie(now)
         root.querySelector("input")?.let { (it as HTMLInputElement).focus() }
     }
+
+    /** The solution screen's numbered steps, the current one marked (GH-126). */
+    private fun steps(solution: SolutionState) = element("div", "steps").apply {
+        // A list, without the numbers an <ol> would add to the steps' own.
+        setAttribute("role", "list")
+        solution.steps.forEachIndexed { i, step ->
+            append(text(if (i == solution.current) "step current" else "step", step).apply {
+                setAttribute("role", "listitem")
+                if (i == solution.current) setAttribute("aria-current", "step")
+            })
+        }
+    }
+
+    /** Prev / Next / Restart, each disabled where it has nowhere to go (GH-126). */
+    private fun replayButtons(solution: SolutionState, dialogOpen: Boolean) = element("div", "replay").apply {
+        append(
+            button("◀ Prev") { game.onReplayPrevious() }.also { it.disabled = dialogOpen || solution.atStart },
+            button("Next ▶") { game.onReplayNext() }.also { it.disabled = dialogOpen || solution.atEnd },
+            button("↻ Restart") { game.onReplayRestart() }.also { it.disabled = dialogOpen || solution.atStart },
+        )
+    }
+
+    /** `Give Up`, disabled until Mordie's solution is revealed, or `Mordie's solution` after a win (GH-126). */
+    private fun giveUpRow(giveUp: GiveUpButton, dialogOpen: Boolean): Element? = when (giveUp) {
+        GiveUpButton.HIDDEN -> null
+        GiveUpButton.MORDIES_SOLUTION -> button("Mordie's solution") { game.onMordiesSolution() }
+        else -> button("Give Up") { game.onGiveUp() }.also { it.disabled = giveUp == GiveUpButton.DIMMED }
+    }?.also { if (dialogOpen) it.disabled = true }?.let { element("div", "give-up").apply { append(it) } }
 
     /** Mordie's spot as the feed has it at [time]: a leaving line rises towards Moves; an arriving
      *  one rises from under the toolbar when it is beside Mordie (wide), else from just below. */
@@ -134,13 +166,14 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
         line.style.opacity = frame.alpha.toString()
     }
 
-    /** Eases the line a shift moved into place: one tile after an arrow, the rest of the way after a
-     *  drag. Any other change to the tiles, or a new drag, stops a slide under way. */
+    /** Eases the line a shift moved into place: one tile after an arrow or a replay shift, the rest
+     *  of the way after a drag. Any other change to the tiles, or a new drag, stops a slide under way. */
     private fun startSlide(before: WebState?, state: WebState) {
         val arrow = clicked
         val start = when {
             before == null || state.drag != null -> null
             arrow != null && state.tiles != before.tiles -> Slides.ofArrow(arrow.first, arrow.second)
+            state.slide != null -> state.slide
             before.drag != null -> Slides.afterDrag(before.drag, moved = state.tiles != before.tiles, state.side)
             state.tiles != before.tiles -> null
             else -> return
