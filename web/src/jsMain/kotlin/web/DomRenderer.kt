@@ -4,6 +4,9 @@ import kotlinx.browser.document
 import kotlinx.dom.clear
 import org.w3c.dom.Element
 import org.w3c.dom.HTMLButtonElement
+import org.w3c.dom.HTMLInputElement
+import org.w3c.dom.events.KeyboardEvent
+import viewmodel.UnsolvableSaveChoice
 
 /** Draws each [WebState] into [root] and turns clicks into [game] intents (GH-110). Plain DOM,
  *  rebuilt every frame; the look comes in WU7. */
@@ -12,18 +15,34 @@ class DomRenderer(private val root: Element) : WebRenderer {
     /** Set once the game is built; only clicks read it, and none can come before then. */
     lateinit var game: WebGame
 
+    /** The open Save dialog's warning line, updated in place while the player types. */
+    private var saveWarning: Element? = null
+
     override fun render(state: WebState) {
+        val dialog = state.dialog
+        // A rebuild would drop the name field's focus and caret, and nothing else changes while
+        // the Save dialog is open, so typing only updates the warning.
+        if (dialog is WebDialog.Save && saveWarning != null) {
+            saveWarning?.textContent = dialog.warning ?: ""
+            return
+        }
+        saveWarning = null
         root.clear()
         root.append(
             text("moves", "Moves: ${state.moves}"),
             text("mordie", state.mordie?.let { if (state.solved) it else "Mordie: $it" } ?: ""),
             board(state),
             element("div", "toolbar").apply {
-                append(button("New") { game.onNew() }.also { it.disabled = state.dialog != null })
+                append(
+                    button("New") { game.onNew() }.also { it.disabled = dialog != null },
+                    button("Save") { game.onSave() }.also { it.disabled = dialog != null },
+                    button("Load") { game.onLoad() }.also { it.disabled = dialog != null },
+                )
             },
             text("status", state.status ?: ""),
         )
-        state.dialog?.let { root.append(dialog(it)) }
+        dialog?.let { root.append(dialog(it)) }
+        root.querySelector("input")?.let { (it as HTMLInputElement).focus() }
     }
 
     /** The tiles in a grid framed by the arrows: ▲ above and ▼ below each column, ◀ and ▶ at
@@ -57,6 +76,38 @@ class DomRenderer(private val root: Element) : WebRenderer {
                 dialog.sizes.forEach { size -> append(button("${size}x$size") { game.onSizeChosen(size) }) }
                 append(button("Cancel") { game.onSizeChosen(null) })
             }
+            is WebDialog.Save -> {
+                append(text("title", "Save game"))
+                val name = (element("input") as HTMLInputElement).apply {
+                    value = dialog.name
+                    addEventListener("input", { game.onSaveNameTyped(value) })
+                    addEventListener("keydown", {
+                        // An Enter that confirms an IME composition isn't the player's Save.
+                        val key = it as KeyboardEvent
+                        if (key.key == "Enter" && !key.isComposing && key.keyCode != 229) game.onSaveAnswered(value)
+                    })
+                }
+                val warning = text("warning", dialog.warning ?: "")
+                saveWarning = warning
+                append(
+                    name,
+                    warning,
+                    button("Save") { game.onSaveAnswered(name.value) },
+                    button("Cancel") { game.onSaveAnswered(null) },
+                )
+            }
+            is WebDialog.Load -> {
+                append(text("title", if (dialog.restore) "Restore a saved game?" else "Load game"))
+                if (dialog.saves.isEmpty()) append(text("message", "No saves found."))
+                dialog.saves.forEach { save -> append(button(save.label) { game.onLoadChosen(save.name) }) }
+                append(button("Cancel") { game.onLoadChosen(null) })
+            }
+            is WebDialog.Unsolvable -> append(
+                text("title", "Can't be solved"),
+                text("message", dialog.message),
+                button("Repair & load") { game.onUnsolvableChoice(UnsolvableSaveChoice.REPAIR) },
+                button("New game") { game.onUnsolvableChoice(UnsolvableSaveChoice.NEW_GAME) },
+            )
         }
     }
 

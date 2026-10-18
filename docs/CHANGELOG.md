@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.16.12] — 2026-10-18 (PR #121 merged)
+
+### Changed
+- [wip] (PR #121) GH-110 (WU5/7): saves in the browser - Save, Load and the startup restore over localStorage (the terminal's save format and name rules), the can't-be-solved dialog without Exit, status messages, and the browser's leave-site prompt while progress is unsaved.
+
 ## [0.16.11] — 2026-10-18 (PR #120 merged)
 
 ### Changed

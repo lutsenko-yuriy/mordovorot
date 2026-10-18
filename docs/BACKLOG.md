@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-- GH-110: Play Mordovorot in the browser (localhost) (WU4/7 merged; WU5-7 pending)
+- GH-110: Play Mordovorot in the browser (localhost) (WU5/7 merged; WU6-7 pending)
 
 ---
 

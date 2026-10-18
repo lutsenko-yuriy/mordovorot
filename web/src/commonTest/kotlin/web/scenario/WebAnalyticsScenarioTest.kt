@@ -3,6 +3,7 @@ package web.scenario
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import viewmodel.UnsolvableSaveChoice
 import web.Arrow
 import web.layoutOf
 
@@ -37,10 +38,34 @@ class WebAnalyticsScenarioTest {
     }
 
     @Test
-    fun `no Exit events ever fire on web`() {
-        // WU5
-        // TODO: 1. Go through every dialog path.
-        // TODO: 2. None of exit_command_used, input_mode_switched, app_launch_aborted, screen_exit_dialog,
-        //          decision: quit, choice: exit, dialog: exit fired.
+    fun `no Exit events ever fire on web`() = webTest {
+        val page = WebHarness(backgroundScope).seed("foo", ONE_SHIFT_FROM_SOLVED).seed("odd", UNSOLVABLE_3X3).start()
+        page.game.onLoadChosen("odd")
+        page.game.onUnsolvableChoice(UnsolvableSaveChoice.NEW_GAME)
+        page.game.onSizeChosen(null)
+        page.game.onArrow(Arrow.RIGHT, 1)
+        page.game.onSave()
+        page.game.onSaveAnswered(null)
+        page.game.onSave()
+        page.game.onSaveAnswered("bar")
+        page.game.onLoad()
+        page.game.onLoadChosen(null)
+        page.game.onLoad()
+        page.game.onLoadChosen("odd")
+        page.game.onUnsolvableChoice(UnsolvableSaveChoice.REPAIR)
+        page.game.onLoad()
+        page.game.onLoadChosen("foo")
+        page.game.onArrow(Arrow.LEFT, 0)
+        page.game.onNew()
+        page.game.onSizeChosen(null)
+
+        val events = page.analytics.events
+        val exitEvents = setOf("exit_command_used", "input_mode_switched", "app_launch_aborted", "screen_exit_dialog")
+        assertTrue(events.none { it.name in exitEvents }, "$events")
+        assertTrue(page.props("startup_restore_decision").none { it["decision"] == "quit" }, "$events")
+        assertTrue(page.props("unsolvable_save_resolved").none { it["choice"] == "exit" }, "$events")
+        assertTrue(page.props("dialog_cancelled").none { it["dialog"] == "exit" }, "$events")
+        assertTrue(events.map { it.name }.containsAll(listOf("screen_unsolvable_dialog", "save_command_used", "load_command_used", "board_solved")))
     }
+
 }

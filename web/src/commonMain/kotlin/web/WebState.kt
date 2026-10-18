@@ -19,4 +19,16 @@ data class WebState(
 sealed interface WebDialog {
     /** The new-game size picker, with Cancel. */
     data class Size(val sizes: List<Int>) : WebDialog
+
+    /** The name being typed, with the overwrite warning when a save by that name exists. */
+    data class Save(val name: String, val warning: String?) : WebDialog
+
+    /** The toolbar's Load, or with [restore] the startup offer to restore one of [saves]. */
+    data class Load(val restore: Boolean, val saves: List<SaveEntry>) : WebDialog
+
+    /** A save no sequence of shifts solves: Repair & load or New game, and no Exit. */
+    data class Unsolvable(val message: String) : WebDialog
 }
+
+/** A save as a Load row: its [label] is `name (NxN)`, with the unsolvable mark when it applies. */
+data class SaveEntry(val name: String, val label: String)

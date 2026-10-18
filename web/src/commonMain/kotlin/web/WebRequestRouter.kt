@@ -1,7 +1,6 @@
 package web
 
 import viewmodel.UiRequest
-import viewmodel.UnsolvableSaveChoice
 
 /** Answers each [UiRequest] the viewModel raises (GH-110). The `when` is exhaustive, like the
  *  terminal's `UiRequestRouter`. */
@@ -14,12 +13,12 @@ internal class WebRequestRouter(private val game: WebGame) {
                 request.respond(Unit)
             }
             is UiRequest.ChooseBoardSize -> request.respond(game.chooseSize(request.origin))
-            // The page keeps no saves until WU5, which gives these their dialogs.
-            is UiRequest.ConfirmRestore -> request.respond(false)
-            is UiRequest.ChooseSaveToRestore -> request.respond(null)
+            is UiRequest.ConfirmRestore -> request.respond(game.chooseRestore(listOf(request.save)) != null)
+            is UiRequest.ChooseSaveToRestore -> request.respond(game.chooseRestore(request.saves))
+            is UiRequest.ResolveUnsolvableSave ->
+                request.respond(game.resolveUnsolvable(request.save, if (request.atStartup) "startup" else "toolbar"))
+            // Only the terminal's Exit raises these.
             is UiRequest.PromptSaveName -> request.respond(null)
-            is UiRequest.ResolveUnsolvableSave -> request.respond(UnsolvableSaveChoice.NEW_GAME)
-            // Only the terminal's Exit raises this.
             is UiRequest.ConfirmSaveBeforeExit -> request.respond(false)
         }
     }
