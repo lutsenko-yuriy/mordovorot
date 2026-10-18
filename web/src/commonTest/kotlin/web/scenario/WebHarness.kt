@@ -20,7 +20,8 @@ import web.startWebGame
 /** Solved 4x4 with row 0 shifted one tile right: `shiftLeft(0)` solves it. */
 internal val ONE_SHIFT_FROM_SOLVED = intArrayOf(3, 0, 1, 2) + IntArray(12) { it + 4 }
 
-/** The page over the production wiring ([startWebGame]) with fakes at its edges. */
+/** The page over the production wiring ([startWebGame]): a real [BoardImpl], a fake Mordie search
+ *  and recording analytics. Saves are a [FakeSaveRepository] until WU5's browser repository. */
 internal class WebHarness(
     private val scope: CoroutineScope,
     val board: BoardImpl = BoardImpl(),

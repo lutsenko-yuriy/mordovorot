@@ -6,9 +6,7 @@ import kotlin.test.assertNull
 import web.WebDialog
 
 /** GH-110 scenarios: what the page opens with. Each scenario drives `WebGame` through a
- *  `FakeWebRenderer` that records every `WebState` frame, over a real `BoardImpl`,
- *  `BrowserSaveRepository(InMemoryKeyValueStore)`, `Mordie(FakeMordieSearchFactory())` and a
- *  `RecordingAnalyticsService` in the production decorators. Each test names the WU that makes it green. */
+ *  [WebHarness], which records every `WebState` frame. Each test names the WU that makes it green. */
 class WebStartupScenarioTest {
 
     @Test
