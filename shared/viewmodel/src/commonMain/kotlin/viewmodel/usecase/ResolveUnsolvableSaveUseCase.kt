@@ -26,6 +26,7 @@ internal class ResolveUnsolvableSaveUseCase(
     private val currentSaveName: CurrentSaveName,
     private val gameShiftSources: GameShiftSources,
     private val unsavedProgress: UnsavedProgress,
+    private val solution: SolutionUseCase,
 ) {
 
     /** The repair / new game / exit choice for an unsolvable save (GH-74). At startup, New game
@@ -46,6 +47,7 @@ internal class ResolveUnsolvableSaveUseCase(
                 // Restored first, so a board that can't take the save (a hand-edited size) never
                 // rewrites the file. A failed overwrite still loads - the file keeps its mark.
                 board.restoreState(fixed, saved.moveCount)
+                solution.leave()
                 mordieHooks.onRepaired()
                 currentSaveName.name = name
                 gameShiftSources.reset()

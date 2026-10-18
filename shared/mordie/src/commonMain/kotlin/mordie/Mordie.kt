@@ -129,6 +129,9 @@ class Mordie(private val factory: MordieSearchFactory) {
 
     fun outcome(): MordieOutcome? = outcome
 
+    /** The arrangement this game started from; `null` when Mordie sits it out (GH-126). */
+    fun original(): IntArray? = original?.copyOf()
+
     /** What a save should store; `null` when Mordie sits this game out. */
     fun snapshot(): MordieSnapshot? {
         val original = original ?: return null

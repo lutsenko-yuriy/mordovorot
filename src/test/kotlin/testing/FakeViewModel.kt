@@ -2,8 +2,11 @@ package testing
 
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
+import viewmodel.GiveUpButton
 import viewmodel.SaveInfo
 import viewmodel.ShiftSource
+import viewmodel.SolutionState
+import viewmodel.SolutionStep
 import viewmodel.UiRequest
 import viewmodel.ViewModel
 
@@ -48,6 +51,12 @@ class FakeViewModel : ViewModel {
 
     /** Scripts [mordieEnding]'s return value. */
     var mordieEnding: String? = null
+
+    /** Scripts [giveUpButton]'s return value (GH-126). */
+    var giveUpButton: GiveUpButton = GiveUpButton.DIMMED
+
+    /** Scripts [solution]'s return value (GH-126). */
+    var solution: SolutionState? = null
 
     override fun shiftLeft(row: Int, source: ShiftSource?) {
         calls.add("shiftLeft($row" + sourceSuffix(source) + ")")
@@ -136,4 +145,30 @@ class FakeViewModel : ViewModel {
     override fun mordieLine(): String? = mordieLine
 
     override fun mordieEnding(): String? = mordieEnding
+
+    override fun giveUpButton(): GiveUpButton = giveUpButton
+
+    override fun giveUp() {
+        calls.add("giveUp")
+    }
+
+    override fun showSolution() {
+        calls.add("showSolution")
+    }
+
+    override fun solution(): SolutionState? = solution
+
+    override fun playPause() {
+        calls.add("playPause")
+    }
+
+    override fun replayShift(): Boolean {
+        calls.add("replayShift")
+        return false
+    }
+
+    override fun replayMove(): SolutionStep? {
+        calls.add("replayMove")
+        return null
+    }
 }

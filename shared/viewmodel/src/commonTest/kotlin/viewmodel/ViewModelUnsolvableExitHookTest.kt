@@ -36,6 +36,7 @@ class ViewModelUnsolvableExitHookTest {
         currentSaveName = CurrentSaveName(),
         gameShiftSources = GameShiftSources(),
         unsavedProgress = UnsavedProgress(),
+        solutionScreen = SolutionScreen(),
         ui = UiRequestChannel(),
         unsolvableExit = unsolvableExit,
     )

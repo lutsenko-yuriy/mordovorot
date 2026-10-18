@@ -15,10 +15,12 @@ internal class NewGameUseCase(
     private val currentSaveName: CurrentSaveName,
     private val gameShiftSources: GameShiftSources,
     private val unsavedProgress: UnsavedProgress,
+    private val solution: SolutionUseCase,
 ) {
 
     fun newGame(size: Int, trigger: String) {
         board.newGame(size)
+        solution.leave()
         mordieHooks.onNewGame()
         currentSaveName.name = null
         gameShiftSources.reset()

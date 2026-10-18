@@ -9,6 +9,7 @@ import mordie.Mordie
 import storage.SaveRepository
 import viewmodel.CurrentSaveName
 import viewmodel.GameShiftSources
+import viewmodel.SolutionScreen
 import viewmodel.UiRequestChannel
 import viewmodel.UnsavedProgress
 import viewmodel.UnsolvableSaveExit
@@ -37,6 +38,7 @@ fun startWebGame(
         currentSaveName = CurrentSaveName(),
         gameShiftSources = GameShiftSources(),
         unsavedProgress = UnsavedProgress(),
+        solutionScreen = SolutionScreen(),
         ui = UiRequestChannel(),
         // The page has no Exit, so it never offers one.
         unsolvableExit = UnsolvableSaveExit.NONE,

@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.17.3] — 2026-10-18 (PR #129 merged)
+
+### Changed
+- [wip] (PR #129) GH-126 (WU2/5): Give Up and the solution screen in the shared viewModel (the button states, the screen on the original arrangement, the step list and replay, analytics, Save/Load of the screen); the terminal and web views follow in WU3-5.
+
 ## [0.17.2] — 2026-10-18 (PR #128 merged)
 
 ### Changed

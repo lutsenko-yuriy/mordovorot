@@ -2,6 +2,7 @@ package mordie
 
 import testing.FakeMordieSearchFactory
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
@@ -102,5 +103,17 @@ class MordieSolutionTest {
 
         mordie.restoreSolved(board, moves = 2, found = true, solution = path)
         assertEquals(path, mordie.snapshot()!!.solution)
+    }
+
+    @Test
+    fun `original is a copy of the bound arrangement, null when Mordie sits out`() {
+        assertNull(mordie.original())
+        mordie.startFresh(board)
+
+        mordie.original()!![0] = 7
+
+        assertContentEquals(board, mordie.original())
+        mordie.clear()
+        assertNull(mordie.original())
     }
 }

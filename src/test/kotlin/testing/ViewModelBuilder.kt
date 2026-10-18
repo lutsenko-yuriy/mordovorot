@@ -8,6 +8,7 @@ import mordie.MordieSearchFactory
 import storage.SaveRepository
 import viewmodel.CurrentSaveName
 import viewmodel.GameShiftSources
+import viewmodel.SolutionScreen
 import viewmodel.UnsavedProgress
 import viewmodel.ViewModelImpl
 
@@ -23,7 +24,8 @@ internal fun testViewModel(
     currentSaveName: CurrentSaveName = CurrentSaveName(),
     gameShiftSources: GameShiftSources = GameShiftSources(),
     unsavedProgress: UnsavedProgress = UnsavedProgress(),
+    solutionScreen: SolutionScreen = SolutionScreen(),
 ): ViewModelImpl =
     buildViewModel(board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftSources,
-        unsavedProgress,
+        unsavedProgress, solutionScreen,
     )

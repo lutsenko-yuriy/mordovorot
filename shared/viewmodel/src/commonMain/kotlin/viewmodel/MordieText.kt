@@ -27,5 +27,8 @@ object MordieText {
         }
     }
 
+    /** The solution screen's line (GH-126), Mordie's solution being [length] moves long. */
+    fun solution(length: Int): String = "Here's how I did it in ${moves(length)}!"
+
     private fun moves(count: Int) = if (count == 1) "1 move" else "$count moves"
 }

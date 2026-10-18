@@ -4,6 +4,7 @@ import analytics.AnalyticsService
 import board_model.BoardModel
 import board_model.Solvability
 import mordie.Mordie
+import mordie.MordieLine
 import mordie.SolutionMove
 import storage.SavedMordie
 import storage.SavedMove
@@ -14,14 +15,17 @@ internal class MordieHooks(
     private val mordie: Mordie,
     private val board: BoardModel,
     private val analytics: AnalyticsService,
+    private val solutionScreen: SolutionScreen,
 ) {
 
     fun onNewGame() = mordie.startFresh(board.boardArray)
 
-    /** Binds Mordie to the board just loaded from a save with [data]. A searching save with an
-     *  unsolvable original can only be hand-edited, so it is treated like a save with no data. */
+    /** Binds Mordie to the board just loaded from a save with [data]. A solution-screen save
+     *  (GH-126) resumes found, whatever the board. A searching save with an unsolvable original
+     *  can only be hand-edited, so it is treated like a save with no data. */
     fun onLoaded(data: SavedMordie?) {
         when {
+            data != null && data.solutionScreen -> mordie.resume(data.original, data.moves, found = true, data.solutionMoves())
             board.isCorrect() ->
                 if (data == null) mordie.clear() else mordie.restoreSolved(data.original, data.moves, data.found, data.solutionMoves())
             data != null && (data.found || Solvability.isSolvable(data.original)) ->
@@ -58,10 +62,28 @@ internal class MordieHooks(
 
     fun snapshot(): SavedMordie? = mordie.snapshot()?.let { snapshot ->
         val solution = snapshot.solution?.map { SavedMove(it.isRow, it.index, it.amount) }
-        SavedMordie(snapshot.original, snapshot.moves, snapshot.found, solution)
+        SavedMordie(snapshot.original, snapshot.moves, snapshot.found, solution, solutionScreen = solutionScreen.replay != null)
     }
 
     fun line(): String? = mordie.line()?.let(MordieText::line)
+
+    /** Mordie's solution for the solution screen (GH-126); `null` when unknown or empty. */
+    fun solution(): List<SolutionMove>? = mordie.solution?.takeIf { it.isNotEmpty() }
+
+    fun original(): IntArray? = mordie.original()
+
+    /** Whether `Found it!` is showing. */
+    fun revealed(): Boolean = mordie.line() is MordieLine.Found
+
+    /** Whether Mordie's frozen result, after a win, is a found solution. */
+    fun foundBeforeWin(): Boolean = mordie.outcome()?.found == true
+
+    /** `game_given_up`'s moves and shifts since `Found it!`; empty after loading a save that was
+     *  already found. */
+    fun sinceRevealProps(): Map<String, Int> = listOfNotNull(
+        mordie.playerMovesAtReveal?.let { "moves_since_solution_found" to board.moveCount - it },
+        mordie.shiftsAtReveal?.let { "shifts_since_solution_found" to mordie.shifts - it },
+    ).toMap()
 
     fun ending(): String? = mordie.outcome()?.let { MordieText.ending(it, board.moveCount) }
 

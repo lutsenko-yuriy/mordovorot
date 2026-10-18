@@ -8,12 +8,13 @@ import viewmodel.usecase.LoadGameUseCase
 import viewmodel.usecase.NewGameUseCase
 import viewmodel.usecase.ResolveUnsolvableSaveUseCase
 import viewmodel.usecase.SaveGameUseCase
+import viewmodel.usecase.SolutionUseCase
 import viewmodel.usecase.StartupRestoreUseCase
 
 /** Builds a [GameViewModelImpl] and its use cases (GH-41) - the only way a platform gets one.
  *  [MordieHooks] is built here, per call, so it tracks through this [analytics]. [ui] is shared
  *  by the viewModel and every use case, and with any platform flow (the terminal's Exit) that
- *  raises requests to the same View. */
+ *  raises requests to the same View. [solutionScreen] is the session's (GH-126). */
 fun buildGameViewModel(
     board: BoardModel,
     saves: SaveRepository,
@@ -24,20 +25,22 @@ fun buildGameViewModel(
     currentSaveName: CurrentSaveName,
     gameShiftSources: GameShiftSources,
     unsavedProgress: UnsavedProgress,
+    solutionScreen: SolutionScreen,
     ui: UiRequestChannel,
     unsolvableExit: UnsolvableSaveExit,
 ): GameViewModelImpl {
-    val mordieHooks = MordieHooks(mordie, board, analytics)
+    val mordieHooks = MordieHooks(mordie, board, analytics, solutionScreen)
+    val solution = SolutionUseCase(board, mordieHooks, analytics, solutionScreen, unsavedProgress)
     val catalog = SaveCatalog(saves)
-    val newGame = NewGameUseCase(board, mordieHooks, analytics, currentSaveName, gameShiftSources, unsavedProgress)
+    val newGame = NewGameUseCase(board, mordieHooks, analytics, currentSaveName, gameShiftSources, unsavedProgress, solution)
     val saveGame = SaveGameUseCase(board, saves, mordieHooks, analytics, ui, currentSaveName, unsavedProgress)
-    val resolveUnsolvable = ResolveUnsolvableSaveUseCase(board, saves, mordieHooks, analytics, ui, newGame, currentSaveName, gameShiftSources, unsavedProgress)
-    val loadGame = LoadGameUseCase(board, saves, mordieHooks, analytics, ui, catalog, resolveUnsolvable, currentSaveName, gameShiftSources, unsavedProgress)
+    val resolveUnsolvable = ResolveUnsolvableSaveUseCase(board, saves, mordieHooks, analytics, ui, newGame, currentSaveName, gameShiftSources, unsavedProgress, solution)
+    val loadGame = LoadGameUseCase(board, saves, mordieHooks, analytics, ui, catalog, resolveUnsolvable, currentSaveName, gameShiftSources, unsavedProgress, solution)
     val startupRestore = StartupRestoreUseCase(
         board, catalog, analytics, ui, loadGame, newGame, mordieHooks, startupRestoreDone, sizeChosenAtLaunch,
     )
     return GameViewModelImpl(
-        board, analytics, mordieHooks, ui, catalog, newGame, saveGame, loadGame, startupRestore, currentSaveName,
+        board, analytics, mordieHooks, ui, catalog, newGame, saveGame, loadGame, startupRestore, solution, currentSaveName,
         gameShiftSources, unsavedProgress, unsolvableExit,
     )
 }
