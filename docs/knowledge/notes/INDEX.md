@@ -48,6 +48,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-109: Upgrade Kotlin to the latest stable 2.x](GH-109.md)
 - [GH-110: Play Mordovorot in the browser (localhost)](GH-110.md)
 - [GH-12: Exit command](GH-12.md)
+- [GH-124: Web dev server: rebuild on change, and run alongside builds](GH-124.md)
 - [GH-23: Split Presenter into console/TUI-specific presenters](GH-23.md)
 - [GH-41: Kotlin Multiplatform shared modules: Core, Analytics, Mordie, Storage, ViewModel](GH-41.md)
 - [GH-6: Save and load game state to/from local files](GH-6.md)
