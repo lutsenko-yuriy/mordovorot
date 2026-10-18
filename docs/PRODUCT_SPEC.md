@@ -261,6 +261,10 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle. A br
   discards the player's moves (GH-126).
 - **Arrows:** `▲` above and `▼` below each column, `◀`/`▶` at both ends of each row. A click
   shifts the line by one tile, sliding it with wrap-around.
+  - **Touch screens (GH-111):** where the main input is touch (phones, tablets), the arrows
+    aren't shown and the board grows into their room; dragging is the only way to shift (screen
+    readers still find the arrow buttons).
+    Touchscreen laptops keep the arrows.
 - **Dragging:** press a tile and drag. Once the pointer has moved a few pixels, the larger
   direction picks the tile's row or column. The line follows the pointer with wrap-around, and
   on release it slides to the nearest whole tile.

@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.18.2] — 2026-10-19 (PR #135 merged)
+
+### Changed
+- [wip] (PR #135) GH-111 (WU2/3): on touch screens the arrows are hidden (screen readers still reach them) and the board grows into their room.
+
 ## [0.18.1] — 2026-10-19 (PR #134 merged)
 
 ### Changed

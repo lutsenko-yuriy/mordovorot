@@ -176,7 +176,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/jsMain/resources/index.html     # The page: `<title>Mordovorot</title>`, loads web.js
 ├── src/jsMain/resources/styles.css     # The look: tile colours by home row/column, modal
 │                                       # dialogs, wide/tall by `orientation` (as layoutOf counts);
-│                                       # `.app.solution` for the solution screen's layouts (GH-126)
+│                                       # `.app.solution` for the solution screen's layouts (GH-126);
+│                                       # no arrows under `pointer: coarse` (GH-111)
 ├── src/commonTest/kotlin/web/scenario/ # GH-110 end to end: WebGame over startWebGame's wiring
 │                                       # (WebHarness), recording each WebState (startup, play,
 │                                       # save/load, unsaved progress, drag, analytics; GH-126 give up)

@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-- GH-111: Publish the browser version on a public website (WU1/2 merged; WU2 pending)
+- GH-111: Publish the browser version on a public website (WU2/3 merged; WU3 pending)
 
 ---
 

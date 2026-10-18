@@ -74,10 +74,13 @@ body {
 .app {
     /* The height left for the board: the rest of the column, Give Up's row included. */
     --rest: 330px;
-    --tile: clamp(28px, min(calc((100vw - 40px) / (var(--side) * 1.1 + 2)), calc((var(--vh) - var(--rest) - var(--footer)) / (var(--side) * 1.1 + 2))), 84px);
+    /* The arrows' room around the tiles, in tiles, and the gap above the first row of tiles. */
+    --band: 2;
+    --tile: clamp(28px, min(calc((100vw - 40px) / (var(--side) * 1.1 + var(--band))), calc((var(--vh) - var(--rest) - var(--footer)) / (var(--side) * 1.1 + var(--band)))), 84px);
     --gap: calc(var(--tile) * 0.1);
     --pitch: calc(var(--tile) + var(--gap));
     --arrow: calc(var(--tile) * 0.7);
+    --lead: calc(var(--arrow) + var(--gap) * 1.5);
     display: grid;
     grid-template-areas: "moves" "mordie" "board" "giveup" "toolbar" "status";
     justify-items: center;
@@ -98,7 +101,7 @@ body {
     .app {
         /* The width left for the board: the panel's column and its gap, and the page's padding. */
         --beside: 392px;
-        --tile: clamp(28px, min(calc((100vw - var(--beside)) / (var(--side) * 1.1 + 2)), calc((var(--vh) - 48px - var(--footer)) / (var(--side) * 1.1 + 2))), 84px);
+        --tile: clamp(28px, min(calc((100vw - var(--beside)) / (var(--side) * 1.1 + var(--band))), calc((var(--vh) - 48px - var(--footer)) / (var(--side) * 1.1 + var(--band)))), 84px);
         grid-template-areas: "board panel";
         grid-template-columns: auto 20rem;
         justify-content: center;
@@ -116,7 +119,7 @@ body {
         align-self: start;
         justify-self: stretch;
         width: auto;
-        margin-top: calc(var(--arrow) + var(--gap) * 1.5);
+        margin-top: var(--lead);
         /* As tall as the tiles, scrolling past that. */
         max-height: calc(var(--side) * var(--pitch));
     }
@@ -130,7 +133,7 @@ body {
         justify-self: stretch;
         gap: 14px;
         /* Level with the first row of tiles. */
-        margin-top: calc(var(--arrow) + var(--gap) * 1.5);
+        margin-top: var(--lead);
     }
 
     .panel > .mordie {
@@ -393,6 +396,31 @@ button:focus-visible {
 @keyframes glow {
     from { box-shadow: 0 0 0 0 hsl(45 90% 60% / 0.9); }
     to { box-shadow: 0 0 0 18px hsl(45 90% 60% / 0); }
+}
+
+/* Touch screens drag instead, so the arrows go and the tiles take their room (GH-111). */
+@media (pointer: coarse) {
+    .app {
+        --band: 0.3;
+        --lead: 0px;
+    }
+
+    .board {
+        display: block;
+    }
+
+    .board > span {
+        display: none;
+    }
+
+    /* Out of sight, but still there for screen readers, which take over one-finger drags. */
+    .board > .arrows {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+    }
 }
 
 .app.dragging, .app.dragging * {
