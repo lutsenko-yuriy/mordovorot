@@ -1,5 +1,7 @@
 package web
 
+import web.drag.LineOffset
+
 /** One frame of the page (GH-110): what [WebRenderer] draws. [tiles] are 1-based, row by row. */
 data class WebState(
     val side: Int,
@@ -11,6 +13,8 @@ data class WebState(
     /** The last status message (D4), cleared by the next action. */
     val status: String?,
     val dialog: WebDialog?,
+    /** The line being dragged and how far, before the release snaps it. */
+    val drag: LineOffset? = null,
 ) {
     val arrowsEnabled: Boolean get() = !solved
 }

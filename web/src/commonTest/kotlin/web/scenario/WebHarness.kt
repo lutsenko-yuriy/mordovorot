@@ -2,6 +2,7 @@ package web.scenario
 
 import board_model.BoardImpl
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -34,6 +35,7 @@ internal class WebHarness(
     val saves = BrowserSaveRepository(store)
     val analytics = RecordingAnalyticsService()
     val mordieSearches = FakeMordieSearchFactory()
+    val mordie = Mordie(mordieSearches)
     private val renderer = FakeWebRenderer()
     lateinit var game: WebGame
         private set
@@ -41,7 +43,7 @@ internal class WebHarness(
     val state: WebState get() = renderer.frames.last()
 
     fun start(): WebHarness {
-        game = startWebGame(board, saves, analytics, Mordie(mordieSearches), renderer, scope, layout)
+        game = startWebGame(board, saves, analytics, mordie, renderer, scope, layout)
         return this
     }
 
@@ -75,6 +77,7 @@ private class FakeWebRenderer : WebRenderer {
 }
 
 /** Runs [block] with the page's coroutines running eagerly, so each intent has finished when it returns. */
+@OptIn(ExperimentalCoroutinesApi::class)
 internal fun webTest(block: suspend TestScope.() -> Unit): TestResult = runTest(UnconfinedTestDispatcher()) { block() }
 
 /** A 3x3 with two tiles swapped: no sequence of shifts solves it. */

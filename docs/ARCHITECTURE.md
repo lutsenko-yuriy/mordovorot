@@ -124,27 +124,32 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                          # DOM-free code in src/commonMain (tested on the JVM and Node.js), the
 │                          # page in src/jsMain. `./gradlew :web:serve` serves it on localhost:8080
 ├── src/commonMain/kotlin/web/
-│   ├── WebGame.kt       # The browser's View: page intents (onArrow/onNew/onSave/onLoad/dialog answers) ->
+│   ├── WebGame.kt       # The browser's View: page intents (onArrow/onDrag*/onNew/onSave/onLoad/dialog answers) ->
 │   │                    # GameViewModel, a WebState to the WebRenderer after every change; drains
 │   │                    # uiRequests; tracks the view-layer analytics (screen views, dialog_cancelled)
-│   ├── WebState.kt      # One frame: tiles (1-based), Moves, Mordie's spot, solved, status, WebDialog
+│   ├── WebState.kt      # One frame: tiles (1-based), Moves, Mordie's spot, solved, status, WebDialog,
+│   │                    # the dragged line's live offset
 │   ├── WebRenderer.kt   # fun interface render(WebState) - the DOM on the page, a recorder in tests
 │   ├── WebRequestRouter.kt # Answers each UiRequest (exhaustive `when`, like UiRequestRouter)
 │   ├── Layout.kt        # layoutOf(width, height): WIDE (wider than tall) or TALL
 │   ├── Launch.kt        # startWebGame: the page's wiring (PlatformAnalyticsService "web" wrapped
 │   │                    # by InputMethodAnalyticsService "rich_ui"), app_launched {mode, layout}
+│   ├── drag/            # LineDrag: one drag in pixels - axis lock past a threshold, live offset,
+│   │                    # snap to whole tiles mod the side; WrapPositions: a part-shifted line's tiles
 │   └── storage/         # BrowserSaveRepository: one KeyValueStore entry per save under
 │                        # `mordovorot.save.<name>`, in SaveFileCodec's format, SaveNames' rules
 ├── src/jsMain/kotlin/web/Main.kt       # The page's composition root: BoardImpl, saves in
 │                                       # localStorage, Mordie with the background search,
 │                                       # MainScope, the window's Layout, the beforeunload prompt
-├── src/jsMain/kotlin/web/DomRenderer.kt # WebState -> DOM, clicks -> WebGame intents
+├── src/jsMain/kotlin/web/DomRenderer.kt # WebState -> DOM, clicks and pointer drags -> WebGame
+│                                       # intents; the page root holds a drag's pointer capture
 ├── src/jsMain/kotlin/web/storage/LocalStorageStore.kt # KeyValueStore over window.localStorage
 ├── src/jsMain/resources/index.html     # The page: `<title>Mordovorot</title>`, loads web.js
 ├── src/commonTest/kotlin/web/scenario/ # GH-110 end to end: WebGame over startWebGame's wiring
 │                                       # (WebHarness), recording each WebState (startup, play,
 │                                       # save/load, unsaved progress, drag, analytics)
 ├── src/commonTest/kotlin/web/LayoutTest.kt
+├── src/commonTest/kotlin/web/drag/     # LineDragTest, WrapPositionsTest
 ├── src/commonTest/kotlin/web/storage/  # BrowserSaveRepositoryTest over InMemoryKeyValueStore
 └── src/jvmTest/kotlin/web/IndexPageTest.kt # Pins the title rule (the title appears only in the tab)
 

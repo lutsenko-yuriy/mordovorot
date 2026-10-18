@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.16.13] — 2026-10-18 (PR #122 merged)
+
+### Changed
+- [wip] (PR #122) GH-110 (WU6/7): drag tiles in the browser - press a tile and drag; the row or column locks, follows the pointer with wrap-around, and snaps to the nearest tile on release as one move.
+
 ## [0.16.12] — 2026-10-18 (PR #121 merged)
 
 ### Changed

@@ -13,14 +13,16 @@ import viewmodel.SaveInfo
 import viewmodel.UnsolvableSaveChoice
 import viewmodel.display
 import viewmodel.displayWithSize
+import web.drag.Axis
+import web.drag.LineDrag
 
 /** Which arrow was clicked: [LEFT]/[RIGHT] shift a row, [UP]/[DOWN] a column. */
 enum class Arrow { LEFT, RIGHT, UP, DOWN }
 
 /** The browser's View (GH-110): takes the page's intents, runs them on [viewModel] and renders a
  *  [WebState] after every change. A dialog is modal: while one is open, or a toolbar action or the
- *  startup restore is under way, only a dialog's answer counts. Tracks the view-layer analytics,
- *  like the terminal's dialog controllers. */
+ *  startup restore is under way, only a dialog's answer counts; while a drag is, only the drag.
+ *  Tracks the view-layer analytics, like the terminal's dialog controllers. */
 class WebGame internal constructor(
     private val viewModel: GameViewModel,
     private val analytics: AnalyticsService,
@@ -37,7 +39,8 @@ class WebGame internal constructor(
     private var status: String? = null
     /** The toolbar action or startup restore under way, if any. */
     private var flow: Job? = null
-    private val idle get() = dialog == null && flow?.isActive != true
+    private var drag: LineDrag? = null
+    private val idle get() = dialog == null && flow?.isActive != true && drag == null
 
     /** Answers the viewModel's requests, then runs the startup restore. */
     internal fun start() {
@@ -54,16 +57,46 @@ class WebGame internal constructor(
 
     fun onArrow(arrow: Arrow, line: Int) {
         if (!idle || viewModel.isSolved()) return
-        status = null
-        when (arrow) {
-            Arrow.LEFT -> viewModel.shiftLeft(line, PointerShift.ARROW)
-            Arrow.RIGHT -> viewModel.shiftRight(line, PointerShift.ARROW)
-            Arrow.UP -> viewModel.shiftUp(line, PointerShift.ARROW)
-            Arrow.DOWN -> viewModel.shiftDown(line, PointerShift.ARROW)
+        shift {
+            when (arrow) {
+                Arrow.LEFT -> viewModel.shiftLeft(line, PointerShift.ARROW)
+                Arrow.RIGHT -> viewModel.shiftRight(line, PointerShift.ARROW)
+                Arrow.UP -> viewModel.shiftUp(line, PointerShift.ARROW)
+                Arrow.DOWN -> viewModel.shiftDown(line, PointerShift.ARROW)
+            }
         }
-        // Unsolved before this shift (see the guard above), so this is the transition.
-        if (viewModel.isSolved()) analytics.track("screen_congratulations")
-        render()
+    }
+
+    /** A press on the tile at [row], [col], at ([x], [y]) on a board with tiles [pitch] apart, in pixels. */
+    fun onDragStart(row: Int, col: Int, x: Double, y: Double, pitch: Double) {
+        if (!idle || viewModel.isSolved()) return
+        drag = LineDrag(row, col, x, y, pitch, viewModel.squareSide())
+    }
+
+    fun onDragMove(x: Double, y: Double) {
+        val drag = drag ?: return
+        val before = drag.offset
+        drag.move(x, y)
+        if (drag.offset != before) render()
+    }
+
+    /** The release: the line snaps to the nearest tile, and the whole drag is one shift. */
+    fun onDragEnd() {
+        val released = drag?.release() ?: return onDragCancel()
+        drag = null
+        shift {
+            when (released.axis) {
+                Axis.ROW -> viewModel.shiftRow(released.line, released.steps, PointerShift.DRAG)
+                Axis.COLUMN -> viewModel.shiftColumn(released.line, released.steps, PointerShift.DRAG)
+            }
+        }
+    }
+
+    /** Drops the drag, leaving the board as it was. */
+    fun onDragCancel() {
+        val moved = drag?.offset != null
+        drag = null
+        if (moved) render()
     }
 
     fun onNew() = runFlow {
@@ -151,6 +184,15 @@ class WebGame internal constructor(
         return name
     }
 
+    /** Runs a shift on the unsolved board and renders. */
+    private fun shift(action: () -> Unit) {
+        status = null
+        action()
+        // Unsolved before this shift (the callers check), so this is the transition.
+        if (viewModel.isSolved()) analytics.track("screen_congratulations")
+        render()
+    }
+
     /** Runs a toolbar action, unless another action or a dialog is under way, then renders. */
     private fun runFlow(action: suspend () -> Unit) {
         if (!idle) return
@@ -192,6 +234,7 @@ class WebGame internal constructor(
                 solved = solved,
                 status = status,
                 dialog = dialog?.shown,
+                drag = drag?.offset,
             ),
         )
     }
