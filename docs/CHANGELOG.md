@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.18.0] — 2026-10-18 (PR #132 merged)
+
+### Added
+- [user] (PR #132) GH-126 (WU5/5): Give Up and Mordie's solution on all three clients — `[ Give Up ]` (F8 in keyboard mode) dimmed until Mordie finds its solution, then a Yes / No confirmation; `[ Mordie's solution ]` after a win; the solution screen on the original arrangement with a numbered step list, stepped by hand with Prev / Next / Restart; saves reopen the screen. WU5 adds the web's wide/tall solution layouts, the current-step highlight and auto-scroll, and fixes a blank page on a fresh browser from WU4.
+
 ## [0.17.5] — 2026-10-18 (PR #131 merged)
 
 ### Changed
