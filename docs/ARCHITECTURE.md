@@ -123,10 +123,24 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 web/                     # :web - the browser client (GH-110): `jvm()` + `js { browser(); nodejs() }`.
 │                          # DOM-free code in src/commonMain (tested on the JVM and Node.js), the
 │                          # page in src/jsMain. `./gradlew :web:serve` serves it on localhost:8080
-├── src/jsMain/kotlin/Main.kt           # Entry point (a placeholder until GH-110 WU4)
+├── src/commonMain/kotlin/web/
+│   ├── WebGame.kt       # The browser's View: page intents (onArrow/onNew/dialog answers) ->
+│   │                    # GameViewModel, a WebState to the WebRenderer after every change; drains
+│   │                    # uiRequests; tracks the view-layer analytics (screen views, dialog_cancelled)
+│   ├── WebState.kt      # One frame: tiles (1-based), Moves, Mordie's spot, solved, status, WebDialog
+│   ├── WebRenderer.kt   # fun interface render(WebState) - the DOM on the page, a recorder in tests
+│   ├── WebRequestRouter.kt # Answers each UiRequest (exhaustive `when`, like UiRequestRouter)
+│   ├── Layout.kt        # layoutOf(width, height): WIDE (wider than tall) or TALL
+│   └── Launch.kt        # startWebGame: the page's wiring (PlatformAnalyticsService "web" wrapped
+│                        # by InputMethodAnalyticsService "rich_ui"), app_launched {mode, layout}
+├── src/jsMain/kotlin/web/Main.kt       # The page's composition root: BoardImpl, Mordie with the
+│                                       # background search, MainScope, the window's Layout
+├── src/jsMain/kotlin/web/DomRenderer.kt # WebState -> DOM, clicks -> WebGame intents
 ├── src/jsMain/resources/index.html     # The page: `<title>Mordovorot</title>`, loads web.js
-├── src/commonTest/kotlin/web/scenario/ # GH-110 end to end: WebGame driven through a fake renderer
-│                                       # (startup, play, save/load, unsaved progress, drag, analytics)
+├── src/commonTest/kotlin/web/scenario/ # GH-110 end to end: WebGame over startWebGame's wiring
+│                                       # (WebHarness), recording each WebState (startup, play,
+│                                       # save/load, unsaved progress, drag, analytics)
+├── src/commonTest/kotlin/web/LayoutTest.kt
 └── src/jvmTest/kotlin/web/IndexPageTest.kt # Pins the title rule (the title appears only in the tab)
 
 src/main/kotlin/                # the terminal app (the root project)
@@ -455,6 +469,12 @@ every collaborator as a constructor parameter with no real-implementation defaul
 defaults (a board side, a save directory, a flag) are fine. Tests build through
 `testing/`'s `testViewModel`/`testTuiView`/`testGameSession`, which call the same
 functions with fakes.
+
+The browser's composition root is `web`'s `Main.kt` (GH-110): it builds the page's
+collaborators and hands them to `startWebGame` (`Launch.kt`), which decorates analytics
+(`platform: web`, then `input_method: rich_ui` for everything but `app_launched`), calls
+`buildGameViewModel` with no startup shortcuts and no Exit hook, and starts a `WebGame`.
+The web scenario tests go through the same `startWebGame` with fakes.
 
 ### Board-size surfaces (GH-44)
 Three entry points, all of which *start a fresh game* rather than resizing the

@@ -1,51 +1,88 @@
 package web.scenario
 
+import board_model.Solvability
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import mordie.SearchProgress
+import web.Arrow
+import web.WebDialog
 
 /** GH-110 scenarios: shifting with the arrows, New, Moves, Mordie and the solved state. Same setup
  *  as [WebStartupScenarioTest]. */
 class WebPlayScenarioTest {
 
     @Test
-    fun `an arrow click shifts the line by one, wrapping around`() {
-        // WU4
-        // TODO: 1. Start a known 4x4 (restoreState on the BoardImpl, then Cancel the startup size picker).
-        // TODO: 2. Click ▶ on row 0: the row wraps one tile right (tiles shown 1-based).
-        // TODO: 3. Click ▲ on column 2: the column shifts up, its top tile moves to the bottom.
+    fun `an arrow click shifts the line by one, wrapping around`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+
+        page.game.onArrow(Arrow.RIGHT, 0)
+        assertEquals(listOf(3, 4, 1, 2), page.state.tiles.take(4))
+
+        page.game.onArrow(Arrow.UP, 2)
+        assertEquals(listOf(7, 11, 15, 1), (2 until 16 step 4).map { page.state.tiles[it] })
     }
 
     @Test
-    fun `Moves follows the move rule`() {
-        // WU4
-        // TODO: 1. Shift row 0 right twice: "Moves: 1".
-        // TODO: 2. Shift row 0 left: still "Moves: 1".
-        // TODO: 3. Shift row 1: "Moves: 2".
-        // TODO: 4. Shift column 0: "Moves: 3".
+    fun `Moves follows the move rule`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+
+        page.game.onArrow(Arrow.RIGHT, 0)
+        page.game.onArrow(Arrow.RIGHT, 0)
+        assertEquals(1, page.state.moves)
+        page.game.onArrow(Arrow.LEFT, 0)
+        assertEquals(1, page.state.moves)
+        page.game.onArrow(Arrow.RIGHT, 1)
+        assertEquals(2, page.state.moves)
+        page.game.onArrow(Arrow.UP, 0)
+        assertEquals(3, page.state.moves)
     }
 
     @Test
-    fun `New opens the size picker, and Cancel leaves the game untouched`() {
-        // WU4
-        // TODO: 1. Make 2 shifts; note the board.
-        // TODO: 2. Press New: the size picker, with Cancel.
-        // TODO: 3. Cancel: the same board and Moves.
-        // TODO: 4. dialog_cancelled {dialog: size} fired.
+    fun `New opens the size picker, and Cancel leaves the game untouched`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.game.onArrow(Arrow.RIGHT, 1)
+        page.game.onArrow(Arrow.DOWN, 0)
+        val before = page.state
+
+        page.game.onNew()
+        assertEquals(WebDialog.Size(listOf(3, 4, 5)), page.state.dialog)
+        page.game.onSizeChosen(null)
+
+        assertEquals(before, page.state)
+        assertEquals(listOf("toolbar"), page.props("screen_size_dialog").map { it["opened_from"] })
+        assertEquals(listOf("size"), page.props("dialog_cancelled").map { it["dialog"] })
     }
 
     @Test
-    fun `New with a size starts a fresh solvable game`() {
-        // WU4
-        // TODO: 1. Press New, pick 3.
-        // TODO: 2. A 3x3 board, "Moves: 0", and the board is solvable.
+    fun `New with a size starts a fresh solvable game`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+
+        page.game.onNew()
+        page.game.onSizeChosen(3)
+
+        assertEquals(3, page.state.side)
+        assertEquals(0, page.state.moves)
+        assertNull(page.state.dialog)
+        assertTrue(Solvability.isSolvable(page.state.tiles.map { it - 1 }.toIntArray()))
+        assertEquals(listOf(mapOf<String, Any?>("size" to 3, "trigger" to "toolbar")), page.props("new_game_size_selected").map { it - "platform" - "input_method" })
     }
 
     @Test
-    fun `solving fades the arrows and stops shifts`() {
-        // WU4
-        // TODO: 1. Start one shift from solved (known board as above); make the solving shift.
-        // TODO: 2. arrowsEnabled is false.
-        // TODO: 3. Click an arrow: the board and Moves are unchanged.
-        // TODO: 4. screen_congratulations fired once.
+    fun `solving fades the arrows and stops shifts`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+
+        page.game.onArrow(Arrow.LEFT, 0)
+        assertFalse(page.state.arrowsEnabled)
+        val solved = page.state
+
+        page.game.onArrow(Arrow.RIGHT, 1)
+
+        assertEquals(solved.tiles, page.state.tiles)
+        assertEquals(solved.moves, page.state.moves)
+        assertEquals(1, page.props("screen_congratulations").size)
     }
 
     @Test
@@ -57,19 +94,29 @@ class WebPlayScenarioTest {
     }
 
     @Test
-    fun `Mordie's greeting, progress and Found it! appear in Mordie's spot`() {
-        // WU4
-        // TODO: 1. Fake progress N=3, not found; shift: the greeting is shown.
-        // TODO: 2. At the shift-20 check: "I have already made 3 moves and have not solved it yet!"
-        // TODO: 3. Set the fake to found, N=11; at the next 5-shift check:
-        //          "Found it! I had to make 11 moves to find the solution! Can you beat it?"
+    fun `Mordie's greeting, progress and Found it! appear in Mordie's spot`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.mordieSearches.latest.progress = SearchProgress(moves = 3, found = false, elapsedMs = 0)
+        // Row 1 back and forth: row 0 stays off, so the board never solves.
+        fun shifts(count: Int) = repeat(count) { page.game.onArrow(if (it % 2 == 0) Arrow.RIGHT else Arrow.LEFT, 1) }
+
+        shifts(1)
+        assertEquals("Alright! Let's sort this one out!", page.state.mordie)
+
+        shifts(19)
+        assertEquals("I have already made 3 moves and have not solved it yet!", page.state.mordie)
+
+        page.mordieSearches.latest.progress = SearchProgress(moves = 11, found = true, elapsedMs = 0)
+        shifts(5)
+        assertEquals("Found it! I had to make 11 moves to find the solution! Can you beat it?", page.state.mordie)
     }
 
     @Test
-    fun `solving before Mordie finds it - Mordie's ending replaces its text`() {
-        // WU4
-        // TODO: 1. Start one shift from solved (known board as above); fake progress N=0, not found.
-        // TODO:    Make the solving shift.
-        // TODO: 2. Mordie's spot is "You beat me! I was still at 0 moves.", not "Congratulations ✓".
+    fun `solving before Mordie finds it - Mordie's ending replaces its text`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+
+        page.game.onArrow(Arrow.LEFT, 0)
+
+        assertEquals("You beat me! I was still at 0 moves.", page.state.mordie)
     }
 }

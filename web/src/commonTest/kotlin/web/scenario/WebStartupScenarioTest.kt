@@ -1,28 +1,40 @@
 package web.scenario
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import web.WebDialog
 
 /** GH-110 scenarios: what the page opens with. Each scenario drives `WebGame` through a
- *  `FakeWebRenderer` that records every `WebState` frame, over a real `BoardImpl`,
- *  `BrowserSaveRepository(InMemoryKeyValueStore)`, `Mordie(FakeMordieSearchFactory())` and a
- *  `RecordingAnalyticsService` in the production decorators. Each test names the WU that makes it green. */
+ *  [WebHarness], which records every `WebState` frame. Each test names the WU that makes it green. */
 class WebStartupScenarioTest {
 
     @Test
-    fun `no saves - the page opens the size picker`() {
-        // WU4
-        // TODO: 1. Start with an empty store.
-        // TODO: 2. The first dialog is the size picker (3-5) with Cancel, as in the terminal.
-        // TODO: 3. Pick 4: a 4x4 board, "Moves: 0", no dialog.
-        // TODO: 4. screen_size_dialog {opened_from: startup} fired.
+    fun `no saves - the page opens the size picker`() = webTest {
+        val page = WebHarness(backgroundScope).start()
+        assertEquals(WebDialog.Size(listOf(3, 4, 5)), page.state.dialog)
+
+        page.game.onSizeChosen(4)
+
+        assertEquals(4, page.state.side)
+        assertEquals(16, page.state.tiles.size)
+        assertEquals(0, page.state.moves)
+        assertNull(page.state.dialog)
+        assertEquals(listOf("startup"), page.props("screen_size_dialog").map { it["opened_from"] })
     }
 
     @Test
-    fun `no saves - Cancel on the startup size picker keeps the current board`() {
-        // WU4
-        // TODO: 1. restoreState a known 4x4 on the BoardImpl before WebGame starts; empty store.
-        // TODO: 2. Cancel the startup size picker: that known 4x4 is shown, "Moves: 0", no dialog.
-        // TODO: 3. dialog_cancelled {dialog: size} fired.
+    fun `no saves - Cancel on the startup size picker keeps the current board`() = webTest {
+        val page = WebHarness(backgroundScope)
+        page.board.restoreState(ONE_SHIFT_FROM_SOLVED, 0)
+        page.start()
+
+        page.game.onSizeChosen(null)
+
+        assertEquals(shown(ONE_SHIFT_FROM_SOLVED), page.state.tiles)
+        assertEquals(0, page.state.moves)
+        assertNull(page.state.dialog)
+        assertEquals(listOf("size"), page.props("dialog_cancelled").map { it["dialog"] })
     }
 
     @Test
