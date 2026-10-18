@@ -25,19 +25,42 @@ internal class SolutionReplay(private val original: IntArray, private val side: 
     val atStart: Boolean get() = position == 0
     val atEnd: Boolean get() = position == shifts.size
 
-    /** Runs since the screen opened; a run begins with a [next] off the start. For analytics,
-     *  kept here rather than in the use case so a mode switch's rebuilt viewModel keeps them. */
-    var runs = 0
+    // The runs, for analytics: a run begins with a [next] off the start and finishes, once, at
+    // the end. Kept here rather than in the use case, so a mode switch's rebuilt viewModel keeps them.
 
-    /** Whether [previous] was used during this run, and whether it has reached the end. */
+    /** Runs since the screen opened. */
+    var runs = 0
+        private set
+
+    /** Whether [previous] was used during this run. */
     var steppedBack = false
-    var finished = false
+        private set
+
+    /** Whether the last [next] began a run, or finished one. */
+    var startedRun = false
+        private set
+    var finishedRun = false
+        private set
+
+    private var finished = false
 
     /** Applies the next shift and returns it; `null` at the end. */
     fun next(): SolutionStep? {
+        startedRun = false
+        finishedRun = false
         if (atEnd) return null
+        if (atStart) {
+            startedRun = true
+            runs++
+            steppedBack = false
+            finished = false
+        }
         val shift = shifts[position++].second
         rotate(shift)
+        if (atEnd && !finished) {
+            finished = true
+            finishedRun = true
+        }
         return shift
     }
 
@@ -46,6 +69,7 @@ internal class SolutionReplay(private val original: IntArray, private val side: 
         if (atStart) return null
         val back = shifts[--position].second.let { it.copy(forward = !it.forward) }
         rotate(back)
+        steppedBack = true
         return back
     }
 

@@ -77,28 +77,17 @@ internal class SolutionUseCase(
     /** The replay's tiles; `null` off the screen. */
     fun tiles(): IntArray? = solutionScreen.replay?.tiles
 
-    /** A Next off the start begins a run (`solution_replay_started`); reaching the end
-     *  finishes it, once (`solution_replay_finished`). */
+    /** Tracks `solution_replay_started` and `solution_replay_finished` as the replay's runs
+     *  begin and end. */
     fun next(): SolutionStep? {
         val replay = solutionScreen.replay ?: return null
-        if (replay.atStart) {
-            analytics.track("solution_replay_started", mapOf("restart" to (replay.runs > 0)) + replayProps(replay))
-            replay.runs++
-            replay.steppedBack = false
-            replay.finished = false
-        }
         val shift = replay.next() ?: return null
-        if (replay.atEnd && !replay.finished) {
-            replay.finished = true
-            analytics.track("solution_replay_finished", replayProps(replay) + ("stepped_back" to replay.steppedBack))
-        }
+        if (replay.startedRun) analytics.track("solution_replay_started", mapOf("restart" to (replay.runs > 1)) + replayProps(replay))
+        if (replay.finishedRun) analytics.track("solution_replay_finished", replayProps(replay) + ("stepped_back" to replay.steppedBack))
         return shift
     }
 
-    fun previous(): SolutionStep? {
-        val replay = solutionScreen.replay ?: return null
-        return replay.previous()?.also { replay.steppedBack = true }
-    }
+    fun previous(): SolutionStep? = solutionScreen.replay?.previous()
 
     fun restart() {
         solutionScreen.replay?.restart()
