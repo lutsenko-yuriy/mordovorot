@@ -25,8 +25,8 @@ class MouseInput : TuiInput {
         is TerminalEvent.Wheel -> InputAction.Scroll(if (event.up) -1 else 1)
         TerminalEvent.EndOfInput -> InputAction.Quit
         // Keys/Backspace/Enter/Escape/Resize/Arrow/FunctionKey/Tab/BackTab only matter while a
-        // dialog's modal loop is reading events directly - the mouse-driven board screen ignores
-        // everything but clicks, same as before this extraction.
+        // dialog's modal loop is reading events directly - the mouse-driven board screen acts
+        // only on clicks and wheel notches (GH-126).
         else -> InputAction.None
     }
 
