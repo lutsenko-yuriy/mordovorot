@@ -108,10 +108,10 @@ behaviour beyond a literal value, it is not trivial — use the full workflow in
    - Push the branch to the remote.
    - Open a PR/MR.
    - Move the ticket to **In Review**.
-   - Inform the user of the PR/MR URL and open it in a browser other than the user's main one, which holds their own tabs (GH-110). The command for this machine is in `CLAUDE.local.md` (`## Browser`); if there is none, give the URL without opening it.
+   - Inform the user of the PR/MR URL and open it per the browser rule in `docs/CONSTRAINTS.md` (GH-110).
    - The review loop (step 10) starts automatically once the PR/MR is open, unless the user says otherwise beforehand.
 10. **Review loop** — starts automatically once the PR/MR is open (see step 9), unless the user asked to hold; repeat until the user explicitly approves:
-    0. **Before starting:** smoke-test the change on your own initiative — confirm it builds/boots, then exercise the specific flow the PR/MR touches. Report the result, then proceed into the loop. Never drive the user's own browser for this. For the web client, use a headless browser with a throwaway profile, which opens no window; the command is in `CLAUDE.local.md` (`## Browser`) (GH-110).
+    0. **Before starting:** smoke-test the change on your own initiative — confirm it builds/boots, then exercise the specific flow the PR/MR touches. Report the result, then proceed into the loop. For the web client, follow the browser rule in `docs/CONSTRAINTS.md`: a headless browser with a throwaway profile, never the user's own (GH-110).
     1. Wait for the review skills (`review`, `audit`), any coverage report, and the user to finish leaving comments.
        - **Immediately after invoking each routed skill, confirm its subagent actually spawned** before moving on to anything else. A skill's routing message is an instruction to act on, not content to just read — treat it the same way you'd treat a TODO you haven't checked off.
        - **Check on routed subagents that run long.** If one hasn't reported back within ~10 minutes, check what it should have changed by now (commits, PR state, checks). If it is stuck, stop it and finish the step yourself, then tell the user. Don't wait silently for its completion notice (GH-103).

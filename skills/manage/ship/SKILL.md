@@ -44,7 +44,10 @@ Follow semantic versioning (`docs/VERSIONING.md`): patch for bug fixes, minor fo
 
 Open `docs/BACKLOG.md` and make two edits:
 
-1. **In Progress section** — replace the in-progress bullet with `_(nothing in progress)_`.
+1. **In Progress section** — replace the in-progress bullet with `_(nothing in progress)_`. For an
+   intermediate WU of a multi-WU ticket, the ticket stays in progress instead: write
+   `- GH-XX: <the issue's title, copied verbatim from the PM tool> (WUn/N merged; WUm-N pending)`
+   (GH-110: a made-up title slipped in on WU2).
 2. **Milestone section** — remove the completed ticket(s) from the remaining-work list for their milestone.
 
 Do not rewrite the rest of the file — the milestone sections are the source of truth from the PM tool.
