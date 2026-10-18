@@ -88,6 +88,10 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle. A br
     Cancelling it falls through to the board-size prompt.
   - This entire prompt - restore included - is skipped outright when `--size=N` was given at
     launch (GH-44): the flag is the answer, no matter what saves exist.
+- **Solution screen saves (GH-126):** a save also stores Mordie's solution once it has found
+  one, and whether it was made on the solution screen (Feature 10). Loading a solution-screen
+  save, by Load or the startup restore prompt, opens the solution screen again at the start of
+  the replay.
 
 ### Feature 5 — Exit (GH-12)
 - The toolbar Exit (Escape in keyboard mode) ends the current session on demand after asking
@@ -105,8 +109,8 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle. A br
 
 ### Feature 6 — Mouse-driven TUI (GH-3)
 - On launch, the app runs a mouse-clickable terminal UI by default: a centered board with
-  `◀`/`▶`/`▲`/`▼` arrows at the ends of each row/column, a toolbar
-  (`[ New ] [ Save ] [ Load ] [ Exit ]`) below it, and a second row below that with
+  `◀`/`▶`/`▲`/`▼` arrows at the ends of each row/column, the `[ Give Up ]` row (Feature 10)
+  below the down arrows, a toolbar (`[ New ] [ Save ] [ Load ] [ Exit ]`) below that, and a second row below that with
   `[ Keyboard ]` for switching to keyboard mode without losing the current game (GH-30).
   Clicking an arrow shifts that row/column; every click repaints the whole screen. `[ New ]`
   (GH-44) opens the same size-picker dialog as the startup prompt and starts a fresh game at
@@ -165,10 +169,11 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle. A br
   below `[ New ] [ Save ] [ Load ] [ Exit ]` for `[Mouse F7]` (GH-30), mirroring the mouse
   mode's `[ Keyboard ]` row — and always live regardless of the selection or solved state:
   **F5** opens Save, **F6** opens Load, **F9** opens the New-game size picker (GH-44), **F7**
-  switches to mouse mode, and **Escape** opens the Exit dialog. F8 does nothing (it switched to
-  console mode before GH-79). A controls-hint line below the toolbar spells these out in plain
-  text: `F5/F6/F9 Save/Load/New · F7 Mouse · Esc` (the board keys have their own side hints,
-  GH-101).
+  switches to mouse mode, **F8** is the Give Up row's button (`[Give Up F8]` or
+  `[Mordie's solution F8]`, GH-126), and **Escape** opens the Exit dialog. A controls-hint line
+  below the toolbar spells these out in plain text:
+  `F5/F6/F9 Save/Load/New · F8 Give Up · F7 Mouse · Esc` (the board keys have their own side
+  hints, GH-101).
 - **Dialog navigation:** Tab/Shift+Tab (or the arrow keys) cycle focus between a dialog's
   controls (text field, list rows, buttons); Enter activates whatever has focus; Escape cancels
   the dialog, same as clicking Cancel. Typing and Backspace work on the focused text field as in
@@ -213,6 +218,8 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle. A br
   - M < N (only possible with a hand-edited save):
     `I made N moves and you made M moves! Are you a machine?`
   - A count of 1 reads `1 move`.
+- **Solution screen (GH-126):** Mordie's line reads `Here's how I did it in N moves!` there
+  (Feature 10).
 - **Saves** also store the original arrangement, Mordie's N and whether it had found its
   solution (two extra lines; older saves still load).
   - Loading a save where Mordie was still searching resumes the search past the saved N, and the
@@ -230,8 +237,8 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle. A br
   address starts it. The tab title is `Mordovorot`, and the title appears nowhere else on the page.
   The terminal game is unchanged.
 - **Same game, mouse only:** the rules, board sizes 3-5, solvable new games, `Moves: N` and its
-  move rule (Feature 2), Save/Load (Feature 4) and Mordie (Feature 8) work as in the terminal
-  game. There is no keyboard mode, no command-line flags and no Exit.
+  move rule (Feature 2), Save/Load (Feature 4), Mordie (Feature 8) and Give Up with its solution
+  screen (Feature 10) work as in the terminal game. There is no keyboard mode, no command-line flags and no Exit.
 - **Toolbar:** `[ New ] [ Save ] [ Load ]`; the player leaves by closing the tab.
   - **New** opens the size picker (3x3, 4x4, 5x5); Cancel leaves the current game untouched.
   - **Save** prefills the current save name and warns before overwriting. A blank name counts as
@@ -250,7 +257,8 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle. A br
 - **Leave-site prompt:** with unsaved progress (at least one shift since the last New game,
   successful save or successful load), closing or reloading the tab shows the browser's own
   "Leave site?" prompt. Safari shows it on reload but not when the tab is closed; that is
-  Safari's choice, and the page can't change it.
+  Safari's choice, and the page can't change it. The solution screen never prompts: entering it
+  discards the player's moves (GH-126).
 - **Arrows:** `▲` above and `▼` below each column, `◀`/`▶` at both ends of each row. A click
   shifts the line by one tile, sliding it with wrap-around.
 - **Dragging:** press a tile and drag. Once the pointer has moved a few pixels, the larger
@@ -276,6 +284,45 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle. A br
     `Moves: N`, Mordie's text, the toolbar and the status line.
   - **Taller than wide, or square:** top to bottom, `Moves: N`, Mordie's text, the board, the
     toolbar and the status line.
+  - The `[ Give Up ]` row sits directly above the toolbar in both (GH-126).
+  - **Solution screen (GH-126):** wide puts the step list between the board and the panel, as
+    tall as the tiles; tall puts it under the board, a few steps high. Either way it scrolls when
+    the steps don't fit, and keeps the current step in view. `[ ◀ Prev ] [ Next ▶ ] [ ↻ Restart ]`
+    sit above the toolbar. The board keeps its place, with its arrows hidden.
   - The board scales to fit the window.
 - **Analytics:** every event carries `platform: web` and `input_method: rich_ui`;
   see `docs/ANALYTICS_EVENTS.md`.
+
+### Feature 10 — Give Up and Mordie's solution (GH-126)
+Applies to terminal mouse mode, terminal keyboard mode and the web client.
+- **Give Up:** `[ Give Up ]` sits on its own row, directly above the toolbar. It is dimmed and
+  inert until Mordie has found its solution (the `Found it!` moment, Feature 8), so on boards
+  where Mordie never finishes (often 5x5) it stays dimmed. Keyboard mode: F8. Pressing it asks
+  `Give up and see Mordie's solution?` `[ Yes ] [ No ]`: No (or Escape) keeps playing; Yes
+  discards the player's moves and opens the solution screen.
+- **After a win:** the row shows `[ Mordie's solution ]` instead (keyboard mode: F8) if Mordie
+  had found its solution by then. It opens the solution screen with no confirmation. After the
+  `You beat me!` ending the row is empty.
+- **Solution screen:**
+  - The board goes back to the game's original arrangement and isn't playable: no arrows, no
+    drag, no shift keys. `Moves: N` is hidden, Mordie's line reads
+    `Here's how I did it in N moves!` (`1 move` for one), and the Give Up row is empty.
+  - **Step list:** one numbered step per Mordie move, `<n>. Row <i> <→|←> ×<k>` or
+    `<n>. Col <i> <↑|↓> ×<k>`, each the shortest way round its line (a tie goes → or ↓). Numbers
+    are zero-padded to the total's width (`01.` to `12.`). It sits right of the board (the
+    terminal, the wide web) or below it (the tall web), scrolls when it doesn't fit (the mouse
+    wheel in mouse mode and on the web; W/S or ↑/↓ in keyboard mode), and keeps the current step
+    in view.
+  - **Stepping, by hand:** `[ ◀ Prev ] [ Next ▶ ] [ ↻ Restart ]`. Next applies one shift of the
+    current step, Prev undoes one, Restart goes back to the original arrangement. Prev and
+    Restart are dimmed at the start, Next on the solved board. The step of the last shift made
+    is highlighted: reverse video in the terminal, a coloured background on the web. On the web
+    each shift slides one tile, as a player's shift does.
+  - **Keyboard mode:** ←/→ or A/D are Prev/Next, Space and Enter are Next too, R is Restart, and
+    W/S or ↑/↓ scroll the steps; side hints spell these out.
+  - **Toolbar:** New, Save, Load (and Exit in the terminal) work as before. New and Load leave
+    the screen. Saving there saves the solution screen (Feature 4). Switching input mode in the
+    terminal keeps the screen and the replay's place.
+  - The replay never counts moves, feeds Mordie, solves the game or sets unsaved progress.
+- **Older saves:** a save from before GH-126 that has Mordie's found N but not its solution
+  can't show the solution: Give Up stays dimmed, and the after-win row stays empty.
