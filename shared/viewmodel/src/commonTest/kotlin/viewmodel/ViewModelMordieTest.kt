@@ -7,9 +7,13 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import mordie.IdaStarSolver
 import mordie.Mordie
+import mordie.MordieSearch
+import mordie.MordieSearchFactory
 import mordie.SearchProgress
 import mordie.SolutionMove
+import storage.SaveFileCodec
 import storage.SavedBoard
 import storage.SavedMordie
 import storage.SavedMove
@@ -211,6 +215,28 @@ class ViewModelMordieTest {
         FakeViewModelUi().drive(viewModel) { viewModel.saveGame("m") }
 
         assertEquals(listOf<SavedMordie?>(SavedMordie(original, 1, found = true, solution = path)), saves.savedMordies)
+    }
+
+    @Test
+    fun `a real solver's solution passes the save codec's check, GH-126`() = runTest {
+        val solving = MordieSearchFactory { original, _ ->
+            val solver = IdaStarSolver(original).also { while (!it.step(10_000)) { } }
+            val progress = SearchProgress(solver.solutionLength!!, found = true, elapsedMs = 0, solver.solution())
+            object : MordieSearch {
+                override fun progress() = progress
+                override fun cancel() = Unit
+            }
+        }
+        val saves = FakeSaveRepository()
+        val viewModel = viewModel(saves, mordie = Mordie(solving))
+        viewModel.newGame(3, trigger = "toolbar")
+
+        FakeViewModelUi().drive(viewModel) { viewModel.saveGame("m") }
+
+        val mordie = saves.savedMordies.single()!!
+        val text = SaveFileCodec.encode(3, viewModel.boardState(), 0, mordie)
+        assertEquals(mordie, SaveFileCodec.decode("m", text).mordie)
+        assertTrue(mordie.solution!!.isNotEmpty())
     }
 
     @Test
