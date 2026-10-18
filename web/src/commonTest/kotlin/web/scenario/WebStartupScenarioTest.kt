@@ -43,7 +43,7 @@ class WebStartupScenarioTest {
     }
 
     @Test
-    fun `one save - Restore a saved game? yes loads it`() = webTest {
+    fun `one save - yes to the restore offer loads it`() = webTest {
         val page = WebHarness(backgroundScope).seed("foo", FOO, moves = 3).start()
         assertEquals(WebDialog.Load(restore = true, listOf(SaveEntry("foo", "foo (5x5)"))), page.state.dialog)
 
