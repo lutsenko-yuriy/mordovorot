@@ -15,7 +15,15 @@
     --mordie: #c2562a;
     --tile-ink: #2e2822;
     --tile-light: 76%;
+    /* The footer's height, left out of the board's room (GH-111): up to three lines when tall. */
+    --footer: 76px;
     color-scheme: light;
+}
+
+@media (orientation: landscape) {
+    :root {
+        --footer: 36px;
+    }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -55,7 +63,7 @@ body {
 .app {
     /* The height left for the board: the rest of the column, Give Up's row included. */
     --rest: 330px;
-    --tile: clamp(28px, min(calc((100vw - 40px) / (var(--side) * 1.1 + 2)), calc((100vh - var(--rest)) / (var(--side) * 1.1 + 2))), 84px);
+    --tile: clamp(28px, min(calc((100vw - 40px) / (var(--side) * 1.1 + 2)), calc((100vh - var(--rest) - var(--footer)) / (var(--side) * 1.1 + 2))), 84px);
     --gap: calc(var(--tile) * 0.1);
     --pitch: calc(var(--tile) + var(--gap));
     --arrow: calc(var(--tile) * 0.7);
@@ -64,7 +72,7 @@ body {
     justify-items: center;
     align-content: center;
     gap: 14px;
-    min-height: 100vh;
+    min-height: calc(100vh - var(--footer));
     padding: 20px 16px;
 }
 
@@ -79,7 +87,7 @@ body {
     .app {
         /* The width left for the board: the panel's column and its gap, and the page's padding. */
         --beside: 392px;
-        --tile: clamp(28px, min(calc((100vw - var(--beside)) / (var(--side) * 1.1 + 2)), calc((100vh - 48px) / (var(--side) * 1.1 + 2))), 84px);
+        --tile: clamp(28px, min(calc((100vw - var(--beside)) / (var(--side) * 1.1 + 2)), calc((100vh - 48px - var(--footer)) / (var(--side) * 1.1 + 2))), 84px);
         grid-template-areas: "board panel";
         grid-template-columns: auto 20rem;
         justify-content: center;
@@ -223,6 +231,24 @@ body {
     min-height: 1.4em;
     color: var(--muted);
     font-size: 0.9rem;
+}
+
+/* ---- The footer (GH-111) ---- */
+
+.footer {
+    min-height: var(--footer);
+    padding: 8px 16px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+.footer a {
+    color: inherit;
+}
+
+.footer a:hover {
+    color: var(--ink);
 }
 
 /* ---- Buttons ---- */

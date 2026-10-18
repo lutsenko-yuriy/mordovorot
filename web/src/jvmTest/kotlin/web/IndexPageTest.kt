@@ -21,6 +21,13 @@ class IndexPageTest {
     }
 
     @Test
+    fun `page loads its files by relative URLs, so it works under the public site's sub-path`() {
+        val urls = Regex("""(?:src|href)="([^"]*)"""").findAll(page).map { it.groupValues[1] }.toList()
+
+        assertEquals(listOf("styles.css", "web.js"), urls)
+    }
+
+    @Test
     fun `page loads the compiled game script`() {
         assertTrue("""<script src="web.js"></script>""" in page)
     }

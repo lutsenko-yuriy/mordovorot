@@ -14,6 +14,8 @@ import web.storage.LocalStorageStore
 /** The page's composition root (GH-110). */
 fun main() {
     val root = document.getElementById("app") as? HTMLElement ?: return
+    // Outside #app, which DomRenderer rebuilds every frame: the footer never changes.
+    document.body?.append(footerElement(footer(BuildInfo.VERSION)))
     val renderer = DomRenderer(root)
     val game = startWebGame(
         BoardImpl(),
