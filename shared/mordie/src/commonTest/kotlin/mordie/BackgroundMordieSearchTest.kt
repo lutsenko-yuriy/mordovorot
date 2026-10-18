@@ -31,6 +31,7 @@ class BackgroundMordieSearchTest {
         withTimeout(10_000) { while (!search.progress().found) delay(5) }
 
         assertEquals(2, search.progress().moves)
+        assertEquals(2, search.progress().solution?.size)
     }
 
     @Test
@@ -70,7 +71,7 @@ class BackgroundMordieSearchTest {
     fun `the NONE factory never searches`() {
         val search = MordieSearchFactory.NONE.start(twoMoves, ruledOut = 4)
 
-        assertEquals(SearchProgress(moves = 4, found = false, elapsedMs = 0), search.progress())
+        assertEquals(SearchProgress(moves = 4, found = false, elapsedMs = 0, solution = null), search.progress())
         search.cancel()
     }
 }

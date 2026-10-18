@@ -35,7 +35,7 @@ internal class MordieHooks(
 
     /** Call after every shift; tracks `mordie_solution_found` when this shift's check reveals it. */
     fun onShift() {
-        val found = mordie.onShift() ?: return
+        val found = mordie.onShift(board.moveCount) ?: return
         analytics.track(
             "mordie_solution_found",
             mapOf(

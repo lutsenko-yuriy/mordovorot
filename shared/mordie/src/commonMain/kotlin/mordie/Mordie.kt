@@ -29,6 +29,18 @@ class Mordie(private val factory: MordieSearchFactory) {
     var shifts = 0
         private set
 
+    /** Mordie's solution, once revealed or solved past - `null` until then, or when the search
+     *  or the save had no path (GH-126). */
+    var solution: List<SolutionMove>? = null
+        private set
+
+    /** [shifts] and the player's moves at the check that revealed the solution; `null` before
+     *  it, and after loading a save that was already found. */
+    var shiftsAtReveal: Int? = null
+        private set
+    var playerMovesAtReveal: Int? = null
+        private set
+
     /** Whether the search resumed from a save rather than starting fresh. */
     var resumedFromSave = false
         private set
@@ -43,10 +55,11 @@ class Mordie(private val factory: MordieSearchFactory) {
         if (!bound) startFresh(arrangement)
     }
 
-    /** A save made while unsolved: Mordie had ruled out [moves], or found a solution that long. */
-    fun resume(original: IntArray, moves: Int, found: Boolean) {
+    /** A save made while unsolved: Mordie had ruled out [moves], or found a [solution] that long. */
+    fun resume(original: IntArray, moves: Int, found: Boolean, solution: List<SolutionMove>? = null) {
         require(moves >= 0) { "Mordie's moves must not be negative" }
         bind(original)
+        this.solution = solution
         resumedFromSave = true
         checkedMoves = moves
         toldMoves = moves
@@ -59,9 +72,10 @@ class Mordie(private val factory: MordieSearchFactory) {
     }
 
     /** A save made after solving: the result is already decided, so nothing searches. */
-    fun restoreSolved(original: IntArray, moves: Int, found: Boolean) {
+    fun restoreSolved(original: IntArray, moves: Int, found: Boolean, solution: List<SolutionMove>? = null) {
         require(moves >= 0) { "Mordie's moves must not be negative" }
         bind(original)
+        this.solution = solution
         outcome = MordieOutcome(moves, found)
     }
 
@@ -70,8 +84,9 @@ class Mordie(private val factory: MordieSearchFactory) {
         bind(null)
     }
 
-    /** Counts a shift; returns the progress when this shift's check reveals the solution. */
-    fun onShift(): SearchProgress? {
+    /** Counts a shift, the player having made [playerMoves] moves; returns the progress when this
+     *  shift's check reveals the solution. */
+    fun onShift(playerMoves: Int): SearchProgress? {
         if (original == null || outcome != null) return null
         shifts++
         if (revealedMoves != null || shifts % CHECK_EVERY != 0) return null
@@ -83,6 +98,9 @@ class Mordie(private val factory: MordieSearchFactory) {
         }
         if (!progress.found) return null
         revealedMoves = progress.moves
+        solution = progress.solution
+        shiftsAtReveal = shifts
+        playerMovesAtReveal = playerMoves
         return progress
     }
 
@@ -101,7 +119,9 @@ class Mordie(private val factory: MordieSearchFactory) {
     fun onSolved(): MordieOutcome? {
         if (original == null) return null
         outcome?.let { return it }
-        return live().also {
+        val progress = liveProgress()
+        if (solution == null) solution = progress?.solution
+        return live(progress).also {
             outcome = it
             stop()
         }
@@ -112,8 +132,10 @@ class Mordie(private val factory: MordieSearchFactory) {
     /** What a save should store; `null` when Mordie sits this game out. */
     fun snapshot(): MordieSnapshot? {
         val original = original ?: return null
-        val state = outcome ?: live()
-        return MordieSnapshot(original.copyOf(), state.moves, state.found)
+        outcome?.let { return MordieSnapshot(original.copyOf(), it.moves, it.found, solution) }
+        val progress = liveProgress()
+        val state = live(progress)
+        return MordieSnapshot(original.copyOf(), state.moves, state.found, solution ?: progress?.solution)
     }
 
     /** Cancels the search; everything else is kept. */
@@ -132,14 +154,20 @@ class Mordie(private val factory: MordieSearchFactory) {
         toldMoves = 0
         progressWindowShown = false
         outcome = null
+        solution = null
+        shiftsAtReveal = null
+        playerMovesAtReveal = null
         shifts = 0
         resumedFromSave = false
     }
 
-    /** The search's current state - not just the last check's. */
-    private fun live(): MordieOutcome {
+    /** The search's progress right now, unless the solution is already revealed or nothing searches. */
+    private fun liveProgress(): SearchProgress? = if (revealedMoves != null) null else search?.progress()
+
+    /** The search's current state - not just the last check's - from [progress] read by [liveProgress]. */
+    private fun live(progress: SearchProgress?): MordieOutcome {
         revealedMoves?.let { return MordieOutcome(it, found = true) }
-        val progress = search?.progress() ?: return MordieOutcome(checkedMoves, found = false)
+        progress ?: return MordieOutcome(checkedMoves, found = false)
         return MordieOutcome(progress.moves.coerceAtLeast(0), progress.found)
     }
 

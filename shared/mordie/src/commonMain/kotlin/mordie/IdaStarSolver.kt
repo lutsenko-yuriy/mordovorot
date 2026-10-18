@@ -1,7 +1,7 @@
 package mordie
 
 /** One move of a solution: rotate a row right (or a column down) by [amount] cells. */
-internal data class SolutionMove(val isRow: Boolean, val index: Int, val amount: Int)
+data class SolutionMove(val isRow: Boolean, val index: Int, val amount: Int)
 
 /**
  * IDA* search for the shortest solution of [original] in the GH-62 move metric, guided by
@@ -68,8 +68,8 @@ class IdaStarSolver(original: IntArray, ruledOut: Int = -1) {
         return solutionLength != null
     }
 
-    /** The found solution, in order - for tests only, nothing shows it to the player. */
-    internal fun solution(): List<SolutionMove> {
+    /** The found solution, in order. */
+    fun solution(): List<SolutionMove> {
         val length = checkNotNull(solutionLength) { "No solution found yet" }
         return (0 until length).map { applied[it] }.map { SolutionMove(isRow(it), lineOf(it), amountOf(it)) }
     }
