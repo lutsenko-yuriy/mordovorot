@@ -63,7 +63,7 @@ Details and directory layout: @docs/ARCHITECTURE.md. Languages and tooling: docs
 - **Lint:** none configured
 - **Build:** `./gradlew build`
 - **Run the game:** `./gradlew installDist && ./build/install/mordovorot/bin/mordovorot` (`./gradlew run` has no terminal, so it only prints the no-terminal message; see `docs/TECH_STACK.md`)
-- **Run the browser game:** `./gradlew :web:serve`, then open `http://localhost:8080` (no rebuild on change: restart it; stop it before `./gradlew check`, as both at once can run the Gradle daemon out of memory)
+- **Run the browser game:** `./gradlew :web:serve -t`, then open `http://localhost:8080`. It rebuilds on change, and `./gradlew check`/`build` can run alongside it (its outputs go to `build/serve`)
 - **Install dependencies:** none to install manually — Gradle resolves everything (`kotlin("test")` on the JUnit 5 platform) on first run
 
 ## Code style

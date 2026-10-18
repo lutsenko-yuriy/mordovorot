@@ -226,7 +226,7 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle. A br
     fair.
 
 ### Feature 9 — Browser client (GH-110)
-- **Running it:** `./gradlew :web:serve` serves the game on `http://localhost:8080`; opening that
+- **Running it:** `./gradlew :web:serve -t` serves the game on `http://localhost:8080`; opening that
   address starts it. The tab title is `Mordovorot`, and the title appears nowhere else on the page.
   The terminal game is unchanged.
 - **Same game, mouse only:** the rules, board sizes 3-5, solvable new games, `Moves: N` and its
