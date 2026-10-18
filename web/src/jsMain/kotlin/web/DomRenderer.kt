@@ -5,6 +5,9 @@ import kotlinx.dom.clear
 import org.w3c.dom.Element
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.HTMLInputElement
+import org.w3c.dom.NEAREST
+import org.w3c.dom.ScrollIntoViewOptions
+import org.w3c.dom.ScrollLogicalPosition
 import org.w3c.dom.pointerevents.PointerEvent
 import web.drag.Axis
 import web.drag.LineOffset
@@ -79,10 +82,13 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
             return
         }
         saveWarning = null
+        // The rebuilt step list starts where this one was scrolled to.
+        val stepsScroll = root.querySelector(".steps")?.scrollTop
         root.clear()
         root.style.setProperty("--side", state.side.toString())
         root.classList.toggle("solved", state.solved)
         root.classList.toggle("dragging", state.drag != null)
+        root.classList.toggle("solution", state.solution != null)
         root.append(
             board(state, justSolved = state.solved && before?.solved == false),
             *listOfNotNull(state.solution?.let { stepList(it) }).toTypedArray(),
@@ -103,6 +109,11 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
                 )
             },
         )
+        root.querySelector(".steps")?.let { steps ->
+            // Back at the top on a Restart; otherwise the current step scrolls into view, if it must.
+            steps.scrollTop = stepsScroll?.takeUnless { state.solution?.atStart == true } ?: 0.0
+            steps.querySelector(".current")?.scrollIntoView(ScrollIntoViewOptions(block = ScrollLogicalPosition.NEAREST))
+        }
         dialog?.let { root.append(element("div", "overlay").apply { append(dialogElement(it, game) { warning -> saveWarning = warning }) }) }
         drawMordie(now)
         root.querySelector("input")?.let { (it as HTMLInputElement).focus() }
