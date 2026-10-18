@@ -12,10 +12,12 @@ internal class StepListWindow {
     private var followed: Int? = null
 
     /** Clamps to [total] steps in [visible] rows, and brings [current] into view when it
-     *  changed since the last call - so a scroll away from it holds until the next step. */
+     *  changed since the last call - so a scroll away from it holds until the next step. Back
+     *  to no current step (Restart) is back to the top. */
     fun update(total: Int, visible: Int, current: Int?) {
         this.total = total
         this.visible = visible
+        if (current == null && followed != null) offset = 0
         if (current != null && current != followed) {
             if (current < offset) offset = current
             if (current >= offset + visible) offset = current - visible + 1

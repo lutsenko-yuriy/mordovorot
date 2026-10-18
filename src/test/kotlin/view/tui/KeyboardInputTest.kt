@@ -173,7 +173,7 @@ class KeyboardInputTest {
         val decorated = KeyboardInput(KeyboardSelection()).decorateBoard(solutionScreen())
 
         assertNull(decorated.selection)
-        assertEquals(listOf("←/→ A/D  step", "R  restart", "W/S  scroll"), decorated.selectionHint)
+        assertEquals(listOf("←/→ A/D  step", "Space/Enter  next", "R  restart", "W/S  scroll"), decorated.selectionHint)
         assertEquals(emptyList(), decorated.shiftHint)
     }
 

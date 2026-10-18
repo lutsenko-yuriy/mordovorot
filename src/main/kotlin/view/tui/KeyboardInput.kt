@@ -13,7 +13,7 @@ private const val CONTROLS_HINT = "F5/F6/F9 Save/Load/New · F8 Give Up · F7 Mo
 
 private val SELECTION_HINT = listOf("W/S  row", "A/D  column")
 private val SHIFT_HINT = listOf("←/→ H/L  shift row", "↑/↓ K/J  shift column")
-private val SOLUTION_HINT = listOf("←/→ A/D  step", "R  restart", "W/S  scroll")
+private val SOLUTION_HINT = listOf("←/→ A/D  step", "Space/Enter  next", "R  restart", "W/S  scroll")
 
 private val SELECT_KEYS = mapOf('w' to Direction.UP, 's' to Direction.DOWN, 'a' to Direction.LEFT, 'd' to Direction.RIGHT)
 private val HJKL_KEYS = mapOf('h' to Direction.LEFT, 'j' to Direction.DOWN, 'k' to Direction.UP, 'l' to Direction.RIGHT)

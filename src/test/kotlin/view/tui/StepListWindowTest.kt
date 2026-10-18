@@ -71,4 +71,23 @@ class StepListWindowTest {
 
         assertEquals(0, window.offset)
     }
+
+    @Test
+    fun `going back to no current step, as Restart does, scrolls back to the top`() {
+        window.update(total = 20, visible = 9, current = 15)
+
+        window.update(total = 20, visible = 9, current = null)
+
+        assertEquals(0, window.offset)
+    }
+
+    @Test
+    fun `with no current step, a scroll holds`() {
+        window.update(total = 20, visible = 9, current = null)
+        window.scroll(4)
+
+        window.update(total = 20, visible = 9, current = null)
+
+        assertEquals(4, window.offset)
+    }
 }
