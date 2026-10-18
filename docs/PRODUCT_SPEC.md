@@ -249,7 +249,8 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle. A br
   picker); without, it opens the size picker, whose Cancel keeps the board already shown.
 - **Leave-site prompt:** with unsaved progress (at least one shift since the last New game,
   successful save or successful load), closing or reloading the tab shows the browser's own
-  "Leave site?" prompt.
+  "Leave site?" prompt. Safari shows it on reload but not when the tab is closed; that is
+  Safari's choice, and the page can't change it.
 - **Arrows:** `▲` above and `▼` below each column, `◀`/`▶` at both ends of each row. A click
   shifts the line by one tile, sliding it with wrap-around.
 - **Dragging:** press a tile and drag. Once the pointer has moved a few pixels, the larger
