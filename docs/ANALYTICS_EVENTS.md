@@ -227,6 +227,46 @@ that game. Likewise, a board solved before the next check never fires it.
 `exit`. Closing the tab and the leave-site prompt are not tracked: a page can't reliably send
 anything while it unloads.
 
+### `game_given_up`
+
+Fired when the player confirms **Yes** in the `Give up and see Mordie's solution?` dialog
+(`[ Give Up ]` / F8). *(GH-126)*
+
+| Property | Type | Description |
+|---|---|---|
+| `board_size` | `number` | The board side (3-5). |
+| `move_count` | `number` | The player's moves on this board, which giving up discards. |
+| `solution_length` | `number` | Mordie's N - its solution's length in moves. |
+| `moves_since_solution_found` | `number` | The player's moves since the `Found it!` line appeared. Absent when a save was loaded with Mordie's solution already found. |
+| `shifts_since_solution_found` | `number` | The same, in shifts. Absent in the same case. |
+| `input_method` | `string` | `mouse`, `keyboard` or `rich_ui`. |
+
+### `solution_replay_started`
+
+Fired when Play starts the replay from the original arrangement on the solution screen: the
+first Play, or Play again after the end. Resuming after a pause doesn't fire it. *(GH-126)*
+
+| Property | Type | Description |
+|---|---|---|
+| `restart` | `boolean` | `true` for Play again after the replay ended. |
+| `board_size` | `number` | The board side (3-5). |
+| `solution_length` | `number` | Mordie's N. |
+| `input_method` | `string` | `mouse`, `keyboard` or `rich_ui`. |
+
+### `solution_replay_finished`
+
+Fired when the replay reaches the solved board. *(GH-126)*
+
+| Property | Type | Description |
+|---|---|---|
+| `board_size` | `number` | The board side (3-5). |
+| `solution_length` | `number` | Mordie's N. |
+| `paused` | `boolean` | Whether the replay was paused on the way. |
+| `input_method` | `string` | `mouse`, `keyboard` or `rich_ui`. |
+
+*GH-126:* `dialog_cancelled.dialog` takes a new value, `give_up` - **No** or Escape in the
+give-up confirmation.
+
 <!-- All events above are sent through `analytics.AnalyticsService`, currently backed by
      `analytics.NoopAnalyticsService` (no real SDK wired up yet). -->
 
@@ -254,3 +294,10 @@ anything while it unloads.
 *GH-99:* `screen_save_dialog` takes a new property `prefilled` (`boolean`) - whether the name field opened with the current save name in it.
 
 *GH-110:* on `web`, the screen views fire on the same triggers as in the TUI. `screen_exit_dialog` never fires there, and `screen_save_dialog.opened_from` never takes `exit_flow`.
+
+*GH-126:* new screen views:
+
+| Screen name | When tracked |
+|---|---|
+| `screen_give_up_dialog` | The `Give up and see Mordie's solution?` confirmation opens (`[ Give Up ]` / F8). Properties `board_size`: number; `move_count`: number - the player's moves so far. *(GH-126)* |
+| `screen_solution` | The solution screen opens. Properties `opened_from`: `give_up`, `after_win` (`[ Mordie's solution ]`), `load` (toolbar Load) or `startup_prompt` (restore prompt); `board_size`: number; `solution_length`: number - Mordie's N. *(GH-126)* |
