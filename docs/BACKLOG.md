@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-- GH-126: Give Up: replay Mordie's solution (WU0-1/5 merged; WU2-5 pending)
+- GH-126: Give Up: replay Mordie's solution (WU0-2/5 merged; WU3-5 pending)
 
 ---
 
