@@ -1,5 +1,8 @@
 package view.tui
 
+import viewmodel.GiveUpButton
+import viewmodel.SolutionState
+
 /** GH-10's 1-based display dialect: tiles are stored 0-based, displayed 1-based. */
 private const val DISPLAY_OFFSET = 1
 
@@ -38,17 +41,21 @@ private const val CLEAR_AND_HOME = "\u001B[2J\u001B[H"
 class ScreenRenderer {
 
     fun render(state: ScreenState, terminalSize: TerminalSize): String {
-        val layout = BoardLayout(terminalSize, state.squareSide, state.arrowsEnabled, state.toolbarShortcuts, state.modeButtons)
+        val layout = state.layout(terminalSize)
         val canvas = Canvas(terminalSize.columns.coerceAtLeast(1), terminalSize.rows.coerceAtLeast(1))
 
         canvas.put(centeredX(state.title, terminalSize), layout.titleRow, state.title)
-        val moves = "Moves: ${state.moveCount}"
-        canvas.put(centeredX(moves, terminalSize), layout.movesRow, moves)
+        if (state.solution == null) {
+            val moves = "Moves: ${state.moveCount}"
+            canvas.put(centeredX(moves, terminalSize), layout.movesRow, moves)
+        }
         state.mordieLine?.let { drawMordieLine(canvas, layout, it, terminalSize) }
         drawGrid(canvas, layout, state)
         if (state.showArrows) drawArrows(canvas, layout, state)
         drawSideHints(canvas, layout, state)
         drawToolbar(canvas, layout, state.toolbarShortcuts)
+        drawGiveUp(canvas, layout, state)
+        state.solution?.let { drawSolution(canvas, layout, it, state.stepOffset) }
         state.message?.let { canvas.put(2, layout.toolbarRow + 2, it) }
         // Anchored to layout.toolbarRow (one row below the status message), not the raw
         // terminal's last row - the unconditional terminalSize.rows - 1 used to land on the
@@ -138,6 +145,27 @@ class ScreenRenderer {
             if (toolbarShortcuts) canvas.putColored(button.x, button.y, button.text, SHORTCUT_COLOR_ON, SHORTCUT_COLOR_OFF)
             else canvas.put(button.x, button.y, button.text)
         }
+    }
+
+    /** Dimmed until Mordie's solution is there to show (GH-126). */
+    private fun drawGiveUp(canvas: Canvas, layout: BoardLayout, state: ScreenState) {
+        val button = layout.giveUpButton() ?: return
+        when {
+            state.giveUpButton == GiveUpButton.DIMMED -> canvas.putColored(button.x, button.y, button.text, DIM_ON, DIM_OFF)
+            state.toolbarShortcuts -> canvas.putColored(button.x, button.y, button.text, SHORTCUT_COLOR_ON, SHORTCUT_COLOR_OFF)
+            else -> canvas.put(button.x, button.y, button.text)
+        }
+    }
+
+    /** The visible window of the step list, the current step reverse video, and Play (GH-126). */
+    private fun drawSolution(canvas: Canvas, layout: BoardLayout, solution: SolutionState, offset: Int) {
+        for (row in 0 until layout.stepRows) {
+            val index = offset + row
+            val step = solution.steps.getOrNull(index) ?: break
+            val y = layout.stepListTop + row
+            if (index == solution.current) canvas.putHighlighted(layout.stepListX, y, step) else canvas.put(layout.stepListX, y, step)
+        }
+        layout.playButton()?.let { canvas.put(it.x, it.y, it.text) }
     }
 
     private fun drawDialog(canvas: Canvas, dialog: Dialog, terminalSize: TerminalSize) {

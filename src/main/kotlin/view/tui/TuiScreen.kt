@@ -97,7 +97,7 @@ internal class TuiScreen(
                 )
                 .copy(dialog = decoratedDialog, message = message),
         )
-        layout = BoardLayout(terminalSize, state.squareSide, state.arrowsEnabled, state.toolbarShortcuts, state.modeButtons)
+        layout = state.layout(terminalSize)
         // Built from state.dialog (post-decorateBoard), not decoratedDialog directly - the two
         // are the same object for MouseInput today, but a future decorateBoard that touches the
         // dialog (e.g. a keyboard mode collapsing decoration into one pass) must not be able to

@@ -1,0 +1,100 @@
+package view.tui
+
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import viewmodel.GiveUpButton
+import viewmodel.Playback
+
+/** GH-126: the Give Up row, and the solution screen's step list and Play button. */
+class BoardLayoutGiveUpTest {
+
+    private val terminalSize = TerminalSize(columns = 80, rows = 40)
+
+    private fun layout(giveUp: GiveUpButton, playback: Playback? = null, side: Int = 4, shortcuts: Boolean = false, size: TerminalSize = terminalSize) =
+        BoardLayout(size, side, arrowsEnabled = playback == null, toolbarShortcuts = shortcuts, giveUp = giveUp, playback = playback)
+
+    @Test
+    fun `the Give Up row takes the blank row between the down arrows and the toolbar`() {
+        val plain = BoardLayout(terminalSize, 4)
+        val layout = layout(GiveUpButton.GIVE_UP)
+
+        assertEquals(plain.toolbarRow, layout.toolbarRow)
+        assertEquals(layout.downArrowPosition(0).second + 1, layout.giveUpRow)
+        assertEquals(layout.toolbarRow - 1, layout.giveUpRow)
+    }
+
+    @Test
+    fun `a live Give Up or Mordie's solution hit-tests to its target`() {
+        val giveUp = layout(GiveUpButton.GIVE_UP)
+        val (x, y) = giveUp.giveUpButtonPosition()!!
+        assertEquals(HitTarget.GiveUp, giveUp.hitTest(x, y))
+        assertEquals("[ Give Up ]", giveUp.giveUpButton()!!.text)
+
+        val solution = layout(GiveUpButton.MORDIES_SOLUTION)
+        val (sx, sy) = solution.giveUpButtonPosition()!!
+        assertEquals(HitTarget.MordiesSolution, solution.hitTest(sx, sy))
+        assertEquals("[ Mordie's solution ]", solution.giveUpButton()!!.text)
+    }
+
+    @Test
+    fun `a dimmed Give Up is drawn but inert, and a hidden one is absent`() {
+        val dimmed = layout(GiveUpButton.DIMMED)
+        val (x, y) = dimmed.giveUpButtonPosition()!!
+        assertEquals(HitTarget.Nothing, dimmed.hitTest(x, y))
+
+        assertNull(layout(GiveUpButton.HIDDEN).giveUpButton())
+    }
+
+    @Test
+    fun `keyboard mode labels it with F8`() {
+        assertEquals("[Give Up F8]", layout(GiveUpButton.GIVE_UP, shortcuts = true).giveUpButton()!!.text)
+        assertEquals("[Mordie's solution F8]", layout(GiveUpButton.MORDIES_SOLUTION, shortcuts = true).giveUpButton()!!.text)
+    }
+
+    @Test
+    fun `Play sits on the down-arrows row and reads Pause while playing and Play again at the end`() {
+        val labels = mapOf(
+            Playback.READY to "[ ▶ Play ]",
+            Playback.PLAYING to "[ ❚❚ Pause ]",
+            Playback.PAUSED to "[ ▶ Play ]",
+            Playback.ENDED to "[ ↻ Play again ]",
+        )
+        for ((playback, label) in labels) {
+            val layout = layout(GiveUpButton.DIMMED, playback)
+            val button = layout.playButton()!!
+            assertEquals(label, button.text)
+            assertEquals(layout.downArrowPosition(0).second, button.y)
+            assertEquals(HitTarget.Play, layout.hitTest(button.x, button.y))
+        }
+        assertNull(layout(GiveUpButton.GIVE_UP).playButton())
+    }
+
+    @Test
+    fun `the step list runs down the grid's rows, right of the board`() {
+        val layout = layout(GiveUpButton.DIMMED, Playback.READY)
+
+        assertEquals(layout.gridOrigin().second, layout.stepListTop)
+        assertEquals(layout.gridHeight, layout.stepRows)
+        assertEquals(layout.rightHintX, layout.stepListX)
+    }
+
+    @Test
+    fun `on the solution screen the arrows are inert`() {
+        val layout = layout(GiveUpButton.DIMMED, Playback.READY)
+        val (x, y) = layout.leftArrowPosition(0)
+
+        assertEquals(HitTarget.Nothing, layout.hitTest(x, y))
+    }
+
+    @Test
+    fun `a 5x5 solution screen fits 80x24, the longest step included`() {
+        val size = TerminalSize(columns = 80, rows = 24)
+        val layout = layout(GiveUpButton.DIMMED, Playback.READY, side = 5, shortcuts = true, size = size)
+
+        assertTrue(layout.toolbarRow + 3 < 24, "the controls hint fits")
+        assertTrue(layout.stepListTop + layout.stepRows <= layout.downArrowPosition(0).second)
+        assertTrue(layout.stepListX + "147. Col 5 ↑ ×1".length <= 80)
+    }
+}

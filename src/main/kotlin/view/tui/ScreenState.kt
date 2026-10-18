@@ -1,6 +1,8 @@
 package view.tui
 
 import InputMode
+import viewmodel.GiveUpButton
+import viewmodel.SolutionState
 
 /** Default (unsolved) board title. */
 const val TITLE_UNSOLVED = "Mordovorot"
@@ -52,6 +54,12 @@ data class ScreenState(
     val moveCount: Int = 0,
     /** What Mordie says under [moveCount] (GH-83), without the `Mordie:` prefix; `null` for none. */
     val mordieLine: String? = null,
+    /** The Give Up row's button (GH-126). */
+    val giveUpButton: GiveUpButton = GiveUpButton.HIDDEN,
+    /** The solution screen (GH-126), `null` off it. */
+    val solution: SolutionState? = null,
+    /** The first step [solution]'s list shows, from [StepListWindow]. */
+    val stepOffset: Int = 0,
 ) {
     companion object {
         /** Builds the board screen's [ScreenState] from the viewModel's current query results. */
@@ -63,14 +71,24 @@ data class ScreenState(
             /** The title once solved - Mordie's ending (GH-83) when there is one. */
             solvedTitle: String = TITLE_SOLVED,
             mordieLine: String? = null,
+            giveUpButton: GiveUpButton = GiveUpButton.HIDDEN,
+            /** On the solution screen the board isn't playable: no arrows, no `Moves:` (GH-126). */
+            solution: SolutionState? = null,
         ): ScreenState =
             ScreenState(
                 title = if (solved) solvedTitle else TITLE_UNSOLVED,
                 board = board,
                 squareSide = squareSide,
-                arrowsEnabled = !solved,
+                arrowsEnabled = !solved && solution == null,
+                showArrows = solution == null,
                 moveCount = moveCount,
                 mordieLine = mordieLine,
+                giveUpButton = giveUpButton,
+                solution = solution,
             )
     }
+
+    /** The geometry this state is drawn and hit-tested against. */
+    fun layout(terminalSize: TerminalSize): BoardLayout =
+        BoardLayout(terminalSize, squareSide, arrowsEnabled, toolbarShortcuts, modeButtons, giveUpButton, solution?.playback)
 }
