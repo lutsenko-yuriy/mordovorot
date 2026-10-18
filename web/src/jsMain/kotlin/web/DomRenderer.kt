@@ -79,10 +79,13 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
             return
         }
         saveWarning = null
+        // The rebuilt step list starts where this one was scrolled to.
+        val stepsScroll = root.querySelector(".steps")?.scrollTop
         root.clear()
         root.style.setProperty("--side", state.side.toString())
         root.classList.toggle("solved", state.solved)
         root.classList.toggle("dragging", state.drag != null)
+        root.classList.toggle("solution", state.solution != null)
         root.append(
             board(state, justSolved = state.solved && before?.solved == false),
             *listOfNotNull(state.solution?.let { stepList(it) }).toTypedArray(),
@@ -91,7 +94,7 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
                 append(
                     text("moves", if (state.movesShown) "Moves: ${state.moves}" else "").also { moves = it },
                     element("div", "mordie").apply { append(element("div", "line")) }.also { mordie = it },
-                    *listOfNotNull(state.solution?.let { replayButtons(it, game, dialog != null) }, giveUpRow(state.giveUp, game, dialog != null)).toTypedArray(),
+                    *listOfNotNull(state.solution?.let { replayButtons(it, { game }, dialog != null) }, giveUpRow(state.giveUp, { game }, dialog != null)).toTypedArray(),
                     element("div", "toolbar").also { toolbar = it }.apply {
                         append(
                             button("New") { game.onNew() }.also { it.disabled = dialog != null },
@@ -103,9 +106,23 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
                 )
             },
         )
+        root.querySelector(".steps")?.let { steps ->
+            // Back at the top on a Restart; otherwise the current step scrolls into view, if it must.
+            steps.scrollTop = stepsScroll?.takeUnless { state.solution?.atStart == true } ?: 0.0
+            (steps.querySelector(".current") as? HTMLElement)?.let { showStep(steps, it) }
+        }
         dialog?.let { root.append(element("div", "overlay").apply { append(dialogElement(it, game) { warning -> saveWarning = warning }) }) }
         drawMordie(now)
         root.querySelector("input")?.let { (it as HTMLInputElement).focus() }
+    }
+
+    /** Scrolls [steps] just enough to show [step]. Unlike `scrollIntoView`, never the page, so
+     *  the buttons under the pointer stay put. */
+    private fun showStep(steps: Element, step: HTMLElement) {
+        val top = step.offsetTop.toDouble()
+        val bottom = top + step.offsetHeight
+        if (top < steps.scrollTop) steps.scrollTop = top
+        if (bottom > steps.scrollTop + steps.clientHeight) steps.scrollTop = bottom - steps.clientHeight
     }
 
     /** Mordie's spot as the feed has it at [time]: a leaving line rises towards Moves; an arriving

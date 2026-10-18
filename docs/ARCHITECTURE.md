@@ -45,13 +45,16 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       ├── SaveFileFormatException.kt # Thrown on a malformed save (from the app, GH-110)
 │       ├── SavedBoard.kt              # Data carrier: square side + tile arrangement (+ optional
 │       │                                # SavedMordie, GH-83)
-│       └── SavedMordie.kt             # Original arrangement + Mordie's N + found flag (GH-83)
+│       ├── SavedMordie.kt             # Original arrangement + Mordie's N + found flag (GH-83);
+│       │                                # Mordie's solution and the solution-screen flag (GH-126)
+│       └── SavedMove.kt               # One step of that solution; mirrors mordie.SolutionMove (GH-126)
 ├── mordie/              # :shared:mordie (depends on kotlinx-coroutines-core)
 │   └── mordie/              # GH-83: the computer opponent - pure domain, no project imports
 │       ├── MoveMetricHeuristic.kt   # Admissible lower bound in the GH-62 move metric:
 │       │                              # ceil(wrong-row tiles/n) + ceil(wrong-column tiles/n)
 │       ├── IdaStarSolver.kt         # Steppable IDA* (explicit stack, O(depth) memory): ruledOut,
-│       │                              # solutionLength; can resume above a saved N
+│       │                              # solutionLength and its SolutionMoves (GH-126); can resume
+│       │                              # above a saved N
 │       ├── MordieSearch.kt          # MordieSearch / SearchProgress / MordieSearchFactory (+ NONE) -
 │       │                              # the seam tests replace with FakeMordieSearchFactory
 │       ├── BackgroundMordieSearch.kt # The real search: one throttled coroutine on
@@ -108,13 +111,24 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                             # its analytics, words its line and ending (GH-83)
 │       ├── MordieText.kt          # Every Mordie string (line bodies + the four endings), singular
 │       │                             # `1 move` included (GH-83)
+│       ├── SolutionScreen.kt      # The session's solution screen: its SolutionReplay, null off it.
+│       │                             # One per session, so a mode switch keeps it (GH-126)
+│       ├── SolutionReplay.kt      # Mordie's steps on their own copy of the original arrangement,
+│       │                             # stepped one shift at a time (next/previous/restart); the
+│       │                             # game's board, moves and Mordie never see it (GH-126)
+│       ├── SolutionSteps.kt       # SolutionStep (one step, the shortest way round its line) and
+│       │                             # the step list's text, `03. Col 3 ↑ ×1` (GH-126)
+│       ├── SolutionState.kt       # What a view draws on the solution screen, plus GiveUpButton
+│       │                             # (DIMMED/GIVE_UP/MORDIES_SOLUTION/HIDDEN) (GH-126)
 │       └── usecase/               # One class per viewmodel flow, delegated to by GameViewModelImpl
 │                                     # (GH-78): NewGameUseCase, SaveGameUseCase, LoadGameUseCase ->
 │                                     # ResolveUnsolvableSaveUseCase (repair / new game / exit, GH-74;
 │                                     # both return LoadResult, GH-41), StartupRestoreUseCase (restore or
 │                                     # size prompt, then Mordie; takes `startupRestoreDone`, which
 │                                     # GameSession seeds true after a mode switch (GH-30), and
-│                                     # `sizeChosenAtLaunch`)
+│                                     # `sizeChosenAtLaunch`), SolutionUseCase (the Give Up row,
+│                                     # entering the solution screen, the replay and its
+│                                     # analytics, GH-126)
 └── testing/             # :shared:testing - plain JVM module of test doubles shared by every
                            # module's tests: FakeBoardModel / FakeSaveRepository /
                            # RecordingAnalyticsService / FakeMordieSearch + FakeMordieSearchFactory /
@@ -124,15 +138,18 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                          # DOM-free code in src/commonMain (tested on the JVM and Node.js), the
 │                          # page in src/jsMain. `./gradlew :web:serve -t` serves it on localhost:8080
 ├── src/commonMain/kotlin/web/
-│   ├── WebGame.kt       # The browser's View: page intents (onArrow/onDrag*/onNew/onSave/onLoad/dialog answers) ->
+│   ├── WebGame.kt       # The browser's View: page intents (onArrow/onDrag*/onNew/onSave/onLoad/dialog answers,
+│   │                    # GH-126's onGiveUp/onMordiesSolution/onReplay*) ->
 │   │                    # GameViewModel, a WebState to the WebRenderer after every change; drains
 │   │                    # uiRequests; tracks the view-layer analytics (screen views, dialog_cancelled)
 │   ├── WebState.kt      # One frame: tiles (1-based), Moves, Mordie's spot, solved, status, WebDialog,
-│   │                    # the dragged line's live offset
+│   │                    # the dragged line's live offset; the Give Up row, the solution screen and
+│   │                    # the replay shift to slide (GH-126)
 │   ├── WebRenderer.kt   # fun interface render(WebState) - the DOM on the page, a recorder in tests
 │   ├── WebRequestRouter.kt # Answers each UiRequest (exhaustive `when`, like UiRequestRouter)
 │   ├── Layout.kt        # layoutOf(width, height): WIDE (wider than tall) or TALL
-│   ├── Slides.kt        # The eased slide after an arrow shift or a drag release, drawn by WrapPositions
+│   ├── Slides.kt        # The eased slide after an arrow shift, a drag release or a replay shift
+│   │                    # (GH-126), drawn by WrapPositions
 │   ├── MessageFeed.kt   # Chat-like timing for Mordie's lines: the old one rises out, then the new rises in
 │   ├── Launch.kt        # startWebGame: the page's wiring (PlatformAnalyticsService "web" wrapped
 │   │                    # by InputMethodAnalyticsService "rich_ui"), app_launched {mode, layout}
@@ -146,12 +163,15 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/jsMain/kotlin/web/DomRenderer.kt # WebState -> DOM, clicks and pointer drags -> WebGame
 │                                       # intents; the page root holds a drag's pointer capture;
 │                                       # runs Slides and MessageFeed on animation frames, redrawing
-│                                       # only the tiles and Mordie's line
+│                                       # only the tiles and Mordie's line; keeps the step list's
+│                                       # scroll across frames, the current step in view (GH-126)
 ├── src/jsMain/kotlin/web/DomDialogs.kt  # The modal dialogs; DomElements.kt: element/text/button helpers
+├── src/jsMain/kotlin/web/DomSolution.kt # The step list, Prev/Next/Restart and the Give Up row (GH-126)
 ├── src/jsMain/kotlin/web/storage/LocalStorageStore.kt # KeyValueStore over window.localStorage
 ├── src/jsMain/resources/index.html     # The page: `<title>Mordovorot</title>`, loads web.js
 ├── src/jsMain/resources/styles.css     # The look: tile colours by home row/column, modal
-│                                       # dialogs, wide/tall by `orientation` (as layoutOf counts)
+│                                       # dialogs, wide/tall by `orientation` (as layoutOf counts);
+│                                       # `.app.solution` for the solution screen's layouts (GH-126)
 ├── src/commonTest/kotlin/web/scenario/ # GH-110 end to end: WebGame over startWebGame's wiring
 │                                       # (WebHarness), recording each WebState (startup, play,
 │                                       # save/load, unsaved progress, drag, analytics; GH-126 give up)
@@ -216,11 +236,14 @@ src/main/kotlin/                # the terminal app (the root project)
         │                                               # arrow/Tab/BackTab/function-key
         │                                               # decoding for keyboard mode, incl.
         │                                               # F7 for the mode-switch shortcut)
-        │                                               # (GH-18, GH-30)
+        │                                               # (GH-18, GH-30), wheel notches (GH-126)
         ├── BoardLayout.kt / HitTarget.kt   # Pure board geometry + click hit-testing, incl. the
         │                                     # toolbar's mode-switch buttons
-        │                                     # (HitTarget.ToolbarMode) (GH-30) and the reserved
-        │                                     # Mordie rows under `Moves:` (GH-83)
+        │                                     # (HitTarget.ToolbarMode) (GH-30), the reserved
+        │                                     # Mordie rows under `Moves:` (GH-83), and the Give Up
+        │                                     # row, the step list and Prev/Next/Restart (GH-126)
+        ├── StepListWindow.kt # Which steps of the solution screen's list show: follows the
+        │                      # current step, scrolled by the wheel or W/S (GH-126)
         ├── WordWrap.kt      # Shared word wrap for dialogs and the Mordie line (GH-83)
         ├── LineSelection.kt # Pure keyboard line selection (GH-101, replaced GH-18's ArrowRing):
         │                      # LineSelection(row, col, axis) - WASD select with wraparound,
@@ -260,7 +283,8 @@ src/main/kotlin/                # the terminal app (the root project)
         │                      # LoadDialogController (toolbar Load + the Load-shaped dialog),
         │                      # RestoreDialogController (startup restore prompt over it),
         │                      # SizeDialogController (toolbar New/F9 + ChooseBoardSize),
-        │                      # UnsolvableDialogController (GH-74's repair/new game/exit)
+        │                      # UnsolvableDialogController (GH-74's repair/new game/exit),
+        │                      # GiveUpDialogController (Give Up/F8's confirmation, GH-126)
         ├── UiRequestRouter.kt # Answers each UiRequest with the dialog that owns it - an
         │                      # exhaustive `when`, so a new request needs an answer to compile
         ├── ToolbarRouter.kt # Runs the activated toolbar button: Save/Load/Exit/New and the
@@ -306,8 +330,9 @@ src/test/kotlin/                # the terminal app's tests; board_model / analyt
 │                           # through ViewModelImpl's delegation; CatchingNonControlTest pins
 │                           # GameSession's catch-all (GH-65). The rest (Delegation, Cancellation,
 │                           # Mordie, MoveCount, NewGame, ShiftSources, ShiftSteps, SizePrompt,
-│                           # UnsavedProgress, UnsolvableExitHook,
-│                           # CatchingNonCancellation, MordieText, SaveInfo) are in
+│                           # UnsavedProgress, UnsolvableExitHook, GiveUp, SolutionSaveLoad,
+│                           # CatchingNonCancellation, MordieText, SaveInfo, and GH-126's
+│                           # SolutionReplay/SolutionSteps) are in
 │                           # shared/viewmodel's commonTest, built by its own testViewModel (GH-41)
 ├── storage/               # FileSaveRepository coverage
 ├── view/tui/              # TUI coverage (GH-3, WU2-WU5)
@@ -423,6 +448,21 @@ title (`mordieEnding() ?: TITLE_SOLVED`); `BoardLayout` reserves `mordieRows` un
 `Moves:` from the longest possible line at `mordieWrapWidth`, so the grid stays put. Every `restoreOnStartup` path ends with
 `mordie.ensureStarted`, which does nothing once Mordie is bound (e.g. after a mode switch).
 
+**Give Up and the solution screen (GH-126).** Mordie's search keeps its solution's moves
+(`SearchProgress.solution`), `Mordie` holds them, and a found save stores them. `SolutionUseCase`
+owns the rest: `giveUpButton()` from Mordie's state and the board, entering the screen
+(`giveUp()`, `showSolution()` after a win, or a load of a solution-screen save), and the
+replay. On the screen the board holds the original arrangement with 0 moves, which is exactly
+what a save there writes; `SolutionReplay` steps its own copy, so a replay never counts moves,
+feeds Mordie, fires `board_solved` or sets unsaved progress. While it is open,
+`boardState()` is the replay's, `shift()` does nothing and `mordieLine()` says how many moves
+Mordie made. `replayNext()`/`replayPrevious()` return the one shift they made, so a view can
+animate it. `SolutionScreen` is one per session, like `CurrentSaveName`, so a terminal mode
+switch keeps the screen and the replay's place. The give-up confirmation is the view's, like
+`[ New ]`'s size picker, not a `UiRequest`: `GiveUpDialogController` and `WebGame` ask, then
+call the synchronous `giveUp()`. `screen_solution` is tracked here rather than in the views,
+since all four ways onto the screen are shared flows.
+
 ### view
 UI only: `view.tui.TuiView` drives the mouse/keyboard TUI, renders the board and
 calls into `ViewModel`. Should not manipulate `board_model` directly. The line-based
@@ -452,7 +492,10 @@ before GH-62) loads as 0; a non-integer or negative one is a
 `SaveFileFormatException`. GH-83 adds two optional lines: line 4 is the original
 arrangement and line 5 is `<N> found` or `<N> searching`. A missing or blank line 4 (an
 older save, or a GH-74 Repair write) means no Mordie data. Once line 4 is present, a bad
-line 4 or 5 is a `SaveFileFormatException`.
+line 4 or 5 is a `SaveFileFormatException`. GH-126 adds two more: line 6 is Mordie's solution on
+a found save, space-separated `r<i>:<k>`/`c<i>:<k>` (rotate row i right, or column i down, by k),
+and line 7 is `solution` on a save made on the solution screen. A missing or blank line means
+neither; a solution that doesn't solve the original in N moves is a `SaveFileFormatException`.
 
 ### analytics
 Cross-cutting: `AnalyticsService` is injected into `viewmodel` (and any layer
