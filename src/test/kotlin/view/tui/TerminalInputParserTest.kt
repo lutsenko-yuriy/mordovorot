@@ -35,13 +35,21 @@ class TerminalInputParserTest {
     }
 
     @Test
-    fun `an SGR wheel notch does not produce a MouseClick`() {
+    fun `an SGR wheel notch decodes to a Wheel, not a MouseClick (GH-126)`() {
         val parser = TerminalInputParser()
 
-        // Pb 64 (bit 0x40 set) - a scroll notch, not a button; wheel reports have no release.
-        val events = parser.feed(csi("<64;5;3M"))
+        // Pb 64/65 (bit 0x40 set) - a scroll notch up/down, not a button; no release report.
+        assertEquals(listOf(TerminalEvent.Wheel(up = true)), parser.feed(csi("<64;5;3M")))
+        assertEquals(listOf(TerminalEvent.Wheel(up = false)), parser.feed(csi("<65;5;3M")))
+    }
 
-        assertEquals(emptyList(), events)
+    @Test
+    fun `a legacy X10 wheel notch decodes to a Wheel (GH-126)`() {
+        val parser = TerminalInputParser()
+
+        // Cb 96/97 is 64/65 offset by 32.
+        assertEquals(listOf(TerminalEvent.Wheel(up = true)), parser.feed(byteArrayOf(ESC, '['.code.toByte(), 'M'.code.toByte(), 96, 37, 35)))
+        assertEquals(listOf(TerminalEvent.Wheel(up = false)), parser.feed(byteArrayOf(ESC, '['.code.toByte(), 'M'.code.toByte(), 97, 37, 35)))
     }
 
     @Test

@@ -135,12 +135,12 @@ class ViewModelGiveUpTest {
     fun `giving up shows the original arrangement with Mordie's steps, ready to play`() {
         givenUp()
 
-        assertEquals(SolutionState(steps, current = null, Playback.READY), viewModel.solution())
+        assertEquals(SolutionState(steps, current = null, atStart = true, atEnd = false), viewModel.solution())
         assertContentEquals(original, viewModel.boardState())
         assertContentEquals(original, board.boardArray)
         assertEquals(0, viewModel.moveCount())
         assertFalse(viewModel.isSolved())
-        assertEquals(GiveUpButton.DIMMED, viewModel.giveUpButton())
+        assertEquals(GiveUpButton.HIDDEN, viewModel.giveUpButton())
         assertEquals("Here's how I did it in 2 moves!", viewModel.mordieLine())
         assertNull(viewModel.mordieEnding())
     }
@@ -180,7 +180,7 @@ class ViewModelGiveUpTest {
 
         viewModel.showSolution()
 
-        assertEquals(SolutionState(steps, current = null, Playback.READY), viewModel.solution())
+        assertEquals(SolutionState(steps, current = null, atStart = true, atEnd = false), viewModel.solution())
         assertContentEquals(original, viewModel.boardState())
         assertEquals(mapOf("opened_from" to "after_win", "board_size" to 3, "solution_length" to 2), event("screen_solution"))
         assertEquals(0, count("game_given_up"))
@@ -192,9 +192,10 @@ class ViewModelGiveUpTest {
         assertFalse(viewModel.hasUnsavedProgress())
 
         viewModel.shiftLeft(0)
-        viewModel.playPause()
-        while (viewModel.replayShift()) Unit
-        viewModel.replayMove()
+        viewModel.replayNext()
+        viewModel.replayNext()
+        viewModel.replayPrevious()
+        viewModel.replayRestart()
 
         assertFalse(unsavedProgress.unsaved)
     }
@@ -212,70 +213,76 @@ class ViewModelGiveUpTest {
 
         assertContentEquals(original, board.boardArray)
         assertEquals(0, viewModel.moveCount())
-        assertEquals(Playback.READY, viewModel.solution()!!.playback)
+        assertTrue(viewModel.solution()!!.atStart)
     }
 
     // --- the replay ---
 
     @Test
-    fun `Play replays Mordie's steps on the screen's board, never the game's`() {
+    fun `Next steps Mordie's solution one shift at a time on the screen's board, never the game's`() {
         givenUp()
 
-        viewModel.playPause()
-        assertEquals(SolutionState(steps, current = 0, Playback.PLAYING), viewModel.solution())
-        assertTrue(viewModel.replayShift())
+        assertEquals(SolutionStep(isRow = true, index = 0, forward = true, count = 1), viewModel.replayNext())
+        assertEquals(SolutionState(steps, current = 0, atStart = false, atEnd = false), viewModel.solution())
         assertContentEquals(afterFirstStep, viewModel.boardState())
-        assertTrue(viewModel.replayShift())
+        viewModel.replayNext()
 
         assertContentEquals(solved, viewModel.boardState())
-        assertEquals(SolutionState(steps, current = 1, Playback.ENDED), viewModel.solution())
+        assertEquals(SolutionState(steps, current = 1, atStart = false, atEnd = true), viewModel.solution())
+        assertNull(viewModel.replayNext())
         assertContentEquals(original, board.boardArray)
         assertEquals(0, count("board_solved"))
     }
 
     @Test
-    fun `replayMove plays a whole step and returns it`() {
+    fun `Prev undoes a shift and Restart goes back to the original arrangement`() {
         givenUp()
-        viewModel.playPause()
+        viewModel.replayNext()
+        viewModel.replayNext()
 
-        assertEquals(SolutionStep(isRow = true, index = 0, forward = true, count = 1), viewModel.replayMove())
+        assertEquals(SolutionStep(isRow = false, index = 0, forward = false, count = 1), viewModel.replayPrevious())
         assertContentEquals(afterFirstStep, viewModel.boardState())
+        viewModel.replayRestart()
+
+        assertEquals(SolutionState(steps, current = null, atStart = true, atEnd = false), viewModel.solution())
+        assertContentEquals(original, viewModel.boardState())
+        assertNull(viewModel.replayPrevious())
     }
 
     @Test
-    fun `solution_replay_started fires on the first Play and on Play again, not on resume`() {
+    fun `solution_replay_started fires on each Next off the start, restart once a run has started on this visit`() {
         givenUp()
 
-        viewModel.playPause()
-        viewModel.playPause()
-        viewModel.playPause()
+        viewModel.replayNext()
+        viewModel.replayNext()
         assertEquals(mapOf("restart" to false, "board_size" to 3, "solution_length" to 2), event("solution_replay_started"))
 
-        viewModel.replayMove()
-        viewModel.replayMove()
-        viewModel.playPause()
+        viewModel.replayRestart()
+        viewModel.replayNext()
+        viewModel.replayPrevious()
+        viewModel.replayNext()
+
         val starts = analytics.events.filter { it.name == "solution_replay_started" }.map { it.properties["restart"] }
-        assertEquals(listOf(false, true), starts)
-        assertContentEquals(original, viewModel.boardState())
+        assertEquals(listOf(false, true, true), starts)
     }
 
     @Test
-    fun `solution_replay_finished fires once per run, with whether it was paused`() {
-        givenUp()
-        viewModel.playPause()
-        viewModel.playPause()
-        viewModel.playPause()
-        viewModel.replayShift()
-        viewModel.replayShift()
-        viewModel.replayShift()
-        viewModel.replayMove()
-        assertEquals(mapOf("board_size" to 3, "solution_length" to 2, "paused" to true), event("solution_replay_finished"))
+    fun `solution_replay_finished fires once per run on reaching the end, with whether Prev was used`() {
+        // Three shifts, so Prev can step back without returning to the start. Never checked against the board.
+        reveal(solution = path + SolutionMove(isRow = true, index = 1, amount = 1))
+        viewModel.giveUp()
+        viewModel.replayNext()
+        viewModel.replayNext()
+        viewModel.replayPrevious()
+        repeat(2) { viewModel.replayNext() }
+        assertEquals(mapOf("board_size" to 3, "solution_length" to 3, "stepped_back" to true), event("solution_replay_finished"))
 
-        viewModel.playPause()
-        viewModel.replayMove()
-        viewModel.replayMove()
+        viewModel.replayPrevious()
+        viewModel.replayNext()
+        viewModel.replayRestart()
+        repeat(3) { viewModel.replayNext() }
 
-        val finished = analytics.events.filter { it.name == "solution_replay_finished" }.map { it.properties["paused"] }
+        val finished = analytics.events.filter { it.name == "solution_replay_finished" }.map { it.properties["stepped_back"] }
         assertEquals(listOf(true, false), finished)
     }
 
@@ -283,11 +290,11 @@ class ViewModelGiveUpTest {
     fun `off the screen there is no solution and the replay does nothing`() {
         reveal()
 
-        viewModel.playPause()
+        viewModel.replayRestart()
 
         assertNull(viewModel.solution())
-        assertFalse(viewModel.replayShift())
-        assertNull(viewModel.replayMove())
+        assertNull(viewModel.replayNext())
+        assertNull(viewModel.replayPrevious())
         assertEquals(0, count("solution_replay_started"))
     }
 }

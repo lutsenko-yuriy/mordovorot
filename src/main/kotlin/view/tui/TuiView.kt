@@ -64,6 +64,10 @@ class TuiView internal constructor(
                         screen.repaint()
                     }
                     InputAction.Redraw -> screen.repaint()
+                    is InputAction.Scroll -> {
+                        screen.scrollSteps(action.delta)
+                        screen.repaint()
+                    }
                     InputAction.Quit -> return@coroutineScope
                     else -> {}
                 }

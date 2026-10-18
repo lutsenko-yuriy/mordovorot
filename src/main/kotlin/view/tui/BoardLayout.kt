@@ -1,6 +1,8 @@
 package view.tui
 
 import InputMode
+import viewmodel.GiveUpButton
+import viewmodel.SolutionState
 
 /** Interior character width of one board cell - wide enough for a 2-digit 1-based tile value
  *  plus a padding space on each side (` 12 `). Internal (not private) so [ScreenRenderer] can
@@ -16,7 +18,7 @@ internal const val CELL_WIDTH = 4
  * Layout, top to bottom: title row, the moves row (GH-62), the Mordie rows (GH-83, [mordieRows]),
  * a blank row, the up-arrows row, the grid (box-drawing
  * borders around [squareSide] x [squareSide] cells, with left/right arrows flanking each row),
- * the down-arrows row, a blank row, the toolbar row, and (GH-30) the mode row directly below it
+ * the down-arrows row, the Give Up row (GH-126, [giveUpRow]), the toolbar row, and (GH-30) the mode row directly below it
  * for the mode-switch button - kept on their own row, not appended to the toolbar
  * row, so a narrow terminal that fit the original three-button toolbar still fits it (audit
  * finding on PR #38: a single five-button row overflowed off-screen below 51 columns). Centered
@@ -34,6 +36,10 @@ class BoardLayout(
     private val toolbarShortcuts: Boolean = false,
     /** The other input modes offered on their own row below the toolbar (GH-30, [modeRow]). */
     private val modeButtons: List<InputMode> = emptyList(),
+    /** The Give Up row's button (GH-126): drawn dimmed and inert when [GiveUpButton.DIMMED]. */
+    private val giveUp: GiveUpButton = GiveUpButton.HIDDEN,
+    /** The solution screen (GH-126), `null` off it. */
+    private val solution: SolutionState? = null,
 ) {
     private val innerCols = squareSide * CELL_WIDTH + (squareSide + 1)
     private val innerRows = squareSide * 2 + 1
@@ -74,6 +80,14 @@ class BoardLayout(
     private val downArrowRow = gridTop + innerRows
     internal val toolbarRow = downArrowRow + 2
 
+    /** The Give Up row, between the down arrows and the toolbar (GH-126 D4). */
+    internal val giveUpRow = downArrowRow + 1
+
+    /** The solution screen's step list (GH-126): right of the board, down the grid's rows. */
+    internal val stepListX: Int get() = rightHintX
+    internal val stepListTop: Int get() = gridTop
+    internal val stepRows: Int get() = innerRows
+
     /** The mode-switch row, directly below [toolbarRow] (GH-30). */
     internal val modeRow = toolbarRow + 1
 
@@ -101,6 +115,35 @@ class BoardLayout(
     fun loadButtonPosition(): Pair<Int, Int> = buttonPosition(HitTarget.ToolbarLoad)
     fun exitButtonPosition(): Pair<Int, Int> = buttonPosition(HitTarget.ToolbarExit)
     fun newButtonPosition(): Pair<Int, Int> = buttonPosition(HitTarget.ToolbarNew)
+    fun giveUpButtonPosition(): Pair<Int, Int>? = giveUpButton()?.let { it.x to it.y }
+
+    /** The Give Up row's button, `null` when [GiveUpButton.HIDDEN]. Its target is
+     *  [HitTarget.Nothing] while dimmed. */
+    internal fun giveUpButton(): ToolbarButton? {
+        val (target, label) = when (giveUp) {
+            GiveUpButton.HIDDEN -> return null
+            GiveUpButton.DIMMED -> HitTarget.Nothing to "Give Up"
+            GiveUpButton.GIVE_UP -> HitTarget.GiveUp to "Give Up"
+            GiveUpButton.MORDIES_SOLUTION -> HitTarget.MordiesSolution to "Mordie's solution"
+        }
+        return layoutRow(listOf(target to if (toolbarShortcuts) "[$label F8]" else "[ $label ]"), giveUpRow).single()
+    }
+
+    /** The solution screen's Prev / Next / Restart, on the down-arrows row (GH-126 D4). One with
+     *  nowhere to go - Prev and Restart at the start, Next at the end - targets
+     *  [HitTarget.Nothing], and is drawn dimmed. Empty off the screen. */
+    internal fun replayButtons(): List<ToolbarButton> {
+        val solution = solution ?: return emptyList()
+        fun live(target: HitTarget, live: Boolean) = if (live) target else HitTarget.Nothing
+        return layoutRow(
+            listOf(
+                live(HitTarget.ReplayPrevious, !solution.atStart) to "[ ◀ Prev ]",
+                live(HitTarget.ReplayNext, !solution.atEnd) to "[ Next ▶ ]",
+                live(HitTarget.ReplayRestart, !solution.atStart) to "[ ↻ Restart ]",
+            ),
+            downArrowRow,
+        )
+    }
 
     /** Looks a button up by target rather than a fixed index or row - defensive against either
      *  moving again (GH-30's mode buttons already moved once, off the toolbar row entirely). */
@@ -108,7 +151,7 @@ class BoardLayout(
         toolbarButtons().first { it.target == target }.let { it.range.first to it.y }
 
     fun hitTest(x: Int, y: Int): HitTarget {
-        if (arrowsEnabled) {
+        if (arrowsEnabled && solution == null) {
             for (row in 0 until squareSide) {
                 if (x to y == leftArrowPosition(row)) return HitTarget.ShiftLeft(row)
                 if (x to y == rightArrowPosition(row)) return HitTarget.ShiftRight(row)
@@ -118,9 +161,8 @@ class BoardLayout(
                 if (x to y == downArrowPosition(col)) return HitTarget.ShiftDown(col)
             }
         }
-        if (y == toolbarRow || y == modeRow) {
-            for (button in toolbarButtons()) if (y == button.y && x in button.range) return button.target
-        }
+        val buttons = toolbarButtons() + listOfNotNull(giveUpButton()) + replayButtons()
+        for (button in buttons) if (y == button.y && x in button.range) return button.target
         return HitTarget.Nothing
     }
 
@@ -190,7 +232,7 @@ class BoardLayout(
         /** The longest line Mordie says, at a 2-digit move count (GH-83). */
         const val LONGEST_MORDIE_LINE = "Mordie: This one is hard! I have already made 99 moves and have not solved it yet!"
 
-        /** The down-arrows row, a blank row, the toolbar row. */
+        /** The down-arrows row, the Give Up row, the toolbar row. */
         const val BOTTOM_EXTRA = 3
 
         /** The mode row, the status message and the controls hint (see [ScreenRenderer.render]). */

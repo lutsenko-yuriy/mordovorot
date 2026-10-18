@@ -20,95 +20,65 @@ class SolutionReplayTest {
     private val replay = SolutionReplay(original, side = 4, steps = listOf(rowStep, colStep))
 
     @Test
-    fun `a new replay is ready on the original arrangement with no step highlighted`() {
-        assertEquals(Playback.READY, replay.playback)
+    fun `a new replay is at the start of the original arrangement with no step highlighted`() {
+        assertTrue(replay.atStart)
+        assertFalse(replay.atEnd)
         assertNull(replay.step)
         assertContentEquals(original, replay.tiles)
-        assertFalse(replay.shift())
-        assertContentEquals(original, replay.tiles)
     }
 
     @Test
-    fun `Play highlights the first step and each shift moves one tile along`() {
-        replay.playPause()
+    fun `Next applies one shift, highlights its step, and returns it as a one-shift step`() {
+        assertEquals(rowStep.copy(count = 1), replay.next())
 
-        assertEquals(Playback.PLAYING, replay.playback)
-        assertEquals(0, replay.step)
-        assertFalse(replay.shift())
         assertContentEquals(afterRowShift, replay.tiles)
-        assertTrue(replay.shift())
+        assertEquals(0, replay.step)
+        assertFalse(replay.atStart)
+
+        replay.next()
         assertContentEquals(afterRowStep, replay.tiles)
-        assertEquals(0, replay.step, "the finished step stays highlighted until the next shift")
-    }
+        assertEquals(0, replay.step)
 
-    @Test
-    fun `the last shift of the last step ends the replay on the solved board`() {
-        replay.playPause()
-        repeat(2) { replay.shift() }
-
-        assertTrue(replay.shift())
-
+        assertEquals(colStep.copy(count = 1), replay.next())
         assertEquals(1, replay.step)
-        assertEquals(Playback.ENDED, replay.playback)
+    }
+
+    @Test
+    fun `the last Next reaches the solved board, and Next does nothing there`() {
+        repeat(3) { replay.next() }
+
+        assertTrue(replay.atEnd)
         assertContentEquals(solved, replay.tiles)
-        assertFalse(replay.shift())
+        assertNull(replay.next())
         assertContentEquals(solved, replay.tiles)
     }
 
     @Test
-    fun `Pause mid-step holds, and Play resumes where it stopped`() {
-        replay.playPause()
-        replay.shift()
+    fun `Prev undoes the last shift and returns the shift it made, back to no highlight at the start`() {
+        repeat(3) { replay.next() }
 
-        replay.playPause()
-
-        assertEquals(Playback.PAUSED, replay.playback)
-        assertTrue(replay.pausedThisRun)
-        assertFalse(replay.shift())
-        assertContentEquals(afterRowShift, replay.tiles)
-        replay.playPause()
-        assertEquals(Playback.PLAYING, replay.playback)
-        assertTrue(replay.shift())
+        assertEquals(colStep.copy(forward = true, count = 1), replay.previous())
         assertContentEquals(afterRowStep, replay.tiles)
-    }
-
-    @Test
-    fun `Play again after the end restarts from the original arrangement`() {
-        replay.playPause()
-        replay.playPause()
-        replay.playPause()
-        repeat(3) { replay.shift() }
-
-        replay.playPause()
-
-        assertEquals(Playback.PLAYING, replay.playback)
         assertEquals(0, replay.step)
-        assertFalse(replay.pausedThisRun)
+
+        assertEquals(rowStep.copy(forward = false, count = 1), replay.previous())
+        assertContentEquals(afterRowShift, replay.tiles)
+        replay.previous()
+
+        assertTrue(replay.atStart)
+        assertNull(replay.step)
         assertContentEquals(original, replay.tiles)
+        assertNull(replay.previous())
     }
 
     @Test
-    fun `move plays a whole step, or the rest of one paused mid-way`() {
-        replay.playPause()
+    fun `Restart goes back to the original arrangement`() {
+        repeat(2) { replay.next() }
 
-        assertEquals(rowStep, replay.move())
-        assertContentEquals(afterRowStep, replay.tiles)
-        assertEquals(colStep, replay.move())
-        assertEquals(Playback.ENDED, replay.playback)
-        assertNull(replay.move())
+        replay.restart()
 
-        replay.playPause()
-        replay.shift()
-        assertEquals(rowStep.copy(count = 1), replay.move())
-        assertContentEquals(afterRowStep, replay.tiles)
-    }
-
-    @Test
-    fun `move does nothing unless playing`() {
-        assertNull(replay.move())
-        replay.playPause()
-        replay.playPause()
-        assertNull(replay.move())
+        assertTrue(replay.atStart)
+        assertNull(replay.step)
         assertContentEquals(original, replay.tiles)
     }
 

@@ -32,5 +32,17 @@ sealed class HitTarget {
     /** A click on row [index] of a dialog's selectable list (WU4's Load dialog). */
     data class DialogListRow(val index: Int) : HitTarget()
 
+    /** The live `[ Give Up ]` button / F8 (GH-126) - opens the give-up confirmation. */
+    object GiveUp : HitTarget()
+
+    /** `[ Mordie's solution ]` after a win / F8 (GH-126) - opens the solution screen. */
+    object MordiesSolution : HitTarget()
+
+    /** The solution screen's Prev / Next / Restart (GH-126): one shift back, one forward, or
+     *  back to the original arrangement. */
+    object ReplayPrevious : HitTarget()
+    object ReplayNext : HitTarget()
+    object ReplayRestart : HitTarget()
+
     object Nothing : HitTarget()
 }

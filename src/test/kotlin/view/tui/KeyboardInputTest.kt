@@ -6,7 +6,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import viewmodel.GiveUpButton
 import viewmodel.ShiftKey
+import viewmodel.SolutionState
 
 /**
  * Direct coverage of [KeyboardInput]'s board (GH-101's WASD/HJKL) and dialog (GH-18) translation, in isolation from
@@ -104,11 +106,75 @@ class KeyboardInputTest {
     }
 
     @Test
-    fun `F7 requests a switch to mouse mode, F8 does nothing (GH-79)`() {
+    fun `F7 requests a switch to mouse mode`() {
         val input = input()
 
         assertEquals(InputAction.Activate(HitTarget.ToolbarMode(InputMode.MOUSE)), input.onBoardEvent(TerminalEvent.FunctionKey(7), boardLayout))
-        assertEquals(InputAction.None, input.onBoardEvent(TerminalEvent.FunctionKey(8), boardLayout))
+    }
+
+    @Test
+    fun `F8 activates whichever Give Up row button is live, and nothing while it is dimmed or hidden (GH-126)`() {
+        val expected = mapOf(
+            GiveUpButton.GIVE_UP to InputAction.Activate(HitTarget.GiveUp),
+            GiveUpButton.MORDIES_SOLUTION to InputAction.Activate(HitTarget.MordiesSolution),
+            GiveUpButton.DIMMED to InputAction.None,
+            GiveUpButton.HIDDEN to InputAction.None,
+        )
+        for ((button, action) in expected) {
+            val input = KeyboardInput(KeyboardSelection())
+            input.decorateBoard(unsolvedBoard().copy(giveUpButton = button))
+
+            assertEquals(action, input.onBoardEvent(TerminalEvent.FunctionKey(8), boardLayout), "$button")
+        }
+    }
+
+    private fun solutionScreen() = ScreenState.forBoard(
+        (0 until 16).toList(), 4, solved = false, giveUpButton = GiveUpButton.DIMMED,
+        solution = SolutionState(listOf("1. Row 1 → ×1"), current = null, atStart = true, atEnd = false),
+    )
+
+    @Test
+    fun `on the solution screen the arrows and A D step, Space and Enter go next, R restarts, W S up down scroll (GH-126)`() {
+        val selection = KeyboardSelection()
+        val input = KeyboardInput(selection)
+        input.decorateBoard(solutionScreen())
+
+        val expected = mapOf(
+            arrow(Direction.LEFT) to InputAction.Activate(HitTarget.ReplayPrevious),
+            key('a') to InputAction.Activate(HitTarget.ReplayPrevious),
+            arrow(Direction.RIGHT) to InputAction.Activate(HitTarget.ReplayNext),
+            key('D') to InputAction.Activate(HitTarget.ReplayNext),
+            key(' ') to InputAction.Activate(HitTarget.ReplayNext),
+            TerminalEvent.Enter to InputAction.Activate(HitTarget.ReplayNext),
+            key('r') to InputAction.Activate(HitTarget.ReplayRestart),
+            key('w') to InputAction.Scroll(-1),
+            arrow(Direction.UP) to InputAction.Scroll(-1),
+            key('S') to InputAction.Scroll(1),
+            arrow(Direction.DOWN) to InputAction.Scroll(1),
+            key('h') to InputAction.None,
+            key('j') to InputAction.None,
+        )
+        for ((event, action) in expected) assertEquals(action, input.onBoardEvent(event, boardLayout), "$event")
+        assertEquals(LineSelection.INITIAL, selection.current)
+        assertEquals(InputAction.Activate(HitTarget.ToolbarSave), input.onBoardEvent(TerminalEvent.FunctionKey(5), boardLayout))
+    }
+
+    @Test
+    fun `off the solution screen Space, Enter and R do nothing (GH-126)`() {
+        val input = input()
+
+        assertEquals(InputAction.None, input.onBoardEvent(key(' '), boardLayout))
+        assertEquals(InputAction.None, input.onBoardEvent(TerminalEvent.Enter, boardLayout))
+        assertEquals(InputAction.None, input.onBoardEvent(key('r'), boardLayout))
+    }
+
+    @Test
+    fun `the solution screen's hints are step, restart and scroll, with no shift hint (GH-126)`() {
+        val decorated = KeyboardInput(KeyboardSelection()).decorateBoard(solutionScreen())
+
+        assertNull(decorated.selection)
+        assertEquals(listOf("←/→ A/D  step", "Space/Enter  next", "R  restart", "W/S  scroll"), decorated.selectionHint)
+        assertEquals(emptyList(), decorated.shiftHint)
     }
 
     @Test
@@ -150,7 +216,7 @@ class KeyboardInputTest {
         assertFalse(unsolved.showArrows)
         assertEquals(listOf("W/S  row", "A/D  column"), unsolved.selectionHint)
         assertEquals(listOf("←/→ H/L  shift row", "↑/↓ K/J  shift column"), unsolved.shiftHint)
-        assertEquals("F5/F6/F9 Save/Load/New · F7 Mouse · Esc", unsolved.controlsHint)
+        assertEquals("F5/F6/F9 Save/Load/New · F8 Give Up · F7 Mouse · Esc", unsolved.controlsHint)
         assertEquals(true, unsolved.toolbarShortcuts)
         assertEquals(listOf(InputMode.MOUSE), unsolved.modeButtons)
 

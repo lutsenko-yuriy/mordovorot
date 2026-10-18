@@ -54,8 +54,7 @@ class ViewModelSolutionSaveLoadTest {
     @Test
     fun `a save on the solution screen holds the original, no moves and the solution-screen flag`() = runTest {
         val viewModel = viewModel().givenUp()
-        viewModel.playPause()
-        viewModel.replayMove()
+        viewModel.replayNext()
 
         viewModel.save("s")
 
@@ -69,7 +68,7 @@ class ViewModelSolutionSaveLoadTest {
 
         viewModel.load("s")
 
-        assertEquals(Playback.READY, viewModel.solution()?.playback)
+        assertEquals(true, viewModel.solution()?.atStart)
         assertNull(viewModel.solution()?.current)
         assertContentEquals(original, viewModel.boardState())
         assertEquals("Here's how I did it in 2 moves!", viewModel.mordieLine())
@@ -84,7 +83,7 @@ class ViewModelSolutionSaveLoadTest {
 
         FakeViewModelUi(confirmRestoreResponses = mutableListOf(true)).drive(viewModel) { viewModel.restoreOnStartup() }
 
-        assertEquals(Playback.READY, viewModel.solution()?.playback)
+        assertEquals(true, viewModel.solution()?.atStart)
         assertEquals("startup_prompt", event("screen_solution")["opened_from"])
     }
 
@@ -96,7 +95,7 @@ class ViewModelSolutionSaveLoadTest {
 
         viewModel.load("s")
 
-        assertEquals(Playback.READY, viewModel.solution()?.playback)
+        assertEquals(true, viewModel.solution()?.atStart)
         assertEquals(listOf("1. Row 1 → ×1", "2. Col 1 ↓ ×1"), viewModel.solution()?.steps)
     }
 
@@ -128,19 +127,18 @@ class ViewModelSolutionSaveLoadTest {
 
         viewModel.load("missing")
 
-        assertEquals(Playback.READY, viewModel.solution()?.playback)
+        assertEquals(true, viewModel.solution()?.atStart)
     }
 
     @Test
     fun `a viewModel rebuilt around the session's SolutionScreen keeps the replay where it was`() {
         val before = viewModel().givenUp()
-        before.playPause()
-        before.replayMove()
+        before.replayNext()
 
         val after = viewModel()
 
         assertEquals(before.solution(), after.solution())
-        assertEquals(Playback.PLAYING, after.solution()?.playback)
+        assertEquals(0, after.solution()?.current)
         assertContentEquals(before.boardState(), after.boardState())
     }
 }

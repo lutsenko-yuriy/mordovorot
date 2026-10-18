@@ -105,14 +105,14 @@ interface GameViewModel {
      *  [mordieLine] says how many moves Mordie made, and shifts do nothing. */
     fun solution(): SolutionState?
 
-    /** The solution screen's Play / Pause / Play again; nothing off the screen. */
-    fun playPause()
+    /** The solution screen's Next: applies one shift and returns it, for a view to animate;
+     *  `null` at the end or off the screen. */
+    fun replayNext(): SolutionStep?
 
-    /** One shift of the replay while it plays (the terminal's clock); returns whether it
-     *  finished a step. */
-    fun replayShift(): Boolean
+    /** The solution screen's Prev: undoes one shift and returns the shift that did so; `null`
+     *  at the start or off the screen. */
+    fun replayPrevious(): SolutionStep?
 
-    /** The rest of the replay's current step, or all of the next, while it plays (the web's
-     *  clock); returns what it played, `null` when nothing played. */
-    fun replayMove(): SolutionStep?
+    /** The solution screen's Restart: back to the original arrangement; nothing off the screen. */
+    fun replayRestart()
 }

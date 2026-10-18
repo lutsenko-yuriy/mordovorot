@@ -38,6 +38,13 @@ internal class TuiScreen(
     var wasSolved = false
         private set
 
+    /** The solution screen's step list scroll (GH-126), reset whenever the steps change -
+     *  leaving the screen, or loading another solution straight from this one. */
+    private val stepWindow = StepListWindow()
+    private var windowSteps: List<String>? = null
+
+    fun scrollSteps(delta: Int) = stepWindow.scroll(delta)
+
     /** Shared dialog loop: tells [input] a dialog opened, then repaints [dialog] and passes each
      *  event to [onAction], which returns from the caller when done. Escape or the "cancel"
      *  button tracks `dialog_cancelled` and returns [cancelled] - unless not [cancellable], when
@@ -85,7 +92,8 @@ internal class TuiScreen(
         // this package already keeps. MouseInput's decoration is the identity, so this is a
         // no-op for mouse mode (WU3's "no behaviour change" requirement).
         val decoratedDialog = dialog?.let { input.decorateDialog(it) }
-        val state = input.decorateBoard(
+        val solution = viewModel.solution()
+        val base = input.decorateBoard(
             ScreenState
                 .forBoard(
                     viewModel.boardState().toList(),
@@ -94,10 +102,18 @@ internal class TuiScreen(
                     viewModel.moveCount(),
                     solvedTitle = viewModel.mordieEnding() ?: TITLE_SOLVED,
                     mordieLine = viewModel.mordieLine(),
+                    giveUpButton = viewModel.giveUpButton(),
+                    solution = solution,
                 )
                 .copy(dialog = decoratedDialog, message = message),
         )
-        layout = BoardLayout(terminalSize, state.squareSide, state.arrowsEnabled, state.toolbarShortcuts, state.modeButtons)
+        // The step list's scroll goes into the state, not the geometry, so the layout comes first.
+        val baseLayout = base.layout(terminalSize)
+        layout = baseLayout
+        if (solution?.steps != windowSteps) stepWindow.reset()
+        windowSteps = solution?.steps
+        solution?.let { stepWindow.update(it.steps.size, baseLayout.stepRows, it.current) }
+        val state = base.copy(stepOffset = stepWindow.offset)
         // Built from state.dialog (post-decorateBoard), not decoratedDialog directly - the two
         // are the same object for MouseInput today, but a future decorateBoard that touches the
         // dialog (e.g. a keyboard mode collapsing decoration into one pass) must not be able to

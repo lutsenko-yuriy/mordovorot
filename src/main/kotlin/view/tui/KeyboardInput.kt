@@ -2,16 +2,18 @@ package view.tui
 
 import InputMode
 import board_model.BoardSize
+import viewmodel.GiveUpButton
 import viewmodel.ShiftKey
 
 /** Bottom-left controls reminder (GH-18/GH-30/GH-44) - F5/F6/F9/F7/Esc stay live even when
  *  the selection keys don't. Must fit 80 chars, the default/fallback terminal width
  *  ([ScreenRenderer.Canvas.put] has no wrap or ellipsis, unlike dialog content - audit findings
  *  on PR #40 and PR #53). The board keys have their own side hints (GH-101). */
-private const val CONTROLS_HINT = "F5/F6/F9 Save/Load/New · F7 Mouse · Esc"
+private const val CONTROLS_HINT = "F5/F6/F9 Save/Load/New · F8 Give Up · F7 Mouse · Esc"
 
 private val SELECTION_HINT = listOf("W/S  row", "A/D  column")
 private val SHIFT_HINT = listOf("←/→ H/L  shift row", "↑/↓ K/J  shift column")
+private val SOLUTION_HINT = listOf("←/→ A/D  step", "Space/Enter  next", "R  restart", "W/S  scroll")
 
 private val SELECT_KEYS = mapOf('w' to Direction.UP, 's' to Direction.DOWN, 'a' to Direction.LEFT, 'd' to Direction.RIGHT)
 private val HJKL_KEYS = mapOf('h' to Direction.LEFT, 'j' to Direction.DOWN, 'k' to Direction.UP, 'l' to Direction.RIGHT)
@@ -24,7 +26,9 @@ private val HJKL_KEYS = mapOf('h' to Direction.LEFT, 'j' to Direction.DOWN, 'k' 
  * [LineSelection]), letters in either case; F5/F6 open Save/Load, F9 (GH-44 WU3) opens the
  * New-game size picker, F7 (GH-30) requests a switch to mouse mode, and Escape opens Exit - all
  * staying live even when solved (the selection and shift keys go inert instead, the highlight
- * stops rendering). Escape replaces a function key for Exit - board and dialog events are
+ * stops rendering). F8 (GH-126) is the Give Up row's button. On the solution screen, the
+ * left/right arrows or A/D are Prev/Next (Space and Enter Next too), R is Restart, and W/S or
+ * the up/down arrows scroll the steps. Escape replaces a function key for Exit - board and dialog events are
  * mutually exclusive, so it can't collide with Escape's dialog-level Cancel.
  *
  * Dialog: Tab/Down/Right advance the focus ring, Shift-Tab/Up/Left go back, Enter activates
@@ -37,6 +41,8 @@ class KeyboardInput(private val selection: KeyboardSelection) : TuiInput {
 
     private var squareSide = BoardSize.DEFAULT
     private var arrowsEnabled = true
+    private var giveUpButton = GiveUpButton.HIDDEN
+    private var onSolutionScreen = false
 
     /** Reset to `0` by [onDialogOpened] at the start of every modal loop, and defensively
      *  whenever [decorateBoard] sees no dialog. */
@@ -53,6 +59,7 @@ class KeyboardInput(private val selection: KeyboardSelection) : TuiInput {
             event is TerminalEvent.FunctionKey -> functionKeyAction(event.n)
             event == TerminalEvent.Escape -> InputAction.Activate(HitTarget.ToolbarExit)
             event == TerminalEvent.EndOfInput -> InputAction.Quit
+            onSolutionScreen -> solutionAction(event, letter)
             !arrowsEnabled -> InputAction.None // solved: nothing to select or shift
             letter in SELECT_KEYS -> {
                 selection.current = selection.current.select(SELECT_KEYS.getValue(letter!!), squareSide)
@@ -62,6 +69,16 @@ class KeyboardInput(private val selection: KeyboardSelection) : TuiInput {
             event is TerminalEvent.Arrow -> shift(event.direction, ShiftKey.ARROW)
             else -> InputAction.None
         }
+    }
+
+    private fun solutionAction(event: TerminalEvent, letter: Char?): InputAction = when {
+        letter == 'a' || event == TerminalEvent.Arrow(Direction.LEFT) -> InputAction.Activate(HitTarget.ReplayPrevious)
+        letter == 'd' || letter == ' ' || event == TerminalEvent.Arrow(Direction.RIGHT) || event == TerminalEvent.Enter ->
+            InputAction.Activate(HitTarget.ReplayNext)
+        letter == 'r' -> InputAction.Activate(HitTarget.ReplayRestart)
+        letter == 'w' || event == TerminalEvent.Arrow(Direction.UP) -> InputAction.Scroll(-1)
+        letter == 's' || event == TerminalEvent.Arrow(Direction.DOWN) -> InputAction.Scroll(1)
+        else -> InputAction.None
     }
 
     private fun shift(direction: Direction, key: ShiftKey): InputAction =
@@ -102,6 +119,8 @@ class KeyboardInput(private val selection: KeyboardSelection) : TuiInput {
     override fun decorateBoard(state: ScreenState): ScreenState {
         squareSide = state.squareSide
         arrowsEnabled = state.arrowsEnabled
+        giveUpButton = state.giveUpButton
+        onSolutionScreen = state.solution != null
         // Kept across new games, loads and solved spells (GH-101), only pulled inside a smaller
         // board - every repaint sees the current side, whichever mode changed it.
         selection.current = selection.current.clampedTo(squareSide)
@@ -109,8 +128,8 @@ class KeyboardInput(private val selection: KeyboardSelection) : TuiInput {
         return state.copy(
             selection = if (arrowsEnabled) selection.current else null,
             showArrows = false,
-            selectionHint = SELECTION_HINT,
-            shiftHint = SHIFT_HINT,
+            selectionHint = if (onSolutionScreen) SOLUTION_HINT else SELECTION_HINT,
+            shiftHint = if (onSolutionScreen) emptyList() else SHIFT_HINT,
             controlsHint = CONTROLS_HINT,
             toolbarShortcuts = true,
             modeButtons = listOf(InputMode.MOUSE),
@@ -155,6 +174,11 @@ class KeyboardInput(private val selection: KeyboardSelection) : TuiInput {
         5 -> InputAction.Activate(HitTarget.ToolbarSave)
         6 -> InputAction.Activate(HitTarget.ToolbarLoad)
         7 -> InputAction.Activate(HitTarget.ToolbarMode(InputMode.MOUSE))
+        8 -> when (giveUpButton) {
+            GiveUpButton.GIVE_UP -> InputAction.Activate(HitTarget.GiveUp)
+            GiveUpButton.MORDIES_SOLUTION -> InputAction.Activate(HitTarget.MordiesSolution)
+            GiveUpButton.DIMMED, GiveUpButton.HIDDEN -> InputAction.None
+        }
         9 -> InputAction.Activate(HitTarget.ToolbarNew)
         else -> InputAction.None
     }

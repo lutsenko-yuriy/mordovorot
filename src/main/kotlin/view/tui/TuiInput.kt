@@ -21,6 +21,8 @@ sealed class InputAction {
     /** Redraw without otherwise acting - a keyboard selection change (GH-101) is the only
      *  source of this today; a mouse click never produces it (see [MouseInput]). */
     object Redraw : InputAction()
+    /** Scrolls the solution screen's step list by [delta] rows (GH-126): a wheel notch, W/S. */
+    data class Scroll(val delta: Int) : InputAction()
     object Quit : InputAction()
     object None : InputAction()
 }

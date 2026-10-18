@@ -4,8 +4,8 @@ package view.tui
  * One data model for GH-3's three modal dialogs (Save/Load/Exit), the Load-shaped startup
  * restore prompt, and GH-44's size picker, so [ScreenRenderer]/[TuiView] don't need one
  * near-identical class per dialog. Which fields are populated depends on [kind]:
- * [textFieldValue] is Save-only, [listItems] and [selectedIndex] are Load-only. SIZE and
- * UNSOLVABLE (GH-74) are buttons-only, like EXIT - they need no fields of their own.
+ * [textFieldValue] is Save-only, [listItems] and [selectedIndex] are Load-only. SIZE,
+ * UNSOLVABLE (GH-74) and GIVE_UP (GH-126) are buttons-only, like EXIT - they need no fields of their own.
  */
 data class Dialog(
     val kind: Kind,
@@ -24,7 +24,7 @@ data class Dialog(
      *  non-Save dialogs and in mouse mode. */
     val textFieldFocused: Boolean = false,
 ) {
-    enum class Kind { SAVE, LOAD, EXIT, SIZE, UNSOLVABLE }
+    enum class Kind { SAVE, LOAD, EXIT, SIZE, UNSOLVABLE, GIVE_UP }
 }
 
 /** One dialog button: [id] is what [HitTarget.DialogButton] carries back on a click, [label]

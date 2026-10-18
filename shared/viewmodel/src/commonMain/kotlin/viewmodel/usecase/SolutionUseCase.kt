@@ -5,7 +5,6 @@ import board_model.BoardModel
 import viewmodel.GiveUpButton
 import viewmodel.MordieHooks
 import viewmodel.MordieText
-import viewmodel.Playback
 import viewmodel.SolutionReplay
 import viewmodel.SolutionScreen
 import viewmodel.SolutionState
@@ -28,7 +27,7 @@ internal class SolutionUseCase(
     fun button(): GiveUpButton {
         val hasPath = mordieHooks.solution() != null
         return when {
-            onScreen -> GiveUpButton.DIMMED
+            onScreen -> GiveUpButton.HIDDEN
             board.isCorrect() ->
                 if (hasPath && mordieHooks.foundBeforeWin()) GiveUpButton.MORDIES_SOLUTION else GiveUpButton.HIDDEN
             hasPath && mordieHooks.revealed() -> GiveUpButton.GIVE_UP
@@ -69,7 +68,7 @@ internal class SolutionUseCase(
     }
 
     fun state(): SolutionState? = solutionScreen.replay?.let {
-        SolutionState(SolutionSteps.format(it.steps), it.step, it.playback)
+        SolutionState(SolutionSteps.format(it.steps), it.step, it.atStart, it.atEnd)
     }
 
     /** Mordie's line on the screen; `null` off it. */
@@ -78,28 +77,20 @@ internal class SolutionUseCase(
     /** The replay's tiles; `null` off the screen. */
     fun tiles(): IntArray? = solutionScreen.replay?.tiles
 
-    fun playPause() {
-        val replay = solutionScreen.replay ?: return
-        val playback = replay.playback
-        if (playback == Playback.READY || playback == Playback.ENDED) {
-            analytics.track("solution_replay_started", mapOf("restart" to (playback == Playback.ENDED)) + replayProps(replay))
-        }
-        replay.playPause()
+    /** Tracks `solution_replay_started` and `solution_replay_finished` as the replay's runs
+     *  begin and end. */
+    fun next(): SolutionStep? {
+        val replay = solutionScreen.replay ?: return null
+        val shift = replay.next() ?: return null
+        if (replay.startedRun) analytics.track("solution_replay_started", mapOf("restart" to (replay.runs > 1)) + replayProps(replay))
+        if (replay.finishedRun) analytics.track("solution_replay_finished", replayProps(replay) + ("stepped_back" to replay.steppedBack))
+        return shift
     }
 
-    fun replayShift(): Boolean = advance(false) { it.shift() }
+    fun previous(): SolutionStep? = solutionScreen.replay?.previous()
 
-    fun replayMove(): SolutionStep? = advance(null) { it.move() }
-
-    /** Runs [play] on the replay, tracking `solution_replay_finished` when it ends the run. */
-    private fun <T> advance(offScreen: T, play: (SolutionReplay) -> T): T {
-        val replay = solutionScreen.replay ?: return offScreen
-        val wasPlaying = replay.playback == Playback.PLAYING
-        val result = play(replay)
-        if (wasPlaying && replay.playback == Playback.ENDED) {
-            analytics.track("solution_replay_finished", replayProps(replay) + ("paused" to replay.pausedThisRun))
-        }
-        return result
+    fun restart() {
+        solutionScreen.replay?.restart()
     }
 
     private fun replayProps(replay: SolutionReplay) =
