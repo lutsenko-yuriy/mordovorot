@@ -157,7 +157,8 @@ class ScreenRenderer {
         }
     }
 
-    /** The visible window of the step list, the current step reverse video, and Play (GH-126). */
+    /** The visible window of the step list, the current step reverse video, and Prev / Next /
+     *  Restart, dimmed where inert (GH-126). */
     private fun drawSolution(canvas: Canvas, layout: BoardLayout, solution: SolutionState, offset: Int) {
         for (row in 0 until layout.stepRows) {
             val index = offset + row
@@ -165,7 +166,10 @@ class ScreenRenderer {
             val y = layout.stepListTop + row
             if (index == solution.current) canvas.putHighlighted(layout.stepListX, y, step) else canvas.put(layout.stepListX, y, step)
         }
-        layout.playButton()?.let { canvas.put(it.x, it.y, it.text) }
+        for (button in layout.replayButtons()) {
+            if (button.target == HitTarget.Nothing) canvas.putColored(button.x, button.y, button.text, DIM_ON, DIM_OFF)
+            else canvas.put(button.x, button.y, button.text)
+        }
     }
 
     private fun drawDialog(canvas: Canvas, dialog: Dialog, terminalSize: TerminalSize) {

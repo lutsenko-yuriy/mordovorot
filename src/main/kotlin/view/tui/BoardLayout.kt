@@ -2,7 +2,7 @@ package view.tui
 
 import InputMode
 import viewmodel.GiveUpButton
-import viewmodel.Playback
+import viewmodel.SolutionState
 
 /** Interior character width of one board cell - wide enough for a 2-digit 1-based tile value
  *  plus a padding space on each side (` 12 `). Internal (not private) so [ScreenRenderer] can
@@ -38,8 +38,8 @@ class BoardLayout(
     private val modeButtons: List<InputMode> = emptyList(),
     /** The Give Up row's button (GH-126): drawn dimmed and inert when [GiveUpButton.DIMMED]. */
     private val giveUp: GiveUpButton = GiveUpButton.HIDDEN,
-    /** The replay's playback on the solution screen (GH-126), `null` off it. */
-    private val playback: Playback? = null,
+    /** The solution screen (GH-126), `null` off it. */
+    private val solution: SolutionState? = null,
 ) {
     private val innerCols = squareSide * CELL_WIDTH + (squareSide + 1)
     private val innerRows = squareSide * 2 + 1
@@ -116,7 +116,6 @@ class BoardLayout(
     fun exitButtonPosition(): Pair<Int, Int> = buttonPosition(HitTarget.ToolbarExit)
     fun newButtonPosition(): Pair<Int, Int> = buttonPosition(HitTarget.ToolbarNew)
     fun giveUpButtonPosition(): Pair<Int, Int>? = giveUpButton()?.let { it.x to it.y }
-    fun playButtonPosition(): Pair<Int, Int>? = playButton()?.let { it.x to it.y }
 
     /** The Give Up row's button, `null` when [GiveUpButton.HIDDEN]. Its target is
      *  [HitTarget.Nothing] while dimmed. */
@@ -130,14 +129,20 @@ class BoardLayout(
         return layoutRow(listOf(target to if (toolbarShortcuts) "[$label F8]" else "[ $label ]"), giveUpRow).single()
     }
 
-    /** The solution screen's Play/Pause/Play again button, on the down-arrows row (GH-126 D4). */
-    internal fun playButton(): ToolbarButton? {
-        val label = when (playback ?: return null) {
-            Playback.READY, Playback.PAUSED -> "[ ▶ Play ]"
-            Playback.PLAYING -> "[ ❚❚ Pause ]"
-            Playback.ENDED -> "[ ↻ Play again ]"
-        }
-        return layoutRow(listOf(HitTarget.Play to label), downArrowRow).single()
+    /** The solution screen's Prev / Next / Restart, on the down-arrows row (GH-126 D4). One with
+     *  nowhere to go - Prev and Restart at the start, Next at the end - targets
+     *  [HitTarget.Nothing], and is drawn dimmed. Empty off the screen. */
+    internal fun replayButtons(): List<ToolbarButton> {
+        val solution = solution ?: return emptyList()
+        fun live(target: HitTarget, live: Boolean) = if (live) target else HitTarget.Nothing
+        return layoutRow(
+            listOf(
+                live(HitTarget.ReplayPrevious, !solution.atStart) to "[ ◀ Prev ]",
+                live(HitTarget.ReplayNext, !solution.atEnd) to "[ Next ▶ ]",
+                live(HitTarget.ReplayRestart, !solution.atStart) to "[ ↻ Restart ]",
+            ),
+            downArrowRow,
+        )
     }
 
     /** Looks a button up by target rather than a fixed index or row - defensive against either
@@ -146,7 +151,7 @@ class BoardLayout(
         toolbarButtons().first { it.target == target }.let { it.range.first to it.y }
 
     fun hitTest(x: Int, y: Int): HitTarget {
-        if (arrowsEnabled && playback == null) {
+        if (arrowsEnabled && solution == null) {
             for (row in 0 until squareSide) {
                 if (x to y == leftArrowPosition(row)) return HitTarget.ShiftLeft(row)
                 if (x to y == rightArrowPosition(row)) return HitTarget.ShiftRight(row)
@@ -156,7 +161,7 @@ class BoardLayout(
                 if (x to y == downArrowPosition(col)) return HitTarget.ShiftDown(col)
             }
         }
-        val buttons = toolbarButtons() + listOfNotNull(giveUpButton(), playButton())
+        val buttons = toolbarButtons() + listOfNotNull(giveUpButton()) + replayButtons()
         for (button in buttons) if (y == button.y && x in button.range) return button.target
         return HitTarget.Nothing
     }

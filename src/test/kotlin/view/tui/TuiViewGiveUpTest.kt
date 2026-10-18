@@ -11,17 +11,16 @@ import testing.FakeViewModel
 import testing.RecordingAnalyticsService
 import testing.testTuiView
 import viewmodel.GiveUpButton
-import viewmodel.Playback
 import viewmodel.SolutionState
 
-/** GH-126: the TUI's Give Up row, its confirmation and the replay clock, over a [FakeViewModel]. */
+/** GH-126: the TUI's Give Up row, its confirmation and the solution screen, over a [FakeViewModel]. */
 class TuiViewGiveUpTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
     private val analytics = RecordingAnalyticsService()
 
-    private fun layout(giveUp: GiveUpButton, playback: Playback? = null) =
-        BoardLayout(terminalSize, 4, arrowsEnabled = playback == null, modeButtons = listOf(InputMode.KEYBOARD), giveUp = giveUp, playback = playback)
+    private fun layout(giveUp: GiveUpButton, solution: SolutionState? = null) =
+        BoardLayout(terminalSize, 4, arrowsEnabled = solution == null, modeButtons = listOf(InputMode.KEYBOARD), giveUp = giveUp, solution = solution)
 
     private val confirm = Dialog(
         Dialog.Kind.GIVE_UP, "Give up and see Mordie's solution?",
@@ -41,9 +40,10 @@ class TuiViewGiveUpTest {
         terminal
     }
 
-    private fun playing(steps: Int = 3) = FakeViewModel().apply {
+    /** On the solution screen, one shift in. */
+    private fun onScreen(steps: Int = 3) = FakeViewModel().apply {
         giveUpButton = GiveUpButton.DIMMED
-        solution = SolutionState(List(steps) { "${it + 1}. Row 1 → ×1" }, current = 0, Playback.PLAYING)
+        solution = SolutionState(List(steps) { "${it + 1}. Row 1 → ×1" }, current = 0, atStart = false, atEnd = false)
     }
 
     @Test
@@ -79,48 +79,29 @@ class TuiViewGiveUpTest {
     }
 
     @Test
-    fun `Play on the solution screen calls playPause`() {
-        val viewModel = playing().apply { solution = solution!!.copy(current = null, playback = Playback.READY) }
+    fun `Prev, Next and Restart call the viewModel`() {
+        val viewModel = onScreen()
+        val buttons = layout(GiveUpButton.DIMMED, viewModel.solution).replayButtons()
 
-        play(viewModel, click(layout(GiveUpButton.DIMMED, Playback.READY).playButtonPosition()))
+        play(viewModel, *buttons.map { TerminalEvent.MouseClick(it.x, it.y) }.toTypedArray())
 
-        assertTrue("playPause" in viewModel.calls)
+        assertEquals(listOf("replayPrevious", "replayNext", "replayRestart"), viewModel.calls.filter { it.startsWith("replay") })
     }
 
     @Test
-    fun `while playing, each Tick is one shift, 500 ms apart, with another 500 ms after a finished step`() {
-        val viewModel = playing().apply { replayShiftResults = mutableListOf(false, true, false) }
+    fun `an inert Prev at the start does nothing`() {
+        val viewModel = onScreen().apply { solution = solution!!.copy(current = null, atStart = true) }
+        val prev = layout(GiveUpButton.DIMMED, viewModel.solution).replayButtons().first()
 
-        val terminal = play(viewModel, TerminalEvent.Tick, TerminalEvent.Tick, TerminalEvent.Tick)
+        play(viewModel, TerminalEvent.MouseClick(prev.x, prev.y))
 
-        assertEquals(3, viewModel.calls.count { it == "replayShift" })
-        assertEquals(listOf<Long?>(500, 500, 1000, 500), terminal.timeouts)
-    }
-
-    @Test
-    fun `when not playing, reads block and a Tick shifts nothing`() {
-        val viewModel = playing().apply { solution = solution!!.copy(playback = Playback.PAUSED) }
-
-        val terminal = play(viewModel, TerminalEvent.Tick)
-
-        assertEquals(listOf<Long?>(null, null), terminal.timeouts)
-        assertFalse("replayShift" in viewModel.calls)
-    }
-
-    @Test
-    fun `an open dialog holds the replay - its reads block (D7)`() {
-        val viewModel = playing()
-
-        val terminal = play(viewModel, click(layout(GiveUpButton.DIMMED, Playback.PLAYING).saveButtonPosition()), TerminalEvent.Escape)
-
-        assertEquals(listOf<Long?>(500, null, 500), terminal.timeouts)
-        assertFalse("replayShift" in viewModel.calls)
+        assertTrue(viewModel.calls.none { it.startsWith("replay") })
     }
 
     @Test
     fun `the wheel scrolls a long step list`() {
-        val viewModel = playing(steps = 20)
-        val solutionLayout = layout(GiveUpButton.DIMMED, Playback.PLAYING)
+        val viewModel = onScreen(steps = 20)
+        val solutionLayout = layout(GiveUpButton.DIMMED, viewModel.solution)
 
         val terminal = play(viewModel, TerminalEvent.Wheel(up = false), TerminalEvent.Wheel(up = false))
 
@@ -129,26 +110,26 @@ class TuiViewGiveUpTest {
     }
 
     @Test
-    fun `in keyboard mode F8 opens the confirmation and Enter on the solution screen presses Play`() {
+    fun `in keyboard mode F8 opens the confirmation and Enter on the solution screen goes next`() {
         val giveUp = FakeViewModel().apply { giveUpButton = GiveUpButton.GIVE_UP }
         play(giveUp, TerminalEvent.FunctionKey(8), TerminalEvent.Escape, input = KeyboardInput(KeyboardSelection()))
         assertEquals(1, analytics.events.count { it.name == "screen_give_up_dialog" })
 
-        val ready = playing().apply { solution = solution!!.copy(playback = Playback.READY) }
-        play(ready, TerminalEvent.Enter, input = KeyboardInput(KeyboardSelection()))
-        assertTrue("playPause" in ready.calls)
+        val screen = onScreen()
+        play(screen, TerminalEvent.Enter, input = KeyboardInput(KeyboardSelection()))
+        assertTrue("replayNext" in screen.calls)
     }
 
     @Test
     fun `another solution's steps start at the top, however far the last list was scrolled`() {
-        val viewModel = playing(steps = 20).apply { solution = solution!!.copy(current = null, playback = Playback.READY) }
-        val other = SolutionState(List(15) { "${it + 1}. Col 1 ↑ ×1" }, current = null, Playback.READY)
-        val events = mutableListOf(TerminalEvent.Wheel(up = false), TerminalEvent.Wheel(up = false), TerminalEvent.Tick)
+        val viewModel = onScreen(steps = 20).apply { solution = solution!!.copy(current = null, atStart = true) }
+        val other = SolutionState(List(15) { "${it + 1}. Col 1 ↑ ×1" }, current = null, atStart = true, atEnd = false)
+        val events = mutableListOf<TerminalEvent>(TerminalEvent.Wheel(up = false), TerminalEvent.Wheel(up = false), TerminalEvent.MouseClick(0, 0))
         val terminal = FakeTerminal(events, terminalSize, beforeEvent = mapOf(2 to { viewModel.solution = other }))
 
         runBlocking { testTuiView(terminal, analytics, viewModel = viewModel).play() }
 
-        val solutionLayout = layout(GiveUpButton.DIMMED, Playback.READY)
+        val solutionLayout = layout(GiveUpButton.DIMMED, other)
         val rows = terminal.frames.last().replace(Regex("\u001B\\[[0-9;?]*[A-Za-z]"), "").split("\r\n")
         assertEquals("1. Col 1 ↑ ×1", rows[solutionLayout.stepListTop].substring(solutionLayout.stepListX).trim())
     }

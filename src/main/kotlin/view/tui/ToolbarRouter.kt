@@ -9,7 +9,7 @@ import viewmodel.ModeSwitcher
 import viewmodel.ViewModel
 
 /** Runs the toolbar button (or its keyboard shortcut) the player activated (GH-78), the Give Up
- *  row's and the solution screen's Play included (GH-126). */
+ *  row's and the solution screen's Prev / Next / Restart included (GH-126). */
 internal class ToolbarRouter(
     private val saveDialog: SaveDialogController,
     private val loadDialog: LoadDialogController,
@@ -30,7 +30,9 @@ internal class ToolbarRouter(
             HitTarget.ToolbarNew -> sizeDialog.onToolbar()
             HitTarget.GiveUp -> giveUpDialog.onToolbar()
             HitTarget.MordiesSolution -> viewModel.showSolution()
-            HitTarget.Play -> viewModel.playPause()
+            HitTarget.ReplayPrevious -> viewModel.replayPrevious()
+            HitTarget.ReplayNext -> viewModel.replayNext()
+            HitTarget.ReplayRestart -> viewModel.replayRestart()
             is HitTarget.ToolbarMode -> modeSwitcher.switchTo(target.mode, trigger = input.switchTrigger)
             else -> {}
         }

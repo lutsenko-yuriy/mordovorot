@@ -120,9 +120,9 @@ class GameViewModelImpl internal constructor(
 
     override fun solution(): SolutionState? = solutionUseCase.state()
 
-    override fun playPause() = solutionUseCase.playPause()
+    override fun replayNext(): SolutionStep? = solutionUseCase.next()
 
-    override fun replayShift(): Boolean = solutionUseCase.replayShift()
+    override fun replayPrevious(): SolutionStep? = solutionUseCase.previous()
 
-    override fun replayMove(): SolutionStep? = solutionUseCase.replayMove()
+    override fun replayRestart() = solutionUseCase.restart()
 }

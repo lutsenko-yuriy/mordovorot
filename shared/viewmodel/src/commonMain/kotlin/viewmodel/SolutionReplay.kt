@@ -1,77 +1,57 @@
 package viewmodel
 
 /** Mordie's [steps] replayed on their own copy of the [original] arrangement (GH-126), so the
- *  game's board, move count and Mordie never see them. Knows nothing about time: each view runs
- *  the clock, calling [shift] or [move] while [playback] is [Playback.PLAYING]. */
+ *  game's board, move count and Mordie never see them. Stepped by hand, one shift at a time:
+ *  [next], [previous] and [restart]. */
 internal class SolutionReplay(private val original: IntArray, private val side: Int, val steps: List<SolutionStep>) {
 
     init {
         require(steps.isNotEmpty()) { "A replay needs at least one step" }
     }
 
+    /** Every shift of every step, in order: its step's index and the one-shift step itself. */
+    private val shifts = steps.flatMapIndexed { index, step -> List(step.count) { index to step.copy(count = 1) } }
+
     private var board = original.copyOf()
+
+    /** Shifts applied so far. */
+    private var position = 0
 
     val tiles: IntArray get() = board.copyOf()
 
-    /** The highlighted step: `null` before the first Play; a finished step stays highlighted
-     *  until the next one starts. */
-    var step: Int? = null
-        private set
+    /** The step of the last shift applied; `null` at the start. */
+    val step: Int? get() = shifts.getOrNull(position - 1)?.first
 
-    /** Shifts of [step] done so far. */
-    private var shiftsDone = 0
+    val atStart: Boolean get() = position == 0
+    val atEnd: Boolean get() = position == shifts.size
 
-    var playback = Playback.READY
-        private set
+    /** Runs since the screen opened; a run begins with a [next] off the start. For analytics,
+     *  kept here rather than in the use case so a mode switch's rebuilt viewModel keeps them. */
+    var runs = 0
 
-    /** Whether this run, since Play or Play again, was paused. */
-    var pausedThisRun = false
-        private set
+    /** Whether [previous] was used during this run, and whether it has reached the end. */
+    var steppedBack = false
+    var finished = false
 
-    /** Play, Pause, resume, or Play again from the original arrangement once ended. */
-    fun playPause() {
-        when (playback) {
-            Playback.READY, Playback.PAUSED -> {
-                if (step == null) step = 0
-                playback = Playback.PLAYING
-            }
-            Playback.PLAYING -> {
-                playback = Playback.PAUSED
-                pausedThisRun = true
-            }
-            Playback.ENDED -> {
-                board = original.copyOf()
-                step = 0
-                shiftsDone = 0
-                pausedThisRun = false
-                playback = Playback.PLAYING
-            }
-        }
+    /** Applies the next shift and returns it; `null` at the end. */
+    fun next(): SolutionStep? {
+        if (atEnd) return null
+        val shift = shifts[position++].second
+        rotate(shift)
+        return shift
     }
 
-    /** One shift while playing; returns whether it finished a step. The last one ends the replay. */
-    fun shift(): Boolean {
-        if (playback != Playback.PLAYING) return false
-        var current = step!!
-        if (shiftsDone == steps[current].count) {
-            current++
-            step = current
-            shiftsDone = 0
-        }
-        rotate(steps[current])
-        shiftsDone++
-        val finished = shiftsDone == steps[current].count
-        if (finished && current == steps.lastIndex) playback = Playback.ENDED
-        return finished
+    /** Undoes the last shift and returns the shift that did so; `null` at the start. */
+    fun previous(): SolutionStep? {
+        if (atStart) return null
+        val back = shifts[--position].second.let { it.copy(forward = !it.forward) }
+        rotate(back)
+        return back
     }
 
-    /** The rest of the step while playing - all of the next one, or what a pause mid-step
-     *  left - returned as the shifts it made; `null` when not playing. */
-    fun move(): SolutionStep? {
-        if (playback != Playback.PLAYING) return null
-        var shifts = 0
-        do shifts++ while (!shift())
-        return steps[step!!].copy(count = shifts)
+    fun restart() {
+        board = original.copyOf()
+        position = 0
     }
 
     private fun rotate(step: SolutionStep) {

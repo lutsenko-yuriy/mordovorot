@@ -3,7 +3,7 @@ package web.scenario
 import kotlin.test.Test
 
 /** GH-126 scenarios: giving up and Mordie's solution screen in the browser, through [WebHarness]
- *  with virtual time for the replay's 1 s moves and 0.5 s pauses. Same setup as
+ *  stepping the replay by hand with Prev / Next / Restart. Same setup as
  *  [WebStartupScenarioTest]. Each test names the WU that makes it green. */
 class WebGiveUpScenarioTest {
 
@@ -25,13 +25,12 @@ class WebGiveUpScenarioTest {
     }
 
     @Test
-    fun `the replay animates each move over 1 s with 0_5 s between moves, and Pause finishes the current move`() {
+    fun `Next and Prev step the replay one shift at a time, with a slide, and Restart goes back to the start`() {
         // WU4
-        // TODO: 1. Play: after 1 s the first move is done; after another 0.5 s the second move starts.
-        // TODO: 2. Pause during the second move: it finishes, then nothing changes (D5).
-        // TODO: 3. Play, open a dialog: the replay holds, and continues once the dialog closes (D7).
-        // TODO: 4. At the end, the button offers Play again, which resets the board to the original arrangement.
-        // TODO: 5. `hasUnsavedProgress()` stays false throughout; `solution_replay_started` and `solution_replay_finished` fire.
+        // TODO: 1. At the start Prev and Restart are disabled; Next applies one shift (a one-tile slide) and highlights its step.
+        // TODO: 2. Prev undoes the last shift (a slide back); stepping back to the start clears the highlight.
+        // TODO: 3. At the solved board Next is disabled; Restart resets to the original arrangement.
+        // TODO: 4. `hasUnsavedProgress()` stays false throughout; `solution_replay_started` {restart} and `solution_replay_finished` {stepped_back} fire.
     }
 
     @Test

@@ -5,7 +5,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import view.View
 import viewmodel.ExitRequestedException
-import viewmodel.Playback
 import viewmodel.ShiftKey
 import viewmodel.ViewModel
 
@@ -29,13 +28,7 @@ class TuiView internal constructor(
     private val screen: TuiScreen,
     private val requests: UiRequestRouter,
     private val toolbar: ToolbarRouter,
-    /** Milliseconds, for the replay's timing (GH-126). */
-    private val clock: () -> Long,
 ) : View {
-
-    /** When the playing replay's next shift is due (GH-126), `null` while it isn't playing. Kept
-     *  across other input, so scrolling doesn't hold the replay back. */
-    private var nextShiftAt: Long? = null
 
     /** Drains [viewModel]'s [viewmodel.ViewModel.uiRequests] alongside the board's own event
      *  loop (GH-42 WU2) - what lets `saveGame`/`loadGame`/`exitGame`/`restoreOnStartup` suspend
@@ -57,13 +50,7 @@ class TuiView internal constructor(
             while (true) {
                 // layout is always non-null here - the screen.repaint() call just above (or the one at
                 // the end of every loop iteration below) always runs before the next readEvent.
-                val event = terminal.readEvent(replayTimeout())
-                if (event == TerminalEvent.Tick) {
-                    replayShift()
-                    screen.repaint()
-                    continue
-                }
-                when (val action = input.onBoardEvent(event, checkNotNull(screen.layout))) {
+                when (val action = input.onBoardEvent(terminal.readEvent(), checkNotNull(screen.layout))) {
                     is InputAction.Activate -> {
                         try {
                             handleTarget(action.target)
@@ -90,26 +77,6 @@ class TuiView internal constructor(
             terminal.restore()
             ui.cancel()
         }
-    }
-
-    /** How long the next read may wait (GH-126): until the next shift while the replay plays,
-     *  read fresh on every pass so a replay a mode switch carried over keeps playing (D6).
-     *  Dialogs read without one, so an open dialog holds the replay (D7). */
-    private fun replayTimeout(): Long? {
-        if (viewModel.solution()?.playback != Playback.PLAYING) {
-            nextShiftAt = null
-            return null
-        }
-        val now = clock()
-        val due = nextShiftAt ?: (now + SHIFT_MS).also { nextShiftAt = it }
-        return (due - now).coerceAtLeast(0)
-    }
-
-    /** One shift, then [SHIFT_MS] to the next, plus [STEP_PAUSE_MS] after a finished step. */
-    private fun replayShift() {
-        if (viewModel.solution()?.playback != Playback.PLAYING) return
-        val stepFinished = viewModel.replayShift()
-        nextShiftAt = clock() + SHIFT_MS + if (stepFinished) STEP_PAUSE_MS else 0
     }
 
     /** [key] is the keyboard key behind a shift (GH-101), `null` for a click. */
@@ -142,10 +109,5 @@ class TuiView internal constructor(
     private fun shift(action: () -> Unit) {
         action()
         if (viewModel.isSolved() && !screen.wasSolved) analytics.track("screen_congratulations")
-    }
-
-    private companion object {
-        const val SHIFT_MS = 500L
-        const val STEP_PAUSE_MS = 500L
     }
 }

@@ -243,25 +243,26 @@ Fired when the player confirms **Yes** in the `Give up and see Mordie's solution
 
 ### `solution_replay_started`
 
-Fired when Play starts the replay from the original arrangement on the solution screen: the
-first Play, or Play again after the end. Resuming after a pause doesn't fire it. *(GH-126)*
+Fired when Next steps the replay off the original arrangement on the solution screen: the
+first Next, or the first after Restart (or after stepping back to the start). *(GH-126)*
 
 | Property | Type | Description |
 |---|---|---|
-| `restart` | `boolean` | `true` for Play again after the replay ended. |
+| `restart` | `boolean` | `true` when an earlier run on this visit to the screen already started. |
 | `board_size` | `number` | The board side (3-5). |
 | `solution_length` | `number` | Mordie's N. |
 | `input_method` | `string` | `mouse`, `keyboard` or `rich_ui`. |
 
 ### `solution_replay_finished`
 
-Fired when the replay reaches the solved board. *(GH-126)*
+Fired when Next reaches the solved board, once per run (a run begins at
+`solution_replay_started`). *(GH-126)*
 
 | Property | Type | Description |
 |---|---|---|
 | `board_size` | `number` | The board side (3-5). |
 | `solution_length` | `number` | Mordie's N. |
-| `paused` | `boolean` | Whether the replay was paused on the way. |
+| `stepped_back` | `boolean` | Whether Prev was used during this run. |
 | `input_method` | `string` | `mouse`, `keyboard` or `rich_ui`. |
 
 *GH-126:* `dialog_cancelled.dialog` takes a new value, `give_up` - **No** or Escape in the

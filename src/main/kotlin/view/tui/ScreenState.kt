@@ -90,5 +90,5 @@ data class ScreenState(
 
     /** The geometry this state is drawn and hit-tested against. */
     fun layout(terminalSize: TerminalSize): BoardLayout =
-        BoardLayout(terminalSize, squareSide, arrowsEnabled, toolbarShortcuts, modeButtons, giveUpButton, solution?.playback)
+        BoardLayout(terminalSize, squareSide, arrowsEnabled, toolbarShortcuts, modeButtons, giveUpButton, solution)
 }

@@ -13,7 +13,7 @@ private const val CONTROLS_HINT = "F5/F6/F9 Save/Load/New · F8 Give Up · F7 Mo
 
 private val SELECTION_HINT = listOf("W/S  row", "A/D  column")
 private val SHIFT_HINT = listOf("←/→ H/L  shift row", "↑/↓ K/J  shift column")
-private val SOLUTION_HINT = listOf("Space  play/pause", "W/S  scroll")
+private val SOLUTION_HINT = listOf("←/→ A/D  step", "R  restart", "W/S  scroll")
 
 private val SELECT_KEYS = mapOf('w' to Direction.UP, 's' to Direction.DOWN, 'a' to Direction.LEFT, 'd' to Direction.RIGHT)
 private val HJKL_KEYS = mapOf('h' to Direction.LEFT, 'j' to Direction.DOWN, 'k' to Direction.UP, 'l' to Direction.RIGHT)
@@ -26,8 +26,9 @@ private val HJKL_KEYS = mapOf('h' to Direction.LEFT, 'j' to Direction.DOWN, 'k' 
  * [LineSelection]), letters in either case; F5/F6 open Save/Load, F9 (GH-44 WU3) opens the
  * New-game size picker, F7 (GH-30) requests a switch to mouse mode, and Escape opens Exit - all
  * staying live even when solved (the selection and shift keys go inert instead, the highlight
- * stops rendering). F8 (GH-126) is the Give Up row's button. On the solution screen, Space and
- * Enter press Play and W/S or the up/down arrows scroll the steps. Escape replaces a function key for Exit - board and dialog events are
+ * stops rendering). F8 (GH-126) is the Give Up row's button. On the solution screen, the
+ * left/right arrows or A/D are Prev/Next (Space and Enter Next too), R is Restart, and W/S or
+ * the up/down arrows scroll the steps. Escape replaces a function key for Exit - board and dialog events are
  * mutually exclusive, so it can't collide with Escape's dialog-level Cancel.
  *
  * Dialog: Tab/Down/Right advance the focus ring, Shift-Tab/Up/Left go back, Enter activates
@@ -71,7 +72,10 @@ class KeyboardInput(private val selection: KeyboardSelection) : TuiInput {
     }
 
     private fun solutionAction(event: TerminalEvent, letter: Char?): InputAction = when {
-        letter == ' ' || event == TerminalEvent.Enter -> InputAction.Activate(HitTarget.Play)
+        letter == 'a' || event == TerminalEvent.Arrow(Direction.LEFT) -> InputAction.Activate(HitTarget.ReplayPrevious)
+        letter == 'd' || letter == ' ' || event == TerminalEvent.Arrow(Direction.RIGHT) || event == TerminalEvent.Enter ->
+            InputAction.Activate(HitTarget.ReplayNext)
+        letter == 'r' -> InputAction.Activate(HitTarget.ReplayRestart)
         letter == 'w' || event == TerminalEvent.Arrow(Direction.UP) -> InputAction.Scroll(-1)
         letter == 's' || event == TerminalEvent.Arrow(Direction.DOWN) -> InputAction.Scroll(1)
         else -> InputAction.None

@@ -16,6 +16,4 @@ fun testTuiView(
     input: TuiInput = MouseInput(),
     modeSwitcher: ModeSwitcher = NoopModeSwitcher(),
     viewModel: ViewModel,
-    /** Stopped, so the replay's read timeouts are exact (GH-126). */
-    clock: () -> Long = { 0L },
-): TuiView = buildTuiView(terminal, analytics, input, modeSwitcher, viewModel, clock)
+): TuiView = buildTuiView(terminal, analytics, input, modeSwitcher, viewModel)

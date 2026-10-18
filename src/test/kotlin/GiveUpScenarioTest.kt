@@ -18,18 +18,19 @@ import testing.RecordingAnalyticsService
 import testing.testGameSession
 import view.tui.BoardLayout
 import view.tui.Dialog
+import view.tui.Direction
 import view.tui.DialogButtonSpec
 import view.tui.DialogLayout
 import view.tui.HitTarget
 import view.tui.TerminalEvent
 import view.tui.TerminalSize
 import viewmodel.GiveUpButton
-import viewmodel.Playback
+import viewmodel.SolutionState
 
 /** GH-126 scenarios: giving up and Mordie's solution screen in the terminal. Real BoardImpl +
  *  FileSaveRepository (temp dir) through a GameSession over a FakeTerminal, with
  *  `Mordie(FakeMordieSearchFactory())` scripting the search and its solution, like
- *  [MordieScenarioTest]. The replay advances on `TerminalEvent.Tick`s. */
+ *  [MordieScenarioTest]. The replay is stepped by hand with Prev / Next / Restart. */
 class GiveUpScenarioTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
@@ -105,7 +106,9 @@ class GiveUpScenarioTest {
     private fun click(p: Pair<Int, Int>?) = Event(TerminalEvent.MouseClick(p!!.first, p.second))
     private fun key(event: TerminalEvent) = Event(event)
     private fun keys(vararg events: TerminalEvent) = events.map(::key)
-    private val tick = key(TerminalEvent.Tick)
+
+    /** [events], then a [snap]. */
+    private fun step(vararg events: TerminalEvent): List<Step> = keys(*events) + snap()
 
     private fun searchFinds(solution: List<SolutionMove> = path) =
         Act { factory.latest.progress = SearchProgress(solution.size, found = true, elapsedMs = 0, solution = solution) }
@@ -130,7 +133,12 @@ class GiveUpScenarioTest {
     /** Reveal, then Give Up and Yes. */
     private fun givenUp(solution: List<SolutionMove> = path) = reveal(solution) + giveUpButton() + clickButton(confirm, "yes")
 
-    private val playButton = click(BoardLayout(terminalSize, 4, giveUp = GiveUpButton.DIMMED, playback = Playback.READY).playButtonPosition())
+    /** Prev / Next / Restart - their positions don't depend on which are live. */
+    private val replayButtons = BoardLayout(terminalSize, 4, solution = SolutionState(emptyList(), null, atStart = false, atEnd = false))
+        .replayButtons().map { click(it.x to it.y) }
+    private val prev = replayButtons[0]
+    private val next = replayButtons[1]
+    private val restart = replayButtons[2]
 
     /** Toolbar Save, type [name], Enter. */
     private fun save(name: String): List<Step> =
@@ -172,10 +180,11 @@ class GiveUpScenarioTest {
 
     private fun highlighted(frame: String) = Regex("\u001B\\[7m(.*?)\u001B\\[27m").findAll(frame).map { it.groupValues[1] }.toList()
 
-    /** The Play button's label, on the down-arrows row. */
-    private fun playShown(frame: String) = rows(frame)[layout.downArrowPosition(0).second].trim()
+    /** The Prev / Next / Restart row, on the down-arrows row. */
+    private fun replayRowShown(frame: String) = rows(frame)[layout.downArrowPosition(0).second].trim()
+    private val replayRow = "[ ◀ Prev ] [ Next ▶ ] [ ↻ Restart ]"
 
-    private fun arrowsShown(frame: String) = rows(frame).any { "◀" in it }
+    private fun arrowsShown(frame: String) = layout.leftArrowPosition(0).let { (x, y) -> rows(frame)[y][x] == '◀' }
 
     /** The tiles drawn in the grid, 0-based like the board. */
     private fun tilesShown(frame: String): List<Int> {
@@ -219,7 +228,8 @@ class GiveUpScenarioTest {
             assertEquals("", movesShown(frame))
             assertEquals(solutionLine, mordieShown(frame))
             assertEquals(steps, stepsShown(frame))
-            assertEquals("[ ▶ Play ]", playShown(frame))
+            assertEquals(replayRow, replayRowShown(frame))
+            assertTrue(dimmed(frame, "[ ◀ Prev ]") && dimmed(frame, "[ ↻ Restart ]") && !dimmed(frame, "[ Next ▶ ]"))
             assertTrue(dimmed(frame, "[ Give Up ]"))
             assertFalse(arrowsShown(frame))
         }
@@ -235,41 +245,39 @@ class GiveUpScenarioTest {
     }
 
     @Test
-    fun `the replay plays, pauses, resumes and plays again`() {
+    fun `Next, Prev and Restart step through Mordie's solution one shift at a time`() {
         val run = session(
-            givenUp() + playButton + snap() + tick + snap() + tick + snap() + playButton + snap() + tick + snap() +
-                click(layout.saveButtonPosition()) + key(TerminalEvent.Escape) + snap() + playButton + tick + snap() +
-                playButton + snap(),
+            givenUp() + next + snap() + next + snap() + prev + snap() + next + next + snap() + next + snap() + restart + snap(),
         )
 
-        assertEquals("[ ❚❚ Pause ]", playShown(snaps[0]))
+        assertEquals(afterFirstStep.toList(), tilesShown(snaps[0]))
         assertEquals(listOf(steps[0]), highlighted(snaps[0]))
-        assertEquals(false, run.events("solution_replay_started").first()["restart"])
-        assertEquals(afterFirstStep.toList(), tilesShown(snaps[1]))
-        assertEquals(afterOneColumnShift.toList(), tilesShown(snaps[2]))
-        assertEquals(listOf(steps[1]), highlighted(snaps[2]))
+        assertFalse(dimmed(snaps[0], "[ ◀ Prev ]") || dimmed(snaps[0], "[ ↻ Restart ]"))
+        assertEquals(false, run.event("solution_replay_started")["restart"])
 
-        // Paused mid-step: a Tick and a Save dialog change nothing.
-        assertEquals("[ ▶ Play ]", playShown(snaps[3]))
-        for (frame in snaps.subList(3, 6)) assertEquals(afterOneColumnShift.toList(), tilesShown(frame))
-        assertEquals("[ ▶ Play ]", playShown(snaps[5]))
+        assertEquals(afterOneColumnShift.toList(), tilesShown(snaps[1]))
+        assertEquals(listOf(steps[1]), highlighted(snaps[1]))
+        assertEquals(afterFirstStep.toList(), tilesShown(snaps[2]))
+        assertEquals(listOf(steps[0]), highlighted(snaps[2]))
 
-        // Resumed from the same shift, to the end.
-        assertEquals(solved.toList(), tilesShown(snaps[6]))
-        assertEquals("[ ↻ Play again ]", playShown(snaps[6]))
-        assertEquals(listOf(steps[1]), highlighted(snaps[6]))
-        assertEquals(true, run.event("solution_replay_finished")["paused"])
+        // The end: Next is dimmed and does nothing.
+        assertEquals(solved.toList(), tilesShown(snaps[3]))
+        assertEquals(listOf(steps[1]), highlighted(snaps[3]))
+        assertTrue(dimmed(snaps[3], "[ Next ▶ ]"))
+        assertEquals(snaps[3], snaps[4])
+        assertEquals(true, run.event("solution_replay_finished")["stepped_back"])
 
-        assertEquals(original.toList(), tilesShown(snaps[7]))
-        assertEquals(listOf(false, true), run.events("solution_replay_started").map { it["restart"] })
-        assertTrue(run.terminal.timeouts.filterNotNull().all { it in 0L..1000L })
+        assertEquals(original.toList(), tilesShown(snaps[5]))
+        assertTrue(highlighted(snaps[5]).isEmpty())
+        assertContentEquals(original, run.board.boardArray)
+        assertTrue(run.events("board_solved").isEmpty())
     }
 
     @Test
     fun `a long step list is zero-padded, follows the current step and scrolls with the wheel`() {
         val wheel = { up: Boolean -> key(TerminalEvent.Wheel(up)) }
         session(
-            givenUp(longPath) + snap() + playButton + List(10) { tick } + snap() + wheel(true) + snap() +
+            givenUp(longPath) + snap() + List(10) { next } + snap() + wheel(true) + snap() +
                 List(5) { wheel(false) } + snap(),
         )
 
@@ -282,13 +290,15 @@ class GiveUpScenarioTest {
     }
 
     @Test
-    fun `keyboard mode - F8 gives up, Space and Enter play and pause, W and S scroll the steps`() {
+    fun `keyboard mode - F8 gives up, arrows A D Space Enter step, R restarts, W and S scroll the steps`() {
         val run = session(
             keys(TerminalEvent.FunctionKey(8)) + snap() + searchFinds(longPath) + keys(*Array(5) { TerminalEvent.KeyPress('h') }) +
                 keys(TerminalEvent.FunctionKey(8), TerminalEvent.Escape, TerminalEvent.FunctionKey(8), TerminalEvent.Enter) + snap() +
-                keys(TerminalEvent.Enter) + snap() + keys(TerminalEvent.KeyPress(' ')) + snap() + keys(TerminalEvent.Enter) + snap() +
-                keys(TerminalEvent.KeyPress(' '), TerminalEvent.KeyPress('s'), TerminalEvent.Arrow(view.tui.Direction.DOWN)) + snap() +
-                keys(TerminalEvent.KeyPress('w'), TerminalEvent.Arrow(view.tui.Direction.UP)) + snap(),
+                step(TerminalEvent.Arrow(Direction.RIGHT), TerminalEvent.KeyPress('d'), TerminalEvent.KeyPress(' '), TerminalEvent.Enter) +
+                step(TerminalEvent.Arrow(Direction.LEFT), TerminalEvent.KeyPress('a')) +
+                step(TerminalEvent.KeyPress('r')) +
+                step(TerminalEvent.KeyPress('s'), TerminalEvent.Arrow(Direction.DOWN)) +
+                step(TerminalEvent.KeyPress('w'), TerminalEvent.Arrow(Direction.UP)),
             mode = InputMode.KEYBOARD,
         )
 
@@ -296,10 +306,11 @@ class GiveUpScenarioTest {
         assertFalse("Give up and see" in snaps[0])
         assertEquals("give_up", run.event("dialog_cancelled")["dialog"])
         assertEquals("[Give Up F8]", giveUpRowShown(snaps[1]))
-        assertEquals("[ ▶ Play ]", playShown(snaps[1]))
-        assertEquals("[ ❚❚ Pause ]", playShown(snaps[2]))
-        assertEquals("[ ▶ Play ]", playShown(snaps[3]))
-        assertEquals("[ ❚❚ Pause ]", playShown(snaps[4]))
+        assertEquals(replayRow, replayRowShown(snaps[1]))
+        assertTrue(rows(snaps[1]).any { "←/→ A/D  step" in it })
+        assertEquals("04.", highlighted(snaps[2]).single().take(3))
+        assertEquals("02.", highlighted(snaps[3]).single().take(3))
+        assertTrue(highlighted(snaps[4]).isEmpty())
         assertEquals("03.", stepsShown(snaps[5]).first().take(3))
         assertEquals("01.", stepsShown(snaps[6]).first().take(3))
     }
@@ -333,14 +344,14 @@ class GiveUpScenarioTest {
     fun `a solution-screen save reopens the screen via Load and startup restore`() {
         val dir = savesDir()
         val run = session(
-            givenUp() + playButton + tick + tick + save("s") + newGame() + snap() + load("s (4x4)") + snap(),
+            givenUp() + next + next + save("s") + newGame() + snap() + load("s (4x4)") + snap(),
             savesDir = dir,
         )
 
         assertEquals("Moves: 0", movesShown(snaps[0]))
         assertTrue(arrowsShown(snaps[0]))
         assertEquals(original.toList(), tilesShown(snaps[1]))
-        assertEquals("[ ▶ Play ]", playShown(snaps[1]))
+        assertEquals(replayRow, replayRowShown(snaps[1]))
         assertTrue(highlighted(snaps[1]).isEmpty())
         assertEquals(listOf("give_up", "load"), run.events("screen_solution").map { it["opened_from"] })
 
@@ -364,16 +375,15 @@ class GiveUpScenarioTest {
     }
 
     @Test
-    fun `switching input mode keeps the solution screen and the replay`() {
+    fun `switching input mode keeps the solution screen and the replay's place`() {
         val keyboardButton = layout.toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.KEYBOARD) }
-        val run = session(givenUp() + playButton + tick + click(keyboardButton.x to keyboardButton.y) + snap() + tick + snap())
+        session(givenUp() + next + click(keyboardButton.x to keyboardButton.y) + snap() + key(TerminalEvent.Arrow(Direction.RIGHT)) + snap())
 
         assertTrue("F7 Mouse" in rows(snaps[0]).joinToString("\n"))
         assertEquals(afterFirstStep.toList(), tilesShown(snaps[0]))
         assertEquals(listOf(steps[0]), highlighted(snaps[0]))
-        assertEquals("[ ❚❚ Pause ]", playShown(snaps[0]))
+        assertEquals(replayRow, replayRowShown(snaps[0]))
         assertEquals(afterOneColumnShift.toList(), tilesShown(snaps[1]))
-        assertTrue(run.terminal.timeouts.last() != null, "the keyboard view keeps reading with the replay's timeout (D6)")
     }
 
     @Test

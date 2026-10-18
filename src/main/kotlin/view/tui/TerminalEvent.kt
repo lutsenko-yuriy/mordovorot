@@ -20,6 +20,4 @@ sealed class TerminalEvent {
     object Escape : TerminalEvent()
     object Resize : TerminalEvent()
     object EndOfInput : TerminalEvent()
-    /** A timed [Terminal.readEvent] passed its timeout with no input (GH-126). */
-    object Tick : TerminalEvent()
 }

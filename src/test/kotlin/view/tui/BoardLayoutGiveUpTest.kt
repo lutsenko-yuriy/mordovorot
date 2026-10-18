@@ -5,15 +5,17 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import viewmodel.GiveUpButton
-import viewmodel.Playback
+import viewmodel.SolutionState
 
 /** GH-126: the Give Up row, and the solution screen's step list and Play button. */
 class BoardLayoutGiveUpTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
 
-    private fun layout(giveUp: GiveUpButton, playback: Playback? = null, side: Int = 4, shortcuts: Boolean = false, size: TerminalSize = terminalSize) =
-        BoardLayout(size, side, arrowsEnabled = playback == null, toolbarShortcuts = shortcuts, giveUp = giveUp, playback = playback)
+    private fun solution(atStart: Boolean = true, atEnd: Boolean = false) = SolutionState(listOf("1. Row 1 → ×1"), null, atStart, atEnd)
+
+    private fun layout(giveUp: GiveUpButton, solution: SolutionState? = null, side: Int = 4, shortcuts: Boolean = false, size: TerminalSize = terminalSize) =
+        BoardLayout(size, side, arrowsEnabled = solution == null, toolbarShortcuts = shortcuts, giveUp = giveUp, solution = solution)
 
     @Test
     fun `the Give Up row takes the blank row between the down arrows and the toolbar`() {
@@ -54,26 +56,28 @@ class BoardLayoutGiveUpTest {
     }
 
     @Test
-    fun `Play sits on the down-arrows row and reads Pause while playing and Play again at the end`() {
-        val labels = mapOf(
-            Playback.READY to "[ ▶ Play ]",
-            Playback.PLAYING to "[ ❚❚ Pause ]",
-            Playback.PAUSED to "[ ▶ Play ]",
-            Playback.ENDED to "[ ↻ Play again ]",
+    fun `Prev, Next and Restart sit on the down-arrows row, each inert where it has nowhere to go`() {
+        val cases = mapOf(
+            solution(atStart = true) to listOf(HitTarget.Nothing, HitTarget.ReplayNext, HitTarget.Nothing),
+            solution(atStart = false) to listOf(HitTarget.ReplayPrevious, HitTarget.ReplayNext, HitTarget.ReplayRestart),
+            solution(atStart = false, atEnd = true) to listOf(HitTarget.ReplayPrevious, HitTarget.Nothing, HitTarget.ReplayRestart),
         )
-        for ((playback, label) in labels) {
-            val layout = layout(GiveUpButton.DIMMED, playback)
-            val button = layout.playButton()!!
-            assertEquals(label, button.text)
-            assertEquals(layout.downArrowPosition(0).second, button.y)
-            assertEquals(HitTarget.Play, layout.hitTest(button.x, button.y))
+        for ((solution, targets) in cases) {
+            val layout = layout(GiveUpButton.DIMMED, solution)
+            val buttons = layout.replayButtons()
+            assertEquals(listOf("[ ◀ Prev ]", "[ Next ▶ ]", "[ ↻ Restart ]"), buttons.map { it.text })
+            assertEquals(targets, buttons.map { it.target })
+            for (button in buttons) {
+                assertEquals(layout.downArrowPosition(0).second, button.y)
+                assertEquals(button.target, layout.hitTest(button.x, button.y))
+            }
         }
-        assertNull(layout(GiveUpButton.GIVE_UP).playButton())
+        assertTrue(layout(GiveUpButton.GIVE_UP).replayButtons().isEmpty())
     }
 
     @Test
     fun `the step list runs down the grid's rows, right of the board`() {
-        val layout = layout(GiveUpButton.DIMMED, Playback.READY)
+        val layout = layout(GiveUpButton.DIMMED, solution())
 
         assertEquals(layout.gridOrigin().second, layout.stepListTop)
         assertEquals(layout.gridHeight, layout.stepRows)
@@ -82,7 +86,7 @@ class BoardLayoutGiveUpTest {
 
     @Test
     fun `on the solution screen the arrows are inert`() {
-        val layout = layout(GiveUpButton.DIMMED, Playback.READY)
+        val layout = layout(GiveUpButton.DIMMED, solution())
         val (x, y) = layout.leftArrowPosition(0)
 
         assertEquals(HitTarget.Nothing, layout.hitTest(x, y))
@@ -91,7 +95,7 @@ class BoardLayoutGiveUpTest {
     @Test
     fun `a 5x5 solution screen fits 80x24, the longest step included`() {
         val size = TerminalSize(columns = 80, rows = 24)
-        val layout = layout(GiveUpButton.DIMMED, Playback.READY, side = 5, shortcuts = true, size = size)
+        val layout = layout(GiveUpButton.DIMMED, solution(), side = 5, shortcuts = true, size = size)
 
         assertTrue(layout.toolbarRow + 3 < 24, "the controls hint fits")
         assertTrue(layout.stepListTop + layout.stepRows <= layout.downArrowPosition(0).second)

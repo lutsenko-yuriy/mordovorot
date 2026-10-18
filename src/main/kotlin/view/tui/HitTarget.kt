@@ -38,8 +38,11 @@ sealed class HitTarget {
     /** `[ Mordie's solution ]` after a win / F8 (GH-126) - opens the solution screen. */
     object MordiesSolution : HitTarget()
 
-    /** The solution screen's Play / Pause / Play again button, or Space/Enter (GH-126). */
-    object Play : HitTarget()
+    /** The solution screen's Prev / Next / Restart (GH-126): one shift back, one forward, or
+     *  back to the original arrangement. */
+    object ReplayPrevious : HitTarget()
+    object ReplayNext : HitTarget()
+    object ReplayRestart : HitTarget()
 
     object Nothing : HitTarget()
 }

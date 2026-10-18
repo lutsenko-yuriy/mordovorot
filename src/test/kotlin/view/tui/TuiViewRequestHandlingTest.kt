@@ -45,7 +45,7 @@ class TuiViewRequestHandlingTest {
                 writeCount++
                 if (writeCount == 1) throw ModeSwitchRequestedException(InputMode.KEYBOARD)
             }
-            override fun readEvent(timeoutMs: Long?): TerminalEvent = TerminalEvent.EndOfInput
+            override fun readEvent(): TerminalEvent = TerminalEvent.EndOfInput
             override fun size(): TerminalSize = terminalSize
         }
         val view = testTuiView(terminal, viewModel = testViewModel(board, saves))

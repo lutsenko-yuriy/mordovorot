@@ -7,7 +7,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import viewmodel.GiveUpButton
-import viewmodel.Playback
 import viewmodel.ShiftKey
 import viewmodel.SolutionState
 
@@ -131,42 +130,50 @@ class KeyboardInputTest {
 
     private fun solutionScreen() = ScreenState.forBoard(
         (0 until 16).toList(), 4, solved = false, giveUpButton = GiveUpButton.DIMMED,
-        solution = SolutionState(listOf("1. Row 1 → ×1"), current = null, Playback.READY),
+        solution = SolutionState(listOf("1. Row 1 → ×1"), current = null, atStart = true, atEnd = false),
     )
 
     @Test
-    fun `on the solution screen Space and Enter press Play, W S and the up down arrows scroll (GH-126)`() {
+    fun `on the solution screen the arrows and A D step, Space and Enter go next, R restarts, W S up down scroll (GH-126)`() {
         val selection = KeyboardSelection()
         val input = KeyboardInput(selection)
         input.decorateBoard(solutionScreen())
 
-        assertEquals(InputAction.Activate(HitTarget.Play), input.onBoardEvent(key(' '), boardLayout))
-        assertEquals(InputAction.Activate(HitTarget.Play), input.onBoardEvent(TerminalEvent.Enter, boardLayout))
-        assertEquals(InputAction.Scroll(-1), input.onBoardEvent(key('w'), boardLayout))
-        assertEquals(InputAction.Scroll(-1), input.onBoardEvent(arrow(Direction.UP), boardLayout))
-        assertEquals(InputAction.Scroll(1), input.onBoardEvent(key('S'), boardLayout))
-        assertEquals(InputAction.Scroll(1), input.onBoardEvent(arrow(Direction.DOWN), boardLayout))
-        for (event in listOf(key('a'), key('d'), key('h'), key('j'), arrow(Direction.LEFT))) {
-            assertEquals(InputAction.None, input.onBoardEvent(event, boardLayout), "$event")
-        }
+        val expected = mapOf(
+            arrow(Direction.LEFT) to InputAction.Activate(HitTarget.ReplayPrevious),
+            key('a') to InputAction.Activate(HitTarget.ReplayPrevious),
+            arrow(Direction.RIGHT) to InputAction.Activate(HitTarget.ReplayNext),
+            key('D') to InputAction.Activate(HitTarget.ReplayNext),
+            key(' ') to InputAction.Activate(HitTarget.ReplayNext),
+            TerminalEvent.Enter to InputAction.Activate(HitTarget.ReplayNext),
+            key('r') to InputAction.Activate(HitTarget.ReplayRestart),
+            key('w') to InputAction.Scroll(-1),
+            arrow(Direction.UP) to InputAction.Scroll(-1),
+            key('S') to InputAction.Scroll(1),
+            arrow(Direction.DOWN) to InputAction.Scroll(1),
+            key('h') to InputAction.None,
+            key('j') to InputAction.None,
+        )
+        for ((event, action) in expected) assertEquals(action, input.onBoardEvent(event, boardLayout), "$event")
         assertEquals(LineSelection.INITIAL, selection.current)
         assertEquals(InputAction.Activate(HitTarget.ToolbarSave), input.onBoardEvent(TerminalEvent.FunctionKey(5), boardLayout))
     }
 
     @Test
-    fun `off the solution screen Space and Enter do nothing (GH-126)`() {
+    fun `off the solution screen Space, Enter and R do nothing (GH-126)`() {
         val input = input()
 
         assertEquals(InputAction.None, input.onBoardEvent(key(' '), boardLayout))
         assertEquals(InputAction.None, input.onBoardEvent(TerminalEvent.Enter, boardLayout))
+        assertEquals(InputAction.None, input.onBoardEvent(key('r'), boardLayout))
     }
 
     @Test
-    fun `the solution screen's hints are play and scroll, with no shift hint (GH-126)`() {
+    fun `the solution screen's hints are step, restart and scroll, with no shift hint (GH-126)`() {
         val decorated = KeyboardInput(KeyboardSelection()).decorateBoard(solutionScreen())
 
         assertNull(decorated.selection)
-        assertEquals(listOf("Space  play/pause", "W/S  scroll"), decorated.selectionHint)
+        assertEquals(listOf("←/→ A/D  step", "R  restart", "W/S  scroll"), decorated.selectionHint)
         assertEquals(emptyList(), decorated.shiftHint)
     }
 
