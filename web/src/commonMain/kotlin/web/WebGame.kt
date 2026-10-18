@@ -5,16 +5,22 @@ import board_model.BoardSize
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import viewmodel.GameViewModel
 import viewmodel.PointerShift
+import viewmodel.SaveInfo
+import viewmodel.UnsolvableSaveChoice
+import viewmodel.display
+import viewmodel.displayWithSize
 
 /** Which arrow was clicked: [LEFT]/[RIGHT] shift a row, [UP]/[DOWN] a column. */
 enum class Arrow { LEFT, RIGHT, UP, DOWN }
 
 /** The browser's View (GH-110): takes the page's intents, runs them on [viewModel] and renders a
- *  [WebState] after every change. A dialog is modal: while one is open, only its answer counts.
- *  Tracks the view-layer analytics, like the terminal's dialog controllers. */
+ *  [WebState] after every change. A dialog is modal: while one is open, or a toolbar action or the
+ *  startup restore is under way, only a dialog's answer counts. Tracks the view-layer analytics,
+ *  like the terminal's dialog controllers. */
 class WebGame internal constructor(
     private val viewModel: GameViewModel,
     private val analytics: AnalyticsService,
@@ -22,26 +28,32 @@ class WebGame internal constructor(
     private val scope: CoroutineScope,
 ) {
 
-    private class OpenDialog<T>(val shown: WebDialog) {
+    private class OpenDialog<T>(var shown: WebDialog) {
         val answer = CompletableDeferred<T>()
     }
 
     private val requests = WebRequestRouter(this)
     private var dialog: OpenDialog<*>? = null
     private var status: String? = null
+    /** The toolbar action or startup restore under way, if any. */
+    private var flow: Job? = null
+    private val idle get() = dialog == null && flow?.isActive != true
 
     /** Answers the viewModel's requests, then runs the startup restore. */
     internal fun start() {
         render()
         scope.launch { for (request in viewModel.uiRequests) requests.handle(request) }
-        scope.launch {
+        flow = scope.launch {
             viewModel.restoreOnStartup()
             render()
         }
     }
 
+    /** Backs the page's leave-site prompt. */
+    fun hasUnsavedProgress(): Boolean = viewModel.hasUnsavedProgress()
+
     fun onArrow(arrow: Arrow, line: Int) {
-        if (dialog != null || viewModel.isSolved()) return
+        if (!idle || viewModel.isSolved()) return
         status = null
         when (arrow) {
             Arrow.LEFT -> viewModel.shiftLeft(line, PointerShift.ARROW)
@@ -54,16 +66,39 @@ class WebGame internal constructor(
         render()
     }
 
-    fun onNew() {
-        if (dialog != null) return
-        status = null
-        // Undispatched, so the dialog is open before this returns and a second click sees it.
-        scope.launch(start = CoroutineStart.UNDISPATCHED) {
-            chooseSize("toolbar")?.let {
-                viewModel.newGame(it, trigger = "toolbar")
-                render()
-            }
+    fun onNew() = runFlow {
+        chooseSize("toolbar")?.let { viewModel.newGame(it, trigger = "toolbar") }
+    }
+
+    fun onSave() = runFlow {
+        val name = askSaveName()
+        when {
+            name == null -> {}
+            // The terminal's rule too: the name check alone allows spaces.
+            name.any { it.isWhitespace() } -> status = "'$name' isn't a usable save name (no spaces) - not saved."
+            else -> viewModel.saveGame(name)
         }
+    }
+
+    fun onSaveNameTyped(name: String) {
+        val open = dialog?.takeIf { it.shown is WebDialog.Save } ?: return
+        open.shown = saveDialog(name)
+        render()
+    }
+
+    /** The Save dialog's answer; `null` is Cancel. */
+    fun onSaveAnswered(name: String?) = answer<WebDialog.Save, String?>(name)
+
+    fun onLoad() = runFlow {
+        chooseSave(viewModel.listSaves(), restore = false)?.let { viewModel.loadGame(it) }
+    }
+
+    /** The Load dialog's answer, a listed save's name; `null` is Cancel. */
+    fun onLoadChosen(name: String?) = answer<WebDialog.Load, String?>(name)
+
+    /** The unsolvable-save dialog's answer. The page has no Exit, so [UnsolvableSaveChoice.EXIT] is ignored. */
+    fun onUnsolvableChoice(choice: UnsolvableSaveChoice) {
+        if (choice != UnsolvableSaveChoice.EXIT) answer<WebDialog.Unsolvable, UnsolvableSaveChoice>(choice)
     }
 
     /** The size picker's answer; `null` is Cancel. */
@@ -77,9 +112,54 @@ class WebGame internal constructor(
         return size
     }
 
+    /** The startup restore offer, for one save or a pick list; the chosen save's name or `null`. */
+    internal suspend fun chooseRestore(saves: List<SaveInfo>): String? = chooseSave(saves, restore = true)
+
+    /** [openedFrom] is `startup` or `toolbar`, as `screen_unsolvable_dialog.opened_from`. */
+    internal suspend fun resolveUnsolvable(save: SaveInfo, openedFrom: String): UnsolvableSaveChoice {
+        analytics.track("screen_unsolvable_dialog", mapOf("opened_from" to openedFrom))
+        // The viewModel's can't-be-solved message, just shown, goes in the dialog instead.
+        val message = status ?: "'${save.displayWithSize()}' can't be solved by any sequence of shifts."
+        status = null
+        return ask(WebDialog.Unsolvable(message))
+    }
+
     internal fun showStatus(text: String) {
         status = text
         render()
+    }
+
+    private suspend fun askSaveName(): String? {
+        val prefill = viewModel.currentSaveName() ?: ""
+        analytics.track("screen_save_dialog", mapOf("opened_from" to "toolbar", "prefilled" to prefill.isNotEmpty()))
+        val name = ask<String?>(saveDialog(prefill))
+        if (name == null) analytics.track("dialog_cancelled", mapOf("dialog" to "save"))
+        // A blank name is Cancel, untracked like the terminal's empty Save.
+        return name?.takeUnless { it.isBlank() }
+    }
+
+    private fun saveDialog(name: String) = WebDialog.Save(
+        name,
+        if (name.isNotEmpty() && viewModel.saveExists(name)) "'$name' already exists - it will be overwritten." else null,
+    )
+
+    private suspend fun chooseSave(saves: List<SaveInfo>, restore: Boolean): String? {
+        val openedFrom = if (restore) "startup" else "toolbar"
+        analytics.track("screen_load_dialog", mapOf("opened_from" to openedFrom, "save_file_count" to saves.size))
+        val name = ask<String?>(WebDialog.Load(restore, saves.map { SaveEntry(it.name, it.display()) }))
+        if (name == null) analytics.track("dialog_cancelled", mapOf("dialog" to "load"))
+        return name
+    }
+
+    /** Runs a toolbar action, unless another action or a dialog is under way, then renders. */
+    private fun runFlow(action: suspend () -> Unit) {
+        if (!idle) return
+        status = null
+        // Undispatched, so the action is under way before this returns and a second click sees it.
+        flow = scope.launch(start = CoroutineStart.UNDISPATCHED) {
+            action()
+            render()
+        }
     }
 
     private suspend fun <T> ask(shown: WebDialog): T {
