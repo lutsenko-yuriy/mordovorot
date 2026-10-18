@@ -289,7 +289,13 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle. A br
     tall as the tiles; tall puts it under the board, a few steps high. Either way it scrolls when
     the steps don't fit, and keeps the current step in view. `[ ◀ Prev ] [ Next ▶ ] [ ↻ Restart ]`
     sit above the toolbar. The board keeps its place, with its arrows hidden.
-  - The board scales to fit the window.
+  - The board scales to fit the window, leaving room for the footer.
+  - The footer sits at the very bottom in both (GH-111).
+- **Footer (GH-111):** one small muted line,
+  `v<version> · Based on Loopover by Cary Huang (carykh) · original · loopover.xyz`. The version is
+  the app's current one, stamped in when the page is built. `original` links to the game on
+  OpenProcessing and `loopover.xyz` to the community site, both in a new tab so the game in this
+  one is kept. Dialogs cover it like the rest of the page.
 - **Analytics:** every event carries `platform: web` and `input_method: rich_ui`;
   see `docs/ANALYTICS_EVENTS.md`.
 

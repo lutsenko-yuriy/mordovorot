@@ -5,6 +5,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import viewmodel.UnsolvableSaveChoice
 import web.Arrow
+import web.Host
 import web.layoutOf
 
 /** GH-110 scenarios: the web's analytics, per `docs/ANALYTICS_EVENTS.md`. Same setup as
@@ -29,27 +30,28 @@ class WebAnalyticsScenarioTest {
     }
 
     @Test
-    fun `app_launched has mode rich_ui and the layout, and no terminal-only properties`() = webTest {
-        fun launched(width: Int, height: Int) =
-            WebHarness(backgroundScope, layout = layoutOf(width, height)).start().props("app_launched").single()
-
-        assertEquals(mapOf<String, Any?>("mode" to "rich_ui", "layout" to "wide", "platform" to "web"), launched(1200, 800))
-        assertEquals(mapOf<String, Any?>("mode" to "rich_ui", "layout" to "tall", "platform" to "web"), launched(800, 800))
-    }
-
-    @Test
     fun `app_launched also carries app_version and host`() = webTest {
-        // TODO: start a harness with version 9.9.9, host LOCALHOST and the wide layout
-        // TODO: verify app_launched is exactly {mode: rich_ui, layout: wide, platform: web, app_version: 9.9.9, host: localhost}
-        // TODO: start one with the tall layout; verify the same map with layout: tall
-        // TODO: fold the test above into this one in the same commit (GH-111 WU1)
+        fun launched(width: Int, height: Int) = WebHarness(
+            backgroundScope, layout = layoutOf(width, height), appVersion = "9.9.9", host = Host.LOCALHOST,
+        ).start().props("app_launched").single()
+
+        fun expected(layout: String) = mapOf<String, Any?>(
+            "mode" to "rich_ui", "layout" to layout, "platform" to "web", "app_version" to "9.9.9", "host" to "localhost",
+        )
+        assertEquals(expected("wide"), launched(1200, 800))
+        assertEquals(expected("tall"), launched(800, 800))
     }
 
     @Test
     fun `app_launched reports the host bucket, never the hostname`() = webTest {
-        // TODO: start harnesses with host PUBLIC_SITE, LOCALHOST and OTHER
-        // TODO: verify app_launched.host is public_site, localhost and other respectively
-        // TODO: verify no event in any of them has a property value containing github.io
+        val pages = Host.entries.associateWith { WebHarness(backgroundScope, host = it).start() }
+
+        assertEquals(
+            mapOf(Host.PUBLIC_SITE to "public_site", Host.LOCALHOST to "localhost", Host.OTHER to "other"),
+            pages.mapValues { (_, page) -> page.props("app_launched").single()["host"] },
+        )
+        val values = pages.values.flatMap { page -> page.analytics.events.flatMap { it.properties.values } }
+        assertTrue(values.none { "github.io" in it.toString() }, "$values")
     }
 
     @Test

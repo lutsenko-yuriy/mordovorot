@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.18.1] — 2026-10-19 (PR #134 merged)
+
+### Changed
+- [wip] (PR #134) GH-111 (WU1/2): a footer at the bottom of the web page with the app version (stamped from build.gradle.kts) and the Loopover credit (Cary Huang, links to the original and loopover.xyz, in a new tab); app_launched on web gains app_version and host (public_site/localhost/other); the page sizes to the dynamic viewport on phones. Publishing on GitHub Pages follows in WU2.
+
 ## [0.18.0] — 2026-10-18 (PR #132 merged)
 
 ### Added
