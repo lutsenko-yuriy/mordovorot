@@ -2,9 +2,8 @@ package viewmodel.usecase
 
 import analytics.AnalyticsService
 import board_model.BoardModel
-import mordie.Mordie
-import mordie.MordieLine
 import viewmodel.GiveUpButton
+import viewmodel.MordieHooks
 import viewmodel.MordieText
 import viewmodel.Playback
 import viewmodel.SolutionReplay
@@ -18,7 +17,7 @@ import viewmodel.UnsavedProgress
  *  original arrangement, and the replay with its analytics. */
 internal class SolutionUseCase(
     private val board: BoardModel,
-    private val mordie: Mordie,
+    private val mordieHooks: MordieHooks,
     private val analytics: AnalyticsService,
     private val solutionScreen: SolutionScreen,
     private val unsavedProgress: UnsavedProgress,
@@ -27,25 +26,22 @@ internal class SolutionUseCase(
     val onScreen: Boolean get() = solutionScreen.replay != null
 
     fun button(): GiveUpButton {
-        val hasPath = !mordie.solution.isNullOrEmpty()
+        val hasPath = mordieHooks.solution() != null
         return when {
             onScreen -> GiveUpButton.DIMMED
             board.isCorrect() ->
-                if (hasPath && mordie.outcome()?.found == true) GiveUpButton.MORDIES_SOLUTION else GiveUpButton.HIDDEN
-            hasPath && mordie.line() is MordieLine.Found -> GiveUpButton.GIVE_UP
+                if (hasPath && mordieHooks.foundBeforeWin()) GiveUpButton.MORDIES_SOLUTION else GiveUpButton.HIDDEN
+            hasPath && mordieHooks.revealed() -> GiveUpButton.GIVE_UP
             else -> GiveUpButton.DIMMED
         }
     }
 
     fun giveUp() {
         if (button() != GiveUpButton.GIVE_UP) return
-        val since = listOfNotNull(
-            mordie.playerMovesAtReveal?.let { "moves_since_solution_found" to board.moveCount - it },
-            mordie.shiftsAtReveal?.let { "shifts_since_solution_found" to mordie.shifts - it },
-        )
         analytics.track(
             "game_given_up",
-            mapOf("board_size" to board.squareSide, "move_count" to board.moveCount, "solution_length" to mordie.solution!!.size) + since,
+            mapOf("board_size" to board.squareSide, "move_count" to board.moveCount, "solution_length" to mordieHooks.solution()!!.size) +
+                mordieHooks.sinceRevealProps(),
         )
         enter("give_up")
     }
@@ -63,8 +59,8 @@ internal class SolutionUseCase(
 
     /** Puts the original arrangement back on the board, which discards the player's moves. */
     private fun enter(openedFrom: String) {
-        val original = mordie.original() ?: return
-        val moves = mordie.solution?.takeIf { it.isNotEmpty() } ?: return
+        val original = mordieHooks.original() ?: return
+        val moves = mordieHooks.solution() ?: return
         board.restoreState(original, 0)
         val replay = SolutionReplay(original, board.squareSide, SolutionSteps.of(moves, board.squareSide))
         solutionScreen.replay = replay

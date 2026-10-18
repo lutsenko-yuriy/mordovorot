@@ -30,7 +30,7 @@ fun buildGameViewModel(
     unsolvableExit: UnsolvableSaveExit,
 ): GameViewModelImpl {
     val mordieHooks = MordieHooks(mordie, board, analytics, solutionScreen)
-    val solution = SolutionUseCase(board, mordie, analytics, solutionScreen, unsavedProgress)
+    val solution = SolutionUseCase(board, mordieHooks, analytics, solutionScreen, unsavedProgress)
     val catalog = SaveCatalog(saves)
     val newGame = NewGameUseCase(board, mordieHooks, analytics, currentSaveName, gameShiftSources, unsavedProgress, solution)
     val saveGame = SaveGameUseCase(board, saves, mordieHooks, analytics, ui, currentSaveName, unsavedProgress)

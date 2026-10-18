@@ -4,6 +4,7 @@ import analytics.AnalyticsService
 import board_model.BoardModel
 import board_model.Solvability
 import mordie.Mordie
+import mordie.MordieLine
 import mordie.SolutionMove
 import storage.SavedMordie
 import storage.SavedMove
@@ -65,6 +66,24 @@ internal class MordieHooks(
     }
 
     fun line(): String? = mordie.line()?.let(MordieText::line)
+
+    /** Mordie's solution for the solution screen (GH-126); `null` when unknown or empty. */
+    fun solution(): List<SolutionMove>? = mordie.solution?.takeIf { it.isNotEmpty() }
+
+    fun original(): IntArray? = mordie.original()
+
+    /** Whether `Found it!` is showing. */
+    fun revealed(): Boolean = mordie.line() is MordieLine.Found
+
+    /** Whether Mordie's frozen result, after a win, is a found solution. */
+    fun foundBeforeWin(): Boolean = mordie.outcome()?.found == true
+
+    /** `game_given_up`'s moves and shifts since `Found it!`; empty after loading a save that was
+     *  already found. */
+    fun sinceRevealProps(): Map<String, Int> = listOfNotNull(
+        mordie.playerMovesAtReveal?.let { "moves_since_solution_found" to board.moveCount - it },
+        mordie.shiftsAtReveal?.let { "shifts_since_solution_found" to mordie.shifts - it },
+    ).toMap()
 
     fun ending(): String? = mordie.outcome()?.let { MordieText.ending(it, board.moveCount) }
 
