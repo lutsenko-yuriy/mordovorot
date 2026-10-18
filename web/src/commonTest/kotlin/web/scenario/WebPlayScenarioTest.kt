@@ -67,7 +67,7 @@ class WebPlayScenarioTest {
         assertEquals(0, page.state.moves)
         assertNull(page.state.dialog)
         assertTrue(Solvability.isSolvable(page.state.tiles.map { it - 1 }.toIntArray()))
-        assertEquals(listOf(mapOf<String, Any?>("size" to 3, "trigger" to "toolbar")), page.props("new_game_size_selected").map { it - "platform" - "input_method" })
+        assertEquals(listOf(mapOf<String, Any?>("size" to 3, "trigger" to "toolbar")), page.ownProps("new_game_size_selected"))
     }
 
     @Test
@@ -86,11 +86,14 @@ class WebPlayScenarioTest {
     }
 
     @Test
-    fun `solving a game Mordie sat out shows Congratulations`() {
-        // WU5 (Mordie sits out only a loaded save with no usable Mordie data and moves > 0)
-        // TODO: 1. Seed a save one shift from solved, 3 moves, no Mordie lines; load it.
-        // TODO: 2. Make the solving shift.
-        // TODO: 3. Mordie's spot is "Congratulations ✓".
+    fun `solving a game Mordie sat out shows Congratulations`() = webTest {
+        // Mordie sits out only a loaded save with no Mordie data and moves made.
+        val page = WebHarness(backgroundScope).seed("s", ONE_SHIFT_FROM_SOLVED, moves = 3).start()
+        page.game.onLoadChosen("s")
+
+        page.game.onArrow(Arrow.LEFT, 0)
+
+        assertEquals("Congratulations ✓", page.state.mordie)
     }
 
     @Test

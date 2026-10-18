@@ -7,32 +7,29 @@ import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
 import mordie.BackgroundMordieSearch
 import mordie.Mordie
-import storage.SaveNames
-import storage.SaveRepository
-import storage.SavedBoard
-import storage.SavedMordie
+import web.storage.BrowserSaveRepository
+import web.storage.LocalStorageStore
 
 /** The page's composition root (GH-110). */
 fun main() {
     val root = document.getElementById("app") ?: return
     val renderer = DomRenderer(root)
-    renderer.game = startWebGame(
+    val game = startWebGame(
         BoardImpl(),
-        NoSaves,
+        BrowserSaveRepository(LocalStorageStore()),
         NoopAnalyticsService(),
         Mordie(BackgroundMordieSearch.Factory()),
         renderer,
         MainScope(),
         layoutOf(window.innerWidth, window.innerHeight),
     )
-}
-
-/** Until WU5 keeps saves in localStorage: there are none, and the page has no Save button. */
-private object NoSaves : SaveRepository {
-    override fun listSaves(): List<String> = emptyList()
-    override fun exists(name: String) = false
-    override fun save(name: String, state: IntArray, squareSide: Int, moveCount: Int, mordie: SavedMordie?) =
-        throw UnsupportedOperationException("The page can't save yet")
-    override fun isValidName(name: String) = SaveNames.isSafe(name)
-    override fun load(name: String): SavedBoard? = null
+    renderer.game = game
+    // The browser's own "Leave site?" prompt, only while some progress isn't in a save.
+    window.addEventListener("beforeunload", { event ->
+        if (game.hasUnsavedProgress()) {
+            event.preventDefault()
+            // Older browsers show the prompt only when this is set as well.
+            event.asDynamic().returnValue = ""
+        }
+    })
 }
