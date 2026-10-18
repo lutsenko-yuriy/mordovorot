@@ -214,6 +214,18 @@ class FileSaveRepositoryTest {
     }
 
     @Test
+    fun `save then load round-trips Mordie's solution and the solution-screen flag, GH-126`() {
+        val repo = newRepository()
+        val original = intArrayOf(2, 3, 0, 1)
+        val path = listOf(SavedMove(isRow = false, index = 0, amount = 1), SavedMove(isRow = false, index = 1, amount = 1))
+        val screen = SavedMordie(original, moves = 2, found = true, solution = path, solutionScreen = true)
+
+        repo.save("screen", original, 2, moveCount = 0, mordie = screen)
+
+        assertEquals(SavedBoard(2, original, 0, screen), repo.load("screen"))
+    }
+
+    @Test
     fun `Mordie data goes on lines 4-5 after an unchanged first three lines`() {
         val dir = createTempDirectory("mordovorot-saves")
         val repo = FileSaveRepository(dir)

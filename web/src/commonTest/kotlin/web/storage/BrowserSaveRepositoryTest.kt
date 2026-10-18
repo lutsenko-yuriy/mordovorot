@@ -9,6 +9,7 @@ import kotlin.test.assertTrue
 import storage.SaveFileFormatException
 import storage.SavedBoard
 import storage.SavedMordie
+import storage.SavedMove
 
 class BrowserSaveRepositoryTest {
 
@@ -28,6 +29,15 @@ class BrowserSaveRepositoryTest {
         repo.save("m", intArrayOf(3, 0, 2, 1), 2, moveCount = 7, mordie = mordie)
 
         assertEquals(SavedBoard(2, intArrayOf(3, 0, 2, 1), 7, mordie), repo.load("m"))
+    }
+
+    @Test
+    fun `load returns Mordie's solution and the solution-screen flag, GH-126`() {
+        val path = listOf(SavedMove(isRow = false, index = 0, amount = 1), SavedMove(isRow = false, index = 1, amount = 1))
+        val mordie = SavedMordie(intArrayOf(2, 3, 0, 1), moves = 2, found = true, solution = path, solutionScreen = true)
+        repo.save("s", intArrayOf(2, 3, 0, 1), 2, moveCount = 0, mordie = mordie)
+
+        assertEquals(SavedBoard(2, intArrayOf(2, 3, 0, 1), 0, mordie), repo.load("s"))
     }
 
     @Test
