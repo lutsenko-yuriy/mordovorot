@@ -5,9 +5,6 @@ import kotlinx.dom.clear
 import org.w3c.dom.Element
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.HTMLInputElement
-import org.w3c.dom.NEAREST
-import org.w3c.dom.ScrollIntoViewOptions
-import org.w3c.dom.ScrollLogicalPosition
 import org.w3c.dom.pointerevents.PointerEvent
 import web.drag.Axis
 import web.drag.LineOffset
@@ -112,11 +109,20 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
         root.querySelector(".steps")?.let { steps ->
             // Back at the top on a Restart; otherwise the current step scrolls into view, if it must.
             steps.scrollTop = stepsScroll?.takeUnless { state.solution?.atStart == true } ?: 0.0
-            steps.querySelector(".current")?.scrollIntoView(ScrollIntoViewOptions(block = ScrollLogicalPosition.NEAREST))
+            (steps.querySelector(".current") as? HTMLElement)?.let { showStep(steps, it) }
         }
         dialog?.let { root.append(element("div", "overlay").apply { append(dialogElement(it, game) { warning -> saveWarning = warning }) }) }
         drawMordie(now)
         root.querySelector("input")?.let { (it as HTMLInputElement).focus() }
+    }
+
+    /** Scrolls [steps] just enough to show [step]. Unlike `scrollIntoView`, never the page, so
+     *  the buttons under the pointer stay put. */
+    private fun showStep(steps: Element, step: HTMLElement) {
+        val top = step.offsetTop.toDouble()
+        val bottom = top + step.offsetHeight
+        if (top < steps.scrollTop) steps.scrollTop = top
+        if (bottom > steps.scrollTop + steps.clientHeight) steps.scrollTop = bottom - steps.clientHeight
     }
 
     /** Mordie's spot as the feed has it at [time]: a leaving line rises towards Moves; an arriving

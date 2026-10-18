@@ -179,6 +179,8 @@ body {
 
 .steps {
     grid-area: steps;
+    /* The steps' offsetTop counts from here, for DomRenderer's scrolling. */
+    position: relative;
     width: 14rem;
     max-width: 100%;
     max-height: calc(6 * 1.9em);
