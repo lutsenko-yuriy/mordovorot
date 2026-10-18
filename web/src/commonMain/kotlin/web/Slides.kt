@@ -2,6 +2,7 @@ package web
 
 import kotlin.math.pow
 import kotlin.math.roundToInt
+import viewmodel.SolutionStep
 import web.drag.Axis
 import web.drag.LineOffset
 import web.drag.WrapPositions
@@ -16,6 +17,10 @@ object Slides {
         Arrow.UP -> LineOffset(Axis.COLUMN, line, 1.0)
         Arrow.DOWN -> LineOffset(Axis.COLUMN, line, -1.0)
     }
+
+    /** After a replay shift (GH-126): as the arrow that makes it would. */
+    fun ofStep(step: SolutionStep): LineOffset =
+        LineOffset(if (step.isRow) Axis.ROW else Axis.COLUMN, step.index, if (step.forward) -1.0 else 1.0)
 
     /** After [drag] on a board of [side] ends: the rest of the way to the nearest tile when the line
      *  [moved], else back to where it started (a full loop counting as none). `null` when already there. */

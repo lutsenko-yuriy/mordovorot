@@ -1,5 +1,7 @@
 package web
 
+import viewmodel.GiveUpButton
+import viewmodel.SolutionState
 import web.drag.LineOffset
 
 /** One frame of the page (GH-110): what [WebRenderer] draws. [tiles] are 1-based, row by row. */
@@ -15,8 +17,15 @@ data class WebState(
     val dialog: WebDialog?,
     /** The line being dragged and how far, before the release snaps it. */
     val drag: LineOffset? = null,
+    /** The row above the toolbar (GH-126). */
+    val giveUp: GiveUpButton = GiveUpButton.HIDDEN,
+    /** Mordie's solution screen (GH-126); `null` off it. */
+    val solution: SolutionState? = null,
+    /** The replay shift just made, for this frame to slide its line from. */
+    val slide: LineOffset? = null,
 ) {
-    val arrowsEnabled: Boolean get() = !solved
+    val arrowsEnabled: Boolean get() = !solved && solution == null
+    val movesShown: Boolean get() = solution == null
 }
 
 /** The modal dialog open over the board. */
@@ -32,6 +41,9 @@ sealed interface WebDialog {
 
     /** A save no sequence of shifts solves: Repair & load or New game, and no Exit. */
     data class Unsolvable(val message: String) : WebDialog
+
+    /** The give-up confirmation (GH-126): Yes or No. */
+    data object GiveUp : WebDialog
 }
 
 /** A save as a Load row: its [label] is `name (NxN)`, with the unsolvable mark when it applies. */

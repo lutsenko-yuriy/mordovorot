@@ -54,6 +54,13 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                     button("Repair & load") { game.onUnsolvableChoice(UnsolvableSaveChoice.REPAIR) },
                 ),
             )
+            WebDialog.GiveUp -> append(
+                text("title", "Give up and see Mordie's solution?"),
+                actions(
+                    button("No", "secondary") { game.onGiveUpAnswered(false) },
+                    button("Yes") { game.onGiveUpAnswered(true) },
+                ),
+            )
         }
     }
 
