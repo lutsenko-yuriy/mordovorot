@@ -81,7 +81,11 @@ class DomRenderer(private val root: Element) : WebRenderer {
                 val name = (element("input") as HTMLInputElement).apply {
                     value = dialog.name
                     addEventListener("input", { game.onSaveNameTyped(value) })
-                    addEventListener("keydown", { if ((it as KeyboardEvent).key == "Enter") game.onSaveAnswered(value) })
+                    addEventListener("keydown", {
+                        // An Enter that confirms an IME composition isn't the player's Save.
+                        val key = it as KeyboardEvent
+                        if (key.key == "Enter" && !key.isComposing && key.keyCode != 229) game.onSaveAnswered(value)
+                    })
                 }
                 val warning = text("warning", dialog.warning ?: "")
                 saveWarning = warning

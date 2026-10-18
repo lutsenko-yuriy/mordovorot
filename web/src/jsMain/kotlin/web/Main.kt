@@ -28,8 +28,8 @@ fun main() {
     window.addEventListener("beforeunload", { event ->
         if (game.hasUnsavedProgress()) {
             event.preventDefault()
-            // Older browsers show the prompt only when this is set as well.
-            event.asDynamic().returnValue = ""
+            // Older browsers show the prompt only when this is set, and not empty, as well.
+            event.asDynamic().returnValue = true
         }
     })
 }
