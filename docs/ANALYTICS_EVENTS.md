@@ -89,6 +89,11 @@ Fired once at startup, after the launch mode is resolved (default mouse TUI or `
 
 *GH-110:* on `web`, it fires on page load. `mode` is `rich_ui`, and `board_size` and `console_flag_ignored` are absent: there are no CLI flags, and `new_game_size_selected` reports the size picked later. New property `layout` (`string`, web only): `wide` (window wider than tall) or `tall` (taller than wide, or square), as of page load.
 
+*GH-111:* two new properties on `web` only: `app_version` (`string`) - the version stamped into
+the build, e.g. `0.18.0`, the same one the footer shows; and `host` (`string`) - `public_site`
+(`lutsenko-yuriy.github.io`), `localhost` or `other`. Only these three bucketed values are sent,
+never the raw hostname, URL, query string or referrer. The footer's links aren't tracked.
+
 ### `dialog_cancelled`
 
 Fired when the user cancels the Save, Load, Exit, or Size dialog in the mouse-driven or keyboard-driven TUI (mouse click, or Escape/Cancel-control in keyboard mode) without completing the action. *(GH-3, GH-18, GH-44)*
