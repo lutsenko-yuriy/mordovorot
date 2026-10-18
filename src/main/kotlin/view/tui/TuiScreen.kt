@@ -38,6 +38,11 @@ internal class TuiScreen(
     var wasSolved = false
         private set
 
+    /** The solution screen's step list scroll (GH-126), reset off the screen. */
+    private val stepWindow = StepListWindow()
+
+    fun scrollSteps(delta: Int) = stepWindow.scroll(delta)
+
     /** Shared dialog loop: tells [input] a dialog opened, then repaints [dialog] and passes each
      *  event to [onAction], which returns from the caller when done. Escape or the "cancel"
      *  button tracks `dialog_cancelled` and returns [cancelled] - unless not [cancellable], when
@@ -85,7 +90,8 @@ internal class TuiScreen(
         // this package already keeps. MouseInput's decoration is the identity, so this is a
         // no-op for mouse mode (WU3's "no behaviour change" requirement).
         val decoratedDialog = dialog?.let { input.decorateDialog(it) }
-        val state = input.decorateBoard(
+        val solution = viewModel.solution()
+        val base = input.decorateBoard(
             ScreenState
                 .forBoard(
                     viewModel.boardState().toList(),
@@ -94,10 +100,16 @@ internal class TuiScreen(
                     viewModel.moveCount(),
                     solvedTitle = viewModel.mordieEnding() ?: TITLE_SOLVED,
                     mordieLine = viewModel.mordieLine(),
+                    giveUpButton = viewModel.giveUpButton(),
+                    solution = solution,
                 )
                 .copy(dialog = decoratedDialog, message = message),
         )
-        layout = state.layout(terminalSize)
+        // The step list's scroll goes into the state, not the geometry, so the layout comes first.
+        val baseLayout = base.layout(terminalSize)
+        layout = baseLayout
+        if (solution == null) stepWindow.reset() else stepWindow.update(solution.steps.size, baseLayout.stepRows, solution.current)
+        val state = base.copy(stepOffset = stepWindow.offset)
         // Built from state.dialog (post-decorateBoard), not decoratedDialog directly - the two
         // are the same object for MouseInput today, but a future decorateBoard that touches the
         // dialog (e.g. a keyboard mode collapsing decoration into one pass) must not be able to

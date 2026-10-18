@@ -58,6 +58,9 @@ class FakeViewModel : ViewModel {
     /** Scripts [solution]'s return value (GH-126). */
     var solution: SolutionState? = null
 
+    /** Scripts [replayShift]'s return values in order, `false` once used up (GH-126). */
+    var replayShiftResults: MutableList<Boolean> = mutableListOf()
+
     override fun shiftLeft(row: Int, source: ShiftSource?) {
         calls.add("shiftLeft($row" + sourceSuffix(source) + ")")
     }
@@ -164,7 +167,7 @@ class FakeViewModel : ViewModel {
 
     override fun replayShift(): Boolean {
         calls.add("replayShift")
-        return false
+        return replayShiftResults.removeFirstOrNull() ?: false
     }
 
     override fun replayMove(): SolutionStep? {

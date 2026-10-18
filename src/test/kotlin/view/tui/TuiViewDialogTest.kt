@@ -595,7 +595,8 @@ class TuiViewDialogTest {
         assertTrue(dialogFrame.contains("already exists"))
         assertTrue(dialogFrame.contains("overwritten"))
         // Row 0 carries the leading clear-screen escape sequence, not board content - every
-        // other row is a fixed-width canvas row and must fit the terminal exactly.
-        assertTrue(dialogFrame.lines().drop(1).all { it.length <= narrow.columns })
+        // other row is a fixed-width canvas row and must fit the terminal exactly, once its
+        // styling (the dimmed Give Up row, GH-126) is stripped.
+        assertTrue(dialogFrame.lines().drop(1).all { it.replace(Regex("\u001B\\[[0-9;]*m"), "").length <= narrow.columns })
     }
 }

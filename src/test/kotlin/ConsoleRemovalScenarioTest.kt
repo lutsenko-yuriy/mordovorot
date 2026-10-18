@@ -151,15 +151,15 @@ class ConsoleRemovalScenarioTest {
     }
 
     @Test
-    fun `keyboard mode offers only Mouse F7, and F8 does nothing`() {
+    fun `keyboard mode offers only Mouse F7, and F8 does nothing before Mordie's solution`() {
         val run = session(InputMode.KEYBOARD, listOf(TerminalEvent.FunctionKey(8)))
 
         for (frame in run.terminal.frames) {
             assertTrue(frame.contains("[Mouse F7]"))
             assertFalse(frame.contains("Console"))
-            assertFalse(frame.contains("F8"))
         }
-        assertTrue(run.analytics.events.none { it.name == "input_mode_switched" })
+        // F8 is Give Up since GH-126, dimmed until Mordie finds its solution.
+        assertTrue(run.analytics.events.none { it.name == "input_mode_switched" || it.name == "screen_give_up_dialog" })
         assertEquals(scrambled.toList(), run.board.boardArray.toList())
     }
 
