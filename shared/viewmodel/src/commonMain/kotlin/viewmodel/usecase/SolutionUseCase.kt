@@ -27,7 +27,7 @@ internal class SolutionUseCase(
     fun button(): GiveUpButton {
         val hasPath = mordieHooks.solution() != null
         return when {
-            onScreen -> GiveUpButton.DIMMED
+            onScreen -> GiveUpButton.HIDDEN
             board.isCorrect() ->
                 if (hasPath && mordieHooks.foundBeforeWin()) GiveUpButton.MORDIES_SOLUTION else GiveUpButton.HIDDEN
             hasPath && mordieHooks.revealed() -> GiveUpButton.GIVE_UP

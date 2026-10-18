@@ -140,7 +140,7 @@ class ViewModelGiveUpTest {
         assertContentEquals(original, board.boardArray)
         assertEquals(0, viewModel.moveCount())
         assertFalse(viewModel.isSolved())
-        assertEquals(GiveUpButton.DIMMED, viewModel.giveUpButton())
+        assertEquals(GiveUpButton.HIDDEN, viewModel.giveUpButton())
         assertEquals("Here's how I did it in 2 moves!", viewModel.mordieLine())
         assertNull(viewModel.mordieEnding())
     }

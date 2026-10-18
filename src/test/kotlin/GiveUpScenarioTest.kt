@@ -230,7 +230,7 @@ class GiveUpScenarioTest {
             assertEquals(steps, stepsShown(frame))
             assertEquals(replayRow, replayRowShown(frame))
             assertTrue(dimmed(frame, "[ ◀ Prev ]") && dimmed(frame, "[ ↻ Restart ]") && !dimmed(frame, "[ Next ▶ ]"))
-            assertTrue(dimmed(frame, "[ Give Up ]"))
+            assertEquals("", giveUpRowShown(frame), "no Give Up on the solution screen")
             assertFalse(arrowsShown(frame))
         }
         assertContentEquals(original, run.board.boardArray)
@@ -305,7 +305,7 @@ class GiveUpScenarioTest {
         assertTrue("F8 Give Up" in rows(snaps[0]).joinToString("\n"))
         assertFalse("Give up and see" in snaps[0])
         assertEquals("give_up", run.event("dialog_cancelled")["dialog"])
-        assertEquals("[Give Up F8]", giveUpRowShown(snaps[1]))
+        assertEquals("", giveUpRowShown(snaps[1]))
         assertEquals(replayRow, replayRowShown(snaps[1]))
         assertTrue(rows(snaps[1]).any { "←/→ A/D  step" in it })
         assertEquals("04.", highlighted(snaps[2]).single().take(3))
