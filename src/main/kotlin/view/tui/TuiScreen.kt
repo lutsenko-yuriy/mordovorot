@@ -38,8 +38,10 @@ internal class TuiScreen(
     var wasSolved = false
         private set
 
-    /** The solution screen's step list scroll (GH-126), reset off the screen. */
+    /** The solution screen's step list scroll (GH-126), reset whenever the steps change -
+     *  leaving the screen, or loading another solution straight from this one. */
     private val stepWindow = StepListWindow()
+    private var windowSteps: List<String>? = null
 
     fun scrollSteps(delta: Int) = stepWindow.scroll(delta)
 
@@ -108,7 +110,9 @@ internal class TuiScreen(
         // The step list's scroll goes into the state, not the geometry, so the layout comes first.
         val baseLayout = base.layout(terminalSize)
         layout = baseLayout
-        if (solution == null) stepWindow.reset() else stepWindow.update(solution.steps.size, baseLayout.stepRows, solution.current)
+        if (solution?.steps != windowSteps) stepWindow.reset()
+        windowSteps = solution?.steps
+        solution?.let { stepWindow.update(it.steps.size, baseLayout.stepRows, it.current) }
         val state = base.copy(stepOffset = stepWindow.offset)
         // Built from state.dialog (post-decorateBoard), not decoratedDialog directly - the two
         // are the same object for MouseInput today, but a future decorateBoard that touches the

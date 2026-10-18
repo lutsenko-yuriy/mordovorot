@@ -138,4 +138,18 @@ class TuiViewGiveUpTest {
         play(ready, TerminalEvent.Enter, input = KeyboardInput(KeyboardSelection()))
         assertTrue("playPause" in ready.calls)
     }
+
+    @Test
+    fun `another solution's steps start at the top, however far the last list was scrolled`() {
+        val viewModel = playing(steps = 20).apply { solution = solution!!.copy(current = null, playback = Playback.READY) }
+        val other = SolutionState(List(15) { "${it + 1}. Col 1 ↑ ×1" }, current = null, Playback.READY)
+        val events = mutableListOf(TerminalEvent.Wheel(up = false), TerminalEvent.Wheel(up = false), TerminalEvent.Tick)
+        val terminal = FakeTerminal(events, terminalSize, beforeEvent = mapOf(2 to { viewModel.solution = other }))
+
+        runBlocking { testTuiView(terminal, analytics, viewModel = viewModel).play() }
+
+        val solutionLayout = layout(GiveUpButton.DIMMED, Playback.READY)
+        val rows = terminal.frames.last().replace(Regex("\u001B\\[[0-9;?]*[A-Za-z]"), "").split("\r\n")
+        assertEquals("1. Col 1 ↑ ×1", rows[solutionLayout.stepListTop].substring(solutionLayout.stepListX).trim())
+    }
 }
