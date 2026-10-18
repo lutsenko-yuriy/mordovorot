@@ -8,13 +8,16 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import viewmodel.GameViewModel
+import viewmodel.GiveUpButton
 import viewmodel.PointerShift
 import viewmodel.SaveInfo
+import viewmodel.SolutionStep
 import viewmodel.UnsolvableSaveChoice
 import viewmodel.display
 import viewmodel.displayWithSize
 import web.drag.Axis
 import web.drag.LineDrag
+import web.drag.LineOffset
 
 /** Which arrow was clicked: [LEFT]/[RIGHT] shift a row, [UP]/[DOWN] a column. */
 enum class Arrow { LEFT, RIGHT, UP, DOWN }
@@ -41,6 +44,8 @@ class WebGame internal constructor(
     private var flow: Job? = null
     private var drag: LineDrag? = null
     private val idle get() = dialog == null && flow?.isActive != true && drag == null
+    /** Mordie's solution screen (GH-126): the board is the replay's, not the player's. */
+    private val playable get() = idle && !viewModel.isSolved() && viewModel.solution() == null
 
     /** Answers the viewModel's requests, then runs the startup restore. */
     internal fun start() {
@@ -56,7 +61,7 @@ class WebGame internal constructor(
     fun hasUnsavedProgress(): Boolean = viewModel.hasUnsavedProgress()
 
     fun onArrow(arrow: Arrow, line: Int) {
-        if (!idle || viewModel.isSolved()) return
+        if (!playable) return
         shift {
             when (arrow) {
                 Arrow.LEFT -> viewModel.shiftLeft(line, PointerShift.ARROW)
@@ -69,7 +74,7 @@ class WebGame internal constructor(
 
     /** A press on the tile at [row], [col], at ([x], [y]) on a board with tiles [pitch] apart, in pixels. */
     fun onDragStart(row: Int, col: Int, x: Double, y: Double, pitch: Double) {
-        if (!idle || viewModel.isSolved()) return
+        if (!playable) return
         drag = LineDrag(row, col, x, y, pitch, viewModel.squareSide())
     }
 
@@ -97,6 +102,36 @@ class WebGame internal constructor(
         val moved = drag?.offset != null
         drag = null
         if (moved) render()
+    }
+
+    /** `[ Give Up ]`: the confirmation, then Mordie's solution screen on Yes. */
+    fun onGiveUp() {
+        if (viewModel.giveUpButton() != GiveUpButton.GIVE_UP) return
+        runFlow {
+            analytics.track("screen_give_up_dialog", mapOf("board_size" to viewModel.squareSide(), "move_count" to viewModel.moveCount()))
+            if (ask(WebDialog.GiveUp)) viewModel.giveUp()
+            else analytics.track("dialog_cancelled", mapOf("dialog" to "give_up"))
+        }
+    }
+
+    /** The give-up confirmation's answer: Yes or No. */
+    fun onGiveUpAnswered(yes: Boolean) = answer<WebDialog.GiveUp, Boolean>(yes)
+
+    /** `[ Mordie's solution ]` after a win: the screen, with no confirmation. */
+    fun onMordiesSolution() {
+        if (!idle) return
+        status = null
+        viewModel.showSolution()
+        render()
+    }
+
+    fun onReplayNext() = replay { viewModel.replayNext() }
+
+    fun onReplayPrevious() = replay { viewModel.replayPrevious() }
+
+    fun onReplayRestart() = replay {
+        viewModel.replayRestart()
+        null
     }
 
     fun onNew() = runFlow {
@@ -193,6 +228,13 @@ class WebGame internal constructor(
         render()
     }
 
+    /** Steps the replay and renders, sliding the shift [action] made. */
+    private fun replay(action: () -> SolutionStep?) {
+        if (!idle || viewModel.solution() == null) return
+        status = null
+        render(action()?.let(Slides::ofStep))
+    }
+
     /** Runs a toolbar action, unless another action or a dialog is under way, then renders. */
     private fun runFlow(action: suspend () -> Unit) {
         if (!idle) return
@@ -223,7 +265,7 @@ class WebGame internal constructor(
         (open as OpenDialog<T>).answer.complete(value)
     }
 
-    private fun render() {
+    private fun render(slide: LineOffset? = null) {
         val solved = viewModel.isSolved()
         renderer.render(
             WebState(
@@ -235,6 +277,9 @@ class WebGame internal constructor(
                 status = status,
                 dialog = dialog?.shown,
                 drag = drag?.offset,
+                giveUp = viewModel.giveUpButton(),
+                solution = viewModel.solution(),
+                slide = slide,
             ),
         )
     }

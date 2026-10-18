@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.17.5] — 2026-10-18 (PR #131 merged)
+
+### Changed
+- [wip] (PR #131) GH-126 (WU4/5): Give Up and the solution screen in the web (the Give Up button, disabled until Found it!, then the Yes / No confirmation, or Mordie's solution after a win; Prev / Next / Restart slide one tile per shift; the step list marks the current step; arrows, drags and Moves are off on the screen); the web's look follows in WU5.
+
 ## [0.17.4] — 2026-10-18 (PR #130 merged)
 
 ### Changed

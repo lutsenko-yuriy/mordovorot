@@ -85,11 +85,13 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
         root.classList.toggle("dragging", state.drag != null)
         root.append(
             board(state, justSolved = state.solved && before?.solved == false),
+            *listOfNotNull(state.solution?.let { stepList(it) }).toTypedArray(),
             // Beside the board when the window is wide; when tall, its items stack around it (styles.css).
             element("div", "panel").apply {
                 append(
-                    text("moves", "Moves: ${state.moves}").also { moves = it },
+                    text("moves", if (state.movesShown) "Moves: ${state.moves}" else "").also { moves = it },
                     element("div", "mordie").apply { append(element("div", "line")) }.also { mordie = it },
+                    *listOfNotNull(state.solution?.let { replayButtons(it, game, dialog != null) }, giveUpRow(state.giveUp, game, dialog != null)).toTypedArray(),
                     element("div", "toolbar").also { toolbar = it }.apply {
                         append(
                             button("New") { game.onNew() }.also { it.disabled = dialog != null },
@@ -134,13 +136,14 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
         line.style.opacity = frame.alpha.toString()
     }
 
-    /** Eases the line a shift moved into place: one tile after an arrow, the rest of the way after a
-     *  drag. Any other change to the tiles, or a new drag, stops a slide under way. */
+    /** Eases the line a shift moved into place: one tile after an arrow or a replay shift, the rest
+     *  of the way after a drag. Any other change to the tiles, or a new drag, stops a slide under way. */
     private fun startSlide(before: WebState?, state: WebState) {
         val arrow = clicked
         val start = when {
             before == null || state.drag != null -> null
             arrow != null && state.tiles != before.tiles -> Slides.ofArrow(arrow.first, arrow.second)
+            state.slide != null -> state.slide
             before.drag != null -> Slides.afterDrag(before.drag, moved = state.tiles != before.tiles, state.side)
             state.tiles != before.tiles -> null
             else -> return

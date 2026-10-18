@@ -4,6 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import web.drag.Axis
+import viewmodel.SolutionStep
 import web.drag.LineOffset
 
 class SlidesTest {
@@ -14,6 +15,14 @@ class SlidesTest {
         assertEquals(LineOffset(Axis.ROW, line = 0, tiles = -1.0), Slides.ofArrow(Arrow.RIGHT, 0))
         assertEquals(LineOffset(Axis.COLUMN, line = 1, tiles = 1.0), Slides.ofArrow(Arrow.UP, 1))
         assertEquals(LineOffset(Axis.COLUMN, line = 3, tiles = -1.0), Slides.ofArrow(Arrow.DOWN, 3))
+    }
+
+    @Test
+    fun `a replay shift slides like the arrow that makes it`() {
+        assertEquals(Slides.ofArrow(Arrow.RIGHT, 2), Slides.ofStep(SolutionStep(isRow = true, index = 2, forward = true, count = 1)))
+        assertEquals(Slides.ofArrow(Arrow.LEFT, 0), Slides.ofStep(SolutionStep(isRow = true, index = 0, forward = false, count = 1)))
+        assertEquals(Slides.ofArrow(Arrow.DOWN, 1), Slides.ofStep(SolutionStep(isRow = false, index = 1, forward = true, count = 1)))
+        assertEquals(Slides.ofArrow(Arrow.UP, 3), Slides.ofStep(SolutionStep(isRow = false, index = 3, forward = false, count = 1)))
     }
 
     @Test
