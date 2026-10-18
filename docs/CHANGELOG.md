@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.17.4] — 2026-10-18 (PR #130 merged)
+
+### Changed
+- [wip] (PR #130) GH-126 (WU3/5): Give Up and the solution screen in the terminal (the Give Up row and F8, the confirmation, the step list with wheel and W/S scrolling); Mordie's solution is now stepped by hand with Prev / Next / Restart instead of a timed replay, and Give Up is hidden on the solution screen; the web follows in WU4-5.
+
 ## [0.17.3] — 2026-10-18 (PR #129 merged)
 
 ### Changed
