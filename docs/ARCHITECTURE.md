@@ -152,19 +152,24 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │                    # (GH-126), drawn by WrapPositions
 │   ├── MessageFeed.kt   # Chat-like timing for Mordie's lines: the old one rises out, then the new rises in
 │   ├── Launch.kt        # startWebGame: the page's wiring (PlatformAnalyticsService "web" wrapped
-│   │                    # by InputMethodAnalyticsService "rich_ui"), app_launched {mode, layout}
+│   │                    # by InputMethodAnalyticsService "rich_ui"), app_launched {mode, layout,
+│   │                    # app_version, host} (GH-111)
+│   ├── Host.kt          # hostOf(hostname): PUBLIC_SITE, LOCALHOST or OTHER - only the bucket is sent (GH-111)
+│   ├── Footer.kt        # footer(version): the footer line as Text/Link parts, worded as the README's Credits (GH-111)
 │   ├── drag/            # LineDrag: one drag in pixels - axis lock past a threshold, live offset,
 │   │                    # snap to whole tiles mod the side; WrapPositions: a part-shifted line's tiles
 │   └── storage/         # BrowserSaveRepository: one KeyValueStore entry per save under
 │                        # `mordovorot.save.<name>`, in SaveFileCodec's format, SaveNames' rules
 ├── src/jsMain/kotlin/web/Main.kt       # The page's composition root: BoardImpl, saves in
 │                                       # localStorage, Mordie with the background search,
-│                                       # MainScope, the window's Layout, the beforeunload prompt
+│                                       # MainScope, the window's Layout, the beforeunload prompt;
+│                                       # the footer, once, outside #app (GH-111)
 ├── src/jsMain/kotlin/web/DomRenderer.kt # WebState -> DOM, clicks and pointer drags -> WebGame
 │                                       # intents; the page root holds a drag's pointer capture;
 │                                       # runs Slides and MessageFeed on animation frames, redrawing
 │                                       # only the tiles and Mordie's line; keeps the step list's
 │                                       # scroll across frames, the current step in view (GH-126)
+├── src/jsMain/kotlin/web/DomFooter.kt  # footerElement: <footer>, its links in a new tab (GH-111)
 ├── src/jsMain/kotlin/web/DomDialogs.kt  # The modal dialogs; DomElements.kt: element/text/button helpers
 ├── src/jsMain/kotlin/web/DomSolution.kt # The step list, Prev/Next/Restart and the Give Up row (GH-126)
 ├── src/jsMain/kotlin/web/storage/LocalStorageStore.kt # KeyValueStore over window.localStorage
@@ -176,10 +181,16 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # (WebHarness), recording each WebState (startup, play,
 │                                       # save/load, unsaved progress, drag, analytics; GH-126 give up)
 ├── src/commonTest/kotlin/web/FooterTest.kt # GH-111: the footer's wording and links
+├── src/commonTest/kotlin/web/HostTest.kt # GH-111: hostOf's buckets
 ├── src/commonTest/kotlin/web/LayoutTest.kt, SlidesTest.kt, MessageFeedTest.kt
 ├── src/commonTest/kotlin/web/drag/     # LineDragTest, WrapPositionsTest
 ├── src/commonTest/kotlin/web/storage/  # BrowserSaveRepositoryTest over InMemoryKeyValueStore
-└── src/jvmTest/kotlin/web/IndexPageTest.kt # Pins the title rule (the title appears only in the tab)
+├── src/jvmTest/kotlin/web/IndexPageTest.kt # Pins the title rule (the title appears only in the tab)
+│                                       # and relative asset URLs (GH-111: the public site's sub-path)
+├── src/jvmTest/kotlin/web/BuildInfoTest.kt, CreditsTest.kt # GH-111: the stamped version is the
+│                                       # build's; the footer's credit matches the README's
+└── build/generated/buildInfo/          # BuildInfo.VERSION, written by :web:generateBuildInfo from
+                                        # the root build.gradle.kts's version (GH-111)
 
 src/main/kotlin/                # the terminal app (the root project)
 ├── Main.kt              # Entry point — resolves the starting InputMode (or aborts with no
@@ -536,6 +547,9 @@ The browser's composition root is `web`'s `Main.kt` (GH-110): it builds the page
 collaborators and hands them to `startWebGame` (`Launch.kt`), which decorates analytics
 (`platform: web`, then `input_method: rich_ui` for everything but `app_launched`), calls
 `buildGameViewModel` with no startup shortcuts and no Exit hook, and starts a `WebGame`.
+`Main.kt` also passes the stamped `BuildInfo.VERSION` and `hostOf(window.location.hostname)` for
+`app_launched` (GH-111), and appends the footer to `<body>` once, outside `#app`, which
+`DomRenderer` rebuilds every frame.
 The web scenario tests go through the same `startWebGame` with fakes.
 
 ### Board-size surfaces (GH-44)
