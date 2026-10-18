@@ -27,8 +27,8 @@
   the npm packages; a Kotlin upgrade that changes them fails the build until
   `./gradlew kotlinUpgradeYarnLock` is run and the new lock committed); the `:web` module (GH-110) adds
   `js { browser() }`, whose webpack, webpack-cli and webpack-dev-server are build-time npm packages in
-  the same lock. `serve` keeps its outputs in each project's `build/serve`, and
-  `gradle.properties` gives the shared Kotlin compile daemon 2 GB (`kotlin.daemon.jvmargs`), so
+  the same lock. `serve` keeps its outputs in each project's `build-serve/` (outside `build/`, so
+  `clean` leaves it), and `gradle.properties` gives the shared Kotlin compile daemon 2 GB (`kotlin.daemon.jvmargs`), so
   `check`/`build` can run alongside it (GH-124)
 - **Test runner:** `./gradlew check` (JUnit Platform) - runs the root `test` and every shared
   module's common tests on both the JVM (`jvmTest`) and Node.js (`jsNodeTest`, GH-103); plain `./gradlew test` skips the shared modules; Python: `python -m unittest`

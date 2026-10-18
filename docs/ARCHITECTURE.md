@@ -616,8 +616,9 @@ alert when a session waits on the user, toggled per machine in the gitignored `.
   webpack and webpack-dev-server (build time only, pinned in the same `yarn.lock`); the
   browser test task is off, so CI needs no headless browser. `serve` (GH-124) needs `-t`:
   `settings.gradle.kts` fails it fast without, and points every project's build directory to
-  `build/serve` so its outputs don't collide with a `check`/`build` running alongside; one Kotlin
-  compile daemon serves both, so `gradle.properties` sets `kotlin.daemon.jvmargs=-Xmx2g`.
+  `build-serve` (outside `build/`, so `clean` leaves it), so its outputs don't collide with a
+  `check`/`build` running alongside; one Kotlin compile daemon serves both, so
+  `gradle.properties` sets `kotlin.daemon.jvmargs=-Xmx2g`.
   Known follow-up for the first non-JVM port: seven viewmodel test files stay in the app
   because they use Exit or `SaveFileFormatException`, so they don't run on other targets
   (`SaveFileFormatException` is in `:shared:storage` since GH-110).

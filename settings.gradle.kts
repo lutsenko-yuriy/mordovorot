@@ -15,10 +15,10 @@ dependencyResolutionManagement {
 }
 
 // GH-124: serve only rebuilds on change under continuous build, and keeps its outputs in
-// build/serve so check/build can run alongside it.
+// build-serve so check/build can run alongside it; outside build/, so clean doesn't delete it.
 if (gradle.startParameter.taskNames.any { it.substringAfterLast(':') == "serve" }) {
     if (!gradle.startParameter.isContinuous) {
         throw GradleException("Run it as ./gradlew :web:serve -t (continuous build, so it rebuilds on change)")
     }
-    gradle.lifecycle.beforeProject { layout.buildDirectory.set(layout.projectDirectory.dir("build/serve")) }
+    gradle.lifecycle.beforeProject { layout.buildDirectory.set(layout.projectDirectory.dir("build-serve")) }
 }
