@@ -12,6 +12,7 @@
     --card: #fffdf9;
     --scrim: rgba(40, 32, 24, 0.45);
     --warning: #b4572e;
+    --mordie: #c2562a;
     --tile-ink: #2e2822;
     --tile-light: 76%;
     color-scheme: light;
@@ -29,6 +30,7 @@
         --card: #2a2724;
         --scrim: rgba(0, 0, 0, 0.6);
         --warning: #f0a27a;
+        --mordie: #f39a6b;
         --tile-light: 70%;
         color-scheme: dark;
     }
@@ -108,6 +110,11 @@ body {
     min-height: 2.8em;
     color: var(--muted);
     text-align: center;
+}
+
+.mordie .name {
+    color: var(--mordie);
+    font-weight: 700;
 }
 
 .app.solved .mordie {

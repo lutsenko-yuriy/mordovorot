@@ -73,7 +73,7 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
             element("div", "panel").apply {
                 append(
                     text("moves", "Moves: ${state.moves}"),
-                    text("mordie", state.mordie?.let { if (state.solved) it else "Mordie: $it" } ?: ""),
+                    mordie(state),
                     element("div", "toolbar").apply {
                         append(
                             button("New") { game.onNew() }.also { it.disabled = dialog != null },
@@ -87,6 +87,16 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
         )
         dialog?.let { root.append(element("div", "overlay").apply { append(dialog(it)) }) }
         root.querySelector("input")?.let { (it as HTMLInputElement).focus() }
+    }
+
+    /** Mordie's spot: its line after its highlighted name, or the ending once solved. */
+    private fun mordie(state: WebState) = element("div", "mordie").apply {
+        val line = state.mordie ?: return@apply
+        if (state.solved) {
+            textContent = line
+        } else {
+            append(element("span", "name").apply { textContent = "Mordie:" }, " $line")
+        }
     }
 
     /** Eases the line a shift moved into place: one tile after an arrow, the rest of the way after a
