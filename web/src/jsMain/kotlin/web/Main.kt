@@ -23,6 +23,8 @@ fun main() {
         renderer,
         MainScope(),
         layoutOf(window.innerWidth, window.innerHeight),
+        BuildInfo.VERSION,
+        hostOf(window.location.hostname),
     )
     renderer.game = game
     // The browser's own "Leave site?" prompt, only while some progress isn't in a save.

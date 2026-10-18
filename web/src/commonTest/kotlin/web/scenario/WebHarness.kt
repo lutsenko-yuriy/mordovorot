@@ -11,6 +11,7 @@ import mordie.Mordie
 import storage.SavedMordie
 import testing.FakeMordieSearchFactory
 import testing.RecordingAnalyticsService
+import web.Host
 import web.Layout
 import web.WebDialog
 import web.WebGame
@@ -31,6 +32,8 @@ internal class WebHarness(
     val board: BoardImpl = BoardImpl(),
     val store: InMemoryKeyValueStore = InMemoryKeyValueStore(),
     private val layout: Layout = Layout.WIDE,
+    private val appVersion: String = "9.9.9",
+    private val host: Host = Host.LOCALHOST,
 ) {
     val saves = BrowserSaveRepository(store)
     val analytics = RecordingAnalyticsService()
@@ -43,7 +46,7 @@ internal class WebHarness(
     val state: WebState get() = renderer.frames.last()
 
     fun start(): WebHarness {
-        game = startWebGame(board, saves, analytics, mordie, renderer, scope, layout)
+        game = startWebGame(board, saves, analytics, mordie, renderer, scope, layout, appVersion, host)
         return this
     }
 
