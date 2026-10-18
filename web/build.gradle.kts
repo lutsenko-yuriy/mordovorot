@@ -3,7 +3,7 @@ plugins {
 }
 
 // GH-111: `version` in the root build.gradle.kts, as a Kotlin constant the footer and analytics read.
-val generateBuildInfo by tasks.registering {
+val generateBuildInfo = tasks.register("generateBuildInfo") {
     val version = rootProject.version.toString()
     val outputDir = layout.buildDirectory.dir("generated/buildInfo/kotlin")
     inputs.property("version", version)
