@@ -18,6 +18,9 @@ class FakeTerminal(
 
     val frames = mutableListOf<String>()
 
+    /** Each read's timeout, `null` for a blocking read (GH-126). */
+    val timeouts = mutableListOf<Long?>()
+
     var rawModeEntered = false
         private set
 
@@ -43,7 +46,9 @@ class FakeTerminal(
         frames += frame
     }
 
-    override fun readEvent(): TerminalEvent {
+    /** Scripted [TerminalEvent.Tick]s stand in for timeouts passing, so tests take no real time. */
+    override fun readEvent(timeoutMs: Long?): TerminalEvent {
+        timeouts += timeoutMs
         beforeEvent[eventsRead++]?.invoke()
         return if (events.isEmpty()) TerminalEvent.EndOfInput else events.removeAt(0)
     }

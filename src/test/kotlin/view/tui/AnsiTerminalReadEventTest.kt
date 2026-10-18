@@ -39,4 +39,18 @@ class AnsiTerminalReadEventTest {
         assertEquals(TerminalEvent.MouseClick(4, 2), terminal.readEvent())
         assertEquals(TerminalEvent.KeyPress('a'), terminal.readEvent())
     }
+
+    @Test
+    fun `a timed read with no input returns Tick once the timeout passes (GH-126)`() {
+        val terminal = terminalReading(ByteArray(0))
+
+        assertEquals(TerminalEvent.Tick, terminal.readEvent(timeoutMs = 20))
+    }
+
+    @Test
+    fun `a timed read with input waiting returns the input, not Tick (GH-126)`() {
+        val terminal = terminalReading("a".toByteArray())
+
+        assertEquals(TerminalEvent.KeyPress('a'), terminal.readEvent(timeoutMs = 20))
+    }
 }

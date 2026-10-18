@@ -8,6 +8,8 @@ interface Terminal {
     fun restore()
     fun enableMouseReporting()
     fun write(frame: String)
-    fun readEvent(): TerminalEvent
+    /** Blocks for the next event; with [timeoutMs], returns [TerminalEvent.Tick] once that
+     *  passes with no input (GH-126's replay clock). */
+    fun readEvent(timeoutMs: Long? = null): TerminalEvent
     fun size(): TerminalSize
 }

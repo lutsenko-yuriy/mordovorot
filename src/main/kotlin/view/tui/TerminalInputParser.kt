@@ -77,8 +77,8 @@ class TerminalInputParser {
         return 3
     }
 
-    /** `ESC [ < Pb ; Px ; Py (M|m)`. `M` is a press (-> [TerminalEvent.MouseClick]), `m` a
-     *  release (no event). Returns 0 until the terminating `M`/`m` byte arrives. */
+    /** `ESC [ < Pb ; Px ; Py (M|m)`. `M` is a press (-> [TerminalEvent.MouseClick], or
+     *  [TerminalEvent.Wheel] for a scroll notch), `m` a release (no event). Returns 0 until the terminating `M`/`m` byte arrives. */
     private fun decodeSgr(data: ByteArray, from: Int, events: MutableList<TerminalEvent>): Int {
         val end = scanFor(data, from + 3, 'M', 'm') ?: return giveUpOrWait(data, from)
 
@@ -88,7 +88,11 @@ class TerminalInputParser {
         val px = parts.getOrNull(1)?.toIntOrNull()
         val py = parts.getOrNull(2)?.toIntOrNull()
         val isWheel = pb != null && (pb and 0x40) != 0 // scroll notch, not a button - has no release report
-        if (press && !isWheel && px != null && py != null) events += TerminalEvent.MouseClick(px - 1, py - 1)
+        when {
+            !press -> {}
+            isWheel -> wheel(pb!!)?.let { events += it }
+            px != null && py != null -> events += TerminalEvent.MouseClick(px - 1, py - 1)
+        }
         return end - from + 1
     }
 
@@ -103,8 +107,18 @@ class TerminalInputParser {
         val cb = (data[from + 3].toInt() and 0xFF) - 32
         val column = (data[from + 4].toInt() and 0xFF) - 32
         val row = (data[from + 5].toInt() and 0xFF) - 32
-        if ((cb and 0x3) != 3) events += TerminalEvent.MouseClick(column - 1, row - 1)
+        when {
+            (cb and 0x40) != 0 -> wheel(cb)?.let { events += it }
+            (cb and 0x3) != 3 -> events += TerminalEvent.MouseClick(column - 1, row - 1)
+        }
         return 6
+    }
+
+    /** Button code 64 is a wheel notch up, 65 down; the modifier bits are ignored. */
+    private fun wheel(code: Int): TerminalEvent? = when (code and 0x3) {
+        0 -> TerminalEvent.Wheel(up = true)
+        1 -> TerminalEvent.Wheel(up = false)
+        else -> null
     }
 
     /** Arrow keys (`ESC [ A..D`), Tab-reverse (`ESC [ Z`), and the F5/F6/F7/F8/F9 function keys

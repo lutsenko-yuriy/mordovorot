@@ -7,10 +7,11 @@ enum class Direction { UP, DOWN, LEFT, RIGHT }
  *  [TerminalInputParser]. */
 sealed class TerminalEvent {
     data class MouseClick(val x: Int, val y: Int) : TerminalEvent()
+    /** One mouse-wheel notch (GH-126). */
+    data class Wheel(val up: Boolean) : TerminalEvent()
     data class KeyPress(val char: Char) : TerminalEvent()
     data class Arrow(val direction: Direction) : TerminalEvent()
-    /** F5-F9, [n] holding the function-key number rather than a separate case each. F8 still
-     *  decodes but maps to nothing since GH-79. */
+    /** F5-F9, [n] holding the function-key number rather than a separate case each. */
     data class FunctionKey(val n: Int) : TerminalEvent()
     object Tab : TerminalEvent()
     object BackTab : TerminalEvent()
@@ -19,4 +20,6 @@ sealed class TerminalEvent {
     object Escape : TerminalEvent()
     object Resize : TerminalEvent()
     object EndOfInput : TerminalEvent()
+    /** A timed [Terminal.readEvent] passed its timeout with no input (GH-126). */
+    object Tick : TerminalEvent()
 }

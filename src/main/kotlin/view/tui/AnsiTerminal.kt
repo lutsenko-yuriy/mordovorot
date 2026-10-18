@@ -9,6 +9,7 @@ private const val ENABLE_MOUSE = "\u001B[?1000h\u001B[?1006h"
 private const val DISABLE_MOUSE = "\u001B[?1006l\u001B[?1000l"
 private const val HIDE_CURSOR = "\u001B[?25l"
 private const val SHOW_CURSOR = "\u001B[?25h"
+private const val POLL_MS = 10L
 
 /**
  * The one class in `view.tui` that touches a real terminal: `stty` for cbreak mode, ANSI
@@ -87,13 +88,25 @@ class AnsiTerminal(
      *  the underlying ambiguity (is a lone ESC the whole input, or is more still coming?) needs
      *  a read timeout to resolve properly, which this stdlib-only terminal layer doesn't have.
      */
-    override fun readEvent(): TerminalEvent {
+    override fun readEvent(timeoutMs: Long?): TerminalEvent {
+        if (timeoutMs != null && pendingEvents.isEmpty() && !awaitInput(timeoutMs)) return TerminalEvent.Tick
         while (pendingEvents.isEmpty()) {
             val first = input.read()
             if (first == -1) return parser.endOfInput()
             pendingEvents.addAll(parser.feed(byteArrayOf(first.toByte()) + readAvailable()))
         }
         return pendingEvents.removeFirst()
+    }
+
+    /** Polls [InputStream.available] until input arrives or [timeoutMs] passes - stdlib has no
+     *  timed read on a stream. Returns whether input arrived. */
+    private fun awaitInput(timeoutMs: Long): Boolean {
+        val deadline = System.nanoTime() + timeoutMs * 1_000_000
+        while (input.available() <= 0) {
+            if (System.nanoTime() >= deadline) return false
+            Thread.sleep(POLL_MS)
+        }
+        return true
     }
 
     private fun readAvailable(): ByteArray {
