@@ -140,6 +140,7 @@ body {
     /* Above Mordie's line as it rises in from underneath. */
     position: relative;
     z-index: 1;
+    background: var(--page);
     display: flex;
     gap: 10px;
 }

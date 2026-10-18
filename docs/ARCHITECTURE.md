@@ -147,6 +147,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # intents; the page root holds a drag's pointer capture;
 │                                       # runs Slides and MessageFeed on animation frames, redrawing
 │                                       # only the tiles and Mordie's line
+├── src/jsMain/kotlin/web/DomDialogs.kt  # The modal dialogs; DomElements.kt: element/text/button helpers
 ├── src/jsMain/kotlin/web/storage/LocalStorageStore.kt # KeyValueStore over window.localStorage
 ├── src/jsMain/resources/index.html     # The page: `<title>Mordovorot</title>`, loads web.js
 ├── src/jsMain/resources/styles.css     # The look: tile colours by home row/column, modal

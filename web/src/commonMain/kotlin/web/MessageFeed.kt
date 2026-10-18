@@ -4,8 +4,9 @@ import kotlin.math.pow
 
 /** Messages shown one at a time, like a chat (GH-110): the old one rises out and fades, and only
  *  once it has gone does the next rise in from below and fade in. A phase under way always
- *  finishes; then the latest message given to [show] follows. Times are in milliseconds. */
-class MessageFeed<T : Any>(private val outMs: Double, private val inMs: Double) {
+ *  finishes; then the latest message given to [show] follows. Times are in milliseconds; the
+ *  durations can change between calls, and 0 shows each message at once. */
+class MessageFeed<T : Any>(var outMs: Double, var inMs: Double) {
 
     /** [message] [rise]s from its place: negative is up, by a share of the way out; positive is
      *  below, by a share of the way in. */
