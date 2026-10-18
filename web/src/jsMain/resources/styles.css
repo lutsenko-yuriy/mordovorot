@@ -26,6 +26,17 @@
     }
 }
 
+/* The window's height: on phones, the part left by the browser's own toolbars (GH-111). */
+:root {
+    --vh: 100vh;
+}
+
+@supports (height: 100dvh) {
+    :root {
+        --vh: 100dvh;
+    }
+}
+
 @media (prefers-color-scheme: dark) {
     :root {
         --page: #1d1b19;
@@ -63,7 +74,7 @@ body {
 .app {
     /* The height left for the board: the rest of the column, Give Up's row included. */
     --rest: 330px;
-    --tile: clamp(28px, min(calc((100vw - 40px) / (var(--side) * 1.1 + 2)), calc((100vh - var(--rest) - var(--footer)) / (var(--side) * 1.1 + 2))), 84px);
+    --tile: clamp(28px, min(calc((100vw - 40px) / (var(--side) * 1.1 + 2)), calc((var(--vh) - var(--rest) - var(--footer)) / (var(--side) * 1.1 + 2))), 84px);
     --gap: calc(var(--tile) * 0.1);
     --pitch: calc(var(--tile) + var(--gap));
     --arrow: calc(var(--tile) * 0.7);
@@ -72,7 +83,7 @@ body {
     justify-items: center;
     align-content: center;
     gap: 14px;
-    min-height: calc(100vh - var(--footer));
+    min-height: calc(var(--vh) - var(--footer));
     padding: 20px 16px;
 }
 
@@ -87,7 +98,7 @@ body {
     .app {
         /* The width left for the board: the panel's column and its gap, and the page's padding. */
         --beside: 392px;
-        --tile: clamp(28px, min(calc((100vw - var(--beside)) / (var(--side) * 1.1 + 2)), calc((100vh - 48px - var(--footer)) / (var(--side) * 1.1 + 2))), 84px);
+        --tile: clamp(28px, min(calc((100vw - var(--beside)) / (var(--side) * 1.1 + 2)), calc((var(--vh) - 48px - var(--footer)) / (var(--side) * 1.1 + 2))), 84px);
         grid-template-areas: "board panel";
         grid-template-columns: auto 20rem;
         justify-content: center;
@@ -407,7 +418,7 @@ button:focus-visible {
     flex-direction: column;
     gap: 14px;
     width: min(24rem, 100%);
-    max-height: calc(100vh - 32px);
+    max-height: calc(var(--vh) - 32px);
     overflow: auto;
     padding: 22px;
     border-radius: 14px;
