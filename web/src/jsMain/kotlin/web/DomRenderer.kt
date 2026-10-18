@@ -18,7 +18,9 @@ class DomRenderer(private val root: Element) : WebRenderer {
             text("moves", "Moves: ${state.moves}"),
             text("mordie", state.mordie?.let { if (state.solved) it else "Mordie: $it" } ?: ""),
             board(state),
-            element("div", "toolbar").apply { append(button("New") { game.onNew() }) },
+            element("div", "toolbar").apply {
+                append(button("New") { game.onNew() }.also { it.disabled = state.dialog != null })
+            },
             text("status", state.status ?: ""),
         )
         state.dialog?.let { root.append(dialog(it)) }
@@ -31,7 +33,7 @@ class DomRenderer(private val root: Element) : WebRenderer {
         val grid = element("div", "board")
         grid.setAttribute("style", "display: grid; grid-template-columns: repeat(${side + 2}, 2.5em); gap: 2px;")
         fun arrow(label: String, arrow: Arrow, line: Int) =
-            button(label) { game.onArrow(arrow, line) }.also { it.disabled = !state.arrowsEnabled }
+            button(label) { game.onArrow(arrow, line) }.also { it.disabled = !state.arrowsEnabled || state.dialog != null }
         fun blank() = element("span")
 
         grid.append(blank())

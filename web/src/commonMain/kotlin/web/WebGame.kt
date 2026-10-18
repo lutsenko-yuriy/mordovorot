@@ -4,6 +4,7 @@ import analytics.AnalyticsService
 import board_model.BoardSize
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch
 import viewmodel.GameViewModel
 import viewmodel.PointerShift
@@ -56,7 +57,8 @@ class WebGame internal constructor(
     fun onNew() {
         if (dialog != null) return
         status = null
-        scope.launch {
+        // Undispatched, so the dialog is open before this returns and a second click sees it.
+        scope.launch(start = CoroutineStart.UNDISPATCHED) {
             chooseSize("toolbar")?.let {
                 viewModel.newGame(it, trigger = "toolbar")
                 render()
