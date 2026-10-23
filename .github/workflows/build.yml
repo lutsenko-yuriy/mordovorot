@@ -19,6 +19,28 @@ jobs:
           java-version: "17"
           cache: gradle
       - name: Build and test
-        run: ./gradlew build --console=plain
+        run: ./gradlew build :web:jsBrowserDistribution --console=plain
       - name: Check notes index is current
         run: python3 scripts/notes/index.py --check
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/build/dist/js/productionExecutable
+
+  # Publishes the web client to GitHub Pages after a green master build (GH-111).
+  deploy:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

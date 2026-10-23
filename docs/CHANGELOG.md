@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.19.0] — 2026-10-24 (PR #138 merged)
+
+### Added
+- [user] (PR #138) GH-111 (WU3/3): play the browser version at https://lutsenko-yuriy.github.io/mordovorot/ — every green merge to `master` publishes it; a footer shows the version and credits Loopover's creator, and on touch screens the board drops the arrows for dragging (WU1–WU2).
+- [ci] (PR #138) GH-111: `build.yml` builds the production web bundle on every run and, after a green `master` build, its `deploy` job publishes it to GitHub Pages.
+
 ## [0.18.3] — 2026-10-24 (PR #136 merged)
 
 ### Changed

@@ -6,8 +6,8 @@
 
 ## Overview
 
-Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle. A browser client on
-`localhost` plays the same game with the mouse (Feature 9).
+Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle. A browser client,
+published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game with the mouse (Feature 9).
 
 ## Features
 
@@ -233,8 +233,8 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle. A br
     fair.
 
 ### Feature 9 — Browser client (GH-110)
-- **Running it:** `./gradlew :web:serve -t` serves the game on `http://localhost:8080`; opening that
-  address starts it. The tab title is `Mordovorot`, and the title appears nowhere else on the page.
+- **Running it:** the game is published at `https://lutsenko-yuriy.github.io/mordovorot/` (GH-111); for development,
+  `./gradlew :web:serve -t` serves it on `http://localhost:8080`. Opening either address starts it. The tab title is `Mordovorot`, and the title appears nowhere else on the page.
   The terminal game is unchanged.
 - **Same game, mouse only:** the rules, board sizes 3-5, solvable new games, `Moves: N` and its
   move rule (Feature 2), Save/Load (Feature 4), Mordie (Feature 8) and Give Up with its solution
@@ -249,8 +249,9 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle. A br
   - The `Can't be solved` dialog offers `[ Repair & load ] [ New game ]`, with no Exit.
 - **Status line** under the toolbar: messages such as `Saved as 'x'.` and load errors. The next
   action clears it.
-- **Saves** are kept in the browser's `localStorage` for `localhost:8080`, one entry per save in
-  the terminal's save format. They survive reloads and browser restarts, and are separate from
+- **Saves** are kept in the browser's `localStorage`, one entry per save in the terminal's save
+  format. Each address has its own: saves on the public site and on `localhost:8080` don't see
+  each other (GH-111). They survive reloads and browser restarts, and are separate from
   the terminal game's `saves/`.
 - **Startup:** with saves, the page opens with `Restore a saved game?` (Cancel opens the size
   picker); without, it opens the size picker, whose Cancel keeps the board already shown.
@@ -300,6 +301,10 @@ Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle. A br
   the app's current one, stamped in when the page is built. `original` links to the game on
   OpenProcessing and `loopover.xyz` to the community site, both in a new tab so the game in this
   one is kept. Dialogs cover it like the rest of the page.
+- **Public site / Updates (GH-111):** every merge to `master` whose build and tests pass
+  publishes the new version; a failed build leaves the last good one up. GitHub may serve the
+  previous version for up to ~10 minutes after that. An open tab keeps the version it loaded
+  until it's reloaded; the footer's version shows which one is running.
 - **Analytics:** every event carries `platform: web` and `input_method: rich_ui`;
   see `docs/ANALYTICS_EVENTS.md`.
 

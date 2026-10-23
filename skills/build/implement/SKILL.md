@@ -30,6 +30,10 @@ Retrieve the issue details and find the implementation plan comment left by the 
 | GitHub Issues | `gh issue view {number}` and `gh issue comment list {number}` |
 | GitLab | `glab issue view {number}` and `glab issue note list {number}` |
 
+Then read `docs/knowledge/notes/GH-XX.md` if it exists. Amendments recorded there after the plan
+(new WUs, conditions such as "don't start WUn until …") override the plan comment. If one blocks
+the WU about to start, stop and ask the user whether it's cleared (GH-111).
+
 **If no approved plan comment exists — stop.** Report back:
 
 > "No approved plan found on GH-XX. Invoke the `plan` skill to produce and approve a plan before implementation can begin."
