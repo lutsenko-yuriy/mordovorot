@@ -1,7 +1,7 @@
 # Mordovorot
 
 A version of Loopover, a sliding-row/column puzzle, written in Kotlin. It runs in a terminal
-and, on `localhost`, in a web browser.
+and in a web browser, at https://lutsenko-yuriy.github.io/mordovorot/.
 
 The board is a `SQUARE_SIDE × SQUARE_SIDE` grid (3×3 to 5×5, default 4×4) holding a
 shuffled permutation of numbers. Rows shift left/right and columns shift up/down,
@@ -48,14 +48,19 @@ Saves go to `saves/`, relative to the directory you launch from. See
 
 ### In a browser
 
+Play it at **https://lutsenko-yuriy.github.io/mordovorot/**. Every green merge to `master` publishes the latest version
+there (GitHub may serve the previous one for up to ~10 minutes).
+
+To run it locally while working on it:
+
 ```bash
 ./gradlew :web:serve -t    # then open http://localhost:8080
 ```
 
 The browser game plays with the mouse: click the arrows, or drag a row or column. It has the
 same rules, saves, and Mordie as the terminal game, but no keyboard mode, no flags and no Exit
-(close the tab). Saves are kept in the browser (`localStorage` for `localhost:8080`), separate
-from the terminal's `saves/`. With `-t` the server rebuilds when the code changes; reload the tab if it
+(close the tab). Saves are kept in the browser's `localStorage`, per address (the public site and
+`localhost:8080` each have their own), separate from the terminal's `saves/`. With `-t` the server rebuilds when the code changes; reload the tab if it
 doesn't reload by itself.
 
 ## Testing

@@ -17,7 +17,7 @@
 ## Platforms
 
 - JVM 17 desktop terminal app: an ANSI mouse/keyboard TUI that needs a real terminal (`installDist` launcher, not `./gradlew run`)
-- Web browser (GH-110): the `:web` Kotlin/JS client (plain DOM and CSS, no UI framework), served on `http://localhost:8080` by `./gradlew :web:serve -t` (the Kotlin plugin's webpack dev server under continuous build, so it rebuilds on change, GH-124; the port is pinned because browser saves are per origin)
+- Web browser (GH-110): the `:web` Kotlin/JS client (plain DOM and CSS, no UI framework), published on GitHub Pages at https://lutsenko-yuriy.github.io/mordovorot/ (GH-111), and served on `http://localhost:8080` by `./gradlew :web:serve -t` (the Kotlin plugin's webpack dev server under continuous build, so it rebuilds on change, GH-124; the port is pinned because browser saves are per origin)
 
 ## Tooling
 
@@ -38,4 +38,4 @@
   `.claude/alert.env` (`YAB_ALERT_NOTIFY`, `YAB_ALERT_SPEAK`, `YAB_ALERT_SUPPRESS_FOCUSED`, all `on` by
   default; set both channels `off` to opt out). The file is per checkout, so an opt-out does not
   carry over to worktrees or fresh clones. Needs `jq`; does nothing off macOS
-- **CI:** GitHub Actions: `build.yml` (`./gradlew build`), `tests.yml` (onboard and alert Python tests)
+- **CI:** GitHub Actions: `build.yml` (`./gradlew build :web:jsBrowserDistribution`; on a green `master` push its `deploy` job publishes the web bundle to GitHub Pages, GH-111), `tests.yml` (onboard and alert Python tests)

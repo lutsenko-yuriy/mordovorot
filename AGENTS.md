@@ -4,7 +4,7 @@ This file provides guidance to AI coding agents (Claude Code, Codex, Cursor, Ope
 
 ## Project Overview
 
-Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle, with a browser client on localhost (GH-110)
+Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle, with a browser client, published on GitHub Pages (GH-110, GH-111)
 
 Full product specifications: docs/PRODUCT_SPEC.md
 

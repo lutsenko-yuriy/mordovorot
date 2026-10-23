@@ -679,6 +679,10 @@ alert when a session waits on the user, toggled per machine in the gitignored `.
   `build-serve` (outside `build/`, so `clean` leaves it), so its outputs don't collide with a
   `check`/`build` running alongside; one Kotlin compile daemon serves both, so
   `gradle.properties` sets `kotlin.daemon.jvmargs=-Xmx2g`.
+  **Deployment (GH-111):** `build.yml`'s `deploy` job publishes `:web`'s production bundle
+  (`jsBrowserDistribution`) to GitHub Pages after a green `master` build; the repo's Pages
+  source is "GitHub Actions". The site lives under `/mordovorot/`, so `index.html` must load
+  its assets by relative URLs (`IndexPageTest` pins this).
   Known follow-up for the first non-JVM port: seven viewmodel test files stay in the app
   because they use Exit or `SaveFileFormatException`, so they don't run on other targets
   (`SaveFileFormatException` is in `:shared:storage` since GH-110).
