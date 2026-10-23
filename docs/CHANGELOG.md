@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.18.3] — 2026-10-24 (PR #136 merged)
+
+### Changed
+- [wip] (PR #136) GH-111: the README's Credits also link carykh's video introducing Loopover and credit Janis Pritzkau, who made loopover.xyz.
+
 ## [0.18.2] — 2026-10-19 (PR #135 merged)
 
 ### Changed
