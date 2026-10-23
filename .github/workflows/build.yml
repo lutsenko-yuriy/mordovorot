@@ -23,8 +23,6 @@ jobs:
       - name: Check notes index is current
         run: python3 scripts/notes/index.py --check
       - if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        uses: actions/configure-pages@v5
-      - if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         uses: actions/upload-pages-artifact@v3
         with:
           path: web/build/dist/js/productionExecutable
