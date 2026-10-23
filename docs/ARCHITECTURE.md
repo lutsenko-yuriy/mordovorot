@@ -136,7 +136,8 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 
 web/                     # :web - the browser client (GH-110): `jvm()` + `js { browser(); nodejs() }`.
 │                          # DOM-free code in src/commonMain (tested on the JVM and Node.js), the
-│                          # page in src/jsMain. `./gradlew :web:serve -t` serves it on localhost:8080
+│                          # page in src/jsMain. `./gradlew :web:serve -t` serves it on localhost:8080;
+│                          # `build.yml`'s `deploy` job publishes it to GitHub Pages (GH-111)
 ├── src/commonMain/kotlin/web/
 │   ├── WebGame.kt       # The browser's View: page intents (onArrow/onDrag*/onNew/onSave/onLoad/dialog answers,
 │   │                    # GH-126's onGiveUp/onMordiesSolution/onReplay*) ->
