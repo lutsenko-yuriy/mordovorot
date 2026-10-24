@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.20.0] — 2026-10-24 (PR #143 merged)
+
+### Added
+- [user] (PR #143) GH-139 (WU3/3): choose how tiles are labelled — numbers, numbers from 0, pairs, pairs from 0, letters or letter pairs — in a Tile labels dialog, in the terminal (`[ Labels ]`, F4) and now in the browser (`[ Labels ]`, with a live preview); the choice is remembered, and a save keeps its own labels (WU1–WU2).
+
 ## [0.19.2] — 2026-10-24 (PR #142 merged)
 
 ### Added
