@@ -11,6 +11,17 @@ kotlin {
     jvmToolchain(17)
 }
 
+// GH-137: the Kotlin/JS test runner's mocha 11 still locks serialize-javascript 6 and diff 7,
+// both with open advisories. Pin the patched majors until a Kotlin release bundles a mocha that
+// needs them; mocha 11 calls only diff.createPatch and, in parallel mode, serialize().
+// rootPackageJson doesn't see a change here: run `./gradlew rootPackageJson --rerun kotlinUpgradeYarnLock`.
+plugins.withType<org.jetbrains.kotlin.gradle.targets.js.yarn.YarnPlugin> {
+    the<org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension>().apply {
+        resolution("serialize-javascript", "^7.1.4")
+        resolution("diff", "^8.0.4")
+    }
+}
+
 dependencies {
     // GH-42: the project's first third-party runtime dependency - powers ViewModel's
     // View-request channel. Versions live in gradle/libs.versions.toml (GH-109).
