@@ -1,5 +1,6 @@
-/* GH-148: the rules that fit the page to phones, tall (GH-147) and wide; linked right after
-   styles.css, whose rules these override. */
+/* GH-148: fitting the page to phones. Tall, the whole fit (GH-147); wide, the fixed footer and the
+   spacing on short and narrow phones, while the wide fit itself stays with the wide layout in
+   styles.css. Linked right after styles.css, whose rules these override. */
 
 /* Tall: the page is the window's height and never scrolls; the board takes the room the rest
    leaves and its tiles fit the stage (GH-147). Browsers without size queries keep the estimate. */
