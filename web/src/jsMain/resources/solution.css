@@ -9,9 +9,10 @@
 @media (orientation: landscape) {
     /* The steps between the board and the panel. */
     .app.solution {
-        --beside: 624px;
+        --steps: 11rem;
+        --beside: calc(var(--panel) + var(--steps) + 2 * var(--column-gap) + 2 * var(--pad-x));
         grid-template-areas: "board steps panel";
-        grid-template-columns: auto 11rem 21rem;
+        grid-template-columns: auto var(--steps) var(--panel);
     }
 
     .app.solution .steps {
@@ -21,6 +22,21 @@
         margin-top: var(--lead);
         /* As tall as the tiles, scrolling past that. */
         max-height: calc(var(--side) * var(--pitch));
+    }
+}
+
+/* Narrow wide phones: about the narrowest column a step like `12. Row 4 → ×3` fits without scrolling sideways (GH-148). */
+@media (orientation: landscape) and (max-width: 760px) {
+    .app.solution {
+        --steps: 9.5rem;
+    }
+}
+
+/* The narrowest (the SE): three columns leave the board little room, so the gaps give it some. */
+@media (orientation: landscape) and (max-width: 600px) {
+    .app.solution {
+        --column-gap: 8px;
+        --pad-x: 8px;
     }
 }
 
@@ -65,7 +81,7 @@
     cursor: default;
 }
 
-/* The tall layout's fit (GH-147), as in styles.css. */
+/* The tall layout's fit (GH-147), as in fit.css. */
 @supports (container-type: size) {
     @media (orientation: portrait) {
         .app.solution {

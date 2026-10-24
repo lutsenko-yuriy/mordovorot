@@ -1,0 +1,91 @@
+/* GH-148: fitting the page to phones. Tall, the whole fit (GH-147); wide, the fixed footer and the
+   spacing on short and narrow phones, while the wide fit itself stays with the wide layout in
+   styles.css. Linked right after styles.css, whose rules these override. */
+
+/* Tall: the page is the window's height and never scrolls; the board takes the room the rest
+   leaves and its tiles fit the stage (GH-147). Browsers without size queries keep the estimate. */
+@supports (container-type: size) {
+    @media (orientation: portrait) {
+        html {
+            overscroll-behavior: none;
+        }
+
+        body {
+            display: grid;
+            grid-template-rows: minmax(0, 1fr) auto;
+            height: var(--vh);
+        }
+
+        .app {
+            grid-template-rows: auto auto minmax(0, 1fr) auto auto auto;
+            align-content: stretch;
+            gap: 8px;
+            min-height: 0;
+            padding: 8px 12px;
+        }
+
+        .stage {
+            container-type: size;
+            justify-self: stretch;
+            display: grid;
+            place-items: center;
+            --tile: clamp(16px, min(100cqw, 100cqh) / (var(--side) * 1.1 + var(--band)), 84px);
+            --gap: calc(var(--tile) * 0.1);
+            --pitch: calc(var(--tile) + var(--gap));
+            --arrow: calc(var(--tile) * 0.7);
+        }
+
+        .footer {
+            min-height: 0;
+        }
+    }
+}
+
+/* Wide: the footer is one line of fixed height, left out of the board's room (GH-148). */
+@media (orientation: landscape) {
+    .footer {
+        height: var(--footer);
+        min-height: 0;
+        padding: 0 16px;
+        line-height: var(--footer);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+/* Wide phones (GH-148). Short: tighter spacing. */
+@media (orientation: landscape) and (max-height: 500px) {
+    .app {
+        --pad-y: 8px;
+    }
+
+    .panel {
+        gap: 6px;
+    }
+}
+
+/* Very short (the SE, or any phone with its browser's bars showing): the panel starts level with
+   the arrows, and Mordie keeps two lines, as its longest line takes in the narrow panel. */
+@media (orientation: landscape) and (max-height: 340px) {
+    .panel {
+        margin-top: 0;
+    }
+
+    .panel > .mordie {
+        min-height: calc(2em * 1.4);
+        font-size: 0.9rem;
+    }
+
+    .moves {
+        font-size: 1.25rem;
+    }
+}
+
+/* Narrow: slimmer columns, so the board keeps room. */
+@media (orientation: landscape) and (max-width: 760px) {
+    .app {
+        --panel: 18rem;
+        --column-gap: 16px;
+    }
+}

@@ -309,15 +309,23 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   - **Solution screen (GH-126):** wide puts the step list between the board and the panel, as
     tall as the tiles; tall puts it under the board, a few steps high. Either way it scrolls when
     the steps don't fit, and keeps the current step in view. `[ ◀ Prev ] [ Next ▶ ] [ ↻ Restart ]`
-    sit above the toolbar. The board keeps its place, with its arrows hidden.
-  - The board scales to fit the window, leaving room for the footer.
+    sit above the toolbar. The board keeps its place, with its arrows hidden, wherever the window's
+    height limits the board; where its width does (narrow wide windows), the steps' column takes
+    room and the board is smaller there (GH-148).
+  - **Wide fits the window (GH-148):** wider than tall, the page is exactly the window's height
+    and never scrolls or bounces, as when tall: the tiles shrink to fit beside the panel and above
+    the footer, down to 16px, in every browser. Landscape phones get tighter spacing: under 500px
+    tall smaller gaps; under 340px tall the panel starts level with the board's top, Mordie's text
+    is smaller and keeps two lines, and `Moves` is smaller; under 760px wide the panel, the gap
+    and the steps' column are narrower. A dialog taller than the window scrolls inside itself.
   - **Tall fits the window (GH-147):** taller than wide, the page is exactly the window's height
     (the part the browser's own toolbars leave) and never scrolls: the board takes the room the
     rest leaves and its tiles shrink to fit, down to 16px. Pulling the page past its edge neither
     bounces nor refreshes it; pinch-zoom still works, and a zoomed-in page scrolls as usual.
     Browsers without CSS size container queries (before Safari 16, Firefox 110, Chrome 105) keep
     the older estimate, which can scroll on short phones.
-  - The toolbar's buttons stay on one row, tighter on screens under 380px wide (GH-147).
+  - The toolbar's buttons stay on one row, tighter on screens under 380px wide (GH-147) and on
+    wide ones under 760px wide (GH-148).
   - The footer sits at the very bottom in both (GH-111).
 - **Footer (GH-111):** one small muted line,
   `v<version> · Based on Loopover by Cary Huang (carykh) · original · loopover.xyz`. The version is
@@ -325,6 +333,8 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   OpenProcessing and `loopover.xyz` to the community site, both in a new tab so the game in this
   one is kept. Dialogs cover it like the rest of the page. Taller than wide and under 480px wide
   it is one short line without the links, `v<version> · Based on Loopover by carykh` (GH-147).
+  Wider than tall it is one line of fixed height, cut off with `…` if a window is ever too narrow
+  for it (GH-148).
 - **Public site / Updates (GH-111):** every merge to `master` whose build and tests pass
   publishes the new version; a failed build leaves the last good one up. GitHub may serve the
   previous version for up to ~10 minutes after that. An open tab keeps the version it loaded
