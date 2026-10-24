@@ -192,7 +192,9 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # sheets below in this order (the cascade relies on it), loads web.js
 ├── src/jsMain/resources/styles.css     # The look: tokens, wide/tall by `orientation` (as layoutOf
 │                                       # counts), panel, toolbar, footer, buttons; tall: the page is
-│                                       # the window's height, tiles fit `.stage` (GH-147)
+│                                       # the window's height, tiles fit `.stage` (GH-147); wide: the
+│                                       # same, the board's room from named column widths and a
+│                                       # fixed-height footer, no size container (GH-148)
 ├── src/jsMain/resources/board.css      # GH-153: tile colours by home row/column, arrows, solve
 │                                       # animations; no arrows under `pointer: coarse` (GH-111)
 ├── src/jsMain/resources/dialogs.css    # GH-153: the modal dialogs, the Tile labels picker (GH-139)
@@ -213,7 +215,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # every sheet linked, in order (GH-153)
 ├── src/jvmTest/kotlin/web/BuildInfoTest.kt, CreditsTest.kt # GH-111: the stamped version is the
 │                                       # build's; the footer's credit matches the README's
-├── src/jvmTest/kotlin/web/PhoneFitStylesTest.kt # GH-147: pins the tall-layout fit rules
+├── src/jvmTest/kotlin/web/PhoneFitStylesTest.kt # GH-147, GH-148: pins the tall and wide fit rules
 │                                       # (styles.css, solution.css)
 └── build/generated/buildInfo/          # BuildInfo.VERSION, written by :web:generateBuildInfo from
                                         # the root build.gradle.kts's version (GH-111)
@@ -688,7 +690,7 @@ bash hooks are wired in the committed `.claude/settings.json` through `${CLAUDE_
 has run) and `scripts/alert/alert.sh` (GH-107: Notification/Stop, a macOS notification and spoken
 alert when a session waits on the user, toggled per machine in the gitignored `.claude/alert.env`).
 `scripts/web/phone_fit/` (GH-147) measures the built web game at phone sizes in headless Chrome
-(`measure.sh`, see its README) and serves it to a real phone on the local network (`serve_lan.sh`).
+(`measure.sh`, see its README; a `landscape` preset and checks on all four edges, GH-148) and serves it to a real phone on the local network (`serve_lan.sh`).
 
 ## Dependencies
 
