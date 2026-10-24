@@ -180,8 +180,11 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # intents; the page root holds a drag's pointer capture;
 │                                       # runs Slides and MessageFeed on animation frames, redrawing
 │                                       # only the tiles and Mordie's line; keeps the step list's
-│                                       # scroll across frames, the current step in view (GH-126)
-├── src/jsMain/kotlin/web/DomFooter.kt  # footerElement: <footer>, its links in a new tab (GH-111)
+│                                       # scroll across frames, the current step in view (GH-126);
+│                                       # the board sits in `.stage`, the box the tall layout's
+│                                       # tiles are sized from (GH-147)
+├── src/jsMain/kotlin/web/DomFooter.kt  # footerElement: <footer>, its links in a new tab (GH-111);
+│                                       # wide-only parts in `.wide-only` (GH-147)
 ├── src/jsMain/kotlin/web/DomDialogs.kt  # The modal dialogs; DomElements.kt: element/text/button helpers
 ├── src/jsMain/kotlin/web/DomSolution.kt # The step list, Prev/Next/Restart and the Give Up row (GH-126)
 ├── src/jsMain/kotlin/web/storage/LocalStorageStore.kt # KeyValueStore over window.localStorage
@@ -189,7 +192,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/jsMain/resources/styles.css     # The look: tile colours by home row/column, modal
 │                                       # dialogs, wide/tall by `orientation` (as layoutOf counts);
 │                                       # `.app.solution` for the solution screen's layouts (GH-126);
-│                                       # no arrows under `pointer: coarse` (GH-111)
+│                                       # no arrows under `pointer: coarse` (GH-111); tall: the page
+│                                       # is the window's height, tiles fit `.stage` (GH-147)
 ├── src/commonTest/kotlin/web/scenario/ # GH-110 end to end: WebGame over startWebGame's wiring
 │                                       # (WebHarness), recording each WebState (startup, play,
 │                                       # save/load, unsaved progress, drag, analytics; GH-126 give up;
@@ -204,6 +208,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # and relative asset URLs (GH-111: the public site's sub-path)
 ├── src/jvmTest/kotlin/web/BuildInfoTest.kt, CreditsTest.kt # GH-111: the stamped version is the
 │                                       # build's; the footer's credit matches the README's
+├── src/jvmTest/kotlin/web/PhoneFitStylesTest.kt # GH-147: pins styles.css's tall-layout fit rules
 └── build/generated/buildInfo/          # BuildInfo.VERSION, written by :web:generateBuildInfo from
                                         # the root build.gradle.kts's version (GH-111)
 
