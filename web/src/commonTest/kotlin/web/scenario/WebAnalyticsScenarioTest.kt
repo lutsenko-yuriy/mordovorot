@@ -35,6 +35,7 @@ class WebAnalyticsScenarioTest {
             backgroundScope, layout = layoutOf(width, height), appVersion = "9.9.9", host = Host.LOCALHOST,
         ).start().props("app_launched").single()
 
+        // TODO(GH-139): the exact map gains "tile_labels" to "numbers" (empty store), and the stored scheme with one
         fun expected(layout: String) = mapOf<String, Any?>(
             "mode" to "rich_ui", "layout" to layout, "platform" to "web", "app_version" to "9.9.9", "host" to "localhost",
         )
