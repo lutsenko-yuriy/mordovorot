@@ -188,13 +188,15 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/jsMain/kotlin/web/DomDialogs.kt  # The modal dialogs; DomElements.kt: element/text/button helpers
 ├── src/jsMain/kotlin/web/DomSolution.kt # The step list, Prev/Next/Restart and the Give Up row (GH-126)
 ├── src/jsMain/kotlin/web/storage/LocalStorageStore.kt # KeyValueStore over window.localStorage
-├── src/jsMain/resources/index.html     # The page: `<title>Mordovorot</title>`, links the four
+├── src/jsMain/resources/index.html     # The page: `<title>Mordovorot</title>`, links the five
 │                                       # sheets below in this order (the cascade relies on it), loads web.js
 ├── src/jsMain/resources/styles.css     # The look: tokens, wide/tall by `orientation` (as layoutOf
-│                                       # counts), panel, toolbar, footer, buttons; tall: the page is
-│                                       # the window's height, tiles fit `.stage` (GH-147); wide: the
-│                                       # same, the board's room from named column widths and a
-│                                       # fixed-height footer, no size container (GH-148)
+│                                       # counts), panel, toolbar, footer, buttons; wide: the page is
+│                                       # the window's height, the board's room from named column
+│                                       # widths and a fixed-height footer, no size container (GH-148)
+├── src/jsMain/resources/fit.css        # GH-148: fitting phones: tall, the page is the window's
+│                                       # height and tiles fit `.stage` (GH-147); wide, the fixed
+│                                       # footer and tighter spacing on short and narrow phones
 ├── src/jsMain/resources/board.css      # GH-153: tile colours by home row/column, arrows, solve
 │                                       # animations; no arrows under `pointer: coarse` (GH-111)
 ├── src/jsMain/resources/dialogs.css    # GH-153: the modal dialogs, the Tile labels picker (GH-139)
@@ -216,7 +218,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/jvmTest/kotlin/web/BuildInfoTest.kt, CreditsTest.kt # GH-111: the stamped version is the
 │                                       # build's; the footer's credit matches the README's
 ├── src/jvmTest/kotlin/web/PhoneFitStylesTest.kt # GH-147, GH-148: pins the tall and wide fit rules
-│                                       # (styles.css, solution.css)
+│                                       # (styles.css, fit.css, solution.css)
 └── build/generated/buildInfo/          # BuildInfo.VERSION, written by :web:generateBuildInfo from
                                         # the root build.gradle.kts's version (GH-111)
 

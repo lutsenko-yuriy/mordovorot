@@ -81,7 +81,7 @@
     cursor: default;
 }
 
-/* The tall layout's fit (GH-147), as in styles.css. */
+/* The tall layout's fit (GH-147), as in fit.css. */
 @supports (container-type: size) {
     @media (orientation: portrait) {
         .app.solution {

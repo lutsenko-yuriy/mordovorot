@@ -9,9 +9,13 @@ class PhoneFitStylesTest {
     private val styles = File("src/jsMain/resources/styles.css").readText()
     private val board = File("src/jsMain/resources/board.css").readText()
     private val solution = File("src/jsMain/resources/solution.css").readText()
+    private val fitSheet = File("src/jsMain/resources/fit.css").readText()
+
+    /** styles.css and fit.css, linked one after the other, which the fit's rules rely on. */
+    private val layout = styles + fitSheet
 
     /** Every top-level block in [css] that opens with [opening], up to its closing brace, joined. */
-    private fun block(opening: String, css: String = styles): String =
+    private fun block(opening: String, css: String = layout): String =
         Regex("""(?m)^${Regex.escape(opening)} \{(.*?)\n}""", RegexOption.DOT_MATCHES_ALL)
             .findAll(css).joinToString("") { it.groupValues[1] }
 
