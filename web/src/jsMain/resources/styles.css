@@ -16,15 +16,15 @@
     --mordie: #c2562a;
     --tile-ink: #2e2822;
     --tile-light: 76%;
-    /* The footer's height, left out of the board's room (GH-111): up to three lines when tall.
-       Tall, only where size queries are missing (GH-147). */
+    /* The footer's height, left out of the board's room (GH-111): up to three lines when tall,
+       one fixed line when wide (GH-148). Tall, only where size queries are missing (GH-147). */
     --footer: 76px;
     color-scheme: light;
 }
 
 @media (orientation: landscape) {
     :root {
-        --footer: 36px;
+        --footer: 26px;
     }
 }
 
@@ -103,17 +103,34 @@ body {
     -webkit-touch-callout: none;
 }
 
-/* Wider than tall, as layoutOf counts it: the board on the left, the rest on the right. */
+/* Wider than tall, as layoutOf counts it: the board on the left, the rest on the right. The page is
+   the window's height and never scrolls; the board takes the room the panel, the padding and the
+   footer leave, which nothing else shares here (GH-148). */
 @media (orientation: landscape) {
+    html {
+        overscroll-behavior: none;
+    }
+
+    body {
+        display: grid;
+        grid-template-rows: minmax(0, 1fr) auto;
+        height: var(--vh);
+    }
+
     .app {
-        /* The width left for the board: the panel's column (wide enough for the four toolbar
-           buttons, GH-139) and its gap, and the page's padding. */
-        --beside: 408px;
-        --tile: clamp(28px, min(calc((100vw - var(--beside)) / (var(--side) * 1.1 + var(--band))), calc((var(--vh) - 48px - var(--footer)) / (var(--side) * 1.1 + var(--band)))), 84px);
+        /* The panel's column is wide enough for the four toolbar buttons (GH-139). */
+        --panel: 21rem;
+        --column-gap: 40px;
+        --pad-x: 16px;
+        --pad-y: 20px;
+        --beside: calc(var(--panel) + var(--column-gap) + 2 * var(--pad-x));
+        --tile: clamp(16px, min(100vw - var(--beside), var(--vh) - var(--footer) - 2 * var(--pad-y)) / (var(--side) * 1.1 + var(--band)), 84px);
         grid-template-areas: "board panel";
-        grid-template-columns: auto 21rem;
+        grid-template-columns: auto var(--panel);
         justify-content: center;
-        column-gap: 40px;
+        column-gap: var(--column-gap);
+        min-height: 0;
+        padding: var(--pad-y) var(--pad-x);
     }
 
     .panel {
@@ -224,6 +241,18 @@ body {
     color: var(--muted);
     font-size: 0.8rem;
     text-align: center;
+}
+
+@media (orientation: landscape) {
+    .footer {
+        height: var(--footer);
+        min-height: 0;
+        padding: 0 16px;
+        line-height: var(--footer);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 }
 
 /* Narrow and tall: one short line, the links left to wider windows (GH-147). */

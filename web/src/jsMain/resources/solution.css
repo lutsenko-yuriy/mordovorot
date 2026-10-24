@@ -9,9 +9,10 @@
 @media (orientation: landscape) {
     /* The steps between the board and the panel. */
     .app.solution {
-        --beside: 624px;
+        --steps: 11rem;
+        --beside: calc(var(--panel) + var(--steps) + 2 * var(--column-gap) + 2 * var(--pad-x));
         grid-template-areas: "board steps panel";
-        grid-template-columns: auto 11rem 21rem;
+        grid-template-columns: auto var(--steps) var(--panel);
     }
 
     .app.solution .steps {
