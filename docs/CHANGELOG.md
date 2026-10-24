@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.19.1] — 2026-10-24 (PR #141 merged)
+
+### Added
+- [wip] (PR #141) GH-139 (WU1/3): a save keeps its tile labels (line 8) and the chosen labels are remembered as a preference (`saves/preferences` in the terminal, `localStorage` in the browser); the viewmodel, analytics and both clients' wiring are in place, with nothing drawn yet.
+
 ## [0.19.0] — 2026-10-24 (PR #138 merged)
 
 ### Added

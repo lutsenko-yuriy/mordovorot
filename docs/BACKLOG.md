@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-_(nothing in progress)_
+- GH-139: Alternative tile labels: numbers from 0, pairs, letters, chosen in a dialog (WU1/3 merged; WU2-3 pending)
 
 ---
 
