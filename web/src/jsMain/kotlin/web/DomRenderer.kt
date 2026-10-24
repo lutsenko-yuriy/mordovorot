@@ -87,7 +87,8 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
         root.classList.toggle("dragging", state.drag != null)
         root.classList.toggle("solution", state.solution != null)
         root.append(
-            board(state, justSolved = state.solved && before?.solved == false),
+            // The box the tall layout sizes the tiles from (GH-147).
+            element("div", "stage").apply { append(board(state, justSolved = state.solved && before?.solved == false)) },
             *listOfNotNull(state.solution?.let { stepList(it) }).toTypedArray(),
             // Beside the board when the window is wide; when tall, its items stack around it (styles.css).
             element("div", "panel").apply {
