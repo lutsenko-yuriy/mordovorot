@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.20.3] — 2026-10-24 (PR #151 merged)
+
+### Fixed
+- [user] (PR #151) GH-147: on phones held upright the web game now fits the screen with no scrolling — the tiles shrink to fit, the toolbar stays on one row and the footer is one short line.
+
 ## [0.20.2] — 2026-10-24 (PR #146 merged)
 
 ### Fixed
