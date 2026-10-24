@@ -37,4 +37,6 @@ doesn't reveal its solution within the harness's 80 shifts, so use 3×3 and 4×4
 ## On a real phone
 
 The user runs `! scripts/web/phone_fit/serve_lan.sh` (auto mode blocks the agent from serving to
-the network); it prints the address to open on a phone on the same Wi-Fi. Ctrl+C stops it.
+the network); it prints the address to open on a phone on the same Wi-Fi, and a QR code for the
+phone's camera when `qrencode` is installed (`brew install qrencode`), so the phone's browser can't
+swap in an older address from its history (GH-148). Ctrl+C stops it.
