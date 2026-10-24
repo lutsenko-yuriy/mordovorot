@@ -8,7 +8,13 @@
 <script>
 const q = new URLSearchParams(location.search);
 const variant = q.get("v") || "mouse";
-const sizes = (q.get("sizes") || "320x568,375x667,390x844,393x852,412x915,430x932").split(",");
+const PRESETS = {
+    portrait: "320x568,375x667,390x844,393x852,412x915,430x932",
+    // GH-148: the phones turned, plus the 14 and Pro Max less Safari's notch insets.
+    landscape: "568x320,667x375,844x390,852x393,915x412,932x430,750x390,814x430",
+};
+const sizeList = q.get("sizes") || "portrait";
+const sizes = (PRESETS[sizeList] || sizeList).split(",");
 const boards = (q.get("boards") || "3,4,5").split(",").map(Number);
 const mode = q.get("mode") || "play"; // play | dialog | solution
 const shorter = Number(q.get("shorter") || 0);
@@ -26,27 +32,35 @@ function clickText(doc, text) {
 }
 
 /** One line: OK when the page is the window's size, nothing visible is past an edge, the toolbar has at
- *  most `rows` rows and the footer one line; then the sizes and positions to compare across runs. */
+ *  most `rows` rows, the footer one line and the steps don't scroll sideways; then the sizes and positions
+ *  to compare across runs. */
 function measure(win, label) {
     const doc = win.document;
     const de = doc.documentElement;
     const rect = selector => doc.querySelector(selector)?.getBoundingClientRect();
     const toolbar = rect(".toolbar"), button = rect(".toolbar button"), footer = rect(".footer");
-    const tiles = rect(".tiles"), tile = rect(".tile"), mordie = rect(".mordie");
-    // The arrows hidden on touch screens are 1px boxes wherever they land, so they don't count.
+    const tiles = rect(".tiles"), tile = rect(".tile"), mordie = rect(".mordie"), panel = rect(".panel");
+    // Past any of the window's four edges (GH-148). The arrows hidden on touch screens are 1px boxes
+    // wherever they land, and a dialog's buttons scroll inside it, so neither counts; the dialog does.
     let overflow = 0, culprit = "";
-    for (const el of doc.querySelectorAll(".app button:not(.arrow), .footer, .status, .tiles, .steps")) {
+    for (const el of doc.querySelectorAll(".app button:not(.arrow):not(.dialog *), .footer, .status, .tiles, .steps, .dialog")) {
         const r = el.getBoundingClientRect();
         if (r.width === 0) continue;
-        const past = Math.max(r.bottom - win.innerHeight, r.right - win.innerWidth);
+        const past = Math.max(r.bottom - win.innerHeight, r.right - win.innerWidth, -r.left, -r.top);
         if (past > overflow) { overflow = past; culprit = el.className || el.textContent; }
     }
+    const steps = doc.querySelector(".steps");
+    const sideways = steps ? steps.scrollWidth - steps.clientWidth : 0;
+    const dialog = doc.querySelector(".dialog");
     const ok = de.scrollHeight <= win.innerHeight && de.scrollWidth <= win.innerWidth && overflow <= 0.5
-        && toolbar && button && toolbar.height < button.height * (toolbarRows + 0.5) && footer && footer.height < 30;
+        && toolbar && button && toolbar.height < button.height * (toolbarRows + 0.5) && footer && footer.height < 30
+        && sideways <= 0;
     return `${ok ? "OK  " : "BAD "}${label} page ${de.scrollWidth}x${de.scrollHeight} win ${win.innerWidth}x${win.innerHeight} `
         + `toolbar h${Math.round(toolbar?.height)} w${Math.round(toolbar?.width)}@${round(toolbar)} `
         + `footer h${Math.round(footer?.height)} tiles@${round(tiles)} tile ${Math.round(tile?.width)} `
-        + `mordie h${Math.round(mordie?.height)} overflow ${Math.round(overflow)} ${culprit}`;
+        + `mordie h${Math.round(mordie?.height)}${panel?.height ? ` panel h${Math.round(panel.height)}` : ""}`
+        + `${steps ? ` steps sideways ${sideways}` : ""}${dialog ? ` dialog h${dialog.clientHeight}/${dialog.scrollHeight}` : ""} `
+        + `overflow ${Math.round(overflow)} ${culprit}`;
 }
 
 async function run(size, board) {
