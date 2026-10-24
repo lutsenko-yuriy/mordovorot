@@ -153,7 +153,9 @@ class PhoneFitStylesTest {
         val narrowWide = "(orientation: landscape) and (max-width: 760px)"
 
         assertTrue("--panel: 18rem;" in rule(block("@media $narrowWide"), ".app"), block("@media $narrowWide"))
-        assertTrue("--steps: 9rem;" in rule(block("@media $narrowWide", solution), ".app.solution"), solution)
+        assertTrue("--steps: 9.5rem;" in rule(block("@media $narrowWide", solution), ".app.solution"), solution)
         assertTrue("@media (max-width: 380px), $narrowWide {" in styles, "the toolbar's tight rule covers narrow wide phones")
+        val narrowest = rule(block("@media (orientation: landscape) and (max-width: 600px)", solution), ".app.solution")
+        assertTrue("--column-gap: 8px;" in narrowest && "--pad-x: 8px;" in narrowest, narrowest)
     }
 }
