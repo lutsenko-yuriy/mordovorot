@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.20.2] — 2026-10-24 (PR #146 merged)
+
+### Fixed
+- [user] (PR #146) GH-145: on touch screens a double tap no longer zooms the page and text no longer gets selected or shows the iOS long-press callout on the board; pinch-zoom still works, and the save name field stays editable.
+
 ## [0.20.1] — 2026-10-24 (PR #144 merged)
 
 ### Fixed
