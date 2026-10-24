@@ -99,20 +99,21 @@ body {
 /* Wider than tall, as layoutOf counts it: the board on the left, the rest on the right. */
 @media (orientation: landscape) {
     .app {
-        /* The width left for the board: the panel's column and its gap, and the page's padding. */
-        --beside: 392px;
+        /* The width left for the board: the panel's column (wide enough for the four toolbar
+           buttons, GH-139) and its gap, and the page's padding. */
+        --beside: 408px;
         --tile: clamp(28px, min(calc((100vw - var(--beside)) / (var(--side) * 1.1 + var(--band))), calc((var(--vh) - 48px - var(--footer)) / (var(--side) * 1.1 + var(--band)))), 84px);
         grid-template-areas: "board panel";
-        grid-template-columns: auto 20rem;
+        grid-template-columns: auto 21rem;
         justify-content: center;
         column-gap: 40px;
     }
 
     /* The steps between the board and the panel. */
     .app.solution {
-        --beside: 608px;
+        --beside: 624px;
         grid-template-areas: "board steps panel";
-        grid-template-columns: auto 11rem 20rem;
+        grid-template-columns: auto 11rem 21rem;
     }
 
     .app.solution .steps {
@@ -190,6 +191,7 @@ body {
     z-index: 1;
     background: var(--page);
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
 }
 
@@ -495,6 +497,34 @@ button:focus-visible {
 
 .dialog .choices.list button {
     text-align: left;
+}
+
+/* The Tile labels picker (GH-139): the mark, the name, then the sample row in a fixed-width face. */
+.dialog .choices.labels button {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6em;
+    background: transparent;
+    color: var(--ink);
+    box-shadow: inset 0 0 0 2px var(--frame);
+}
+
+.dialog .choices.labels button:hover {
+    background: var(--frame);
+}
+
+.dialog .choices.labels button.checked {
+    box-shadow: inset 0 0 0 2px var(--button);
+}
+
+.dialog .choices.labels .name {
+    flex: 1;
+}
+
+.dialog .choices.labels .sample {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    color: var(--muted);
+    white-space: pre;
 }
 
 .dialog .actions {

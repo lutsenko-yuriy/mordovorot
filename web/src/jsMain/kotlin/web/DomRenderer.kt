@@ -100,6 +100,7 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
                             button("New") { game.onNew() }.also { it.disabled = dialog != null },
                             button("Save") { game.onSave() }.also { it.disabled = dialog != null },
                             button("Load") { game.onLoad() }.also { it.disabled = dialog != null },
+                            button("Labels") { game.onLabels() }.also { it.disabled = dialog != null },
                         )
                     },
                     text("status", state.status ?: ""),
@@ -238,19 +239,20 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
         repeat(side) { row ->
             repeat(side) { col ->
                 val value = state.tiles[row * side + col]
+                val label = state.tileTexts[row * side + col]
                 val x = if (offset?.axis == Axis.ROW && offset.line == row) wrapped!![col] else col.toDouble()
                 val y = if (offset?.axis == Axis.COLUMN && offset.line == col) wrapped!![row] else row.toDouble()
-                layer.append(tile(value, side, x, y).apply {
+                layer.append(tile(value, label, side, x, y).apply {
                     addEventListener("pointerdown", { startDrag(it as PointerEvent, layer, side, row, col) })
                 })
-                if (x > side - 1) layer.append(tile(value, side, x - side, y))
-                if (y > side - 1) layer.append(tile(value, side, x, y - side))
+                if (x > side - 1) layer.append(tile(value, label, side, x - side, y))
+                if (y > side - 1) layer.append(tile(value, label, side, x, y - side))
             }
         }
     }
 
-    /** Tile [value] at column [x], row [y], in tiles; its colour comes from where it belongs. */
-    private fun tile(value: Int, side: Int, x: Double, y: Double) = text("tile", value.toString()).apply {
+    /** Tile [value], showing [label], at column [x], row [y], in tiles; its colour comes from where it belongs. */
+    private fun tile(value: Int, label: String, side: Int, x: Double, y: Double) = text("tile", label).apply {
         setAttribute(
             "style",
             "--x: $x; --y: $y; --row: ${(value - 1) / side}; --col: ${(value - 1) % side};",

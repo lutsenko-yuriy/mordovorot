@@ -54,6 +54,17 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                     button("Repair & load") { game.onUnsolvableChoice(UnsolvableSaveChoice.REPAIR) },
                 ),
             )
+            is WebDialog.Labels -> append(
+                text("title", "Tile labels"),
+                choices(dialog.options.map { labelRow(it, it.labels == dialog.selected, game) }, "list labels").apply {
+                    setAttribute("role", "radiogroup")
+                    setAttribute("aria-label", "Tile labels")
+                },
+                actions(
+                    button("Cancel", "secondary") { game.onLabelsAnswered(ok = false) },
+                    button("OK") { game.onLabelsAnswered(ok = true) },
+                ),
+            )
             WebDialog.GiveUp -> append(
                 text("title", "Give up and see Mordie's solution?"),
                 actions(
@@ -62,6 +73,18 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                 ),
             )
         }
+    }
+
+/** A radio-role button, since the page is rebuilt every frame and a native radio would lose its state. */
+private fun labelRow(option: LabelOption, checked: Boolean, game: WebGame) =
+    button("", if (checked) "checked" else null) { game.onLabelsSelected(option.labels) }.apply {
+        setAttribute("role", "radio")
+        setAttribute("aria-checked", checked.toString())
+        append(
+            element("span", "mark").apply { textContent = if (checked) "●" else "○" },
+            element("span", "name").apply { textContent = option.title },
+            element("span", "sample").apply { textContent = option.sample.joinToString(" ") { it.padEnd(2) } },
+        )
     }
 
 private fun choices(buttons: List<Element>, kind: String? = null) =
