@@ -64,6 +64,12 @@ html, body {
     min-height: 100%;
 }
 
+/* GH-145: a double tap doesn't zoom (pinch-zoom still does), and taps don't flash a grey box. */
+html {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
 body {
     background: var(--page);
     color: var(--ink);
@@ -88,6 +94,10 @@ body {
     gap: 14px;
     min-height: calc(var(--vh) - var(--footer));
     padding: 20px 16px;
+    /* GH-145: a long press or a drag that starts off a tile doesn't select text or offer to copy it. */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
 }
 
 /* GH-126: the solution screen's steps go under the board, and its replay buttons under them. */
@@ -482,6 +492,9 @@ button:focus-visible {
     border-radius: 8px;
     background: var(--page);
     color: var(--ink);
+    /* The game's no-select would otherwise stop iOS from editing the save name (GH-145). */
+    user-select: text;
+    -webkit-user-select: text;
 }
 
 .dialog input:focus {

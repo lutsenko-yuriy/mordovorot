@@ -279,6 +279,9 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
     aren't shown and the board grows into their room; dragging is the only way to shift (screen
     readers still find the arrow buttons).
     Touchscreen laptops keep the arrows.
+  - **Touch gestures (GH-145):** a double tap doesn't zoom the page (pinch-zoom still does), and
+    a long press or a drag doesn't select the game's text or offer to copy it. The save name
+    field and the footer stay selectable.
 - **Dragging:** press a tile and drag. Once the pointer has moved a few pixels, the larger
   direction picks the tile's row or column. The line follows the pointer with wrap-around, and
   on release it slides to the nearest whole tile.
