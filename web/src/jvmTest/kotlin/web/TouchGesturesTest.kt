@@ -7,11 +7,12 @@ import kotlin.test.assertTrue
 /** GH-145: on touch screens a double tap doesn't zoom and a long press doesn't select text, but pinch-zoom stays. */
 class TouchGesturesTest {
     private val styles = File("src/jsMain/resources/styles.css").readText()
+    private val dialogs = File("src/jsMain/resources/dialogs.css").readText()
     private val page = File("src/jsMain/resources/index.html").readText()
 
-    /** Every declaration block for exactly [selector], joined. */
-    private fun rule(selector: String): String =
-        Regex("""(?m)^${Regex.escape(selector)} \{([^}]*)}""").findAll(styles).joinToString("") { it.groupValues[1] }
+    /** Every declaration block for exactly [selector] in [css], joined. */
+    private fun rule(selector: String, css: String = styles): String =
+        Regex("""(?m)^${Regex.escape(selector)} \{([^}]*)}""").findAll(css).joinToString("") { it.groupValues[1] }
 
     @Test
     fun `a double tap doesn't zoom the page`() {
@@ -35,7 +36,7 @@ class TouchGesturesTest {
 
     @Test
     fun `the save dialog's input still takes text`() {
-        val input = rule(".dialog input")
+        val input = rule(".dialog input", dialogs)
 
         assertTrue("user-select: text;" in input && "-webkit-user-select: text;" in input, input)
     }

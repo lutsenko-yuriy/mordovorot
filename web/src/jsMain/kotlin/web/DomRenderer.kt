@@ -11,7 +11,7 @@ import web.drag.LineOffset
 import web.drag.WrapPositions
 
 /** Draws each [WebState] into [root] and turns clicks and drags into [game] intents (GH-110).
- *  Plain DOM, rebuilt every frame, with the look in `styles.css`. */
+ *  Plain DOM, rebuilt every frame, with the look in the sheets `index.html` links. */
 class DomRenderer(private val root: HTMLElement) : WebRenderer {
 
     /** Set once the game is built; only the page's events read it, and none can come before then. */

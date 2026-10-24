@@ -36,7 +36,7 @@ trap 'kill "$server" 2>/dev/null; wait "$server" 2>/dev/null; rm -rf "$work"' EX
 add_variant() {
   cp -R "$1" "$work/site/$2"
   if [[ "$3" == "touch" ]]; then
-    sed -i '' 's/@media (pointer: coarse)/@media all/' "$work/site/$2/styles.css"
+    sed -i '' 's/@media (pointer: coarse)/@media all/' "$work/site/$2"/*.css
   fi
 }
 
