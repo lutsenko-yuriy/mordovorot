@@ -7,6 +7,7 @@ import viewmodel.SaveInfo
 import viewmodel.ShiftSource
 import viewmodel.SolutionState
 import viewmodel.SolutionStep
+import viewmodel.TileLabels
 import viewmodel.UiRequest
 import viewmodel.ViewModel
 
@@ -33,6 +34,9 @@ class FakeViewModel : ViewModel {
 
     /** Scripts [hasUnsavedProgress]'s return value (GH-110). */
     var unsavedProgress: Boolean = false
+
+    /** Scripts [tileLabels]'s return value (GH-139). */
+    var tileLabels: TileLabels = TileLabels.DEFAULT
 
     /** Scripts [isSolved]'s return value. */
     var solved: Boolean = false
@@ -170,5 +174,15 @@ class FakeViewModel : ViewModel {
 
     override fun replayRestart() {
         calls.add("replayRestart")
+    }
+
+    override fun tileLabels(): TileLabels = tileLabels
+
+    override fun tileLabelsDialogOpened(openedFrom: String) {
+        calls.add("tileLabelsDialogOpened($openedFrom)")
+    }
+
+    override fun changeTileLabels(labels: TileLabels) {
+        calls.add("changeTileLabels($labels)")
     }
 }

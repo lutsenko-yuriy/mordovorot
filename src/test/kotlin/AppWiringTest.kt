@@ -7,6 +7,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import mordie.Mordie
 import testing.FakeMordieSearchFactory
+import testing.FakePreferenceRepository
 import testing.FakeSaveRepository
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
@@ -19,7 +20,9 @@ import view.tui.TerminalSize
 import viewmodel.CurrentSaveName
 import viewmodel.GameShiftSources
 import viewmodel.ModeSwitchRequestedException
+import viewmodel.SessionTileLabels
 import viewmodel.SolutionScreen
+import viewmodel.TileLabelsPreference
 import viewmodel.UnsavedProgress
 
 /** Covers the composition root (GH-78): what production wiring builds and what every rebuild
@@ -48,6 +51,7 @@ class AppWiringTest {
                 gameShiftSources = GameShiftSources(),
                 unsavedProgress = UnsavedProgress(),
                 solutionScreen = SolutionScreen(),
+                tileLabels = SessionTileLabels(TileLabelsPreference(FakePreferenceRepository())),
                 keyboardSelection = KeyboardSelection(),
                 terminalFactory = { FakeTerminal(mutableListOf(switchKey.getValue(mode)), terminalSize) },
             )

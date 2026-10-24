@@ -161,6 +161,7 @@ class MoveCounterScenarioTest {
                 mapOf(
                     "move_count" to 1,
                     "board_size" to 4,
+                    "tile_labels" to "numbers",
                     "mordie_result" to "player_won",
                     "mordie_moves" to 0,
                     "input_method" to "mouse",

@@ -9,6 +9,8 @@ import viewmodel.CurrentSaveName
 import viewmodel.GameShiftSources
 import viewmodel.MordieHooks
 import viewmodel.SaveInfo
+import viewmodel.SessionTileLabels
+import viewmodel.TileLabels
 import viewmodel.UiRequest
 import viewmodel.UiRequestChannel
 import viewmodel.UnsavedProgress
@@ -27,6 +29,7 @@ internal class ResolveUnsolvableSaveUseCase(
     private val gameShiftSources: GameShiftSources,
     private val unsavedProgress: UnsavedProgress,
     private val solution: SolutionUseCase,
+    private val tileLabels: SessionTileLabels,
 ) {
 
     /** The repair / new game / exit choice for an unsolvable save (GH-74). At startup, New game
@@ -52,8 +55,9 @@ internal class ResolveUnsolvableSaveUseCase(
                 currentSaveName.name = name
                 gameShiftSources.reset()
                 unsavedProgress.unsaved = false
+                tileLabels.applySave(TileLabels.fromWireName(saved.labels))
                 val error = try {
-                    saves.save(name, fixed, saved.squareSide, saved.moveCount)
+                    saves.save(name, fixed, saved.squareSide, saved.moveCount, labels = saved.labels)
                     null
                 } catch (e: Exception) {
                     e

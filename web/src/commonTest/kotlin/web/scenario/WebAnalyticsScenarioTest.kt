@@ -7,6 +7,7 @@ import viewmodel.UnsolvableSaveChoice
 import web.Arrow
 import web.Host
 import web.layoutOf
+import web.storage.InMemoryKeyValueStore
 
 /** GH-110 scenarios: the web's analytics, per `docs/ANALYTICS_EVENTS.md`. Same setup as
  *  [WebStartupScenarioTest]. */
@@ -35,12 +36,21 @@ class WebAnalyticsScenarioTest {
             backgroundScope, layout = layoutOf(width, height), appVersion = "9.9.9", host = Host.LOCALHOST,
         ).start().props("app_launched").single()
 
-        // TODO(GH-139): the exact map gains "tile_labels" to "numbers" (empty store), and the stored scheme with one
         fun expected(layout: String) = mapOf<String, Any?>(
             "mode" to "rich_ui", "layout" to layout, "platform" to "web", "app_version" to "9.9.9", "host" to "localhost",
+            "tile_labels" to "numbers",
         )
         assertEquals(expected("wide"), launched(1200, 800))
         assertEquals(expected("tall"), launched(800, 800))
+    }
+
+    @Test
+    fun `app_launched carries the remembered tile labels, GH-139`() = webTest {
+        val store = InMemoryKeyValueStore(mutableMapOf("mordovorot.pref.tile_labels" to "letter_pairs"))
+
+        val launched = WebHarness(backgroundScope, store = store).start().props("app_launched").single()
+
+        assertEquals("letter_pairs", launched["tile_labels"])
     }
 
     @Test

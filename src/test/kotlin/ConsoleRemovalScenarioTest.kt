@@ -11,6 +11,7 @@ import kotlinx.coroutines.runBlocking
 import mordie.Mordie
 import storage.FileSaveRepository
 import testing.FakeMordieSearchFactory
+import testing.FakePreferenceRepository
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
 import testing.RecordingAnalyticsService.Event
@@ -22,7 +23,9 @@ import view.tui.TerminalEvent
 import view.tui.TerminalSize
 import viewmodel.CurrentSaveName
 import viewmodel.GameShiftSources
+import viewmodel.SessionTileLabels
 import viewmodel.SolutionScreen
+import viewmodel.TileLabelsPreference
 import viewmodel.UnsavedProgress
 
 /** GH-79 scenarios: console mode removed - the no-terminal abort, the `--console` notice, the TUI
@@ -82,7 +85,7 @@ class ConsoleRemovalScenarioTest {
         assertEquals(InputMode.MOUSE, mode)
         assertEquals(listOf("Console mode was removed - starting the terminal UI."), notices)
         assertEquals(
-            listOf(Event("app_launched", mapOf("mode" to "mouse", "board_size" to 4, "console_flag_ignored" to true))),
+            listOf(Event("app_launched", mapOf("mode" to "mouse", "board_size" to 4, "console_flag_ignored" to true, "tile_labels" to "numbers"))),
             analytics.events,
         )
         assertEquals(emptyList(), unrecognized)
@@ -183,7 +186,7 @@ class ConsoleRemovalScenarioTest {
             buildView = { mode, restoreDone ->
                 builds += mode to restoreDone
                 if (mode == InputMode.KEYBOARD) throw RuntimeException("stty not found")
-                defaultView(mode, board, saves, RecordingAnalyticsService(), restoreDone, sizeChosenAtLaunch = true, mordie, CurrentSaveName(), GameShiftSources(), UnsavedProgress(), SolutionScreen(), KeyboardSelection()) { terminal }
+                defaultView(mode, board, saves, RecordingAnalyticsService(), restoreDone, sizeChosenAtLaunch = true, mordie, CurrentSaveName(), GameShiftSources(), UnsavedProgress(), SolutionScreen(), SessionTileLabels(TileLabelsPreference(FakePreferenceRepository())), KeyboardSelection()) { terminal }
             },
         ).run()
 

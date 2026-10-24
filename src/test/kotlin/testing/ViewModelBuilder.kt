@@ -8,7 +8,9 @@ import mordie.MordieSearchFactory
 import storage.SaveRepository
 import viewmodel.CurrentSaveName
 import viewmodel.GameShiftSources
+import viewmodel.SessionTileLabels
 import viewmodel.SolutionScreen
+import viewmodel.TileLabelsPreference
 import viewmodel.UnsavedProgress
 import viewmodel.ViewModelImpl
 
@@ -25,7 +27,8 @@ internal fun testViewModel(
     gameShiftSources: GameShiftSources = GameShiftSources(),
     unsavedProgress: UnsavedProgress = UnsavedProgress(),
     solutionScreen: SolutionScreen = SolutionScreen(),
+    tileLabels: SessionTileLabels = SessionTileLabels(TileLabelsPreference(FakePreferenceRepository())),
 ): ViewModelImpl =
     buildViewModel(board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftSources,
-        unsavedProgress, solutionScreen,
+        unsavedProgress, solutionScreen, tileLabels,
     )

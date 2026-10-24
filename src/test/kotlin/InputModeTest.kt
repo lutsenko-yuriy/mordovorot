@@ -40,9 +40,23 @@ class InputModeTest {
 
         assertEquals(InputMode.KEYBOARD, mode)
         assertEquals(
-            listOf(Event("app_launched", mapOf("mode" to "keyboard", "board_size" to 4, "console_flag_ignored" to false))),
+            listOf(
+                Event(
+                    "app_launched",
+                    mapOf("mode" to "keyboard", "board_size" to 4, "console_flag_ignored" to false, "tile_labels" to "numbers"),
+                ),
+            ),
             analytics.events,
         )
+    }
+
+    @Test
+    fun `app_launched carries the remembered tile labels, GH-139`() {
+        val analytics = RecordingAnalyticsService()
+
+        resolveInputMode(emptyArray(), analytics, tileLabels = "pairs", hasInteractiveTerminal = terminal)
+
+        assertEquals("pairs", analytics.events.single().properties["tile_labels"])
     }
 
     @Test

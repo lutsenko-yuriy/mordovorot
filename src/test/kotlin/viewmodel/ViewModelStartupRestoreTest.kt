@@ -58,7 +58,7 @@ class ViewModelStartupRestoreTest {
         assertEquals(
             listOf(
                 Event("startup_restore_prompt_shown", mapOf("save_file_count" to 1)),
-                Event("load_command_used", mapOf("trigger" to "startup_prompt", "result" to "success")),
+                Event("load_command_used", mapOf("trigger" to "startup_prompt", "result" to "success", "labels_differ_from_preference" to false)),
                 Event("startup_restore_decision", mapOf("decision" to "restored", "save_file_count" to 1)),
             ),
             analytics.events,
@@ -106,7 +106,7 @@ class ViewModelStartupRestoreTest {
         assertEquals(
             listOf(
                 Event("startup_restore_prompt_shown", mapOf("save_file_count" to 2)),
-                Event("load_command_used", mapOf("trigger" to "startup_prompt", "result" to "success")),
+                Event("load_command_used", mapOf("trigger" to "startup_prompt", "result" to "success", "labels_differ_from_preference" to false)),
                 Event("startup_restore_decision", mapOf("decision" to "restored", "save_file_count" to 2)),
             ),
             analytics.events,
@@ -231,7 +231,7 @@ class ViewModelStartupRestoreTest {
         assertEquals(
             listOf(
                 Event("startup_restore_prompt_shown", mapOf("save_file_count" to 1)),
-                Event("load_command_used", mapOf("trigger" to "startup_prompt", "result" to "success")),
+                Event("load_command_used", mapOf("trigger" to "startup_prompt", "result" to "success", "labels_differ_from_preference" to false)),
                 Event("startup_restore_decision", mapOf("decision" to "restored", "save_file_count" to 1)),
             ),
             analytics.events,

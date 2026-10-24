@@ -8,6 +8,7 @@ import kotlinx.coroutines.MainScope
 import mordie.BackgroundMordieSearch
 import mordie.Mordie
 import org.w3c.dom.HTMLElement
+import web.storage.BrowserPreferenceRepository
 import web.storage.BrowserSaveRepository
 import web.storage.LocalStorageStore
 
@@ -20,6 +21,7 @@ fun main() {
     val game = startWebGame(
         BoardImpl(),
         BrowserSaveRepository(LocalStorageStore()),
+        BrowserPreferenceRepository(LocalStorageStore()),
         NoopAnalyticsService(),
         Mordie(BackgroundMordieSearch.Factory()),
         renderer,
