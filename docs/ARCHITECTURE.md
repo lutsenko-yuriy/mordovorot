@@ -681,6 +681,8 @@ bash hooks are wired in the committed `.claude/settings.json` through `${CLAUDE_
 `scripts/onboard/gate.sh` (SessionStart/UserPromptExpansion/PreToolUse, blocks work until `/onboard`
 has run) and `scripts/alert/alert.sh` (GH-107: Notification/Stop, a macOS notification and spoken
 alert when a session waits on the user, toggled per machine in the gitignored `.claude/alert.env`).
+`scripts/web/phone_fit/` (GH-147) measures the built web game at phone sizes in headless Chrome
+(`measure.sh`, see its README) and serves it to a real phone on the local network (`serve_lan.sh`).
 
 ## Dependencies
 

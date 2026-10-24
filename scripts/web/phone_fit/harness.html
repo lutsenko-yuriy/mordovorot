@@ -1,0 +1,101 @@
+<!doctype html>
+<!-- GH-147: loads the web game at phone sizes and reports whether it fits the window. Served by serve.py
+     and driven by measure.sh; query options are in README.md. Results go to POST /result. -->
+<meta charset="utf-8">
+<style>iframe { border: 0; display: block; margin: 0 0 10px; }</style>
+<pre id="out">pending</pre>
+<div id="frames"></div>
+<script>
+const q = new URLSearchParams(location.search);
+const variant = q.get("v") || "mouse";
+const sizes = (q.get("sizes") || "320x568,375x667,390x844,393x852,412x915,430x932").split(",");
+const boards = (q.get("boards") || "3,4,5").split(",").map(Number);
+const mode = q.get("mode") || "play"; // play | dialog | solution
+const shorter = Number(q.get("shorter") || 0);
+const toolbarRows = Number(q.get("rows") || 1);
+// Mordie's longest line, so its spot is as tall as it gets.
+const LONG = "Found it! I had to make 12 moves to find the solution! Can you beat it?";
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const round = r => r && `${Math.round(r.left)},${Math.round(r.top)}`;
+const results = [];
+
+function clickText(doc, text) {
+    const b = [...doc.querySelectorAll("button")].find(b => b.textContent.trim() === text);
+    if (b) b.click();
+    return !!b;
+}
+
+/** One line: OK when the page is the window's size, nothing visible is past an edge, the toolbar has at
+ *  most `rows` rows and the footer one line; then the sizes and positions to compare across runs. */
+function measure(win, label) {
+    const doc = win.document;
+    const de = doc.documentElement;
+    const rect = selector => doc.querySelector(selector)?.getBoundingClientRect();
+    const toolbar = rect(".toolbar"), button = rect(".toolbar button"), footer = rect(".footer");
+    const tiles = rect(".tiles"), tile = rect(".tile"), mordie = rect(".mordie");
+    // The arrows hidden on touch screens are 1px boxes wherever they land, so they don't count.
+    let overflow = 0, culprit = "";
+    for (const el of doc.querySelectorAll(".app button:not(.arrow), .footer, .status, .tiles, .steps")) {
+        const r = el.getBoundingClientRect();
+        if (r.width === 0) continue;
+        const past = Math.max(r.bottom - win.innerHeight, r.right - win.innerWidth);
+        if (past > overflow) { overflow = past; culprit = el.className || el.textContent; }
+    }
+    const ok = de.scrollHeight <= win.innerHeight && de.scrollWidth <= win.innerWidth && overflow <= 0.5
+        && toolbar && button && toolbar.height < button.height * (toolbarRows + 0.5) && footer && footer.height < 30;
+    return `${ok ? "OK  " : "BAD "}${label} page ${de.scrollWidth}x${de.scrollHeight} win ${win.innerWidth}x${win.innerHeight} `
+        + `toolbar h${Math.round(toolbar?.height)} w${Math.round(toolbar?.width)}@${round(toolbar)} `
+        + `footer h${Math.round(footer?.height)} tiles@${round(tiles)} tile ${Math.round(tile?.width)} `
+        + `mordie h${Math.round(mordie?.height)} overflow ${Math.round(overflow)} ${culprit}`;
+}
+
+async function run(size, board) {
+    const [w, full] = size.split("x").map(Number);
+    const h = full - shorter;
+    const f = document.createElement("iframe");
+    f.width = w;
+    f.height = h;
+    f.src = `/${variant}/index.html`;
+    document.getElementById("frames").append(f);
+    await new Promise(r => f.onload = r);
+    const win = f.contentWindow;
+    win.localStorage.clear();
+    await wait(400);
+    // With no saves, startup asks for a size.
+    const pick = `${board}x${board}`;
+    if (!clickText(win.document, pick)) {
+        clickText(win.document, "New");
+        await wait(200);
+        clickText(win.document, pick);
+    }
+    await wait(400);
+    if (mode === "solution") {
+        // Mordie reveals its solution at a check every 5 shifts, so keep shifting until Give Up lights up.
+        for (let i = 0; i < 80 && win.document.querySelector(".give-up button")?.disabled !== false; i++) {
+            const arrows = [...win.document.querySelectorAll(".arrow")];
+            arrows[i % 2 ? 0 : arrows.length - 1]?.click();
+            await wait(400);
+        }
+        clickText(win.document, "Give Up");
+        await wait(300);
+        clickText(win.document, "Yes");
+        await wait(500);
+    }
+    const line = win.document.querySelector(".mordie .line");
+    if (line) line.innerHTML = `<span class="name">Mordie:</span> ${LONG}`;
+    if (mode === "dialog") {
+        clickText(win.document, "Labels");
+        await wait(300);
+    }
+    await wait(100);
+    const solution = win.document.querySelector(".app.solution") ? " [solution]" : "";
+    results.push(measure(win, `${variant} ${mode} ${w}x${h} ${board}x${board}${solution}`));
+    f.remove();
+}
+
+(async () => {
+    for (const s of sizes) for (const b of boards) await run(s, b);
+    document.getElementById("out").textContent = results.join("\n");
+    await fetch("/result", { method: "POST", body: `# ${location.search}\n${results.join("\n")}\n#done` });
+})();
+</script>
