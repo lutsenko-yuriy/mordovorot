@@ -12,7 +12,7 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 ## Features
 
 ### Feature 1 — Board
-- The game presents a square board of tiles laid out `SQUARE_SIDE × SQUARE_SIDE` (default 4×4), holding a shuffled permutation of the integers `0..SQUARE_SIDE²-1` internally, **displayed to the player as `1..SQUARE_SIDE²`** (GH-10) by default. In the terminal the player can pick other tile labels (numbers from 0, pairs, letters) in the Tile labels dialog (GH-139, Features 6 and 7); the board, the solved screen and the solution screen all follow the choice, and the step list keeps `Row …`/`Col …`.
+- The game presents a square board of tiles laid out `SQUARE_SIDE × SQUARE_SIDE` (default 4×4), holding a shuffled permutation of the integers `0..SQUARE_SIDE²-1` internally, **displayed to the player as `1..SQUARE_SIDE²`** (GH-10) by default. The player can pick other tile labels (numbers from 0, pairs, letters) in the Tile labels dialog (GH-139, Feature 11); the board, the solved screen and the solution screen all follow the choice, and the step list keeps `Row …`/`Col …`.
 - On starting a new game, the board is reshuffled via a Fisher-Yates shuffle.
 - Every new game can be solved (GH-74). On a 4×4 board every arrangement can be solved. On 3×3
   and 5×5 boards, only arrangements an even number of tile swaps away from the solved order can
@@ -251,7 +251,7 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 - **Same game, mouse only:** the rules, board sizes 3-5, solvable new games, `Moves: N` and its
   move rule (Feature 2), Save/Load (Feature 4), Mordie (Feature 8) and Give Up with its solution
   screen (Feature 10) work as in the terminal game. There is no keyboard mode, no command-line flags and no Exit.
-- **Toolbar:** `[ New ] [ Save ] [ Load ]`; the player leaves by closing the tab.
+- **Toolbar:** `[ New ] [ Save ] [ Load ] [ Labels ]`; the player leaves by closing the tab.
   - **New** opens the size picker (3x3, 4x4, 5x5); Cancel leaves the current game untouched.
   - **Save** prefills the current save name and warns before overwriting. A blank name counts as
     Cancel. A rejected name (spaces, a path separator, `..`) saves nothing, and the message
@@ -259,6 +259,7 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   - **Load** lists each save as `foo (5x5)`, marking unsolvable ones; `No saves found.` when
     there are none.
   - The `Can't be solved` dialog offers `[ Repair & load ] [ New game ]`, with no Exit.
+  - **Labels** opens the Tile labels dialog (GH-139, Feature 11).
 - **Status line** under the toolbar: messages such as `Saved as 'x'.` and load errors. The next
   action clears it.
 - **Saves** are kept in the browser's `localStorage`, one entry per save in the terminal's save
@@ -353,3 +354,31 @@ Applies to terminal mouse mode, terminal keyboard mode and the web client.
   - The replay never counts moves, feeds Mordie, solves the game or sets unsaved progress.
 - **Older saves:** a save from before GH-126 that has Mordie's found N but not its solution
   can't show the solution: Give Up stays dimmed, and the after-win row stays empty.
+
+### Feature 11 — Tile labels (GH-139)
+Applies to terminal mouse mode, terminal keyboard mode and the web client.
+- **Schemes**, shown for the 0-based tile N on a side-S board:
+
+  | Scheme | Label | 4x4 solved first row |
+  |---|---|---|
+  | Numbers (default) | N + 1 | `1 2 3 4` |
+  | Numbers from 0 | N | `0 1 2 3` |
+  | Pairs | solved row and column, from 1 | `11 12 13 14` |
+  | Pairs from 0 | solved row and column, from 0 | `00 01 02 03` |
+  | Letters | `A` + N | `A B C D` |
+  | Letter pairs | solved row and column as letters | `AA AB AC AD` |
+
+  Only the text changes: a tile's colour (web) and the step list's `Row …`/`Col …` stay as they are.
+- **The dialog:** `Tile labels`, one row per scheme with the current board size's first solved
+  row as a sample, the current scheme marked `●` and the rest `○`. Picking a row marks it; OK
+  relabels the board at once, Cancel changes nothing. It opens from `[ Labels ]` in both clients
+  (terminal keyboard mode: `[Labels F4]` and F4; details in Features 6, 7 and 9), during play,
+  after a win and on the solution screen. Escape cancels it in the terminal; web dialogs have no
+  Escape.
+- **Which labels a game shows:** a loaded save's own labels (Feature 4) win for that game; then
+  the remembered preference; then Numbers. A new game goes back to the preference.
+- **The preference:** OK on a different scheme makes it the preference too. OK on the scheme
+  already shown changes nothing, so it doesn't adopt a loaded save's labels. The terminal keeps
+  it in `saves/preferences` (`tile_labels=pairs`); the browser in `localStorage`, per address
+  like its saves. If it can't be written the board still relabels, silently; it just isn't
+  remembered. Changing the labels isn't unsaved progress.
