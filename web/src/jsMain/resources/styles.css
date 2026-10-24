@@ -280,7 +280,7 @@ button:focus-visible {
     outline-offset: 2px;
 }
 
-/* ---- Board ---- */
+/* ---- The board's stage and the tall fit (the board itself is in board.css) ---- */
 
 .stage {
     grid-area: board;
