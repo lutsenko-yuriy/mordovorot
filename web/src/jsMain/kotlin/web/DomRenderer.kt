@@ -239,11 +239,12 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
     private fun drawTiles(layer: Element, state: WebState, offset: LineOffset?) {
         val side = state.side
         val wrapped = offset?.let { WrapPositions.of(side, it.tiles) }
+        val texts = state.tileTexts
         layer.clear()
         repeat(side) { row ->
             repeat(side) { col ->
                 val value = state.tiles[row * side + col]
-                val label = state.tileTexts[row * side + col]
+                val label = texts[row * side + col]
                 val x = if (offset?.axis == Axis.ROW && offset.line == row) wrapped!![col] else col.toDouble()
                 val y = if (offset?.axis == Axis.COLUMN && offset.line == col) wrapped!![row] else row.toDouble()
                 layer.append(tile(value, label, side, x, y).apply {
