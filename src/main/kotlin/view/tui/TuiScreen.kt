@@ -104,6 +104,7 @@ internal class TuiScreen(
                     mordieLine = viewModel.mordieLine(),
                     giveUpButton = viewModel.giveUpButton(),
                     solution = solution,
+                    tileLabels = viewModel.tileLabels(),
                 )
                 .copy(dialog = decoratedDialog, message = message),
         )

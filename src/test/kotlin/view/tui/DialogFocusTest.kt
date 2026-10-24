@@ -40,6 +40,17 @@ class DialogFocusTest {
     }
 
     @Test
+    fun `a Labels dialog's ring is its list rows then OK and Cancel, like Load (GH-139)`() {
+        val buttons = listOf(DialogButtonSpec("ok", "OK"), DialogButtonSpec("cancel", "Cancel"))
+        val focus = DialogFocus(Dialog(Dialog.Kind.LABELS, "Tile labels", listItems = List(6) { "row $it" }, buttons = buttons))
+
+        assertEquals(8, focus.size)
+        assertEquals(DialogFocusTarget.ListRow(5), focus.target(5))
+        assertEquals(DialogFocusTarget.Button(HitTarget.DialogButton("ok")), focus.target(6))
+        assertEquals(5, focus.indexOf(DialogFocusTarget.ListRow(5)))
+    }
+
+    @Test
     fun `a Load dialog with zero saves has a ring of buttons only`() {
         val dialog = Dialog(Dialog.Kind.LOAD, "Load game", message = "No saves found.", buttons = loadButtons)
         val focus = DialogFocus(dialog)

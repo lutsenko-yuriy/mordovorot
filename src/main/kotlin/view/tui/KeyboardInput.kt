@@ -9,7 +9,7 @@ import viewmodel.ShiftKey
  *  the selection keys don't. Must fit 80 chars, the default/fallback terminal width
  *  ([ScreenRenderer.Canvas.put] has no wrap or ellipsis, unlike dialog content - audit findings
  *  on PR #40 and PR #53). The board keys have their own side hints (GH-101). */
-private const val CONTROLS_HINT = "F5/F6/F9 Save/Load/New · F8 Give Up · F7 Mouse · Esc"
+private const val CONTROLS_HINT = "F5/F6/F9 Save/Load/New · F4 Labels · F8 Give Up · F7 Mouse · Esc"
 
 private val SELECTION_HINT = listOf("W/S  row", "A/D  column")
 private val SHIFT_HINT = listOf("←/→ H/L  shift row", "↑/↓ K/J  shift column")
@@ -24,7 +24,7 @@ private val HJKL_KEYS = mapOf('h' to Direction.LEFT, 'j' to Direction.DOWN, 'k' 
  *
  * Board (GH-101): W/A/S/D select a row or column, H/J/K/L and the arrow keys shift it (see
  * [LineSelection]), letters in either case; F5/F6 open Save/Load, F9 (GH-44 WU3) opens the
- * New-game size picker, F7 (GH-30) requests a switch to mouse mode, and Escape opens Exit - all
+ * New-game size picker, F4 (GH-139) opens Tile labels, F7 (GH-30) requests a switch to mouse mode, and Escape opens Exit - all
  * staying live even when solved (the selection and shift keys go inert instead, the highlight
  * stops rendering). F8 (GH-126) is the Give Up row's button. On the solution screen, the
  * left/right arrows or A/D are Prev/Next (Space and Enter Next too), R is Restart, and W/S or
@@ -33,7 +33,9 @@ private val HJKL_KEYS = mapOf('h' to Direction.LEFT, 'j' to Direction.DOWN, 'k' 
  *
  * Dialog: Tab/Down/Right advance the focus ring, Shift-Tab/Up/Left go back, Enter activates
  * whatever's focused (submit, select a row, or click a button), Escape cancels, typing only ever
- * edits the text field. Space is always text inside a dialog, never an activator.
+ * edits the text field. Space is always text inside a dialog, never an activator. A dialog opens
+ * focused on its selected row, if any; in Labels (GH-139) Enter on a row submits it, since
+ * reaching OK by Tab would walk the selection past it.
  */
 class KeyboardInput(private val selection: KeyboardSelection) : TuiInput {
 
@@ -47,6 +49,9 @@ class KeyboardInput(private val selection: KeyboardSelection) : TuiInput {
     /** Reset to `0` by [onDialogOpened] at the start of every modal loop, and defensively
      *  whenever [decorateBoard] sees no dialog. */
     private var dialogFocusIndex = 0
+
+    /** Set by [onDialogOpened]: the next [decorateDialog] moves focus to the selected row. */
+    private var focusSelectedRow = false
 
     override fun prepare(terminal: Terminal) {
         // Keyboard mode never enables mouse reporting.
@@ -107,7 +112,9 @@ class KeyboardInput(private val selection: KeyboardSelection) : TuiInput {
                 moveFocus(focus, focus.next(index))
             TerminalEvent.BackTab, TerminalEvent.Arrow(Direction.UP), TerminalEvent.Arrow(Direction.LEFT) ->
                 moveFocus(focus, focus.previous(index))
-            TerminalEvent.Enter -> activateFocus(focus, index)
+            TerminalEvent.Enter ->
+                if (dialog.kind == Dialog.Kind.LABELS && focus.target(index) is DialogFocusTarget.ListRow) InputAction.Submit
+                else activateFocus(focus, index)
             is TerminalEvent.KeyPress ->
                 if (focus.target(index) == DialogFocusTarget.TextField) InputAction.TextChar(event.char) else InputAction.None
             TerminalEvent.Backspace ->
@@ -138,11 +145,16 @@ class KeyboardInput(private val selection: KeyboardSelection) : TuiInput {
 
     override fun onDialogOpened() {
         dialogFocusIndex = 0
+        focusSelectedRow = true
     }
 
     override fun decorateDialog(dialog: Dialog): Dialog {
         val focus = DialogFocus(dialog)
         if (focus.size == 0) return dialog
+        if (focusSelectedRow) {
+            focusSelectedRow = false
+            focus.indexOf(DialogFocusTarget.ListRow(dialog.selectedIndex)).takeIf { it >= 0 }?.let { dialogFocusIndex = it }
+        }
         val index = dialogFocusIndex.mod(focus.size)
         dialogFocusIndex = index
         return when (val target = focus.target(index)) {
@@ -171,6 +183,7 @@ class KeyboardInput(private val selection: KeyboardSelection) : TuiInput {
     }
 
     private fun functionKeyAction(n: Int): InputAction = when (n) {
+        4 -> InputAction.Activate(HitTarget.ToolbarLabels)
         5 -> InputAction.Activate(HitTarget.ToolbarSave)
         6 -> InputAction.Activate(HitTarget.ToolbarLoad)
         7 -> InputAction.Activate(HitTarget.ToolbarMode(InputMode.MOUSE))

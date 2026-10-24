@@ -81,7 +81,7 @@ class KeyboardLineSelectionScenarioTest {
         for (hint in listOf("W/S  row", "A/D  column", "←/→ H/L  shift row", "↑/↓ K/J  shift column")) {
             assertTrue(hint in frame, hint)
         }
-        assertTrue("F5/F6/F9 Save/Load/New · F8 Give Up · F7 Mouse · Esc" in frame)
+        assertTrue("F5/F6/F9 Save/Load/New · F4 Labels · F8 Give Up · F7 Mouse · Esc" in frame)
         assertFalse("Enter" in frame)
     }
 

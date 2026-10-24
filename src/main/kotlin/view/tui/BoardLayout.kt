@@ -34,7 +34,7 @@ class BoardLayout(
      *  sites from the same [ScreenState.toolbarShortcuts] flag, or the drawn and hit-tested
      *  toolbars disagree (this class's own KDoc invariant). */
     private val toolbarShortcuts: Boolean = false,
-    /** The other input modes offered on their own row below the toolbar (GH-30, [modeRow]). */
+    /** The other input modes offered on the second row, after Labels (GH-30, GH-139, [modeRow]). */
     private val modeButtons: List<InputMode> = emptyList(),
     /** The Give Up row's button (GH-126): drawn dimmed and inert when [GiveUpButton.DIMMED]. */
     private val giveUp: GiveUpButton = GiveUpButton.HIDDEN,
@@ -47,12 +47,13 @@ class BoardLayout(
     private val fullWidth = LEFT_GUTTER + innerCols + RIGHT_GUTTER
 
     private val primaryEntries = primaryButtons(toolbarShortcuts)
-    private val modeEntries = modeButtons.map { HitTarget.ToolbarMode(it) to modeButtonLabel(it, toolbarShortcuts) }
+    private val secondRowEntries = listOf(HitTarget.ToolbarLabels to if (toolbarShortcuts) "[Labels F4]" else "[ Labels ]") +
+        modeButtons.map { HitTarget.ToolbarMode(it) to modeButtonLabel(it, toolbarShortcuts) }
 
     /** The Mordie line's wrap width (GH-83): about as wide as the board and toolbar, never the
      *  full terminal. */
     internal val mordieWrapWidth =
-        minOf(maxOf(fullWidth, rowWidth(primaryEntries), rowWidth(modeEntries)), terminalSize.columns - 2).coerceAtLeast(1)
+        minOf(maxOf(fullWidth, rowWidth(primaryEntries), rowWidth(secondRowEntries)), terminalSize.columns - 2).coerceAtLeast(1)
 
     /** Rows reserved for the Mordie line: the wrapped height of the longest line it can say. Fixed
      *  per layout, not per text, so the board doesn't jump as the line comes and goes. */
@@ -88,7 +89,7 @@ class BoardLayout(
     internal val stepListTop: Int get() = gridTop
     internal val stepRows: Int get() = innerRows
 
-    /** The mode-switch row, directly below [toolbarRow] (GH-30). */
+    /** The second row, directly below [toolbarRow]: Labels (GH-139), then the mode switch (GH-30). */
     internal val modeRow = toolbarRow + 1
 
     /** The grid's top-left corner and size, for [ScreenRenderer] to draw the box-drawing frame
@@ -115,6 +116,7 @@ class BoardLayout(
     fun loadButtonPosition(): Pair<Int, Int> = buttonPosition(HitTarget.ToolbarLoad)
     fun exitButtonPosition(): Pair<Int, Int> = buttonPosition(HitTarget.ToolbarExit)
     fun newButtonPosition(): Pair<Int, Int> = buttonPosition(HitTarget.ToolbarNew)
+    fun labelsButtonPosition(): Pair<Int, Int> = buttonPosition(HitTarget.ToolbarLabels)
     fun giveUpButtonPosition(): Pair<Int, Int>? = giveUpButton()?.let { it.x to it.y }
 
     /** The Give Up row's button, `null` when [GiveUpButton.HIDDEN]. Its target is
@@ -169,12 +171,12 @@ class BoardLayout(
     private fun contentRowY(row: Int) = gridTop + 1 + 2 * row
     private fun cellCenterX(col: Int) = gridLeft + 1 + col * (CELL_WIDTH + 1) + CELL_WIDTH / 2
 
-    /** [toolbarRow]'s New/Save/Load/Exit buttons plus [modeRow]'s mode-switch buttons, each row
+    /** [toolbarRow]'s New/Save/Load/Exit buttons plus [modeRow]'s Labels and mode-switch buttons, each row
      *  independently centered - shared by [hitTest] (via [ToolbarButton.range]/[ToolbarButton.y])
      *  and [ScreenRenderer] (via [ToolbarButton.text]). Internal, not private, so [ScreenRenderer]
      *  can draw exactly what's clickable. */
     internal fun toolbarButtons(): List<ToolbarButton> =
-        layoutRow(primaryEntries, toolbarRow) + layoutRow(modeEntries, modeRow)
+        layoutRow(primaryEntries, toolbarRow) + layoutRow(secondRowEntries, modeRow)
 
     private fun primaryButtons(shortcuts: Boolean): List<Pair<HitTarget, String>> =
         if (shortcuts) {

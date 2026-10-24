@@ -17,6 +17,7 @@ import view.tui.TuiView
 import view.tui.UiRequestRouter
 import view.tui.dialog.ExitDialogController
 import view.tui.dialog.GiveUpDialogController
+import view.tui.dialog.LabelsDialogController
 import view.tui.dialog.LoadDialogController
 import view.tui.dialog.RestoreDialogController
 import view.tui.dialog.SaveDialogController
@@ -154,6 +155,7 @@ internal fun buildTuiView(
         UnsolvableDialogController(screen, analytics),
     )
     val giveUpDialog = GiveUpDialogController(screen, analytics, viewModel)
-    val toolbar = ToolbarRouter(saveDialog, loadDialog, exitDialog, sizeDialog, giveUpDialog, viewModel, modeSwitcher, input)
+    val labelsDialog = LabelsDialogController(screen, viewModel)
+    val toolbar = ToolbarRouter(saveDialog, loadDialog, exitDialog, sizeDialog, giveUpDialog, labelsDialog, viewModel, modeSwitcher, input)
     return TuiView(terminal, analytics, input, viewModel, screen, requests, toolbar)
 }

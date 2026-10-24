@@ -125,4 +125,19 @@ class DialogLayoutTest {
 
         assertTrue(layout.messageLines.isEmpty())
     }
+
+    @Test
+    fun `a Labels dialog's rows hit-test like a Load dialog's (GH-139)`() {
+        val dialog = Dialog(
+            kind = Dialog.Kind.LABELS,
+            title = "Tile labels",
+            listItems = List(6) { "row $it" },
+            selectedIndex = 0,
+            buttons = listOf(DialogButtonSpec("ok", "OK"), DialogButtonSpec("cancel", "Cancel")),
+        )
+        val layout = DialogLayout(dialog, terminalSize)
+
+        for (index in 0 until 6) assertEquals(HitTarget.DialogListRow(index), layout.hitTest(layout.left + 2, layout.listRowPosition(index)))
+        assertEquals(layout.listRowPosition(5) + 2, layout.buttonsRow())
+    }
 }

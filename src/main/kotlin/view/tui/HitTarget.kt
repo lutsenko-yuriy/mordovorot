@@ -3,9 +3,9 @@ package view.tui
 import InputMode
 
 /**
- * What a mouse click resolves to. Row/column indices here are 0-based model indices - the
- * `DISPLAY_OFFSET` 1-based dialect (GH-10, [ScreenRenderer]) applies only to rendered tile
- * values, never to a click coordinate.
+ * What a mouse click resolves to. Row/column indices here are 0-based model indices - tile
+ * labels ([viewmodel.TileLabels], GH-139) apply only to rendered tile values, never to a click
+ * coordinate.
  */
 sealed class HitTarget {
     data class ShiftLeft(val row: Int) : HitTarget()
@@ -20,6 +20,9 @@ sealed class HitTarget {
     /** The `[ New ]` toolbar button (GH-44 WU3) - opens the same size-picker dialog as the
      *  startup prompt ([viewmodel.ViewModel.newGame]'s `"toolbar"` trigger). */
     object ToolbarNew : HitTarget()
+
+    /** The `[ Labels ]` button / F4 (GH-139) - opens the Tile labels dialog. */
+    object ToolbarLabels : HitTarget()
 
     /** A toolbar button requesting a switch to [mode] (GH-30) - one per entry in
      *  [ScreenState.modeButtons], never the mode the view is already in. */

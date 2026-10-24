@@ -3,9 +3,6 @@ package view.tui
 import viewmodel.GiveUpButton
 import viewmodel.SolutionState
 
-/** GH-10's 1-based display dialect: tiles are stored 0-based, displayed 1-based. */
-private const val DISPLAY_OFFSET = 1
-
 private const val DIM_ON = "\u001B[2m"
 private const val DIM_OFF = "\u001B[22m"
 
@@ -33,7 +30,7 @@ private const val CLEAR_AND_HOME = "\u001B[2J\u001B[H"
 
 /**
  * Pure [ScreenState] -> frame `String` renderer for GH-3's board screen: box-drawing borders,
- * 1-based tile values, arrow glyphs (dimmed when disabled), and the toolbar. Builds a character
+ * tile labels ([ScreenState.tileLabels], GH-139), arrow glyphs (dimmed when disabled), and the toolbar. Builds a character
  * canvas from the same [BoardLayout] coordinates [BoardLayout.hitTest] resolves clicks against,
  * so what's drawn is exactly what's clickable. No terminal involved - [TuiView] writes the
  * returned string via [Terminal.write].
@@ -98,8 +95,8 @@ class ScreenRenderer {
 
         for (row in 0 until state.squareSide) {
             for (col in 0 until state.squareSide) {
-                val value = state.board[row * state.squareSide + col] + DISPLAY_OFFSET
-                val text = value.toString().padStart(CELL_WIDTH - 1).padEnd(CELL_WIDTH)
+                val label = state.tileLabels.label(state.board[row * state.squareSide + col], state.squareSide)
+                val text = label.padStart(CELL_WIDTH - 1).padEnd(CELL_WIDTH)
                 val x = gridLeft + 1 + col * (CELL_WIDTH + 1)
                 val y = gridTop + 1 + 2 * row
                 if (state.selection?.covers(row, col) == true) canvas.putHighlighted(x, y, text) else canvas.put(x, y, text)
@@ -190,7 +187,12 @@ class ScreenRenderer {
             canvas.put(layout.left + 2, row, truncate("Name: ${dialog.textFieldValue}_$focusMarker", maxLineWidth))
         }
         for (index in dialog.listItems.indices) {
-            val marker = if (index == dialog.selectedIndex) "> " else "  "
+            val selected = index == dialog.selectedIndex
+            val marker = when {
+                dialog.kind == Dialog.Kind.LABELS -> if (selected) "● " else "○ "
+                selected -> "> "
+                else -> "  "
+            }
             canvas.put(layout.left + 2, layout.listRowPosition(index), truncate("$marker${dialog.listItems[index]}", maxLineWidth))
         }
         val focusedTarget = dialog.focusedButtonId?.let { HitTarget.DialogButton(it) }

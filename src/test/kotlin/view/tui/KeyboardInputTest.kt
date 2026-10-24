@@ -183,6 +183,15 @@ class KeyboardInputTest {
     }
 
     @Test
+    fun `F4 activates Labels while playing, once solved and on the solution screen (GH-139)`() {
+        val solution = unsolvedBoard().copy(solution = SolutionState(listOf("1. Row 1 → ×1"), null, atStart = true, atEnd = false))
+        for (state in listOf(unsolvedBoard(), solvedBoard(), solution)) {
+            val input = KeyboardInput(KeyboardSelection()).also { it.decorateBoard(state) }
+            assertEquals(InputAction.Activate(HitTarget.ToolbarLabels), input.onBoardEvent(TerminalEvent.FunctionKey(4), boardLayout))
+        }
+    }
+
+    @Test
     fun `EndOfInput quits, an unrelated key is None`() {
         val input = input()
 
@@ -216,7 +225,7 @@ class KeyboardInputTest {
         assertFalse(unsolved.showArrows)
         assertEquals(listOf("W/S  row", "A/D  column"), unsolved.selectionHint)
         assertEquals(listOf("←/→ H/L  shift row", "↑/↓ K/J  shift column"), unsolved.shiftHint)
-        assertEquals("F5/F6/F9 Save/Load/New · F8 Give Up · F7 Mouse · Esc", unsolved.controlsHint)
+        assertEquals("F5/F6/F9 Save/Load/New · F4 Labels · F8 Give Up · F7 Mouse · Esc", unsolved.controlsHint)
         assertEquals(true, unsolved.toolbarShortcuts)
         assertEquals(listOf(InputMode.MOUSE), unsolved.modeButtons)
 
@@ -309,6 +318,35 @@ class KeyboardInputTest {
         val action = input.onDialogEvent(TerminalEvent.Arrow(Direction.DOWN), dialog, dialogLayoutFor(dialog))
 
         assertEquals(InputAction.Activate(HitTarget.DialogListRow(1)), action)
+    }
+
+    private fun labelsDialog(selected: Int) = Dialog(
+        kind = Dialog.Kind.LABELS,
+        title = "Tile labels",
+        listItems = listOf("Numbers", "Numbers from 0", "Pairs", "Pairs from 0", "Letters", "Letter pairs"),
+        selectedIndex = selected,
+        buttons = listOf(DialogButtonSpec("ok", "OK"), DialogButtonSpec("cancel", "Cancel")),
+    )
+
+    @Test
+    fun `a fresh Labels dialog focuses the marked row, and Down marks the next (GH-139)`() {
+        val input = KeyboardInput(KeyboardSelection())
+        input.onDialogOpened()
+        val dialog = input.decorateDialog(labelsDialog(selected = 2))
+
+        assertEquals(InputAction.Activate(HitTarget.DialogListRow(3)), input.onDialogEvent(arrow(Direction.DOWN), dialog, dialogLayoutFor(dialog)))
+    }
+
+    @Test
+    fun `Enter on a Labels row submits it, while Enter on a Load row only selects (GH-139)`() {
+        val input = KeyboardInput(KeyboardSelection())
+        input.onDialogOpened()
+        val labels = input.decorateDialog(labelsDialog(selected = 4))
+        assertEquals(InputAction.Submit, input.onDialogEvent(TerminalEvent.Enter, labels, dialogLayoutFor(labels)))
+
+        input.onDialogOpened()
+        val load = input.decorateDialog(loadDialog(listOf("foo", "bar"), selected = 0))
+        assertEquals(InputAction.Activate(HitTarget.DialogListRow(0)), input.onDialogEvent(TerminalEvent.Enter, load, dialogLayoutFor(load)))
     }
 
     @Test

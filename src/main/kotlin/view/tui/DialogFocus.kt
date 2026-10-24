@@ -11,7 +11,7 @@ sealed class DialogFocusTarget {
 
 /**
  * Pure focus ring for GH-18's keyboard dialog navigation: the focusable controls of a [Dialog],
- * in order - its text field (Save only), then its list rows (Load only), then its buttons -
+ * in order - its text field (Save only), then its list rows (Load and Labels), then its buttons -
  * with [next]/[previous] wrapping a 0-based focus index around the ring and [target] mapping
  * that index back to what it means ([DialogFocusTarget]). No terminal or viewModel involved.
  */
@@ -19,7 +19,7 @@ class DialogFocus(dialog: Dialog) {
 
     private val targets: List<DialogFocusTarget> = buildList {
         if (dialog.kind == Dialog.Kind.SAVE) add(DialogFocusTarget.TextField)
-        if (dialog.kind == Dialog.Kind.LOAD) dialog.listItems.indices.forEach { add(DialogFocusTarget.ListRow(it)) }
+        if (dialog.kind.hasList) dialog.listItems.indices.forEach { add(DialogFocusTarget.ListRow(it)) }
         dialog.buttons.forEach { add(DialogFocusTarget.Button(HitTarget.DialogButton(it.id))) }
     }
 
@@ -30,4 +30,7 @@ class DialogFocus(dialog: Dialog) {
     fun previous(current: Int): Int = if (targets.isEmpty()) 0 else (current - 1).mod(targets.size)
 
     fun target(index: Int): DialogFocusTarget? = targets.getOrNull(index)
+
+    /** The ring index of [target], or -1 when the dialog has no such control. */
+    fun indexOf(target: DialogFocusTarget): Int = targets.indexOf(target)
 }
