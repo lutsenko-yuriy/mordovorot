@@ -69,11 +69,14 @@ class TerminalInputParser {
     }
 
     /** `ESC O <char>` - SS3, used for arrow keys when the terminal is in application cursor-key
-     *  mode (tmux/screen, some terminals' default). Same direction mapping as the CSI form
-     *  decoded in [decodeUnknownCsi]; any other final byte is discarded whole. */
+     *  mode (tmux/screen, some terminals' default), and for F4 (`ESC O S`, GH-139) by xterm,
+     *  macOS Terminal and iTerm2. Same direction mapping as the CSI form decoded in
+     *  [decodeUnknownCsi]; any other final byte is discarded whole. */
     private fun decodeSs3(data: ByteArray, from: Int, events: MutableList<TerminalEvent>): Int {
         if (from + 2 >= data.size) return 0
-        arrowDirection(data[from + 2].toInt().toChar())?.let { events += TerminalEvent.Arrow(it) }
+        val finalByte = data[from + 2].toInt().toChar()
+        if (finalByte == 'S') events += TerminalEvent.FunctionKey(4)
+        arrowDirection(finalByte)?.let { events += TerminalEvent.Arrow(it) }
         return 3
     }
 
@@ -121,8 +124,8 @@ class TerminalInputParser {
         else -> null
     }
 
-    /** Arrow keys (`ESC [ A..D`), Tab-reverse (`ESC [ Z`), and the F5/F6/F7/F8/F9 function keys
-     *  (`ESC [ 15~` / `17~` / `18~` / `19~` / `20~`) decode here; any other CSI sequence (Home/End, page
+    /** Arrow keys (`ESC [ A..D`), Tab-reverse (`ESC [ Z`), and the F4/F5/F6/F7/F8/F9 function keys
+     *  (`ESC [ 14~` (rxvt-style F4) / `15~` / `17~` / `18~` / `19~` / `20~`) decode here; any other CSI sequence (Home/End, page
      *  keys, other function keys, ...) is discarded whole rather than left to leak its individual
      *  bytes out as bogus [TerminalEvent.KeyPress]es. */
     private fun decodeUnknownCsi(data: ByteArray, from: Int, events: MutableList<TerminalEvent>): Int {
@@ -147,6 +150,7 @@ class TerminalInputParser {
         return when (finalByte) {
             'Z' -> TerminalEvent.BackTab
             '~' -> when (params.toIntOrNull()) {
+                14 -> TerminalEvent.FunctionKey(4)
                 15 -> TerminalEvent.FunctionKey(5)
                 17 -> TerminalEvent.FunctionKey(6)
                 18 -> TerminalEvent.FunctionKey(7)

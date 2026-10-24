@@ -206,6 +206,15 @@ class TerminalInputParserTest {
     }
 
     @Test
+    fun `F4 decodes from both its SS3 and its CSI form (GH-139)`() {
+        val parser = TerminalInputParser()
+
+        // ESC O S - xterm, macOS Terminal and iTerm2; ESC [ 14 ~ - rxvt-style terminals.
+        assertEquals(listOf(TerminalEvent.FunctionKey(4)), parser.feed(byteArrayOf(ESC, 'O'.code.toByte(), 'S'.code.toByte())))
+        assertEquals(listOf(TerminalEvent.FunctionKey(4)), parser.feed(csi("14~")))
+    }
+
+    @Test
     fun `an unrecognised function-key number is discarded whole, not leaked as KeyPresses`() {
         val parser = TerminalInputParser()
 
