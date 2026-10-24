@@ -8,8 +8,8 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 
 - **template-drift** (5)
 - **token-cost** (3)
+- **smoke-test-gap** (2)
 - **scope-growth** (1)
-- **smoke-test-gap** (1)
 - **subagent-routing** (1)
 - **workflow-order** (1)
 
@@ -19,6 +19,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-44: Adjustable board size (3x3-5x5, default 4x4)](GH-44.md)
 
 ### smoke-test-gap
+- [GH-145: Web on touch screens: double-tap zooms in and long-press selects text](GH-145.md)
 - [GH-4: Automated test coverage for board_model and presenter](GH-4.md)
 
 ### subagent-routing
