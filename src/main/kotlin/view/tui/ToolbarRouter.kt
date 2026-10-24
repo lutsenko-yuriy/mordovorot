@@ -2,6 +2,7 @@ package view.tui
 
 import view.tui.dialog.ExitDialogController
 import view.tui.dialog.GiveUpDialogController
+import view.tui.dialog.LabelsDialogController
 import view.tui.dialog.LoadDialogController
 import view.tui.dialog.SaveDialogController
 import view.tui.dialog.SizeDialogController
@@ -16,6 +17,7 @@ internal class ToolbarRouter(
     private val exitDialog: ExitDialogController,
     private val sizeDialog: SizeDialogController,
     private val giveUpDialog: GiveUpDialogController,
+    private val labelsDialog: LabelsDialogController,
     private val viewModel: ViewModel,
     private val modeSwitcher: ModeSwitcher,
     private val input: TuiInput,
@@ -29,6 +31,7 @@ internal class ToolbarRouter(
             HitTarget.ToolbarExit -> exitDialog.onToolbar()
             HitTarget.ToolbarNew -> sizeDialog.onToolbar()
             HitTarget.GiveUp -> giveUpDialog.onToolbar()
+            HitTarget.ToolbarLabels -> labelsDialog.onToolbar(input.switchTrigger)
             HitTarget.MordiesSolution -> viewModel.showSolution()
             HitTarget.ReplayPrevious -> viewModel.replayPrevious()
             HitTarget.ReplayNext -> viewModel.replayNext()

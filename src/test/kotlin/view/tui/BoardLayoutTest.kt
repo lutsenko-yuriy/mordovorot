@@ -3,6 +3,7 @@ package view.tui
 import InputMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlin.test.assertNotEquals
 
 /**
@@ -122,7 +123,10 @@ class BoardLayoutTest {
 
         val buttons = layout.toolbarButtons()
         assertEquals(
-            listOf(HitTarget.ToolbarNew, HitTarget.ToolbarSave, HitTarget.ToolbarLoad, HitTarget.ToolbarExit, HitTarget.ToolbarMode(InputMode.KEYBOARD)),
+            listOf(
+                HitTarget.ToolbarNew, HitTarget.ToolbarSave, HitTarget.ToolbarLoad, HitTarget.ToolbarExit,
+                HitTarget.ToolbarLabels, HitTarget.ToolbarMode(InputMode.KEYBOARD),
+            ),
             buttons.map { it.target },
         )
         val (new, save, load, exit) = buttons
@@ -131,6 +135,7 @@ class BoardLayoutTest {
         assertEquals(layout.toolbarRow, load.y)
         assertEquals(layout.toolbarRow, exit.y)
         assertEquals(layout.modeRow, buttons[4].y)
+        assertEquals(layout.modeRow, buttons[5].y)
         for (button in buttons) assertEquals(button.target, layout.hitTest(button.range.first, button.y))
     }
 
@@ -169,6 +174,29 @@ class BoardLayoutTest {
 
         assertEquals("[ Mouse ]", plain.toolbarButtons().last().text)
         assertEquals("[Mouse F7]", shortcuts.toolbarButtons().last().text)
+    }
+
+    @Test
+    fun `the second row is Labels then the mode button, in both label styles (GH-139)`() {
+        val plain = BoardLayout(ampleTerminal, squareSide = 4, modeButtons = listOf(InputMode.KEYBOARD))
+        val shortcuts = BoardLayout(ampleTerminal, squareSide = 4, toolbarShortcuts = true, modeButtons = listOf(InputMode.MOUSE))
+
+        assertEquals(listOf("[ Labels ]", "[ Keyboard ]"), plain.toolbarButtons().filter { it.y == plain.modeRow }.map { it.text })
+        assertEquals(listOf("[Labels F4]", "[Mouse F7]"), shortcuts.toolbarButtons().filter { it.y == shortcuts.modeRow }.map { it.text })
+        for (layout in listOf(plain, shortcuts)) {
+            val (x, y) = layout.labelsButtonPosition()
+            assertEquals(layout.modeRow, y)
+            assertEquals(HitTarget.ToolbarLabels, layout.hitTest(x, y))
+        }
+    }
+
+    @Test
+    fun `5x5 with the Labels button still fits 80x24 (GH-139)`() {
+        val layout = BoardLayout(TerminalSize(80, 24), squareSide = 5, toolbarShortcuts = true, modeButtons = listOf(InputMode.MOUSE))
+
+        assertTrue(layout.toolbarButtons().all { it.range.last < 80 && it.y < 24 })
+        // The controls hint goes three rows under the toolbar (ScreenRenderer.render).
+        assertTrue(layout.toolbarRow + 3 < 24)
     }
 
     @Test

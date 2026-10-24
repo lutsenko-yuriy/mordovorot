@@ -3,6 +3,7 @@ package view.tui
 import InputMode
 import viewmodel.GiveUpButton
 import viewmodel.SolutionState
+import viewmodel.TileLabels
 
 /** Default (unsolved) board title. */
 const val TITLE_UNSOLVED = "Mordovorot"
@@ -12,8 +13,8 @@ const val TITLE_SOLVED = "Congratulations ✓"
 
 /**
  * Everything [ScreenRenderer] needs to draw one frame of the board screen: the title, the
- * board's current tile values (0-based, GH-10 dialect - [ScreenRenderer] applies the 1-based
- * display offset) and side, and whether the shift arrows are interactive. `arrowsEnabled = false`
+ * board's current tile values (0-based, GH-10 dialect - [ScreenRenderer] draws them in
+ * [tileLabels]) and side, and whether the shift arrows are interactive. `arrowsEnabled = false`
  * is how [viewmodel.ViewModel.isSolved] reaching the TUI shows up here - see the ticket's
  * solved-state note (dimmed, non-clickable arrows, live toolbar, `Congratulations ✓` title -
  * see [view.tui.TuiView]'s class KDoc for the full solved-state behavior).
@@ -60,6 +61,8 @@ data class ScreenState(
     val solution: SolutionState? = null,
     /** The first step [solution]'s list shows, from [StepListWindow]. */
     val stepOffset: Int = 0,
+    /** How the tiles are labelled (GH-139). */
+    val tileLabels: TileLabels = TileLabels.DEFAULT,
 ) {
     companion object {
         /** Builds the board screen's [ScreenState] from the viewModel's current query results. */
@@ -74,6 +77,7 @@ data class ScreenState(
             giveUpButton: GiveUpButton = GiveUpButton.HIDDEN,
             /** On the solution screen the board isn't playable: no arrows, no `Moves:` (GH-126). */
             solution: SolutionState? = null,
+            tileLabels: TileLabels = TileLabels.DEFAULT,
         ): ScreenState =
             ScreenState(
                 title = if (solved) solvedTitle else TITLE_UNSOLVED,
@@ -85,6 +89,7 @@ data class ScreenState(
                 mordieLine = mordieLine,
                 giveUpButton = giveUpButton,
                 solution = solution,
+                tileLabels = tileLabels,
             )
     }
 

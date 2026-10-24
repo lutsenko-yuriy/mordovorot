@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.19.2] — 2026-10-24 (PR #142 merged)
+
+### Added
+- [wip] (PR #142) GH-139 (WU2/3): tile labels in the terminal: `[ Labels ]` / `[Labels F4]` on the second row, F4, the Tile labels dialog, and the board drawn in the chosen labels.
+
 ## [0.19.1] — 2026-10-24 (PR #141 merged)
 
 ### Added

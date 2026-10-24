@@ -224,9 +224,11 @@ class ScreenRendererTest {
         assertTrue(shortcutFrame.contains("[Save F5]"))
         assertTrue(shortcutFrame.contains("[Load F6]"))
         assertTrue(shortcutFrame.contains("[Exit ESC]"))
-        // One matched on/off pair per button - New/Save/Load/Exit (GH-44 WU3 added New).
-        assertEquals(4, Regex(Regex.escape("[96m")).findAll(shortcutFrame).count())
-        assertEquals(4, Regex(Regex.escape("[39m")).findAll(shortcutFrame).count())
+        assertTrue(shortcutFrame.contains("[Labels F4]"))
+        // One matched on/off pair per button - New/Save/Load/Exit (GH-44 WU3 added New) and the
+        // second row's Labels (GH-139).
+        assertEquals(5,Regex(Regex.escape("[96m")).findAll(shortcutFrame).count())
+        assertEquals(5, Regex(Regex.escape("[39m")).findAll(shortcutFrame).count())
     }
 
     @Test

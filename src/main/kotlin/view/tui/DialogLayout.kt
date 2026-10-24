@@ -27,7 +27,7 @@ class DialogLayout(private val dialog: Dialog, terminalSize: TerminalSize) {
     val width = maxOf(DIALOG_WIDTH, structuralContentWidth(dialog) + 4)
         .coerceAtMost((terminalSize.columns - 4).coerceAtLeast(MIN_WIDTH))
 
-    private val hasList = dialog.kind == Dialog.Kind.LOAD
+    private val hasList = dialog.kind.hasList
     private val listRows = if (hasList) dialog.listItems.size.coerceAtLeast(1) else 0
     private val hasTextField = dialog.kind == Dialog.Kind.SAVE
 

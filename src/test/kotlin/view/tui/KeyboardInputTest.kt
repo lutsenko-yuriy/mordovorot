@@ -216,7 +216,7 @@ class KeyboardInputTest {
         assertFalse(unsolved.showArrows)
         assertEquals(listOf("W/S  row", "A/D  column"), unsolved.selectionHint)
         assertEquals(listOf("←/→ H/L  shift row", "↑/↓ K/J  shift column"), unsolved.shiftHint)
-        assertEquals("F5/F6/F9 Save/Load/New · F8 Give Up · F7 Mouse · Esc", unsolved.controlsHint)
+        assertEquals("F5/F6/F9 Save/Load/New · F4 Labels · F8 Give Up · F7 Mouse · Esc", unsolved.controlsHint)
         assertEquals(true, unsolved.toolbarShortcuts)
         assertEquals(listOf(InputMode.MOUSE), unsolved.modeButtons)
 
