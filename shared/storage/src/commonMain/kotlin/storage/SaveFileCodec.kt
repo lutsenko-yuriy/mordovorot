@@ -63,7 +63,7 @@ object SaveFileCodec {
         if (moveCount < 0) throw SaveFileFormatException(name, "move count must not be negative")
 
         // Line 8 (GH-139): any one word, so a later build's scheme loads with the preference instead.
-        val labels = lines.getOrNull(7)?.trim()?.takeIf { it.isNotEmpty() }
+        val labels = lines.getOrNull(7)?.trim()?.split(Regex("\\s+"))?.first()?.takeIf { it.isNotEmpty() }
         return SavedBoard(squareSide, state, moveCount, parseMordie(name, lines, squareSide), labels)
     }
 

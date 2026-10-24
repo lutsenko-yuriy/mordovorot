@@ -221,4 +221,11 @@ class SaveFileCodecTest {
         }
         assertEquals("emoji", SaveFileCodec.decode("foo", "2\n3 0 2 1\n7\n\n\n\n\n emoji \n").labels)
     }
+
+    @Test
+    fun `decode keeps only line 8's first word, so the labels always encode again`() {
+        val labels = SaveFileCodec.decode("foo", "2\n3 0 2 1\n7\n\n\n\n\nletter pairs\n").labels
+        assertEquals("letter", labels)
+        SaveFileCodec.encode(2, state, 7, null, labels)
+    }
 }
