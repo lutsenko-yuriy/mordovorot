@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.20.6] — 2026-10-24 (PR #157 merged)
+
+### Fixed
+- [user] (PR #157) GH-148: on phones held sideways, the web game now fits the screen with no scrolling; the board shrinks to fit beside the controls, and small phones get a tighter layout.
+- [non-user] The phone-fit rules move to their own sheet, fit.css; the phone-fit harness checks every edge and has a landscape preset; serve_lan.sh runs under macOS's bash 3.2 and prints a QR code when qrencode is installed.
+
 ## [0.20.5] — 2026-10-24 (PR #155 merged)
 
 ### Changed
