@@ -5,7 +5,7 @@ plugins {
     application
 }
 
-version = "0.20.3"
+version = "0.20.4"
 
 kotlin {
     jvmToolchain(17)
@@ -15,6 +15,8 @@ kotlin {
 // both with open advisories. Pin the patched majors until a Kotlin release bundles a mocha that
 // needs them; mocha 11 calls only diff.createPatch and, in parallel mode, serialize().
 // rootPackageJson doesn't see a change here: run `./gradlew rootPackageJson --rerun kotlinUpgradeYarnLock`.
+// GH-152: a fix within a package's locked range needs no pin: yarn keeps a lock entry that still
+// matches, so delete that package's entry in kotlin-js-store/yarn.lock, then run kotlinUpgradeYarnLock.
 plugins.withType<org.jetbrains.kotlin.gradle.targets.js.yarn.YarnPlugin> {
     the<org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension>().apply {
         resolution("serialize-javascript", "^7.1.4")
