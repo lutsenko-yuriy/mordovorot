@@ -182,4 +182,43 @@ class SaveFileCodecTest {
         )
         for ((case, lines) in bad) assertFailsWith<SaveFileFormatException>(case) { SaveFileCodec.decode("foo", "2\n3 0 2 1\n7\n$lines") }
     }
+
+    @Test
+    fun `encode puts the labels on line 8, padding lines 4-7 with blanks, GH-139`() {
+        val screen = SavedMordie(swapped, 2, found = true, solution = path, solutionScreen = true)
+        assertEquals("2\n3 0 2 1\n7\n\n\n\n\npairs\n", SaveFileCodec.encode(2, state, 7, null, "pairs"))
+        assertEquals(
+            "2\n3 0 2 1\n7\n1 0 3 2\n8 searching\n\n\nletters\n",
+            SaveFileCodec.encode(2, state, 7, SavedMordie(swapped, 8, found = false), "letters"),
+        )
+        assertEquals("2\n3 0 2 1\n7\n1 0 3 2\n2 found\nr0:1 r1:1\n\nnumbers\n", SaveFileCodec.encode(2, state, 7, found, "numbers"))
+        assertEquals(
+            "2\n1 0 3 2\n0\n1 0 3 2\n2 found\nr0:1 r1:1\nsolution\nletter_pairs\n",
+            SaveFileCodec.encode(2, swapped, 0, screen, "letter_pairs"),
+        )
+    }
+
+    @Test
+    fun `encode rejects blank or spaced labels`() {
+        for (labels in listOf("", " ", "two words", "pairs\n")) {
+            assertFailsWith<IllegalArgumentException>(labels) { SaveFileCodec.encode(2, state, 7, null, labels) }
+        }
+    }
+
+    @Test
+    fun `decode round-trips the labels, with and without Mordie data`() {
+        val screen = SavedMordie(swapped, 2, found = true, solution = path, solutionScreen = true)
+        for (mordie in listOf(null, SavedMordie(swapped, 8, found = false), found)) {
+            assertEquals(SavedBoard(2, state, 7, mordie, "pairs"), SaveFileCodec.decode("foo", SaveFileCodec.encode(2, state, 7, mordie, "pairs")))
+        }
+        assertEquals(SavedBoard(2, swapped, 0, screen, "pairs"), SaveFileCodec.decode("foo", SaveFileCodec.encode(2, swapped, 0, screen, "pairs")))
+    }
+
+    @Test
+    fun `decode reads a missing or blank line 8 as no labels, and keeps an unknown name`() {
+        for (text in listOf("2\n3 0 2 1\n7\n", "2\n3 0 2 1\n7\n\n\n\n\n", "2\n3 0 2 1\n7\n\n\n\n\n  \n")) {
+            assertNull(SaveFileCodec.decode("foo", text).labels, text)
+        }
+        assertEquals("emoji", SaveFileCodec.decode("foo", "2\n3 0 2 1\n7\n\n\n\n\n emoji \n").labels)
+    }
 }

@@ -32,9 +32,9 @@ class FileSaveRepository(private val directory: Path = defaultDirectory()) : Sav
         return pathFor(name).exists()
     }
 
-    override fun save(name: String, state: IntArray, squareSide: Int, moveCount: Int, mordie: SavedMordie?) {
+    override fun save(name: String, state: IntArray, squareSide: Int, moveCount: Int, mordie: SavedMordie?, labels: String?) {
         SaveNames.requireSafe(name)
-        val text = SaveFileCodec.encode(squareSide, state, moveCount, mordie)
+        val text = SaveFileCodec.encode(squareSide, state, moveCount, mordie, labels)
 
         directory.createDirectories()
         // Write to a temp file and move atomically so a crash or a rejected write

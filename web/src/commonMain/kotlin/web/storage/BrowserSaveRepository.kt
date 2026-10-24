@@ -15,9 +15,9 @@ class BrowserSaveRepository(private val store: KeyValueStore) : SaveRepository {
 
     override fun exists(name: String): Boolean = store.get(keyFor(name)) != null
 
-    override fun save(name: String, state: IntArray, squareSide: Int, moveCount: Int, mordie: SavedMordie?) {
+    override fun save(name: String, state: IntArray, squareSide: Int, moveCount: Int, mordie: SavedMordie?, labels: String?) {
         val key = keyFor(name)
-        store.set(key, SaveFileCodec.encode(squareSide, state, moveCount, mordie))
+        store.set(key, SaveFileCodec.encode(squareSide, state, moveCount, mordie, labels))
     }
 
     override fun isValidName(name: String): Boolean = SaveNames.isSafe(name)
