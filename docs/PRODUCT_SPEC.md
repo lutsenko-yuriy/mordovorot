@@ -311,12 +311,20 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
     the steps don't fit, and keeps the current step in view. `[ ◀ Prev ] [ Next ▶ ] [ ↻ Restart ]`
     sit above the toolbar. The board keeps its place, with its arrows hidden.
   - The board scales to fit the window, leaving room for the footer.
+  - **Tall fits the window (GH-147):** taller than wide, the page is exactly the window's height
+    (the part the browser's own toolbars leave) and never scrolls: the board takes the room the
+    rest leaves and its tiles shrink to fit, down to 16px. Pulling the page past its edge neither
+    bounces nor refreshes it; pinch-zoom still works, and a zoomed-in page scrolls as usual.
+    Browsers without CSS size container queries (before Safari 16, Firefox 110, Chrome 105) keep
+    the older estimate, which can scroll on short phones.
+  - The toolbar's buttons stay on one row, tighter on screens under 380px wide (GH-147).
   - The footer sits at the very bottom in both (GH-111).
 - **Footer (GH-111):** one small muted line,
   `v<version> · Based on Loopover by Cary Huang (carykh) · original · loopover.xyz`. The version is
   the app's current one, stamped in when the page is built. `original` links to the game on
   OpenProcessing and `loopover.xyz` to the community site, both in a new tab so the game in this
-  one is kept. Dialogs cover it like the rest of the page.
+  one is kept. Dialogs cover it like the rest of the page. Taller than wide and under 480px wide
+  it is one short line without the links, `v<version> · Based on Loopover by carykh` (GH-147).
 - **Public site / Updates (GH-111):** every merge to `master` whose build and tests pass
   publishes the new version; a failed build leaves the last good one up. GitHub may serve the
   previous version for up to ~10 minutes after that. An open tab keeps the version it loaded

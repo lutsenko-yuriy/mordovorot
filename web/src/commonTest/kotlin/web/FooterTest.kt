@@ -19,10 +19,17 @@ class FooterTest {
 
         assertEquals(
             listOf(
-                FooterPart.Link("original", "https://openprocessing.org/@carykh/580366"),
-                FooterPart.Link("loopover.xyz", "https://loopover.xyz"),
+                FooterPart.Link("original", "https://openprocessing.org/@carykh/580366", wideOnly = true),
+                FooterPart.Link("loopover.xyz", "https://loopover.xyz", wideOnly = true),
             ),
             links,
         )
+    }
+
+    @Test
+    fun `narrow footer keeps the version and the short credit, without links`() {
+        val text = footer("1.2.3").filterNot { it.wideOnly }.joinToString("") { it.text }
+
+        assertEquals("v1.2.3 · Based on Loopover by carykh", text)
     }
 }
