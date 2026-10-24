@@ -313,11 +313,12 @@ src/main/kotlin/                # the terminal app (the root project)
         │                      # RestoreDialogController (startup restore prompt over it),
         │                      # SizeDialogController (toolbar New/F9 + ChooseBoardSize),
         │                      # UnsolvableDialogController (GH-74's repair/new game/exit),
-        │                      # GiveUpDialogController (Give Up/F8's confirmation, GH-126)
+        │                      # GiveUpDialogController (Give Up/F8's confirmation, GH-126),
+        │                      # LabelsDialogController (Labels/F4's Tile labels dialog, GH-139)
         ├── UiRequestRouter.kt # Answers each UiRequest with the dialog that owns it - an
         │                      # exhaustive `when`, so a new request needs an answer to compile
-        ├── ToolbarRouter.kt # Runs the activated toolbar button: Save/Load/Exit/New and the
-        │                      # mode switch (GH-78)
+        ├── ToolbarRouter.kt # Runs the activated toolbar button: Save/Load/Exit/New, Labels
+        │                      # (GH-139) and the mode switch (GH-78)
         ├── TuiScreen.kt     # What the TUI draws (GH-78): the last-drawn BoardLayout/DialogLayout,
         │                      # the parked status message, wasSolved, repaint, and runModal -
         │                      # the one blocking dialog loop (inline, calls
@@ -499,9 +500,11 @@ UI only: `view.tui.TuiView` drives the mouse/keyboard TUI, renders the board and
 calls into `ViewModel`. Should not manipulate `board_model` directly. The line-based
 console mode (`ViewImpl` and its command table) was removed in GH-79.
 
-**1-based display dialect (GH-10):** displayed tile values are 1-based;
-`board_model` and `storage` stay 0-based. `ScreenRenderer`'s `DISPLAY_OFFSET`
-constant is the single translation point (`+1` when rendering). Clicks and key
+**1-based display dialect (GH-10):** displayed tile values are 1-based by default;
+`board_model` and `storage` stay 0-based. `viewmodel.TileLabels` is the single
+translation point: `NUMBERS` adds 1, and the other schemes (GH-139) label the 0-based
+tile their own way. `ScreenRenderer` draws `ScreenState.tileLabels`, which `TuiScreen`
+reads from `ViewModel.tileLabels()` on every repaint. Clicks and key
 presses resolve to 0-based `HitTarget`s directly, so nothing parses a typed index.
 Range validation lives in `board_model` (`BoardImpl`'s bounds check), not `view`.
 

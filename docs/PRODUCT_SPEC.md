@@ -12,7 +12,7 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 ## Features
 
 ### Feature 1 — Board
-- The game presents a square board of tiles laid out `SQUARE_SIDE × SQUARE_SIDE` (default 4×4), holding a shuffled permutation of the integers `0..SQUARE_SIDE²-1` internally, **displayed to the player as `1..SQUARE_SIDE²`** (GH-10).
+- The game presents a square board of tiles laid out `SQUARE_SIDE × SQUARE_SIDE` (default 4×4), holding a shuffled permutation of the integers `0..SQUARE_SIDE²-1` internally, **displayed to the player as `1..SQUARE_SIDE²`** (GH-10) by default. In the terminal the player can pick other tile labels (numbers from 0, pairs, letters) in the Tile labels dialog (GH-139, Features 6 and 7); the board, the solved screen and the solution screen all follow the choice, and the step list keeps `Row …`/`Col …`.
 - On starting a new game, the board is reshuffled via a Fisher-Yates shuffle.
 - Every new game can be solved (GH-74). On a 4×4 board every arrangement can be solved. On 3×3
   and 5×5 boards, only arrangements an even number of tile swaps away from the solved order can
@@ -116,10 +116,15 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 - On launch, the app runs a mouse-clickable terminal UI by default: a centered board with
   `◀`/`▶`/`▲`/`▼` arrows at the ends of each row/column, the `[ Give Up ]` row (Feature 10)
   below the down arrows, a toolbar (`[ New ] [ Save ] [ Load ] [ Exit ]`) below that, and a second row below that with
-  `[ Keyboard ]` for switching to keyboard mode without losing the current game (GH-30).
+  `[ Labels ]` (GH-139) and `[ Keyboard ]` for switching to keyboard mode without losing the current game (GH-30).
   Clicking an arrow shifts that row/column; every click repaints the whole screen. `[ New ]`
   (GH-44) opens the same size-picker dialog as the startup prompt and starts a fresh game at
   whichever size is chosen; Cancel leaves the current game untouched.
+- `[ Labels ]` (GH-139) opens the **Tile labels** dialog: one row per scheme (Numbers, Numbers
+  from 0, Pairs, Pairs from 0, Letters, Letter pairs), each with the solved board's first row as
+  a sample, the current scheme marked `●` and the rest `○`. Clicking a row marks it; OK relabels
+  the board at once and remembers the choice in `saves/preferences`; Cancel (or Escape) changes
+  nothing. It works while playing, after a win and on the solution screen.
 - If switching modes fails (e.g. the terminal can't be set up), the game carries on in the
   current mode with the same game and shows `Could not switch to <mode> mode (<reason>) -
   staying in <current> mode.` on its status line (GH-79).
@@ -171,18 +176,20 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   - Once solved, the highlight disappears and the selection and shift keys go inert, matching
     mouse mode's dimmed arrows; the hints stay.
 - **Toolbar shortcuts**, shown in light blue on the toolbar buttons — including a second row
-  below `[ New ] [ Save ] [ Load ] [ Exit ]` for `[Mouse F7]` (GH-30), mirroring the mouse
-  mode's `[ Keyboard ]` row — and always live regardless of the selection or solved state:
-  **F5** opens Save, **F6** opens Load, **F9** opens the New-game size picker (GH-44), **F7**
+  below `[ New ] [ Save ] [ Load ] [ Exit ]` for `[Labels F4] [Mouse F7]` (GH-30, GH-139), mirroring the mouse
+  mode's `[ Labels ] [ Keyboard ]` row — and always live regardless of the selection or solved state:
+  **F5** opens Save, **F6** opens Load, **F9** opens the New-game size picker (GH-44), **F4**
+  opens Tile labels (GH-139; on a Mac keyboard it may need fn+F4), **F7**
   switches to mouse mode, **F8** is the Give Up row's button (`[Give Up F8]` or
   `[Mordie's solution F8]`, GH-126), and **Escape** opens the Exit dialog. A controls-hint line
   below the toolbar spells these out in plain text:
-  `F5/F6/F9 Save/Load/New · F8 Give Up · F7 Mouse · Esc` (the board keys have their own side
+  `F5/F6/F9 Save/Load/New · F4 Labels · F8 Give Up · F7 Mouse · Esc` (the board keys have their own side
   hints, GH-101).
 - **Dialog navigation:** Tab/Shift+Tab (or the arrow keys) cycle focus between a dialog's
   controls (text field, list rows, buttons); Enter activates whatever has focus; Escape cancels
   the dialog, same as clicking Cancel. Typing and Backspace work on the focused text field as in
-  the mouse mode's Save dialog.
+  the mouse mode's Save dialog. The Tile labels dialog (GH-139) opens focused on the marked
+  scheme; the arrows move the mark, and Enter on a row confirms it, same as OK.
 - All other dialog and startup-restore behavior (validation, re-prompting) is identical to
   Feature 6 — only the input method differs, which shows up in analytics as an `input_method`
   property of `keyboard` instead of `mouse`.
