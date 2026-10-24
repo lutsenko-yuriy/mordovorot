@@ -15,5 +15,7 @@ if [[ ! -f "$dist/index.html" ]]; then
   exit 2
 fi
 address="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null)"
-echo "On the phone, on the same Wi-Fi: http://${address:-<this Mac's IP>}:$port/"
+# Not inside ${...:-...}: macOS's bash 3.2 takes an apostrophe there for an opening quote.
+[[ -n "$address" ]] || address="<this Mac's IP>"
+echo "On the phone, on the same Wi-Fi: http://$address:$port/"
 cd "$dist" && exec python3 -m http.server "$port" --bind 0.0.0.0
