@@ -25,6 +25,13 @@
     }
 }
 
+/* Narrow wide phones: the narrowest column the longest step fits without scrolling sideways (GH-148). */
+@media (orientation: landscape) and (max-width: 760px) {
+    .app.solution {
+        --steps: 9rem;
+    }
+}
+
 .steps {
     grid-area: steps;
     /* The steps' offsetTop counts from here, for DomRenderer's scrolling. */

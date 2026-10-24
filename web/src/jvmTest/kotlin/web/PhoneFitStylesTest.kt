@@ -130,4 +130,30 @@ class PhoneFitStylesTest {
 
         assertTrue("height: var(--footer);" in footer && "white-space: nowrap;" in footer, footer)
     }
+
+    @Test
+    fun `short wide phones get a tighter panel`() {
+        val short = block("@media (orientation: landscape) and (max-height: 500px)")
+
+        assertTrue("--pad-y: 8px;" in rule(short, ".app"), short)
+        assertTrue("gap: 6px;" in rule(short, ".panel"), short)
+    }
+
+    @Test
+    fun `very short wide phones get a compact panel level with the board's top`() {
+        val veryShort = block("@media (orientation: landscape) and (max-height: 340px)")
+
+        assertTrue("margin-top: 0;" in rule(veryShort, ".panel"), veryShort)
+        assertTrue("min-height: calc(2em * 1.4);" in rule(veryShort, ".panel > .mordie"), veryShort)
+        assertTrue("font-size: 1.25rem;" in rule(veryShort, ".moves"), veryShort)
+    }
+
+    @Test
+    fun `narrow wide phones get narrower columns and the tight toolbar`() {
+        val narrowWide = "(orientation: landscape) and (max-width: 760px)"
+
+        assertTrue("--panel: 18rem;" in rule(block("@media $narrowWide"), ".app"), block("@media $narrowWide"))
+        assertTrue("--steps: 9rem;" in rule(block("@media $narrowWide", solution), ".app.solution"), solution)
+        assertTrue("@media (max-width: 380px), $narrowWide {" in styles, "the toolbar's tight rule covers narrow wide phones")
+    }
 }
