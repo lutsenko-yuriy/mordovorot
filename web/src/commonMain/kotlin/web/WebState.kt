@@ -2,6 +2,7 @@ package web
 
 import viewmodel.GiveUpButton
 import viewmodel.SolutionState
+import viewmodel.TileLabels
 import web.drag.LineOffset
 
 /** One frame of the page (GH-110): what [WebRenderer] draws. [tiles] are 1-based, row by row. */
@@ -23,7 +24,12 @@ data class WebState(
     val solution: SolutionState? = null,
     /** The replay shift just made, for this frame to slide its line from. */
     val slide: LineOffset? = null,
+    /** How the tiles are labelled (GH-139). */
+    val labels: TileLabels = TileLabels.DEFAULT,
 ) {
+    /** Each tile's text, in [tiles]' order. */
+    val tileTexts: List<String> get() = tiles.map { labels.label(it - 1, side) }
+
     val arrowsEnabled: Boolean get() = !solved && solution == null
     val movesShown: Boolean get() = solution == null
 }
@@ -44,7 +50,13 @@ sealed interface WebDialog {
 
     /** The give-up confirmation (GH-126): Yes or No. */
     data object GiveUp : WebDialog
+
+    /** The tile labels picker (GH-139): [selected] is marked until Cancel or OK. */
+    data class Labels(val options: List<LabelOption>, val selected: TileLabels) : WebDialog
 }
 
 /** A save as a Load row: its [label] is `name (NxN)`, with the unsolvable mark when it applies. */
 data class SaveEntry(val name: String, val label: String)
+
+/** A Labels row: a scheme, its [title] and its [sample], the solved board's first row. */
+data class LabelOption(val labels: TileLabels, val title: String, val sample: List<String>)
