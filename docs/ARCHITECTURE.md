@@ -40,11 +40,12 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 ├── storage/             # :shared:storage - the save contract and text format; the file I/O is the app's
 │   └── storage/
 │       ├── SaveRepository.kt          # Persistence contract: list/exists/save/load
+│       ├── PreferenceRepository.kt    # Player preferences as plain strings: get/set (GH-139)
 │       ├── SaveFileCodec.kt           # The save text format: encode/decode with all its validation (GH-110)
 │       ├── SaveNames.kt               # Which save names are accepted, on every platform (GH-110)
 │       ├── SaveFileFormatException.kt # Thrown on a malformed save (from the app, GH-110)
 │       ├── SavedBoard.kt              # Data carrier: square side + tile arrangement (+ optional
-│       │                                # SavedMordie, GH-83)
+│       │                                # SavedMordie, GH-83, and the labels' wire name, GH-139)
 │       ├── SavedMordie.kt             # Original arrangement + Mordie's N + found flag (GH-83);
 │       │                                # Mordie's solution and the solution-screen flag (GH-126)
 │       └── SavedMove.kt               # One step of that solution; mirrors mordie.SolutionMove (GH-126)
@@ -113,6 +114,14 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                             # `1 move` included (GH-83)
 │       ├── SolutionScreen.kt      # The session's solution screen: its SolutionReplay, null off it.
 │       │                             # One per session, so a mode switch keeps it (GH-126)
+│       ├── TileLabels.kt          # The six label schemes: wireName (analytics, save line 8, the
+│       │                             # preference), title, maxSide, label(tile, side), sampleRow.
+│       │                             # NUMBERS is the default (GH-139)
+│       ├── TileLabelsPreference.kt # TileLabels over a PreferenceRepository under `tile_labels`;
+│       │                             # a failed read is no preference, a failed write is silent (GH-139)
+│       ├── SessionTileLabels.kt   # The session's labels and TileLabelsSource: a save's labels
+│       │                             # beat the preference, which beats NUMBERS. One per session,
+│       │                             # so a mode switch keeps them; reads the preference once (GH-139)
 │       ├── SolutionReplay.kt      # Mordie's steps on their own copy of the original arrangement,
 │       │                             # stepped one shift at a time (next/previous/restart); the
 │       │                             # game's board, moves and Mordie never see it (GH-126)
@@ -128,9 +137,10 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │                                     # GameSession seeds true after a mode switch (GH-30), and
 │                                     # `sizeChosenAtLaunch`), SolutionUseCase (the Give Up row,
 │                                     # entering the solution screen, the replay and its
-│                                     # analytics, GH-126)
+│                                     # analytics, GH-126), TileLabelsUseCase (the labels dialog's
+│                                     # screen view and OK, GH-139)
 └── testing/             # :shared:testing - plain JVM module of test doubles shared by every
-                           # module's tests: FakeBoardModel / FakeSaveRepository /
+                           # module's tests: FakeBoardModel / FakeSaveRepository / FakePreferenceRepository /
                            # RecordingAnalyticsService / FakeMordieSearch + FakeMordieSearchFactory /
                            # FakeViewModelUi (scripted UiRequest responder, GH-42 WU2)
 
@@ -154,15 +164,16 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── MessageFeed.kt   # Chat-like timing for Mordie's lines: the old one rises out, then the new rises in
 │   ├── Launch.kt        # startWebGame: the page's wiring (PlatformAnalyticsService "web" wrapped
 │   │                    # by InputMethodAnalyticsService "rich_ui"), app_launched {mode, layout,
-│   │                    # app_version, host} (GH-111)
+│   │                    # app_version, host} (GH-111) and tile_labels (GH-139)
 │   ├── Host.kt          # hostOf(hostname): PUBLIC_SITE, LOCALHOST or OTHER - only the bucket is sent (GH-111)
 │   ├── Footer.kt        # footer(version): the footer line as Text/Link parts, worded as the README's Credits (GH-111)
 │   ├── drag/            # LineDrag: one drag in pixels - axis lock past a threshold, live offset,
 │   │                    # snap to whole tiles mod the side; WrapPositions: a part-shifted line's tiles
 │   └── storage/         # BrowserSaveRepository: one KeyValueStore entry per save under
-│                        # `mordovorot.save.<name>`, in SaveFileCodec's format, SaveNames' rules
-├── src/jsMain/kotlin/web/Main.kt       # The page's composition root: BoardImpl, saves in
-│                                       # localStorage, Mordie with the background search,
+│                        # `mordovorot.save.<name>`, in SaveFileCodec's format, SaveNames' rules;
+│                        # BrowserPreferenceRepository: `mordovorot.pref.<key>` (GH-139)
+├── src/jsMain/kotlin/web/Main.kt       # The page's composition root: BoardImpl, saves and
+│                                       # preferences in localStorage, Mordie with the background search,
 │                                       # MainScope, the window's Layout, the beforeunload prompt;
 │                                       # the footer, once, outside #app (GH-111)
 ├── src/jsMain/kotlin/web/DomRenderer.kt # WebState -> DOM, clicks and pointer drags -> WebGame
@@ -187,7 +198,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/commonTest/kotlin/web/HostTest.kt # GH-111: hostOf's buckets
 ├── src/commonTest/kotlin/web/LayoutTest.kt, SlidesTest.kt, MessageFeedTest.kt
 ├── src/commonTest/kotlin/web/drag/     # LineDragTest, WrapPositionsTest
-├── src/commonTest/kotlin/web/storage/  # BrowserSaveRepositoryTest over InMemoryKeyValueStore
+├── src/commonTest/kotlin/web/storage/  # BrowserSaveRepositoryTest, BrowserPreferenceRepositoryTest
+│                                       # over InMemoryKeyValueStore
 ├── src/jvmTest/kotlin/web/IndexPageTest.kt # Pins the title rule (the title appears only in the tab)
 │                                       # and relative asset URLs (GH-111: the public site's sub-path)
 ├── src/jvmTest/kotlin/web/BuildInfoTest.kt, CreditsTest.kt # GH-111: the stamped version is the
@@ -238,8 +250,10 @@ src/main/kotlin/                # the terminal app (the root project)
 │                                # ExitRequestedException (GH-12); delegated to by ViewModelImpl (GH-41)
 ├── storage/                       # the contract, the format and the name rules are in
 │   │                                # shared/storage
-│   └── FileSaveRepository.kt      # Plain-text file implementation (the only class
-│                                    touching the filesystem); atomic writes via a temp file
+│   ├── FileSaveRepository.kt      # Plain-text file implementation (the only class
+│   │                                touching the filesystem); atomic writes via a temp file
+│   └── FilePreferenceRepository.kt # `key=value` lines in `saves/preferences`, kept apart
+│                                    # from the `.save` files; unknown lines kept (GH-139)
 └── view/
     ├── View.kt          # View interface — play() (GH-79 removed the console-only members)
     └── tui/             # GH-3: the View implementation, the mouse/keyboard TUI
@@ -351,7 +365,7 @@ src/test/kotlin/                # the terminal app's tests; board_model / analyt
 │                           # CatchingNonCancellation, MordieText, SaveInfo, and GH-126's
 │                           # SolutionReplay/SolutionSteps) are in
 │                           # shared/viewmodel's commonTest, built by its own testViewModel (GH-41)
-├── storage/               # FileSaveRepository coverage
+├── storage/               # FileSaveRepository and FilePreferenceRepository coverage
 ├── view/tui/              # TUI coverage (GH-3, WU2-WU5)
 └── testing/              # testViewModel / testTuiView / testGameSession - the only way tests
                             # build these, calling AppWiring with fake defaults (GH-78) /
@@ -497,9 +511,11 @@ exactly once" rather than "permutation of 0..N-1") so they read correctly
 next to the 1-based board when shown in a Load dialog message.
 
 ### storage
-File persistence for save games. `SaveRepository` is the contract `viewmodel`
+File persistence for save games and preferences. `SaveRepository` is the contract `viewmodel`
 depends on; `FileSaveRepository` is the only class in the codebase that touches
-the filesystem. The text format (`SaveFileCodec`) and the accepted names (`SaveNames`)
+the save files, and `FilePreferenceRepository` (GH-139) the preferences file beside them.
+`PreferenceRepository` is a plain string store, so `storage` still knows no viewmodel types;
+`viewmodel.TileLabelsPreference` gives it a type. The text format (`SaveFileCodec`) and the accepted names (`SaveNames`)
 live in `:shared:storage` so every platform reads and writes the same saves (GH-110). No dependency on `board_model`, `viewmodel`, or `view` — it
 deals in plain data (`SavedBoard`), not domain objects.
 
@@ -513,6 +529,10 @@ line 4 or 5 is a `SaveFileFormatException`. GH-126 adds two more: line 6 is Mord
 a found save, space-separated `r<i>:<k>`/`c<i>:<k>` (rotate row i right, or column i down, by k),
 and line 7 is `solution` on a save made on the solution screen. A missing or blank line means
 neither; a solution that doesn't solve the original in N moves is a `SaveFileFormatException`.
+GH-139 adds line 8, the tile labels' wire name, which every new save writes; lines 4-7 are blank
+where they don't apply, which older builds already read as "nothing there". A missing or blank
+line 8 means no labels, and any other word is kept, so a name this build doesn't know loads with
+the preference rather than as a corrupted save.
 
 ### analytics
 Cross-cutting: `AnalyticsService` is injected into `viewmodel` (and any layer
