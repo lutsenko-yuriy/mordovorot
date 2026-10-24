@@ -443,6 +443,10 @@ button:focus-visible {
     animation: appear 0.15s ease-out;
 }
 
+.overlay.shown {
+    animation: none;
+}
+
 .dialog {
     display: flex;
     flex-direction: column;

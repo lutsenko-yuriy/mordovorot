@@ -56,6 +56,22 @@ class WebTileLabelsScenarioTest {
     }
 
     @Test
+    fun `a marked row previews its labels, and OK keeps them`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+
+        page.game.onLabels()
+        page.game.onLabelsSelected(TileLabels.LETTERS)
+
+        assertEquals("G", page.state.tileTexts[6])
+        assertTrue(page.props("tile_labels_changed").isEmpty())
+        assertNull(page.preferences.get("tile_labels"))
+
+        page.game.onLabelsAnswered(ok = true)
+        assertEquals("G", page.state.tileTexts[6])
+        assertEquals("letters", page.preferences.get("tile_labels"))
+    }
+
+    @Test
     fun `cancel changes nothing`() = webTest {
         val page = WebHarness(backgroundScope).startOn()
 
@@ -65,6 +81,7 @@ class WebTileLabelsScenarioTest {
         page.game.onLabelsAnswered(ok = false)
 
         assertNull(page.state.dialog)
+        assertEquals(TileLabels.NUMBERS, page.state.labels)
         assertEquals("7", page.state.tileTexts[6])
         assertEquals(listOf<Any?>("labels"), page.props("dialog_cancelled").map { it["dialog"] })
 

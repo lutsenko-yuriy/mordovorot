@@ -112,9 +112,13 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
             steps.scrollTop = stepsScroll?.takeUnless { state.solution?.atStart == true } ?: 0.0
             (steps.querySelector(".current") as? HTMLElement)?.let { showStep(steps, it) }
         }
-        dialog?.let { root.append(element("div", "overlay").apply { append(dialogElement(it, game) { warning -> saveWarning = warning }) }) }
+        // Only a dialog that has just opened fades in, not one redrawn as the player picks in it.
+        val reopened = dialog != null && before?.dialog?.let { it::class == dialog::class } == true
+        dialog?.let { root.append(element("div", if (reopened) "overlay shown" else "overlay").apply { append(dialogElement(it, game) { warning -> saveWarning = warning }) }) }
         drawMordie(now)
         root.querySelector("input")?.let { (it as HTMLInputElement).focus() }
+        // The rebuilt Labels dialog keeps keyboard focus on the row just picked.
+        if (reopened && dialog is WebDialog.Labels) (root.querySelector(".labels .checked") as? HTMLElement)?.focus()
     }
 
     /** Scrolls [steps] just enough to show [step]. Unlike `scrollIntoView`, never the page, so

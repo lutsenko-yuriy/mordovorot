@@ -144,7 +144,7 @@ class WebGame internal constructor(
         else viewModel.changeTileLabels(chosen)
     }
 
-    /** A Labels row pressed: it becomes the marked one. */
+    /** A Labels row pressed: it becomes the marked one, and the board previews it. */
     fun onLabelsSelected(labels: TileLabels) {
         val open = dialog?.takeIf { it.shown is WebDialog.Labels } ?: return
         open.shown = labelsDialog(labels)
@@ -308,7 +308,8 @@ class WebGame internal constructor(
                 giveUp = viewModel.giveUpButton(),
                 solution = viewModel.solution(),
                 slide = slide,
-                labels = viewModel.tileLabels(),
+                // The Labels dialog's marked scheme, previewed until OK keeps it or Cancel drops it.
+                labels = (dialog?.shown as? WebDialog.Labels)?.selected ?: viewModel.tileLabels(),
             ),
         )
     }

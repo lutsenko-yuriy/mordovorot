@@ -371,7 +371,8 @@ Applies to terminal mouse mode, terminal keyboard mode and the web client.
   Only the text changes: a tile's colour (web) and the step list's `Row …`/`Col …` stay as they are.
 - **The dialog:** `Tile labels`, one row per scheme with the current board size's first solved
   row as a sample, the current scheme marked `●` and the rest `○`. Picking a row marks it; OK
-  relabels the board at once, Cancel changes nothing. It opens from `[ Labels ]` in both clients
+  relabels the board at once, Cancel changes nothing. On the web the board already shows the
+  marked scheme while the dialog is open, and Cancel puts the old labels back. It opens from `[ Labels ]` in both clients
   (terminal keyboard mode: `[Labels F4]` and F4; details in Features 6, 7 and 9), during play,
   after a win and on the solution screen. Escape cancels it in the terminal; web dialogs have no
   Escape.
