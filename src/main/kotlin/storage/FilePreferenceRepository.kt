@@ -19,6 +19,8 @@ class FilePreferenceRepository(private val directory: Path = FileSaveRepository.
         lines().firstNotNullOfOrNull { line -> line.removePrefix("$key=").takeIf { it != line } }
 
     override fun set(key: String, value: String) {
+        require(key.isNotEmpty() && '=' !in key && key.none(::isLineBreak)) { "Bad preference key '$key'" }
+        require(value.none(::isLineBreak)) { "A preference value must be one line" }
         val entry = "$key=$value"
         val lines = lines()
         val at = lines.indexOfFirst { it.startsWith("$key=") }
@@ -35,6 +37,8 @@ class FilePreferenceRepository(private val directory: Path = FileSaveRepository.
             throw e
         }
     }
+
+    private fun isLineBreak(c: Char) = c == '\n' || c == '\r'
 
     private fun lines(): List<String> = if (file.exists()) file.readLines() else emptyList()
 }

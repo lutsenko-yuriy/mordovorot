@@ -6,6 +6,7 @@ import kotlin.io.path.readText
 import kotlin.io.path.writeText
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -37,6 +38,14 @@ class FilePreferenceRepositoryTest {
 
         assertEquals("future=1\ntile_labels=letters\n# a note\n", dir.resolve("preferences").readText())
         assertEquals("1", FilePreferenceRepository(dir).get("future"))
+    }
+
+    @Test
+    fun `a key with = or a line break, or a value with a line break, is rejected`() {
+        for ((key, value) in listOf("a=b" to "x", "a\nb" to "x", "a" to "x\ny", "" to "x")) {
+            assertFailsWith<IllegalArgumentException>("$key / $value") { repo.set(key, value) }
+        }
+        assertNull(repo.get("a"))
     }
 
     @Test
