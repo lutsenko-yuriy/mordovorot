@@ -51,6 +51,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-12: Exit command](GH-12.md)
 - [GH-124: Web dev server: rebuild on change, and run alongside builds](GH-124.md)
 - [GH-126: Give Up: replay Mordie's solution](GH-126.md)
+- [GH-137: Fix Dependabot alerts in the Kotlin/JS build tools (yarn.lock)](GH-137.md)
 - [GH-139: Alternative tile labels: numbers from 0, pairs, letters, chosen in a dialog](GH-139.md)
 - [GH-23: Split Presenter into console/TUI-specific presenters](GH-23.md)
 - [GH-41: Kotlin Multiplatform shared modules: Core, Analytics, Mordie, Storage, ViewModel](GH-41.md)
