@@ -181,7 +181,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # no arrows under `pointer: coarse` (GH-111)
 ├── src/commonTest/kotlin/web/scenario/ # GH-110 end to end: WebGame over startWebGame's wiring
 │                                       # (WebHarness), recording each WebState (startup, play,
-│                                       # save/load, unsaved progress, drag, analytics; GH-126 give up)
+│                                       # save/load, unsaved progress, drag, analytics; GH-126 give up;
+│                                       # GH-139 tile labels)
 ├── src/commonTest/kotlin/web/FooterTest.kt # GH-111: the footer's wording and links
 ├── src/commonTest/kotlin/web/HostTest.kt # GH-111: hostOf's buckets
 ├── src/commonTest/kotlin/web/LayoutTest.kt, SlidesTest.kt, MessageFeedTest.kt
@@ -329,6 +330,8 @@ src/test/kotlin/                # the terminal app's tests; board_model / analyt
 │                            # through the TUI over a real board and temp-dir saves
 ├── MordieScenarioTest.kt  # GH-83 end to end with a scripted FakeMordieSearchFactory
 ├── GiveUpScenarioTest.kt  # GH-126 end to end: Give Up, the solution screen and its replay
+├── TileLabelsScenarioTest.kt # GH-139 end to end: the Tile labels dialog, the preference and
+│                            # saves' labels, in mouse and keyboard mode
 ├── GameSessionTest.kt     # Session loop: startupRestoreDone seeding, multi-switch chains,
 │                            # failed-switch fallback, Mordie stopped on exit (GH-30)
 ├── AppWiringTest.kt      # Composition root: each mode's switch key really switches, a mode

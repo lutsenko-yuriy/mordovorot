@@ -273,6 +273,29 @@ Fired when Next reaches the solved board, once per run (a run begins at
 *GH-126:* `dialog_cancelled.dialog` takes a new value, `give_up` - **No** or Escape in the
 give-up confirmation.
 
+### `tile_labels_changed`
+
+Fired when the player presses OK in the Tile labels dialog with a **different** scheme selected.
+OK on the current scheme fires nothing. Scheme values everywhere: `numbers`, `numbers_from_0`,
+`pairs`, `pairs_from_0`, `letters`, `letter_pairs`. *(GH-139)*
+
+| Property | Type | Description |
+|---|---|---|
+| `from` | `string` | The scheme the game showed before. |
+| `to` | `string` | The scheme chosen. |
+| `from_source` | `string` | Why the game showed `from`: `default` (no preference set), `preference`, or `save` (a loaded save's labels). |
+| `screen` | `string` | `play`, `solved` or `solution` - where the player was. |
+| `board_size` | `number` | The board side (3-5). |
+| `input_method` | `string` | `mouse`, `keyboard` or `rich_ui`. |
+
+*GH-139:* additions to existing events:
+- `app_launched` gains `tile_labels` (`string`, always sent): the remembered preference at launch,
+  `numbers` when none is set.
+- `board_solved` gains `tile_labels` (`string`): the labels shown when the solving shift was made.
+- `load_command_used` gains `labels_differ_from_preference` (`boolean`, only on `success`): `true`
+  when the save carried labels other than the preference; saves without labels send `false`.
+- `dialog_cancelled.dialog` takes a new value, `labels` (Cancel or Escape in the Tile labels dialog).
+
 <!-- All events above are sent through `analytics.AnalyticsService`, currently backed by
      `analytics.NoopAnalyticsService` (no real SDK wired up yet). -->
 
@@ -307,3 +330,9 @@ give-up confirmation.
 |---|---|
 | `screen_give_up_dialog` | The `Give up and see Mordie's solution?` confirmation opens (`[ Give Up ]` / F8). Properties `board_size`: number; `move_count`: number - the player's moves so far. *(GH-126)* |
 | `screen_solution` | The solution screen opens. Properties `opened_from`: `give_up`, `after_win` (`[ Mordie's solution ]`), `load` (toolbar Load) or `startup_prompt` (restore prompt); `board_size`: number; `solution_length`: number - Mordie's N. *(GH-126)* |
+
+*GH-139:* new screen view:
+
+| Screen name | When tracked |
+|---|---|
+| `screen_labels_dialog` | The Tile labels dialog opens. Properties `opened_from`: `toolbar` (`[ Labels ]` click) or `shortcut` (F4 in keyboard mode); `screen`: `play`, `solved` or `solution`; `current_labels`: the scheme shown when it opened. *(GH-139)* |
