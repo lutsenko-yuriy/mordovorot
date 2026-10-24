@@ -25,7 +25,8 @@
   terminal app, Kotlin Multiplatform for the `shared/` modules (GH-41: `jvm()` + `js { nodejs() }`,
   GH-103; the Kotlin Gradle plugin downloads Node.js and yarn, `kotlin-js-store/yarn.lock` pins
   the npm packages; a Kotlin upgrade that changes them fails the build until
-  `./gradlew kotlinUpgradeYarnLock` is run and the new lock committed); the `:web` module (GH-110) adds
+  `./gradlew kotlinUpgradeYarnLock` is run and the new lock committed; GH-137: yarn resolutions in the
+  root `build.gradle.kts` pin patched `serialize-javascript` and `diff` under Mocha); the `:web` module (GH-110) adds
   `js { browser() }`, whose webpack, webpack-cli and webpack-dev-server are build-time npm packages in
   the same lock. `serve` keeps its outputs in each project's `build-serve/` (outside `build/`, so
   `clean` leaves it), and `gradle.properties` gives the shared Kotlin compile daemon 2 GB (`kotlin.daemon.jvmargs`), so
