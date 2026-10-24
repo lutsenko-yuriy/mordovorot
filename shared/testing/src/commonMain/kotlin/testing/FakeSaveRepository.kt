@@ -21,6 +21,9 @@ class FakeSaveRepository(
     /** The Mordie data passed to each [save] call, parallel to [saveCalls]. */
     val savedMordies = mutableListOf<SavedMordie?>()
 
+    /** The labels passed to each [save] call, parallel to [saveCalls]. */
+    val savedLabels = mutableListOf<String?>()
+
     /** When set, [save] throws this instead of persisting - simulates an unsafe name or a
      *  filesystem failure (disk full, read-only directory). */
     var saveException: Throwable? = null
@@ -49,12 +52,13 @@ class FakeSaveRepository(
         return saves.containsKey(name)
     }
 
-    override fun save(name: String, state: IntArray, squareSide: Int, moveCount: Int, mordie: SavedMordie?) {
+    override fun save(name: String, state: IntArray, squareSide: Int, moveCount: Int, mordie: SavedMordie?, labels: String?) {
         saveException?.let { throw it }
         saveCalls.add(Triple(name, state.copyOf(), squareSide))
         savedMoveCounts.add(moveCount)
         savedMordies.add(mordie)
-        saves[name] = SavedBoard(squareSide, state.copyOf(), moveCount, mordie)
+        savedLabels.add(labels)
+        saves[name] = SavedBoard(squareSide, state.copyOf(), moveCount, mordie, labels)
     }
 
     override fun load(name: String): SavedBoard? {

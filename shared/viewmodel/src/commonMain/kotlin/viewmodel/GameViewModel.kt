@@ -115,4 +115,15 @@ interface GameViewModel {
 
     /** The solution screen's Restart: back to the original arrangement; nothing off the screen. */
     fun replayRestart()
+
+    /** How the current game's tiles are labelled (GH-139): its save's, else the preference's. */
+    fun tileLabels(): TileLabels
+
+    /** Tracks `screen_labels_dialog` as the Tile labels dialog opens; [openedFrom] is `toolbar`
+     *  or `shortcut`. */
+    fun tileLabelsDialogOpened(openedFrom: String)
+
+    /** The Tile labels dialog's OK: relabels and remembers [labels] as the preference, tracking
+     *  `tile_labels_changed`. Does nothing when [labels] is already shown. */
+    fun changeTileLabels(labels: TileLabels)
 }

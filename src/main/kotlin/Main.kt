@@ -5,8 +5,12 @@ import board_model.BoardSize
 import kotlinx.coroutines.runBlocking
 import mordie.BackgroundMordieSearch
 import mordie.Mordie
+import storage.FilePreferenceRepository
 import storage.FileSaveRepository
 import view.tui.AnsiTerminal
+import viewmodel.SessionTileLabels
+import viewmodel.TileLabels
+import viewmodel.TileLabelsPreference
 
 /**
  * Created by yurich on 02.12.16.
@@ -16,7 +20,9 @@ fun main(args: Array<String>): Unit = runBlocking {
     val parsedSize = resolveBoardSize(args)
     val boardSize = parsedSize ?: BoardSize.DEFAULT
     // No terminal: the abort message is already printed - return normally, so the exit is 0.
-    val mode = resolveInputMode(args, analytics, boardSize = boardSize) ?: return@runBlocking
+    val tileLabels = SessionTileLabels(TileLabelsPreference(FilePreferenceRepository()))
+    val mode = resolveInputMode(args, analytics, boardSize = boardSize, tileLabels = tileLabels.effectivePreference.wireName)
+        ?: return@runBlocking
     // An invalid --size=N (out of range, non-numeric, blank) degrades to "no flag given" here
     // too - sizeChosenAtLaunch must track whether the flag was actually usable, not just
     // present, or a typo'd flag would silently suppress the restore/size prompts on top of
@@ -29,6 +35,7 @@ fun main(args: Array<String>): Unit = runBlocking {
         analytics = analytics,
         sizeChosenAtLaunch = sizeChosenAtLaunch,
         mordie = Mordie(BackgroundMordieSearch.Factory()),
+        tileLabels = tileLabels,
         terminalFactory = { AnsiTerminal() },
     ).run()
 }
@@ -62,11 +69,13 @@ fun resolveBoardSize(
 /** Resolves the starting input mode, warns on any unrecognized argument, and tracks the launch -
  *  split out from [main] so it's unit-testable without running the whole game loop. Returns
  *  `null` (and tracks `app_launch_aborted` instead of `app_launched`) when there is no
- *  interactive terminal: the game only runs as a TUI since GH-79. */
+ *  interactive terminal: the game only runs as a TUI since GH-79. [tileLabels] is the remembered
+ *  preference at launch (GH-139). */
 fun resolveInputMode(
     args: Array<String>,
     analytics: AnalyticsService,
     boardSize: Int = BoardSize.DEFAULT,
+    tileLabels: String = TileLabels.DEFAULT.wireName,
     warnUnrecognizedArg: (String) -> Unit = { System.err.println("Unrecognized argument: '$it' - ignoring.") },
     reportNoInteractiveTerminal: (String) -> Unit = { System.err.println(it) },
     noticeConsoleRemoved: (String) -> Unit = { System.err.println(it) },
@@ -90,7 +99,10 @@ fun resolveInputMode(
     val mode = InputMode.resolve(args)
     analytics.track(
         "app_launched",
-        mapOf("mode" to mode.name.lowercase(), "board_size" to boardSize, "console_flag_ignored" to consoleFlag),
+        mapOf(
+            "mode" to mode.name.lowercase(), "board_size" to boardSize, "console_flag_ignored" to consoleFlag,
+            "tile_labels" to tileLabels,
+        ),
     )
     return mode
 }

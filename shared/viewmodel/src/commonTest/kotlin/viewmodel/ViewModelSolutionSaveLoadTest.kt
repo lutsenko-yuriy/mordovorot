@@ -58,7 +58,7 @@ class ViewModelSolutionSaveLoadTest {
 
         viewModel.save("s")
 
-        assertEquals(SavedBoard(3, original, 0, screenSave), saves.load("s"))
+        assertEquals(SavedBoard(3, original, 0, screenSave, "numbers"), saves.load("s"))
     }
 
     @Test

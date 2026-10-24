@@ -10,6 +10,7 @@ import viewmodel.usecase.NewGameUseCase
 import viewmodel.usecase.SaveGameUseCase
 import viewmodel.usecase.SolutionUseCase
 import viewmodel.usecase.StartupRestoreUseCase
+import viewmodel.usecase.TileLabelsUseCase
 
 /** The one [GameViewModel] implementation (GH-42 WU3, collapsing GH-23's `BaseViewModel` +
  *  `ConsoleViewModelImpl` + `TuiViewModelImpl` split; Exit split out for GH-41): shifts and the
@@ -27,9 +28,11 @@ class GameViewModelImpl internal constructor(
     private val loadGameUseCase: LoadGameUseCase,
     private val startupRestoreUseCase: StartupRestoreUseCase,
     private val solutionUseCase: SolutionUseCase,
+    private val tileLabelsUseCase: TileLabelsUseCase,
     private val currentSaveName: CurrentSaveName,
     private val gameShiftSources: GameShiftSources,
     private val unsavedProgress: UnsavedProgress,
+    private val tileLabels: SessionTileLabels,
     private val unsolvableExit: UnsolvableSaveExit,
 ) : GameViewModel {
 
@@ -69,7 +72,8 @@ class GameViewModelImpl internal constructor(
             val mordieProps = mordieHooks.onSolved()
             analytics.track(
                 "board_solved",
-                mapOf("move_count" to board.moveCount, "board_size" to board.squareSide) + mordieProps +
+                mapOf("move_count" to board.moveCount, "board_size" to board.squareSide, "tile_labels" to tileLabels.current.wireName) +
+                    mordieProps +
                     gameShiftSources.propertiesFor(source),
             )
         }
@@ -125,4 +129,10 @@ class GameViewModelImpl internal constructor(
     override fun replayPrevious(): SolutionStep? = solutionUseCase.previous()
 
     override fun replayRestart() = solutionUseCase.restart()
+
+    override fun tileLabels(): TileLabels = tileLabels.current
+
+    override fun tileLabelsDialogOpened(openedFrom: String) = tileLabelsUseCase.dialogOpened(openedFrom)
+
+    override fun changeTileLabels(labels: TileLabels) = tileLabelsUseCase.change(labels)
 }

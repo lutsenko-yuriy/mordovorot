@@ -8,7 +8,9 @@ import storage.SaveRepository
 import viewmodel.CurrentSaveName
 import viewmodel.GameShiftSources
 import viewmodel.GameViewModelImpl
+import viewmodel.SessionTileLabels
 import viewmodel.SolutionScreen
+import viewmodel.TileLabelsPreference
 import viewmodel.UiRequestChannel
 import viewmodel.UnsavedProgress
 import viewmodel.UnsolvableSaveExit
@@ -27,7 +29,8 @@ internal fun testViewModel(
     gameShiftSources: GameShiftSources = GameShiftSources(),
     unsavedProgress: UnsavedProgress = UnsavedProgress(),
     solutionScreen: SolutionScreen = SolutionScreen(),
+    tileLabels: SessionTileLabels = SessionTileLabels(TileLabelsPreference(FakePreferenceRepository())),
 ): GameViewModelImpl = buildGameViewModel(
     board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftSources,
-    unsavedProgress, solutionScreen, UiRequestChannel(), UnsolvableSaveExit.NONE,
+    unsavedProgress, solutionScreen, tileLabels, UiRequestChannel(), UnsolvableSaveExit.NONE,
 )

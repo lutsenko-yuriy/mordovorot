@@ -18,6 +18,7 @@ import web.WebGame
 import web.WebRenderer
 import web.WebState
 import web.startWebGame
+import web.storage.BrowserPreferenceRepository
 import web.storage.BrowserSaveRepository
 import web.storage.InMemoryKeyValueStore
 
@@ -25,8 +26,8 @@ import web.storage.InMemoryKeyValueStore
 internal val ONE_SHIFT_FROM_SOLVED = intArrayOf(3, 0, 1, 2) + IntArray(12) { it + 4 }
 
 /** The page over the production wiring ([startWebGame]): a real [BoardImpl], the browser's save
- *  repository over an in-memory [store], a fake Mordie search and recording analytics. A new
- *  harness over the same [store] is a reload. */
+ *  and preference repositories over an in-memory [store], a fake Mordie search and recording
+ *  analytics. A new harness over the same [store] is a reload. */
 internal class WebHarness(
     private val scope: CoroutineScope,
     val board: BoardImpl = BoardImpl(),
@@ -36,6 +37,7 @@ internal class WebHarness(
     private val host: Host = Host.LOCALHOST,
 ) {
     val saves = BrowserSaveRepository(store)
+    val preferences = BrowserPreferenceRepository(store)
     val analytics = RecordingAnalyticsService()
     val mordieSearches = FakeMordieSearchFactory()
     val mordie = Mordie(mordieSearches)
@@ -46,7 +48,7 @@ internal class WebHarness(
     val state: WebState get() = renderer.frames.last()
 
     fun start(): WebHarness {
-        game = startWebGame(board, saves, analytics, mordie, renderer, scope, layout, appVersion, host)
+        game = startWebGame(board, saves, preferences, analytics, mordie, renderer, scope, layout, appVersion, host)
         return this
     }
 

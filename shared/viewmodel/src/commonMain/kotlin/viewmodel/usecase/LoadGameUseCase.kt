@@ -8,6 +8,8 @@ import viewmodel.CurrentSaveName
 import viewmodel.GameShiftSources
 import viewmodel.MordieHooks
 import viewmodel.SaveCatalog
+import viewmodel.SessionTileLabels
+import viewmodel.TileLabels
 import viewmodel.UiRequestChannel
 import viewmodel.UnsavedProgress
 import viewmodel.catchingNonCancellation
@@ -26,6 +28,7 @@ internal class LoadGameUseCase(
     private val gameShiftSources: GameShiftSources,
     private val unsavedProgress: UnsavedProgress,
     private val solution: SolutionUseCase,
+    private val tileLabels: SessionTileLabels,
 ) {
 
     /** [trigger] is `"command"` for a mid-game load (toolbar Load / F6), or `"startup_prompt"`
@@ -64,7 +67,14 @@ internal class LoadGameUseCase(
             currentSaveName.name = name
             gameShiftSources.reset()
             unsavedProgress.unsaved = false
-            analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "success"))
+            // An unknown name (a later build's scheme, a hand edit) loads with the preference (GH-139).
+            val fromSave = TileLabels.fromWireName(saved.labels)
+            val labelsDiffer = fromSave != null && fromSave != tileLabels.effectivePreference
+            tileLabels.applySave(fromSave)
+            analytics.track(
+                "load_command_used",
+                mapOf("trigger" to trigger, "result" to "success", "labels_differ_from_preference" to labelsDiffer),
+            )
             if (saved.mordie?.solutionScreen == true) solution.enterLoaded(trigger)
             ui.showMessage("Loaded '$name'.")
             LoadResult.LOADED

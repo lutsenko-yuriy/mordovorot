@@ -7,9 +7,12 @@ import board_model.BoardModel
 import buildGameSession
 import mordie.Mordie
 import mordie.MordieSearchFactory
+import storage.PreferenceRepository
 import storage.SaveRepository
 import view.View
 import view.tui.Terminal
+import viewmodel.SessionTileLabels
+import viewmodel.TileLabelsPreference
 
 /** The one place tests build a production-wired [GameSession] (GH-78), with fake defaults. */
 fun testGameSession(
@@ -20,7 +23,11 @@ fun testGameSession(
     sizeChosenAtLaunch: Boolean = false,
     terminalFactory: () -> Terminal = { FakeTerminal() },
     mordie: Mordie = Mordie(MordieSearchFactory.NONE),
-): GameSession = buildGameSession(initialMode, board, saves, analytics, sizeChosenAtLaunch, mordie, terminalFactory)
+    preferences: PreferenceRepository = FakePreferenceRepository(),
+): GameSession = buildGameSession(
+    initialMode, board, saves, analytics, sizeChosenAtLaunch, mordie, SessionTileLabels(TileLabelsPreference(preferences)),
+    terminalFactory,
+)
 
 /** A [GameSession] over a scripted [buildView], for tests of the session loop itself. */
 fun testGameSession(

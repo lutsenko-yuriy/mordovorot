@@ -226,6 +226,17 @@ class FileSaveRepositoryTest {
     }
 
     @Test
+    fun `save then load round-trips the tile labels on line 8, GH-139`() {
+        val dir = createTempDirectory("mordovorot-saves")
+        val repo = FileSaveRepository(dir)
+
+        repo.save("l", intArrayOf(3, 0, 2, 1), 2, moveCount = 7, labels = "pairs")
+
+        assertEquals(SavedBoard(2, intArrayOf(3, 0, 2, 1), 7, labels = "pairs"), repo.load("l"))
+        assertEquals("2\n3 0 2 1\n7\n\n\n\n\npairs\n", dir.resolve("l.save").readText())
+    }
+
+    @Test
     fun `Mordie data goes on lines 4-5 after an unchanged first three lines`() {
         val dir = createTempDirectory("mordovorot-saves")
         val repo = FileSaveRepository(dir)

@@ -1,16 +1,18 @@
 package storage
 
 /** The save text format, shared by the terminal's files and the browser's storage (GH-110):
- *  square side, then the values, then the move count, then optional Mordie data, one per line. */
+ *  square side, then the values, then the move count, then optional Mordie data, then optional
+ *  tile labels on line 8 (GH-139), one per line. */
 object SaveFileCodec {
 
     private const val FOUND = "found"
     private const val SEARCHING = "searching"
     private const val SOLUTION_SCREEN = "solution"
+    private const val MORDIE_LINES = 4
     private val MOVE_TOKEN = Regex("([rc])(\\d+):(\\d+)")
 
-    /** Throws [IllegalArgumentException] for a state, move count or Mordie data [SaveRepository.save] rejects. */
-    fun encode(squareSide: Int, state: IntArray, moveCount: Int, mordie: SavedMordie?): String {
+    /** Throws [IllegalArgumentException] for a state, move count, Mordie data or labels [SaveRepository.save] rejects. */
+    fun encode(squareSide: Int, state: IntArray, moveCount: Int, mordie: SavedMordie?, labels: String? = null): String {
         require(squareSide > 0) { "Square side must be positive" }
         require(state.size == squareSide * squareSide) { "Expected ${squareSide * squareSide} values, got ${state.size}" }
         require(isArrangement(state, state.size)) { "State must contain each of ${state.size} tile values exactly once" }
@@ -21,15 +23,23 @@ object SaveFileCodec {
             mordie.solution?.let { solution -> solutionProblem(solution, mordie, squareSide)?.let { throw IllegalArgumentException(it) } }
             require(!mordie.solutionScreen || !mordie.solution.isNullOrEmpty()) { "A solution-screen save needs Mordie's solution" }
         }
-        return "$squareSide\n${state.joinToString(" ")}\n$moveCount\n${mordie?.let(::mordieLines).orEmpty()}"
+        require(labels == null || (labels.isNotEmpty() && labels.none { it.isWhitespace() })) { "Labels must be one word" }
+        val optional = mordie?.let(::mordieLines).orEmpty()
+        // Lines 4-7 are blank where they don't apply, so the labels always land on line 8.
+        val tail = if (labels == null) optional else optional + List(MORDIE_LINES - optional.size) { "" } + labels
+        return (listOf("$squareSide", state.joinToString(" "), "$moveCount") + tail).joinToString("") { "$it\n" }
     }
 
     /** Lines 4-7; an empty solution is written as none, so line 6 is never blank before line 7. */
-    private fun mordieLines(mordie: SavedMordie): String {
+    private fun mordieLines(mordie: SavedMordie): List<String> {
         val solution = mordie.solution?.takeIf { it.isNotEmpty() }
             ?.joinToString(" ") { "${if (it.isRow) 'r' else 'c'}${it.index}:${it.amount}" }
-        return "${mordie.original.joinToString(" ")}\n${mordie.moves} ${if (mordie.found) FOUND else SEARCHING}\n" +
-            solution?.let { "$it\n" }.orEmpty() + (if (mordie.solutionScreen) "$SOLUTION_SCREEN\n" else "")
+        return listOfNotNull(
+            mordie.original.joinToString(" "),
+            "${mordie.moves} ${if (mordie.found) FOUND else SEARCHING}",
+            solution,
+            SOLUTION_SCREEN.takeIf { mordie.solutionScreen },
+        )
     }
 
     /** Throws [SaveFileFormatException], naming the save [name], when [text] isn't a valid save. */
@@ -52,7 +62,9 @@ object SaveFileCodec {
             ?: throw SaveFileFormatException(name, "move count is not an integer")
         if (moveCount < 0) throw SaveFileFormatException(name, "move count must not be negative")
 
-        return SavedBoard(squareSide, state, moveCount, parseMordie(name, lines, squareSide))
+        // Line 8 (GH-139): any one word, so a later build's scheme loads with the preference instead.
+        val labels = lines.getOrNull(7)?.trim()?.split(Regex("\\s+"))?.first()?.takeIf { it.isNotEmpty() }
+        return SavedBoard(squareSide, state, moveCount, parseMordie(name, lines, squareSide), labels)
     }
 
     /** Lines 4-5 (GH-83): the original arrangement, then `<N> found` or `<N> searching`.

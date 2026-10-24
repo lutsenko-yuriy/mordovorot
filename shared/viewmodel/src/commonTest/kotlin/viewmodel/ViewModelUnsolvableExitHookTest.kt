@@ -8,6 +8,7 @@ import kotlin.test.assertTrue
 import mordie.Mordie
 import storage.SavedBoard
 import testing.FakeMordieSearchFactory
+import testing.FakePreferenceRepository
 import testing.FakeSaveRepository
 import testing.FakeViewModelUi
 import testing.RecordingAnalyticsService
@@ -37,6 +38,7 @@ class ViewModelUnsolvableExitHookTest {
         gameShiftSources = GameShiftSources(),
         unsavedProgress = UnsavedProgress(),
         solutionScreen = SolutionScreen(),
+        tileLabels = SessionTileLabels(TileLabelsPreference(FakePreferenceRepository())),
         ui = UiRequestChannel(),
         unsolvableExit = unsolvableExit,
     )

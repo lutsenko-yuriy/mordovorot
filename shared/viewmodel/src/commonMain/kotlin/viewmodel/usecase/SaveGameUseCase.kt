@@ -5,6 +5,7 @@ import board_model.BoardModel
 import storage.SaveRepository
 import viewmodel.CurrentSaveName
 import viewmodel.MordieHooks
+import viewmodel.SessionTileLabels
 import viewmodel.UiRequestChannel
 import viewmodel.UnsavedProgress
 import viewmodel.catchingNonCancellation
@@ -18,6 +19,7 @@ internal class SaveGameUseCase(
     private val ui: UiRequestChannel,
     private val currentSaveName: CurrentSaveName,
     private val unsavedProgress: UnsavedProgress,
+    private val tileLabels: SessionTileLabels,
 ) {
 
     /** Returns whether the save succeeded; a failure is tracked and shown, never thrown. */
@@ -41,7 +43,8 @@ internal class SaveGameUseCase(
             },
         ) {
             val existed = saves.exists(name)
-            saves.save(name, board.boardArray, board.squareSide, board.moveCount, mordieHooks.snapshot())
+            // Numbers included: a save's labels outrank the preference (GH-139).
+            saves.save(name, board.boardArray, board.squareSide, board.moveCount, mordieHooks.snapshot(), tileLabels.current.wireName)
             currentSaveName.name = name
             unsavedProgress.unsaved = false
             analytics.track(

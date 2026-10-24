@@ -97,7 +97,7 @@ class ViewModelSaveLoadTest {
 
         assertEquals(listOf(8, 7, 6, 5, 4, 3, 2, 1, 0), board.boardArray.toList())
         assertEquals(
-            listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "success"))),
+            listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "success", "labels_differ_from_preference" to false))),
             analytics.events,
         )
     }
@@ -148,7 +148,7 @@ class ViewModelSaveLoadTest {
         assertEquals(listOf(3, 2, 1, 0, 7, 6, 5, 4, 8), board.boardArray.toList())
         assertTrue(ui.shownMessages.any { it.contains("Loaded 'small'") })
         assertEquals(
-            listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "success"))),
+            listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "success", "labels_differ_from_preference" to false))),
             analytics.events,
         )
     }

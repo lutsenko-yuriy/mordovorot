@@ -92,6 +92,11 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   one, and whether it was made on the solution screen (Feature 10). Loading a solution-screen
   save, by Load or the startup restore prompt, opens the solution screen again at the start of
   the replay.
+- **Tile labels in saves (GH-139):** a save also stores the tile labels it was shown with, and
+  loading it (Load, the startup restore, Repair & load) shows them again, ahead of the player's
+  preference, until the next new game. A save from before GH-139, or one naming labels this
+  build doesn't know, loads with the preference. Older builds still load a new save and ignore
+  its labels.
 
 ### Feature 5 — Exit (GH-12)
 - The toolbar Exit (Escape in keyboard mode) ends the current session on demand after asking

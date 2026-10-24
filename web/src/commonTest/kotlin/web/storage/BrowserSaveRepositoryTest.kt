@@ -41,6 +41,13 @@ class BrowserSaveRepositoryTest {
     }
 
     @Test
+    fun `load returns the tile labels, GH-139`() {
+        repo.save("l", intArrayOf(3, 0, 2, 1), 2, moveCount = 7, labels = "letter_pairs")
+
+        assertEquals(SavedBoard(2, intArrayOf(3, 0, 2, 1), 7, labels = "letter_pairs"), repo.load("l"))
+    }
+
+    @Test
     fun `load of a missing save is null`() {
         assertNull(repo.load("nope"))
     }
