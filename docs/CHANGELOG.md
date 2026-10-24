@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.20.1] — 2026-10-24 (PR #144 merged)
+
+### Fixed
+- [app] (PR #144) GH-137: the Kotlin/JS test runner's mocha now gets patched serialize-javascript 7.1.4 and diff 8.0.4 through yarn resolutions in the root build script (Dependabot alerts #1–#3); the withdrawn braces advisory (#4) is dismissed. Build tooling only; the game and web.js are unchanged.
+
 ## [0.20.0] — 2026-10-24 (PR #143 merged)
 
 ### Added
