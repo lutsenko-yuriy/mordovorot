@@ -2,20 +2,21 @@ package web
 
 import kotlinx.browser.document
 import org.w3c.dom.Element
+import org.w3c.dom.Node
 
-/** The footer line (GH-111) as `<footer>`: its links open in a new tab, keeping the game in this one. */
+/** The footer line (GH-111) as `<footer>`: its links open in a new tab, keeping the game in this one.
+ *  Wide-only parts go in `.wide-only`, which narrow tall windows hide (GH-147). */
 internal fun footerElement(parts: List<FooterPart>): Element = element("footer", "footer").apply {
     for (part in parts) {
-        when (part) {
-            is FooterPart.Text -> append(document.createTextNode(part.text))
-            is FooterPart.Link -> append(
-                element("a").apply {
-                    textContent = part.text
-                    setAttribute("href", part.href)
-                    setAttribute("target", "_blank")
-                    setAttribute("rel", "noopener noreferrer")
-                },
-            )
+        val node: Node = when (part) {
+            is FooterPart.Text -> document.createTextNode(part.text)
+            is FooterPart.Link -> element("a").apply {
+                textContent = part.text
+                setAttribute("href", part.href)
+                setAttribute("target", "_blank")
+                setAttribute("rel", "noopener noreferrer")
+            }
         }
+        append(if (part.wideOnly) element("span", "wide-only").apply { append(node) } else node)
     }
 }
