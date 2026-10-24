@@ -123,7 +123,7 @@ class PhoneFitStylesTest {
             rule(wide, ".app"),
         )
         assertTrue("grid-template-columns: auto var(--steps) var(--panel);" in rule(solutionWide, ".app.solution"), solutionWide)
-        for (css in listOf(styles, solution)) {
+        for (css in listOf(layout, solution)) {
             assertTrue(!Regex("""--beside: \d+px""").containsMatchIn(css), "no bare px --beside")
         }
     }
