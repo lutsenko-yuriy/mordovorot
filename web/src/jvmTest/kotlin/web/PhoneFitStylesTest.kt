@@ -7,11 +7,13 @@ import kotlin.test.assertTrue
 /** GH-147: when tall, the whole game fits the window and nothing scrolls; the tiles shrink instead. */
 class PhoneFitStylesTest {
     private val styles = File("src/jsMain/resources/styles.css").readText()
+    private val board = File("src/jsMain/resources/board.css").readText()
+    private val solution = File("src/jsMain/resources/solution.css").readText()
 
-    /** The top-level block that opens with [opening], up to its closing brace. */
-    private fun block(opening: String): String =
+    /** The top-level block in [css] that opens with [opening], up to its closing brace. */
+    private fun block(opening: String, css: String = styles): String =
         Regex("""(?m)^${Regex.escape(opening)} \{(.*?)\n}""", RegexOption.DOT_MATCHES_ALL)
-            .find(styles)?.groupValues?.get(1).orEmpty()
+            .find(css)?.groupValues?.get(1).orEmpty()
 
     /** Every declaration block for exactly [selector] inside [css], joined. */
     private fun rule(css: String, selector: String): String =
@@ -19,6 +21,7 @@ class PhoneFitStylesTest {
 
     /** The tall layout's fit, for browsers with size container queries; others keep the estimate. */
     private val fit = block("@supports (container-type: size)")
+    private val solutionFit = block("@supports (container-type: size)", solution)
     private val narrow = block("@media (orientation: portrait) and (max-width: 480px)")
 
     @Test
@@ -38,7 +41,16 @@ class PhoneFitStylesTest {
         val app = rule(fit, ".app")
 
         assertTrue("minmax(0, 1fr)" in app && "min-height: 0;" in app, app)
-        assertTrue("minmax(0, 1fr)" in rule(fit, ".app.solution"), rule(fit, ".app.solution"))
+        assertTrue("minmax(0, 1fr)" in rule(solutionFit, ".app.solution"), solutionFit)
+    }
+
+    /** GH-153: it overrides the base .steps at the same specificity, so it must come after it, in solution.css. */
+    @Test
+    fun `fewer steps show on short phones`() {
+        val steps = solution.substringBefore("@supports")
+
+        assertTrue("max-height: calc(6 * 1.9em);" in rule(steps, ".steps"), steps)
+        assertTrue("max-height: clamp(" in rule(solutionFit, ".steps"), solutionFit)
     }
 
     @Test
@@ -54,7 +66,7 @@ class PhoneFitStylesTest {
     @Test
     fun `the board sits in the stage everywhere`() {
         assertTrue("grid-area: board;" in rule(styles, ".stage"), rule(styles, ".stage"))
-        assertTrue("grid-area" !in rule(styles, ".board"), rule(styles, ".board"))
+        assertTrue("grid-area" !in rule(board, ".board"), rule(board, ".board"))
     }
 
     @Test

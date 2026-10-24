@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.20.5] — 2026-10-24 (PR #155 merged)
+
+### Changed
+- [app] (PR #155) GH-153: the web client's styles.css is split into styles.css, board.css, dialogs.css and solution.css (linked in that order), every rule moved verbatim; the game looks and behaves the same.
+
 ## [0.20.4] — 2026-10-24 (PR #154 merged)
 
 ### Fixed

@@ -1,5 +1,6 @@
 /* GH-110: the browser game's look. DomRenderer sets --side on #app and each tile's --x/--y (where it
-   sits) and --row/--col (where it belongs, which picks its colour). */
+   sits) and --row/--col (where it belongs, which picks its colour). The board, the dialogs and the
+   solution screen have sheets of their own, linked after this one (GH-153). */
 
 :root {
     --page: #f5f1ea;
@@ -102,12 +103,6 @@ body {
     -webkit-touch-callout: none;
 }
 
-/* GH-126: the solution screen's steps go under the board, and its replay buttons under them. */
-.app.solution {
-    --rest: 440px;
-    grid-template-areas: "moves" "mordie" "board" "steps" "replay" "toolbar" "status";
-}
-
 /* Wider than tall, as layoutOf counts it: the board on the left, the rest on the right. */
 @media (orientation: landscape) {
     .app {
@@ -119,22 +114,6 @@ body {
         grid-template-columns: auto 21rem;
         justify-content: center;
         column-gap: 40px;
-    }
-
-    /* The steps between the board and the panel. */
-    .app.solution {
-        --beside: 624px;
-        grid-template-areas: "board steps panel";
-        grid-template-columns: auto 11rem 21rem;
-    }
-
-    .app.solution .steps {
-        align-self: start;
-        justify-self: stretch;
-        width: auto;
-        margin-top: var(--lead);
-        /* As tall as the tiles, scrolling past that. */
-        max-height: calc(var(--side) * var(--pitch));
     }
 
     .panel {
@@ -230,49 +209,6 @@ body {
     grid-area: giveup;
 }
 
-/* ---- The solution screen (GH-126) ---- */
-
-.steps {
-    grid-area: steps;
-    /* The steps' offsetTop counts from here, for DomRenderer's scrolling. */
-    position: relative;
-    width: 14rem;
-    max-width: 100%;
-    max-height: calc(6 * 1.9em);
-    overflow-y: auto;
-    padding: 4px;
-    border-radius: 10px;
-    background: var(--frame);
-}
-
-.step {
-    padding: 0.25em 0.7em;
-    border-radius: 6px;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-}
-
-.step.current {
-    background: var(--button);
-    color: var(--button-ink);
-    font-weight: 600;
-}
-
-.replay {
-    grid-area: replay;
-    display: flex;
-    gap: 10px;
-}
-
-/* No shifts on the solution screen: the arrows go, keeping their room so the board stays put. */
-.app.solution .arrow {
-    visibility: hidden;
-}
-
-.app.solution .tile {
-    cursor: default;
-}
-
 .status {
     grid-area: status;
     min-height: 1.4em;
@@ -344,7 +280,7 @@ button:focus-visible {
     outline-offset: 2px;
 }
 
-/* ---- Board ---- */
+/* ---- The board's stage and the tall fit (the board itself is in board.css) ---- */
 
 .stage {
     grid-area: board;
@@ -372,10 +308,6 @@ button:focus-visible {
             padding: 8px 12px;
         }
 
-        .app.solution {
-            grid-template-rows: auto auto minmax(0, 1fr) auto auto auto auto;
-        }
-
         .stage {
             container-type: size;
             justify-self: stretch;
@@ -387,268 +319,10 @@ button:focus-visible {
             --arrow: calc(var(--tile) * 0.7);
         }
 
-        /* Fewer steps in sight on short phones, rather than the controls pushed off-screen. */
-        .steps {
-            max-height: clamp(calc(3 * 1.9em), calc(var(--vh) * 0.2), calc(6 * 1.9em));
-        }
-
         .footer {
             min-height: 0;
         }
     }
-}
-
-.board {
-    display: grid;
-    grid-template-columns: var(--arrow) auto var(--arrow);
-    grid-template-rows: var(--arrow) auto var(--arrow);
-    gap: calc(var(--gap) * 1.5);
-}
-
-.arrows {
-    display: flex;
-    gap: var(--gap);
-}
-
-.arrows.row {
-    padding: 0 calc(var(--gap) / 2);
-}
-
-.arrows.column {
-    flex-direction: column;
-    padding: calc(var(--gap) / 2) 0;
-}
-
-.arrow {
-    flex: 0 0 var(--tile);
-    padding: 0;
-    background: transparent;
-    color: var(--muted);
-    font-size: calc(var(--arrow) * 0.5);
-    line-height: 1;
-}
-
-.arrow:hover:not(:disabled) {
-    background: var(--frame);
-    color: var(--ink);
-}
-
-.arrow:disabled {
-    opacity: 0.35;
-}
-
-.board.solved .arrow {
-    opacity: 0;
-}
-
-/* Only on the shift that solves it: later frames are drawn already faded. */
-.board.just-solved .arrow {
-    animation: fade 0.8s ease-out;
-}
-
-@keyframes fade {
-    from { opacity: 1; }
-    to { opacity: 0; }
-}
-
-.tiles {
-    position: relative;
-    overflow: hidden;
-    width: calc(var(--side) * var(--pitch));
-    height: calc(var(--side) * var(--pitch));
-    border-radius: calc(var(--tile) * 0.2);
-    background: var(--frame);
-}
-
-.tile {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: var(--tile);
-    height: var(--tile);
-    transform: translate(calc(var(--x) * var(--pitch) + var(--gap) / 2), calc(var(--y) * var(--pitch) + var(--gap) / 2));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: calc(var(--tile) * 0.16);
-    /* Each row its own hue, darker along the row, so where a tile belongs shows at a glance. */
-    background: hsl(calc(var(--row) * 360deg / var(--side) + 8deg) 68% calc(var(--tile-light) - var(--col) * 22% / (var(--side) - 1)));
-    color: var(--tile-ink);
-    font-size: calc(var(--tile) * 0.4);
-    font-weight: 700;
-    box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12);
-    user-select: none;
-    -webkit-user-select: none;
-    touch-action: none;
-    cursor: grab;
-}
-
-.board.solved .tile {
-    cursor: default;
-}
-
-.board.just-solved .tiles {
-    animation: glow 0.9s ease-out;
-}
-
-@keyframes glow {
-    from { box-shadow: 0 0 0 0 hsl(45 90% 60% / 0.9); }
-    to { box-shadow: 0 0 0 18px hsl(45 90% 60% / 0); }
-}
-
-/* Touch screens drag instead, so the arrows go and the tiles take their room (GH-111). */
-@media (pointer: coarse) {
-    .app {
-        --band: 0.3;
-        --lead: 0px;
-    }
-
-    .board {
-        display: block;
-    }
-
-    .board > span {
-        display: none;
-    }
-
-    /* Out of sight, but still there for screen readers, which take over one-finger drags. */
-    .board > .arrows {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        clip-path: inset(50%);
-    }
-}
-
-.app.dragging, .app.dragging * {
-    cursor: grabbing;
-}
-
-/* ---- Dialogs ---- */
-
-.overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    background: var(--scrim);
-    animation: appear 0.15s ease-out;
-}
-
-.overlay.shown {
-    animation: none;
-}
-
-.dialog {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    width: min(24rem, 100%);
-    max-height: calc(var(--vh) - 32px);
-    overflow: auto;
-    padding: 22px;
-    border-radius: 14px;
-    background: var(--card);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-}
-
-.dialog .title {
-    font-size: 1.25rem;
-    font-weight: 700;
-}
-
-.dialog .message {
-    color: var(--muted);
-}
-
-.dialog .warning {
-    min-height: 1.4em;
-    color: var(--warning);
-    font-size: 0.9rem;
-}
-
-.dialog input {
-    font: inherit;
-    padding: 0.5em 0.7em;
-    border: 2px solid var(--frame);
-    border-radius: 8px;
-    background: var(--page);
-    color: var(--ink);
-    /* The game's no-select would otherwise stop iOS from editing the save name (GH-145). */
-    user-select: text;
-    -webkit-user-select: text;
-}
-
-.dialog input:focus {
-    outline: none;
-    border-color: var(--button);
-}
-
-.dialog .choices {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.dialog .choices.list {
-    flex-direction: column;
-}
-
-.dialog .choices.list button {
-    text-align: left;
-}
-
-/* The Tile labels picker (GH-139): the mark, the name, then the sample row in a fixed-width face. */
-.dialog .choices.labels button {
-    display: flex;
-    align-items: baseline;
-    gap: 0.6em;
-    background: transparent;
-    color: var(--ink);
-    box-shadow: inset 0 0 0 2px var(--frame);
-}
-
-.dialog .choices.labels button:hover {
-    background: var(--frame);
-}
-
-.dialog .choices.labels button.checked {
-    box-shadow: inset 0 0 0 2px var(--button);
-}
-
-.dialog .choices.labels .name {
-    flex: 1;
-}
-
-.dialog .choices.labels .sample {
-    font-family: ui-monospace, Menlo, Consolas, monospace;
-    color: var(--muted);
-    white-space: pre;
-}
-
-.dialog .actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-}
-
-.dialog .actions .secondary {
-    background: transparent;
-    color: var(--ink);
-    box-shadow: inset 0 0 0 2px var(--frame);
-}
-
-.dialog .actions .secondary:hover {
-    background: var(--frame);
-}
-
-@keyframes appear {
-    from { opacity: 0; }
-    to { opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {

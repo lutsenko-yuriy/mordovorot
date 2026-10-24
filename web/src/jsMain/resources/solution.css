@@ -1,0 +1,80 @@
+/* GH-153: the solution screen (GH-126). */
+
+/* GH-126: the solution screen's steps go under the board, and its replay buttons under them. */
+.app.solution {
+    --rest: 440px;
+    grid-template-areas: "moves" "mordie" "board" "steps" "replay" "toolbar" "status";
+}
+
+@media (orientation: landscape) {
+    /* The steps between the board and the panel. */
+    .app.solution {
+        --beside: 624px;
+        grid-template-areas: "board steps panel";
+        grid-template-columns: auto 11rem 21rem;
+    }
+
+    .app.solution .steps {
+        align-self: start;
+        justify-self: stretch;
+        width: auto;
+        margin-top: var(--lead);
+        /* As tall as the tiles, scrolling past that. */
+        max-height: calc(var(--side) * var(--pitch));
+    }
+}
+
+.steps {
+    grid-area: steps;
+    /* The steps' offsetTop counts from here, for DomRenderer's scrolling. */
+    position: relative;
+    width: 14rem;
+    max-width: 100%;
+    max-height: calc(6 * 1.9em);
+    overflow-y: auto;
+    padding: 4px;
+    border-radius: 10px;
+    background: var(--frame);
+}
+
+.step {
+    padding: 0.25em 0.7em;
+    border-radius: 6px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.step.current {
+    background: var(--button);
+    color: var(--button-ink);
+    font-weight: 600;
+}
+
+.replay {
+    grid-area: replay;
+    display: flex;
+    gap: 10px;
+}
+
+/* No shifts on the solution screen: the arrows go, keeping their room so the board stays put. */
+.app.solution .arrow {
+    visibility: hidden;
+}
+
+.app.solution .tile {
+    cursor: default;
+}
+
+/* The tall layout's fit (GH-147), as in styles.css. */
+@supports (container-type: size) {
+    @media (orientation: portrait) {
+        .app.solution {
+            grid-template-rows: auto auto minmax(0, 1fr) auto auto auto auto;
+        }
+
+        /* Fewer steps in sight on short phones, rather than the controls pushed off-screen. */
+        .steps {
+            max-height: clamp(calc(3 * 1.9em), calc(var(--vh) * 0.2), calc(6 * 1.9em));
+        }
+    }
+}
