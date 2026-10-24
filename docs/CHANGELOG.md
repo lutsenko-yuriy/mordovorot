@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.20.4] — 2026-10-24 (PR #154 merged)
+
+### Fixed
+- [app] (PR #154) GH-152: the Kotlin/JS build tools' lockfile now locks patched body-parser 2.4.0 (webpack dev server) and fast-uri 3.1.9 (webpack's ajv) (Dependabot alerts #5–#9). Build tooling only; the game and web.js are unchanged.
+
 ## [0.20.3] — 2026-10-24 (PR #151 merged)
 
 ### Fixed
