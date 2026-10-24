@@ -12,6 +12,7 @@ import viewmodel.GiveUpButton
 import viewmodel.PointerShift
 import viewmodel.SaveInfo
 import viewmodel.SolutionStep
+import viewmodel.TileLabels
 import viewmodel.UnsolvableSaveChoice
 import viewmodel.display
 import viewmodel.displayWithSize
@@ -134,6 +135,28 @@ class WebGame internal constructor(
         null
     }
 
+    /** `[ Labels ]` (GH-139): the picker, live on play, after a win and on the solution screen. */
+    fun onLabels() = runFlow {
+        val current = viewModel.tileLabels()
+        viewModel.tileLabelsDialogOpened("toolbar")
+        val chosen = ask<TileLabels?>(labelsDialog(current))
+        if (chosen == null) analytics.track("dialog_cancelled", mapOf("dialog" to "labels"))
+        else viewModel.changeTileLabels(chosen)
+    }
+
+    /** A Labels row pressed: it becomes the marked one, and the board previews it. */
+    fun onLabelsSelected(labels: TileLabels) {
+        val open = dialog?.takeIf { it.shown is WebDialog.Labels } ?: return
+        open.shown = labelsDialog(labels)
+        render()
+    }
+
+    /** The Labels dialog's answer: OK with the marked scheme, or Cancel. */
+    fun onLabelsAnswered(ok: Boolean) {
+        val shown = dialog?.shown as? WebDialog.Labels ?: return
+        answer<WebDialog.Labels, TileLabels?>(if (ok) shown.selected else null)
+    }
+
     fun onNew() = runFlow {
         chooseSize("toolbar")?.let { viewModel.newGame(it, trigger = "toolbar") }
     }
@@ -211,6 +234,11 @@ class WebGame internal constructor(
         if (name.isNotEmpty() && viewModel.saveExists(name)) "'$name' already exists - it will be overwritten." else null,
     )
 
+    private fun labelsDialog(selected: TileLabels): WebDialog.Labels {
+        val side = viewModel.squareSide()
+        return WebDialog.Labels(TileLabels.entries.map { LabelOption(it, it.title, it.sampleRow(side)) }, selected)
+    }
+
     private suspend fun chooseSave(saves: List<SaveInfo>, restore: Boolean): String? {
         val openedFrom = if (restore) "startup" else "toolbar"
         analytics.track("screen_load_dialog", mapOf("opened_from" to openedFrom, "save_file_count" to saves.size))
@@ -280,6 +308,8 @@ class WebGame internal constructor(
                 giveUp = viewModel.giveUpButton(),
                 solution = viewModel.solution(),
                 slide = slide,
+                // The Labels dialog's marked scheme, previewed until OK keeps it or Cancel drops it.
+                labels = (dialog?.shown as? WebDialog.Labels)?.selected ?: viewModel.tileLabels(),
             ),
         )
     }
