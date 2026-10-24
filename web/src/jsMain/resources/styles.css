@@ -15,7 +15,8 @@
     --mordie: #c2562a;
     --tile-ink: #2e2822;
     --tile-light: 76%;
-    /* The footer's height, left out of the board's room (GH-111): up to three lines when tall. */
+    /* The footer's height, left out of the board's room (GH-111): up to three lines when tall.
+       Tall, only where size queries are missing (GH-147). */
     --footer: 76px;
     color-scheme: light;
 }
@@ -78,7 +79,8 @@ body {
 
 /* Sized so the board and its arrows fit the window beside (wide) or under (tall) the rest. */
 .app {
-    /* The height left for the board: the rest of the column, Give Up's row included. */
+    /* The height left for the board: the rest of the column, Give Up's row included. Tall, only
+       where size queries are missing; `.stage` measures it instead (GH-147). */
     --rest: 330px;
     /* The arrows' room around the tiles, in tiles, and the gap above the first row of tiles. */
     --band: 2;
@@ -213,6 +215,14 @@ body {
 
     .toolbar button {
         padding: 0.55em 0.8em;
+    }
+}
+
+/* Even the tighter row doesn't fit (a Fold's cover screen, a zoomed page): two rows beat a hidden button. */
+@media (max-width: 300px) {
+    .toolbar {
+        flex-wrap: wrap;
+        justify-content: center;
     }
 }
 

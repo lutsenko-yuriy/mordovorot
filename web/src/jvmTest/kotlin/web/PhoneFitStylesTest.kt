@@ -68,6 +68,13 @@ class PhoneFitStylesTest {
     }
 
     @Test
+    fun `under 300px the toolbar wraps rather than run past the window's edge`() {
+        val tiny = block("@media (max-width: 300px)")
+
+        assertTrue("flex-wrap: wrap;" in rule(tiny, ".toolbar"), tiny)
+    }
+
+    @Test
     fun `narrow tall windows show the footer's short line`() {
         assertTrue("display: none;" in rule(narrow, ".footer .wide-only"), narrow)
         assertTrue("white-space: nowrap;" in rule(narrow, ".footer"), narrow)
