@@ -188,12 +188,16 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/jsMain/kotlin/web/DomDialogs.kt  # The modal dialogs; DomElements.kt: element/text/button helpers
 ├── src/jsMain/kotlin/web/DomSolution.kt # The step list, Prev/Next/Restart and the Give Up row (GH-126)
 ├── src/jsMain/kotlin/web/storage/LocalStorageStore.kt # KeyValueStore over window.localStorage
-├── src/jsMain/resources/index.html     # The page: `<title>Mordovorot</title>`, loads web.js
-├── src/jsMain/resources/styles.css     # The look: tile colours by home row/column, modal
-│                                       # dialogs, wide/tall by `orientation` (as layoutOf counts);
-│                                       # `.app.solution` for the solution screen's layouts (GH-126);
-│                                       # no arrows under `pointer: coarse` (GH-111); tall: the page
-│                                       # is the window's height, tiles fit `.stage` (GH-147)
+├── src/jsMain/resources/index.html     # The page: `<title>Mordovorot</title>`, links the four
+│                                       # sheets below in this order (the cascade relies on it), loads web.js
+├── src/jsMain/resources/styles.css     # The look: tokens, wide/tall by `orientation` (as layoutOf
+│                                       # counts), panel, toolbar, footer, buttons; tall: the page is
+│                                       # the window's height, tiles fit `.stage` (GH-147)
+├── src/jsMain/resources/board.css      # GH-153: tile colours by home row/column, arrows, solve
+│                                       # animations; no arrows under `pointer: coarse` (GH-111)
+├── src/jsMain/resources/dialogs.css    # GH-153: the modal dialogs, the Tile labels picker (GH-139)
+├── src/jsMain/resources/solution.css   # GH-153: `.app.solution` and the step list (GH-126); its
+│                                       # tall `.steps` overrides the base `.steps` by coming later
 ├── src/commonTest/kotlin/web/scenario/ # GH-110 end to end: WebGame over startWebGame's wiring
 │                                       # (WebHarness), recording each WebState (startup, play,
 │                                       # save/load, unsaved progress, drag, analytics; GH-126 give up;
@@ -205,10 +209,12 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/commonTest/kotlin/web/storage/  # BrowserSaveRepositoryTest, BrowserPreferenceRepositoryTest
 │                                       # over InMemoryKeyValueStore
 ├── src/jvmTest/kotlin/web/IndexPageTest.kt # Pins the title rule (the title appears only in the tab)
-│                                       # and relative asset URLs (GH-111: the public site's sub-path)
+│                                       # and relative asset URLs (GH-111: the public site's sub-path);
+│                                       # every sheet linked, in order (GH-153)
 ├── src/jvmTest/kotlin/web/BuildInfoTest.kt, CreditsTest.kt # GH-111: the stamped version is the
 │                                       # build's; the footer's credit matches the README's
-├── src/jvmTest/kotlin/web/PhoneFitStylesTest.kt # GH-147: pins styles.css's tall-layout fit rules
+├── src/jvmTest/kotlin/web/PhoneFitStylesTest.kt # GH-147: pins the tall-layout fit rules
+│                                       # (styles.css, solution.css)
 └── build/generated/buildInfo/          # BuildInfo.VERSION, written by :web:generateBuildInfo from
                                         # the root build.gradle.kts's version (GH-111)
 
