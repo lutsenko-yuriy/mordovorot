@@ -310,6 +310,9 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   moving waits for it, then the latest line follows. `Mordie:` is bold and coloured.
 - **Look:** rounded coloured tiles (each row its own hue, darker along the row, so a tile's home
   shows at a glance), real buttons and modal dialogs, in light or dark to match the system.
+- **Reduced motion (GH-162):** when the system asks for reduced motion, nothing animates: shifts
+  and Mordie's lines appear at once, and dialogs, buttons and the win show without fading or
+  glowing. A change of the setting applies with the tab open.
 - **Layout:**
   - **Wider than tall:** the board with its arrows on the left; on the right, top to bottom,
     `Moves: N`, Mordie's text, the toolbar and the status line.
