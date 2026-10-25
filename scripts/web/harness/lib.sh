@@ -10,7 +10,7 @@ make_work() {
   server=""
   trap stop_work EXIT
   mkdir -p "$work/site"
-  cp "$here/harness.html" "$work/site/"
+  cp "$here/harness.html" "$here/keys.js" "$work/site/"
   results="$work/results.txt"
   : >"$results"
 }

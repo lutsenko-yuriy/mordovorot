@@ -1,0 +1,13 @@
+mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert -
+mouse play 1200x800 4x4 | click:Labels - -> focus label-numbers role radio name "●Numbers1 2 3 4" checked | dialog "Tile labels" | ring none | keyboard no | inert DIV.stage DIV.panel FOOTER.footer
+mouse play 1200x800 4x4 | S-Tab page -> focus BUTTON "OK" role button name "OK" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer
+mouse play 1200x800 4x4 | Tab page -> focus label-numbers role radio name "●Numbers1 2 3 4" checked | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer
+mouse play 1200x800 4x4 | Tab native -> focus label-numbers_from_0 role radio name "○Numbers from 00 1 2 3" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer
+mouse play 1200x800 4x4 | Escape page -> focus labels role button name "Labels" | dialog - | ring solid | keyboard yes | inert -
+mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert -
+mouse play 1200x800 4x4 | focus:new - -> focus new role button name "New" | dialog - | ring none | keyboard no | inert -
+mouse play 1200x800 4x4 | Enter native -> focus size-4 role button name "4x4" | dialog "New game size" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer
+mouse play 1200x800 4x4 | Escape page -> focus new role button name "New" | dialog - | ring solid | keyboard yes | inert -
+mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert -
+mouse play 1200x800 4x4 | click:Save - -> focus save-name role textbox name "Save name" | dialog "Save game" | ring none | keyboard no | inert DIV.stage DIV.panel FOOTER.footer
+mouse play 1200x800 4x4 | Escape page -> focus save role button name "Save" | dialog - | ring solid | keyboard yes | inert -

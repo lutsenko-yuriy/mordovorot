@@ -1,26 +1,30 @@
 <!doctype html>
 <!-- GH-147: loads the web game at phone sizes and reports whether it fits the window, or (report=styles,
-     GH-156) every element's computed styles. Served by serve.py and driven by measure.sh or styles_diff.sh;
-     query options are in README.md. Results go to POST /result. -->
+     GH-156) every element's computed styles, or (report=keys, GH-174, keys.js) focus and the like after each
+     of a list of keys. Served by serve.py and driven by measure.sh or styles_diff.sh; query options are in
+     README.md. Results go to POST /result. -->
 <meta charset="utf-8">
 <style>iframe { border: 0; display: block; margin: 0 0 10px; }</style>
 <pre id="out">pending</pre>
 <div id="frames"></div>
+<script src="keys.js"></script>
 <script>
 const q = new URLSearchParams(location.search);
 const variant = q.get("v") || "mouse";
+const report = q.get("report") || "fit"; // fit | styles | keys
+// The keys report is about focus, not fit, so one case is enough.
+const keys = report === "keys";
 const PRESETS = {
     portrait: "320x568,375x667,390x844,393x852,412x915,430x932",
     // GH-148: the phones turned, plus the 14 and Pro Max less Safari's notch insets.
     landscape: "568x320,667x375,844x390,852x393,915x412,932x430,750x390,814x430",
 };
-const sizeList = q.get("sizes") || "portrait";
+const sizeList = q.get("sizes") || (keys ? "1200x800" : "portrait");
 const sizes = (PRESETS[sizeList] || sizeList).split(",");
-const boards = (q.get("boards") || "3,4,5").split(",").map(Number);
+const boards = (q.get("boards") || (keys ? "4" : "3,4,5")).split(",").map(Number);
 const mode = q.get("mode") || "play"; // play | dialog | solution
 const shorter = Number(q.get("shorter") || 0);
 const toolbarRows = Number(q.get("rows") || 1);
-const report = q.get("report") || "fit"; // fit | styles
 // Mordie's longest line, so its spot is as tall as it gets.
 const LONG = "Found it! I had to make 12 moves to find the solution! Can you beat it?";
 const wait = ms => new Promise(r => setTimeout(r, ms));
@@ -118,7 +122,9 @@ async function run(size, board) {
     await wait(100);
     const solution = win.document.querySelector(".app.solution") ? " [solution]" : "";
     const label = `${mode} ${w}x${h} ${board}x${board}${solution}`;
-    if (report === "styles") {
+    if (keys) {
+        results.push(...await runKeys(win, (q.get("keys") || "").split(",").filter(Boolean), `${variant} ${label}`));
+    } else if (report === "styles") {
         // One case per post keeps each body to about a megabyte.
         const body = JSON.stringify({ v: variant, case: label, elements: await styles(win) });
         await fetch("/result", { method: "POST", body });
