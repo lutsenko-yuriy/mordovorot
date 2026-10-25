@@ -78,8 +78,10 @@
 }
 
 /* The Tile labels picker (GH-139): the mark, the name, then the sample row in a fixed-width face. */
+/* A sample too wide to share the row (6x6, GH-160) wraps under the name rather than squeezing it. */
 .dialog .choices.labels button {
     display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
     gap: 0.6em;
     background: transparent;
@@ -104,9 +106,11 @@
 
 .dialog .choices.labels .name {
     flex: 1;
+    white-space: nowrap;
 }
 
 .dialog .choices.labels .sample {
+    margin-left: auto;
     font-family: ui-monospace, Menlo, Consolas, monospace;
     color: var(--muted);
     white-space: pre;
