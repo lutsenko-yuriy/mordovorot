@@ -43,6 +43,10 @@ make_work
 trap 'stop_work; git -C "$project" worktree prune' EXIT
 
 baseline="${baseline%/}"
+if [[ -z "$baseline" ]]; then
+  echo "The baseline can't be /" >&2
+  exit 2
+fi
 if [[ -n "$ref" ]]; then
   # A built bundle is stamped with its commit, so a moved ref is rebuilt rather than silently reused.
   commit="$(git -C "$project" rev-parse --verify -q "$ref^{commit}")" || {
@@ -57,6 +61,7 @@ if [[ -n "$ref" ]]; then
     tree="$work/baseline-src"
     # Copied beside the target and moved in whole, so an interrupted copy is never taken for a bundle.
     partial="$baseline.partial"
+    mkdir -p "$(dirname "$baseline")" || exit 2
     rm -rf "$partial"
     git -C "$project" worktree add -q --detach "$tree" "$commit" \
       && (cd "$tree" && ./gradlew -q :web:jsBrowserDistribution >&2) \
