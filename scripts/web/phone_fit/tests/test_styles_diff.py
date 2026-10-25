@@ -73,32 +73,54 @@ class DiffCaseTest(unittest.TestCase):
     def test_property_order_does_not_count(self):
         old = [("DIV.app", {"color": "red", "margin-top": "0px"})]
         new = [("DIV.app", {"margin-top": "0px", "color": "red"})]
-        self.assertEqual(styles_diff.diff_case(old, new), [])
+        self.assertEqual(styles_diff.diff_case(old, new), ([], 0))
 
     def test_reports_a_changed_value_on_its_element(self):
         old = [("HTML", {"color": "red"}), ("DIV.dialog", {"color": "red", "opacity": "1"})]
         new = [("HTML", {"color": "red"}), ("DIV.dialog", {"color": "blue", "opacity": "1"})]
-        self.assertEqual(styles_diff.diff_case(old, new),
-                         [["  DIV.dialog", "    color: red -> blue"]])
+        self.assertEqual(styles_diff.diff_case(old, new), (["  DIV.dialog", "    color: red -> blue"], 1))
 
     def test_reports_a_property_only_one_side_has(self):
         old = [("DIV.app", {"color": "red"})]
         new = [("DIV.app", {"color": "red", "--gap": "4px"})]
-        self.assertEqual(styles_diff.diff_case(old, new),
-                         [["  DIV.app", "    --gap: (missing) -> 4px"]])
+        self.assertEqual(styles_diff.diff_case(old, new), (["  DIV.app", "    --gap: (missing) -> 4px"], 1))
 
     def test_reports_added_and_removed_elements(self):
         old = [("HTML", {}), ("SPAN.old", {}), ("DIV.app", {"color": "red"})]
         new = [("HTML", {}), ("DIV.wrap", {}), ("DIV.app", {"color": "red"}), ("P", {})]
         self.assertEqual(styles_diff.diff_case(old, new),
-                         [["  - SPAN.old (only on the baseline)"], ["  + DIV.wrap (only on the branch)"],
-                          ["  + P (only on the branch)"]])
+                         (["  - SPAN.old (only on the baseline)", "  + DIV.wrap (only on the branch)",
+                           "  + P (only on the branch)"], 3))
 
     def test_still_compares_the_elements_after_a_structural_change(self):
         old = [("HTML", {}), ("DIV.app", {"color": "red"})]
         new = [("HTML", {}), ("DIV.wrap", {}), ("DIV.app", {"color": "blue"})]
         self.assertEqual(styles_diff.diff_case(old, new),
-                         [["  + DIV.wrap (only on the branch)"], ["  DIV.app", "    color: red -> blue"]])
+                         (["  + DIV.wrap (only on the branch)", "  DIV.app", "    color: red -> blue"], 2))
+
+    def test_a_logical_size_repeating_its_physical_twin_is_left_out(self):
+        old = [("DIV.app", {"width": "216px", "inline-size": "216px", "block-size": "30px", "height": "30px"})]
+        new = [("DIV.app", {"width": "201px", "inline-size": "201px", "block-size": "40px", "height": "30px"})]
+        self.assertEqual(styles_diff.diff_case(old, new),
+                         (["  DIV.app", "    block-size: 30px -> 40px", "    width: 216px -> 201px"], 1))
+
+    def test_numbers_elements_that_share_a_selector(self):
+        old = [("DIV.board", {}), ("DIV.step", {"color": "red"}), ("DIV.step", {"color": "red"})]
+        new = [("DIV.board", {"color": "blue"}), ("DIV.step", {"color": "red"}), ("DIV.step", {"color": "blue"})]
+        self.assertEqual(styles_diff.diff_case(old, new),
+                         (["  DIV.board", "    color: (missing) -> blue", "  DIV.step[2]", "    color: red -> blue"],
+                          2))
+
+    def test_folds_a_run_of_the_same_change_into_one_entry(self):
+        old = [("DIV.step", {"width": "216px"})] * 3 + [("DIV.step", {"width": "9px"}), ("P", {})]
+        new = [("DIV.step", {"width": "201px"})] * 3 + [("DIV.step", {"width": "8px"}), ("P", {})]
+        self.assertEqual(styles_diff.diff_case(old, new),
+                         (["  DIV.step[1-3]", "    width: 216px -> 201px", "  DIV.step[4]", "    width: 9px -> 8px"], 4))
+
+    def test_folds_a_run_of_added_elements(self):
+        old = [("HTML", {})]
+        new = [("HTML", {}), ("DIV.step", {}), ("DIV.step", {})]
+        self.assertEqual(styles_diff.diff_case(old, new), (["  + DIV.step[1-2] (only on the branch)"], 2))
 
 
 class CompareTest(unittest.TestCase):

@@ -7,6 +7,7 @@ import difflib
 import json
 import re
 import sys
+from collections import Counter
 from pathlib import Path
 
 # The same scramble, and so the same solution screen, in every bundle (GH-153: tiles moved 5-11px between
@@ -15,6 +16,10 @@ SEED_SCRIPT = ("<script>/* GH-156 */(() => { let s = 12345; Math.random = () => 
                "(s = (Math.imul(s, 1103515245) + 12345) >>> 0) / 4294967296; })();</script>")
 # Each branch variant against its baseline, never across pointer types.
 PAIRS = (("mouse", "master"), ("touch", "master-touch"))
+# The game is laid out horizontally, so a logical size only repeats its physical twin.
+LOGICAL_SIZES = {"inline-size": "width", "block-size": "height", "min-inline-size": "min-width",
+                 "max-inline-size": "max-width", "min-block-size": "min-height", "max-block-size": "max-height"}
+SIDES = {"": "", "- ": " (only on the baseline)", "+ ": " (only on the branch)"}
 
 
 def inject_seed(html):
@@ -40,26 +45,54 @@ def load_cases(lines):
 
 
 def _changed(old, new):
-    return [f"    {p}: {old.get(p, '(missing)')} -> {new.get(p, '(missing)')}"
-            for p in sorted(old.keys() | new.keys()) if old.get(p) != new.get(p)]
+    changed = {p: (old.get(p, "(missing)"), new.get(p, "(missing)")) for p in old.keys() | new.keys()
+               if old.get(p) != new.get(p)}
+    for logical, physical in LOGICAL_SIZES.items():
+        if logical in changed and changed[logical] == changed.get(physical):
+            del changed[logical]
+    return [f"    {p}: {a} -> {b}" for p, (a, b) in sorted(changed.items())]
+
+
+def _numbered(elements):
+    """Each element's place among those sharing its selector, from 1, or None when its selector is unique."""
+    totals, seen, numbers = Counter(sel for sel, _ in elements), Counter(), []
+    for sel, _ in elements:
+        seen[sel] += 1
+        numbers.append(seen[sel] if totals[sel] > 1 else None)
+    return numbers
+
+
+def _fold(entries):
+    """Report lines, with a run of numbered elements that changed the same way as one entry: DIV.step[1-12]."""
+    lines, i = [], 0
+    while i < len(entries):
+        mark, sel, first, changed = entries[i]
+        last, i = first, i + 1
+        while (first is not None and i < len(entries) and entries[i][:2] == (mark, sel)
+               and entries[i][2] == last + 1 and entries[i][3] == changed):
+            last, i = entries[i][2], i + 1
+        place = "" if first is None else f"[{first}]" if first == last else f"[{first}-{last}]"
+        lines += [f"  {mark}{sel}{place}{SIDES[mark]}"] + changed
+    return lines
 
 
 def diff_case(old, new):
-    """One group of report lines per differing element. Elements are lined up by selector in document order,
-    so one added or removed element doesn't shift every element after it; properties compare as maps, since
+    """(report lines, number of differing elements). Elements are lined up by selector in document order, so
+    one added or removed element doesn't shift every element after it; properties compare as maps, since
     Chrome lists them in a different order when the sheets differ (GH-153)."""
-    groups = []
+    old_numbers, new_numbers = _numbered(old), _numbered(new)
+    entries = []  # (mark, selector, number, changed property lines)
     matcher = difflib.SequenceMatcher(None, [s for s, _ in old], [s for s, _ in new], autojunk=False)
     for tag, i1, i2, j1, j2 in matcher.get_opcodes():
         if tag == "equal":
-            for (sel, a), (_, b) in zip(old[i1:i2], new[j1:j2]):
-                changed = _changed(a, b)
+            for i, j in zip(range(i1, i2), range(j1, j2)):
+                changed = _changed(old[i][1], new[j][1])
                 if changed:
-                    groups.append([f"  {sel}"] + changed)
+                    entries.append(("", new[j][0], new_numbers[j], changed))
             continue
-        groups += [[f"  - {sel} (only on the baseline)"] for sel, _ in old[i1:i2]]
-        groups += [[f"  + {sel} (only on the branch)"] for sel, _ in new[j1:j2]]
-    return groups
+        entries += [("- ", old[i][0], old_numbers[i], []) for i in range(i1, i2)]
+        entries += [("+ ", new[j][0], new_numbers[j], []) for j in range(j1, j2)]
+    return _fold(entries), len(entries)
 
 
 def _plural(n, word):
@@ -80,12 +113,10 @@ def compare(cases):
                 count += 1
                 differing += 1
                 continue
-            groups = diff_case(old, new)
-            if groups:
-                lines.append(head)
-                for group in groups:
-                    lines += group
-                count += len(groups)
+            changes, n = diff_case(old, new)
+            if n:
+                lines += [head] + changes
+                count += n
                 differing += 1
     if count:
         lines.append(f"{_plural(count, 'difference')} in {differing} of {_plural(total, 'case')}")
