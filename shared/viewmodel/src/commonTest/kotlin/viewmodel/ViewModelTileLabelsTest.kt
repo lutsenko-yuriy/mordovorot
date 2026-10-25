@@ -263,4 +263,55 @@ class ViewModelTileLabelsTest {
 
         assertEquals("letters_unavailable", event("tile_labels_changed")["from_source"])
     }
+
+    private val lettersWarning = "Letters don't fit a 6x6 board (26 letters, 36 tiles) - pick other labels."
+
+    @Test
+    fun `a 6x6 save with Letters asks for labels before Loaded, and OK applies the pick`() = runTest {
+        saves.save("six", IntArray(36) { 35 - it }, 6, labels = "letters")
+        val viewModel = viewModel("pairs_from_0")
+        val ui = FakeViewModelUi(chooseFittingLabelsResponses = mutableListOf(TileLabels.PAIRS))
+
+        viewModel.load("six", ui)
+
+        assertEquals(listOf(lettersWarning to emptyList<String>()), ui.chooseFittingLabelsCalls)
+        assertEquals(listOf("Loaded 'six'."), ui.shownMessages)
+        assertEquals(TileLabels.PAIRS, viewModel.tileLabels())
+        assertEquals("pairs", store.values["tile_labels"])
+        assertEquals(
+            listOf(mapOf("opened_from" to "letters_save", "screen" to "play", "current_labels" to "numbers")),
+            events("screen_labels_dialog"),
+        )
+        assertEquals(
+            mapOf("from" to "numbers", "to" to "pairs", "from_source" to "letters_unavailable", "screen" to "play", "board_size" to 6),
+            event("tile_labels_changed"),
+        )
+    }
+
+    @Test
+    fun `cancelling the Letters warning keeps numbers and the preference, and the next save drops Letters`() = runTest {
+        saves.save("six", IntArray(36) { 35 - it }, 6, labels = "letters")
+        val viewModel = viewModel("pairs")
+        val ui = FakeViewModelUi(chooseFittingLabelsResponses = mutableListOf(null))
+
+        viewModel.load("six", ui)
+        ui.drive(viewModel) { viewModel.saveGame("again") }
+
+        assertEquals(TileLabels.NUMBERS, viewModel.tileLabels())
+        assertEquals("pairs", store.values["tile_labels"])
+        assertEquals(0, events("tile_labels_changed").size)
+        assertEquals("numbers", saves.savedLabels.last())
+    }
+
+    @Test
+    fun `a 4x4 save with Letters loads with no question`() = runTest {
+        saves.save("four", IntArray(16) { 15 - it }, 4, labels = "letters")
+        val viewModel = viewModel()
+        val ui = FakeViewModelUi()
+
+        viewModel.load("four", ui)
+
+        assertEquals(TileLabels.LETTERS, viewModel.tileLabels())
+        assertEquals(emptyList(), ui.chooseFittingLabelsCalls)
+    }
 }

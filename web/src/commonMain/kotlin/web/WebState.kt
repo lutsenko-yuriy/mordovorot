@@ -51,8 +51,9 @@ sealed interface WebDialog {
     /** The give-up confirmation (GH-126): Yes or No. */
     data object GiveUp : WebDialog
 
-    /** The tile labels picker (GH-139): [selected] is marked until Cancel or OK. */
-    data class Labels(val options: List<LabelOption>, val selected: TileLabels) : WebDialog
+    /** The tile labels picker (GH-139): [selected] is marked until Cancel or OK. [message] says why
+     *  a load opened it (GH-160). */
+    data class Labels(val options: List<LabelOption>, val selected: TileLabels, val message: String? = null) : WebDialog
 }
 
 /** A save as a Load row: its [label] is `name (NxN)`, with the unsolvable mark when it applies. */

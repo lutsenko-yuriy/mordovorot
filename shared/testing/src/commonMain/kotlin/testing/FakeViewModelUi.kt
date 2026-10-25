@@ -4,6 +4,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import kotlin.time.Duration.Companion.seconds
+import viewmodel.TileLabels
 import viewmodel.UiRequest
 import viewmodel.UnsolvableSaveChoice
 import viewmodel.GameViewModel
@@ -21,6 +22,7 @@ class FakeViewModelUi(
     private val promptSaveNameResponses: MutableList<String?> = mutableListOf(),
     private val chooseBoardSizeResponses: MutableList<Int?> = mutableListOf(),
     private val resolveUnsolvableSaveResponses: MutableList<UnsolvableSaveChoice> = mutableListOf(),
+    private val chooseFittingLabelsResponses: MutableList<TileLabels?> = mutableListOf(),
 ) {
 
     val shownMessages = mutableListOf<String>()
@@ -36,6 +38,9 @@ class FakeViewModelUi(
 
     /** Each [UiRequest.ResolveUnsolvableSave] as (displayed save, atStartup). */
     val resolveUnsolvableSaveCalls = mutableListOf<Pair<String, Boolean>>()
+
+    /** Each [UiRequest.ChooseFittingLabels.message] (GH-160), with the messages shown before it. */
+    val chooseFittingLabelsCalls = mutableListOf<Pair<String, List<String>>>()
 
     var confirmSaveBeforeExitCallCount = 0
         private set
@@ -89,6 +94,10 @@ class FakeViewModelUi(
             is UiRequest.ResolveUnsolvableSave -> {
                 resolveUnsolvableSaveCalls.add(request.save.display() to request.atStartup)
                 request.respond(nextOrThrow(resolveUnsolvableSaveResponses, "resolveUnsolvableSave"))
+            }
+            is UiRequest.ChooseFittingLabels -> {
+                chooseFittingLabelsCalls.add(request.message to shownMessages.toList())
+                request.respond(nextOrThrow(chooseFittingLabelsResponses, "chooseFittingLabels"))
             }
         }
     }

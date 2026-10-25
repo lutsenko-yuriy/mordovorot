@@ -34,6 +34,10 @@ sealed class UiRequest<R> {
     /** "Repair, new game or exit?" when a load hits an unsolvable save (GH-74) - raised by
      *  [GameViewModelImpl]'s `loadGame`. [atStartup] is `true` for the startup restore. */
     class ResolveUnsolvableSave(val save: SaveInfo, val atStartup: Boolean) : UiRequest<UnsolvableSaveChoice>()
+
+    /** A loaded save's labels don't fit its board (Letters on 6x6, GH-160): the Tile labels dialog
+     *  with [message] above it and the unfit schemes dimmed. The picked scheme, or `null` on Cancel. */
+    class ChooseFittingLabels(val message: String) : UiRequest<TileLabels?>()
 }
 
 enum class UnsolvableSaveChoice { REPAIR, NEW_GAME, EXIT }

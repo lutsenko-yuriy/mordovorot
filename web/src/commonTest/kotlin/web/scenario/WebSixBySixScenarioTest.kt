@@ -83,9 +83,35 @@ class WebSixBySixScenarioTest {
 
     @Test
     fun `a 6x6 save with Letters asks for labels - OK and Cancel`() = webTest {
-        // TODO: store a 6x6 save with Letters labels and load it
-        // TODO: assert the Labels dialog opens with the warning message, Letters unavailable, screen_labels_dialog {opened_from: letters_save}
-        // TODO: pick Pairs and OK - assert the tiles show pairs
-        // TODO: reload, load the save again and Cancel - assert the tiles show numbers and dialog_cancelled {dialog: labels}
+        val page = WebHarness(backgroundScope).startOn()
+        page.saves.save("six", oneShiftFromSolved, 6, 0, labels = "letters")
+
+        page.game.onLoad()
+        page.game.onLoadChosen("six")
+
+        val dialog = page.state.dialog as WebDialog.Labels
+        assertEquals("Letters don't fit a 6x6 board (26 letters, 36 tiles) - pick other labels.", dialog.message)
+        assertEquals(TileLabels.NUMBERS, dialog.selected)
+        assertEquals(false, dialog.options.single { it.labels == TileLabels.LETTERS }.available)
+        assertEquals(
+            listOf(mapOf("opened_from" to "letters_save", "screen" to "play", "current_labels" to "numbers")),
+            page.ownProps("screen_labels_dialog"),
+        )
+        page.game.onLabelsSelected(TileLabels.PAIRS)
+        assertEquals(dialog.message, (page.state.dialog as WebDialog.Labels).message)
+        page.game.onLabelsAnswered(ok = true)
+        assertEquals(TileLabels.PAIRS, page.state.labels)
+        assertEquals("Loaded 'six'.", page.state.status)
+        assertEquals(listOf<Any?>("letters_unavailable"), page.props("tile_labels_changed").map { it["from_source"] })
+
+        val reloaded = WebHarness(backgroundScope, store = page.store).startOn()
+        reloaded.game.onLoad()
+        reloaded.game.onLoadChosen("six")
+        reloaded.game.onLabelsAnswered(ok = false)
+
+        assertNull(reloaded.state.dialog)
+        assertEquals(TileLabels.NUMBERS, reloaded.state.labels)
+        assertEquals((1..6).map { "$it" }, reloaded.state.tileTexts.take(6).sortedBy { it.toInt() })
+        assertEquals(listOf<Any?>("labels"), reloaded.props("dialog_cancelled").map { it["dialog"] })
     }
 }

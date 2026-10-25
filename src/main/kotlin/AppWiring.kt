@@ -146,6 +146,7 @@ internal fun buildTuiView(
     val exitDialog = ExitDialogController(screen, analytics, viewModel)
     val loadDialog = LoadDialogController(screen, analytics, viewModel)
     val sizeDialog = SizeDialogController(screen, analytics, viewModel)
+    val labelsDialog = LabelsDialogController(screen, viewModel)
     val requests = UiRequestRouter(
         screen,
         saveDialog,
@@ -153,9 +154,9 @@ internal fun buildTuiView(
         RestoreDialogController(loadDialog),
         sizeDialog,
         UnsolvableDialogController(screen, analytics),
+        labelsDialog,
     )
     val giveUpDialog = GiveUpDialogController(screen, analytics, viewModel)
-    val labelsDialog = LabelsDialogController(screen, viewModel)
     val toolbar = ToolbarRouter(saveDialog, loadDialog, exitDialog, sizeDialog, giveUpDialog, labelsDialog, viewModel, modeSwitcher, input)
     return TuiView(terminal, analytics, input, viewModel, screen, requests, toolbar)
 }

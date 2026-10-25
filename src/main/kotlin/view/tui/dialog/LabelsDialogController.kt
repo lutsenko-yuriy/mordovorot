@@ -22,8 +22,11 @@ internal class LabelsDialogController(
         runLabelsDialog()?.let { viewModel.changeTileLabels(it) }
     }
 
+    /** A loaded save's labels don't fit its board (GH-160): the dialog with [message] above the rows. */
+    fun chooseFitting(message: String): TileLabels? = runLabelsDialog(message)
+
     /** The marked scheme on OK, `null` on Cancel / Escape / end of input. */
-    private fun runLabelsDialog(): TileLabels? {
+    private fun runLabelsDialog(message: String? = null): TileLabels? {
         val schemes = TileLabels.entries
         val side = viewModel.squareSide()
         val rows = schemes.map { labels ->
@@ -36,6 +39,7 @@ internal class LabelsDialogController(
             Dialog(
                 kind = Dialog.Kind.LABELS,
                 title = "Tile labels",
+                message = message,
                 listItems = rows,
                 selectedIndex = selected,
                 disabledRows = disabled,

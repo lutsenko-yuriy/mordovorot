@@ -17,6 +17,7 @@ internal class WebRequestRouter(private val game: WebGame) {
             is UiRequest.ChooseSaveToRestore -> request.respond(game.chooseRestore(request.saves))
             is UiRequest.ResolveUnsolvableSave ->
                 request.respond(game.resolveUnsolvable(request.save, if (request.atStartup) "startup" else "toolbar"))
+            is UiRequest.ChooseFittingLabels -> request.respond(game.chooseFittingLabels(request.message))
             // Only the terminal's Exit raises these.
             is UiRequest.PromptSaveName -> request.respond(null)
             is UiRequest.ConfirmSaveBeforeExit -> request.respond(false)
