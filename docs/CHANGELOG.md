@@ -13,6 +13,14 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.20.8] — 2026-10-25 (PR #159 merged)
+
+### Added
+- [test] (PR #159) GH-156: `scripts/web/harness/styles_diff.sh` compares every element's computed styles in the branch's web build against a master build, case by case, and lists each element whose styles differ, with old and new values; repeated changes are folded and the entries numbered. It builds both bundles itself (the master bundle is rebuilt when master moves), and exits 0 when nothing differs, 1 when something does, 2 on error.
+- [non-user] The phone-fit harness folder is renamed to `scripts/web/harness/`; `measure.sh` shares its code through `lib.sh`, and `harness.html` gains `report=styles`.
+- [ci] The tests workflow gets a `web_harness` job.
+- [meta] The workflow docs point to the harness, and FEATURE.md gains a "Sizing the choice" rule (GH-156 debrief).
+
 ## [0.20.7] — 2026-10-25 (PR #158 merged)
 
 ### Changed
