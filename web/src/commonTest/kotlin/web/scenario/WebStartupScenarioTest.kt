@@ -17,7 +17,7 @@ class WebStartupScenarioTest {
     @Test
     fun `no saves - the page opens the size picker`() = webTest {
         val page = WebHarness(backgroundScope).start()
-        assertEquals(WebDialog.Size(listOf(3, 4, 5)), page.state.dialog)
+        assertEquals(WebDialog.Size(listOf(3, 4, 5, 6)), page.state.dialog)
 
         page.game.onSizeChosen(4)
 
@@ -62,7 +62,7 @@ class WebStartupScenarioTest {
 
         page.game.onLoadChosen(null)
 
-        assertEquals(WebDialog.Size(listOf(3, 4, 5)), page.state.dialog)
+        assertEquals(WebDialog.Size(listOf(3, 4, 5, 6)), page.state.dialog)
         assertEquals(listOf("foo"), page.saves.listSaves())
         assertEquals(listOf("load"), page.props("dialog_cancelled").map { it["dialog"] })
     }

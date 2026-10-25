@@ -25,7 +25,7 @@ class TuiViewModalLoopTest {
         Case("exit", BoardLayout::exitButtonPosition, Dialog(Dialog.Kind.EXIT, "Save before quitting?", buttons = listOf(DialogButtonSpec("yes", "Yes"), DialogButtonSpec("no", "No"), cancelButton))),
         Case(
             "size", BoardLayout::newButtonPosition,
-            Dialog(Dialog.Kind.SIZE, "New game size", buttons = listOf(DialogButtonSpec("3", "3x3"), DialogButtonSpec("4", "4x4"), DialogButtonSpec("5", "5x5"), cancelButton)),
+            Dialog(Dialog.Kind.SIZE, "New game size", buttons = listOf(DialogButtonSpec("3", "3x3"), DialogButtonSpec("4", "4x4"), DialogButtonSpec("5", "5x5"), DialogButtonSpec("6", "6x6"), cancelButton)),
         ),
     )
 

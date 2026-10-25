@@ -36,7 +36,7 @@ class TuiViewSizeDialogTest {
         Dialog.Kind.SIZE, "New game size",
         buttons = listOf(
             DialogButtonSpec("3", "3x3"), DialogButtonSpec("4", "4x4"),
-            DialogButtonSpec("5", "5x5"), DialogButtonSpec("cancel", "Cancel"),
+            DialogButtonSpec("5", "5x5"), DialogButtonSpec("6", "6x6"), DialogButtonSpec("cancel", "Cancel"),
         ),
     )
 
@@ -126,7 +126,7 @@ class TuiViewSizeDialogTest {
             "New game size",
             buttons = listOf(
                 DialogButtonSpec("3", "3x3"), DialogButtonSpec("4", "4x4"),
-                DialogButtonSpec("5", "5x5"), DialogButtonSpec("cancel", "Cancel"),
+                DialogButtonSpec("5", "5x5"), DialogButtonSpec("6", "6x6"), DialogButtonSpec("cancel", "Cancel"),
             ),
         )
         val button5 = DialogLayout(dialog, terminalSize).buttons().first { it.target == HitTarget.DialogButton("5") }

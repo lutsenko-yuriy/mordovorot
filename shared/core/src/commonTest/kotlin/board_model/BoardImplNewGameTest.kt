@@ -31,6 +31,16 @@ class BoardImplNewGameTest {
     }
 
     @Test
+    fun `newGame(6) grows the board to a 6x6 shuffled permutation (GH-160)`() {
+        val board = BoardImpl(4)
+
+        board.newGame(6)
+
+        assertEquals(6, board.squareSide)
+        assertEquals((0..35).toList(), board.boardArray.sorted())
+    }
+
+    @Test
     fun `newGame resets the move count`() {
         val board = BoardImpl(4)
         board.shiftLeft(0)
@@ -53,11 +63,11 @@ class BoardImplNewGameTest {
     }
 
     @Test
-    fun `newGame(6) throws and leaves the board untouched`() {
+    fun `newGame(7) throws and leaves the board untouched`() {
         val board = BoardImpl(4)
         val before = board.boardArray.toList()
 
-        assertFailsWith<IllegalArgumentException> { board.newGame(6) }
+        assertFailsWith<IllegalArgumentException> { board.newGame(7) }
 
         assertEquals(4, board.squareSide)
         assertEquals(before, board.boardArray.toList())
@@ -88,7 +98,7 @@ class BoardImplNewGameTest {
     @Test
     fun `the constructor still validates its own size argument`() {
         assertFailsWith<IllegalArgumentException> { BoardImpl(2) }
-        assertFailsWith<IllegalArgumentException> { BoardImpl(6) }
+        assertFailsWith<IllegalArgumentException> { BoardImpl(7) }
     }
 
     @Test

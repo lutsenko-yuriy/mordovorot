@@ -5,7 +5,7 @@ package board_model
  *  the same range back to the user. */
 object BoardSize {
     const val MIN: Int = 3
-    const val MAX: Int = 5
+    const val MAX: Int = 6
     const val DEFAULT: Int = 4
 
     fun isValid(side: Int): Boolean = side in MIN..MAX

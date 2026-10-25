@@ -48,7 +48,7 @@ class WebPlayScenarioTest {
         val before = page.state
 
         page.game.onNew()
-        assertEquals(WebDialog.Size(listOf(3, 4, 5)), page.state.dialog)
+        assertEquals(WebDialog.Size(listOf(3, 4, 5, 6)), page.state.dialog)
         page.game.onSizeChosen(null)
 
         assertEquals(before, page.state)

@@ -30,6 +30,11 @@ class SolvabilityTest {
     }
 
     @Test
+    fun `every 6x6 board is solvable, a single swap included (GH-160)`() {
+        assertTrue(Solvability.isSolvable(solved(6).swapped(0, 1)))
+    }
+
+    @Test
     fun `every shift keeps an odd-side board solvable`() {
         for (side in listOf(3, 5)) {
             val board = BoardImpl(side).apply { restoreState(solved(side)) }

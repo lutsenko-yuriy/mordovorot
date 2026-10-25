@@ -1,6 +1,7 @@
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /** Covers [resolveBoardSize] - the `--size=N` launch flag (GH-44). Only the `--size=N` form
  *  (no space) is recognized; a missing, non-numeric, or out-of-range value all resolve to
@@ -23,6 +24,21 @@ class BoardSizeArgTest {
     @Test
     fun `--size=5 resolves to 5`() {
         assertEquals(5, resolveBoardSize(arrayOf("--size=5")))
+    }
+
+    @Test
+    fun `--size=6 resolves to 6 (GH-160)`() {
+        assertEquals(6, resolveBoardSize(arrayOf("--size=6")))
+    }
+
+    @Test
+    fun `--size=7 warns with the 3-6 range and resolves to null (GH-160)`() {
+        val warnings = mutableListOf<String>()
+
+        val size = resolveBoardSize(arrayOf("--size=7"), warnInvalidSize = { warnings.add(it) })
+
+        assertNull(size)
+        assertTrue(warnings.single().contains("must be 3-6"), warnings.single())
     }
 
     @Test
