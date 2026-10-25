@@ -21,8 +21,8 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 ├── core/                # :shared:core
 │   └── board_model/
 │       ├── BoardModel.kt    # Board interface (domain contract)
-│       ├── BoardSize.kt     # The valid board side range (MIN 3 / MAX 5 / DEFAULT 4) and its
-│       │                      # validation - the one place the range lives (GH-44)
+│       ├── BoardSize.kt     # The valid board side range (MIN 3 / MAX 6 / DEFAULT 4) and its
+│       │                      # validation - the one place the range lives (GH-44, GH-160)
 │       ├── Solvability.kt   # Which boards shifts can solve (permutation parity on odd sides)
 │       │                      # and the two-tile repair - the one place the rule lives (GH-74)
 │       └── BoardImpl.kt     # IntArray-backed board state + shift/reset/newGame/isCorrect logic + move count.
@@ -61,7 +61,8 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       ├── BackgroundMordieSearch.kt # The real search: one throttled coroutine on
 │       │                               # Dispatchers.Default, publishing a volatile snapshot
 │       ├── Mordie.kt                # Opponent state: shift count, 5-shift checks, opening/resume
-│       │                              # kind, found reveal, frozen outcome, save snapshot
+│       │                              # kind, found reveal, frozen outcome, save snapshot;
+│       │                              # MAX_SIDE 5 and sitOut() for larger boards (GH-160)
 │       └── MordieLine.kt            # MordieLine (sealed) / MordieOutcome / MordieResult /
 │                                      # MordieSnapshot (what a save stores)
 ├── viewmodel/           # :shared:viewmodel - everything but Exit and session control (api
@@ -81,10 +82,11 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       ├── UnsolvableSaveExit.kt # The platform hook for Exit on an unsolvable save, run after the
 │       │                           # shared flow returns (GH-41); with NONE, Exit
 │       │                           # just ends the load
-│       ├── UiRequest.kt          # Sealed request/response type for the seven viewmodel→UI
+│       ├── UiRequest.kt          # Sealed request/response type for the viewmodel→UI
 │       │                           # interactions (ShowMessage/ConfirmRestore/ChooseSaveToRestore/
 │       │                           # ConfirmSaveBeforeExit/PromptSaveName/ChooseBoardSize (GH-44)/
-│       │                           # ResolveUnsolvableSave (GH-74) + UnsolvableSaveChoice),
+│       │                           # ResolveUnsolvableSave (GH-74) + UnsolvableSaveChoice,
+│       │                           # ChooseFittingLabels (GH-160)),
 │       │                           # sent on
 │       │                           # GameViewModel.uiRequests (GH-42 WU2)
 │       ├── UiRequestChannel.kt   # The rendezvous channel behind uiRequests: ask/showMessage. One
@@ -108,20 +110,23 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                                 # only CancellationException, since no session-control
 │       │                                 # exception passes through shared flows (GH-41)
 │       ├── MordieHooks.kt         # GameViewModelImpl's Mordie part: binds it on new game/load/repair/
-│       │                             # startup (sits out a loaded board already played on), tracks
+│       │                             # startup (sits out a loaded board already played on, and any side
+│       │                             # above Mordie.MAX_SIDE, GH-160), tracks
 │       │                             # its analytics, words its line and ending (GH-83)
 │       ├── MordieText.kt          # Every Mordie string (line bodies + the four endings), singular
 │       │                             # `1 move` included (GH-83)
 │       ├── SolutionScreen.kt      # The session's solution screen: its SolutionReplay, null off it.
 │       │                             # One per session, so a mode switch keeps it (GH-126)
 │       ├── TileLabels.kt          # The six label schemes: wireName (analytics, save line 8, the
-│       │                             # preference), title, maxSide, label(tile, side), sampleRow.
+│       │                             # preference), title, maxSide, fits(side), label(tile, side), sampleRow.
 │       │                             # NUMBERS is the default (GH-139)
 │       ├── TileLabelsPreference.kt # TileLabels over a PreferenceRepository under `tile_labels`;
 │       │                             # a failed read is no preference, a failed write is silent (GH-139)
 │       ├── SessionTileLabels.kt   # The session's labels and TileLabelsSource: a save's labels
 │       │                             # beat the preference, which beats NUMBERS. One per session,
-│       │                             # so a mode switch keeps them; reads the preference once (GH-139)
+│       │                             # so a mode switch keeps them; reads the preference once (GH-139).
+│       │                             # A scheme that doesn't fit the side shows NUMBERS
+│       │                             # (LETTERS_UNAVAILABLE), the preference kept (GH-160)
 │       ├── SolutionReplay.kt      # Mordie's steps on their own copy of the original arrangement,
 │       │                             # stepped one shift at a time (next/previous/restart); the
 │       │                             # game's board, moves and Mordie never see it (GH-126)
@@ -415,7 +420,7 @@ to keep layers swappable.
 Core game state and rules: board array, shifting, reset, and the win check
 (`isCorrect`). No dependency on `viewmodel` or `view`.
 
-**Board size (GH-44):** the board stays square, with a side of 3–5 (default 4).
+**Board size (GH-44):** the board stays square, with a side of 3–6 (default 4; 6 since GH-160).
 `BoardSize` holds that range and its validation — the single place it lives, per
 this layer's "range validation lives in `board_model`, the view translates but
 does not validate" rule (see the 1-based display dialect note under `view`).
@@ -450,6 +455,9 @@ frozen on solve, using Mordie's live state at that shift. Its `MordieSnapshot` m
 between the two. `Main` builds one `Mordie` per session, so it survives mode switches;
 `GameSession` stops it. `GameViewModelImpl` reaches it through `MordieHooks`, which
 `buildGameViewModel` builds per rebuild so it tracks through that mode's decorated analytics.
+Boards above `Mordie.MAX_SIDE` (6x6, GH-160) get `Mordie.sitOut()`: no search and no
+snapshot, only the opening `SitsOut` line; `MordieHooks` decides by board side before every
+binding. Lifting it is GH-116's follow-up.
 Test builders default to an inert `Mordie(MordieSearchFactory.NONE)`, so unit tests never
 leave real searches running.
 
