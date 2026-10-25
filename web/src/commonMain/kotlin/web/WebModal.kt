@@ -1,0 +1,43 @@
+package web
+
+import kotlinx.coroutines.CompletableDeferred
+
+/** [WebGame]'s modal dialog: at most one is open, and [ask] waits for its answer. [render] draws
+ *  the page with the dialog shown, then without it once answered. */
+internal class WebModal(private val render: () -> Unit) {
+
+    private class OpenDialog<T>(var shown: WebDialog) {
+        val answer = CompletableDeferred<T>()
+    }
+
+    private var open: OpenDialog<*>? = null
+
+    /** The open dialog as the page shows it; `null` when none is. */
+    val shown: WebDialog? get() = open?.shown
+
+    /** Redraws the open dialog as [dialog], e.g. the Save name as typed. */
+    fun update(dialog: WebDialog) {
+        open?.shown = dialog
+    }
+
+    suspend fun <T> ask(shown: WebDialog): T {
+        val dialog = OpenDialog<T>(shown)
+        open = dialog
+        render()
+        try {
+            return dialog.answer.await()
+        } finally {
+            open = null
+            render()
+        }
+    }
+
+    /** Completes the open dialog when it is a [D]; any other answer is stale and ignored. */
+    inline fun <reified D : WebDialog, T> answer(value: T) = answer(value) { it is D }
+
+    fun <T> answer(value: T, matches: (WebDialog) -> Boolean) {
+        val dialog = open?.takeIf { matches(it.shown) } ?: return
+        @Suppress("UNCHECKED_CAST")
+        (dialog as OpenDialog<T>).answer.complete(value)
+    }
+}
