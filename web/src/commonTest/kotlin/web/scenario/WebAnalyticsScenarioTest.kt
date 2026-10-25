@@ -96,4 +96,9 @@ class WebAnalyticsScenarioTest {
         assertTrue(events.map { it.name }.containsAll(listOf("screen_unsolvable_dialog", "save_command_used", "load_command_used", "board_solved")))
     }
 
+    @Test
+    fun `every web dialog_cancelled carries via`() = webTest {
+        // TODO: 1. Cancel New, Save, Load and Labels with their buttons, Give Up with No.
+        // TODO: 2. Every dialog_cancelled has via, and it is button.
+    }
 }
