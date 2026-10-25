@@ -717,7 +717,10 @@ alert when a session waits on the user, toggled per machine in the gitignored `.
 `scripts/web/harness/` (GH-147; `phone_fit/` until GH-156) measures the built web game at phone sizes in headless Chrome
 (`measure.sh`, see its README; a `landscape` preset and checks on all four edges, GH-148) and serves it to a real phone on the local network (`serve_lan.sh`). `styles_diff.sh` (GH-156)
 compares every element's computed styles against a master bundle, so a CSS refactor can show the
-game looks the same; its compare logic, `styles_diff.py`, is tested in `tests.yml` too.
+game looks the same; its compare logic, `styles_diff.py`, is tested in `tests.yml` too. Its
+`report=keys` (GH-174, `keys.js`) plays keys and clicks and reports focus, accessible names, the
+ring and `inert` after each; `keys_check.sh` diffs the GH-163 dialog flows against
+`tests/keys_expected.txt`, run by the agent rather than CI (it needs Chrome and a bundle).
 
 ## Dependencies
 
