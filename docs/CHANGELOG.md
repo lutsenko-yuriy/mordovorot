@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.20.7] — 2026-10-25 (PR #158 merged)
+
+### Changed
+- [user] (PR #158) GH-149: on phones and tablets, pinching no longer zooms the web game's page, and tapping into the save name no longer zooms in either; desktop zoom still works.
+- [meta] The plan skill shows a plan summary and each decision in the session before asking (GH-149 debrief).
+
 ## [0.20.6] — 2026-10-24 (PR #157 merged)
 
 ### Fixed

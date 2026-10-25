@@ -58,6 +58,16 @@ Post the full plan text as a comment on the primary issue so `implement` can ref
 
 Show the plan to the user and wait for approval or adjustments. Do not proceed until the user explicitly approves.
 
+Whoever talks to the user (the orchestrator, when this skill ran in a subagent) shows two
+things in the session text itself, before asking anything (GH-149):
+- a short summary of the plan: the approach, the files it touches, the tests and what's out of
+  scope; the full text stays in the issue comment;
+- every decision as its own item: what is being decided, each option with its trade-off, and
+  the recommendation.
+
+Only then ask. Each answer must be readable without the issue open: never fold several
+decisions into one "accept all" option unless each was shown first.
+
 ### 6. Update ARCHITECTURE.md (after approval)
 
 If the plan introduces new layers, directories, classes, or dependencies not already in `docs/ARCHITECTURE.md`, update that file now. Keep the existing structure — add to it, do not rewrite it.

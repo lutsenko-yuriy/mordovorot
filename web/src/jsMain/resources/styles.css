@@ -67,9 +67,10 @@ html, body {
     min-height: 100%;
 }
 
-/* GH-145: a double tap doesn't zoom (pinch-zoom still does), and taps don't flash a grey box. */
+/* Touch never zooms the page: neither a double tap (GH-145) nor a pinch (GH-149, with the viewport
+   meta and stopPinchZoom). Taps don't flash a grey box. */
 html {
-    touch-action: manipulation;
+    touch-action: pan-x pan-y;
     -webkit-tap-highlight-color: transparent;
 }
 

@@ -175,7 +175,9 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/jsMain/kotlin/web/Main.kt       # The page's composition root: BoardImpl, saves and
 │                                       # preferences in localStorage, Mordie with the background search,
 │                                       # MainScope, the window's Layout, the beforeunload prompt;
-│                                       # the footer, once, outside #app (GH-111)
+│                                       # the footer, once, outside #app (GH-111); stopPinchZoom
+├── src/jsMain/kotlin/web/DomGestures.kt # stopPinchZoom: on touch screens, cancels WebKit's pinch
+│                                       # events, which iOS fires whatever touch-action says (GH-149)
 ├── src/jsMain/kotlin/web/DomRenderer.kt # WebState -> DOM, clicks and pointer drags -> WebGame
 │                                       # intents; the page root holds a drag's pointer capture;
 │                                       # runs Slides and MessageFeed on animation frames, redrawing
