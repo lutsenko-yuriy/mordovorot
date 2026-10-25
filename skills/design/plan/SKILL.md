@@ -43,6 +43,8 @@ If no work unit changes observable behaviour (UI, text, analytics, save format),
 
 Before proposing a CHANGELOG tag, read `skills/manage/ship/resources/changelog-tags.md` - GH-78's plan claimed no refactor tag existed while `[app]` did.
 
+Check the line count of every source file in "Files touched" against the `docs/CODE_STYLE.md` size guideline (~300 lines). For a file already over it, or one the plan's additions will push over, put the split in the plan: a cycle in this WU, or a follow-up ticket, chosen as a decision. Don't leave it for review to find (GH-160: `WebGame.kt` was at 320 lines when the plan named it, and the split came out of review).
+
 ### 4. Post the plan as a PM comment
 
 Post the full plan text as a comment on the primary issue so `implement` can reference it.
