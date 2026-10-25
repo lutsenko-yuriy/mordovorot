@@ -102,6 +102,7 @@ Fired when the user cancels the Save, Load, Exit, or Size dialog in the mouse-dr
 |---|---|---|
 | `dialog` | `string` | `save`, `load`, `exit`, or `size`. |
 | `input_method` | `string` | `mouse` or `keyboard` — which TUI mode the session was running in. *(GH-18)* |
+| `via` | `string` | `web` only: `button` (Cancel / No) or `escape`. Absent on `terminal`. *(GH-163)* |
 
 ### `input_mode_switched`
 

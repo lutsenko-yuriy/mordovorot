@@ -156,13 +156,13 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                          # `build.yml`'s `deploy` job publishes it to GitHub Pages (GH-111)
 ├── src/commonMain/kotlin/web/
 │   ├── WebGame.kt       # The browser's View: page intents (onArrow/onDrag*/onNew/onSave/onLoad/dialog answers,
-│   │                    # GH-126's onGiveUp/onMordiesSolution/onReplay*, GH-139's onLabels*) ->
+│   │                    # GH-126's onGiveUp/onMordiesSolution/onReplay*, GH-139's onLabels*, GH-163's onEscape) ->
 │   │                    # GameViewModel, a WebState to the WebRenderer after every change; drains
 │   │                    # uiRequests; tracks the view-layer analytics (screen views, dialog_cancelled)
 │   ├── WebState.kt      # One frame: tiles (1-based), Moves, Mordie's spot, solved, status, WebDialog,
 │   │                    # the dragged line's live offset; the Give Up row, the solution screen and
 │   │                    # the replay shift to slide (GH-126); the tile labels and tileTexts (GH-139);
-│   │                    # LabelOption.available and Labels.message (GH-160)
+│   │                    # LabelOption.available and Labels.message (GH-160); the one-time focus (GH-163)
 │   ├── WebRenderer.kt   # fun interface render(WebState) - the DOM on the page, a recorder in tests
 │   ├── WebRequestRouter.kt # Answers each UiRequest (exhaustive `when`, like UiRequestRouter)
 │   ├── WebLabelsDialog.kt # The Tile labels dialog's flows over WebGame's modal (GH-160), like
