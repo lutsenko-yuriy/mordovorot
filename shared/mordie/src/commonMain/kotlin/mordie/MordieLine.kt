@@ -5,6 +5,9 @@ sealed interface MordieLine {
     /** Shifts 0-4 of a fresh game. */
     data object Opening : MordieLine
 
+    /** Shifts 0-4 of a game too big for Mordie's search (GH-160). */
+    data object SitsOut : MordieLine
+
     /** Shifts 0-4 after loading a save Mordie was still searching in, at [moves]. */
     data class Resumed(val moves: Int) : MordieLine
 
