@@ -60,7 +60,10 @@ By default it runs the play, dialog and solution screens on a 4×4 board at 390x
 1200x800: 18 compared cases, a few minutes. Other queries go after the directory, without `v` and
 `report`, which it sets itself.
 
-It prints each differing element with each property's old and new values, then a total. Exit 0
+It prints each differing element with each property's old and new values, then a total. Elements
+sharing a selector are numbered by their place among them in that case, on the branch's side
+(`DIV.step[3]`), or the baseline's for one only there (`-`); a run that changed the same way is one
+entry (`DIV.step[1-6]`), and `inline-size` and the like are left out when they only repeat `width`. Exit 0
 means no differences; 1 means differences, or a case on one side only; 2 means a usage error, a
 failed build or a `TIMEOUT`. It serves on port 8767 (`STYLES_DIFF_PORT`), so it can run
 next to `measure.sh` (8765) and `serve_lan.sh` (8766).
