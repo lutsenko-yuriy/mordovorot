@@ -279,9 +279,13 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
     aren't shown and the board grows into their room; dragging is the only way to shift (screen
     readers still find the arrow buttons).
     Touchscreen laptops keep the arrows.
-  - **Touch gestures (GH-145):** a double tap doesn't zoom the page (pinch-zoom still does), and
-    a long press or a drag doesn't select the game's text or offer to copy it. The save name
-    field and the footer stay selectable.
+  - **Touch gestures (GH-145):** a double tap doesn't zoom the page, and a long press or a drag
+    doesn't select the game's text or offer to copy it. The save name field and the footer stay
+    selectable.
+  - **No zoom on touch screens (GH-149):** a pinch doesn't zoom the page either, and focusing the
+    save name field doesn't zoom into it. Desktop zoom (keys, wheel, trackpad) still works. This
+    takes zoom from players who need bigger text; GH-150 is to give the game its own way to read
+    larger.
 - **Dragging:** press a tile and drag. Once the pointer has moved a few pixels, the larger
   direction picks the tile's row or column. The line follows the pointer with wrap-around, and
   on release it slides to the nearest whole tile.
@@ -321,7 +325,7 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   - **Tall fits the window (GH-147):** taller than wide, the page is exactly the window's height
     (the part the browser's own toolbars leave) and never scrolls: the board takes the room the
     rest leaves and its tiles shrink to fit, down to 16px. Pulling the page past its edge neither
-    bounces nor refreshes it; pinch-zoom still works, and a zoomed-in page scrolls as usual.
+    bounces nor refreshes it.
     Browsers without CSS size container queries (before Safari 16, Firefox 110, Chrome 105) keep
     the older estimate, which can scroll on short phones.
   - The toolbar's buttons stay on one row, tighter on screens under 380px wide (GH-147) and on
