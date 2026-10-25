@@ -6,8 +6,8 @@ import kotlinx.coroutines.CompletableDeferred
 enum class CancelVia(val wire: String) { BUTTON("button"), ESCAPE("escape") }
 
 /** [WebGame]'s modal dialog: at most one is open, and [ask] waits for its answer. [render] draws
- *  the page with the dialog shown, then without it once answered. */
-internal class WebModal(private val render: () -> Unit) {
+ *  the page with the dialog shown, focusing its default control, then without it once answered. */
+internal class WebModal(private val render: (focus: Focus?) -> Unit) {
 
     private class OpenDialog<T>(var shown: WebDialog) {
         val answer = CompletableDeferred<T>()
@@ -29,21 +29,28 @@ internal class WebModal(private val render: () -> Unit) {
         open?.shown = dialog
     }
 
-    /** Marks the open dialog's coming answer as given by Escape. */
-    fun escaping() {
-        open?.via = CancelVia.ESCAPE
+    /** Gives the open dialog's Cancel answer, or No's; Can't be solved has neither. */
+    fun escape() {
+        val dialog = open ?: return
+        val cancel = when (dialog.shown) {
+            is WebDialog.Unsolvable -> return
+            WebDialog.GiveUp -> false
+            is WebDialog.Size, is WebDialog.Save, is WebDialog.Load, is WebDialog.Labels -> null
+        }
+        dialog.via = CancelVia.ESCAPE
+        answer(cancel) { true }
     }
 
     suspend fun <T> ask(shown: WebDialog): T {
         val dialog = OpenDialog<T>(shown)
         open = dialog
-        render()
+        render(defaultFocus(shown))
         try {
             return dialog.answer.await()
         } finally {
             closedVia = dialog.via
             open = null
-            render()
+            render(null)
         }
     }
 

@@ -48,10 +48,10 @@ class WebPlayScenarioTest {
         val before = page.state
 
         page.game.onNew()
-        assertEquals(WebDialog.Size(listOf(3, 4, 5, 6)), page.state.dialog)
+        assertEquals(WebDialog.Size(listOf(3, 4, 5, 6), current = 4), page.state.dialog)
         page.game.onSizeChosen(null)
 
-        assertEquals(before, page.state)
+        assertEquals(before.unfocused(), page.state.unfocused())
         assertEquals(listOf("toolbar"), page.props("screen_size_dialog").map { it["opened_from"] })
         assertEquals(listOf("size"), page.props("dialog_cancelled").map { it["dialog"] })
     }

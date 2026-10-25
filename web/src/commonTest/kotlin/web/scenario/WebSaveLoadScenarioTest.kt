@@ -98,7 +98,7 @@ class WebSaveLoadScenarioTest {
         page.game.onLoadChosen("odd")
 
         page.game.onUnsolvableChoice(UnsolvableSaveChoice.NEW_GAME)
-        assertEquals(WebDialog.Size(listOf(3, 4, 5, 6)), page.state.dialog)
+        assertEquals(WebDialog.Size(listOf(3, 4, 5, 6), current = 4), page.state.dialog)
         page.game.onSizeChosen(5)
 
         assertEquals(5, page.state.side)

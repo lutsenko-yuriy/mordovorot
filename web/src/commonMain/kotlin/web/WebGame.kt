@@ -33,12 +33,14 @@ class WebGame internal constructor(
     private val scope: CoroutineScope,
 ) {
 
-    private val modal = WebModal { render() }
+    private val modal = WebModal { render(focus = it) }
     internal val labelsDialog = WebLabelsDialog(viewModel, ::cancelled) { modal.ask(it) }
     private val requests = WebRequestRouter(this)
     private var status: String? = null
     /** The toolbar action or startup restore under way, if any. */
     private var flow: Job? = null
+    /** Where focus goes once [flow] ends: back to the button that started it, unless it moves on. */
+    private var closing: Focus = Focus.PageStart
     private var drag: LineDrag? = null
     private val idle get() = modal.shown == null && flow?.isActive != true && drag == null
     /** Mordie's solution screen (GH-126): the board is the replay's, not the player's. */
@@ -50,7 +52,7 @@ class WebGame internal constructor(
         scope.launch { for (request in viewModel.uiRequests) requests.handle(request) }
         flow = scope.launch {
             viewModel.restoreOnStartup()
-            render()
+            render(focus = Focus.PageStart)
         }
     }
 
@@ -104,10 +106,13 @@ class WebGame internal constructor(
     /** `[ Give Up ]`: the confirmation, then Mordie's solution screen on Yes. */
     fun onGiveUp() {
         if (viewModel.giveUpButton() != GiveUpButton.GIVE_UP) return
-        runFlow {
+        runFlow(Focus.GiveUpRow) {
             analytics.track("screen_give_up_dialog", mapOf("board_size" to viewModel.squareSide(), "move_count" to viewModel.moveCount()))
-            if (modal.ask(WebDialog.GiveUp)) viewModel.giveUp()
-            else cancelled("give_up")
+            if (modal.ask(WebDialog.GiveUp)) {
+                viewModel.giveUp()
+                // The solution screen has no Give Up.
+                closing = Focus.ReplayNext
+            } else cancelled("give_up")
         }
     }
 
@@ -132,13 +137,13 @@ class WebGame internal constructor(
     }
 
     /** `[ Labels ]` (GH-139): the picker, live on play, after a win and on the solution screen. */
-    fun onLabels() = runFlow { labelsDialog.fromToolbar() }
+    fun onLabels() = runFlow(Focus.LabelsButton) { labelsDialog.fromToolbar() }
 
     /** A Labels row pressed: it becomes the marked one, and the board previews it. */
     fun onLabelsSelected(labels: TileLabels) {
         val shown = modal.shown as? WebDialog.Labels ?: return
         modal.update(labelsDialog.select(shown, labels) ?: return)
-        render()
+        render(focus = Focus.Label(labels))
     }
 
     /** The Labels dialog's answer: OK with the marked scheme, or Cancel. */
@@ -147,11 +152,11 @@ class WebGame internal constructor(
         modal.answer<WebDialog.Labels, TileLabels?>(if (ok) shown.selected else null)
     }
 
-    fun onNew() = runFlow {
+    fun onNew() = runFlow(Focus.NewButton) {
         chooseSize("toolbar")?.let { viewModel.newGame(it, trigger = "toolbar") }
     }
 
-    fun onSave() = runFlow {
+    fun onSave() = runFlow(Focus.SaveButton) {
         val name = askSaveName()
         when {
             name == null -> {}
@@ -170,7 +175,7 @@ class WebGame internal constructor(
     /** The Save dialog's answer; `null` is Cancel. */
     fun onSaveAnswered(name: String?) = modal.answer<WebDialog.Save, String?>(name)
 
-    fun onLoad() = runFlow {
+    fun onLoad() = runFlow(Focus.LoadButton) {
         chooseSave(viewModel.listSaves(), restore = false)?.let { viewModel.loadGame(it) }
     }
 
@@ -185,25 +190,13 @@ class WebGame internal constructor(
     /** The size picker's answer; `null` is Cancel. */
     fun onSizeChosen(size: Int?) = modal.answer<WebDialog.Size, Int?>(size)
 
-    /** Escape (GH-163): the open dialog's Cancel, or No; Can't be solved has neither. */
-    fun onEscape() {
-        val shown = modal.shown ?: return
-        if (shown is WebDialog.Unsolvable) return
-        modal.escaping()
-        when (shown) {
-            is WebDialog.Size -> onSizeChosen(null)
-            is WebDialog.Save -> onSaveAnswered(null)
-            is WebDialog.Load -> onLoadChosen(null)
-            is WebDialog.Labels -> onLabelsAnswered(ok = false)
-            WebDialog.GiveUp -> onGiveUpAnswered(false)
-            is WebDialog.Unsolvable -> {}
-        }
-    }
+    /** Escape (GH-163): the open dialog's Cancel, or No. */
+    fun onEscape() = modal.escape()
 
     /** [openedFrom] is `toolbar` or a `ChooseBoardSize.origin`, as `screen_size_dialog.opened_from`. */
     internal suspend fun chooseSize(openedFrom: String): Int? {
         analytics.track("screen_size_dialog", mapOf("opened_from" to openedFrom))
-        val size = modal.ask<Int?>(WebDialog.Size((BoardSize.MIN..BoardSize.MAX).toList()))
+        val size = modal.ask<Int?>(WebDialog.Size((BoardSize.MIN..BoardSize.MAX).toList(), viewModel.squareSide()))
         if (size == null) cancelled("size")
         return size
     }
@@ -267,18 +260,20 @@ class WebGame internal constructor(
         render(action()?.let(Slides::ofStep))
     }
 
-    /** Runs a toolbar action, unless another action or a dialog is under way, then renders. */
-    private fun runFlow(action: suspend () -> Unit) {
+    /** Runs a toolbar action, unless another action or a dialog is under way, then renders with
+     *  focus back on its [opener]. */
+    private fun runFlow(opener: Focus, action: suspend () -> Unit) {
         if (!idle) return
         status = null
+        closing = opener
         // Undispatched, so the action is under way before this returns and a second click sees it.
         flow = scope.launch(start = CoroutineStart.UNDISPATCHED) {
             action()
-            render()
+            render(focus = closing)
         }
     }
 
-    private fun render(slide: LineOffset? = null) {
+    private fun render(slide: LineOffset? = null, focus: Focus? = null) {
         val solved = viewModel.isSolved()
         renderer.render(
             WebState(
@@ -295,6 +290,7 @@ class WebGame internal constructor(
                 slide = slide,
                 // The Labels dialog's marked scheme, previewed until OK keeps it or Cancel drops it.
                 labels = (modal.shown as? WebDialog.Labels)?.selected ?: viewModel.tileLabels(),
+                focus = focus,
             ),
         )
     }

@@ -23,7 +23,7 @@ class WebSixBySixScenarioTest {
         val page = WebHarness(backgroundScope).startOn()
 
         page.game.onNew()
-        assertEquals(WebDialog.Size(listOf(3, 4, 5, 6)), page.state.dialog)
+        assertEquals(WebDialog.Size(listOf(3, 4, 5, 6), current = 4), page.state.dialog)
         page.game.onSizeChosen(6)
 
         assertEquals(6, page.state.side)

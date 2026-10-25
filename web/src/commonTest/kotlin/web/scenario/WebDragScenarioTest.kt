@@ -46,7 +46,7 @@ class WebDragScenarioTest {
 
         page.drag(0, 2, 101.0 to 120.0, 100.0 to 100.0)
 
-        assertEquals(before, page.state)
+        assertEquals(before.unfocused(), page.state.unfocused())
         assertEquals(0, page.mordie.shifts)
     }
 
@@ -72,7 +72,7 @@ class WebDragScenarioTest {
 
         page.drag(1, 0, 140.0 to 100.0)
 
-        assertEquals(before, page.state)
+        assertEquals(before.unfocused(), page.state.unfocused())
     }
 
     @Test
@@ -99,7 +99,7 @@ class WebDragScenarioTest {
         page.game.onDragMove(180.0, 100.0)
         page.game.onDragCancel()
 
-        assertEquals(before, page.state)
+        assertEquals(before.unfocused(), page.state.unfocused())
     }
 
     @Test

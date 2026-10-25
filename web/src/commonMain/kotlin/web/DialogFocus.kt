@@ -1,0 +1,44 @@
+package web
+
+import viewmodel.TileLabels
+
+/** A control the page focuses once a frame is drawn (GH-163); [key] is its `data-focus`. */
+sealed class Focus(val key: String) {
+    data class SizeChoice(val side: Int) : Focus("size-$side")
+    data object SaveName : Focus("save-name")
+    data object FirstSave : Focus("first-save")
+    /** A dialog's Cancel: Load's, when it has no saves to focus. */
+    data object DialogCancel : Focus("dialog-cancel")
+    data object Repair : Focus("repair")
+    data class Label(val labels: TileLabels) : Focus("label-${labels.name.lowercase()}")
+    data object No : Focus("no")
+    data object NewButton : Focus("new")
+    data object SaveButton : Focus("save")
+    data object LoadButton : Focus("load")
+    data object LabelsButton : Focus("labels")
+    /** Give Up, or Mordie's solution after a win. */
+    data object GiveUpRow : Focus("give-up")
+    data object ReplayNext : Focus("replay-next")
+    /** No control: the start of the page, as on a fresh load. */
+    data object PageStart : Focus("page-start")
+}
+
+/** The control [dialog] opens focused on. */
+fun defaultFocus(dialog: WebDialog): Focus = when (dialog) {
+    is WebDialog.Size -> Focus.SizeChoice(dialog.current)
+    is WebDialog.Save -> Focus.SaveName
+    is WebDialog.Load -> if (dialog.saves.isEmpty()) Focus.DialogCancel else Focus.FirstSave
+    is WebDialog.Unsolvable -> Focus.Repair
+    is WebDialog.Labels -> Focus.Label(dialog.selected)
+    WebDialog.GiveUp -> Focus.No
+}
+
+/** The dialog's title, which also names it for screen readers. */
+val WebDialog.title: String get() = when (this) {
+    is WebDialog.Size -> "New game size"
+    is WebDialog.Save -> "Save game"
+    is WebDialog.Load -> if (restore) "Restore a saved game?" else "Load game"
+    is WebDialog.Unsolvable -> "Can't be solved"
+    is WebDialog.Labels -> "Tile labels"
+    WebDialog.GiveUp -> "Give up and see Mordie's solution?"
+}
