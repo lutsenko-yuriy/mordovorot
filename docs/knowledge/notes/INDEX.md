@@ -59,6 +59,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-149: Web on phones: stop pinch-zoom on the game page](GH-149.md)
 - [GH-152: Fix Dependabot alerts in the Kotlin/JS build tools: body-parser, fast-uri (yarn.lock)](GH-152.md)
 - [GH-153: Split the web client's styles.css into layout, dialog and solution-screen sheets](GH-153.md)
+- [GH-156: Web: a committed tool that diffs computed styles against master](GH-156.md)
 - [GH-23: Split Presenter into console/TUI-specific presenters](GH-23.md)
 - [GH-41: Kotlin Multiplatform shared modules: Core, Analytics, Mordie, Storage, ViewModel](GH-41.md)
 - [GH-6: Save and load game state to/from local files](GH-6.md)

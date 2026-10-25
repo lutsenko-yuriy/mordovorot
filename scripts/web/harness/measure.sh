@@ -6,8 +6,7 @@
 #   (see README.md), e.g. "v=touch&mode=solution&boards=3". Variants: mouse, touch (the
 #   `pointer: coarse` rules always on), and with --baseline, master and master-touch from that bundle.
 #
-# Real time, never --virtual-time-budget: Mordie's search keeps virtual time from ever running out.
-# Chrome runs headless with a throwaway profile, never the user's own (docs/CONSTRAINTS.md).
+# Chrome runs headless in real time with a throwaway profile; see lib.sh.
 
 set -u
 
@@ -18,6 +17,7 @@ chrome="${CHROME:-/Applications/Google Chrome.app/Contents/MacOS/Google Chrome}"
 port="${PHONE_FIT_PORT:-8765}"
 # One query's cases, at up to ~30s each on the solution screen.
 max_wait_s=600
+source "$here/lib.sh"
 
 baseline=""
 if [[ "${1:-}" == "--baseline" ]]; then
@@ -29,44 +29,14 @@ if [[ $# -eq 0 || ! -f "$dist/index.html" ]]; then
   exit 2
 fi
 
-work="$(mktemp -d)"
-trap 'kill "$server" 2>/dev/null; wait "$server" 2>/dev/null; rm -rf "$work"' EXIT
-
-# A variant: a copy of a bundle, with the touch-screen rules forced on when asked.
-add_variant() {
-  cp -R "$1" "$work/site/$2"
-  if [[ "$3" == "touch" ]]; then
-    sed -i '' 's/@media (pointer: coarse)/@media all/' "$work/site/$2"/*.css
-  fi
-}
-
-mkdir -p "$work/site"
-cp "$here/harness.html" "$work/site/"
+make_work
 add_variant "$dist" mouse mouse
 add_variant "$dist" touch touch
 if [[ -n "$baseline" ]]; then
   add_variant "$baseline" master mouse
   add_variant "$baseline" master-touch touch
 fi
-results="$work/results.txt"
-: >"$results"
-
-python3 "$here/serve.py" "$work/site" "$results" "$port" &
-server=$!
-sleep 1
-
-for query in "$@"; do
-  before=$(grep -c '^#done' "$results")
-  "$chrome" --headless=new --user-data-dir="$work/profile" "http://127.0.0.1:$port/harness.html?$query" \
-    >/dev/null 2>&1 &
-  browser=$!
-  for ((i = 0; i < max_wait_s * 2; i++)); do
-    [[ $(grep -c '^#done' "$results") -gt "$before" ]] && break
-    sleep 0.5
-  done
-  kill "$browser" 2>/dev/null
-  wait "$browser" 2>/dev/null
-  [[ $(grep -c '^#done' "$results") -gt "$before" ]] || echo "TIMEOUT $query"
-done
+start_server
+run_queries "$@"
 
 grep -v '^#' "$results"

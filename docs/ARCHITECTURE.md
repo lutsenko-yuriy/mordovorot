@@ -693,8 +693,10 @@ bash hooks are wired in the committed `.claude/settings.json` through `${CLAUDE_
 `scripts/onboard/gate.sh` (SessionStart/UserPromptExpansion/PreToolUse, blocks work until `/onboard`
 has run) and `scripts/alert/alert.sh` (GH-107: Notification/Stop, a macOS notification and spoken
 alert when a session waits on the user, toggled per machine in the gitignored `.claude/alert.env`).
-`scripts/web/phone_fit/` (GH-147) measures the built web game at phone sizes in headless Chrome
-(`measure.sh`, see its README; a `landscape` preset and checks on all four edges, GH-148) and serves it to a real phone on the local network (`serve_lan.sh`).
+`scripts/web/harness/` (GH-147; `phone_fit/` until GH-156) measures the built web game at phone sizes in headless Chrome
+(`measure.sh`, see its README; a `landscape` preset and checks on all four edges, GH-148) and serves it to a real phone on the local network (`serve_lan.sh`). `styles_diff.sh` (GH-156)
+compares every element's computed styles against a master bundle, so a CSS refactor can show the
+game looks the same; its compare logic, `styles_diff.py`, is tested in `tests.yml` too.
 
 ## Dependencies
 
