@@ -247,7 +247,7 @@ class WebGame internal constructor(
         return WebDialog.Labels(
             TileLabels.entries.map {
                 if (it.fits(side)) LabelOption(it, it.title, it.sampleRow(side))
-                else LabelOption(it, it.title, listOf("up to ${it.maxSide}x${it.maxSide}"), available = false)
+                else LabelOption(it, it.title, listOf(it.limitText), available = false)
             },
             selected,
             message,

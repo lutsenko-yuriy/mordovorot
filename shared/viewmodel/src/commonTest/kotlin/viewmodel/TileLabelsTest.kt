@@ -75,4 +75,9 @@ class TileLabelsTest {
         assertTrue(TileLabels.LETTER_PAIRS.fits(6))
         assertTrue(TileLabels.NUMBERS.fits(6))
     }
+
+    @Test
+    fun `the limit text names the largest board a scheme labels (GH-160)`() {
+        assertEquals("up to 5x5", TileLabels.LETTERS.limitText)
+    }
 }

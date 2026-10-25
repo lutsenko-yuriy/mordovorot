@@ -84,7 +84,8 @@ internal class LoadGameUseCase(
         }
     }
 
-    /** Only a hand-edited save has Letters on 6x6 (GH-160); numbers show until the player picks. */
+    /** Only a hand-edited save has Letters on 6x6 (GH-160); numbers show until the player picks.
+     *  The message names Letters: up to 6x6 it is the only scheme that can fail to fit. */
     private suspend fun chooseFittingLabels() {
         val side = board.squareSide
         tileLabelsUseCase.dialogOpened("letters_save")

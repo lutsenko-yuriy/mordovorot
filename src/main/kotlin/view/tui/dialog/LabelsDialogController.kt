@@ -30,7 +30,7 @@ internal class LabelsDialogController(
         val schemes = TileLabels.entries
         val side = viewModel.squareSide()
         val rows = schemes.map { labels ->
-            val sample = if (labels.fits(side)) labels.sampleRow(side).joinToString(" ") { it.padEnd(2) } else "up to ${labels.maxSide}x${labels.maxSide}"
+            val sample = if (labels.fits(side)) labels.sampleRow(side).joinToString(" ") { it.padEnd(2) } else labels.limitText
             "${labels.title.padEnd(16)} $sample".trimEnd()
         }
         val disabled = schemes.indices.filterNot { schemes[it].fits(side) }.toSet()
