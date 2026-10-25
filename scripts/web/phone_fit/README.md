@@ -39,13 +39,13 @@ doesn't reveal its solution within the harness's 80 shifts, so use 3×3 and 4×4
 ## Computed-style diff
 
 ```
-./gradlew :web:jsBrowserDistribution
 scripts/web/phone_fit/styles_diff.sh --build-baseline ../master-dist
 ```
 
 Compares every element's computed styles in the branch's bundle against a baseline bundle, so a
 CSS refactor can show the game looks the same: `measure.sh` checks only a few sizes and positions,
-which two different cascades can share. `--build-baseline` builds `origin/master` (or
+which two different cascades can share. It builds the branch's bundle first, so a CSS edit is never
+compared from an old build. `--build-baseline` builds `origin/master` (or
 `--build-baseline=<ref>`) in a temporary worktree into the given directory. It stamps the bundle
 with its commit (`.commit`), so later runs reuse it until the ref moves, then build again;
 `git fetch` first so `origin/master` is current. It won't overwrite a non-empty directory it
@@ -62,7 +62,7 @@ By default it runs the play, dialog and solution screens on a 4×4 board at 390x
 
 It prints each differing element with each property's old and new values, then a total. Exit 0
 means no differences; 1 means differences, or a case on one side only; 2 means a usage error, a
-failed baseline build or a `TIMEOUT`. It serves on port 8767 (`STYLES_DIFF_PORT`), so it can run
+failed build or a `TIMEOUT`. It serves on port 8767 (`STYLES_DIFF_PORT`), so it can run
 next to `measure.sh` (8765) and `serve_lan.sh` (8766).
 
 Before calling a difference a regression, rerun the cases it's in. The harness waits for
