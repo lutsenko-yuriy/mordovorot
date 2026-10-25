@@ -196,7 +196,7 @@ class SixBySixScenarioTest {
         assertEquals("", mordieLine(snaps[2]))
         assertEquals("", mordieLine(snaps[3]))
         assertTrue(factory.started.isEmpty())
-        for (frame in snaps) assertTrue("$dim[ Give Up ]" in frame, "Give Up dimmed")
+        for (frame in snaps) assertFalse("Give Up" in text(frame), "Give Up hidden")
     }
 
     @Test
@@ -231,7 +231,7 @@ class SixBySixScenarioTest {
             assertEquals(24, rows(frame).size)
             assertEquals(sitsOut, mordieLine(frame))
             assertEquals(36, tilesShown(frame).size)
-            assertTrue("Give Up" in text(frame))
+            assertFalse("[ Give Up ]" in text(frame) || "[Give Up F8]" in text(frame))
         }
         val mouse = text(snaps[0])
         assertTrue("[ New ]" in mouse && "[ Labels ]" in mouse && "Saved as 'fit'." in mouse, mouse)

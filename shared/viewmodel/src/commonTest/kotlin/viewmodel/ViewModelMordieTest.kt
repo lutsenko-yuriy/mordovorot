@@ -199,18 +199,21 @@ class ViewModelMordieTest {
         FakeSaveRepository(mutableMapOf("m" to SavedBoard(6, state.copyOf(), moveCount, mordie)))
 
     @Test
-    fun `Mordie sits a new 6x6 game out - the line for shifts 0-4, no search, Give Up dimmed`() {
+    fun `Mordie sits a new 6x6 game out - the line for shifts 0-4, no search, Give Up hidden`() {
         val viewModel = viewModel()
 
         viewModel.newGame(6, trigger = "toolbar")
 
         assertEquals(0, factory.started.size)
         assertEquals(sitsOut, viewModel.mordieLine())
-        assertEquals(GiveUpButton.DIMMED, viewModel.giveUpButton())
+        assertEquals(GiveUpButton.HIDDEN, viewModel.giveUpButton())
         repeat(4) { viewModel.shiftUp(0) }
         assertEquals(sitsOut, viewModel.mordieLine())
         viewModel.shiftUp(0)
         assertNull(viewModel.mordieLine())
+        assertEquals(GiveUpButton.HIDDEN, viewModel.giveUpButton())
+
+        viewModel.newGame(4, trigger = "toolbar")
         assertEquals(GiveUpButton.DIMMED, viewModel.giveUpButton())
     }
 

@@ -14,8 +14,10 @@ class Mordie(private val factory: MordieSearchFactory) {
     private var bound = false
     private var original: IntArray? = null
 
-    /** A game too big to search: only shifts are counted, for the [MordieLine.SitsOut] line. */
-    private var sitsOut = false
+    /** A game too big to search, until it's solved: only shifts are counted, for the
+     *  [MordieLine.SitsOut] line. */
+    var sitsOut = false
+        private set
     private var search: MordieSearch? = null
     private var opening: MordieLine = MordieLine.Opening
     private var checkedMoves = 0

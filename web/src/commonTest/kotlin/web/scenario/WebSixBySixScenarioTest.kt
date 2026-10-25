@@ -39,7 +39,7 @@ class WebSixBySixScenarioTest {
 
         assertEquals(sitsOut, page.state.mordie)
         assertEquals(listOf(16), page.mordieSearches.started.map { it.original.size }, "only the 4x4 game's search")
-        assertEquals(GiveUpButton.DIMMED, page.state.giveUp)
+        assertEquals(GiveUpButton.HIDDEN, page.state.giveUp)
         repeat(5) { page.game.onArrow(Arrow.UP, 0) }
         assertNull(page.state.mordie)
 

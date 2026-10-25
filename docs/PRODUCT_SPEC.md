@@ -205,7 +205,7 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 - **Mordie sits 6x6 out (GH-160)**, until a faster search exists (GH-116): no search, and for
   shifts 0-4 its line is `6x6 is too much for me, you're on your own!`, then empty. A loaded 6x6
   save shows the same line (and its Mordie lines, if any, are dropped at the next save). The
-  solved title is `Congratulations ✓`, `[ Give Up ]` stays dimmed, and no `[ Mordie's solution ]`
+  solved title is `Congratulations ✓`, the Give Up row stays empty (no `[ Give Up ]`), and no `[ Mordie's solution ]`
   follows a win. In the terminal the line takes one row on 6x6, so the board fits 80x24.
 - **Mordie's line** sits under `Moves: N`: `Mordie:` in magenta, then the text, word-wrapped to
   about the width of the board and toolbar, each row centered. Its rows are always reserved, so
@@ -356,7 +356,8 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 Applies to terminal mouse mode, terminal keyboard mode and the web client.
 - **Give Up:** `[ Give Up ]` sits on its own row, directly above the toolbar. It is dimmed and
   inert until Mordie has found its solution (the `Found it!` moment, Feature 8), so on boards
-  where Mordie never finishes (often 5x5) it stays dimmed. Keyboard mode: F8. Pressing it asks
+  where Mordie never finishes (often 5x5) it stays dimmed. On 6x6, which Mordie sits out, it isn't
+  shown at all (GH-160). Keyboard mode: F8. Pressing it asks
   `Give up and see Mordie's solution?` `[ Yes ] [ No ]`: No (or Escape) keeps playing; Yes
   discards the player's moves and opens the solution screen.
 - **After a win:** the row shows `[ Mordie's solution ]` instead (keyboard mode: F8) if Mordie
