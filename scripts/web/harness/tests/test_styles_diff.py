@@ -1,6 +1,6 @@
 """styles_diff.py (GH-156): seeding Math.random and comparing computed-style dumps.
 
-Run: python -m unittest discover -s scripts/web/phone_fit/tests -t scripts/web/phone_fit
+Run: python -m unittest discover -s scripts/web/harness/tests -t scripts/web/harness
 """
 
 import json

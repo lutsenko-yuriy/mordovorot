@@ -1,4 +1,4 @@
-"""GH-147: serves the phone-fit site on 127.0.0.1 and appends each POST /result body to a file.
+"""GH-147: serves the harness site on 127.0.0.1 and appends each POST /result body to a file.
 
 Usage: serve.py <site dir> <results file> [port]
 """

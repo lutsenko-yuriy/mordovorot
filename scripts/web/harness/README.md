@@ -1,4 +1,4 @@
-# Phone fit (GH-147, GH-148, GH-156)
+# Web harness (GH-147, GH-148, GH-156)
 
 Checks that the web game fits phone screens, headless, compares its computed styles against master,
 and serves it to a real phone.
@@ -7,7 +7,7 @@ and serves it to a real phone.
 
 ```
 ./gradlew :web:jsBrowserDistribution
-scripts/web/phone_fit/measure.sh "v=mouse" "v=touch&mode=solution&boards=3"
+scripts/web/harness/measure.sh "v=mouse" "v=touch&mode=solution&boards=3"
 ```
 
 One line per case: `OK`/`BAD`, then the page and window sizes, the toolbar's height, width and
@@ -39,7 +39,7 @@ doesn't reveal its solution within the harness's 80 shifts, so use 3×3 and 4×4
 ## Computed-style diff
 
 ```
-scripts/web/phone_fit/styles_diff.sh --build-baseline ../master-dist
+scripts/web/harness/styles_diff.sh --build-baseline ../master-dist
 ```
 
 Compares every element's computed styles in the branch's bundle against a baseline bundle, so a
@@ -76,12 +76,12 @@ scrollbar's width, and Mordie may not reveal its solution in time, so a `solutio
 its `[solution]` mark on one side. Both went away when rerun alone (GH-156). `::before` and
 `::after` aren't compared.
 
-The compare logic is unit-tested: `python3 -m unittest discover -s scripts/web/phone_fit/tests -t
-scripts/web/phone_fit`.
+The compare logic is unit-tested: `python3 -m unittest discover -s scripts/web/harness/tests -t
+scripts/web/harness`.
 
 ## On a real phone
 
-The user runs `! scripts/web/phone_fit/serve_lan.sh` (auto mode blocks the agent from serving to
+The user runs `! scripts/web/harness/serve_lan.sh` (auto mode blocks the agent from serving to
 the network); it prints the address to open on a phone on the same Wi-Fi, and a QR code for the
 phone's camera when `qrencode` is installed (`brew install qrencode`), so the phone's browser can't
 swap in an older address from its history (GH-148). Ctrl+C stops it.

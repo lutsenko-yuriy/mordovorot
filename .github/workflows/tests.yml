@@ -56,7 +56,7 @@ jobs:
       - name: Run skill_router tests
         run: python -W error -m unittest discover -s scripts/skill_router/tests -t scripts
 
-  phone_fit:
+  web_harness:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -67,5 +67,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Run phone_fit tests
-        run: python -W error -m unittest discover -s scripts/web/phone_fit/tests -t scripts/web/phone_fit
+      - name: Run web harness tests
+        run: python -W error -m unittest discover -s scripts/web/harness/tests -t scripts/web/harness

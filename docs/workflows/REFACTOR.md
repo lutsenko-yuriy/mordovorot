@@ -18,7 +18,7 @@ From plan approval to the final WU's PR, the agent does not ask the user anythin
 1. Implement on `feature/GH-XX-WUN-<short>`, branched from a fresh `origin/main`. Move code
    verbatim and keep every existing assertion.
 2. Get `./gradlew build` green, then smoke-run the real binary over the flows the WU moved.
-   For the web client's CSS, also run `scripts/web/phone_fit/styles_diff.sh` against master: it
+   For the web client's CSS, also run `scripts/web/harness/styles_diff.sh` against master: it
    should report no differences (GH-156).
 3. Open the PR and run `review` + `audit`. Fix every comment, suggestions included, and
    re-run until a round posts **no** findings.
