@@ -56,6 +56,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-139: Alternative tile labels: numbers from 0, pairs, letters, chosen in a dialog](GH-139.md)
 - [GH-147: Web on phones: fit the whole game on one screen, no scrolling](GH-147.md)
 - [GH-148: Web on phones in landscape: fit the whole game on one screen, no scrolling](GH-148.md)
+- [GH-149: Web on phones: stop pinch-zoom on the game page](GH-149.md)
 - [GH-152: Fix Dependabot alerts in the Kotlin/JS build tools: body-parser, fast-uri (yarn.lock)](GH-152.md)
 - [GH-153: Split the web client's styles.css into layout, dialog and solution-screen sheets](GH-153.md)
 - [GH-23: Split Presenter into console/TUI-specific presenters](GH-23.md)
