@@ -2,7 +2,6 @@ package web
 
 import analytics.AnalyticsService
 import board_model.BoardSize
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
@@ -34,18 +33,16 @@ class WebGame internal constructor(
     private val scope: CoroutineScope,
 ) {
 
-    private class OpenDialog<T>(var shown: WebDialog) {
-        val answer = CompletableDeferred<T>()
-    }
-
-    internal val labelsDialog = WebLabelsDialog(viewModel, analytics) { ask(it) }
+    private val modal = WebModal { render(focus = it) }
+    internal val labelsDialog = WebLabelsDialog(viewModel, ::cancelled) { modal.ask(it) }
     private val requests = WebRequestRouter(this)
-    private var dialog: OpenDialog<*>? = null
     private var status: String? = null
     /** The toolbar action or startup restore under way, if any. */
     private var flow: Job? = null
+    /** Where focus goes once [flow] ends: back to the button that started it, unless it moves on. */
+    private var closing: Focus = Focus.PageStart
     private var drag: LineDrag? = null
-    private val idle get() = dialog == null && flow?.isActive != true && drag == null
+    private val idle get() = modal.shown == null && flow?.isActive != true && drag == null
     /** Mordie's solution screen (GH-126): the board is the replay's, not the player's. */
     private val playable get() = idle && !viewModel.isSolved() && viewModel.solution() == null
 
@@ -55,7 +52,7 @@ class WebGame internal constructor(
         scope.launch { for (request in viewModel.uiRequests) requests.handle(request) }
         flow = scope.launch {
             viewModel.restoreOnStartup()
-            render()
+            render(focus = Focus.PageStart)
         }
     }
 
@@ -109,15 +106,18 @@ class WebGame internal constructor(
     /** `[ Give Up ]`: the confirmation, then Mordie's solution screen on Yes. */
     fun onGiveUp() {
         if (viewModel.giveUpButton() != GiveUpButton.GIVE_UP) return
-        runFlow {
+        runFlow(Focus.GiveUpRow) {
             analytics.track("screen_give_up_dialog", mapOf("board_size" to viewModel.squareSide(), "move_count" to viewModel.moveCount()))
-            if (ask(WebDialog.GiveUp)) viewModel.giveUp()
-            else analytics.track("dialog_cancelled", mapOf("dialog" to "give_up"))
+            if (modal.ask(WebDialog.GiveUp)) {
+                viewModel.giveUp()
+                // The solution screen has no Give Up.
+                closing = Focus.ReplayNext
+            } else cancelled("give_up")
         }
     }
 
     /** The give-up confirmation's answer: Yes or No. */
-    fun onGiveUpAnswered(yes: Boolean) = answer<WebDialog.GiveUp, Boolean>(yes)
+    fun onGiveUpAnswered(yes: Boolean) = modal.answer<WebDialog.GiveUp, Boolean>(yes)
 
     /** `[ Mordie's solution ]` after a win: the screen, with no confirmation. */
     fun onMordiesSolution() {
@@ -137,26 +137,26 @@ class WebGame internal constructor(
     }
 
     /** `[ Labels ]` (GH-139): the picker, live on play, after a win and on the solution screen. */
-    fun onLabels() = runFlow { labelsDialog.fromToolbar() }
+    fun onLabels() = runFlow(Focus.LabelsButton) { labelsDialog.fromToolbar() }
 
     /** A Labels row pressed: it becomes the marked one, and the board previews it. */
     fun onLabelsSelected(labels: TileLabels) {
-        val open = dialog?.takeIf { it.shown is WebDialog.Labels } ?: return
-        open.shown = labelsDialog.select(open.shown as WebDialog.Labels, labels) ?: return
-        render()
+        val shown = modal.shown as? WebDialog.Labels ?: return
+        modal.update(labelsDialog.select(shown, labels) ?: return)
+        render(focus = Focus.Label(labels))
     }
 
     /** The Labels dialog's answer: OK with the marked scheme, or Cancel. */
     fun onLabelsAnswered(ok: Boolean) {
-        val shown = dialog?.shown as? WebDialog.Labels ?: return
-        answer<WebDialog.Labels, TileLabels?>(if (ok) shown.selected else null)
+        val shown = modal.shown as? WebDialog.Labels ?: return
+        modal.answer<WebDialog.Labels, TileLabels?>(if (ok) shown.selected else null)
     }
 
-    fun onNew() = runFlow {
+    fun onNew() = runFlow(Focus.NewButton) {
         chooseSize("toolbar")?.let { viewModel.newGame(it, trigger = "toolbar") }
     }
 
-    fun onSave() = runFlow {
+    fun onSave() = runFlow(Focus.SaveButton) {
         val name = askSaveName()
         when {
             name == null -> {}
@@ -167,34 +167,37 @@ class WebGame internal constructor(
     }
 
     fun onSaveNameTyped(name: String) {
-        val open = dialog?.takeIf { it.shown is WebDialog.Save } ?: return
-        open.shown = saveDialog(name)
+        if (modal.shown !is WebDialog.Save) return
+        modal.update(saveDialog(name))
         render()
     }
 
     /** The Save dialog's answer; `null` is Cancel. */
-    fun onSaveAnswered(name: String?) = answer<WebDialog.Save, String?>(name)
+    fun onSaveAnswered(name: String?) = modal.answer<WebDialog.Save, String?>(name)
 
-    fun onLoad() = runFlow {
+    fun onLoad() = runFlow(Focus.LoadButton) {
         chooseSave(viewModel.listSaves(), restore = false)?.let { viewModel.loadGame(it) }
     }
 
     /** The Load dialog's answer, a listed save's name; `null` is Cancel. */
-    fun onLoadChosen(name: String?) = answer<WebDialog.Load, String?>(name)
+    fun onLoadChosen(name: String?) = modal.answer<WebDialog.Load, String?>(name)
 
     /** The unsolvable-save dialog's answer. The page has no Exit, so [UnsolvableSaveChoice.EXIT] is ignored. */
     fun onUnsolvableChoice(choice: UnsolvableSaveChoice) {
-        if (choice != UnsolvableSaveChoice.EXIT) answer<WebDialog.Unsolvable, UnsolvableSaveChoice>(choice)
+        if (choice != UnsolvableSaveChoice.EXIT) modal.answer<WebDialog.Unsolvable, UnsolvableSaveChoice>(choice)
     }
 
     /** The size picker's answer; `null` is Cancel. */
-    fun onSizeChosen(size: Int?) = answer<WebDialog.Size, Int?>(size)
+    fun onSizeChosen(size: Int?) = modal.answer<WebDialog.Size, Int?>(size)
+
+    /** Escape (GH-163): the open dialog's Cancel, or No. */
+    fun onEscape() = modal.escape()
 
     /** [openedFrom] is `toolbar` or a `ChooseBoardSize.origin`, as `screen_size_dialog.opened_from`. */
     internal suspend fun chooseSize(openedFrom: String): Int? {
         analytics.track("screen_size_dialog", mapOf("opened_from" to openedFrom))
-        val size = ask<Int?>(WebDialog.Size((BoardSize.MIN..BoardSize.MAX).toList()))
-        if (size == null) analytics.track("dialog_cancelled", mapOf("dialog" to "size"))
+        val size = modal.ask<Int?>(WebDialog.Size((BoardSize.MIN..BoardSize.MAX).toList(), viewModel.squareSide()))
+        if (size == null) cancelled("size")
         return size
     }
 
@@ -207,7 +210,7 @@ class WebGame internal constructor(
         // The viewModel's can't-be-solved message, just shown, goes in the dialog instead.
         val message = status ?: "'${save.displayWithSize()}' can't be solved by any sequence of shifts."
         status = null
-        return ask(WebDialog.Unsolvable(message))
+        return modal.ask(WebDialog.Unsolvable(message))
     }
 
     internal fun showStatus(text: String) {
@@ -218,8 +221,8 @@ class WebGame internal constructor(
     private suspend fun askSaveName(): String? {
         val prefill = viewModel.currentSaveName() ?: ""
         analytics.track("screen_save_dialog", mapOf("opened_from" to "toolbar", "prefilled" to prefill.isNotEmpty()))
-        val name = ask<String?>(saveDialog(prefill))
-        if (name == null) analytics.track("dialog_cancelled", mapOf("dialog" to "save"))
+        val name = modal.ask<String?>(saveDialog(prefill))
+        if (name == null) cancelled("save")
         // A blank name is Cancel, untracked like the terminal's empty Save.
         return name?.takeUnless { it.isBlank() }
     }
@@ -232,10 +235,14 @@ class WebGame internal constructor(
     private suspend fun chooseSave(saves: List<SaveInfo>, restore: Boolean): String? {
         val openedFrom = if (restore) "startup" else "toolbar"
         analytics.track("screen_load_dialog", mapOf("opened_from" to openedFrom, "save_file_count" to saves.size))
-        val name = ask<String?>(WebDialog.Load(restore, saves.map { SaveEntry(it.name, it.display()) }))
-        if (name == null) analytics.track("dialog_cancelled", mapOf("dialog" to "load"))
+        val name = modal.ask<String?>(WebDialog.Load(restore, saves.map { SaveEntry(it.name, it.display()) }))
+        if (name == null) cancelled("load")
         return name
     }
+
+    /** `dialog_cancelled` for the dialog just closed, with how it was cancelled. */
+    private fun cancelled(dialog: String) =
+        analytics.track("dialog_cancelled", mapOf("dialog" to dialog, "via" to modal.closedVia.wire))
 
     /** Runs a shift on the unsolved board and renders. */
     private fun shift(action: () -> Unit) {
@@ -253,37 +260,20 @@ class WebGame internal constructor(
         render(action()?.let(Slides::ofStep))
     }
 
-    /** Runs a toolbar action, unless another action or a dialog is under way, then renders. */
-    private fun runFlow(action: suspend () -> Unit) {
+    /** Runs a toolbar action, unless another action or a dialog is under way, then renders with
+     *  focus back on its [opener]. */
+    private fun runFlow(opener: Focus, action: suspend () -> Unit) {
         if (!idle) return
         status = null
+        closing = opener
         // Undispatched, so the action is under way before this returns and a second click sees it.
         flow = scope.launch(start = CoroutineStart.UNDISPATCHED) {
             action()
-            render()
+            render(focus = closing)
         }
     }
 
-    private suspend fun <T> ask(shown: WebDialog): T {
-        val open = OpenDialog<T>(shown)
-        dialog = open
-        render()
-        try {
-            return open.answer.await()
-        } finally {
-            dialog = null
-            render()
-        }
-    }
-
-    /** Completes the open dialog when it is a [D]; any other answer is stale and ignored. */
-    private inline fun <reified D : WebDialog, T> answer(value: T) {
-        val open = dialog?.takeIf { it.shown is D } ?: return
-        @Suppress("UNCHECKED_CAST")
-        (open as OpenDialog<T>).answer.complete(value)
-    }
-
-    private fun render(slide: LineOffset? = null) {
+    private fun render(slide: LineOffset? = null, focus: Focus? = null) {
         val solved = viewModel.isSolved()
         renderer.render(
             WebState(
@@ -293,13 +283,14 @@ class WebGame internal constructor(
                 mordie = if (solved) viewModel.mordieEnding() ?: SOLVED_TITLE else viewModel.mordieLine(),
                 solved = solved,
                 status = status,
-                dialog = dialog?.shown,
+                dialog = modal.shown,
                 drag = drag?.offset,
                 giveUp = viewModel.giveUpButton(),
                 solution = viewModel.solution(),
                 slide = slide,
                 // The Labels dialog's marked scheme, previewed until OK keeps it or Cancel drops it.
-                labels = (dialog?.shown as? WebDialog.Labels)?.selected ?: viewModel.tileLabels(),
+                labels = (modal.shown as? WebDialog.Labels)?.selected ?: viewModel.tileLabels(),
+                focus = focus,
             ),
         )
     }

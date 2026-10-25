@@ -96,4 +96,20 @@ class WebAnalyticsScenarioTest {
         assertTrue(events.map { it.name }.containsAll(listOf("screen_unsolvable_dialog", "save_command_used", "load_command_used", "board_solved")))
     }
 
+    @Test
+    fun `every web dialog_cancelled carries via`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.game.onNew()
+        page.game.onSizeChosen(null)
+        page.game.onSave()
+        page.game.onSaveAnswered(null)
+        page.game.onLoad()
+        page.game.onLoadChosen(null)
+        page.game.onLabels()
+        page.game.onLabelsAnswered(ok = false)
+
+        val cancelled = page.props("dialog_cancelled")
+        assertEquals(listOf("size", "save", "load", "labels"), cancelled.map { it["dialog"] })
+        assertTrue(cancelled.all { it["via"] == "button" }, "$cancelled")
+    }
 }

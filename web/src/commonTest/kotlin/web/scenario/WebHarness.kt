@@ -47,6 +47,9 @@ internal class WebHarness(
 
     val state: WebState get() = renderer.frames.last()
 
+    /** Every frame drawn so far, the latest last. */
+    val frames: List<WebState> get() = renderer.frames
+
     fun start(): WebHarness {
         game = startWebGame(board, saves, preferences, analytics, mordie, renderer, scope, layout, appVersion, host)
         return this
@@ -95,3 +98,6 @@ private fun sideOf(tiles: IntArray) = generateSequence(1) { it + 1 }.first { it 
 
 /** [tiles] as the page shows them: 1-based. */
 internal fun shown(tiles: IntArray) = tiles.map { it + 1 }
+
+/** The frame without its one-time focus (GH-163), for comparing what two frames show. */
+internal fun WebState.unfocused() = copy(focus = null)

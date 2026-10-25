@@ -1,14 +1,14 @@
 package web
 
-import analytics.AnalyticsService
 import viewmodel.GameViewModel
 import viewmodel.TileLabels
 
 /** The Tile labels dialog's flows (GH-139, GH-160), like the terminal's `LabelsDialogController`.
- *  [ask] is [WebGame]'s modal: it shows the dialog and waits for OK's scheme, or `null`. */
+ *  [ask] is [WebGame]'s modal: it shows the dialog and waits for OK's scheme, or `null`;
+ *  [cancelled] tracks a Cancel. */
 internal class WebLabelsDialog(
     private val viewModel: GameViewModel,
-    private val analytics: AnalyticsService,
+    private val cancelled: (dialog: String) -> Unit,
     private val ask: suspend (WebDialog.Labels) -> TileLabels?,
 ) {
 
@@ -27,7 +27,7 @@ internal class WebLabelsDialog(
 
     private suspend fun choose(message: String? = null): TileLabels? {
         val chosen = ask(dialog(viewModel.tileLabels(), message))
-        if (chosen == null) analytics.track("dialog_cancelled", mapOf("dialog" to "labels"))
+        if (chosen == null) cancelled("labels")
         return chosen
     }
 

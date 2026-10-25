@@ -102,6 +102,7 @@ Fired when the user cancels the Save, Load, Exit, or Size dialog in the mouse-dr
 |---|---|---|
 | `dialog` | `string` | `save`, `load`, `exit`, or `size`. |
 | `input_method` | `string` | `mouse` or `keyboard` — which TUI mode the session was running in. *(GH-18)* |
+| `via` | `string` | `web` only: `button` (Cancel / No) or `escape`. Absent on `terminal`. *(GH-163)* |
 
 ### `input_mode_switched`
 
@@ -302,6 +303,11 @@ OK on the current scheme fires nothing. Scheme values everywhere: `numbers`, `nu
 `game_given_up` and the `solution_replay_*` events never fire. `unsolvable_save_resolved.board_size`
 stays 3 or 5, since every 6x6 arrangement can be solved. `tile_labels_changed.from_source` takes a
 new value, `letters_unavailable`: the game showed Numbers because Letters doesn't fit a 6x6 board.
+
+*GH-163:* Escape now cancels web dialogs, firing the same events as their Cancel-like button.
+`dialog_cancelled` gains `via` (`string`, `web` only - absent on `terminal`, where `input_method`
+already tells keyboard from mouse): `button` (Cancel / No clicked or activated) or `escape`.
+`startup_restore_decision` is unchanged: Escape on Restore sends `new_game`, as Cancel does.
 
 <!-- All events above are sent through `analytics.AnalyticsService`, currently backed by
      `analytics.NoopAnalyticsService` (no real SDK wired up yet). -->

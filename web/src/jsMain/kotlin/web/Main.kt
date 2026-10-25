@@ -32,6 +32,7 @@ fun main() {
         hostOf(window.location.hostname),
     )
     renderer.game = game
+    listenForDialogKeys(root) { game }
     // The browser's own "Leave site?" prompt, only while some progress isn't in a save.
     window.addEventListener("beforeunload", { event ->
         if (game.hasUnsavedProgress()) {

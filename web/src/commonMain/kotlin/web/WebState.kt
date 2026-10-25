@@ -26,6 +26,8 @@ data class WebState(
     val slide: LineOffset? = null,
     /** How the tiles are labelled (GH-139). */
     val labels: TileLabels = TileLabels.DEFAULT,
+    /** The control to focus once this frame is drawn (GH-163); `null` leaves focus alone. */
+    val focus: Focus? = null,
 ) {
     /** Each tile's text, in [tiles]' order. */
     val tileTexts: List<String> get() = tiles.map { labels.label(it - 1, side) }
@@ -36,8 +38,8 @@ data class WebState(
 
 /** The modal dialog open over the board. */
 sealed interface WebDialog {
-    /** The new-game size picker, with Cancel. */
-    data class Size(val sizes: List<Int>) : WebDialog
+    /** The new-game size picker, with Cancel; [current] is the board's side. */
+    data class Size(val sizes: List<Int>, val current: Int) : WebDialog
 
     /** The name being typed, with the overwrite warning when a save by that name exists. */
     data class Save(val name: String, val warning: String?) : WebDialog

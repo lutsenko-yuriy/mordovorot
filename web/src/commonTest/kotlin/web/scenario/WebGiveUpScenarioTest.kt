@@ -73,7 +73,7 @@ class WebGiveUpScenarioTest {
         page.game.onGiveUp()
         assertEquals(WebDialog.GiveUp, page.state.dialog)
         page.game.onGiveUpAnswered(false)
-        assertEquals(before, page.state)
+        assertEquals(before.unfocused(), page.state.unfocused())
         assertEquals(listOf("give_up"), page.props("dialog_cancelled").map { it["dialog"] })
 
         page.game.onGiveUp()

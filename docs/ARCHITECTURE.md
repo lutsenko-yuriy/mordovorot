@@ -156,17 +156,20 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                          # `build.yml`'s `deploy` job publishes it to GitHub Pages (GH-111)
 ├── src/commonMain/kotlin/web/
 │   ├── WebGame.kt       # The browser's View: page intents (onArrow/onDrag*/onNew/onSave/onLoad/dialog answers,
-│   │                    # GH-126's onGiveUp/onMordiesSolution/onReplay*, GH-139's onLabels*) ->
+│   │                    # GH-126's onGiveUp/onMordiesSolution/onReplay*, GH-139's onLabels*, GH-163's onEscape) ->
 │   │                    # GameViewModel, a WebState to the WebRenderer after every change; drains
 │   │                    # uiRequests; tracks the view-layer analytics (screen views, dialog_cancelled)
 │   ├── WebState.kt      # One frame: tiles (1-based), Moves, Mordie's spot, solved, status, WebDialog,
 │   │                    # the dragged line's live offset; the Give Up row, the solution screen and
 │   │                    # the replay shift to slide (GH-126); the tile labels and tileTexts (GH-139);
-│   │                    # LabelOption.available and Labels.message (GH-160)
+│   │                    # LabelOption.available and Labels.message (GH-160); the one-time focus (GH-163)
 │   ├── WebRenderer.kt   # fun interface render(WebState) - the DOM on the page, a recorder in tests
 │   ├── WebRequestRouter.kt # Answers each UiRequest (exhaustive `when`, like UiRequestRouter)
 │   ├── WebLabelsDialog.kt # The Tile labels dialog's flows over WebGame's modal (GH-160), like
 │   │                    # the terminal's LabelsDialogController
+│   ├── WebModal.kt      # WebGame's dialog machinery: open/answer a WebDialog, the button that
+│   │                    # opened it, the cancel's `via` (GH-163)
+│   ├── DialogFocus.kt   # GH-163: Focus (a data-focus key), each dialog's default focus and title
 │   ├── Layout.kt        # layoutOf(width, height): WIDE (wider than tall) or TALL
 │   ├── Slides.kt        # The eased slide after an arrow shift, a drag release or a replay shift
 │   │                    # (GH-126), drawn by WrapPositions
@@ -197,6 +200,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/jsMain/kotlin/web/DomFooter.kt  # footerElement: <footer>, its links in a new tab (GH-111);
 │                                       # wide-only parts in `.wide-only` (GH-147)
 ├── src/jsMain/kotlin/web/DomDialogs.kt  # The modal dialogs; DomElements.kt: element/text/button helpers
+├── src/jsMain/kotlin/web/DomKeyboard.kt # GH-163: Escape -> WebGame.onEscape, Tab wraps inside the
+│                                       # open dialog, the page behind it `inert`, applies WebState.focus
 ├── src/jsMain/kotlin/web/DomSolution.kt # The step list, Prev/Next/Restart and the Give Up row (GH-126)
 ├── src/jsMain/kotlin/web/storage/LocalStorageStore.kt # KeyValueStore over window.localStorage
 ├── src/jsMain/resources/index.html     # The page: `<title>Mordovorot</title>`, links the five

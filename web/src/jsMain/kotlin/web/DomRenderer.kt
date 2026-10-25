@@ -4,7 +4,6 @@ import kotlinx.browser.window
 import kotlinx.dom.clear
 import org.w3c.dom.Element
 import org.w3c.dom.HTMLElement
-import org.w3c.dom.HTMLInputElement
 import org.w3c.dom.pointerevents.PointerEvent
 import web.drag.Axis
 import web.drag.LineOffset
@@ -81,6 +80,7 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
         saveWarning = null
         // The rebuilt step list starts where this one was scrolled to.
         val stepsScroll = root.querySelector(".steps")?.scrollTop
+        val focused = focusedKey(root)
         root.clear()
         root.style.setProperty("--side", state.side.toString())
         root.classList.toggle("solved", state.solved)
@@ -98,10 +98,10 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
                     *listOfNotNull(state.solution?.let { replayButtons(it, { game }, dialog != null) }, giveUpRow(state.giveUp, { game }, dialog != null)).toTypedArray(),
                     element("div", "toolbar").also { toolbar = it }.apply {
                         append(
-                            button("New") { game.onNew() }.also { it.disabled = dialog != null },
-                            button("Save") { game.onSave() }.also { it.disabled = dialog != null },
-                            button("Load") { game.onLoad() }.also { it.disabled = dialog != null },
-                            button("Labels") { game.onLabels() }.also { it.disabled = dialog != null },
+                            button("New") { game.onNew() }.focusKey(Focus.NewButton).also { it.disabled = dialog != null },
+                            button("Save") { game.onSave() }.focusKey(Focus.SaveButton).also { it.disabled = dialog != null },
+                            button("Load") { game.onLoad() }.focusKey(Focus.LoadButton).also { it.disabled = dialog != null },
+                            button("Labels") { game.onLabels() }.focusKey(Focus.LabelsButton).also { it.disabled = dialog != null },
                         )
                     },
                     text("status", state.status ?: ""),
@@ -117,9 +117,8 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
         val reopened = dialog != null && before?.dialog?.let { it::class == dialog::class } == true
         dialog?.let { root.append(element("div", if (reopened) "overlay shown" else "overlay").apply { append(dialogElement(it, game) { warning -> saveWarning = warning }) }) }
         drawMordie(now)
-        root.querySelector("input")?.let { (it as HTMLInputElement).focus() }
-        // The rebuilt Labels dialog keeps keyboard focus on the row just picked.
-        if (reopened && dialog is WebDialog.Labels) (root.querySelector(".labels .checked") as? HTMLElement)?.focus()
+        setBehindDialog(root, dialog != null)
+        applyFocus(root, state.focus, focused, dialog != null)
     }
 
     /** Scrolls [steps] just enough to show [step]. Unlike `scrollIntoView`, never the page, so

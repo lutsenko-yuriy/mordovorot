@@ -11,27 +11,29 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
     element("div", "dialog").apply {
         setAttribute("role", "dialog")
         setAttribute("aria-modal", "true")
+        // Named by its title (GH-163).
+        setAttribute("aria-labelledby", TITLE_ID)
+        append(text("title", dialog.title).apply { id = TITLE_ID })
         when (dialog) {
             is WebDialog.Size -> append(
-                text("title", "New game size"),
-                choices(dialog.sizes.map { size -> button("${size}x$size") { game.onSizeChosen(size) } }),
+                choices(dialog.sizes.map { size -> button("${size}x$size") { game.onSizeChosen(size) }.focusKey(Focus.SizeChoice(size)) }),
                 actions(button("Cancel", "secondary") { game.onSizeChosen(null) }),
             )
             is WebDialog.Save -> {
                 val name = (element("input") as HTMLInputElement).apply {
                     value = dialog.name
                     setAttribute("aria-label", "Save name")
+                    focusKey(Focus.SaveName)
                     addEventListener("input", { game.onSaveNameTyped(value) })
                     addEventListener("keydown", {
                         // An Enter that confirms an IME composition isn't the player's Save.
                         val key = it as KeyboardEvent
-                        if (key.key == "Enter" && !key.isComposing && key.keyCode != 229) game.onSaveAnswered(value)
+                        if (key.key == "Enter" && !key.composing) game.onSaveAnswered(value)
                     })
                 }
                 val warning = text("warning", dialog.warning ?: "")
                 onSaveWarning(warning)
                 append(
-                    text("title", "Save game"),
                     name,
                     warning,
                     actions(
@@ -41,21 +43,20 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                 )
             }
             is WebDialog.Load -> {
-                append(text("title", if (dialog.restore) "Restore a saved game?" else "Load game"))
                 if (dialog.saves.isEmpty()) append(text("message", "No saves found."))
-                else append(choices(dialog.saves.map { save -> button(save.label) { game.onLoadChosen(save.name) } }, "list"))
-                append(actions(button("Cancel", "secondary") { game.onLoadChosen(null) }))
+                else append(choices(dialog.saves.mapIndexed { i, save ->
+                    button(save.label) { game.onLoadChosen(save.name) }.apply { if (i == 0) focusKey(Focus.FirstSave) }
+                }, "list"))
+                append(actions(button("Cancel", "secondary") { game.onLoadChosen(null) }.focusKey(Focus.DialogCancel)))
             }
             is WebDialog.Unsolvable -> append(
-                text("title", "Can't be solved"),
                 text("message", dialog.message),
                 actions(
                     button("New game", "secondary") { game.onUnsolvableChoice(UnsolvableSaveChoice.NEW_GAME) },
-                    button("Repair & load") { game.onUnsolvableChoice(UnsolvableSaveChoice.REPAIR) },
+                    button("Repair & load") { game.onUnsolvableChoice(UnsolvableSaveChoice.REPAIR) }.focusKey(Focus.Repair),
                 ),
             )
             is WebDialog.Labels -> append(
-                text("title", "Tile labels"),
                 *listOfNotNull(dialog.message?.let { text("message", it) }).toTypedArray(),
                 choices(dialog.options.map { labelRow(it, it.labels == dialog.selected, game) }, "list labels").apply {
                     setAttribute("role", "radiogroup")
@@ -67,9 +68,8 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                 ),
             )
             WebDialog.GiveUp -> append(
-                text("title", "Give up and see Mordie's solution?"),
                 actions(
-                    button("No", "secondary") { game.onGiveUpAnswered(false) },
+                    button("No", "secondary") { game.onGiveUpAnswered(false) }.focusKey(Focus.No),
                     button("Yes") { game.onGiveUpAnswered(true) },
                 ),
             )
@@ -78,7 +78,7 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
 
 /** A radio-role button, since the page is rebuilt every frame and a native radio would lose its state. */
 private fun labelRow(option: LabelOption, checked: Boolean, game: WebGame) =
-    button("", if (checked) "checked" else null) { game.onLabelsSelected(option.labels) }.apply {
+    button("", if (checked) "checked" else null) { game.onLabelsSelected(option.labels) }.focusKey(Focus.Label(option.labels)).apply {
         setAttribute("role", "radio")
         setAttribute("aria-checked", checked.toString())
         if (!option.available) {
@@ -91,6 +91,8 @@ private fun labelRow(option: LabelOption, checked: Boolean, game: WebGame) =
             element("span", "sample").apply { textContent = option.sample.joinToString(" ") { it.padEnd(2) } },
         )
     }
+
+private const val TITLE_ID = "dialog-title"
 
 private fun choices(buttons: List<Element>, kind: String? = null) =
     element("div", listOfNotNull("choices", kind).joinToString(" ")).apply { buttons.forEach { append(it) } }
