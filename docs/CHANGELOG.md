@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.21.0] — 2026-10-25 (PR #161 merged)
+
+### Added
+- [user] (PR #161) GH-160: 6x6 boards in the terminal game and the browser. Mordie sits 6x6 out for now ("6x6 is too much for me, you're on your own!") and Give Up isn't shown there. Letters labels only go up to 5x5, so a 6x6 board shows numbers instead and keeps your choice for smaller boards; a 6x6 save with Letters asks you to pick other labels.
+- [non-user] serve_lan.sh rebuilds the web bundle when it isn't from the current commit; /plan now checks touched files against the size guideline.
+
 ## [0.20.8] — 2026-10-25 (PR #159 merged)
 
 ### Added
