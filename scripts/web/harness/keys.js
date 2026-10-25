@@ -17,8 +17,7 @@ async function runKeys(win, steps, label) {
 function play(win, step) {
     const doc = win.document;
     if (step.startsWith("click:")) {
-        const text = step.slice(6);
-        [...doc.querySelectorAll("button")].find(b => b.textContent.trim() === text)?.click();
+        clickText(doc, step.slice(6)); // harness.html's
         return "-";
     }
     if (step.startsWith("focus:")) {
