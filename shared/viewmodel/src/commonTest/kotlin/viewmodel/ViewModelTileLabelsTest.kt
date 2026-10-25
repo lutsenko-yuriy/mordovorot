@@ -216,4 +216,51 @@ class ViewModelTileLabelsTest {
 
         assertEquals(TileLabels.LETTERS, testViewModel(board, saves, analytics, tileLabels = labels).tileLabels())
     }
+
+    // --- 6x6, GH-160 ---
+
+    @Test
+    fun `a Letters preference shows numbers on a new 6x6 game, and letters again on 4x4`() {
+        val viewModel = viewModel("letters")
+
+        viewModel.newGame(6, trigger = "toolbar")
+        assertEquals(TileLabels.NUMBERS, viewModel.tileLabels())
+
+        viewModel.newGame(4, trigger = "toolbar")
+        assertEquals(TileLabels.LETTERS, viewModel.tileLabels())
+        assertEquals("letters", store.values["tile_labels"])
+    }
+
+    @Test
+    fun `--size=6 with a Letters preference starts on numbers`() = runTest {
+        store.values["tile_labels"] = "letters"
+        val viewModel = testViewModel(
+            BoardImpl(6), saves, analytics, sizeChosenAtLaunch = true, mordie = Mordie(FakeMordieSearchFactory()),
+            tileLabels = SessionTileLabels(TileLabelsPreference(store)),
+        )
+
+        FakeViewModelUi().drive(viewModel) { viewModel.restoreOnStartup() }
+
+        assertEquals(TileLabels.NUMBERS, viewModel.tileLabels())
+    }
+
+    @Test
+    fun `a 6x6 save with no labels and a Letters preference loads on numbers`() = runTest {
+        saves.save("six", IntArray(36) { 35 - it }, 6)
+        val viewModel = viewModel("letters")
+
+        viewModel.load("six")
+
+        assertEquals(TileLabels.NUMBERS, viewModel.tileLabels())
+    }
+
+    @Test
+    fun `changing labels on 6x6 from the stand-in numbers tracks from_source letters_unavailable`() {
+        val viewModel = viewModel("letters")
+        viewModel.newGame(6, trigger = "toolbar")
+
+        viewModel.changeTileLabels(TileLabels.PAIRS)
+
+        assertEquals("letters_unavailable", event("tile_labels_changed")["from_source"])
+    }
 }

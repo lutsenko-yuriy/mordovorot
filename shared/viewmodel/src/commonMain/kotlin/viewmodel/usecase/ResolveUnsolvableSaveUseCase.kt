@@ -55,7 +55,7 @@ internal class ResolveUnsolvableSaveUseCase(
                 currentSaveName.name = name
                 gameShiftSources.reset()
                 unsavedProgress.unsaved = false
-                tileLabels.applySave(TileLabels.fromWireName(saved.labels))
+                tileLabels.applySave(TileLabels.fromWireName(saved.labels), board.squareSide)
                 val error = try {
                     saves.save(name, fixed, saved.squareSide, saved.moveCount, labels = saved.labels)
                     null

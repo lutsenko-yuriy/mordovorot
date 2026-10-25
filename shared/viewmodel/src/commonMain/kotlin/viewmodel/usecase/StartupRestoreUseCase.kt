@@ -4,6 +4,7 @@ import analytics.AnalyticsService
 import board_model.BoardModel
 import viewmodel.MordieHooks
 import viewmodel.SaveCatalog
+import viewmodel.SessionTileLabels
 import viewmodel.UiRequest
 import viewmodel.UiRequestChannel
 import viewmodel.catchingNonCancellation
@@ -17,6 +18,7 @@ internal class StartupRestoreUseCase(
     private val loadGame: LoadGameUseCase,
     private val newGame: NewGameUseCase,
     private val mordieHooks: MordieHooks,
+    private val tileLabels: SessionTileLabels,
     /** Seeded `true` by `GameSession` after a mode switch, so the prompt doesn't re-show. */
     startupRestoreDone: Boolean,
     /** `true` when `--size=N` was given at launch (GH-44) - the flag *is* the answer, so
@@ -47,7 +49,11 @@ internal class StartupRestoreUseCase(
     private suspend fun restoreOrPickSize(): Boolean {
         if (startupRestoreDone) return false
         startupRestoreDone = true
-        if (sizeChosenAtLaunch) return false
+        if (sizeChosenAtLaunch) {
+            // The labels were set before the board's size was known, e.g. Letters on 6x6 (GH-160).
+            tileLabels.resetToPreference(board.squareSide)
+            return false
+        }
         // Any failure here just starts a fresh game instead of crashing at boot.
         return catchingNonCancellation(onError = { false }) {
             val saveInfos = catalog.infos()

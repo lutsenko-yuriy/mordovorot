@@ -3,7 +3,9 @@ package viewmodel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class TileLabelsTest {
 
@@ -64,5 +66,13 @@ class TileLabelsTest {
         assertFailsWith<IllegalArgumentException> { TileLabels.LETTERS.label(0, 6) }
         assertFailsWith<IllegalArgumentException> { TileLabels.PAIRS.label(0, 10) }
         assertEquals("100", TileLabels.NUMBERS.label(99, 10))
+    }
+
+    @Test
+    fun `fits says whether a scheme labels a side (GH-160)`() {
+        assertTrue(TileLabels.LETTERS.fits(5))
+        assertFalse(TileLabels.LETTERS.fits(6))
+        assertTrue(TileLabels.LETTER_PAIRS.fits(6))
+        assertTrue(TileLabels.NUMBERS.fits(6))
     }
 }

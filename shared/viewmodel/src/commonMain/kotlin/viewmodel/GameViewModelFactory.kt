@@ -45,7 +45,7 @@ fun buildGameViewModel(
         solution, tileLabels,
     )
     val startupRestore = StartupRestoreUseCase(
-        board, catalog, analytics, ui, loadGame, newGame, mordieHooks, startupRestoreDone, sizeChosenAtLaunch,
+        board, catalog, analytics, ui, loadGame, newGame, mordieHooks, tileLabels, startupRestoreDone, sizeChosenAtLaunch,
     )
     val tileLabelsUseCase = TileLabelsUseCase(board, tileLabels, analytics, solution)
     return GameViewModelImpl(

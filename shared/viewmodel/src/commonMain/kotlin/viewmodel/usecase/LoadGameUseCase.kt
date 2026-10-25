@@ -70,7 +70,7 @@ internal class LoadGameUseCase(
             // An unknown name (a later build's scheme, a hand edit) loads with the preference (GH-139).
             val fromSave = TileLabels.fromWireName(saved.labels)
             val labelsDiffer = fromSave != null && fromSave != tileLabels.effectivePreference
-            tileLabels.applySave(fromSave)
+            tileLabels.applySave(fromSave, board.squareSide)
             analytics.track(
                 "load_command_used",
                 mapOf("trigger" to trigger, "result" to "success", "labels_differ_from_preference" to labelsDiffer),
