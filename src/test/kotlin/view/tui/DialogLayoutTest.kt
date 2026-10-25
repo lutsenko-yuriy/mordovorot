@@ -140,4 +140,19 @@ class DialogLayoutTest {
         for (index in 0 until 6) assertEquals(HitTarget.DialogListRow(index), layout.hitTest(layout.left + 2, layout.listRowPosition(index)))
         assertEquals(layout.listRowPosition(5) + 2, layout.buttonsRow())
     }
+
+    @Test
+    fun `a disabled Labels row hits nothing (GH-160)`() {
+        val dialog = Dialog(
+            kind = Dialog.Kind.LABELS,
+            title = "Tile labels",
+            listItems = List(6) { "row $it" },
+            buttons = listOf(DialogButtonSpec("ok", "OK"), DialogButtonSpec("cancel", "Cancel")),
+            disabledRows = setOf(4),
+        )
+        val layout = DialogLayout(dialog, terminalSize)
+
+        assertEquals(HitTarget.Nothing, layout.hitTest(layout.left + 2, layout.listRowPosition(4)))
+        assertEquals(HitTarget.DialogListRow(5), layout.hitTest(layout.left + 2, layout.listRowPosition(5)))
+    }
 }

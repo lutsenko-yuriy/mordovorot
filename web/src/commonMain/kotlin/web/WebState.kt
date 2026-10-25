@@ -58,5 +58,6 @@ sealed interface WebDialog {
 /** A save as a Load row: its [label] is `name (NxN)`, with the unsolvable mark when it applies. */
 data class SaveEntry(val name: String, val label: String)
 
-/** A Labels row: a scheme, its [title] and its [sample], the solved board's first row. */
-data class LabelOption(val labels: TileLabels, val title: String, val sample: List<String>)
+/** A Labels row: a scheme, its [title] and its [sample], the solved board's first row - or, when
+ *  not [available] for the board (GH-160), the largest side it labels. */
+data class LabelOption(val labels: TileLabels, val title: String, val sample: List<String>, val available: Boolean = true)

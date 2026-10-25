@@ -80,6 +80,10 @@ private fun labelRow(option: LabelOption, checked: Boolean, game: WebGame) =
     button("", if (checked) "checked" else null) { game.onLabelsSelected(option.labels) }.apply {
         setAttribute("role", "radio")
         setAttribute("aria-checked", checked.toString())
+        if (!option.available) {
+            setAttribute("disabled", "")
+            setAttribute("aria-disabled", "true")
+        }
         append(
             element("span", "mark").apply { textContent = if (checked) "●" else "○" },
             element("span", "name").apply { textContent = option.title },

@@ -91,6 +91,13 @@
     background: var(--frame);
 }
 
+/* A scheme too small for the board (GH-160). */
+.dialog .choices.labels button:disabled {
+    opacity: 0.45;
+    cursor: default;
+    background: transparent;
+}
+
 .dialog .choices.labels button.checked {
     box-shadow: inset 0 0 0 2px var(--button);
 }

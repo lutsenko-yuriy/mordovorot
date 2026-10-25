@@ -193,7 +193,9 @@ class ScreenRenderer {
                 selected -> "> "
                 else -> "  "
             }
-            canvas.put(layout.left + 2, layout.listRowPosition(index), truncate("$marker${dialog.listItems[index]}", maxLineWidth))
+            val text = truncate("$marker${dialog.listItems[index]}", maxLineWidth)
+            if (index in dialog.disabledRows) canvas.putColored(layout.left + 2, layout.listRowPosition(index), text, DIM_ON, DIM_OFF)
+            else canvas.put(layout.left + 2, layout.listRowPosition(index), text)
         }
         val focusedTarget = dialog.focusedButtonId?.let { HitTarget.DialogButton(it) }
         for (button in layout.buttons()) {

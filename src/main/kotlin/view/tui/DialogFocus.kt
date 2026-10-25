@@ -19,7 +19,7 @@ class DialogFocus(dialog: Dialog) {
 
     private val targets: List<DialogFocusTarget> = buildList {
         if (dialog.kind == Dialog.Kind.SAVE) add(DialogFocusTarget.TextField)
-        if (dialog.kind.hasList) dialog.listItems.indices.forEach { add(DialogFocusTarget.ListRow(it)) }
+        if (dialog.kind.hasList) dialog.listItems.indices.filter { it !in dialog.disabledRows }.forEach { add(DialogFocusTarget.ListRow(it)) }
         dialog.buttons.forEach { add(DialogFocusTarget.Button(HitTarget.DialogButton(it.id))) }
     }
 

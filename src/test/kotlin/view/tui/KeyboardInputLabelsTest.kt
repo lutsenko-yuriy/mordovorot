@@ -62,4 +62,14 @@ class KeyboardInputLabelsTest {
         val load = input.decorateDialog(loadDialog(listOf("foo", "bar"), selected = 0))
         assertEquals(InputAction.Activate(HitTarget.DialogListRow(0)), input.onDialogEvent(TerminalEvent.Enter, load, dialogLayoutFor(load)))
     }
+
+    @Test
+    fun `Down and Up skip a disabled Labels row (GH-160)`() {
+        val input = KeyboardInput(KeyboardSelection())
+        input.onDialogOpened()
+        val dialog = input.decorateDialog(labelsDialog(selected = 3).copy(disabledRows = setOf(4)))
+
+        assertEquals(InputAction.Activate(HitTarget.DialogListRow(5)), input.onDialogEvent(arrow(Direction.DOWN), dialog, dialogLayoutFor(dialog)))
+        assertEquals(InputAction.Activate(HitTarget.DialogListRow(3)), input.onDialogEvent(arrow(Direction.UP), dialog, dialogLayoutFor(dialog)))
+    }
 }

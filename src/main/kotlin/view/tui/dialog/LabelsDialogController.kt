@@ -26,7 +26,11 @@ internal class LabelsDialogController(
     private fun runLabelsDialog(): TileLabels? {
         val schemes = TileLabels.entries
         val side = viewModel.squareSide()
-        val rows = schemes.map { labels -> "${labels.title.padEnd(16)} ${labels.sampleRow(side).joinToString(" ") { it.padEnd(2) }}".trimEnd() }
+        val rows = schemes.map { labels ->
+            val sample = if (labels.fits(side)) labels.sampleRow(side).joinToString(" ") { it.padEnd(2) } else "up to ${labels.maxSide}x${labels.maxSide}"
+            "${labels.title.padEnd(16)} $sample".trimEnd()
+        }
+        val disabled = schemes.indices.filterNot { schemes[it].fits(side) }.toSet()
         var selected = schemes.indexOf(viewModel.tileLabels())
         val dialog = {
             Dialog(
@@ -34,6 +38,7 @@ internal class LabelsDialogController(
                 title = "Tile labels",
                 listItems = rows,
                 selectedIndex = selected,
+                disabledRows = disabled,
                 buttons = listOf(DialogButtonSpec("ok", "OK"), DialogButtonSpec("cancel", "Cancel")),
             )
         }

@@ -78,4 +78,21 @@ class TuiViewLabelsDialogTest {
         assertTrue(run.viewModel.calls.none { it.startsWith("changeTileLabels") })
         assertEquals(listOf<Any?>("labels"), run.analytics.events.filter { it.name == "dialog_cancelled" }.map { it.properties["dialog"] })
     }
+
+    @Test
+    fun `on 6x6 the Letters row reads up to 5x5, and clicking it marks nothing (GH-160)`() {
+        val open6 = BoardLayout(terminalSize, 6, modeButtons = listOf(InputMode.KEYBOARD)).labelsButtonPosition()
+            .let { (x, y) -> TerminalEvent.MouseClick(x, y) }
+        val run = runBlocking {
+            val terminal = FakeTerminal(mutableListOf(open6, row(4), clickButton("ok")), terminalSize)
+            val viewModel = FakeViewModel().also { it.side = 6; it.board = IntArray(36) { i -> i } }
+            testTuiView(terminal, RecordingAnalyticsService(), MouseInput(), viewModel = viewModel).play()
+            Run(terminal, viewModel, RecordingAnalyticsService())
+        }
+
+        val dialogFrame = run.terminal.frames.first { "Tile labels" in it }
+        assertTrue("○ Letters          up to 5x5" in dialogFrame, dialogFrame)
+        assertTrue("○ Letter pairs     AA AB AC AD AE AF" in dialogFrame, dialogFrame)
+        assertEquals(listOf("tileLabelsDialogOpened(toolbar)", "changeTileLabels(NUMBERS)"), run.viewModel.calls.filter { "Labels" in it })
+    }
 }

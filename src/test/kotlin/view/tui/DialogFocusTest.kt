@@ -93,4 +93,16 @@ class DialogFocusTest {
         assertNull(focus.target(3))
         assertNull(focus.target(-1))
     }
+
+    @Test
+    fun `a Labels dialog's disabled rows are left out of the ring (GH-160)`() {
+        val buttons = listOf(DialogButtonSpec("ok", "OK"), DialogButtonSpec("cancel", "Cancel"))
+        val focus = DialogFocus(
+            Dialog(Dialog.Kind.LABELS, "Tile labels", listItems = List(6) { "row $it" }, buttons = buttons, disabledRows = setOf(4)),
+        )
+
+        assertEquals(7, focus.size)
+        assertEquals(DialogFocusTarget.ListRow(5), focus.target(4))
+        assertEquals(-1, focus.indexOf(DialogFocusTarget.ListRow(4)))
+    }
 }

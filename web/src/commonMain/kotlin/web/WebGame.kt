@@ -147,6 +147,7 @@ class WebGame internal constructor(
     /** A Labels row pressed: it becomes the marked one, and the board previews it. */
     fun onLabelsSelected(labels: TileLabels) {
         val open = dialog?.takeIf { it.shown is WebDialog.Labels } ?: return
+        if (!labels.fits(viewModel.squareSide())) return
         open.shown = labelsDialog(labels)
         render()
     }
@@ -236,7 +237,13 @@ class WebGame internal constructor(
 
     private fun labelsDialog(selected: TileLabels): WebDialog.Labels {
         val side = viewModel.squareSide()
-        return WebDialog.Labels(TileLabels.entries.map { LabelOption(it, it.title, it.sampleRow(side)) }, selected)
+        return WebDialog.Labels(
+            TileLabels.entries.map {
+                if (it.fits(side)) LabelOption(it, it.title, it.sampleRow(side))
+                else LabelOption(it, it.title, listOf("up to ${it.maxSide}x${it.maxSide}"), available = false)
+            },
+            selected,
+        )
     }
 
     private suspend fun chooseSave(saves: List<SaveInfo>, restore: Boolean): String? {

@@ -58,4 +58,22 @@ class ScreenRendererLabelsTest {
         assertTrue("○ Numbers" in text && "● Pairs" in text, text)
         assertFalse("> " in text)
     }
+
+    @Test
+    fun `a disabled Labels row is drawn dimmed (GH-160)`() {
+        val state = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false).copy(
+            dialog = Dialog(
+                kind = Dialog.Kind.LABELS,
+                title = "Tile labels",
+                listItems = listOf("Numbers", "Letters"),
+                selectedIndex = 0,
+                buttons = listOf(DialogButtonSpec("ok", "OK"), DialogButtonSpec("cancel", "Cancel")),
+                disabledRows = setOf(1),
+            ),
+        )
+
+        val frame = renderer.render(state, terminalSize)
+        assertTrue("\u001B[2m○ Letters" in frame, frame)
+        assertFalse("\u001B[2m● Numbers" in frame || "\u001B[2m○ Numbers" in frame, frame)
+    }
 }

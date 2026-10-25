@@ -76,7 +76,9 @@ class DialogLayout(private val dialog: Dialog, terminalSize: TerminalSize) {
 
     fun hitTest(x: Int, y: Int): HitTarget {
         if (hasList && dialog.listItems.isNotEmpty() && x in left until (left + width)) {
-            for (index in dialog.listItems.indices) if (y == listRowPosition(index)) return HitTarget.DialogListRow(index)
+            for (index in dialog.listItems.indices) {
+                if (y == listRowPosition(index)) return if (index in dialog.disabledRows) HitTarget.Nothing else HitTarget.DialogListRow(index)
+            }
         }
         if (y == buttonsRow) {
             for (button in buttons()) if (x in button.range) return button.target
