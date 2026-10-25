@@ -140,7 +140,8 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │                                     # both return LoadResult, GH-41), StartupRestoreUseCase (restore or
 │                                     # size prompt, then Mordie; takes `startupRestoreDone`, which
 │                                     # GameSession seeds true after a mode switch (GH-30), and
-│                                     # `sizeChosenAtLaunch`), SolutionUseCase (the Give Up row,
+│                                     # `sizeChosenAtLaunch`, which also fits the labels to the
+│                                     # launch size, GH-160), SolutionUseCase (the Give Up row,
 │                                     # entering the solution screen, the replay and its
 │                                     # analytics, GH-126), TileLabelsUseCase (the labels dialog's
 │                                     # screen view and OK, GH-139)
@@ -160,7 +161,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │                    # uiRequests; tracks the view-layer analytics (screen views, dialog_cancelled)
 │   ├── WebState.kt      # One frame: tiles (1-based), Moves, Mordie's spot, solved, status, WebDialog,
 │   │                    # the dragged line's live offset; the Give Up row, the solution screen and
-│   │                    # the replay shift to slide (GH-126); the tile labels and tileTexts (GH-139)
+│   │                    # the replay shift to slide (GH-126); the tile labels and tileTexts (GH-139);
+│   │                    # LabelOption.available and Labels.message (GH-160)
 │   ├── WebRenderer.kt   # fun interface render(WebState) - the DOM on the page, a recorder in tests
 │   ├── WebRequestRouter.kt # Answers each UiRequest (exhaustive `when`, like UiRequestRouter)
 │   ├── Layout.kt        # layoutOf(width, height): WIDE (wider than tall) or TALL
@@ -308,6 +310,8 @@ src/main/kotlin/                # the terminal app (the root project)
         │                                     # Load-shaped startup restore prompt (GH-3 WU4);
         │                                     # Dialog also carries keyboard focus state
         │                                     # (focusedButtonId, textFieldFocused) (GH-18)
+        │                                     # and disabledRows: dimmed, unclickable and
+        │                                     # out of the focus ring (GH-160)
         ├── DialogFocus.kt   # Pure focus ring over a dialog's controls (text field/list rows,
         │                      # then buttons) for Tab/arrow-key dialog navigation (GH-18)
         ├── ScreenState.kt / ScreenRenderer.kt # Pure ScreenState -> frame String rendering,
@@ -656,7 +660,9 @@ Exit answer is pending.
 A usable `--size=N` sets `sizeChosenAtLaunch` (captured by `buildGameSession`
 and passed through `defaultView` → `StartupRestoreUseCase` on every rebuild), and `restoreOnStartup` returns immediately when
 it's set — no restore prompt, no size prompt, no `startup_restore_prompt_shown`/
-`startup_restore_decision`, regardless of what saves exist on disk. Without the
+`startup_restore_decision`, regardless of what saves exist on disk. It does
+refit the labels to the launch size, so a Letters preference shows Numbers on
+`--size=6` (GH-160). Without the
 flag (or with an unusable one - `sizeChosenAtLaunch` is `false` in that case
 too, matching `resolveBoardSize`'s `null`), the restore prompt runs as before
 (GH-6), and the size prompt raises only once it's established nothing was
