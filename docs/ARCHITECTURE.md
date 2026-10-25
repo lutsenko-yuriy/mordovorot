@@ -165,6 +165,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │                    # LabelOption.available and Labels.message (GH-160)
 │   ├── WebRenderer.kt   # fun interface render(WebState) - the DOM on the page, a recorder in tests
 │   ├── WebRequestRouter.kt # Answers each UiRequest (exhaustive `when`, like UiRequestRouter)
+│   ├── WebLabelsDialog.kt # The Tile labels dialog's flows over WebGame's modal (GH-160), like
+│   │                    # the terminal's LabelsDialogController
 │   ├── Layout.kt        # layoutOf(width, height): WIDE (wider than tall) or TALL
 │   ├── Slides.kt        # The eased slide after an arrow shift, a drag release or a replay shift
 │   │                    # (GH-126), drawn by WrapPositions

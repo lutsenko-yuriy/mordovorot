@@ -38,6 +38,7 @@ class WebGame internal constructor(
         val answer = CompletableDeferred<T>()
     }
 
+    internal val labelsDialog = WebLabelsDialog(viewModel, analytics) { ask(it) }
     private val requests = WebRequestRouter(this)
     private var dialog: OpenDialog<*>? = null
     private var status: String? = null
@@ -136,19 +137,12 @@ class WebGame internal constructor(
     }
 
     /** `[ Labels ]` (GH-139): the picker, live on play, after a win and on the solution screen. */
-    fun onLabels() = runFlow {
-        val current = viewModel.tileLabels()
-        viewModel.tileLabelsDialogOpened("toolbar")
-        val chosen = ask<TileLabels?>(labelsDialog(current))
-        if (chosen == null) analytics.track("dialog_cancelled", mapOf("dialog" to "labels"))
-        else viewModel.changeTileLabels(chosen)
-    }
+    fun onLabels() = runFlow { labelsDialog.fromToolbar() }
 
     /** A Labels row pressed: it becomes the marked one, and the board previews it. */
     fun onLabelsSelected(labels: TileLabels) {
         val open = dialog?.takeIf { it.shown is WebDialog.Labels } ?: return
-        if (!labels.fits(viewModel.squareSide())) return
-        open.shown = labelsDialog(labels, (open.shown as WebDialog.Labels).message)
+        open.shown = labelsDialog.select(open.shown as WebDialog.Labels, labels) ?: return
         render()
     }
 
@@ -193,13 +187,6 @@ class WebGame internal constructor(
         if (choice != UnsolvableSaveChoice.EXIT) answer<WebDialog.Unsolvable, UnsolvableSaveChoice>(choice)
     }
 
-    /** A loaded save's labels don't fit its board (GH-160): the picker with [message] above it. */
-    internal suspend fun chooseFittingLabels(message: String): TileLabels? {
-        val chosen = ask<TileLabels?>(labelsDialog(viewModel.tileLabels(), message))
-        if (chosen == null) analytics.track("dialog_cancelled", mapOf("dialog" to "labels"))
-        return chosen
-    }
-
     /** The size picker's answer; `null` is Cancel. */
     fun onSizeChosen(size: Int?) = answer<WebDialog.Size, Int?>(size)
 
@@ -241,18 +228,6 @@ class WebGame internal constructor(
         name,
         if (name.isNotEmpty() && viewModel.saveExists(name)) "'$name' already exists - it will be overwritten." else null,
     )
-
-    private fun labelsDialog(selected: TileLabels, message: String? = null): WebDialog.Labels {
-        val side = viewModel.squareSide()
-        return WebDialog.Labels(
-            TileLabels.entries.map {
-                if (it.fits(side)) LabelOption(it, it.title, it.sampleRow(side))
-                else LabelOption(it, it.title, listOf(it.limitText), available = false)
-            },
-            selected,
-            message,
-        )
-    }
 
     private suspend fun chooseSave(saves: List<SaveInfo>, restore: Boolean): String? {
         val openedFrom = if (restore) "startup" else "toolbar"
