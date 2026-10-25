@@ -1,7 +1,10 @@
 package view.tui
 
 import InputMode
+import mordie.Mordie
+import mordie.MordieLine
 import viewmodel.GiveUpButton
+import viewmodel.MordieText
 import viewmodel.SolutionState
 
 /** Interior character width of one board cell - wide enough for a 2-digit 1-based tile value
@@ -50,14 +53,22 @@ class BoardLayout(
     private val secondRowEntries = listOf(HitTarget.ToolbarLabels to if (toolbarShortcuts) "[Labels F4]" else "[ Labels ]") +
         modeButtons.map { HitTarget.ToolbarMode(it) to modeButtonLabel(it, toolbarShortcuts) }
 
+    /** On a board Mordie sits out (GH-160), its one line: it runs to its own width, so it takes a
+     *  single row and 6x6 fits 24 rows. */
+    private val sitsOut = squareSide > Mordie.MAX_SIDE
+    private val longestMordieLine = if (sitsOut) "Mordie: ${MordieText.line(MordieLine.SitsOut)}" else LONGEST_MORDIE_LINE
+
     /** The Mordie line's wrap width (GH-83): about as wide as the board and toolbar, never the
      *  full terminal. */
     internal val mordieWrapWidth =
-        minOf(maxOf(fullWidth, rowWidth(primaryEntries), rowWidth(secondRowEntries)), terminalSize.columns - 2).coerceAtLeast(1)
+        minOf(
+            maxOf(fullWidth, rowWidth(primaryEntries), rowWidth(secondRowEntries), if (sitsOut) longestMordieLine.length else 0),
+            terminalSize.columns - 2,
+        ).coerceAtLeast(1)
 
     /** Rows reserved for the Mordie line: the wrapped height of the longest line it can say. Fixed
      *  per layout, not per text, so the board doesn't jump as the line comes and goes. */
-    internal val mordieRows = wordWrap(LONGEST_MORDIE_LINE, mordieWrapWidth).size
+    internal val mordieRows = wordWrap(longestMordieLine, mordieWrapWidth).size
 
     private val topExtra = TOP_EXTRA + mordieRows
     private val fullHeight = topExtra + innerRows + BOTTOM_EXTRA
