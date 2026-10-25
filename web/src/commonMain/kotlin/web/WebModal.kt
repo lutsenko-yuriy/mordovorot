@@ -2,15 +2,24 @@ package web
 
 import kotlinx.coroutines.CompletableDeferred
 
+/** How a dialog was cancelled, as `dialog_cancelled.via` (GH-163). */
+enum class CancelVia(val wire: String) { BUTTON("button"), ESCAPE("escape") }
+
 /** [WebGame]'s modal dialog: at most one is open, and [ask] waits for its answer. [render] draws
  *  the page with the dialog shown, then without it once answered. */
 internal class WebModal(private val render: () -> Unit) {
 
     private class OpenDialog<T>(var shown: WebDialog) {
         val answer = CompletableDeferred<T>()
+        var via = CancelVia.BUTTON
     }
 
     private var open: OpenDialog<*>? = null
+
+    /** How the last dialog closed. Read right after [ask] returns: an answer may resume the asking
+     *  flow only after the call that gave it has returned, so a flag around that call would be gone. */
+    var closedVia = CancelVia.BUTTON
+        private set
 
     /** The open dialog as the page shows it; `null` when none is. */
     val shown: WebDialog? get() = open?.shown
@@ -20,6 +29,11 @@ internal class WebModal(private val render: () -> Unit) {
         open?.shown = dialog
     }
 
+    /** Marks the open dialog's coming answer as given by Escape. */
+    fun escaping() {
+        open?.via = CancelVia.ESCAPE
+    }
+
     suspend fun <T> ask(shown: WebDialog): T {
         val dialog = OpenDialog<T>(shown)
         open = dialog
@@ -27,6 +41,7 @@ internal class WebModal(private val render: () -> Unit) {
         try {
             return dialog.answer.await()
         } finally {
+            closedVia = dialog.via
             open = null
             render()
         }

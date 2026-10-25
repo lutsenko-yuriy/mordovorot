@@ -34,7 +34,7 @@ class WebGame internal constructor(
 ) {
 
     private val modal = WebModal { render() }
-    internal val labelsDialog = WebLabelsDialog(viewModel, analytics) { modal.ask(it) }
+    internal val labelsDialog = WebLabelsDialog(viewModel, ::cancelled) { modal.ask(it) }
     private val requests = WebRequestRouter(this)
     private var status: String? = null
     /** The toolbar action or startup restore under way, if any. */
@@ -107,7 +107,7 @@ class WebGame internal constructor(
         runFlow {
             analytics.track("screen_give_up_dialog", mapOf("board_size" to viewModel.squareSide(), "move_count" to viewModel.moveCount()))
             if (modal.ask(WebDialog.GiveUp)) viewModel.giveUp()
-            else analytics.track("dialog_cancelled", mapOf("dialog" to "give_up"))
+            else cancelled("give_up")
         }
     }
 
@@ -185,11 +185,26 @@ class WebGame internal constructor(
     /** The size picker's answer; `null` is Cancel. */
     fun onSizeChosen(size: Int?) = modal.answer<WebDialog.Size, Int?>(size)
 
+    /** Escape (GH-163): the open dialog's Cancel, or No; Can't be solved has neither. */
+    fun onEscape() {
+        val shown = modal.shown ?: return
+        if (shown is WebDialog.Unsolvable) return
+        modal.escaping()
+        when (shown) {
+            is WebDialog.Size -> onSizeChosen(null)
+            is WebDialog.Save -> onSaveAnswered(null)
+            is WebDialog.Load -> onLoadChosen(null)
+            is WebDialog.Labels -> onLabelsAnswered(ok = false)
+            WebDialog.GiveUp -> onGiveUpAnswered(false)
+            is WebDialog.Unsolvable -> {}
+        }
+    }
+
     /** [openedFrom] is `toolbar` or a `ChooseBoardSize.origin`, as `screen_size_dialog.opened_from`. */
     internal suspend fun chooseSize(openedFrom: String): Int? {
         analytics.track("screen_size_dialog", mapOf("opened_from" to openedFrom))
         val size = modal.ask<Int?>(WebDialog.Size((BoardSize.MIN..BoardSize.MAX).toList()))
-        if (size == null) analytics.track("dialog_cancelled", mapOf("dialog" to "size"))
+        if (size == null) cancelled("size")
         return size
     }
 
@@ -214,7 +229,7 @@ class WebGame internal constructor(
         val prefill = viewModel.currentSaveName() ?: ""
         analytics.track("screen_save_dialog", mapOf("opened_from" to "toolbar", "prefilled" to prefill.isNotEmpty()))
         val name = modal.ask<String?>(saveDialog(prefill))
-        if (name == null) analytics.track("dialog_cancelled", mapOf("dialog" to "save"))
+        if (name == null) cancelled("save")
         // A blank name is Cancel, untracked like the terminal's empty Save.
         return name?.takeUnless { it.isBlank() }
     }
@@ -228,9 +243,13 @@ class WebGame internal constructor(
         val openedFrom = if (restore) "startup" else "toolbar"
         analytics.track("screen_load_dialog", mapOf("opened_from" to openedFrom, "save_file_count" to saves.size))
         val name = modal.ask<String?>(WebDialog.Load(restore, saves.map { SaveEntry(it.name, it.display()) }))
-        if (name == null) analytics.track("dialog_cancelled", mapOf("dialog" to "load"))
+        if (name == null) cancelled("load")
         return name
     }
+
+    /** `dialog_cancelled` for the dialog just closed, with how it was cancelled. */
+    private fun cancelled(dialog: String) =
+        analytics.track("dialog_cancelled", mapOf("dialog" to dialog, "via" to modal.closedVia.wire))
 
     /** Runs a shift on the unsolved board and renders. */
     private fun shift(action: () -> Unit) {

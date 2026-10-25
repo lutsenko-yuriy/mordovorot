@@ -98,7 +98,18 @@ class WebAnalyticsScenarioTest {
 
     @Test
     fun `every web dialog_cancelled carries via`() = webTest {
-        // TODO: 1. Cancel New, Save, Load and Labels with their buttons, Give Up with No.
-        // TODO: 2. Every dialog_cancelled has via, and it is button.
+        val page = WebHarness(backgroundScope).startOn()
+        page.game.onNew()
+        page.game.onSizeChosen(null)
+        page.game.onSave()
+        page.game.onSaveAnswered(null)
+        page.game.onLoad()
+        page.game.onLoadChosen(null)
+        page.game.onLabels()
+        page.game.onLabelsAnswered(ok = false)
+
+        val cancelled = page.props("dialog_cancelled")
+        assertEquals(listOf("size", "save", "load", "labels"), cancelled.map { it["dialog"] })
+        assertTrue(cancelled.all { it["via"] == "button" }, "$cancelled")
     }
 }

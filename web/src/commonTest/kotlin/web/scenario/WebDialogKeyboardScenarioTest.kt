@@ -1,10 +1,28 @@
 package web.scenario
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import mordie.SearchProgress
+import mordie.SolutionMove
+import viewmodel.TileLabels
+import web.Arrow
+import web.WebDialog
 
 /** GH-163 scenarios: the web's dialogs from the keyboard - focus on open, Escape, focus on close -
  *  through [WebHarness], reading the frame's `focus`. Same setup as [WebStartupScenarioTest]. */
 class WebDialogKeyboardScenarioTest {
+
+    /** 4x4 two moves from solved, as in [WebGiveUpScenarioTest]. */
+    private val original = intArrayOf(9, 2, 3, 0, 4, 13, 6, 7, 8, 1, 10, 11, 12, 5, 14, 15)
+    private val path = listOf(SolutionMove(isRow = true, index = 0, amount = 1), SolutionMove(isRow = false, index = 1, amount = 2))
+
+    /** Mordie finds its solution, then five shifts of column 3 reveal it, so Give Up is live. */
+    private fun WebHarness.reveal() {
+        mordieSearches.latest.progress = SearchProgress(path.size, found = true, elapsedMs = 0, solution = path)
+        repeat(5) { game.onArrow(Arrow.UP, 3) }
+    }
 
     // Focus on open
 
@@ -45,28 +63,86 @@ class WebDialogKeyboardScenarioTest {
 
     @Test
     fun `Escape cancels each dialog like its Cancel button`() = webTest {
-        // TODO: 1. New -> Escape: closed, board unchanged; dialog_cancelled {size, via: escape}.
-        // TODO: 2. Save -> Escape: nothing saved; dialog_cancelled {save, via: escape}.
-        // TODO: 3. Load -> Escape: nothing loaded; dialog_cancelled {load, via: escape}.
-        // TODO: 4. Labels -> pick Letters -> Escape: Numbers back on the board; dialog_cancelled {labels, via: escape}.
-        // TODO: 5. Give Up -> Escape: game goes on; dialog_cancelled {give_up, via: escape}.
+        val page = WebHarness(backgroundScope).seed("foo", solved(3)).startOn()
+        val board = page.state.tiles
+
+        page.game.onNew()
+        page.game.onEscape()
+        assertNull(page.state.dialog)
+        assertEquals(board, page.state.tiles)
+
+        page.game.onSave()
+        page.game.onEscape()
+        assertNull(page.state.dialog)
+        assertEquals(listOf("foo"), page.saves.listSaves())
+
+        page.game.onLoad()
+        page.game.onEscape()
+        assertNull(page.state.dialog)
+        assertEquals(board, page.state.tiles)
+
+        page.game.onLabels()
+        page.game.onLabelsSelected(TileLabels.LETTERS)
+        page.game.onEscape()
+        assertNull(page.state.dialog)
+        assertEquals(TileLabels.NUMBERS, page.state.labels)
+
+        page.reveal()
+        page.game.onGiveUp()
+        page.game.onEscape()
+        assertNull(page.state.dialog)
+        assertNull(page.state.solution)
+
+        assertEquals(
+            listOf("size", "save", "load", "labels", "give_up").map { mapOf("dialog" to it, "via" to "escape") },
+            page.ownProps("dialog_cancelled"),
+        )
     }
 
     @Test
     fun `Cancel through the button reports via button`() = webTest {
-        // TODO: 1. New -> Cancel, Labels -> Cancel, Give Up -> No - each dialog_cancelled has via: button.
+        val page = WebHarness(backgroundScope).startOn(original)
+
+        page.game.onNew()
+        page.game.onSizeChosen(null)
+        page.game.onLabels()
+        page.game.onLabelsAnswered(ok = false)
+        page.reveal()
+        page.game.onGiveUp()
+        page.game.onGiveUpAnswered(false)
+
+        assertEquals(
+            listOf("size", "labels", "give_up").map { mapOf("dialog" to it, "via" to "button") },
+            page.ownProps("dialog_cancelled"),
+        )
     }
 
     @Test
     fun `Escape on Restore opens the size picker and counts as new_game`() = webTest {
-        // TODO: 1. Seed one save; start - Restore a saved game? is open.
-        // TODO: 2. Escape - the size picker opens; startup_restore_decision {decision: new_game}.
+        val page = WebHarness(backgroundScope).seed("foo", solved(4)).start()
+        assertEquals(true, (page.state.dialog as? WebDialog.Load)?.restore)
+
+        page.game.onEscape()
+
+        assertTrue(page.state.dialog is WebDialog.Size, "${page.state.dialog}")
+        assertEquals(listOf("new_game"), page.ownProps("startup_restore_decision").map { it["decision"] })
     }
 
     @Test
     fun `Escape does nothing on Can't be solved or with no dialog open`() = webTest {
-        // TODO: 1. No dialog: Escape - the frame is unchanged, no event.
-        // TODO: 2. Toolbar Load of an unsolvable save: Escape - Can't be solved stays open, no event.
+        val page = WebHarness(backgroundScope).seed("odd", UNSOLVABLE_3X3).startOn()
+        val idle = page.state
+
+        page.game.onEscape()
+        assertEquals(idle, page.state)
+        assertTrue(page.analytics.events.isEmpty(), "${page.analytics.events}")
+
+        page.game.onLoad()
+        page.game.onLoadChosen("odd")
+        page.analytics.events.clear()
+        page.game.onEscape()
+        assertTrue(page.state.dialog is WebDialog.Unsolvable, "${page.state.dialog}")
+        assertTrue(page.analytics.events.isEmpty(), "${page.analytics.events}")
     }
 
     // Focus on close
