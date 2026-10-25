@@ -16,8 +16,9 @@ internal fun listenForDialogKeys(root: Element, game: () -> WebGame) {
         root.classList.add("keyboard")
         val dialog = root.querySelector(".dialog") ?: return@addEventListener
         when {
-            // An Escape that cancels an IME composition isn't the player's.
-            key.key == "Escape" && !key.isComposing -> {
+            // An Escape that drops an IME composition isn't the player's, and a held one would
+            // cancel the next dialog too (Restore -> the size picker).
+            key.key == "Escape" && !key.composing && !key.repeat -> {
                 key.preventDefault()
                 game().onEscape()
             }
@@ -58,5 +59,8 @@ internal fun setBehindDialog(root: Element, dialogOpen: Boolean) {
     val behind = root.children.asList().filter { !it.classList.contains("overlay") } + listOfNotNull(document.querySelector("footer"))
     behind.forEach { if (dialogOpen) it.setAttribute("inert", "") else it.removeAttribute("inert") }
 }
+
+/** Part of an IME composition: Safari ends it before the key's keydown, which then has only keyCode 229. */
+internal val KeyboardEvent.composing: Boolean get() = isComposing || keyCode == 229
 
 internal fun <E : Element> E.focusKey(focus: Focus): E = apply { setAttribute("data-focus", focus.key) }

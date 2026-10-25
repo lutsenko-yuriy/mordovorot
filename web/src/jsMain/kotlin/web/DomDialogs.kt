@@ -28,7 +28,7 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                     addEventListener("keydown", {
                         // An Enter that confirms an IME composition isn't the player's Save.
                         val key = it as KeyboardEvent
-                        if (key.key == "Enter" && !key.isComposing && key.keyCode != 229) game.onSaveAnswered(value)
+                        if (key.key == "Enter" && !key.composing) game.onSaveAnswered(value)
                     })
                 }
                 val warning = text("warning", dialog.warning ?: "")

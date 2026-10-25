@@ -3,7 +3,7 @@ package web
 import kotlinx.coroutines.CompletableDeferred
 
 /** How a dialog was cancelled, as `dialog_cancelled.via` (GH-163). */
-enum class CancelVia(val wire: String) { BUTTON("button"), ESCAPE("escape") }
+internal enum class CancelVia(val wire: String) { BUTTON("button"), ESCAPE("escape") }
 
 /** [WebGame]'s modal dialog: at most one is open, and [ask] waits for its answer. [render] draws
  *  the page with the dialog shown, focusing its default control, then without it once answered. */
