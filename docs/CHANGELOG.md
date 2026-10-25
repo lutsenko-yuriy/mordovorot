@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.21.1] — 2026-10-25 (PR #172 merged)
+
+### Added
+- [test] (PR #172) GH-162: a guard test keeps the web's reduced-motion rule in place, so every web animation and transition still stops when the system asks for reduced motion, and no stylesheet can outrank that rule. The game itself is unchanged.
+
 ## [0.21.0] — 2026-10-25 (PR #161 merged)
 
 ### Added
