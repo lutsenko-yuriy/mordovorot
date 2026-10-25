@@ -18,14 +18,14 @@ internal class MordieHooks(
     private val solutionScreen: SolutionScreen,
 ) {
 
-    fun onNewGame() = if (tooBig()) mordie.sitOut() else mordie.startFresh(board.boardArray)
+    fun onNewGame() = if (tooBig()) mordie.sitOut(board.squareSide) else mordie.startFresh(board.boardArray)
 
     /** Binds Mordie to the board just loaded from a save with [data]. A solution-screen save
      *  (GH-126) resumes found, whatever the board. A searching save with an unsolvable original
      *  can only be hand-edited, so it is treated like a save with no data. */
     fun onLoaded(data: SavedMordie?) {
         when {
-            tooBig() -> if (board.isCorrect()) mordie.clear() else mordie.sitOut()
+            tooBig() -> if (board.isCorrect()) mordie.clear() else mordie.sitOut(board.squareSide)
             data != null && data.solutionScreen -> mordie.resume(data.original, data.moves, found = true, data.solutionMoves())
             board.isCorrect() ->
                 if (data == null) mordie.clear() else mordie.restoreSolved(data.original, data.moves, data.found, data.solutionMoves())
@@ -38,7 +38,7 @@ internal class MordieHooks(
     fun onRepaired() = startOnLoadedBoard()
 
     /** Starts Mordie unless it is already bound, e.g. after a mode switch. */
-    fun onStartup() = if (tooBig()) mordie.ensureSatOut() else mordie.ensureStarted(board.boardArray)
+    fun onStartup() = if (tooBig()) mordie.ensureSatOut(board.squareSide) else mordie.ensureStarted(board.boardArray)
 
     /** Call after every shift; tracks `mordie_solution_found` when this shift's check reveals it. */
     fun onShift() {
@@ -98,6 +98,6 @@ internal class MordieHooks(
 
     /** Mordie's N would cover only the moves from here, so it sits out a board already played on. */
     private fun startOnLoadedBoard() {
-        if (tooBig()) mordie.sitOut() else if (board.moveCount == 0) mordie.startFresh(board.boardArray) else mordie.clear()
+        if (tooBig()) mordie.sitOut(board.squareSide) else if (board.moveCount == 0) mordie.startFresh(board.boardArray) else mordie.clear()
     }
 }

@@ -130,14 +130,14 @@ class MordieTest {
         mordie.startFresh(board)
         val first = factory.latest
 
-        mordie.sitOut()
+        mordie.sitOut(6)
 
         assertTrue(mordie.sitsOut)
         assertTrue(first.cancelled)
         assertEquals(1, factory.started.size)
-        assertEquals(MordieLine.SitsOut, mordie.line())
+        assertEquals(MordieLine.SitsOut(6), mordie.line())
         shifts(4)
-        assertEquals(MordieLine.SitsOut, mordie.line())
+        assertEquals(MordieLine.SitsOut(6), mordie.line())
         shifts(1)
         assertNull(mordie.line())
         shifts(20)
@@ -147,7 +147,7 @@ class MordieTest {
 
     @Test
     fun `a sat-out game has no outcome, snapshot or original, and a win silences it (GH-160)`() {
-        mordie.sitOut()
+        mordie.sitOut(6)
         shifts(1)
 
         assertNull(mordie.snapshot())
@@ -160,21 +160,21 @@ class MordieTest {
 
     @Test
     fun `ensureStarted keeps a sat-out Mordie sitting out (GH-160)`() {
-        mordie.sitOut()
+        mordie.sitOut(6)
 
         mordie.ensureStarted(board)
 
         assertEquals(0, factory.started.size)
-        assertEquals(MordieLine.SitsOut, mordie.line())
+        assertEquals(MordieLine.SitsOut(6), mordie.line())
     }
 
     @Test
     fun `ensureSatOut sits out only when nothing is bound yet (GH-160)`() {
-        mordie.ensureSatOut()
-        assertEquals(MordieLine.SitsOut, mordie.line())
+        mordie.ensureSatOut(6)
+        assertEquals(MordieLine.SitsOut(6), mordie.line())
         shifts(5)
 
-        mordie.ensureSatOut()
+        mordie.ensureSatOut(6)
 
         assertEquals(5, mordie.shifts)
         assertNull(mordie.line())
@@ -182,7 +182,7 @@ class MordieTest {
 
     @Test
     fun `binding a game after sitOut stops sitting out (GH-160)`() {
-        mordie.sitOut()
+        mordie.sitOut(6)
 
         mordie.startFresh(board)
 

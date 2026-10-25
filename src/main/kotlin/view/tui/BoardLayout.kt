@@ -1,8 +1,6 @@
 package view.tui
 
 import InputMode
-import mordie.Mordie
-import mordie.MordieLine
 import viewmodel.GiveUpButton
 import viewmodel.MordieText
 import viewmodel.SolutionState
@@ -55,14 +53,14 @@ class BoardLayout(
 
     /** On a board Mordie sits out (GH-160), its one line: it runs to its own width, so it takes a
      *  single row and 6x6 fits 24 rows. */
-    private val sitsOut = squareSide > Mordie.MAX_SIDE
-    private val longestMordieLine = if (sitsOut) "Mordie: ${MordieText.line(MordieLine.SitsOut)}" else LONGEST_MORDIE_LINE
+    private val sitsOutLine = MordieText.sitsOutLine(squareSide)?.let { "Mordie: $it" }
+    private val longestMordieLine = sitsOutLine ?: LONGEST_MORDIE_LINE
 
     /** The Mordie line's wrap width (GH-83): about as wide as the board and toolbar, never the
      *  full terminal. */
     internal val mordieWrapWidth =
         minOf(
-            maxOf(fullWidth, rowWidth(primaryEntries), rowWidth(secondRowEntries), if (sitsOut) longestMordieLine.length else 0),
+            maxOf(fullWidth, rowWidth(primaryEntries), rowWidth(secondRowEntries), sitsOutLine?.length ?: 0),
             terminalSize.columns - 2,
         ).coerceAtLeast(1)
 

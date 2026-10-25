@@ -71,7 +71,7 @@ class BoardLayoutMordieTest {
 
     @Test
     fun `on 6x6 one row is reserved for the sit-out line, which runs to its own width (GH-160)`() {
-        val sitsOut = "Mordie: ${MordieText.line(MordieLine.SitsOut)}"
+        val sitsOut = "Mordie: ${MordieText.line(MordieLine.SitsOut(6))}"
         for (shortcuts in listOf(false, true)) {
             val layout = BoardLayout(TerminalSize(columns = 80, rows = 24), 6, toolbarShortcuts = shortcuts)
             assertEquals(1, layout.mordieRows)

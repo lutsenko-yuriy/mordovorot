@@ -1,5 +1,6 @@
 package viewmodel
 
+import mordie.Mordie
 import mordie.MordieLine
 import mordie.MordieOutcome
 import mordie.MordieResult
@@ -9,13 +10,17 @@ object MordieText {
 
     fun line(line: MordieLine): String = when (line) {
         MordieLine.Opening -> "Alright! Let's sort this one out!"
-        MordieLine.SitsOut -> "6x6 is too much for me, you're on your own!"
+        is MordieLine.SitsOut -> "${line.side}x${line.side} is too much for me, you're on your own!"
         is MordieLine.Resumed -> "Okay, so we stopped when I was at ${moves(line.moves)}! What was I doing?.."
         is MordieLine.Progress ->
             (if (line.hard) "This one is hard! " else "") +
                 "I have already made ${moves(line.moves)} and have not solved it yet!"
         is MordieLine.Found -> "Found it! I had to make ${moves(line.moves)} to find the solution! Can you beat it?"
     }
+
+    /** The only line Mordie says on a [side]x[side] board it sits out (GH-160), for the terminal
+     *  to reserve rows for; `null` on a board it plays. */
+    fun sitsOutLine(side: Int): String? = if (side > Mordie.MAX_SIDE) line(MordieLine.SitsOut(side)) else null
 
     /** The solved title, given the player's [playerMoves]. */
     fun ending(outcome: MordieOutcome, playerMoves: Int): String {
