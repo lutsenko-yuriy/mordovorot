@@ -46,9 +46,10 @@ scripts/web/phone_fit/styles_diff.sh --build-baseline ../master-dist
 Compares every element's computed styles in the branch's bundle against a baseline bundle, so a
 CSS refactor can show the game looks the same: `measure.sh` checks only a few sizes and positions,
 which two different cascades can share. `--build-baseline` builds `origin/master` (or
-`--build-baseline=<ref>`) in a temporary worktree into the given directory when that has no bundle
-yet; later runs reuse it, so delete the directory after master moves. Without the flag, pass any
-bundle directory.
+`--build-baseline=<ref>`) in a temporary worktree into the given directory. It stamps the bundle
+with its commit (`.commit`), so later runs reuse it until the ref moves, then build again;
+`git fetch` first so `origin/master` is current. It won't overwrite a non-empty directory it
+didn't build. Without the flag, pass any bundle directory as is.
 
 It makes four variants: `mouse` and `touch` from the branch, `master` and `master-touch` from the
 baseline. Each gets a seeded `Math.random`, so the scramble and Mordie's solution match across

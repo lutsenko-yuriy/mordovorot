@@ -4,7 +4,7 @@
 #
 # Usage: styles_diff.sh [--build-baseline[=<ref>]] <baseline dist dir> [<query>...]
 #   Run `./gradlew :web:jsBrowserDistribution` first. --build-baseline builds <ref> (default origin/master)
-#   into <baseline dist dir> when that has no bundle yet, so later runs reuse it. Each <query> is
+#   into <baseline dist dir>, and later runs reuse it until <ref> moves to another commit. Each <query> is
 #   harness.html's query string without v and report (see README.md); by default the play, dialog and
 #   solution screens on a 4x4 board at 390x844, 844x390 and 1200x800.
 #   Exit 0: no differences; 1: differences, or a case on one side only; 2: usage, build or TIMEOUT.
@@ -42,21 +42,38 @@ fi
 make_work
 trap 'stop_work; git -C "$project" worktree prune' EXIT
 
-if [[ ! -f "$baseline/index.html" ]]; then
-  if [[ -z "$ref" ]]; then
-    echo "No bundle in $baseline; pass --build-baseline to build one" >&2
+baseline="${baseline%/}"
+if [[ -n "$ref" ]]; then
+  # A built bundle is stamped with its commit, so a moved ref is rebuilt rather than silently reused.
+  commit="$(git -C "$project" rev-parse --verify -q "$ref^{commit}")" || {
+    echo "Unknown ref $ref" >&2
     exit 2
+  }
+  if [[ "$(cat "$baseline/.commit" 2>/dev/null)" != "$commit" ]]; then
+    if [[ -e "$baseline" && ! -f "$baseline/.commit" && -n "$(ls -A "$baseline")" ]]; then
+      echo "$baseline isn't empty and wasn't built by $0; pass an empty or new directory" >&2
+      exit 2
+    fi
+    tree="$work/baseline-src"
+    # Copied beside the target and moved in whole, so an interrupted copy is never taken for a bundle.
+    partial="$baseline.partial"
+    rm -rf "$partial"
+    git -C "$project" worktree add -q --detach "$tree" "$commit" \
+      && (cd "$tree" && ./gradlew -q :web:jsBrowserDistribution >&2) \
+      && cp -R "$tree/web/build/dist/js/productionExecutable" "$partial" \
+      && echo "$commit" >"$partial/.commit" \
+      && rm -rf "$baseline" && mv "$partial" "$baseline"
+    built=$?
+    git -C "$project" worktree remove --force "$tree" 2>/dev/null
+    if [[ $built -ne 0 ]]; then
+      rm -rf "$partial"
+      echo "Couldn't build $ref into $baseline" >&2
+      exit 2
+    fi
   fi
-  tree="$work/baseline-src"
-  git -C "$project" worktree add -q --detach "$tree" "$ref" \
-    && (cd "$tree" && ./gradlew -q :web:jsBrowserDistribution >&2) \
-    && mkdir -p "$baseline" && cp -R "$tree/web/build/dist/js/productionExecutable/." "$baseline/"
-  built=$?
-  git -C "$project" worktree remove --force "$tree" 2>/dev/null
-  if [[ $built -ne 0 ]]; then
-    echo "Couldn't build $ref into $baseline" >&2
-    exit 2
-  fi
+elif [[ ! -f "$baseline/index.html" ]]; then
+  echo "No bundle in $baseline; pass --build-baseline to build one" >&2
+  exit 2
 fi
 
 add_variant "$dist" mouse mouse

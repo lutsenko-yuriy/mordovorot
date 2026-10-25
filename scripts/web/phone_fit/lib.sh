@@ -1,4 +1,5 @@
 # GH-156: shared by measure.sh and styles_diff.sh, which set here, chrome, port and max_wait_s first.
+# make_work sets work, results and server for them; stop_work, the EXIT trap, removes them.
 #
 # Real time, never --virtual-time-budget: Mordie's search keeps virtual time from ever running out.
 # Chrome runs headless with a throwaway profile, never the user's own (docs/CONSTRAINTS.md).
