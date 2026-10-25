@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.22.0] — 2026-10-25 (PR #173 merged)
+
+### Added
+- [user] (PR #173) GH-163: dialogs in the browser game work from the keyboard. When a dialog opens, focus goes to its first control; Tab and Shift+Tab stay inside it; Escape does what its Cancel button does; and the game behind it doesn't respond until it closes. Typing with an input method and holding Escape no longer dismiss a dialog by accident.
+
 ## [0.21.1] — 2026-10-25 (PR #172 merged)
 
 ### Added
