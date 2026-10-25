@@ -76,8 +76,8 @@ scrollbar's width, and Mordie may not reveal its solution in time, so a `solutio
 its `[solution]` mark on one side. Both went away when rerun alone (GH-156). `::before` and
 `::after` aren't compared.
 
-The compare logic is unit-tested: `python3 -m unittest discover -s scripts/web/harness/tests -t
-scripts/web/harness`.
+The compare logic and `serve_lan.sh`'s rebuild are unit-tested: `python3 -m unittest discover -s
+scripts/web/harness/tests -t scripts/web/harness`.
 
 ## On a real phone
 
@@ -85,3 +85,8 @@ The user runs `! scripts/web/harness/serve_lan.sh` (auto mode blocks the agent f
 the network); it prints the address to open on a phone on the same Wi-Fi, and a QR code for the
 phone's camera when `qrencode` is installed (`brew install qrencode`), so the phone's browser can't
 swap in an older address from its history (GH-148). Ctrl+C stops it.
+
+It builds the bundle first unless the bundle was built from `HEAD` with a clean tree: each build
+stamps the bundle with its commit (`.commit`), and uncommitted changes always rebuild (GH-160: the
+phone showed a bundle older than the fix it was meant to check). `SERVE_LAN_DRY_RUN=1` stops it
+before it serves; `tests/test_serve_lan.py` uses that.
