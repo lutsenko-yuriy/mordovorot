@@ -21,7 +21,7 @@ internal fun stepList(solution: SolutionState): Element = element("div", "steps"
 internal fun replayButtons(solution: SolutionState, game: () -> WebGame, dialogOpen: Boolean): Element = element("div", "replay").apply {
     append(
         button("◀ Prev") { game().onReplayPrevious() }.also { it.disabled = dialogOpen || solution.atStart },
-        button("Next ▶") { game().onReplayNext() }.also { it.disabled = dialogOpen || solution.atEnd },
+        button("Next ▶") { game().onReplayNext() }.focusKey(Focus.ReplayNext).also { it.disabled = dialogOpen || solution.atEnd },
         button("↻ Restart") { game().onReplayRestart() }.also { it.disabled = dialogOpen || solution.atStart },
     )
 }
@@ -35,5 +35,6 @@ internal fun giveUpRow(giveUp: GiveUpButton, game: () -> WebGame, dialogOpen: Bo
         GiveUpButton.GIVE_UP, GiveUpButton.DIMMED -> button("Give Up") { game().onGiveUp() }
     }
     button.disabled = dialogOpen || giveUp == GiveUpButton.DIMMED
+    button.focusKey(Focus.GiveUpRow)
     return element("div", "give-up").apply { append(button) }
 }

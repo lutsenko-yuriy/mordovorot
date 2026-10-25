@@ -295,7 +295,13 @@ button:disabled {
     cursor: default;
 }
 
+/* GH-163: dialogs focus a control by script, which would ring it for the mouse too, so the ring
+   waits for the first key press (DomKeyboard sets `keyboard`). */
 button:focus-visible {
+    outline: none;
+}
+
+.app.keyboard button:focus-visible {
     outline: 3px solid var(--warning);
     outline-offset: 2px;
 }
