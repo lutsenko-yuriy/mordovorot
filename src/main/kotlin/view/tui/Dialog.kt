@@ -23,6 +23,8 @@ data class Dialog(
      *  marker [ScreenRenderer.drawDialog] appends after the field's caret. Always `false` for
      *  non-Save dialogs and in mouse mode. */
     val textFieldFocused: Boolean = false,
+    /** [listItems] indices drawn dimmed that can't be clicked or focused (LABELS, GH-160). */
+    val disabledRows: Set<Int> = emptySet(),
 ) {
     enum class Kind {
         SAVE, LOAD, EXIT, SIZE, UNSOLVABLE, GIVE_UP, LABELS;

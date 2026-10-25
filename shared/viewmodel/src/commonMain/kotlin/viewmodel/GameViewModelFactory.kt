@@ -40,14 +40,14 @@ fun buildGameViewModel(
     val resolveUnsolvable = ResolveUnsolvableSaveUseCase(
         board, saves, mordieHooks, analytics, ui, newGame, currentSaveName, gameShiftSources, unsavedProgress, solution, tileLabels,
     )
+    val tileLabelsUseCase = TileLabelsUseCase(board, tileLabels, analytics, solution)
     val loadGame = LoadGameUseCase(
         board, saves, mordieHooks, analytics, ui, catalog, resolveUnsolvable, currentSaveName, gameShiftSources, unsavedProgress,
-        solution, tileLabels,
+        solution, tileLabels, tileLabelsUseCase,
     )
     val startupRestore = StartupRestoreUseCase(
-        board, catalog, analytics, ui, loadGame, newGame, mordieHooks, startupRestoreDone, sizeChosenAtLaunch,
+        board, catalog, analytics, ui, loadGame, newGame, mordieHooks, tileLabels, startupRestoreDone, sizeChosenAtLaunch,
     )
-    val tileLabelsUseCase = TileLabelsUseCase(board, tileLabels, analytics, solution)
     return GameViewModelImpl(
         board, analytics, mordieHooks, ui, catalog, newGame, saveGame, loadGame, startupRestore, solution, tileLabelsUseCase,
         currentSaveName, gameShiftSources, unsavedProgress, tileLabels, unsolvableExit,

@@ -25,7 +25,7 @@ internal class NewGameUseCase(
         solution.leave()
         mordieHooks.onNewGame()
         currentSaveName.name = null
-        tileLabels.resetToPreference()
+        tileLabels.resetToPreference(board.squareSide)
         gameShiftSources.reset()
         unsavedProgress.unsaved = false
         analytics.track("new_game_size_selected", mapOf("size" to size, "trigger" to trigger))

@@ -13,7 +13,7 @@ internal class TileLabelsUseCase(
     private val solution: SolutionUseCase,
 ) {
 
-    /** [openedFrom] is `toolbar` or `shortcut`. */
+    /** [openedFrom] is `toolbar`, `shortcut` or `letters_save` (GH-160). */
     fun dialogOpened(openedFrom: String) = analytics.track(
         "screen_labels_dialog",
         mapOf("opened_from" to openedFrom, "screen" to screen(), "current_labels" to labels.current.wireName),

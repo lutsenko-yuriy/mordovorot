@@ -10,6 +10,7 @@ import viewmodel.MordieHooks
 import viewmodel.SaveCatalog
 import viewmodel.SessionTileLabels
 import viewmodel.TileLabels
+import viewmodel.UiRequest
 import viewmodel.UiRequestChannel
 import viewmodel.UnsavedProgress
 import viewmodel.catchingNonCancellation
@@ -29,6 +30,7 @@ internal class LoadGameUseCase(
     private val unsavedProgress: UnsavedProgress,
     private val solution: SolutionUseCase,
     private val tileLabels: SessionTileLabels,
+    private val tileLabelsUseCase: TileLabelsUseCase,
 ) {
 
     /** [trigger] is `"command"` for a mid-game load (toolbar Load / F6), or `"startup_prompt"`
@@ -70,14 +72,24 @@ internal class LoadGameUseCase(
             // An unknown name (a later build's scheme, a hand edit) loads with the preference (GH-139).
             val fromSave = TileLabels.fromWireName(saved.labels)
             val labelsDiffer = fromSave != null && fromSave != tileLabels.effectivePreference
-            tileLabels.applySave(fromSave)
+            tileLabels.applySave(fromSave, board.squareSide)
             analytics.track(
                 "load_command_used",
                 mapOf("trigger" to trigger, "result" to "success", "labels_differ_from_preference" to labelsDiffer),
             )
             if (saved.mordie?.solutionScreen == true) solution.enterLoaded(trigger)
+            if (fromSave != null && !fromSave.fits(board.squareSide)) chooseFittingLabels()
             ui.showMessage("Loaded '$name'.")
             LoadResult.LOADED
         }
+    }
+
+    /** Only a hand-edited save has Letters on 6x6 (GH-160); numbers show until the player picks.
+     *  The message names Letters: up to 6x6 it is the only scheme that can fail to fit. */
+    private suspend fun chooseFittingLabels() {
+        val side = board.squareSide
+        tileLabelsUseCase.dialogOpened("letters_save")
+        val message = "Letters don't fit a ${side}x$side board (26 letters, ${side * side} tiles) - pick other labels."
+        ui.ask(UiRequest.ChooseFittingLabels(message))?.let(tileLabelsUseCase::change)
     }
 }

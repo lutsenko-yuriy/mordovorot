@@ -14,7 +14,8 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 ### Feature 1 — Board
 - The game presents a square board of tiles laid out `SQUARE_SIDE × SQUARE_SIDE` (default 4×4), holding a shuffled permutation of the integers `0..SQUARE_SIDE²-1` internally, **displayed to the player as `1..SQUARE_SIDE²`** (GH-10) by default. The player can pick other tile labels (numbers from 0, pairs, letters) in the Tile labels dialog (GH-139, Feature 11); the board, the solved screen and the solution screen all follow the choice, and the step list keeps `Row …`/`Col …`.
 - On starting a new game, the board is reshuffled via a Fisher-Yates shuffle.
-- Every new game can be solved (GH-74). On a 4×4 board every arrangement can be solved. On 3×3
+- Board sizes are 3×3 to 6×6 (6×6 since GH-160).
+- Every new game can be solved (GH-74). On a 4×4 or 6×6 board every arrangement can be solved. On 3×3
   and 5×5 boards, only arrangements an even number of tile swaps away from the solved order can
   be solved. If the shuffle lands on one that can't, two tiles are swapped to fix it. Every board
   that can be solved stays equally likely.
@@ -41,7 +42,7 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   stderr and exits normally (status 0) without starting a game.
 - `--console` in a terminal prints `Console mode was removed - starting the terminal UI.` and
   then starts the TUI as if the flag weren't there (`--console --keyboard` starts keyboard mode).
-- `--size=N` starts at board side `N` (3-5) and skips the startup restore and size prompts
+- `--size=N` starts at board side `N` (3-6) and skips the startup restore and size prompts
   (Feature 4). An unusable value warns and falls back to 4. Unrecognized arguments are reported
   and ignored.
 
@@ -201,6 +202,11 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   playable. Mordie's N is the longest solution length it has ruled out so far; once it has found
   a solution, N is that solution's length, the true minimum. On 5x5 the search may never finish
   within a game; Mordie then just keeps reporting progress.
+- **Mordie sits 6x6 out (GH-160)**, until a faster search exists (GH-116): no search, and for
+  shifts 0-4 its line is `6x6 is too much for me, you're on your own!`, then empty. A loaded 6x6
+  save shows the same line (and its Mordie lines, if any, are dropped at the next save). The
+  solved title is `Congratulations ✓`, the Give Up row stays empty (no `[ Give Up ]`), and no `[ Mordie's solution ]`
+  follows a win. In the terminal the line takes one row on 6x6, so the board fits 80x24.
 - **Mordie's line** sits under `Moves: N`: `Mordie:` in magenta, then the text, word-wrapped to
   about the width of the board and toolbar, each row centered. Its rows are always reserved, so
   the board doesn't move as the line comes and goes. Mouse and keyboard mode show the same text,
@@ -248,11 +254,11 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 - **Running it:** the game is published at `https://lutsenko-yuriy.github.io/mordovorot/` (GH-111); for development,
   `./gradlew :web:serve -t` serves it on `http://localhost:8080`. Opening either address starts it. The tab title is `Mordovorot`, and the title appears nowhere else on the page.
   The terminal game is unchanged.
-- **Same game, mouse only:** the rules, board sizes 3-5, solvable new games, `Moves: N` and its
+- **Same game, mouse only:** the rules, board sizes 3-6, solvable new games, `Moves: N` and its
   move rule (Feature 2), Save/Load (Feature 4), Mordie (Feature 8) and Give Up with its solution
   screen (Feature 10) work as in the terminal game. There is no keyboard mode, no command-line flags and no Exit.
 - **Toolbar:** `[ New ] [ Save ] [ Load ] [ Labels ]`; the player leaves by closing the tab.
-  - **New** opens the size picker (3x3, 4x4, 5x5); Cancel leaves the current game untouched.
+  - **New** opens the size picker (3x3, 4x4, 5x5, 6x6); Cancel leaves the current game untouched.
   - **Save** prefills the current save name and warns before overwriting. A blank name counts as
     Cancel. A rejected name (spaces, a path separator, `..`) saves nothing, and the message
     shows on the status line.
@@ -350,7 +356,8 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 Applies to terminal mouse mode, terminal keyboard mode and the web client.
 - **Give Up:** `[ Give Up ]` sits on its own row, directly above the toolbar. It is dimmed and
   inert until Mordie has found its solution (the `Found it!` moment, Feature 8), so on boards
-  where Mordie never finishes (often 5x5) it stays dimmed. Keyboard mode: F8. Pressing it asks
+  where Mordie never finishes (often 5x5) it stays dimmed. On 6x6, which Mordie sits out, it isn't
+  shown at all (GH-160). Keyboard mode: F8. Pressing it asks
   `Give up and see Mordie's solution?` `[ Yes ] [ No ]`: No (or Escape) keeps playing; Yes
   discards the player's moves and opens the solution screen.
 - **After a win:** the row shows `[ Mordie's solution ]` instead (keyboard mode: F8) if Mordie
@@ -403,6 +410,14 @@ Applies to terminal mouse mode, terminal keyboard mode and the web client.
   Escape.
 - **Which labels a game shows:** a loaded save's own labels (Feature 4) win for that game; then
   the remembered preference; then Numbers. A new game goes back to the preference.
+- **Letters on 6x6 (GH-160):** Letters has 26 labels, too few for 36 tiles. On a 6x6 board its row
+  in the dialog is dimmed, reads `up to 5x5` instead of a sample, and can't be picked or focused.
+  A Letters preference shows Numbers on 6x6 and stays Letters, so smaller boards keep letters; OK
+  on those Numbers changes nothing. Loading a 6x6 save with Letters (only possible by hand-editing)
+  opens the dialog by itself, with `Letters don't fit a 6x6 board (26 letters, 36 tiles) - pick
+  other labels.` above the rows and Numbers marked: OK applies the pick (and makes it the
+  preference), Cancel keeps Numbers. Either way the next save stores the labels shown. The
+  `Loaded '<name>'.` message follows once the dialog closes.
 - **The preference:** OK on a different scheme makes it the preference too. OK on the scheme
   already shown changes nothing, so it doesn't adopt a loaded save's labels. The terminal keeps
   it in `saves/preferences` (`tile_labels=pairs`); the browser in `localStorage`, per address

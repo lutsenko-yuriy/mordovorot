@@ -8,7 +8,7 @@ When a new term is introduced during a `brief` session, add it here before creat
 | Term | Definition | Code symbol |
 |---|---|---|
 | Board | The square side × square side grid of tiles holding the puzzle state | `BoardModel`, `BoardImpl` |
-| Board size | The valid range of square sides a game can use: 3–5, default 4. Chosen via `--size=N`, the startup size prompt, or `[ New ]` | `BoardSize` |
+| Board size | The valid range of square sides a game can use: 3–6, default 4 (6x6 since GH-160; Mordie sits 6x6 out until GH-116). Chosen via `--size=N`, the startup size prompt, or `[ New ]` | `BoardSize` |
 | Current save name | The name of the save the current game was most recently loaded from or saved to; prefills the Save dialog. Cleared by a new game, not kept across launches (GH-99) | `CurrentSaveName`, `ViewModel.currentSaveName()` |
 | Dialog | A modal box in the TUI (Save, Load, Exit, New-game size picker, Startup restore) that takes over input until confirmed or cancelled | `Dialog`, `DialogLayout` |
 | Drag | Web client only: pressing on a tile and dragging slides its row (horizontal drag) or column (vertical drag) under the pointer, snapping to whole tiles on release. Each tile of distance is one shift; the whole drag is one move (GH-110) | — |
@@ -27,7 +27,7 @@ When a new term is introduced during a `brief` session, add it here before creat
 | Solved | The board state where all values are in ascending order. "Correct" is the board-model name for the same check | `isSolved()`, `isCorrect()` |
 | Square side | The board's edge length (default 4, giving a 4×4 board) | `squareSide` |
 | Startup restore prompt | The launch-time offer to restore an existing save before the first move (a TUI dialog) | `restoreOnStartup()` |
-| Tile labels | How tiles are labelled, one of six schemes: Numbers (default, `1..side²`), Numbers from 0, Pairs (`23`), Pairs from 0 (`12`), Letters (`G`), Letter pairs (`BC`). Chosen in the Tile labels dialog; remembered as a preference and stored in saves, a save's labels winning for that game (GH-139) | — |
+| Tile labels | How tiles are labelled, one of six schemes: Numbers (default, `1..side²`), Numbers from 0, Pairs (`23`), Pairs from 0 (`12`), Letters (`G`), Letter pairs (`BC`). Chosen in the Tile labels dialog; remembered as a preference and stored in saves, a save's labels winning for that game (GH-139); Letters only labels up to 5x5 - on 6x6 Numbers stand in and the preference is kept (GH-160) | — |
 | Toolbar | The TUI's row of buttons below the board — `[ New ] [ Save ] [ Load ] [ Exit ]` — plus the input-mode switch row beneath it | `HitTarget.Toolbar*` |
 | Unsaved progress | At least one shift since the last New game, successful save or successful load. The web client asks before the tab is closed or reloaded with it (GH-110) | — |
 | Web client | The browser version of the game, mouse only and built on the shared modules, with its saves kept in the browser (GH-110) | — |

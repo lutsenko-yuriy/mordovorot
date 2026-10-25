@@ -68,4 +68,22 @@ class BoardLayoutMordieTest {
         // The controls hint is drawn three rows under the toolbar (ScreenRenderer.render).
         assertTrue(layout.toolbarRow + 3 < 24)
     }
+
+    @Test
+    fun `on 6x6 one row is reserved for the sit-out line, which runs to its own width (GH-160)`() {
+        val sitsOut = "Mordie: ${MordieText.line(MordieLine.SitsOut(6))}"
+        for (shortcuts in listOf(false, true)) {
+            val layout = BoardLayout(TerminalSize(columns = 80, rows = 24), 6, toolbarShortcuts = shortcuts)
+            assertEquals(1, layout.mordieRows)
+            assertEquals(listOf(sitsOut), wordWrap(sitsOut, layout.mordieWrapWidth))
+        }
+        assertEquals(28, BoardLayout(TerminalSize(columns = 30, rows = 40), 6).mordieWrapWidth)
+    }
+
+    @Test
+    fun `a 6x6 board fits the controls hint on a 24-row terminal (GH-160)`() {
+        val layout = BoardLayout(TerminalSize(columns = 80, rows = 24), 6, toolbarShortcuts = true)
+
+        assertTrue(layout.toolbarRow + 3 < 24)
+    }
 }

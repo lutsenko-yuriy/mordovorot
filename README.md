@@ -3,7 +3,7 @@
 A version of Loopover, a sliding-row/column puzzle, written in Kotlin. It runs in a terminal
 and in a web browser, at https://lutsenko-yuriy.github.io/mordovorot/.
 
-The board is a `SQUARE_SIDE × SQUARE_SIDE` grid (3×3 to 5×5, default 4×4) holding a
+The board is a `SQUARE_SIDE × SQUARE_SIDE` grid (3×3 to 6×6, default 4×4) holding a
 shuffled permutation of numbers. Rows shift left/right and columns shift up/down,
 cyclically wrapping around, until the board is back in ascending order.
 
@@ -41,7 +41,7 @@ Flags:
 - `--mouse`: the mouse TUI (the default with a terminal).
 - `--keyboard`: the keyboard-only TUI.
 - `--console`: console mode was removed; the game prints a notice and starts the TUI.
-- `--size=N`: start at board side `N` (3-5). This skips the startup restore/size prompts.
+- `--size=N`: start at board side `N` (3-6). This skips the startup restore/size prompts.
 
 Saves go to `saves/`, relative to the directory you launch from. See
 `docs/PRODUCT_SPEC.md` for the full behaviour.

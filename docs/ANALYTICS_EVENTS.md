@@ -296,6 +296,13 @@ OK on the current scheme fires nothing. Scheme values everywhere: `numbers`, `nu
   when the save carried labels other than the preference; saves without labels send `false`.
 - `dialog_cancelled.dialog` takes a new value, `labels` (Cancel or Escape in the Tile labels dialog).
 
+*GH-160:* board sides now run 3-6, so `app_launched.board_size`, `new_game_size_selected.size`,
+`board_solved.board_size` and `tile_labels_changed.board_size` can be `6`. Mordie sits 6x6 out:
+`board_solved` leaves out `mordie_result` and `mordie_moves` there, and `mordie_solution_found`,
+`game_given_up` and the `solution_replay_*` events never fire. `unsolvable_save_resolved.board_size`
+stays 3 or 5, since every 6x6 arrangement can be solved. `tile_labels_changed.from_source` takes a
+new value, `letters_unavailable`: the game showed Numbers because Letters doesn't fit a 6x6 board.
+
 <!-- All events above are sent through `analytics.AnalyticsService`, currently backed by
      `analytics.NoopAnalyticsService` (no real SDK wired up yet). -->
 
@@ -336,3 +343,7 @@ OK on the current scheme fires nothing. Scheme values everywhere: `numbers`, `nu
 | Screen name | When tracked |
 |---|---|
 | `screen_labels_dialog` | The Tile labels dialog opens. Properties `opened_from`: `toolbar` (`[ Labels ]` click) or `shortcut` (F4 in keyboard mode); `screen`: `play`, `solved` or `solution`; `current_labels`: the scheme shown when it opened. *(GH-139)* |
+
+*GH-160:* `screen_labels_dialog.opened_from` takes a new value, `letters_save`: the dialog opened by
+itself after the warning for a 6x6 save with Letters labels. Cancel there is `dialog_cancelled`
+with `dialog: labels`, as usual.

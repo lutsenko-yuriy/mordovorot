@@ -1,6 +1,7 @@
 package view.tui
 
 import view.tui.dialog.ExitDialogController
+import view.tui.dialog.LabelsDialogController
 import view.tui.dialog.RestoreDialogController
 import view.tui.dialog.SaveDialogController
 import view.tui.dialog.SizeDialogController
@@ -16,6 +17,7 @@ internal class UiRequestRouter(
     private val restoreDialog: RestoreDialogController,
     private val sizeDialog: SizeDialogController,
     private val unsolvableDialog: UnsolvableDialogController,
+    private val labelsDialog: LabelsDialogController,
 ) {
 
     suspend fun handle(request: UiRequest<*>) {
@@ -31,6 +33,7 @@ internal class UiRequestRouter(
             is UiRequest.ChooseBoardSize -> request.respond(sizeDialog.runSizeDialog(request.origin))
             is UiRequest.ResolveUnsolvableSave ->
                 request.respond(unsolvableDialog.runUnsolvableDialog(request.save, if (request.atStartup) "startup" else "toolbar"))
+            is UiRequest.ChooseFittingLabels -> request.respond(labelsDialog.chooseFitting(request.message))
         }
     }
 }

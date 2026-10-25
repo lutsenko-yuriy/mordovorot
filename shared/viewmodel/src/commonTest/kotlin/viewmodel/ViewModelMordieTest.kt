@@ -188,6 +188,110 @@ class ViewModelMordieTest {
         assertNull(viewModel.mordieLine())
     }
 
+    // --- 6x6, GH-160 ---
+
+    private val sitsOut = "6x6 is too much for me, you're on your own!"
+
+    /** 6x6, one `shiftRight(0)` from solved. */
+    private val nearlySolved6 = BoardImpl(6).apply { restoreState(IntArray(36) { it }); shiftLeft(0) }.boardArray
+
+    private fun saves6(state: IntArray, moveCount: Int = 0, mordie: SavedMordie? = null) =
+        FakeSaveRepository(mutableMapOf("m" to SavedBoard(6, state.copyOf(), moveCount, mordie)))
+
+    @Test
+    fun `Mordie sits a new 6x6 game out - the line for shifts 0-4, no search, Give Up hidden`() {
+        val viewModel = viewModel()
+
+        viewModel.newGame(6, trigger = "toolbar")
+
+        assertEquals(0, factory.started.size)
+        assertEquals(sitsOut, viewModel.mordieLine())
+        assertEquals(GiveUpButton.HIDDEN, viewModel.giveUpButton())
+        repeat(4) { viewModel.shiftUp(0) }
+        assertEquals(sitsOut, viewModel.mordieLine())
+        viewModel.shiftUp(0)
+        assertNull(viewModel.mordieLine())
+        assertEquals(GiveUpButton.HIDDEN, viewModel.giveUpButton())
+
+        viewModel.newGame(4, trigger = "toolbar")
+        assertEquals(GiveUpButton.DIMMED, viewModel.giveUpButton())
+    }
+
+    @Test
+    fun `a 6x6 save with moves and Mordie data loads sitting out, and saves no Mordie data`() = runTest {
+        val saves = saves6(nearlySolved6, moveCount = 3, mordie = SavedMordie(nearlySolved6, 8, found = false))
+        val viewModel = viewModel(saves)
+
+        viewModel.load()
+        FakeViewModelUi().drive(viewModel) { viewModel.saveGame("n") }
+
+        assertEquals(0, factory.started.size)
+        assertEquals(sitsOut, viewModel.mordieLine())
+        assertEquals(listOf<SavedMordie?>(null), saves.savedMordies)
+    }
+
+    @Test
+    fun `a solved 6x6 save loads with no line`() = runTest {
+        val viewModel = viewModel(saves6(IntArray(36) { it }, moveCount = 3))
+
+        viewModel.load()
+
+        assertNull(viewModel.mordieLine())
+        assertNull(viewModel.mordieEnding())
+    }
+
+    @Test
+    fun `restoreOnStartup with --size=6 sits Mordie out`() = runTest {
+        val viewModel = viewModel(board = BoardImpl(6), sizeChosenAtLaunch = true)
+
+        FakeViewModelUi().drive(viewModel) { viewModel.restoreOnStartup() }
+
+        assertEquals(0, factory.started.size)
+        assertEquals(sitsOut, viewModel.mordieLine())
+    }
+
+    @Test
+    fun `restoreOnStartup with 6 chosen at the prompt sits Mordie out`() = runTest {
+        val viewModel = viewModel()
+
+        FakeViewModelUi(chooseBoardSizeResponses = mutableListOf(6)).drive(viewModel) { viewModel.restoreOnStartup() }
+
+        assertEquals(0, factory.started.size)
+        assertEquals(sitsOut, viewModel.mordieLine())
+    }
+
+    @Test
+    fun `a rebuild after a mode switch keeps a 6x6 game's shift count`() = runTest {
+        val mordie = Mordie(factory)
+        val board = BoardImpl(6)
+        val first = viewModel(board = board, sizeChosenAtLaunch = true, mordie = mordie)
+        FakeViewModelUi().drive(first) { first.restoreOnStartup() }
+        repeat(5) { first.shiftUp(0) }
+
+        val rebuilt = viewModel(board = board, startupRestoreDone = true, mordie = mordie)
+        FakeViewModelUi().drive(rebuilt) { rebuilt.restoreOnStartup() }
+
+        assertEquals(5, mordie.shifts)
+        assertNull(rebuilt.mordieLine())
+    }
+
+    @Test
+    fun `solving a 6x6 - no Mordie props on board_solved, no ending or line, Give Up hidden`() = runTest {
+        val viewModel = viewModel(saves6(nearlySolved6))
+        viewModel.load()
+
+        viewModel.shiftRight(0)
+
+        assertTrue(viewModel.isSolved())
+        assertEquals(mapOf("move_count" to 1, "board_size" to 6, "tile_labels" to "numbers"), event("board_solved"))
+        assertNull(viewModel.mordieEnding())
+        assertNull(viewModel.mordieLine())
+        assertEquals(GiveUpButton.HIDDEN, viewModel.giveUpButton())
+
+        viewModel.shiftLeft(0)
+        assertEquals(GiveUpButton.HIDDEN, viewModel.giveUpButton(), "a shift after the win (audit on PR #161)")
+    }
+
     // --- save ---
 
     @Test

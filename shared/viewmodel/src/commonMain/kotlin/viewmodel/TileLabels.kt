@@ -12,6 +12,11 @@ enum class TileLabels(val wireName: String, val title: String, val maxSide: Int 
     LETTER_PAIRS("letter_pairs", "Letter pairs", 26),
     ;
 
+    fun fits(side: Int): Boolean = side <= maxSide
+
+    /** The labels dialog's sample for a board the scheme doesn't [fits] (GH-160). */
+    val limitText: String get() = "up to ${maxSide}x$maxSide"
+
     /** The label of the 0-based [tile] on a [side]x[side] board: its solved row and column for pairs. */
     fun label(tile: Int, side: Int): String {
         require(side <= maxSide) { "$title labels at most a ${maxSide}x$maxSide board" }

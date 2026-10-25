@@ -36,7 +36,7 @@ class SessionTileLabelsTest {
     @Test
     fun `a save's labels win over the preference`() {
         val labels = session("pairs")
-        labels.applySave(TileLabels.LETTERS)
+        labels.applySave(TileLabels.LETTERS, 4)
         assertEquals(TileLabels.LETTERS, labels.current)
         assertEquals(TileLabelsSource.SAVE, labels.source)
         assertEquals(TileLabels.PAIRS, labels.effectivePreference)
@@ -44,12 +44,12 @@ class SessionTileLabelsTest {
 
     @Test
     fun `a save with no labels falls back to the preference, or the default`() {
-        val withPreference = session("pairs").apply { applySave(TileLabels.LETTERS); applySave(null) }
+        val withPreference = session("pairs").apply { applySave(TileLabels.LETTERS, 4); applySave(null, 4) }
         assertEquals(TileLabels.PAIRS, withPreference.current)
         assertEquals(TileLabelsSource.PREFERENCE, withPreference.source)
 
         store.values.clear()
-        val withoutPreference = session().apply { applySave(TileLabels.LETTERS); applySave(null) }
+        val withoutPreference = session().apply { applySave(TileLabels.LETTERS, 4); applySave(null, 4) }
         assertEquals(TileLabels.NUMBERS, withoutPreference.current)
         assertEquals(TileLabelsSource.DEFAULT, withoutPreference.source)
     }
@@ -57,8 +57,8 @@ class SessionTileLabelsTest {
     @Test
     fun `a new game goes back to the preference`() {
         val labels = session("pairs")
-        labels.applySave(TileLabels.LETTERS)
-        labels.resetToPreference()
+        labels.applySave(TileLabels.LETTERS, 4)
+        labels.resetToPreference(4)
         assertEquals(TileLabels.PAIRS, labels.current)
         assertEquals(TileLabelsSource.PREFERENCE, labels.source)
     }
@@ -76,7 +76,7 @@ class SessionTileLabelsTest {
     @Test
     fun `choosing the scheme already shown changes nothing and writes nothing`() {
         val labels = session("pairs")
-        labels.applySave(TileLabels.LETTERS)
+        labels.applySave(TileLabels.LETTERS, 4)
         assertFalse(labels.choose(TileLabels.LETTERS))
         assertEquals(TileLabelsSource.SAVE, labels.source)
         assertEquals(TileLabels.PAIRS, labels.preferred)
@@ -89,7 +89,48 @@ class SessionTileLabelsTest {
         store.setException = RuntimeException("read-only")
         assertTrue(labels.choose(TileLabels.PAIRS))
         assertEquals(TileLabels.PAIRS, labels.current)
-        labels.resetToPreference()
+        labels.resetToPreference(4)
         assertEquals(TileLabels.PAIRS, labels.current)
+    }
+
+    // --- 6x6, GH-160 ---
+
+    @Test
+    fun `a Letters preference shows numbers on 6x6 and keeps the preference`() {
+        val labels = session("letters")
+        labels.resetToPreference(6)
+        assertEquals(TileLabels.NUMBERS, labels.current)
+        assertEquals(TileLabelsSource.LETTERS_UNAVAILABLE, labels.source)
+        assertEquals(TileLabels.LETTERS, labels.preferred)
+
+        labels.resetToPreference(5)
+        assertEquals(TileLabels.LETTERS, labels.current)
+        assertEquals(TileLabelsSource.PREFERENCE, labels.source)
+    }
+
+    @Test
+    fun `a save's Letters show numbers on 6x6`() {
+        val labels = session("pairs")
+        labels.applySave(TileLabels.LETTERS, 6)
+        assertEquals(TileLabels.NUMBERS, labels.current)
+        assertEquals(TileLabelsSource.LETTERS_UNAVAILABLE, labels.source)
+        assertEquals(TileLabels.PAIRS, labels.preferred)
+    }
+
+    @Test
+    fun `no save labels and a Letters preference show numbers on 6x6`() {
+        val labels = session("letters")
+        labels.applySave(null, 6)
+        assertEquals(TileLabels.NUMBERS, labels.current)
+        assertEquals(TileLabelsSource.LETTERS_UNAVAILABLE, labels.source)
+    }
+
+    @Test
+    fun `OK on the numbers standing in for Letters changes nothing`() {
+        val labels = session("letters")
+        labels.resetToPreference(6)
+        assertFalse(labels.choose(TileLabels.NUMBERS))
+        assertEquals(TileLabels.LETTERS, labels.preferred)
+        assertEquals("letters", store.values["tile_labels"])
     }
 }

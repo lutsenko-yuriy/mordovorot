@@ -56,6 +56,7 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
             )
             is WebDialog.Labels -> append(
                 text("title", "Tile labels"),
+                *listOfNotNull(dialog.message?.let { text("message", it) }).toTypedArray(),
                 choices(dialog.options.map { labelRow(it, it.labels == dialog.selected, game) }, "list labels").apply {
                     setAttribute("role", "radiogroup")
                     setAttribute("aria-label", "Tile labels")
@@ -80,6 +81,10 @@ private fun labelRow(option: LabelOption, checked: Boolean, game: WebGame) =
     button("", if (checked) "checked" else null) { game.onLabelsSelected(option.labels) }.apply {
         setAttribute("role", "radio")
         setAttribute("aria-checked", checked.toString())
+        if (!option.available) {
+            setAttribute("disabled", "")
+            setAttribute("aria-disabled", "true")
+        }
         append(
             element("span", "mark").apply { textContent = if (checked) "●" else "○" },
             element("span", "name").apply { textContent = option.title },
