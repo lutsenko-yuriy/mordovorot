@@ -132,7 +132,6 @@ class MordieTest {
 
         mordie.sitOut(6)
 
-        assertTrue(mordie.sitsOut)
         assertTrue(first.cancelled)
         assertEquals(1, factory.started.size)
         assertEquals(MordieLine.SitsOut(6), mordie.line())
@@ -155,7 +154,6 @@ class MordieTest {
         assertNull(mordie.onSolved())
         assertNull(mordie.outcome())
         assertNull(mordie.line())
-        assertFalse(mordie.sitsOut)
     }
 
     @Test

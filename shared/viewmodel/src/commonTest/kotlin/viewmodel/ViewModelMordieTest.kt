@@ -287,6 +287,9 @@ class ViewModelMordieTest {
         assertNull(viewModel.mordieEnding())
         assertNull(viewModel.mordieLine())
         assertEquals(GiveUpButton.HIDDEN, viewModel.giveUpButton())
+
+        viewModel.shiftLeft(0)
+        assertEquals(GiveUpButton.HIDDEN, viewModel.giveUpButton(), "a shift after the win (audit on PR #161)")
     }
 
     // --- save ---

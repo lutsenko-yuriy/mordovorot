@@ -73,8 +73,8 @@ internal class MordieHooks(
 
     fun original(): IntArray? = mordie.original()
 
-    /** Whether Mordie sits this unsolved game out for its size (GH-160). */
-    fun sitsOut(): Boolean = mordie.sitsOut
+    /** Whether Mordie sits games of this board's size out (GH-160), solved or not. */
+    fun sitsOut(): Boolean = tooBig()
 
     /** Whether `Found it!` is showing. */
     fun revealed(): Boolean = mordie.line() is MordieLine.Found

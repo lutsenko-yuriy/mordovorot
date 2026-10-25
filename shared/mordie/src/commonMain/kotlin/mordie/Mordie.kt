@@ -16,8 +16,7 @@ class Mordie(private val factory: MordieSearchFactory) {
 
     /** A game too big to search, until it's solved: only shifts are counted, for the
      *  [MordieLine.SitsOut] line. */
-    var sitsOut = false
-        private set
+    private var sitsOut = false
 
     /** The side of the game being sat out, for its line. */
     private var satOutSide = 0
