@@ -27,7 +27,7 @@ class UiRequestChannel {
 
     /** The one place [UiRequest.ShowMessage] is raised - every message goes through this, not a
      *  bare `ask` call, so a future new message site can't forget it. */
-    suspend fun showMessage(text: String) {
-        ask(UiRequest.ShowMessage(text))
+    suspend fun showMessage(text: String, loadedSave: String? = null) {
+        ask(UiRequest.ShowMessage(text, loadedSave))
     }
 }

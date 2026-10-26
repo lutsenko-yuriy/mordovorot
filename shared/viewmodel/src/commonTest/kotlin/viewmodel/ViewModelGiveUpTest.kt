@@ -29,6 +29,7 @@ class ViewModelGiveUpTest {
     private val afterFirstStep = intArrayOf(3, 1, 2, 6, 4, 5, 0, 7, 8)
     private val solved = IntArray(9) { it }
     private val steps = listOf("1. Row 1 → ×1", "2. Col 1 ↓ ×1")
+    private val moves = listOf(SolutionStep(isRow = true, index = 0, forward = true, count = 1), SolutionStep(isRow = false, index = 0, forward = true, count = 1))
 
     private val factory = FakeMordieSearchFactory()
     private val analytics = RecordingAnalyticsService()
@@ -135,7 +136,7 @@ class ViewModelGiveUpTest {
     fun `giving up shows the original arrangement with Mordie's steps, ready to play`() {
         givenUp()
 
-        assertEquals(SolutionState(steps, current = null, atStart = true, atEnd = false), viewModel.solution())
+        assertEquals(SolutionState(steps, current = null, atStart = true, atEnd = false, moves = moves), viewModel.solution())
         assertContentEquals(original, viewModel.boardState())
         assertContentEquals(original, board.boardArray)
         assertEquals(0, viewModel.moveCount())
@@ -180,7 +181,7 @@ class ViewModelGiveUpTest {
 
         viewModel.showSolution()
 
-        assertEquals(SolutionState(steps, current = null, atStart = true, atEnd = false), viewModel.solution())
+        assertEquals(SolutionState(steps, current = null, atStart = true, atEnd = false, moves = moves), viewModel.solution())
         assertContentEquals(original, viewModel.boardState())
         assertEquals(mapOf("opened_from" to "after_win", "board_size" to 3, "solution_length" to 2), event("screen_solution"))
         assertEquals(0, count("game_given_up"))
@@ -223,12 +224,12 @@ class ViewModelGiveUpTest {
         givenUp()
 
         assertEquals(SolutionStep(isRow = true, index = 0, forward = true, count = 1), viewModel.replayNext())
-        assertEquals(SolutionState(steps, current = 0, atStart = false, atEnd = false), viewModel.solution())
+        assertEquals(SolutionState(steps, current = 0, atStart = false, atEnd = false, moves = moves), viewModel.solution())
         assertContentEquals(afterFirstStep, viewModel.boardState())
         viewModel.replayNext()
 
         assertContentEquals(solved, viewModel.boardState())
-        assertEquals(SolutionState(steps, current = 1, atStart = false, atEnd = true), viewModel.solution())
+        assertEquals(SolutionState(steps, current = 1, atStart = false, atEnd = true, moves = moves), viewModel.solution())
         assertNull(viewModel.replayNext())
         assertContentEquals(original, board.boardArray)
         assertEquals(0, count("board_solved"))
@@ -244,7 +245,7 @@ class ViewModelGiveUpTest {
         assertContentEquals(afterFirstStep, viewModel.boardState())
         viewModel.replayRestart()
 
-        assertEquals(SolutionState(steps, current = null, atStart = true, atEnd = false), viewModel.solution())
+        assertEquals(SolutionState(steps, current = null, atStart = true, atEnd = false, moves = moves), viewModel.solution())
         assertContentEquals(original, viewModel.boardState())
         assertNull(viewModel.replayPrevious())
     }

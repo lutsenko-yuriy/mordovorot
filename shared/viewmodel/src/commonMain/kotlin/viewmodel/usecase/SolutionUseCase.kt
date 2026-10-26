@@ -68,7 +68,7 @@ internal class SolutionUseCase(
     }
 
     fun state(): SolutionState? = solutionScreen.replay?.let {
-        SolutionState(SolutionSteps.format(it.steps), it.step, it.atStart, it.atEnd)
+        SolutionState(SolutionSteps.format(it.steps), it.step, it.atStart, it.atEnd, it.steps)
     }
 
     /** Mordie's line on the screen; `null` off it. */

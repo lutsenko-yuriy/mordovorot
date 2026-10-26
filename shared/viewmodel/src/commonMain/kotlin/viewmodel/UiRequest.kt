@@ -18,7 +18,8 @@ sealed class UiRequest<R> {
 
     internal suspend fun awaitResponse(): R = response.await()
 
-    class ShowMessage(val text: String) : UiRequest<Unit>()
+    /** [loadedSave] names the save a load just restored, on its `Loaded` message only (GH-166). */
+    class ShowMessage(val text: String, val loadedSave: String? = null) : UiRequest<Unit>()
     /** [save] carries its size (GH-44 WU4) so the View can show it alongside the name. */
     class ConfirmRestore(val save: SaveInfo) : UiRequest<Boolean>()
     class ChooseSaveToRestore(val saves: List<SaveInfo>) : UiRequest<String?>()

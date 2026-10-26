@@ -79,7 +79,7 @@ internal class LoadGameUseCase(
             )
             if (saved.mordie?.solutionScreen == true) solution.enterLoaded(trigger)
             if (fromSave != null && !fromSave.fits(board.squareSide)) chooseFittingLabels()
-            ui.showMessage("Loaded '$name'.")
+            ui.showMessage("Loaded '$name'.", loadedSave = name)
             LoadResult.LOADED
         }
     }
