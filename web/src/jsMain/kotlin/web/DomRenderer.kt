@@ -203,7 +203,7 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
     private fun board(state: WebState, justSolved: Boolean): Element {
         val side = state.side
         val disabled = !state.arrowsEnabled || state.dialog != null
-        fun arrow(label: String, arrow: Arrow, line: Int, name: String) =
+        fun arrow(label: String, arrow: Arrow, line: Int) =
             button(label, "arrow") {
                 clicked = arrow to line
                 try {
@@ -213,10 +213,10 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
                 }
             }.focusKey(Focus.ArrowButton(arrow, line)).also {
                 it.disabled = disabled
-                it.setAttribute("aria-label", name)
+                it.setAttribute("aria-label", Announcements.line(arrow, line))
             }
-        fun arrows(arrow: Arrow, label: String, axis: String, name: (Int) -> String) =
-            element("div", "arrows $axis").apply { repeat(side) { append(arrow(label, arrow, it, name(it + 1))) } }
+        fun arrows(arrow: Arrow, label: String, axis: String) =
+            element("div", "arrows $axis").apply { repeat(side) { append(arrow(label, arrow, it)) } }
 
         val layer = element("div", "tiles")
         tiles = layer
@@ -225,11 +225,11 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
         val classes = listOfNotNull("board", "solved".takeIf { state.solved }, "just-solved".takeIf { justSolved })
         return element("div", classes.joinToString(" ")).apply {
             append(
-                element("span"), arrows(Arrow.UP, "▲", "row") { "Column $it up" }, element("span"),
-                arrows(Arrow.LEFT, "◀", "column") { "Row $it left" },
+                element("span"), arrows(Arrow.UP, "▲", "row"), element("span"),
+                arrows(Arrow.LEFT, "◀", "column"),
                 layer,
-                arrows(Arrow.RIGHT, "▶", "column") { "Row $it right" },
-                element("span"), arrows(Arrow.DOWN, "▼", "row") { "Column $it down" }, element("span"),
+                arrows(Arrow.RIGHT, "▶", "column"),
+                element("span"), arrows(Arrow.DOWN, "▼", "row"), element("span"),
             )
         }
     }
