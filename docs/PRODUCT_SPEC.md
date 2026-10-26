@@ -257,8 +257,9 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 - **Same game, mouse only:** the rules, board sizes 3-6, solvable new games, `Moves: N` and its
   move rule (Feature 2), Save/Load (Feature 4), Mordie (Feature 8) and Give Up with its solution
   screen (Feature 10) work as in the terminal game. There is no keyboard mode, no command-line flags and no Exit.
-- **Dialogs from the keyboard (GH-163):** every dialog works without the mouse; the toolbar and
-  the board don't yet (GH-169, GH-171).
+- **Dialogs from the keyboard (GH-163):** every dialog works without the mouse; the toolbar,
+  the arrows and the solution screen's buttons are reached with Tab and pressed with Enter or
+  Space, but there are no shortcuts or keyboard play yet (GH-169, GH-171).
   - **Focus on open:** the size picker on the current board's size, Save on its name field, Load
     and `Restore a saved game?` on the first save (Cancel when there are none), `Can't be solved`
     on `Repair & load`, Tile labels on the marked scheme (and on each row picked), Give Up on No.
@@ -272,6 +273,15 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
     be solved`); to `Next ▶` after Give Up → Yes; to the start of the page after a startup dialog.
   - Focus rings show only once a key has been pressed, so a dialog's default control isn't ringed
     for mouse players.
+- **Focus after a press (GH-164):** a pressed arrow, toolbar button or solution-screen button keeps
+  focus once the page has redrawn, without scrolling the page. When it's gone or disabled, focus
+  goes on to the next thing that screen offers:
+  - an arrow whose shift solved the board: `Mordie's solution` when shown, else `New`;
+  - `Next ▶` at the last step: `◀ Prev`; `◀ Prev` at the first step, and `↻ Restart`: `Next ▶`;
+  - `Mordie's solution` after a win: `Next ▶`, as after Give Up → Yes;
+  - anything else: the start of the page.
+
+  A held Enter presses the focused button once, not once per auto-repeat.
 - **Toolbar:** `[ New ] [ Save ] [ Load ] [ Labels ]`; the player leaves by closing the tab.
   - **New** opens the size picker (3x3, 4x4, 5x5, 6x6); Cancel leaves the current game untouched.
   - **Save** prefills the current save name and warns before overwriting. A blank name counts as
