@@ -18,7 +18,7 @@ fun main() {
     stopPinchZoom(document, window.navigator)
     // Outside #app, which DomRenderer rebuilds every frame: the footer never changes.
     document.body?.append(footerElement(footer(BuildInfo.VERSION)))
-    val renderer = DomRenderer(root)
+    val renderer = DomRenderer(root, document.getElementById("announcer")?.let(::DomAnnouncer))
     val game = startWebGame(
         BoardImpl(),
         BrowserSaveRepository(LocalStorageStore()),

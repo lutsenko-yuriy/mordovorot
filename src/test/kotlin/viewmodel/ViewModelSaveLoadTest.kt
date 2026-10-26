@@ -96,6 +96,8 @@ class ViewModelSaveLoadTest {
         ui.drive(viewModel) { viewModel.loadGame("foo") }
 
         assertEquals(listOf(8, 7, 6, 5, 4, 3, 2, 1, 0), board.boardArray.toList())
+        assertEquals(listOf("Loaded 'foo'."), ui.shownMessages)
+        assertEquals(listOf<String?>("foo"), ui.loadedSaves)
         assertEquals(
             listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "success", "labels_differ_from_preference" to false))),
             analytics.events,
@@ -115,6 +117,7 @@ class ViewModelSaveLoadTest {
 
         assertEquals(listOf(0, 1, 2, 3, 4, 5, 6, 7, 8), board.boardArray.toList())
         assertTrue(ui.shownMessages.any { it.contains("missing") && it.contains("bar") })
+        assertEquals(listOf<String?>(null), ui.loadedSaves)
         assertEquals(
             listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "not_found"))),
             analytics.events,
@@ -191,6 +194,7 @@ class ViewModelSaveLoadTest {
 
         assertEquals(listOf(0, 1, 2, 3, 4, 5, 6, 7, 8), board.boardArray.toList())
         assertTrue(ui.shownMessages.any { it.contains("corrupt") })
+        assertEquals(listOf<String?>(null), ui.loadedSaves)
         assertEquals(
             listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "error"))),
             analytics.events,

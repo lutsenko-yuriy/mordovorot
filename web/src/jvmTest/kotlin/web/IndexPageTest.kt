@@ -5,7 +5,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/** GH-110: the tab title is `Mordovorot`, and the title appears nowhere else on the page. */
+/** GH-110: the tab title is `Mordovorot`, and the title appears nowhere else on the page. GH-166:
+ *  the screen reader's live region. */
 class IndexPageTest {
     private val page = File("src/jsMain/resources/index.html").readText()
 
@@ -34,6 +35,19 @@ class IndexPageTest {
         val sheets = File("src/jsMain/resources").listFiles { f -> f.extension == "css" }.orEmpty().map { it.name }.toSet()
 
         assertEquals(sheets, linked)
+    }
+
+    /** GH-166: a live region must exist before its text changes, and outside #app, which every frame
+     *  rebuilds and a dialog makes inert. */
+    @Test
+    fun `page has a polite live region next to the app`() {
+        val body = page.substringAfter("<body>").substringBefore("<script")
+
+        assertEquals(
+            """<div id="app"></div>
+<div id="announcer" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></div>""",
+            body.trim(),
+        )
     }
 
     @Test

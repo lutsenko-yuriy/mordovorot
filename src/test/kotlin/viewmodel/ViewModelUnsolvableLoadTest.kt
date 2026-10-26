@@ -59,6 +59,7 @@ class ViewModelUnsolvableLoadTest {
         assertEquals(5, board.moveCount)
         assertTrue(Solvability.isSolvable(board.boardArray))
         assertEquals("Repaired 'odd' (two tiles swapped) and loaded it.", ui.shownMessages.last())
+        assertTrue(ui.loadedSaves.all { it == null })
         assertEquals(
             listOf(
                 Event("load_command_used", mapOf("trigger" to "command", "result" to "unsolvable")),
@@ -279,5 +280,6 @@ class ViewModelUnsolvableLoadTest {
 
         assertEquals(emptyList(), ui.resolveUnsolvableSaveCalls)
         assertEquals(listOf("Loaded 'ok'."), ui.shownMessages)
+        assertEquals(listOf<String?>("ok"), ui.loadedSaves)
     }
 }

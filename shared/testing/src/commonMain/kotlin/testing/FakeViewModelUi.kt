@@ -27,6 +27,9 @@ class FakeViewModelUi(
 
     val shownMessages = mutableListOf<String>()
 
+    /** [UiRequest.ShowMessage.loadedSave] of each message, parallel to [shownMessages] (GH-166). */
+    val loadedSaves = mutableListOf<String?>()
+
     val confirmRestoreCalls = mutableListOf<String>()
 
     val chooseSaveToRestoreCalls = mutableListOf<List<String>>()
@@ -68,6 +71,7 @@ class FakeViewModelUi(
         when (request) {
             is UiRequest.ShowMessage -> {
                 shownMessages.add(request.text)
+                loadedSaves.add(request.loadedSave)
                 request.respond(Unit)
             }
             is UiRequest.ConfirmRestore -> {

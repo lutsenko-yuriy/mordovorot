@@ -86,7 +86,8 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                           # interactions (ShowMessage/ConfirmRestore/ChooseSaveToRestore/
 │       │                           # ConfirmSaveBeforeExit/PromptSaveName/ChooseBoardSize (GH-44)/
 │       │                           # ResolveUnsolvableSave (GH-74) + UnsolvableSaveChoice,
-│       │                           # ChooseFittingLabels (GH-160)),
+│       │                           # ChooseFittingLabels (GH-160)); ShowMessage.loadedSave names
+│       │                           # the save a load restored (GH-166),
 │       │                           # sent on
 │       │                           # GameViewModel.uiRequests (GH-42 WU2)
 │       ├── UiRequestChannel.kt   # The rendezvous channel behind uiRequests: ask/showMessage. One
@@ -133,7 +134,8 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       ├── SolutionSteps.kt       # SolutionStep (one step, the shortest way round its line) and
 │       │                             # the step list's text, `03. Col 3 ↑ ×1` (GH-126)
 │       ├── SolutionState.kt       # What a view draws on the solution screen, plus GiveUpButton
-│       │                             # (DIMMED/GIVE_UP/MORDIES_SOLUTION/HIDDEN) (GH-126)
+│       │                             # (DIMMED/GIVE_UP/MORDIES_SOLUTION/HIDDEN) (GH-126); its moves,
+│       │                             # the steps unformatted (GH-166)
 │       └── usecase/               # One class per viewmodel flow, delegated to by GameViewModelImpl
 │                                     # (GH-78): NewGameUseCase, SaveGameUseCase, LoadGameUseCase ->
 │                                     # ResolveUnsolvableSaveUseCase (repair / new game / exit, GH-74;
@@ -158,11 +160,16 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── WebGame.kt       # The browser's View: page intents (onArrow/onDrag*/onNew/onSave/onLoad/dialog answers,
 │   │                    # GH-126's onGiveUp/onMordiesSolution/onReplay*, GH-139's onLabels*, GH-163's onEscape) ->
 │   │                    # GameViewModel, a WebState to the WebRenderer after every change; drains
-│   │                    # uiRequests; tracks the view-layer analytics (screen views, dialog_cancelled)
+│   │                    # uiRequests; tracks the view-layer analytics (screen views, dialog_cancelled);
+│   │                    # sets each frame's announcement (GH-166)
+│   ├── WebDialogFlows.kt # WebGame's Save, Load, size and can't-be-solved dialogs over its modal (GH-166)
+│   ├── Announcements.kt # GH-166: what a screen reader hears - shifts, the win, new game, load,
+│   │                    # solution steps - and the arrows' accessible names
 │   ├── WebState.kt      # One frame: tiles (1-based), Moves, Mordie's spot, solved, status, WebDialog,
 │   │                    # the dragged line's live offset; the Give Up row, the solution screen and
 │   │                    # the replay shift to slide (GH-126); the tile labels and tileTexts (GH-139);
 │   │                    # LabelOption.available and Labels.message (GH-160); the one-time focus (GH-163)
+│   │                    # and announcement (GH-166)
 │   ├── WebRenderer.kt   # fun interface render(WebState) - the DOM on the page, a recorder in tests
 │   ├── WebRequestRouter.kt # Answers each UiRequest (exhaustive `when`, like UiRequestRouter)
 │   ├── WebLabelsDialog.kt # The Tile labels dialog's flows over WebGame's modal (GH-160), like
@@ -206,9 +213,13 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
                                        # keeps the focused control across redraws, else fallbackFocus,
                                        # and drops held Enter repeats (GH-164)
 ├── src/jsMain/kotlin/web/DomSolution.kt # The step list, Prev/Next/Restart and the Give Up row (GH-126)
+├── src/jsMain/kotlin/web/DomAnnouncer.kt # GH-166: says WebState.announcement through #announcer,
+│                                       # emptied then refilled after 100 ms so a repeat is re-read
 ├── src/jsMain/kotlin/web/storage/LocalStorageStore.kt # KeyValueStore over window.localStorage
 ├── src/jsMain/resources/index.html     # The page: `<title>Mordovorot</title>`, links the six
-│                                       # sheets below in this order (the cascade relies on it), loads web.js
+│                                       # sheets below in this order (the cascade relies on it), loads web.js;
+│                                       # #announcer, the polite live region, next to #app so no redraw
+│                                       # or `inert` touches it (GH-166)
 ├── src/jsMain/resources/palette.css    # GH-165: the colour tokens, light and dark (one set of tile
 │                                       # colours for both); linked first
 ├── src/jsMain/resources/styles.css     # The look: layout tokens, wide/tall by `orientation` (as layoutOf
@@ -226,16 +237,18 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/commonTest/kotlin/web/scenario/ # GH-110 end to end: WebGame over startWebGame's wiring
 │                                       # (WebHarness), recording each WebState (startup, play,
 │                                       # save/load, unsaved progress, drag, analytics; GH-126 give up;
-│                                       # GH-139 tile labels)
+│                                       # GH-139 tile labels; GH-166 announcements, as WebHarness.said)
 ├── src/commonTest/kotlin/web/FooterTest.kt # GH-111: the footer's wording and links
 ├── src/commonTest/kotlin/web/HostTest.kt # GH-111: hostOf's buckets
-├── src/commonTest/kotlin/web/LayoutTest.kt, SlidesTest.kt, MessageFeedTest.kt
+├── src/commonTest/kotlin/web/LayoutTest.kt, SlidesTest.kt, MessageFeedTest.kt, AnnouncementsTest.kt
 ├── src/commonTest/kotlin/web/drag/     # LineDragTest, WrapPositionsTest
 ├── src/commonTest/kotlin/web/storage/  # BrowserSaveRepositoryTest, BrowserPreferenceRepositoryTest
 │                                       # over InMemoryKeyValueStore
 ├── src/jvmTest/kotlin/web/IndexPageTest.kt # Pins the title rule (the title appears only in the tab)
 │                                       # and relative asset URLs (GH-111: the public site's sub-path);
-│                                       # every sheet linked, in order (GH-153)
+│                                       # every sheet linked, in order (GH-153); #announcer (GH-166)
+├── src/jvmTest/kotlin/web/AnnouncerStylesTest.kt # GH-166: .visually-hidden clips, never hides from
+│                                       # screen readers (no display: none or visibility: hidden)
 ├── src/jvmTest/kotlin/web/BuildInfoTest.kt, CreditsTest.kt # GH-111: the stamped version is the
 │                                       # build's; the footer's credit matches the README's
 ├── src/jvmTest/kotlin/web/PhoneFitStylesTest.kt # GH-147, GH-148: pins the tall and wide fit rules

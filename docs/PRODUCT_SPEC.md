@@ -282,6 +282,22 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   - anything else: the start of the page.
 
   A held Enter presses the focused button once, not once per auto-repeat.
+- **Screen reader announcements (GH-166):** a screen reader is told what just happened, politely
+  (after what it's reading) and without moving focus. Always on; nothing shows on the page.
+  - **A shift:** `Row 2 left`, `Column 4 up`; with the move count when it starts a new move
+    (`Row 2 left, 5 moves`, `1 move` for one). A drag is said once, on release, with how far
+    (`Row 2 left 2`); nothing mid-drag, and nothing for a release back where it started.
+  - **The win:** only `Solved in M moves`; after it, nothing more from the board.
+  - **The status line:** every message, as it appears; the same message twice is said twice.
+  - **A new game:** `New 4x4 game`, from New, at startup with no restore (the size picked or
+    cancelled), and after `Can't be solved` → New game. Cancel on New says nothing.
+  - **A load:** `Loaded 'foo', 5x5, 12 moves`, `Loaded 'foo', 5x5, solved in 14 moves`, or for a
+    save on the solution screen `Loaded 'foo', 5x5, solution, 12 moves` (its steps), from Load and
+    the startup restore; the status line still shows `Loaded 'foo'.`
+  - **The solution screen:** `Solution, 12 moves` on entry; Next and Prev say the step now current
+    in words, `Step 3 of 12: Column 3 up 2` (a two-shift step is said again on its second Next);
+    Restart, and Prev back to the start, say `Start, step 0 of 12`.
+  - Mordie's lines are never said. The board's tiles aren't either (GH-167).
 - **Toolbar:** `[ New ] [ Save ] [ Load ] [ Labels ]`; the player leaves by closing the tab.
   - **New** opens the size picker (3x3, 4x4, 5x5, 6x6); Cancel leaves the current game untouched.
   - **Save** prefills the current save name and warns before overwriting. A blank name counts as

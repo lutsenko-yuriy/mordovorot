@@ -9,6 +9,7 @@ import mordie.SearchProgress
 import mordie.SolutionMove
 import viewmodel.GiveUpButton
 import viewmodel.SolutionState
+import viewmodel.SolutionStep
 import web.Arrow
 import web.WebDialog
 import web.drag.Axis
@@ -25,6 +26,7 @@ class WebGiveUpScenarioTest {
     private val afterOneColumnShift = intArrayOf(0, 5, 2, 3, 4, 9, 6, 7, 8, 13, 10, 11, 12, 1, 14, 15)
     private val path = listOf(SolutionMove(isRow = true, index = 0, amount = 1), SolutionMove(isRow = false, index = 1, amount = 2))
     private val steps = listOf("1. Row 1 → ×1", "2. Col 2 ↓ ×2")
+    private val moves = listOf(SolutionStep(isRow = true, index = 0, forward = true, count = 1), SolutionStep(isRow = false, index = 1, forward = true, count = 2))
     private val solutionLine = "Here's how I did it in 2 moves!"
 
     private fun WebHarness.searchFinds() {
@@ -82,7 +84,7 @@ class WebGiveUpScenarioTest {
         assertEquals(shown(original), page.state.tiles)
         assertFalse(page.state.movesShown)
         assertEquals(solutionLine, page.state.mordie)
-        assertEquals(SolutionState(steps, current = null, atStart = true, atEnd = false), page.state.solution)
+        assertEquals(SolutionState(steps, current = null, atStart = true, atEnd = false, moves = moves), page.state.solution)
         assertEquals(GiveUpButton.HIDDEN, page.state.giveUp)
         assertFalse(page.state.arrowsEnabled)
 
@@ -111,7 +113,7 @@ class WebGiveUpScenarioTest {
         page.game.onReplayNext()
         assertEquals(shown(afterFirstStep), page.state.tiles)
         assertEquals(LineOffset(Axis.ROW, line = 0, tiles = -1.0), page.state.slide)
-        assertEquals(SolutionState(steps, current = 0, atStart = false, atEnd = false), page.state.solution)
+        assertEquals(SolutionState(steps, current = 0, atStart = false, atEnd = false, moves = moves), page.state.solution)
         assertEquals(false, page.props("solution_replay_started").single()["restart"])
 
         page.game.onReplayNext()
@@ -133,12 +135,12 @@ class WebGiveUpScenarioTest {
         page.game.onReplayRestart()
         assertEquals(shown(original), page.state.tiles)
         assertNull(page.state.slide)
-        assertEquals(SolutionState(steps, current = null, atStart = true, atEnd = false), page.state.solution)
+        assertEquals(SolutionState(steps, current = null, atStart = true, atEnd = false, moves = moves), page.state.solution)
 
         page.game.onReplayNext()
         page.game.onReplayPrevious()
         assertEquals(shown(original), page.state.tiles)
-        assertEquals(SolutionState(steps, current = null, atStart = true, atEnd = false), page.state.solution)
+        assertEquals(SolutionState(steps, current = null, atStart = true, atEnd = false, moves = moves), page.state.solution)
         assertFalse(page.game.hasUnsavedProgress())
         assertTrue(page.props("board_solved").isEmpty())
     }
@@ -181,7 +183,7 @@ class WebGiveUpScenarioTest {
         page.game.onLoad()
         page.game.onLoadChosen("s")
         assertEquals(shown(original), page.state.tiles)
-        assertEquals(SolutionState(steps, current = null, atStart = true, atEnd = false), page.state.solution)
+        assertEquals(SolutionState(steps, current = null, atStart = true, atEnd = false, moves = moves), page.state.solution)
         assertEquals(listOf("give_up", "load"), page.props("screen_solution").map { it["opened_from"] })
 
         val reloaded = WebHarness(backgroundScope, store = page.store).start()

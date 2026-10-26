@@ -130,7 +130,7 @@ class KeyboardInputTest {
 
     private fun solutionScreen() = ScreenState.forBoard(
         (0 until 16).toList(), 4, solved = false, giveUpButton = GiveUpButton.DIMMED,
-        solution = SolutionState(listOf("1. Row 1 → ×1"), current = null, atStart = true, atEnd = false),
+        solution = SolutionState(listOf("1. Row 1 → ×1"), current = null, atStart = true, atEnd = false, moves = emptyList()),
     )
 
     @Test

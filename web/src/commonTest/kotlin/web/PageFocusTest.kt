@@ -10,7 +10,7 @@ class PageFocusTest {
     private val playing = WebState(side = 3, tiles = (1..9).toList(), moves = 4, mordie = null, solved = false, status = null, dialog = null)
     private val won = playing.copy(solved = true)
     private fun replay(atStart: Boolean, atEnd: Boolean) =
-        playing.copy(solution = SolutionState(listOf("01. Row 1 ← ×1", "02. Col 2 ↑ ×1"), current = null, atStart = atStart, atEnd = atEnd))
+        playing.copy(solution = SolutionState(listOf("01. Row 1 ← ×1", "02. Col 2 ↑ ×1"), current = null, atStart = atStart, atEnd = atEnd, moves = emptyList()))
 
     @Test
     fun `a winning arrow passes focus to Mordie's solution when it is shown`() {
