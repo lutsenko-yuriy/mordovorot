@@ -118,7 +118,7 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
         dialog?.let { root.append(element("div", if (reopened) "overlay shown" else "overlay").apply { append(dialogElement(it, game) { warning -> saveWarning = warning }) }) }
         drawMordie(now)
         setBehindDialog(root, dialog != null)
-        applyFocus(root, state.focus, focused, dialog != null)
+        applyFocus(root, state, focused)
     }
 
     /** Scrolls [steps] just enough to show [step]. Unlike `scrollIntoView`, never the page, so
@@ -211,7 +211,7 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
                 } finally {
                     clicked = null
                 }
-            }.also {
+            }.focusKey(Focus.ArrowButton(arrow, line)).also {
                 it.disabled = disabled
                 it.setAttribute("aria-label", name)
             }

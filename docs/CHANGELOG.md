@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.23.0] — 2026-10-26 (PR #176 merged)
+
+### Added
+- [user] (PR #176) GH-164: in the browser game, a button pressed from the keyboard keeps focus after the page updates, instead of focus jumping back to the start of the page. When the button goes away or can't be pressed any more (a winning arrow, the first or last solution step), focus moves to the next sensible button, and holding Enter presses a button only once.
+- [non-user] The focus fallbacks live in `fallbackFocus` (`web/src/commonMain/kotlin/web/PageFocus.kt`); `Focus` gains the arrows, Prev and Restart; the keyboard harness gains an `R-` (held key) step and four new `keys_check.sh` flows.
+- [meta] FEATURE.md step 10.0: manual checklists as numbered steps, one action per line, naming the browser; the GH-164 debrief note.
+
 ## [0.22.1] — 2026-10-26 (PR #175 merged)
 
 ### Added
