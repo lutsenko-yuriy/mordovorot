@@ -96,7 +96,7 @@ mouse play 1200x800 4x4 | S-Tab page -> focus BUTTON "OK" role button name "OK" 
 
 A step is `click:<button text>` (a mouse click), `focus:<data-focus key>`, or a key: `Tab`,
 `S-Tab` (Shift+Tab), `Escape`, `Enter`, `Space`, `ArrowUp` and the like, sent as a `keydown` to
-the focused control. A synthetic key gets no default action, so when the page doesn't take it
+the focused control; `R-` before a key is its auto-repeat while held (`R-Enter`, GH-164). A synthetic key gets no default action, so when the page doesn't take it
 (`preventDefault`), the harness does what the browser would: Tab moves to the next control in
 DOM order (the page sets no positive `tabindex`) that isn't disabled, hidden or `inert`, and
 leaves the page past either end; Enter and Space click a button. The step's mark says which:
@@ -112,7 +112,9 @@ Headless can't show what VoiceOver says or how a ring looks; those stay a short 
 the user (`docs/workflows/FEATURE.md` step 10.0).
 
 `keys_check.sh` builds the bundle, plays GH-163's dialog flows (Labels with Tab and Shift+Tab
-wrapping, New from Enter, Save, each closed with Escape) and diffs the lines against
+wrapping, New from Enter, Save, each closed with Escape) and GH-164's kept focus (Tab on from
+Load after its dialog closes; an arrow pressed twice, then a held Enter and Tab; Prev at the first
+step and Restart on the solution screen) and diffs the lines against
 `tests/keys_expected.txt`. Exit 0 means as expected, 1 differences (the diff is printed), 2 a
 failed build or a `TIMEOUT`. It needs Chrome, so the agent runs it rather than CI. When a change
 to the page's keys or focus is meant, update the expected file and check each changed line.

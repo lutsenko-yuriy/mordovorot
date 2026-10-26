@@ -20,9 +20,9 @@ internal fun stepList(solution: SolutionState): Element = element("div", "steps"
  *  click: the first frame is drawn before the renderer has its game. */
 internal fun replayButtons(solution: SolutionState, game: () -> WebGame, dialogOpen: Boolean): Element = element("div", "replay").apply {
     append(
-        button("◀ Prev") { game().onReplayPrevious() }.also { it.disabled = dialogOpen || solution.atStart },
+        button("◀ Prev") { game().onReplayPrevious() }.focusKey(Focus.ReplayPrev).also { it.disabled = dialogOpen || solution.atStart },
         button("Next ▶") { game().onReplayNext() }.focusKey(Focus.ReplayNext).also { it.disabled = dialogOpen || solution.atEnd },
-        button("↻ Restart") { game().onReplayRestart() }.also { it.disabled = dialogOpen || solution.atStart },
+        button("↻ Restart") { game().onReplayRestart() }.focusKey(Focus.ReplayRestart).also { it.disabled = dialogOpen || solution.atStart },
     )
 }
 

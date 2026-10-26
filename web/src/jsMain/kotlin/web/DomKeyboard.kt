@@ -2,18 +2,27 @@ package web
 
 import kotlinx.browser.document
 import org.w3c.dom.Element
+import org.w3c.dom.HTMLButtonElement
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.asList
 import org.w3c.dom.events.KeyboardEvent
 
 // GH-163: the dialogs from the keyboard. WebGame decides where focus goes; this applies it.
+// GH-164: across every other redraw, the focused control keeps focus or passes it on.
 
-/** Escape cancels the open dialog, and Tab and Shift+Tab cycle inside it. The first key shows
- *  focus rings from then on (styles.css). [game] is read only on a key, as in [replayButtons]. */
-internal fun listenForDialogKeys(root: Element, game: () -> WebGame) {
+/** Escape cancels the open dialog, Tab and Shift+Tab cycle inside it, and a held Enter presses
+ *  once. The first key shows focus rings from then on (styles.css). [game] is read only on a key,
+ *  as in [replayButtons]. */
+internal fun listenForKeys(root: Element, game: () -> WebGame) {
     document.addEventListener("keydown", { event ->
         val key = event as KeyboardEvent
         root.classList.add("keyboard")
+        // A held Enter presses the focused button once: it keeps focus now, so each repeat would
+        // press it again (GH-164).
+        if (key.key == "Enter" && key.repeat) {
+            key.preventDefault()
+            return@addEventListener
+        }
         val dialog = root.querySelector(".dialog") ?: return@addEventListener
         when {
             // An Escape that drops an IME composition isn't the player's, and a held one would
@@ -46,13 +55,25 @@ private fun wrapTab(dialog: Element, key: KeyboardEvent) {
 internal fun focusedKey(root: Element): String? =
     document.activeElement?.takeIf { root.contains(it) }?.getAttribute("data-focus")
 
-/** Focuses [focus] in the rebuilt [root]; with none, puts back the control that had focus while a
- *  dialog stays open, [before]. A control that isn't on the page leaves focus at the page's start. */
-internal fun applyFocus(root: Element, focus: Focus?, before: String?, dialogOpen: Boolean) {
-    val key = focus?.key ?: before?.takeIf { dialogOpen } ?: return
-    val control = root.querySelector("[data-focus=\"$key\"]") as? HTMLElement
-    if (control != null) control.focus() else (document.activeElement as? HTMLElement)?.blur()
+/** Focuses [state]'s focus in the rebuilt [root]; with none, puts back the control that had
+ *  focus, [before], or the one [fallbackFocus] names when it's gone or disabled (GH-164). A
+ *  control that isn't on the page leaves focus at the page's start. */
+internal fun applyFocus(root: Element, state: WebState, before: String?) {
+    state.focus?.let { focus ->
+        val control = root.querySelector("[data-focus=\"${focus.key}\"]") as? HTMLElement
+        if (control != null) control.focus() else blurFocused()
+        return
+    }
+    if (before == null) return
+    // Without preventScroll a redraw could scroll the page to the restored control.
+    val control = focusable(root, before) ?: focusable(root, fallbackFocus(before, state).key)
+    if (control != null) control.asDynamic().focus(js("({ preventScroll: true })")) else blurFocused()
 }
+
+private fun focusable(root: Element, key: String): HTMLElement? =
+    (root.querySelector("[data-focus=\"$key\"]") as? HTMLElement)?.takeUnless { (it as? HTMLButtonElement)?.disabled == true }
+
+private fun blurFocused() = (document.activeElement as? HTMLElement)?.blur()
 
 /** While a dialog is open, the page behind it, the footer included, is out of reach. */
 internal fun setBehindDialog(root: Element, dialogOpen: Boolean) {

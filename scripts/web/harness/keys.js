@@ -25,9 +25,12 @@ function play(win, step) {
         return "-";
     }
     const shift = step.startsWith("S-");
-    const key = { Space: " " }[step] || (shift ? step.slice(2) : step);
+    // GH-164: R- is a held key's auto-repeat.
+    const repeat = step.startsWith("R-");
+    const name = shift || repeat ? step.slice(2) : step;
+    const key = { Space: " " }[name] || name;
     const target = doc.activeElement || doc.body;
-    const event = new win.KeyboardEvent("keydown", { key, shiftKey: shift, bubbles: true, cancelable: true });
+    const event = new win.KeyboardEvent("keydown", { key, shiftKey: shift, repeat, bubbles: true, cancelable: true });
     if (!target.dispatchEvent(event)) return "page";
     if (key === "Tab") {
         tab(doc, target, shift);
