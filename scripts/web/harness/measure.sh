@@ -3,8 +3,9 @@
 #
 # Usage: measure.sh [--baseline <dist dir>] <query>...
 #   Run `./gradlew :web:jsBrowserDistribution` first. Each <query> is harness.html's query string
-#   (see README.md), e.g. "v=touch&mode=solution&boards=3". Variants: mouse, touch (the
-#   `pointer: coarse` rules always on), and with --baseline, master and master-touch from that bundle.
+#   (see README.md), e.g. "v=touch&mode=solution&boards=3" or "report=keys&keys=click:Labels,Tab"
+#   (GH-174). Variants: mouse, touch (the `pointer: coarse` rules always on), and with --baseline,
+#   master and master-touch from that bundle.
 #
 # Chrome runs headless in real time with a throwaway profile; see lib.sh.
 

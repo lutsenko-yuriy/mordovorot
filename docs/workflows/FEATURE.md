@@ -117,7 +117,8 @@ behaviour beyond a literal value, it is not trivial — use the full workflow in
        When the PR/MR changes how a client looks or responds (a new dialog, button, animation), also start that client for the user right after opening the PR/MR: run its dev server or give the command to launch it (see `AGENTS.md` Common Commands), and invite them to try the flow. A headless screenshot can't show clicks or animation, and GH-139's dialog blink and its instant label preview only surfaced when the user tried it.
        When the PR/MR changes the web client's keyboard or screen-reader behaviour (focus, keys,
        ARIA, `inert`), check in headless Chrome everything it can show (where focus lands, what a
-       key does, accessible names, what is `inert`) and report it. Then hand the user a short
+       key does, accessible names, what is `inert`) with the harness's `report=keys` and report
+       it, and run `scripts/web/harness/keys_check.sh` (see its README, GH-174). Then hand the user a short
        checklist in the PR/MR of only what it can't: one line per flow, the keys to press and
        what to see or hear (VoiceOver: Cmd+F5), e.g. "Save → Escape: dialog closes, ring on
        Save". GH-163: clicking through every dialog with VoiceOver, unguided, was the tedious part.

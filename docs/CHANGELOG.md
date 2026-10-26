@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.22.1] — 2026-10-26 (PR #175 merged)
+
+### Added
+- [test] (PR #175) GH-174: the web harness gains `report=keys`, which plays keys and clicks against the game in headless Chrome and reports, after each, where focus is, its role and accessible name, the open dialog, the focus ring and what is `inert`; `scripts/web/harness/keys_check.sh` plays GH-163's dialog flows and diffs them against `tests/keys_expected.txt` (exit 0 as expected, 1 differences, 2 a failed build or timeout).
+- [meta] FEATURE.md step 10.0 points to `report=keys` and `keys_check.sh`; the GH-174 debrief note.
+
 ## [0.22.0] — 2026-10-25 (PR #173 merged)
 
 ### Added

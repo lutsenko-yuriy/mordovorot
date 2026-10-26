@@ -1,7 +1,7 @@
-# Web harness (GH-147, GH-148, GH-156)
+# Web harness (GH-147, GH-148, GH-156, GH-174)
 
 Checks that the web game fits phone screens, headless, compares its computed styles against master,
-and serves it to a real phone.
+checks it from the keyboard and serves it to a real phone.
 
 ## Headless measurements
 
@@ -28,7 +28,8 @@ Query options (harness.html):
 | `mode` | `play` | `play`, `dialog` (Tile labels open) or `solution` (shifts until Give Up lights, then gives up) |
 | `shorter` | `0` | px taken off each height, standing in for the browser's own toolbars (try `100`) |
 | `rows` | `1` | toolbar rows allowed (`2` under 300px wide) |
-| `report` | `fit` | `fit` (one line per case, above) or `styles` (every element's computed styles, for `styles_diff.sh`) |
+| `report` | `fit` | `fit` (one line per case, above), `styles` (every element's computed styles, for `styles_diff.sh`) or `keys` (below; `sizes` then defaults to `1200x800` and `boards` to `4`) |
+| `keys` | | with `report=keys`, the steps to play, comma-separated (below) |
 
 To compare against master, build master's bundle into another directory and pass it with
 `--baseline <dir>`; positions in the `master` lines should match the `mouse` ones where nothing
@@ -78,6 +79,43 @@ its `[solution]` mark on one side. Both went away when rerun alone (GH-156). `::
 
 The compare logic and `serve_lan.sh`'s rebuild are unit-tested: `python3 -m unittest discover -s
 scripts/web/harness/tests -t scripts/web/harness`.
+
+## From the keyboard
+
+```
+scripts/web/harness/measure.sh "report=keys&keys=click:Labels,Tab,S-Tab,Escape"
+scripts/web/harness/keys_check.sh
+```
+
+`report=keys` plays the steps in `keys` against the screen `mode` leaves, and prints a line for
+that screen, then one after each step, once the page has redrawn:
+
+```
+mouse play 1200x800 4x4 | S-Tab page -> focus BUTTON "OK" role button name "OK" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer
+```
+
+A step is `click:<button text>` (a mouse click), `focus:<data-focus key>`, or a key: `Tab`,
+`S-Tab` (Shift+Tab), `Escape`, `Enter`, `Space`, `ArrowUp` and the like, sent as a `keydown` to
+the focused control. A synthetic key gets no default action, so when the page doesn't take it
+(`preventDefault`), the harness does what the browser would: Tab moves to the next control in
+DOM order (the page sets no positive `tabindex`) that isn't disabled, hidden or `inert`, and
+leaves the page past either end; Enter and Space click a button. The step's mark says which:
+`page`, `native`, or `-` (a click, a `focus:`, or a key neither acted on).
+
+After the arrow: the focused control's `data-focus` key (or its tag and text), its role,
+accessible name (`aria-label`, `aria-labelledby` or its text) and `checked`; the open dialog's
+name; the ring, the focused control's computed `outline-style` (`:focus-visible` matching
+misled in GH-163); whether the page has seen a key (`.keyboard`, which turns the rings on); and
+the `inert` elements.
+
+Headless can't show what VoiceOver says or how a ring looks; those stay a short checklist for
+the user (`docs/workflows/FEATURE.md` step 10.0).
+
+`keys_check.sh` builds the bundle, plays GH-163's dialog flows (Labels with Tab and Shift+Tab
+wrapping, New from Enter, Save, each closed with Escape) and diffs the lines against
+`tests/keys_expected.txt`. Exit 0 means as expected, 1 differences (the diff is printed), 2 a
+failed build or a `TIMEOUT`. It needs Chrome, so the agent runs it rather than CI. When a change
+to the page's keys or focus is meant, update the expected file and check each changed line.
 
 ## On a real phone
 

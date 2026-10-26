@@ -1,0 +1,81 @@
+// GH-174: report=keys for harness.html. Plays steps (keys and clicks) against the game in an iframe and
+// reports, after each, what focus, screen readers and the page's inert see. Query options: README.md.
+
+/** One line per step, the first for the screen as `mode` left it. */
+async function runKeys(win, steps, label) {
+    const lines = [`${label} | start - -> ${snapshot(win)}`];
+    for (const step of steps) {
+        const how = play(win, step);
+        await redrawn(win);
+        lines.push(`${label} | ${step} ${how} -> ${snapshot(win)}`);
+    }
+    return lines;
+}
+
+/** Plays [step]; `page` when the page took the key (preventDefault), `native` when the harness did
+ *  what the browser would have, since a synthetic key gets no default action, else `-`. */
+function play(win, step) {
+    const doc = win.document;
+    if (step.startsWith("click:")) {
+        clickText(doc, step.slice(6)); // harness.html's
+        return "-";
+    }
+    if (step.startsWith("focus:")) {
+        doc.querySelector(`[data-focus="${step.slice(6)}"]`)?.focus();
+        return "-";
+    }
+    const shift = step.startsWith("S-");
+    const key = { Space: " " }[step] || (shift ? step.slice(2) : step);
+    const target = doc.activeElement || doc.body;
+    const event = new win.KeyboardEvent("keydown", { key, shiftKey: shift, bubbles: true, cancelable: true });
+    if (!target.dispatchEvent(event)) return "page";
+    if (key === "Tab") {
+        tab(doc, target, shift);
+        return "native";
+    }
+    if ((key === "Enter" || key === " ") && target.tagName === "BUTTON") {
+        target.click();
+        return "native";
+    }
+    return "-";
+}
+
+/** Moves focus as Tab would. The page sets no positive tabindex, so the order is the DOM's; past
+ *  either end focus leaves the page, as it goes to the browser's own controls. `visibilityProperty`
+ *  skips the solution screen's arrows, hidden with `visibility` but still laid out. */
+function tab(doc, from, back) {
+    const order = [...doc.querySelectorAll("button, input, [href], [tabindex]")].filter(el =>
+        !el.disabled && el.getAttribute("tabindex") !== "-1" && !el.closest("[inert]")
+        && el.checkVisibility({ visibilityProperty: true }));
+    const next = order[order.indexOf(from) + (back ? -1 : 1)] || (order.includes(from) ? null : order[back ? order.length - 1 : 0]);
+    if (next) next.focus();
+    else doc.activeElement?.blur();
+}
+
+/** Two frames, so the page has rebuilt #app, then a moment for the flow the key resumed. */
+async function redrawn(win) {
+    for (let i = 0; i < 2; i++) await new Promise(r => win.requestAnimationFrame(r));
+    await new Promise(r => setTimeout(r, 50));
+}
+
+function snapshot(win) {
+    const doc = win.document;
+    const el = doc.activeElement === doc.body ? null : doc.activeElement;
+    const dialog = doc.querySelector('[role="dialog"]');
+    const title = dialog && doc.getElementById(dialog.getAttribute("aria-labelledby"));
+    const inert = [...doc.querySelectorAll("[inert]")].map(e => e.tagName + [...e.classList].map(c => `.${c}`).join(""));
+    return `focus ${el ? describe(doc, el) : "-"} | dialog ${title ? `"${flat(title.textContent)}"` : "-"} `
+        + `| ring ${el ? win.getComputedStyle(el).outlineStyle : "-"} `
+        + `| keyboard ${doc.querySelector(".app.keyboard") ? "yes" : "no"} | inert ${inert.join(" ") || "-"}`;
+}
+
+/** Its data-focus key (or tag and text), role, accessible name and checked state. */
+function describe(doc, el) {
+    const role = el.getAttribute("role") || { BUTTON: "button", INPUT: "textbox", A: "link" }[el.tagName] || "-";
+    const labelledBy = el.getAttribute("aria-labelledby");
+    const name = el.getAttribute("aria-label") || (labelledBy && doc.getElementById(labelledBy)?.textContent) || el.textContent;
+    const key = el.getAttribute("data-focus") || `${el.tagName} "${flat(el.textContent).slice(0, 20)}"`;
+    return `${key} role ${role} name "${flat(name)}"${el.getAttribute("aria-checked") === "true" ? " checked" : ""}`;
+}
+
+const flat = text => (text || "").replace(/\s+/g, " ").trim();
