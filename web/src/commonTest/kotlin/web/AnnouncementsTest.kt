@@ -45,6 +45,7 @@ class AnnouncementsTest {
         assertEquals("Loaded 'foo', 5x5, 12 moves", Announcements.loaded("foo", 5, 12, solved = false))
         assertEquals("Loaded 'foo', 3x3, 1 move", Announcements.loaded("foo", 3, 1, solved = false))
         assertEquals("Loaded 'done', 4x4, solved in 14 moves", Announcements.loaded("done", 4, 14, solved = true))
+        assertEquals("Loaded 'sol', 4x4, solution, 12 moves", Announcements.loaded("sol", 4, 0, solved = false, solutionSteps = 12))
     }
 
     @Test

@@ -219,7 +219,9 @@ class WebGame internal constructor(
     /** A status message, said too; a load's names [loadedSave] and says its size and moves instead. */
     internal fun showStatus(text: String, loadedSave: String? = null) {
         status = text
-        saying = loadedSave?.let { Announcements.loaded(it, viewModel.squareSide(), viewModel.moveCount(), viewModel.isSolved()) } ?: text
+        saying = loadedSave?.let {
+            Announcements.loaded(it, viewModel.squareSide(), viewModel.moveCount(), viewModel.isSolved(), viewModel.solution()?.moves?.size)
+        } ?: text
         render()
     }
 

@@ -291,8 +291,9 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   - **The status line:** every message, as it appears; the same message twice is said twice.
   - **A new game:** `New 4x4 game`, from New, at startup with no restore (the size picked or
     cancelled), and after `Can't be solved` → New game. Cancel on New says nothing.
-  - **A load:** `Loaded 'foo', 5x5, 12 moves`, or `Loaded 'foo', 5x5, solved in 14 moves`, from Load
-    and the startup restore; the status line still shows `Loaded 'foo'.`
+  - **A load:** `Loaded 'foo', 5x5, 12 moves`, `Loaded 'foo', 5x5, solved in 14 moves`, or for a
+    save on the solution screen `Loaded 'foo', 5x5, solution, 12 moves` (its steps), from Load and
+    the startup restore; the status line still shows `Loaded 'foo'.`
   - **The solution screen:** `Solution, 12 moves` on entry; Next and Prev say the step now current
     in words, `Step 3 of 12: Column 3 up 2` (a two-shift step is said again on its second Next);
     Restart, and Prev back to the start, say `Start, step 0 of 12`.

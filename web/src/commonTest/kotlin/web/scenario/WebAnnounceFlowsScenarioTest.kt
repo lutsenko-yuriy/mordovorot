@@ -4,6 +4,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import mordie.SearchProgress
 import mordie.SolutionMove
+import storage.SavedMordie
+import storage.SavedMove
 import viewmodel.UnsolvableSaveChoice
 import web.Arrow
 
@@ -86,6 +88,17 @@ class WebAnnounceFlowsScenarioTest {
         page.game.onLoadChosen("done")
 
         assertEquals(listOf("Loaded 'done', 4x4, solved in 14 moves"), page.said)
+    }
+
+    @Test
+    fun `loading a save on the solution screen announces the solution`() = webTest {
+        val mordie = SavedMordie(ORIGINAL, 2, found = true, PATH.map { SavedMove(it.isRow, it.index, it.amount) }, solutionScreen = true)
+        val page = WebHarness(backgroundScope).seed("sol", ORIGINAL, mordie = mordie).startOn()
+
+        page.game.onLoad()
+        page.game.onLoadChosen("sol")
+
+        assertEquals(listOf("Loaded 'sol', 4x4, solution, 2 moves"), page.said)
     }
 
     @Test

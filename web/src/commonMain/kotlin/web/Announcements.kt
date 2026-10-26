@@ -33,8 +33,13 @@ internal object Announcements {
 
     fun newGame(side: Int) = "New ${side}x$side game"
 
-    fun loaded(name: String, side: Int, moves: Int, solved: Boolean) =
-        "Loaded '$name', ${side}x$side, " + if (solved) "solved in ${moves(moves)}" else moves(moves)
+    /** A load; [solutionSteps] when it reopened the solution screen, with that many steps. */
+    fun loaded(name: String, side: Int, moves: Int, solved: Boolean, solutionSteps: Int? = null) =
+        "Loaded '$name', ${side}x$side, " + when {
+            solutionSteps != null -> "solution, ${moves(solutionSteps)}"
+            solved -> "solved in ${moves(moves)}"
+            else -> moves(moves)
+        }
 
     /** Entering the solution screen, with its number of [steps]. */
     fun solution(steps: Int) = "Solution, ${moves(steps)}"
