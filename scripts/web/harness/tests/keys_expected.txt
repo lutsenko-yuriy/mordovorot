@@ -1,35 +1,39 @@
-mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert -
-mouse play 1200x800 4x4 | click:Labels - -> focus label-numbers role radio name "●Numbers1 2 3 4" checked | dialog "Tile labels" | ring none | keyboard no | inert DIV.stage DIV.panel FOOTER.footer
-mouse play 1200x800 4x4 | S-Tab page -> focus BUTTON "OK" role button name "OK" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer
-mouse play 1200x800 4x4 | Tab page -> focus label-numbers role radio name "●Numbers1 2 3 4" checked | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer
-mouse play 1200x800 4x4 | Tab native -> focus label-numbers_from_0 role radio name "○Numbers from 00 1 2 3" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer
-mouse play 1200x800 4x4 | Escape page -> focus labels role button name "Labels" | dialog - | ring solid | keyboard yes | inert -
-mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert -
-mouse play 1200x800 4x4 | focus:new - -> focus new role button name "New" | dialog - | ring none | keyboard no | inert -
-mouse play 1200x800 4x4 | Enter native -> focus size-4 role button name "4x4" | dialog "New game size" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer
-mouse play 1200x800 4x4 | Escape page -> focus new role button name "New" | dialog - | ring solid | keyboard yes | inert -
-mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert -
-mouse play 1200x800 4x4 | click:Save - -> focus save-name role textbox name "Save name" | dialog "Save game" | ring none | keyboard no | inert DIV.stage DIV.panel FOOTER.footer
-mouse play 1200x800 4x4 | Escape page -> focus save role button name "Save" | dialog - | ring solid | keyboard yes | inert -
-mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert -
-mouse play 1200x800 4x4 | focus:load - -> focus load role button name "Load" | dialog - | ring none | keyboard no | inert -
-mouse play 1200x800 4x4 | Enter native -> focus dialog-cancel role button name "Cancel" | dialog "Load game" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer
-mouse play 1200x800 4x4 | Escape page -> focus load role button name "Load" | dialog - | ring solid | keyboard yes | inert -
-mouse play 1200x800 4x4 | Tab native -> focus labels role button name "Labels" | dialog - | ring solid | keyboard yes | inert -
-mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert -
-mouse play 1200x800 4x4 | focus:arrow-up-0 - -> focus arrow-up-0 role button name "Column 1 up" | dialog - | ring none | keyboard no | inert -
-mouse play 1200x800 4x4 | Enter native -> focus arrow-up-0 role button name "Column 1 up" | dialog - | ring solid | keyboard yes | inert -
-mouse play 1200x800 4x4 | Enter native -> focus arrow-up-0 role button name "Column 1 up" | dialog - | ring solid | keyboard yes | inert -
-mouse play 1200x800 4x4 | R-Enter page -> focus arrow-up-0 role button name "Column 1 up" | dialog - | ring solid | keyboard yes | inert -
-mouse play 1200x800 4x4 | Tab native -> focus arrow-up-1 role button name "Column 2 up" | dialog - | ring solid | keyboard yes | inert -
-mouse solution 1200x800 4x4 [solution] | start - -> focus replay-next role button name "Next ▶" | dialog - | ring none | keyboard no | inert -
-mouse solution 1200x800 4x4 [solution] | focus:replay-next - -> focus replay-next role button name "Next ▶" | dialog - | ring none | keyboard no | inert -
-mouse solution 1200x800 4x4 [solution] | Enter native -> focus replay-next role button name "Next ▶" | dialog - | ring solid | keyboard yes | inert -
-mouse solution 1200x800 4x4 [solution] | focus:replay-prev - -> focus replay-prev role button name "◀ Prev" | dialog - | ring solid | keyboard yes | inert -
-mouse solution 1200x800 4x4 [solution] | Enter native -> focus replay-next role button name "Next ▶" | dialog - | ring solid | keyboard yes | inert -
-mouse solution 1200x800 4x4 [solution] | start - -> focus replay-next role button name "Next ▶" | dialog - | ring none | keyboard no | inert -
-mouse solution 1200x800 4x4 [solution] | focus:replay-next - -> focus replay-next role button name "Next ▶" | dialog - | ring none | keyboard no | inert -
-mouse solution 1200x800 4x4 [solution] | Enter native -> focus replay-next role button name "Next ▶" | dialog - | ring solid | keyboard yes | inert -
-mouse solution 1200x800 4x4 [solution] | Enter native -> focus replay-next role button name "Next ▶" | dialog - | ring solid | keyboard yes | inert -
-mouse solution 1200x800 4x4 [solution] | focus:replay-restart - -> focus replay-restart role button name "↻ Restart" | dialog - | ring solid | keyboard yes | inert -
-mouse solution 1200x800 4x4 [solution] | Enter native -> focus replay-next role button name "Next ▶" | dialog - | ring solid | keyboard yes | inert -
+mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert - | said "New 4x4 game"
+mouse play 1200x800 4x4 | click:Labels - -> focus label-numbers role radio name "●Numbers1 2 3 4" checked | dialog "Tile labels" | ring none | keyboard no | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | S-Tab page -> focus BUTTON "OK" role button name "OK" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | Tab page -> focus label-numbers role radio name "●Numbers1 2 3 4" checked | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | Tab native -> focus label-numbers_from_0 role radio name "○Numbers from 00 1 2 3" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | Escape page -> focus labels role button name "Labels" | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert - | said "New 4x4 game"
+mouse play 1200x800 4x4 | focus:new - -> focus new role button name "New" | dialog - | ring none | keyboard no | inert - | said -
+mouse play 1200x800 4x4 | Enter native -> focus size-4 role button name "4x4" | dialog "New game size" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | Escape page -> focus new role button name "New" | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert - | said "New 4x4 game"
+mouse play 1200x800 4x4 | click:Save - -> focus save-name role textbox name "Save name" | dialog "Save game" | ring none | keyboard no | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | Escape page -> focus save role button name "Save" | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert - | said "New 4x4 game"
+mouse play 1200x800 4x4 | focus:load - -> focus load role button name "Load" | dialog - | ring none | keyboard no | inert - | said -
+mouse play 1200x800 4x4 | Enter native -> focus dialog-cancel role button name "Cancel" | dialog "Load game" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | Escape page -> focus load role button name "Load" | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | Tab native -> focus labels role button name "Labels" | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert - | said "New 4x4 game"
+mouse play 1200x800 4x4 | focus:arrow-up-0 - -> focus arrow-up-0 role button name "Column 1 up" | dialog - | ring none | keyboard no | inert - | said -
+mouse play 1200x800 4x4 | Enter native -> focus arrow-up-0 role button name "Column 1 up" | dialog - | ring solid | keyboard yes | inert - | said "Column 1 up, 1 move"
+mouse play 1200x800 4x4 | Enter native -> focus arrow-up-0 role button name "Column 1 up" | dialog - | ring solid | keyboard yes | inert - | said "Column 1 up"
+mouse play 1200x800 4x4 | R-Enter page -> focus arrow-up-0 role button name "Column 1 up" | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | Tab native -> focus arrow-up-1 role button name "Column 2 up" | dialog - | ring solid | keyboard yes | inert - | said -
+mouse solution 1200x800 4x4 [solution] | start - -> focus replay-next role button name "Next ▶" | dialog - | ring none | keyboard no | inert - | said "Solution, N moves"
+mouse solution 1200x800 4x4 [solution] | focus:replay-next - -> focus replay-next role button name "Next ▶" | dialog - | ring none | keyboard no | inert - | said -
+mouse solution 1200x800 4x4 [solution] | Enter native -> focus replay-next role button name "Next ▶" | dialog - | ring solid | keyboard yes | inert - | said "Step N of N: LINE N DIR N"
+mouse solution 1200x800 4x4 [solution] | focus:replay-prev - -> focus replay-prev role button name "◀ Prev" | dialog - | ring solid | keyboard yes | inert - | said -
+mouse solution 1200x800 4x4 [solution] | Enter native -> focus replay-next role button name "Next ▶" | dialog - | ring solid | keyboard yes | inert - | said "Start, step N of N"
+mouse solution 1200x800 4x4 [solution] | start - -> focus replay-next role button name "Next ▶" | dialog - | ring none | keyboard no | inert - | said "Solution, N moves"
+mouse solution 1200x800 4x4 [solution] | focus:replay-next - -> focus replay-next role button name "Next ▶" | dialog - | ring none | keyboard no | inert - | said -
+mouse solution 1200x800 4x4 [solution] | Enter native -> focus replay-next role button name "Next ▶" | dialog - | ring solid | keyboard yes | inert - | said "Step N of N: LINE N DIR N"
+mouse solution 1200x800 4x4 [solution] | Enter native -> focus replay-next role button name "Next ▶" | dialog - | ring solid | keyboard yes | inert - | said "Step N of N: LINE N DIR N"
+mouse solution 1200x800 4x4 [solution] | focus:replay-restart - -> focus replay-restart role button name "↻ Restart" | dialog - | ring solid | keyboard yes | inert - | said -
+mouse solution 1200x800 4x4 [solution] | Enter native -> focus replay-next role button name "Next ▶" | dialog - | ring solid | keyboard yes | inert - | said "Start, step N of N"
+mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert - | said "New 4x4 game"
+mouse play 1200x800 4x4 | click:New - -> focus size-4 role button name "4x4" | dialog "New game size" | ring none | keyboard no | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | click:5x5 - -> focus new role button name "New" | dialog - | ring none | keyboard no | inert - | said "New 5x5 game"
+mouse play 1200x800 4x4 | click:▶ - -> focus new role button name "New" | dialog - | ring none | keyboard no | inert - | said "Row 1 right, 1 move"

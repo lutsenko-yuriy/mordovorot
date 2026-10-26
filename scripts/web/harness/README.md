@@ -91,7 +91,7 @@ scripts/web/harness/keys_check.sh
 that screen, then one after each step, once the page has redrawn:
 
 ```
-mouse play 1200x800 4x4 | S-Tab page -> focus BUTTON "OK" role button name "OK" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer
+mouse play 1200x800 4x4 | S-Tab page -> focus BUTTON "OK" role button name "OK" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
 ```
 
 A step is `click:<button text>` (a mouse click), `focus:<data-focus key>`, or a key: `Tab`,
@@ -105,8 +105,9 @@ leaves the page past either end; Enter and Space click a button. The step's mark
 After the arrow: the focused control's `data-focus` key (or its tag and text), its role,
 accessible name (`aria-label`, `aria-labelledby` or its text) and `checked`; the open dialog's
 name; the ring, the focused control's computed `outline-style` (`:focus-visible` matching
-misled in GH-163); whether the page has seen a key (`.keyboard`, which turns the rings on); and
-the `inert` elements.
+misled in GH-163); whether the page has seen a key (`.keyboard`, which turns the rings on); the
+`inert` elements; and `said`, what the live region `#announcer` holds once the step is done,
+which is what a screen reader would announce (GH-166; emptied before each step, `-` for nothing).
 
 Headless can't show what VoiceOver says or how a ring looks; those stay a short checklist for
 the user (`docs/workflows/FEATURE.md` step 10.0).
@@ -114,9 +115,11 @@ the user (`docs/workflows/FEATURE.md` step 10.0).
 `keys_check.sh` builds the bundle, plays GH-163's dialog flows (Labels with Tab and Shift+Tab
 wrapping, New from Enter, Save, each closed with Escape) and GH-164's kept focus (Tab on from
 Load after its dialog closes; an arrow pressed twice, then a held Enter and Tab; Prev at the first
-step and Restart on the solution screen) and diffs the lines against
+step and Restart on the solution screen) and GH-166's announcements (New 5x5, then an arrow) and
+diffs the lines against
 `tests/keys_expected.txt`. Exit 0 means as expected, 1 differences (the diff is printed), 2 a
-failed build or a `TIMEOUT`. It needs Chrome, so the agent runs it rather than CI. When a change
+failed build or a `TIMEOUT`. The solution screen's board is random, so on its lines `said` keeps
+only the shape (`Step N of N: LINE N DIR N`). It needs Chrome, so the agent runs it rather than CI. When a change
 to the page's keys or focus is meant, update the expected file and check each changed line.
 
 ## On a real phone

@@ -1,10 +1,14 @@
 // GH-174: report=keys for harness.html. Plays steps (keys and clicks) against the game in an iframe and
-// reports, after each, what focus, screen readers and the page's inert see. Query options: README.md.
+// reports, after each, what focus, screen readers and the page's inert see, and what the live region
+// says (GH-166). Query options: README.md.
 
 /** One line per step, the first for the screen as `mode` left it. */
 async function runKeys(win, steps, label) {
     const lines = [`${label} | start - -> ${snapshot(win)}`];
     for (const step of steps) {
+        // Emptied, so the step's line shows only what that step says.
+        const region = win.document.getElementById("announcer");
+        if (region) region.textContent = "";
         const how = play(win, step);
         await redrawn(win);
         lines.push(`${label} | ${step} ${how} -> ${snapshot(win)}`);
@@ -55,10 +59,11 @@ function tab(doc, from, back) {
     else doc.activeElement?.blur();
 }
 
-/** Two frames, so the page has rebuilt #app, then a moment for the flow the key resumed. */
+/** Two frames, so the page has rebuilt #app, then a moment for the flow the key resumed and for
+ *  DomAnnouncer's 100 ms refill of the live region. */
 async function redrawn(win) {
     for (let i = 0; i < 2; i++) await new Promise(r => win.requestAnimationFrame(r));
-    await new Promise(r => setTimeout(r, 50));
+    await new Promise(r => setTimeout(r, 150));
 }
 
 function snapshot(win) {
@@ -66,10 +71,12 @@ function snapshot(win) {
     const el = doc.activeElement === doc.body ? null : doc.activeElement;
     const dialog = doc.querySelector('[role="dialog"]');
     const title = dialog && doc.getElementById(dialog.getAttribute("aria-labelledby"));
+    const said = flat(doc.getElementById("announcer")?.textContent);
     const inert = [...doc.querySelectorAll("[inert]")].map(e => e.tagName + [...e.classList].map(c => `.${c}`).join(""));
     return `focus ${el ? describe(doc, el) : "-"} | dialog ${title ? `"${flat(title.textContent)}"` : "-"} `
         + `| ring ${el ? win.getComputedStyle(el).outlineStyle : "-"} `
-        + `| keyboard ${doc.querySelector(".app.keyboard") ? "yes" : "no"} | inert ${inert.join(" ") || "-"}`;
+        + `| keyboard ${doc.querySelector(".app.keyboard") ? "yes" : "no"} | inert ${inert.join(" ") || "-"} `
+        + `| said ${said ? `"${said}"` : "-"}`;
 }
 
 /** Its data-focus key (or tag and text), role, accessible name and checked state. */
