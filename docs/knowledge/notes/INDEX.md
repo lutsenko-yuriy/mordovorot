@@ -62,6 +62,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-156: Web: a committed tool that diffs computed styles against master](GH-156.md)
 - [GH-160: 6x6 board size](GH-160.md)
 - [GH-163: Web: dialogs work from the keyboard](GH-163.md)
+- [GH-164: Web: keyboard focus survives the page redraw](GH-164.md)
 - [GH-174: Web harness: a keyboard and accessibility mode](GH-174.md)
 - [GH-23: Split Presenter into console/TUI-specific presenters](GH-23.md)
 - [GH-41: Kotlin Multiplatform shared modules: Core, Analytics, Mordie, Storage, ViewModel](GH-41.md)

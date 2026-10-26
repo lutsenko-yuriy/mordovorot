@@ -119,9 +119,12 @@ behaviour beyond a literal value, it is not trivial — use the full workflow in
        ARIA, `inert`), check in headless Chrome everything it can show (where focus lands, what a
        key does, accessible names, what is `inert`) with the harness's `report=keys` and report
        it, and run `scripts/web/harness/keys_check.sh` (see its README, GH-174). Then hand the user a short
-       checklist in the PR/MR of only what it can't: one line per flow, the keys to press and
-       what to see or hear (VoiceOver: Cmd+F5), e.g. "Save → Escape: dialog closes, ring on
-       Save". GH-163: clicking through every dialog with VoiceOver, unguided, was the tedious part.
+       checklist in the PR/MR of only what it can't: a numbered list per flow, one key press and
+       what to see or hear per line (VoiceOver: Cmd+F5), e.g. "1. Click Save. 2. Press Escape:
+       the dialog closes, ring on Save". GH-163: clicking through every dialog with VoiceOver,
+       unguided, was the tedious part. Name the browser for each part: Firefox or Safari for
+       keys (the user has no Chrome; on macOS turn on System Settings → Keyboard → Keyboard
+       navigation first, or Tab skips buttons), Safari for VoiceOver (GH-164).
        When the PR/MR changes the web client's layout on phones, measure it headless with `scripts/web/harness/measure.sh` (see its README; when it changes the CSS, `styles_diff.sh` there lists every element whose styles changed against master, GH-156), then ask the user to try the branch's build on their own phone before opening the PR/MR (GH-147: landscape and pinch-zoom only surfaced there). Auto mode blocks the agent from serving to the local network, so give the user the command to run with `!` (`scripts/web/harness/serve_lan.sh`, which prints the address to open). It rebuilds the bundle when it isn't from the current commit, but a server already running keeps serving its old bundle: after a fix the user is to re-check, ask them to restart it (GH-160: the phone showed a Give Up the branch had already hidden).
     1. Wait for the review skills (`review`, `audit`), any coverage report, and the user to finish leaving comments.
        - **Immediately after invoking each routed skill, confirm its subagent actually spawned** before moving on to anything else. A skill's routing message is an instruction to act on, not content to just read — treat it the same way you'd treat a TODO you haven't checked off.
