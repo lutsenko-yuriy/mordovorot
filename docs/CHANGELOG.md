@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.24.0] — 2026-10-26 (PR #178 merged)
+
+### Added
+- [user] (PR #178) GH-166: screen readers in the browser game now announce shifts, drags, the win, status messages, new games, loads and the solution screen's steps. Announcements are polite and don't move focus. Mordie is never read.
+- [non-user] The wording lives in `Announcements.kt`; `WebState.announcement` feeds a `#announcer` polite live region through `DomAnnouncer`; `WebDialogFlows` is split out of `WebGame`; `ShowMessage.loadedSave` and `SolutionState.moves` carry the load and solution data; `report=keys` prints `said`.
+
 ## [0.23.1] — 2026-10-26 (PR #177 merged)
 
 ### Changed
