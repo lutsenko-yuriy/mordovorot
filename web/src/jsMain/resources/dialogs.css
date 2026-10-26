@@ -49,7 +49,7 @@
     /* iOS zooms into a field whose text is under 16px when it gets focus (GH-149). */
     font-size: max(16px, 1em);
     padding: 0.5em 0.7em;
-    border: 2px solid var(--frame);
+    border: 2px solid var(--muted);
     border-radius: 8px;
     background: var(--page);
     color: var(--ink);
@@ -114,6 +114,11 @@
     font-family: ui-monospace, Menlo, Consolas, monospace;
     color: var(--muted);
     white-space: pre;
+}
+
+/* Grey is too faint on a hovered row's background (GH-165). */
+.dialog .choices.labels button:hover .sample {
+    color: var(--ink);
 }
 
 .dialog .actions {

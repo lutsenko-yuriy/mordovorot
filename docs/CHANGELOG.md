@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.23.1] — 2026-10-26 (PR #177 merged)
+
+### Changed
+- [user] (PR #177) GH-165: the browser game's text, buttons and tile labels are easier to read. They meet WCAG AA contrast in light and dark, and dark mode uses the same paler tiles with near-black labels.
+- [non-user] The colours moved to `palette.css`; `ColourContrastStylesTest` checks every contrast pair and every tile of every board.
+- [meta] The GH-165 debrief: brief offers a primer for concepts new to the project, and plan proposes a Research WU.
+
 ## [0.23.0] — 2026-10-26 (PR #176 merged)
 
 ### Added

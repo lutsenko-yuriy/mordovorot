@@ -1,0 +1,38 @@
+/* GH-165: the colours, light and dark, linked before every other sheet. Text and tile labels meet
+   WCAG AA contrast (ColourContrastStylesTest); the tiles are the same in both, pale enough for dark labels. */
+
+:root {
+    --page: #f5f1ea;
+    --ink: #4a4239;
+    --muted: #6f655a;
+    --frame: #ddd4c7;
+    --button: #7c6957;
+    --button-ink: #fff;
+    --button-hover: #6b5a4a;
+    --card: #fffdf9;
+    --scrim: rgba(40, 32, 24, 0.45);
+    --warning: #b4572e;
+    --mordie: #a84a22;
+    --tile-ink: #1a1612;
+    --tile-light: 82%;
+    /* How much darker a row gets from its first tile to its last. */
+    --tile-ramp: 14%;
+    color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --page: #1d1b19;
+        --ink: #ece6dd;
+        --muted: #a39a8f;
+        --frame: #34302b;
+        --button: #a58d76;
+        --button-ink: #1d1b19;
+        --button-hover: #bba28a;
+        --card: #2a2724;
+        --scrim: rgba(0, 0, 0, 0.6);
+        --warning: #f0a27a;
+        --mordie: #f39a6b;
+        color-scheme: dark;
+    }
+}

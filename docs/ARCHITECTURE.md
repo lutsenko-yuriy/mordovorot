@@ -207,9 +207,11 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
                                        # and drops held Enter repeats (GH-164)
 ├── src/jsMain/kotlin/web/DomSolution.kt # The step list, Prev/Next/Restart and the Give Up row (GH-126)
 ├── src/jsMain/kotlin/web/storage/LocalStorageStore.kt # KeyValueStore over window.localStorage
-├── src/jsMain/resources/index.html     # The page: `<title>Mordovorot</title>`, links the five
+├── src/jsMain/resources/index.html     # The page: `<title>Mordovorot</title>`, links the six
 │                                       # sheets below in this order (the cascade relies on it), loads web.js
-├── src/jsMain/resources/styles.css     # The look: tokens, wide/tall by `orientation` (as layoutOf
+├── src/jsMain/resources/palette.css    # GH-165: the colour tokens, light and dark (one set of tile
+│                                       # colours for both); linked first
+├── src/jsMain/resources/styles.css     # The look: layout tokens, wide/tall by `orientation` (as layoutOf
 │                                       # counts), panel, toolbar, footer, buttons; wide: the page is
 │                                       # the window's height, the board's room from named column
 │                                       # widths and a fixed-height footer, no size container (GH-148)
@@ -238,6 +240,9 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # build's; the footer's credit matches the README's
 ├── src/jvmTest/kotlin/web/PhoneFitStylesTest.kt # GH-147, GH-148: pins the tall and wide fit rules
 │                                       # (styles.css, fit.css, solution.css)
+├── src/jvmTest/kotlin/web/ColourContrastStylesTest.kt # GH-165: palette.css's text pairs, non-text
+│                                       # edges and every tile label of every board meet WCAG AA
+│                                       # in both themes; pins board.css's tile formula (Wcag.kt)
 └── build/generated/buildInfo/          # BuildInfo.VERSION, written by :web:generateBuildInfo from
                                         # the root build.gradle.kts's version (GH-111)
 

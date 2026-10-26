@@ -335,6 +335,10 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   moving waits for it, then the latest line follows. `Mordie:` is bold and coloured.
 - **Look:** rounded coloured tiles (each row its own hue, darker along the row, so a tile's home
   shows at a glance), real buttons and modal dialogs, in light or dark to match the system.
+- **Contrast (GH-165):** text, tile labels, buttons and the Save field's edge meet WCAG AA
+  contrast (4.5:1 for text, 3:1 for edges) in light and dark. The tiles are the same pale colours
+  in both, with near-black labels. The colours only hint at a tile's home: to colour-blind
+  players some rows look alike, so the tile labels carry it.
 - **Reduced motion (GH-162):** when the system asks for reduced motion, nothing animates: shifts
   and Mordie's lines appear at once, and dialogs, buttons and the win show without fading or
   glowing. A change of the setting applies with the tab open.

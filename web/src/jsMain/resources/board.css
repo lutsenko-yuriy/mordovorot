@@ -74,7 +74,7 @@
     justify-content: center;
     border-radius: calc(var(--tile) * 0.16);
     /* Each row its own hue, darker along the row, so where a tile belongs shows at a glance. */
-    background: hsl(calc(var(--row) * 360deg / var(--side) + 8deg) 68% calc(var(--tile-light) - var(--col) * 22% / (var(--side) - 1)));
+    background: hsl(calc(var(--row) * 360deg / var(--side) + 8deg) 68% calc(var(--tile-light) - var(--col) * var(--tile-ramp) / (var(--side) - 1)));
     color: var(--tile-ink);
     font-size: calc(var(--tile) * 0.4);
     font-weight: 700;

@@ -1,26 +1,12 @@
 /* GH-110: the browser game's look. DomRenderer sets --side on #app and each tile's --x/--y (where it
    sits) and --row/--col (where it belongs, which picks its colour). The board, the dialogs and the
    solution screen have sheets of their own, linked after this one (GH-153), and so do the rules that
-   fit the page to phones (fit.css, GH-148). */
+   fit the page to phones (fit.css, GH-148). The colours are in palette.css, linked first (GH-165). */
 
 :root {
-    --page: #f5f1ea;
-    --ink: #4a4239;
-    --muted: #8a7f73;
-    --frame: #ddd4c7;
-    --button: #8f7a66;
-    --button-ink: #fff;
-    --button-hover: #7c6957;
-    --card: #fffdf9;
-    --scrim: rgba(40, 32, 24, 0.45);
-    --warning: #b4572e;
-    --mordie: #c2562a;
-    --tile-ink: #2e2822;
-    --tile-light: 76%;
     /* The footer's height, left out of the board's room (GH-111): up to three lines when tall,
        one fixed line when wide (GH-148). Tall, only where size queries are missing (GH-147). */
     --footer: 76px;
-    color-scheme: light;
 }
 
 @media (orientation: landscape) {
@@ -37,24 +23,6 @@
 @supports (height: 100dvh) {
     :root {
         --vh: 100dvh;
-    }
-}
-
-@media (prefers-color-scheme: dark) {
-    :root {
-        --page: #1d1b19;
-        --ink: #ece6dd;
-        --muted: #a39a8f;
-        --frame: #34302b;
-        --button: #a58d76;
-        --button-ink: #1d1b19;
-        --button-hover: #bba28a;
-        --card: #2a2724;
-        --scrim: rgba(0, 0, 0, 0.6);
-        --warning: #f0a27a;
-        --mordie: #f39a6b;
-        --tile-light: 70%;
-        color-scheme: dark;
     }
 }
 
