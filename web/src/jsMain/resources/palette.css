@@ -14,6 +14,8 @@
     --mordie: #c2562a;
     --tile-ink: #2e2822;
     --tile-light: 76%;
+    /* How much darker a row gets from its first tile to its last. */
+    --tile-ramp: 22%;
     color-scheme: light;
 }
 
