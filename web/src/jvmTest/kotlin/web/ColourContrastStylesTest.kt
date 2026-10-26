@@ -12,7 +12,6 @@ class ColourContrastStylesTest {
     private fun sheet(name: String) = File("src/jsMain/resources/$name").readText()
 
     private val palette = sheet("palette.css")
-    private val dialogs = sheet("dialogs.css")
 
     private fun tokens(block: String) =
         Regex("""--([\w-]+):\s*([^;]+);""").findAll(block).associate { it.groupValues[1] to it.groupValues[2].trim() }
@@ -21,10 +20,13 @@ class ColourContrastStylesTest {
     private val dark = light + tokens(palette.substringAfter("@media (prefers-color-scheme: dark)"))
     private val themes = mapOf("light" to light, "dark" to dark)
 
-    /** The colour token a rule's [property] takes, e.g. `muted` for `color: var(--muted);`. */
-    private fun tokenIn(css: String, selector: String, property: String) =
-        Regex("""(?m)^${Regex.escape(selector)} \{([^}]*)}""").find(css)?.groupValues?.get(1)
-            ?.let { Regex("""(?m)^\s*$property:[^;]*var\(--([\w-]+)\)""").find(it)?.groupValues?.get(1) }
+    /** The colour token [selector]'s [property] paints with in [sheetName], e.g. `muted` for
+     *  `color: var(--muted);`, so a rule switching tokens is checked too. */
+    private fun paint(sheetName: String, selector: String, property: String): String {
+        val rule = Regex("""(?m)^${Regex.escape(selector)} \{([^}]*)}""").find(sheet(sheetName))?.groupValues?.get(1)
+        val token = rule?.let { Regex("""(?m)^\s*$property:[^;]*var\(--([\w-]+)\)""").find(it)?.groupValues?.get(1) }
+        return checkNotNull(token) { "$sheetName: no $property token in `$selector`" }
+    }
 
     private fun percent(theme: Map<String, String>, token: String) = theme.getValue(token).removeSuffix("%").toDouble()
 
@@ -36,18 +38,22 @@ class ColourContrastStylesTest {
 
     @Test
     fun `text meets 4_5 to 1`() {
-        val hoverSample = tokenIn(dialogs, ".dialog .choices.labels button:hover .sample", "color")
-            ?: tokenIn(dialogs, ".dialog .choices.labels .sample", "color")!!
+        val ink = paint("styles.css", "body", "color")
+        val buttonInk = paint("styles.css", "button", "color")
         val failures = listOf(
-            check("ink", "page", 4.5, "moves and text"),
-            check("ink", "frame", 4.5, "solution steps"),
-            check("muted", "page", 4.5, "Mordie's line, status, footer"),
-            check("muted", "card", 4.5, "dialog message and label samples"),
-            check(hoverSample, "frame", 4.5, "a hovered label row's sample"),
-            check("button-ink", "button", 4.5, "buttons and the current solution step"),
-            check("button-ink", "button-hover", 4.5, "a hovered button"),
-            check("mordie", "page", 4.5, "Mordie's name"),
-            check("warning", "card", 4.5, "dialog warnings"),
+            check(ink, "page", 4.5, "moves and text"),
+            check(ink, "frame", 4.5, "solution steps"),
+            check(paint("styles.css", ".mordie", "color"), "page", 4.5, "Mordie's line"),
+            check(paint("styles.css", ".mordie .name", "color"), "page", 4.5, "Mordie's name"),
+            check(paint("styles.css", ".status", "color"), "page", 4.5, "status"),
+            check(paint("styles.css", ".footer", "color"), "page", 4.5, "footer"),
+            check(buttonInk, "button", 4.5, "buttons"),
+            check(buttonInk, "button-hover", 4.5, "a hovered button"),
+            check(paint("solution.css", ".step.current", "color"), "button", 4.5, "the current solution step"),
+            check(paint("dialogs.css", ".dialog .message", "color"), "card", 4.5, "dialog message"),
+            check(paint("dialogs.css", ".dialog .warning", "color"), "card", 4.5, "dialog warnings"),
+            check(paint("dialogs.css", ".dialog .choices.labels .sample", "color"), "card", 4.5, "label samples"),
+            check(paint("dialogs.css", ".dialog .choices.labels button:hover .sample", "color"), "frame", 4.5, "a hovered label row's sample"),
         ).flatten()
 
         assertTrue(failures.isEmpty(), failures.joinToString("\n"))
@@ -55,12 +61,13 @@ class ColourContrastStylesTest {
 
     @Test
     fun `non-text meets 3 to 1`() {
-        val inputBorder = tokenIn(dialogs, ".dialog input", "border")!!
+        val ring = paint("styles.css", ".app.keyboard button:focus-visible", "outline")
         val failures = listOf(
-            check("warning", "page", 3.0, "focus ring"),
-            check("warning", "frame", 3.0, "focus ring on the board's frame"),
-            check("button", "card", 3.0, "the checked label row's ring"),
-            check(inputBorder, "card", 3.0, "the Save name field's edge"),
+            check(ring, "page", 3.0, "focus ring"),
+            check(ring, "frame", 3.0, "focus ring on the board's frame"),
+            check(paint("board.css", ".arrow", "color"), "page", 3.0, "shift arrows"),
+            check(paint("dialogs.css", ".dialog .choices.labels button.checked", "box-shadow"), "card", 3.0, "the checked label row's ring"),
+            check(paint("dialogs.css", ".dialog input", "border"), "card", 3.0, "the Save name field's edge"),
         ).flatten()
 
         assertTrue(failures.isEmpty(), failures.joinToString("\n"))
