@@ -120,7 +120,8 @@ behaviour beyond a literal value, it is not trivial — use the full workflow in
        key does, accessible names, what is `inert`) with the harness's `report=keys` and report
        it, and run `scripts/web/harness/keys_check.sh` (see its README, GH-174). Then hand the user a short
        checklist in the PR/MR of only what it can't: a numbered list per flow, one key press and
-       what to see or hear per line (VoiceOver: Cmd+F5), e.g. "1. Click Save. 2. Press Escape:
+       what to see or hear per line (VoiceOver: Cmd+F5; Control stops its
+       speech, and VoiceOver Utility → Speech sets a less tiring voice and rate, GH-166), e.g. "1. Click Save. 2. Press Escape:
        the dialog closes, ring on Save". GH-163: clicking through every dialog with VoiceOver,
        unguided, was the tedious part. Name the browser for each part: Firefox or Safari for
        keys (the user has no Chrome; on macOS turn on System Settings → Keyboard → Keyboard
