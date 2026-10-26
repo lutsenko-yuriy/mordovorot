@@ -50,18 +50,23 @@ internal class WebHarness(
     /** Every frame drawn so far, the latest last. */
     val frames: List<WebState> get() = renderer.frames
 
+    /** Every announcement so far (GH-166), one per announcing frame; [startOn] clears it. */
+    val said: MutableList<String> get() = renderer.said
+
     fun start(): WebHarness {
         game = startWebGame(board, saves, preferences, analytics, mordie, renderer, scope, layout, appVersion, host)
         return this
     }
 
-    /** Starts on [tiles] with the startup restore and size picker cancelled and the events so far cleared. */
+    /** Starts on [tiles] with the startup restore and size picker cancelled and the events and
+     *  announcements so far cleared. */
     fun startOn(tiles: IntArray = ONE_SHIFT_FROM_SOLVED): WebHarness {
         board.restoreState(tiles, 0)
         start()
         if (state.dialog is WebDialog.Load) game.onLoadChosen(null)
         game.onSizeChosen(null)
         analytics.events.clear()
+        said.clear()
         return this
     }
 
@@ -78,9 +83,11 @@ internal class WebHarness(
 
 private class FakeWebRenderer : WebRenderer {
     val frames = mutableListOf<WebState>()
+    val said = mutableListOf<String>()
 
     override fun render(state: WebState) {
         frames += state
+        state.announcement?.let { said += it }
     }
 }
 
@@ -99,5 +106,6 @@ private fun sideOf(tiles: IntArray) = generateSequence(1) { it + 1 }.first { it 
 /** [tiles] as the page shows them: 1-based. */
 internal fun shown(tiles: IntArray) = tiles.map { it + 1 }
 
-/** The frame without its one-time focus (GH-163), for comparing what two frames show. */
-internal fun WebState.unfocused() = copy(focus = null)
+/** The frame without its one-time focus (GH-163) and announcement (GH-166), for comparing what two
+ *  frames show. */
+internal fun WebState.unfocused() = copy(focus = null, announcement = null)

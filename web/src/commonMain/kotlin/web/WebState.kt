@@ -28,6 +28,9 @@ data class WebState(
     val labels: TileLabels = TileLabels.DEFAULT,
     /** The control to focus once this frame is drawn (GH-163); `null` leaves focus alone. */
     val focus: Focus? = null,
+    /** What a screen reader says once this frame is drawn (GH-166); `null` says nothing. One-time
+     *  like [focus], so the same text on two frames is said twice. */
+    val announcement: String? = null,
 ) {
     /** Each tile's text, in [tiles]' order. */
     val tileTexts: List<String> get() = tiles.map { labels.label(it - 1, side) }

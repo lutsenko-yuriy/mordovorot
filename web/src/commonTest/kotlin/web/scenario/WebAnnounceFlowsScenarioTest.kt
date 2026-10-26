@@ -1,6 +1,22 @@
 package web.scenario
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import mordie.SearchProgress
+import mordie.SolutionMove
+import viewmodel.UnsolvableSaveChoice
+import web.Arrow
+
+/** A solvable 5x5: solved, with row 0 shifted one tile right. */
+private val FIVE = intArrayOf(4, 0, 1, 2, 3) + IntArray(20) { it + 5 }
+
+/** 4x4 two moves from solved: row 0 right once, then column 1 down twice (Mordie's solution). */
+private val ORIGINAL = intArrayOf(9, 2, 3, 0, 4, 13, 6, 7, 8, 1, 10, 11, 12, 5, 14, 15)
+private val PATH = listOf(SolutionMove(isRow = true, index = 0, amount = 1), SolutionMove(isRow = false, index = 1, amount = 2))
+
+private fun WebHarness.searchFinds() {
+    mordieSearches.latest.progress = SearchProgress(PATH.size, found = true, elapsedMs = 0, solution = PATH)
+}
 
 /** GH-166 scenarios: what a screen reader hears from the status line, New, Load, startup and the
  *  solution screen. */
@@ -8,69 +24,149 @@ class WebAnnounceFlowsScenarioTest {
 
     @Test
     fun `the same status message twice is announced twice`() = webTest {
-        // TODO: Save as `a` - says `Saved as 'a'.`
-        // TODO: Save as `a` again, confirm the overwrite - says `Saved as 'a'.` again, a second announcement
+        val page = WebHarness(backgroundScope).startOn()
+
+        repeat(2) {
+            page.game.onSave()
+            page.game.onSaveAnswered("a")
+        }
+
+        assertEquals(listOf("Saved as 'a'.", "Saved as 'a'."), page.said)
     }
 
     @Test
     fun `a rejected save name is announced`() = webTest {
-        // TODO: Save as `a b` - the status line's rejection message is said
+        val page = WebHarness(backgroundScope).startOn()
+
+        page.game.onSave()
+        page.game.onSaveAnswered("a b")
+
+        assertEquals(listOf("'a b' isn't a usable save name (no spaces) - not saved."), page.said)
     }
 
     @Test
     fun `toolbar New announces the new game, and Cancel announces nothing`() = webTest {
-        // TODO: New, then 5x5 - says `New 5x5 game`
-        // TODO: New, then Cancel - nothing new said
+        val page = WebHarness(backgroundScope).startOn()
+
+        page.game.onNew()
+        page.game.onSizeChosen(5)
+        page.game.onNew()
+        page.game.onSizeChosen(null)
+
+        assertEquals(listOf("New 5x5 game"), page.said)
     }
 
     @Test
     fun `startup with no saves announces the new game`() = webTest {
-        // TODO: start with no saves, pick 4x4 - says `New 4x4 game`
-        // TODO: on a fresh page, cancel the startup size picker instead - also says `New 4x4 game`
+        val picked = WebHarness(backgroundScope).start()
+        picked.game.onSizeChosen(4)
+        assertEquals(listOf("New 4x4 game"), picked.said)
+
+        val cancelled = WebHarness(backgroundScope).start()
+        cancelled.game.onSizeChosen(null)
+        assertEquals(listOf("New 4x4 game"), cancelled.said)
     }
 
     @Test
     fun `a load announces the save's name, size and moves`() = webTest {
-        // TODO: seed `foo`, 5x5, 12 moves
-        // TODO: Load `foo` - says `Loaded 'foo', 5x5, 12 moves` and nothing else (not the plain `Loaded 'foo'.`)
+        val page = WebHarness(backgroundScope).seed("foo", FIVE, moves = 12).startOn()
+
+        page.game.onLoad()
+        page.game.onLoadChosen("foo")
+
+        assertEquals("Loaded 'foo'.", page.state.status)
+        assertEquals(listOf("Loaded 'foo', 5x5, 12 moves"), page.said)
     }
 
     @Test
     fun `loading a solved save announces it solved`() = webTest {
-        // TODO: seed a solved 4x4 `done` with 14 moves
-        // TODO: Load it - says `Loaded 'done', 4x4, solved in 14 moves`
+        val page = WebHarness(backgroundScope).seed("done", solved(4), moves = 14).startOn()
+
+        page.game.onLoad()
+        page.game.onLoadChosen("done")
+
+        assertEquals(listOf("Loaded 'done', 4x4, solved in 14 moves"), page.said)
     }
 
     @Test
     fun `the startup restore announces the load`() = webTest {
-        // TODO: seed `foo`
-        // TODO: start, yes to the restore offer - says `Loaded 'foo', 4x4, 0 moves`
+        val page = WebHarness(backgroundScope).seed("foo", ONE_SHIFT_FROM_SOLVED).start()
+
+        page.game.onLoadChosen("foo")
+
+        assertEquals(listOf("Loaded 'foo', 4x4, 0 moves"), page.said)
     }
 
     @Test
     fun `a load error is announced`() = webTest {
-        // TODO: put a corrupt save in the store and load it - the status line's error is said
+        val page = WebHarness(backgroundScope).startOn()
+        page.store.entries["mordovorot.save.bad"] = "x\n0 1 2 3\n"
+
+        page.game.onLoad()
+        page.game.onLoadChosen("bad")
+
+        assertEquals(listOf("Save 'bad' is corrupted: square side is not an integer"), page.said)
     }
 
     @Test
     fun `Can't be solved - New game announces the new game, Repair announces its message`() = webTest {
-        // TODO: seed an unsolvable 3x3 and load it
-        // TODO: New game, then 3x3 - says `New 3x3 game`
-        // TODO: load it again, Repair & load - the repair status message is said
+        val page = WebHarness(backgroundScope).seed("odd", UNSOLVABLE_3X3).startOn()
+        val unsolvable = "'odd (3x3)' can't be solved - no sequence of shifts reaches the solved board."
+
+        page.game.onLoad()
+        page.game.onLoadChosen("odd")
+        page.game.onUnsolvableChoice(UnsolvableSaveChoice.NEW_GAME)
+        page.game.onSizeChosen(3)
+        // D12: the message is read as a status, then again as the dialog's.
+        assertEquals(listOf(unsolvable, "New 3x3 game"), page.said)
+        page.said.clear()
+
+        page.game.onLoad()
+        page.game.onLoadChosen("odd")
+        page.game.onUnsolvableChoice(UnsolvableSaveChoice.REPAIR)
+
+        assertEquals(listOf(unsolvable, "Repaired 'odd' (two tiles swapped) and loaded it."), page.said)
     }
 
     @Test
     fun `Give Up's solution screen announces itself and each step`() = webTest {
-        // TODO: Give Up, Yes - says `Solution, N moves`
-        // TODO: Next - says `Step 1 of N: ...`, the step in words (e.g. `Row 1 left 1`)
-        // TODO: on a two-shift step, Next again re-reads the same step line
-        // TODO: Prev back to the start - says `Start, step 0 of N`
-        // TODO: Next, then Restart - says `Start, step 0 of N`
+        val page = WebHarness(backgroundScope).startOn(ORIGINAL)
+        page.searchFinds()
+        // Five shifts of column 4 reveal Give Up.
+        repeat(5) { page.game.onArrow(Arrow.UP, 3) }
+        page.said.clear()
+
+        page.game.onGiveUp()
+        page.game.onGiveUpAnswered(true)
+        page.game.onReplayNext()
+        // Column 2 down 2 is two shifts: each Next re-reads it.
+        page.game.onReplayNext()
+        page.game.onReplayNext()
+        assertEquals(
+            listOf("Solution, 2 moves", "Step 1 of 2: Row 1 right 1", "Step 2 of 2: Column 2 down 2", "Step 2 of 2: Column 2 down 2"),
+            page.said,
+        )
+        page.said.clear()
+
+        repeat(3) { page.game.onReplayPrevious() }
+        assertEquals("Start, step 0 of 2", page.said.last())
+        page.game.onReplayNext()
+        page.said.clear()
+        page.game.onReplayRestart()
+
+        assertEquals(listOf("Start, step 0 of 2"), page.said)
     }
 
     @Test
     fun `Mordie's solution after a win announces the solution screen`() = webTest {
-        // TODO: let Mordie find his solution, then solve the board
-        // TODO: press `Mordie's solution` - says `Solution, N moves`
+        val page = WebHarness(backgroundScope).startOn(ORIGINAL)
+        page.searchFinds()
+        page.game.onArrow(Arrow.RIGHT, 0)
+        repeat(2) { page.game.onArrow(Arrow.DOWN, 1) }
+        page.said.clear()
+
+        page.game.onMordiesSolution()
+
+        assertEquals(listOf("Solution, 2 moves"), page.said)
     }
 }

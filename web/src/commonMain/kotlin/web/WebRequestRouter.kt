@@ -9,10 +9,10 @@ internal class WebRequestRouter(private val game: WebGame) {
     suspend fun handle(request: UiRequest<*>) {
         when (request) {
             is UiRequest.ShowMessage -> {
-                game.showStatus(request.text)
+                game.showStatus(request.text, request.loadedSave)
                 request.respond(Unit)
             }
-            is UiRequest.ChooseBoardSize -> request.respond(game.dialogs.chooseSize(request.origin))
+            is UiRequest.ChooseBoardSize -> request.respond(game.chooseNewGameSize(request.origin))
             is UiRequest.ConfirmRestore -> request.respond(game.dialogs.chooseRestore(listOf(request.save)) != null)
             is UiRequest.ChooseSaveToRestore -> request.respond(game.dialogs.chooseRestore(request.saves))
             is UiRequest.ResolveUnsolvableSave ->

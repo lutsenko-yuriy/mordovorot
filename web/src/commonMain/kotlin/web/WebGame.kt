@@ -41,6 +41,10 @@ class WebGame internal constructor(
     /** Where focus goes once [flow] ends: back to the button that started it, unless it moves on. */
     private var closing: Focus = Focus.PageStart
     private var drag: LineDrag? = null
+    /** What the next frame says (GH-166); [render] hands it on once. */
+    private var saying: String? = null
+    /** The viewModel asked for a size during [flow], which so ends in a new game. */
+    private var sizeAsked = false
     private val idle get() = modal.shown == null && flow?.isActive != true && drag == null
     /** Mordie's solution screen (GH-126): the board is the replay's, not the player's. */
     private val playable get() = idle && !viewModel.isSolved() && viewModel.solution() == null
@@ -51,6 +55,7 @@ class WebGame internal constructor(
         scope.launch { for (request in viewModel.uiRequests) requests.handle(request) }
         flow = scope.launch {
             viewModel.restoreOnStartup()
+            sayAskedNewGame()
             render(focus = Focus.PageStart)
         }
     }
@@ -60,7 +65,7 @@ class WebGame internal constructor(
 
     fun onArrow(arrow: Arrow, line: Int) {
         if (!playable) return
-        shift {
+        shift({ Announcements.shift(arrow, line, it) }) {
             when (arrow) {
                 Arrow.LEFT -> viewModel.shiftLeft(line, PointerShift.ARROW)
                 Arrow.RIGHT -> viewModel.shiftRight(line, PointerShift.ARROW)
@@ -87,7 +92,7 @@ class WebGame internal constructor(
     fun onDragEnd() {
         val released = drag?.release() ?: return onDragCancel()
         drag = null
-        shift {
+        shift({ Announcements.drag(released, it) }) {
             when (released.axis) {
                 Axis.ROW -> viewModel.shiftRow(released.line, released.steps, PointerShift.DRAG)
                 Axis.COLUMN -> viewModel.shiftColumn(released.line, released.steps, PointerShift.DRAG)
@@ -109,6 +114,7 @@ class WebGame internal constructor(
             analytics.track("screen_give_up_dialog", mapOf("board_size" to viewModel.squareSide(), "move_count" to viewModel.moveCount()))
             if (modal.ask(WebDialog.GiveUp)) {
                 viewModel.giveUp()
+                saying = solutionScreen()
                 // The solution screen has no Give Up.
                 closing = Focus.ReplayNext
             } else cancelled("give_up")
@@ -123,6 +129,7 @@ class WebGame internal constructor(
         if (!idle) return
         status = null
         viewModel.showSolution()
+        saying = solutionScreen()
         render()
     }
 
@@ -130,7 +137,7 @@ class WebGame internal constructor(
 
     fun onReplayPrevious() = replay { viewModel.replayPrevious() }
 
-    fun onReplayRestart() = replay {
+    fun onReplayRestart() = replay(restart = true) {
         viewModel.replayRestart()
         null
     }
@@ -152,7 +159,10 @@ class WebGame internal constructor(
     }
 
     fun onNew() = runFlow(Focus.NewButton) {
-        dialogs.chooseSize("toolbar")?.let { viewModel.newGame(it, trigger = "toolbar") }
+        dialogs.chooseSize("toolbar")?.let {
+            viewModel.newGame(it, trigger = "toolbar")
+            saying = Announcements.newGame(it)
+        }
     }
 
     fun onSave() = runFlow(Focus.SaveButton) {
@@ -160,7 +170,7 @@ class WebGame internal constructor(
         when {
             name == null -> {}
             // The terminal's rule too: the name check alone allows spaces.
-            name.any { it.isWhitespace() } -> status = "'$name' isn't a usable save name (no spaces) - not saved."
+            name.any { it.isWhitespace() } -> showStatus("'$name' isn't a usable save name (no spaces) - not saved.")
             else -> viewModel.saveGame(name)
         }
     }
@@ -200,8 +210,16 @@ class WebGame internal constructor(
         return dialogs.resolveUnsolvable(message, openedFrom)
     }
 
-    internal fun showStatus(text: String) {
+    /** The size picker the viewModel asks for, at startup or after Can't be solved. */
+    internal suspend fun chooseNewGameSize(origin: String): Int? {
+        sizeAsked = true
+        return dialogs.chooseSize(origin)
+    }
+
+    /** A status message, said too; a load's names [loadedSave] and says its size and moves instead. */
+    internal fun showStatus(text: String, loadedSave: String? = null) {
         status = text
+        saying = loadedSave?.let { Announcements.loaded(it, viewModel.squareSide(), viewModel.moveCount(), viewModel.isSolved()) } ?: text
         render()
     }
 
@@ -209,20 +227,38 @@ class WebGame internal constructor(
     private fun cancelled(dialog: String) =
         analytics.track("dialog_cancelled", mapOf("dialog" to dialog, "via" to modal.closedVia.wire))
 
-    /** Runs a shift on the unsolved board and renders. */
-    private fun shift(action: () -> Unit) {
+    /** Runs a shift on the unsolved board and renders, saying it in [words] (given the move count
+     *  when the shift started a move), or the win. */
+    private fun shift(words: (newMove: Int?) -> String, action: () -> Unit) {
         status = null
+        val before = viewModel.moveCount()
         action()
+        val moves = viewModel.moveCount()
         // Unsolved before this shift (the callers check), so this is the transition.
-        if (viewModel.isSolved()) analytics.track("screen_congratulations")
+        saying = if (viewModel.isSolved()) {
+            analytics.track("screen_congratulations")
+            Announcements.solved(moves)
+        } else words(moves.takeIf { it != before })
         render()
     }
 
-    /** Steps the replay and renders, sliding the shift [action] made. */
-    private fun replay(action: () -> SolutionStep?) {
+    /** Steps the replay and renders, sliding the shift [action] made and saying the step it's on,
+     *  as a [restart] always does. */
+    private fun replay(restart: Boolean = false, action: () -> SolutionStep?) {
         if (!idle || viewModel.solution() == null) return
         status = null
-        render(action()?.let(Slides::ofStep))
+        val shifted = action()
+        if (shifted != null || restart) saying = viewModel.solution()?.let { Announcements.step(it.moves, it.current) }
+        render(shifted?.let(Slides::ofStep))
+    }
+
+    private fun solutionScreen() = viewModel.solution()?.let { Announcements.solution(it.moves.size) }
+
+    /** A new game once a flow in which the viewModel asked for its size ends. */
+    private fun sayAskedNewGame() {
+        if (!sizeAsked) return
+        sizeAsked = false
+        saying = Announcements.newGame(viewModel.squareSide())
     }
 
     /** Runs a toolbar action, unless another action or a dialog is under way, then renders with
@@ -234,6 +270,7 @@ class WebGame internal constructor(
         // Undispatched, so the action is under way before this returns and a second click sees it.
         flow = scope.launch(start = CoroutineStart.UNDISPATCHED) {
             action()
+            sayAskedNewGame()
             render(focus = closing)
         }
     }
@@ -256,8 +293,10 @@ class WebGame internal constructor(
                 // The Labels dialog's marked scheme, previewed until OK keeps it or Cancel drops it.
                 labels = (modal.shown as? WebDialog.Labels)?.selected ?: viewModel.tileLabels(),
                 focus = focus,
+                announcement = saying,
             ),
         )
+        saying = null
     }
 
     private companion object {

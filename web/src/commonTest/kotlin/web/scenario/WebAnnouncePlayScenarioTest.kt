@@ -1,47 +1,91 @@
 package web.scenario
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import mordie.SearchProgress
+import web.Arrow
+
+/** Tiles this far apart, in pixels. */
+private const val PITCH = 40.0
 
 /** GH-166 scenarios: what a screen reader hears while playing - shifts, drags and the win. */
 class WebAnnouncePlayScenarioTest {
 
     @Test
     fun `an arrow announces its line and direction, and the move count when a move starts`() = webTest {
-        // TODO: start on a board several shifts from solved
-        // TODO: shift row 2 right - says `Row 2 right, 1 move`
-        // TODO: shift row 2 right again - says `Row 2 right`, no count (same move)
-        // TODO: shift column 4 up - says `Column 4 up, 2 moves`
+        val page = WebHarness(backgroundScope).startOn()
+
+        page.game.onArrow(Arrow.RIGHT, 1)
+        page.game.onArrow(Arrow.RIGHT, 1)
+        page.game.onArrow(Arrow.UP, 3)
+
+        assertEquals(listOf("Row 2 right, 1 move", "Row 2 right", "Column 4 up, 2 moves"), page.said)
     }
 
     @Test
     fun `a drag announces once, on release`() = webTest {
-        // TODO: press a tile in row 1 and drag two tiles left - nothing said mid-drag
-        // TODO: release - says `Row 1 left 2, 1 move`, once
+        val page = WebHarness(backgroundScope).startOn()
+
+        page.game.onDragStart(0, 0, 100.0, 100.0, PITCH)
+        page.game.onDragMove(60.0, 101.0)
+        page.game.onDragMove(20.0, 100.0)
+        assertEquals(emptyList(), page.said)
+        page.game.onDragEnd()
+
+        assertEquals(listOf("Row 1 left 2, 1 move"), page.said)
     }
 
     @Test
     fun `a drag released where it started announces nothing`() = webTest {
-        // TODO: drag a tile one tile over and back
-        // TODO: release - nothing said
+        val page = WebHarness(backgroundScope).startOn()
+
+        page.game.onDragStart(0, 2, 100.0, 100.0, PITCH)
+        page.game.onDragMove(140.0, 100.0)
+        page.game.onDragMove(100.0, 100.0)
+        page.game.onDragEnd()
+
+        assertEquals(emptyList(), page.said)
     }
 
     @Test
     fun `the winning shift announces only Solved in M moves`() = webTest {
-        // TODO: start one shift from solved
-        // TODO: shift row 1 left - the board is solved
-        // TODO: the only new announcement is `Solved in 1 move` (no `Row 1 left`, no Mordie ending)
+        val page = WebHarness(backgroundScope).startOn()
+
+        page.game.onArrow(Arrow.LEFT, 0)
+
+        assertTrue(page.state.solved)
+        assertEquals(listOf("Solved in 1 move"), page.said)
     }
 
     @Test
     fun `a solved board announces nothing more`() = webTest {
-        // TODO: solve the board
-        // TODO: click an arrow and drag a tile - nothing new said
+        val page = WebHarness(backgroundScope).startOn()
+        page.game.onArrow(Arrow.LEFT, 0)
+        page.said.clear()
+
+        page.game.onArrow(Arrow.RIGHT, 1)
+        page.game.onDragStart(1, 0, 100.0, 100.0, PITCH)
+        page.game.onDragMove(140.0, 100.0)
+        page.game.onDragEnd()
+
+        assertEquals(emptyList(), page.said)
     }
 
     @Test
     fun `Mordie's lines are never announced`() = webTest {
-        // TODO: start a game - Mordie's opening line shows, not said
-        // TODO: shift 20+ times while the fake search reports progress, then a found solution - his progress line and `Found it!` show
-        // TODO: nothing said equals or contains a Mordie line; every announcement is a shift wording
+        val page = WebHarness(backgroundScope).startOn()
+        page.mordieSearches.latest.progress = SearchProgress(moves = 3, found = false, elapsedMs = 0)
+        // Row 2 back and forth: row 1 stays off, so the board never solves.
+        fun shifts(count: Int) = repeat(count) { page.game.onArrow(if (it % 2 == 0) Arrow.RIGHT else Arrow.LEFT, 1) }
+
+        shifts(20)
+        page.mordieSearches.latest.progress = SearchProgress(moves = 11, found = true, elapsedMs = 0)
+        shifts(5)
+
+        val lines = page.frames.mapNotNull { it.mordie }.toSet()
+        assertTrue(lines.any { it.startsWith("Found it!") } && lines.any { it.startsWith("I have already made") }, "$lines")
+        assertEquals(25, page.said.size)
+        assertTrue(page.said.all { it.matches(Regex("""Row 2 (left|right)(, \d+ moves?)?""")) }, "${page.said}")
     }
 }
