@@ -1,7 +1,6 @@
 package web
 
 import analytics.AnalyticsService
-import board_model.BoardSize
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
@@ -13,7 +12,6 @@ import viewmodel.SaveInfo
 import viewmodel.SolutionStep
 import viewmodel.TileLabels
 import viewmodel.UnsolvableSaveChoice
-import viewmodel.display
 import viewmodel.displayWithSize
 import web.drag.Axis
 import web.drag.LineDrag
@@ -35,6 +33,7 @@ class WebGame internal constructor(
 
     private val modal = WebModal { render(focus = it) }
     internal val labelsDialog = WebLabelsDialog(viewModel, ::cancelled) { modal.ask(it) }
+    internal val dialogs = WebDialogFlows(viewModel, analytics, modal, ::cancelled)
     private val requests = WebRequestRouter(this)
     private var status: String? = null
     /** The toolbar action or startup restore under way, if any. */
@@ -153,11 +152,11 @@ class WebGame internal constructor(
     }
 
     fun onNew() = runFlow(Focus.NewButton) {
-        chooseSize("toolbar")?.let { viewModel.newGame(it, trigger = "toolbar") }
+        dialogs.chooseSize("toolbar")?.let { viewModel.newGame(it, trigger = "toolbar") }
     }
 
     fun onSave() = runFlow(Focus.SaveButton) {
-        val name = askSaveName()
+        val name = dialogs.askSaveName()
         when {
             name == null -> {}
             // The terminal's rule too: the name check alone allows spaces.
@@ -168,7 +167,7 @@ class WebGame internal constructor(
 
     fun onSaveNameTyped(name: String) {
         if (modal.shown !is WebDialog.Save) return
-        modal.update(saveDialog(name))
+        modal.update(dialogs.saveDialog(name))
         render()
     }
 
@@ -176,7 +175,7 @@ class WebGame internal constructor(
     fun onSaveAnswered(name: String?) = modal.answer<WebDialog.Save, String?>(name)
 
     fun onLoad() = runFlow(Focus.LoadButton) {
-        chooseSave(viewModel.listSaves(), restore = false)?.let { viewModel.loadGame(it) }
+        dialogs.chooseSave(viewModel.listSaves(), restore = false)?.let { viewModel.loadGame(it) }
     }
 
     /** The Load dialog's answer, a listed save's name; `null` is Cancel. */
@@ -193,51 +192,17 @@ class WebGame internal constructor(
     /** Escape (GH-163): the open dialog's Cancel, or No. */
     fun onEscape() = modal.escape()
 
-    /** [openedFrom] is `toolbar` or a `ChooseBoardSize.origin`, as `screen_size_dialog.opened_from`. */
-    internal suspend fun chooseSize(openedFrom: String): Int? {
-        analytics.track("screen_size_dialog", mapOf("opened_from" to openedFrom))
-        val size = modal.ask<Int?>(WebDialog.Size((BoardSize.MIN..BoardSize.MAX).toList(), viewModel.squareSide()))
-        if (size == null) cancelled("size")
-        return size
-    }
-
-    /** The startup restore offer, for one save or a pick list; the chosen save's name or `null`. */
-    internal suspend fun chooseRestore(saves: List<SaveInfo>): String? = chooseSave(saves, restore = true)
-
     /** [openedFrom] is `startup` or `toolbar`, as `screen_unsolvable_dialog.opened_from`. */
     internal suspend fun resolveUnsolvable(save: SaveInfo, openedFrom: String): UnsolvableSaveChoice {
-        analytics.track("screen_unsolvable_dialog", mapOf("opened_from" to openedFrom))
         // The viewModel's can't-be-solved message, just shown, goes in the dialog instead.
         val message = status ?: "'${save.displayWithSize()}' can't be solved by any sequence of shifts."
         status = null
-        return modal.ask(WebDialog.Unsolvable(message))
+        return dialogs.resolveUnsolvable(message, openedFrom)
     }
 
     internal fun showStatus(text: String) {
         status = text
         render()
-    }
-
-    private suspend fun askSaveName(): String? {
-        val prefill = viewModel.currentSaveName() ?: ""
-        analytics.track("screen_save_dialog", mapOf("opened_from" to "toolbar", "prefilled" to prefill.isNotEmpty()))
-        val name = modal.ask<String?>(saveDialog(prefill))
-        if (name == null) cancelled("save")
-        // A blank name is Cancel, untracked like the terminal's empty Save.
-        return name?.takeUnless { it.isBlank() }
-    }
-
-    private fun saveDialog(name: String) = WebDialog.Save(
-        name,
-        if (name.isNotEmpty() && viewModel.saveExists(name)) "'$name' already exists - it will be overwritten." else null,
-    )
-
-    private suspend fun chooseSave(saves: List<SaveInfo>, restore: Boolean): String? {
-        val openedFrom = if (restore) "startup" else "toolbar"
-        analytics.track("screen_load_dialog", mapOf("opened_from" to openedFrom, "save_file_count" to saves.size))
-        val name = modal.ask<String?>(WebDialog.Load(restore, saves.map { SaveEntry(it.name, it.display()) }))
-        if (name == null) cancelled("load")
-        return name
     }
 
     /** `dialog_cancelled` for the dialog just closed, with how it was cancelled. */

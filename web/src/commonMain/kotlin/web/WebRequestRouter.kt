@@ -12,9 +12,9 @@ internal class WebRequestRouter(private val game: WebGame) {
                 game.showStatus(request.text)
                 request.respond(Unit)
             }
-            is UiRequest.ChooseBoardSize -> request.respond(game.chooseSize(request.origin))
-            is UiRequest.ConfirmRestore -> request.respond(game.chooseRestore(listOf(request.save)) != null)
-            is UiRequest.ChooseSaveToRestore -> request.respond(game.chooseRestore(request.saves))
+            is UiRequest.ChooseBoardSize -> request.respond(game.dialogs.chooseSize(request.origin))
+            is UiRequest.ConfirmRestore -> request.respond(game.dialogs.chooseRestore(listOf(request.save)) != null)
+            is UiRequest.ChooseSaveToRestore -> request.respond(game.dialogs.chooseRestore(request.saves))
             is UiRequest.ResolveUnsolvableSave ->
                 request.respond(game.resolveUnsolvable(request.save, if (request.atStartup) "startup" else "toolbar"))
             is UiRequest.ChooseFittingLabels -> request.respond(game.labelsDialog.chooseFitting(request.message))
