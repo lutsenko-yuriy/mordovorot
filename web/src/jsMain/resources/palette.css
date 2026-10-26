@@ -1,0 +1,36 @@
+/* GH-165: the colours, light and dark, linked before every other sheet. */
+
+:root {
+    --page: #f5f1ea;
+    --ink: #4a4239;
+    --muted: #8a7f73;
+    --frame: #ddd4c7;
+    --button: #8f7a66;
+    --button-ink: #fff;
+    --button-hover: #7c6957;
+    --card: #fffdf9;
+    --scrim: rgba(40, 32, 24, 0.45);
+    --warning: #b4572e;
+    --mordie: #c2562a;
+    --tile-ink: #2e2822;
+    --tile-light: 76%;
+    color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --page: #1d1b19;
+        --ink: #ece6dd;
+        --muted: #a39a8f;
+        --frame: #34302b;
+        --button: #a58d76;
+        --button-ink: #1d1b19;
+        --button-hover: #bba28a;
+        --card: #2a2724;
+        --scrim: rgba(0, 0, 0, 0.6);
+        --warning: #f0a27a;
+        --mordie: #f39a6b;
+        --tile-light: 70%;
+        color-scheme: dark;
+    }
+}
