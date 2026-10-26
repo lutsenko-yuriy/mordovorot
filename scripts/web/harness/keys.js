@@ -41,10 +41,12 @@ function play(win, step) {
 }
 
 /** Moves focus as Tab would. The page sets no positive tabindex, so the order is the DOM's; past
- *  either end focus leaves the page, as it goes to the browser's own controls. */
+ *  either end focus leaves the page, as it goes to the browser's own controls. `visibilityProperty`
+ *  skips the solution screen's arrows, hidden with `visibility` but still laid out. */
 function tab(doc, from, back) {
     const order = [...doc.querySelectorAll("button, input, [href], [tabindex]")].filter(el =>
-        !el.disabled && el.getAttribute("tabindex") !== "-1" && !el.closest("[inert]") && el.getClientRects().length > 0);
+        !el.disabled && el.getAttribute("tabindex") !== "-1" && !el.closest("[inert]")
+        && el.checkVisibility({ visibilityProperty: true }));
     const next = order[order.indexOf(from) + (back ? -1 : 1)] || (order.includes(from) ? null : order[back ? order.length - 1 : 0]);
     if (next) next.focus();
     else doc.activeElement?.blur();
