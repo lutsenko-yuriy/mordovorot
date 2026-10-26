@@ -11,7 +11,7 @@ import web.drag.WrapPositions
 
 /** Draws each [WebState] into [root] and turns clicks and drags into [game] intents (GH-110).
  *  Plain DOM, rebuilt every frame, with the look in the sheets `index.html` links. */
-class DomRenderer(private val root: HTMLElement) : WebRenderer {
+class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnouncer?) : WebRenderer {
 
     /** Set once the game is built; only the page's events read it, and none can come before then. */
     lateinit var game: WebGame
@@ -59,6 +59,7 @@ class DomRenderer(private val root: HTMLElement) : WebRenderer {
     }
 
     override fun render(state: WebState) {
+        state.announcement?.let { announcer?.say(it) }
         val before = shown
         shown = state
         startSlide(before, state)

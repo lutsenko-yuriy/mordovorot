@@ -204,6 +204,16 @@ body {
     font-size: 0.9rem;
 }
 
+/* GH-166: the screen reader's live region, out of sight but not out of hearing. */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
 /* ---- The footer (GH-111) ---- */
 
 .footer {
