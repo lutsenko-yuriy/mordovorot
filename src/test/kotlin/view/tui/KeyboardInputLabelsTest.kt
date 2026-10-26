@@ -27,7 +27,7 @@ class KeyboardInputLabelsTest {
 
     @Test
     fun `F4 activates Labels while playing, once solved and on the solution screen (GH-139)`() {
-        val solution = unsolvedBoard().copy(solution = SolutionState(listOf("1. Row 1 → ×1"), null, atStart = true, atEnd = false))
+        val solution = unsolvedBoard().copy(solution = SolutionState(listOf("1. Row 1 → ×1"), null, atStart = true, atEnd = false, moves = emptyList()))
         for (state in listOf(unsolvedBoard(), solvedBoard(), solution)) {
             val input = KeyboardInput(KeyboardSelection()).also { it.decorateBoard(state) }
             assertEquals(InputAction.Activate(HitTarget.ToolbarLabels), input.onBoardEvent(TerminalEvent.FunctionKey(4), boardLayout))

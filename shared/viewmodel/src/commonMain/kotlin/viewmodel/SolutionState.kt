@@ -8,7 +8,7 @@ data class SolutionState(
     val current: Int?,
     val atStart: Boolean,
     val atEnd: Boolean,
-    val moves: List<SolutionStep> = emptyList(),
+    val moves: List<SolutionStep>,
 )
 
 /** The row above the toolbar (GH-126): `[ Give Up ]` dimmed or live, `[ Mordie's solution ]`

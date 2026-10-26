@@ -134,7 +134,7 @@ class GiveUpScenarioTest {
     private fun givenUp(solution: List<SolutionMove> = path) = reveal(solution) + giveUpButton() + clickButton(confirm, "yes")
 
     /** Prev / Next / Restart - their positions don't depend on which are live. */
-    private val replayButtons = BoardLayout(terminalSize, 4, solution = SolutionState(emptyList(), null, atStart = false, atEnd = false))
+    private val replayButtons = BoardLayout(terminalSize, 4, solution = SolutionState(emptyList(), null, atStart = false, atEnd = false, moves = emptyList()))
         .replayButtons().map { click(it.x to it.y) }
     private val prev = replayButtons[0]
     private val next = replayButtons[1]

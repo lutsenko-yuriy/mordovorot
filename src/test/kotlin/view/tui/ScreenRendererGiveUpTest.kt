@@ -40,7 +40,7 @@ class ScreenRendererGiveUpTest {
 
     @Test
     fun `the solution screen hides Moves and the arrows, and lists the steps right of the board`() {
-        val solution = SolutionState(steps(3), current = null, atStart = true, atEnd = false)
+        val solution = SolutionState(steps(3), current = null, atStart = true, atEnd = false, moves = emptyList())
         val state = state(GiveUpButton.DIMMED, solution)
         val layout = BoardLayout(terminalSize, 4, giveUp = GiveUpButton.DIMMED, solution = solution)
 
@@ -57,14 +57,14 @@ class ScreenRendererGiveUpTest {
 
     @Test
     fun `the current step is reverse video`() {
-        val frame = renderer.render(state(GiveUpButton.DIMMED, SolutionState(steps(3), current = 1, atStart = false, atEnd = false)), terminalSize)
+        val frame = renderer.render(state(GiveUpButton.DIMMED, SolutionState(steps(3), current = 1, atStart = false, atEnd = false, moves = emptyList())), terminalSize)
 
         assertEquals(listOf("2. Row 1 → ×1"), highlighted(frame))
     }
 
     @Test
     fun `a long list shows the rows from the window's offset`() {
-        val state = state(GiveUpButton.DIMMED, SolutionState(steps(20), current = 12, atStart = false, atEnd = false)).copy(stepOffset = 5)
+        val state = state(GiveUpButton.DIMMED, SolutionState(steps(20), current = 12, atStart = false, atEnd = false, moves = emptyList())).copy(stepOffset = 5)
         val layout = BoardLayout(terminalSize, 4, giveUp = GiveUpButton.DIMMED, solution = state.solution)
 
         val rows = rowsOf(renderer.render(state, terminalSize))
@@ -83,12 +83,12 @@ class ScreenRendererGiveUpTest {
 
     @Test
     fun `an inert Prev, Next or Restart is dimmed`() {
-        val atStart = renderer.render(state(GiveUpButton.DIMMED, SolutionState(steps(3), null, atStart = true, atEnd = false)), terminalSize)
+        val atStart = renderer.render(state(GiveUpButton.DIMMED, SolutionState(steps(3), null, atStart = true, atEnd = false, moves = emptyList())), terminalSize)
         assertTrue("\u001B[2m[ ◀ Prev ]\u001B[22m" in atStart)
         assertTrue("\u001B[2m[ ↻ Restart ]\u001B[22m" in atStart)
         assertFalse("\u001B[2m[ Next ▶ ]" in atStart)
 
-        val atEnd = renderer.render(state(GiveUpButton.DIMMED, SolutionState(steps(3), 2, atStart = false, atEnd = true)), terminalSize)
+        val atEnd = renderer.render(state(GiveUpButton.DIMMED, SolutionState(steps(3), 2, atStart = false, atEnd = true, moves = emptyList())), terminalSize)
         assertTrue("\u001B[2m[ Next ▶ ]\u001B[22m" in atEnd)
         assertFalse("\u001B[2m[ ◀ Prev ]" in atEnd)
     }

@@ -43,7 +43,7 @@ class TuiViewGiveUpTest {
     /** On the solution screen, one shift in. */
     private fun onScreen(steps: Int = 3) = FakeViewModel().apply {
         giveUpButton = GiveUpButton.DIMMED
-        solution = SolutionState(List(steps) { "${it + 1}. Row 1 → ×1" }, current = 0, atStart = false, atEnd = false)
+        solution = SolutionState(List(steps) { "${it + 1}. Row 1 → ×1" }, current = 0, atStart = false, atEnd = false, moves = emptyList())
     }
 
     @Test
@@ -123,7 +123,7 @@ class TuiViewGiveUpTest {
     @Test
     fun `another solution's steps start at the top, however far the last list was scrolled`() {
         val viewModel = onScreen(steps = 20).apply { solution = solution!!.copy(current = null, atStart = true) }
-        val other = SolutionState(List(15) { "${it + 1}. Col 1 ↑ ×1" }, current = null, atStart = true, atEnd = false)
+        val other = SolutionState(List(15) { "${it + 1}. Col 1 ↑ ×1" }, current = null, atStart = true, atEnd = false, moves = emptyList())
         val events = mutableListOf<TerminalEvent>(TerminalEvent.Wheel(up = false), TerminalEvent.Wheel(up = false), TerminalEvent.MouseClick(0, 0))
         val terminal = FakeTerminal(events, terminalSize, beforeEvent = mapOf(2 to { viewModel.solution = other }))
 

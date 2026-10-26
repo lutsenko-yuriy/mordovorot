@@ -12,7 +12,7 @@ class BoardLayoutGiveUpTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
 
-    private fun solution(atStart: Boolean = true, atEnd: Boolean = false) = SolutionState(listOf("1. Row 1 → ×1"), null, atStart, atEnd)
+    private fun solution(atStart: Boolean = true, atEnd: Boolean = false) = SolutionState(listOf("1. Row 1 → ×1"), null, atStart, atEnd, moves = emptyList())
 
     private fun layout(giveUp: GiveUpButton, solution: SolutionState? = null, side: Int = 4, shortcuts: Boolean = false, size: TerminalSize = terminalSize) =
         BoardLayout(size, side, arrowsEnabled = solution == null, toolbarShortcuts = shortcuts, giveUp = giveUp, solution = solution)
