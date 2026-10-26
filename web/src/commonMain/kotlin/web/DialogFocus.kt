@@ -2,8 +2,11 @@ package web
 
 import viewmodel.TileLabels
 
-/** A control the page focuses once a frame is drawn (GH-163); [key] is its `data-focus`. */
+/** A control the page focuses once a frame is drawn (GH-163), or keeps focused across one (GH-164);
+ *  [key] is its `data-focus`. */
 sealed class Focus(val key: String) {
+    /** The [arrow] shifting [line], 0-based. */
+    data class ArrowButton(val arrow: Arrow, val line: Int) : Focus("arrow-${arrow.name.lowercase()}-$line")
     data class SizeChoice(val side: Int) : Focus("size-$side")
     data object SaveName : Focus("save-name")
     data object FirstSave : Focus("first-save")
@@ -19,6 +22,8 @@ sealed class Focus(val key: String) {
     /** Give Up, or Mordie's solution after a win. */
     data object GiveUpRow : Focus("give-up")
     data object ReplayNext : Focus("replay-next")
+    data object ReplayPrev : Focus("replay-prev")
+    data object ReplayRestart : Focus("replay-restart")
     /** No control: the start of the page, as on a fresh load. */
     data object PageStart : Focus("page-start")
 }

@@ -37,8 +37,9 @@ class DialogFocusTest {
         val all = listOf(
             Focus.SizeChoice(3), Focus.SizeChoice(4), Focus.SaveName, Focus.FirstSave, Focus.DialogCancel, Focus.Repair,
             Focus.No, Focus.NewButton, Focus.SaveButton, Focus.LoadButton, Focus.LabelsButton, Focus.GiveUpRow,
-            Focus.ReplayNext, Focus.PageStart,
-        ) + TileLabels.entries.map { Focus.Label(it) }
+            Focus.ReplayNext, Focus.ReplayPrev, Focus.ReplayRestart, Focus.PageStart,
+        ) + TileLabels.entries.map { Focus.Label(it) } +
+            Arrow.entries.flatMap { arrow -> (0 until 6).map { Focus.ArrowButton(arrow, it) } }
         assertEquals(all.size, all.map { it.key }.toSet().size)
     }
 }
