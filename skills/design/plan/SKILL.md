@@ -41,6 +41,10 @@ Dependency and tool-version updates get a work unit of their own, never mixed in
 
 If no work unit changes observable behaviour (UI, text, analytics, save format), propose `Workflow: REFACTOR` (`docs/workflows/REFACTOR.md`) in the plan, so the WUs can run without user questions until the debrief. Put it at the top of the plan and ask about it as its own question when presenting the plan, never as one item in a list of technical decisions: it decides whether the user is consulted again before the final PR (GH-41: approved as "D7" without being noticed).
 
+If a decision rests on a concept new to the project that `brief` didn't cover with a primer
+(it surfaced only now, or it is too big for a few bullets), propose a Research WU first
+(`docs/workflows/MULTI_WU.md`) rather than asking the user to decide on it unexplained (GH-165).
+
 Before proposing a CHANGELOG tag, read `skills/manage/ship/resources/changelog-tags.md` - GH-78's plan claimed no refactor tag existed while `[app]` did.
 
 Check the line count of every source file in "Files touched" against the `docs/CODE_STYLE.md` size guideline (~300 lines). For a file already over it, or one the plan's additions will push over, put the split in the plan: a cycle in this WU, or a follow-up ticket, chosen as a decision. Don't leave it for review to find (GH-160: `WebGame.kt` was at 320 lines when the plan named it, and the split came out of review).

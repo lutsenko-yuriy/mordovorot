@@ -37,6 +37,14 @@ Read the following files in full before asking the user anything:
 
 This context is the reference against which the user's idea will be validated.
 
+### 1.5 Primer for concepts new to the project
+
+If the idea (or, for an existing ticket, its description) rests on a domain concept that
+`docs/PRODUCT_SPEC.md` and `docs/GLOSSARY.md` don't cover yet (e.g. colour-blind design in
+GH-165), offer a short primer before any question that decides scope: 4–8 bullets on the main
+techniques and their trade-offs. The user may skip it. GH-165: D5 was approved before the user
+knew the options, and the primer only came after.
+
 ### 2. Open the dialog
 
 Ask the user to describe their feature idea in their own words. One open question is enough:
