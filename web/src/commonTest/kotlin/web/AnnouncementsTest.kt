@@ -72,9 +72,19 @@ class AnnouncementsTest {
     }
 
     @Test
-    fun `a board read counts 1 tile and 0 tiles, with any labels`() {
+    fun `a board read counts 1 tile and 0 tiles, and says letters phonetically`() {
         val texts = listOf("B", "A", "D", "C")
-        assertEquals("Row 1: B, A. Row 2: D, C. 0 tiles in place.", Announcements.board(texts, List(4) { false }, 2))
-        assertEquals("Row 1: B, A. Row 2: D, C. 1 tile in place.", Announcements.board(texts, listOf(false, false, false, true), 2))
+        assertEquals("Row 1: bravo, alpha. Row 2: delta, charlie. 0 tiles in place.", Announcements.board(texts, List(4) { false }, 2))
+        assertEquals("Row 1: bravo, alpha. Row 2: delta, charlie. 1 tile in place.", Announcements.board(texts, listOf(false, false, false, true), 2))
+    }
+
+    @Test
+    fun `a label is spoken letter by letter in the phonetic alphabet, numbers as they are`() {
+        assertEquals("alpha", Announcements.spoken("A"))
+        assertEquals("bravo charlie", Announcements.spoken("BC"))
+        assertEquals("juliet yankee", Announcements.spoken("JY"))
+        assertEquals("x-ray zulu", Announcements.spoken("XZ"))
+        assertEquals("12", Announcements.spoken("12"))
+        assertEquals("0", Announcements.spoken("0"))
     }
 }

@@ -254,7 +254,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
                 val label = texts[row * side + col]
                 val x = if (offset?.axis == Axis.ROW && offset.line == row) wrapped!![col] else col.toDouble()
                 val y = if (offset?.axis == Axis.COLUMN && offset.line == col) wrapped!![row] else row.toDouble()
-                cells.append(asCell(tile(value, label, side, x, y), playing, playing && home[row * side + col]).apply {
+                cells.append(asCell(tile(value, label, side, x, y), label, playing, playing && home[row * side + col]).apply {
                     addEventListener("pointerdown", { startDrag(it as PointerEvent, layer, side, row, col) })
                 })
                 if (x > side - 1) cells.append(asCopy(tile(value, label, side, x - side, y)))

@@ -20,11 +20,20 @@ internal fun gridRow(layer: Element, playing: Boolean): Element =
         layer.append(it)
     }
 
-/** [tile] as its row's cell during play, with `in place` heard, not seen, when [home]. */
-internal fun asCell(tile: Element, playing: Boolean, home: Boolean) = tile.apply {
+/** [tile] as its row's cell during play: [label] is seen, and heard as [Announcements.spoken] has
+ *  it, with `in place` when [home]. */
+internal fun asCell(tile: Element, label: String, playing: Boolean, home: Boolean) = tile.apply {
     if (!playing) return@apply
     setAttribute("role", "cell")
-    if (home) append(element("span", "visually-hidden").apply { textContent = ", ${Announcements.IN_PLACE}" })
+    textContent = ""
+    val heard = Announcements.spoken(label) + if (home) ", ${Announcements.IN_PLACE}" else ""
+    append(
+        element("span").apply {
+            textContent = label
+            setAttribute("aria-hidden", "true")
+        },
+        element("span", "visually-hidden").apply { textContent = heard },
+    )
 }
 
 /** The second copy of a tile pushed past the board's edge: seen, not read, so a tile is read once. */

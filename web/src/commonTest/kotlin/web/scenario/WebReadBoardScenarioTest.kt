@@ -56,14 +56,14 @@ class WebReadBoardScenarioTest {
 
         page.game.onLabels()
         page.game.onLabelsSelected(TileLabels.LETTERS)
-        assertTrue(page.state.boardWords!!.startsWith("Row 1: D, A, B, C."), page.state.boardWords)
+        assertTrue(page.state.boardWords!!.startsWith("Row 1: delta, alpha, bravo, charlie."), page.state.boardWords)
         page.game.onLabelsAnswered(ok = false)
         assertTrue(page.state.boardWords!!.startsWith("Row 1: 4, 1, 2, 3."), page.state.boardWords)
 
         page.game.onLabels()
         page.game.onLabelsSelected(TileLabels.LETTERS)
         page.game.onLabelsAnswered(ok = true)
-        assertTrue(page.state.boardWords!!.startsWith("Row 1: D, A, B, C."), page.state.boardWords)
+        assertTrue(page.state.boardWords!!.startsWith("Row 1: delta, alpha, bravo, charlie."), page.state.boardWords)
     }
 
     @Test
