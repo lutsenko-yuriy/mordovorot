@@ -301,12 +301,14 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 - **Board for screen readers (GH-167):** during play, a screen reader can read the board. Nothing
   changes on screen.
   - **A table:** the tiles are a table named `Board`, a row per board row, each tile a cell
-    saying its label, plus `in place` when it is home (`5, in place`). VoiceOver's table keys
+    saying its label, plus `in place` when it is home (`5, in place`). Letters are said in the
+    phonetic alphabet, so `B` and `D` don't sound alike: `D` is `delta`, `BC` `bravo charlie`. VoiceOver's table keys
     (Ctrl+Option+arrows) go cell by cell. While a line slides or is dragged, the table stays on
     the board as it was before, so a tile pushed past one end is read once.
   - **Read board:** a button, hidden from sight, first in Tab order, that says the board row by
     row through the announcements above, then how many tiles are home: `Row 1: 5, 2, 9, 1. Row
-    2: … 3 tiles in place.` (`1 tile in place`, `0 tiles in place`). It uses the labels shown,
+    2: … 3 tiles in place.` (`1 tile in place`, `0 tiles in place`). It uses the labels shown, letters
+    phonetically (`Row 1: delta, alpha, …`),
     the Tile labels dialog's preview too. Pressing it changes nothing on the page, and focus
     stays on it. A shift that solves the board while it has focus passes focus on as an arrow's
     would (GH-164).

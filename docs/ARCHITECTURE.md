@@ -165,7 +165,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── WebDialogFlows.kt # WebGame's Save, Load, size and can't-be-solved dialogs over its modal (GH-166)
 │   ├── Announcements.kt # GH-166: what a screen reader hears - shifts, the win, new game, load,
 │   │                    # solution steps - and the arrows' accessible names; Read board's
-│   │                    # row-by-row words (GH-167)
+│   │                    # row-by-row words, letters in the phonetic alphabet (GH-167)
 │   ├── WebState.kt      # One frame: tiles (1-based), Moves, Mordie's spot, solved, status, WebDialog,
 │   │                    # the dragged line's live offset; the Give Up row, the solution screen and
 │   │                    # the replay shift to slide (GH-126); the tile labels and tileTexts (GH-139);
@@ -207,8 +207,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # the board sits in `.stage`, the box the tall layout's
 │                                       # tiles are sized from (GH-147)
 ├── src/jsMain/kotlin/web/DomBoardGrid.kt # GH-167: during play, the tiles as a table for screen
-│                                       # readers - a row element per board row, `in place` hidden
-│                                       # text, a wrapped copy aria-hidden - and the hidden Read board
+│                                       # readers - a row element per board row, each cell heard as
+│                                       # said (`delta, in place`), a wrapped copy aria-hidden - and the hidden Read board
 │                                       # button, which says its words through DomAnnouncer
 ├── src/jsMain/kotlin/web/DomFooter.kt  # footerElement: <footer>, its links in a new tab (GH-111);
 │                                       # wide-only parts in `.wide-only` (GH-147)
