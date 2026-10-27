@@ -309,6 +309,10 @@ new value, `letters_unavailable`: the game showed Numbers because Letters doesn'
 already tells keyboard from mouse): `button` (Cancel / No clicked or activated) or `escape`.
 `startup_restore_decision` is unchanged: Escape on Restore sends `new_game`, as Cancel does.
 
+*GH-167:* nothing tracked. A press of Read board, the button hidden from sight, would mark a
+session as "probably uses a screen reader": health and disability information, sensitive even
+without a user ID. Whether any accessibility usage signal is acceptable is GH-180's question.
+
 <!-- All events above are sent through `analytics.AnalyticsService`, currently backed by
      `analytics.NoopAnalyticsService` (no real SDK wired up yet). -->
 
