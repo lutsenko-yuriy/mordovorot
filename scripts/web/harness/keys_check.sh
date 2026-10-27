@@ -26,6 +26,8 @@ queries=(
   "report=keys&keys=click:New,click:5x5,click:▶"
   # GH-167: the board as a table and Read board, pressed, after a shift and under a dialog.
   "report=keys&grid=1&keys=focus:read-board,Enter,click:▶,Enter,click:Labels"
+  # Letters, said in the phonetic alphabet by the cells and Read board.
+  "report=keys&grid=1&keys=click:Labels,focus:label-letters,Enter,click:OK,focus:read-board,Enter"
 )
 
 log="$(cd "$project" && ./gradlew -q :web:jsBrowserDistribution 2>&1)" || {
@@ -34,10 +36,11 @@ log="$(cd "$project" && ./gradlew -q :web:jsBrowserDistribution 2>&1)" || {
 }
 # mode=solution plays a random board, so its solution's length and steps vary: those lines keep
 # only the shape of what's said, e.g. `Step N of N: LINE N DIR N`. So do the play board's tiles
-# on grid lines (GH-167): the numbers said and counted, and which of the first row's cells are in place.
+# on grid lines (GH-167): the numbers and phonetic letters said and counted, and which of the first
+# row's cells are in place.
 actual="$("$here/measure.sh" "${queries[@]}" | perl -pe '
   s{said "\K[^"]*}{$& =~ s/\d+/N/gr =~ s/\b(?:Row|Column) N (?:left|right|up|down)\b/LINE N DIR/gr}e if /^\S+ solution /;
-  if (/\| grid table/) { s{(?:said|row1) "\K[^"]*}{$& =~ s/\d+/N/gr =~ s/, in place//gr =~ s/\b(tile|move)s?\b/$1s/gr}ge; s/in-place \K\d+/N/ }')"
+  if (/\| grid table/) { s{(?:said|row1) "\K[^"]*}{$& =~ s/\d+/N/gr =~ s/\b(?:alpha|bravo|charlie|delta|echo|foxtrot|golf|hotel|india|juliet|kilo|lima|mike|november|oscar|papa|quebec|romeo|sierra|tango|uniform|victor|whiskey|x-ray|yankee|zulu)\b/W/gr =~ s/, in place//gr =~ s/\b(tile|move)s?\b/$1s/gr}ge; s/in-place \K\d+/N/ }')"
 if grep -q '^TIMEOUT' <<<"$actual"; then
   echo "$actual" >&2
   exit 2

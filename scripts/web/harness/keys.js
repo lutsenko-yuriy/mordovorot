@@ -90,8 +90,10 @@ function grid(doc) {
     const rows = table.querySelectorAll('[role="row"]');
     const cells = table.querySelectorAll('[role="cell"]');
     const unread = [...table.querySelectorAll(".tile")].filter(t => !t.matches('[role="cell"], [aria-hidden="true"]'));
-    const home = [...cells].filter(c => c.querySelector(".visually-hidden")).length;
-    const first = [...(rows[0]?.querySelectorAll('[role="cell"]') || [])].map(c => flat(c.textContent)).join(" / ");
+    // What a reader hears from a cell: its text, less what is aria-hidden.
+    const heard = c => flat([...c.childNodes].filter(n => !n.getAttribute?.("aria-hidden")).map(n => n.textContent).join(""));
+    const home = [...cells].filter(c => heard(c).endsWith("in place")).length;
+    const first = [...(rows[0]?.querySelectorAll('[role="cell"]') || [])].map(heard).join(" / ");
     return `grid table "${table.getAttribute("aria-label")}" rows ${rows.length} cells ${cells.length} `
         + `unread-copies ${unread.length} in-place ${home} row1 "${first}" | ${read}`;
 }
