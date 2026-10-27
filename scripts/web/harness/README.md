@@ -111,7 +111,7 @@ misled in GH-163); whether the page has seen a key (`.keyboard`, which turns the
 which is what a screen reader would announce (GH-166; emptied before each step, `-` for nothing).
 With `grid=1`, two more fields (GH-167): `grid`, the board's table (its name, `rows`, `cells`,
 `unread-copies` - copies of a wrapping tile neither a cell nor `aria-hidden`, so `0` -, how many
-cells say `in place`, and the first row's cells), or `grid -` off play; and `read-board`, the
+cells say `in place`, and the first row's cells as heard, without what is `aria-hidden`), or `grid -` off play; and `read-board`, the
 hidden Read board button: `enabled`, `disabled` or `-`.
 
 Headless can't show what VoiceOver says or how a ring looks; those stay a short checklist for
@@ -121,8 +121,8 @@ the user (`docs/workflows/FEATURE.md` step 10.0).
 wrapping, New from Enter, Save, each closed with Escape) and GH-164's kept focus (Tab on from
 Load after its dialog closes; an arrow pressed twice, then a held Enter and Tab; Prev at the first
 step and Restart on the solution screen), GH-166's announcements (New 5x5, then an arrow) and
-GH-167's board table and Read board (pressed, after a shift, under the Labels dialog, and absent
-from the solution screen) and
+GH-167's board table and Read board (pressed, after a shift, under the Labels dialog, with
+Letters said phonetically, and absent from the solution screen) and
 diffs the lines against
 `tests/keys_expected.txt`. Exit 0 means as expected, 1 differences (the diff is printed), 2 a
 failed build or a `TIMEOUT`. The solution screen's board is random, so on its lines `said` keeps
