@@ -63,4 +63,18 @@ class AnnouncementsTest {
         assertEquals("Step 3 of 4: Row 2 right 1", Announcements.step(steps, current = 2))
         assertEquals("Step 4 of 4: Column 1 down 3", Announcements.step(steps, current = 3))
     }
+
+    @Test
+    fun `a board read says each row from 1, then how many tiles are in place`() {
+        val texts = listOf("5", "2", "9", "1", "4", "6", "7", "8", "3")
+        val home = listOf(false, true, false, false, false, true, true, true, false)
+        assertEquals("Row 1: 5, 2, 9. Row 2: 1, 4, 6. Row 3: 7, 8, 3. 4 tiles in place.", Announcements.board(texts, home, 3))
+    }
+
+    @Test
+    fun `a board read counts 1 tile and 0 tiles, with any labels`() {
+        val texts = listOf("B", "A", "D", "C")
+        assertEquals("Row 1: B, A. Row 2: D, C. 0 tiles in place.", Announcements.board(texts, List(4) { false }, 2))
+        assertEquals("Row 1: B, A. Row 2: D, C. 1 tile in place.", Announcements.board(texts, listOf(false, false, false, true), 2))
+    }
 }

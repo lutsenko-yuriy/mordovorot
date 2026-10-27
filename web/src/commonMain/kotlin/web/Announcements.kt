@@ -55,6 +55,17 @@ internal object Announcements {
         return "Step ${current + 1} of ${steps.size}: ${line(arrow, step.index)} ${step.count}"
     }
 
+    /** `Row 1: 5, 2, 9. Row 2: … 3 tiles in place.`: [texts] row by row on a [side] board, [home]
+     *  marking the tiles in place. */
+    fun board(texts: List<String>, home: List<Boolean>, side: Int): String {
+        val rows = texts.chunked(side).mapIndexed { row, line -> "Row ${row + 1}: ${line.joinToString(", ")}." }
+        val count = home.count { it }
+        return rows.joinToString(" ") + " ${if (count == 1) "1 tile" else "$count tiles"} $IN_PLACE."
+    }
+
+    /** What a tile in place adds: to Read board's count, and to the tile's own cell. */
+    const val IN_PLACE = "in place"
+
     private fun movesSuffix(newMove: Int?) = newMove?.let { ", ${moves(it)}" } ?: ""
 
     private fun moves(n: Int) = if (n == 1) "1 move" else "$n moves"
