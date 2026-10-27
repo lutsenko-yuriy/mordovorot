@@ -22,11 +22,11 @@ mouse play 1200x800 4x4 | Enter native -> focus arrow-up-0 role button name "Col
 mouse play 1200x800 4x4 | Enter native -> focus arrow-up-0 role button name "Column 1 up" | dialog - | ring solid | keyboard yes | inert - | said "Column 1 up"
 mouse play 1200x800 4x4 | R-Enter page -> focus arrow-up-0 role button name "Column 1 up" | dialog - | ring solid | keyboard yes | inert - | said -
 mouse play 1200x800 4x4 | Tab native -> focus arrow-up-1 role button name "Column 2 up" | dialog - | ring solid | keyboard yes | inert - | said -
-mouse solution 1200x800 4x4 [solution] | start - -> focus replay-next role button name "Next ▶" | dialog - | ring none | keyboard no | inert - | said "Solution, N moves"
-mouse solution 1200x800 4x4 [solution] | focus:replay-next - -> focus replay-next role button name "Next ▶" | dialog - | ring none | keyboard no | inert - | said -
-mouse solution 1200x800 4x4 [solution] | Enter native -> focus replay-next role button name "Next ▶" | dialog - | ring solid | keyboard yes | inert - | said "Step N of N: LINE N DIR N"
-mouse solution 1200x800 4x4 [solution] | focus:replay-prev - -> focus replay-prev role button name "◀ Prev" | dialog - | ring solid | keyboard yes | inert - | said -
-mouse solution 1200x800 4x4 [solution] | Enter native -> focus replay-next role button name "Next ▶" | dialog - | ring solid | keyboard yes | inert - | said "Start, step N of N"
+mouse solution 1200x800 4x4 [solution] | start - -> focus replay-next role button name "Next ▶" | dialog - | ring none | keyboard no | inert - | said "Solution, N moves" | grid - | read-board -
+mouse solution 1200x800 4x4 [solution] | focus:replay-next - -> focus replay-next role button name "Next ▶" | dialog - | ring none | keyboard no | inert - | said - | grid - | read-board -
+mouse solution 1200x800 4x4 [solution] | Enter native -> focus replay-next role button name "Next ▶" | dialog - | ring solid | keyboard yes | inert - | said "Step N of N: LINE N DIR N" | grid - | read-board -
+mouse solution 1200x800 4x4 [solution] | focus:replay-prev - -> focus replay-prev role button name "◀ Prev" | dialog - | ring solid | keyboard yes | inert - | said - | grid - | read-board -
+mouse solution 1200x800 4x4 [solution] | Enter native -> focus replay-next role button name "Next ▶" | dialog - | ring solid | keyboard yes | inert - | said "Start, step N of N" | grid - | read-board -
 mouse solution 1200x800 4x4 [solution] | start - -> focus replay-next role button name "Next ▶" | dialog - | ring none | keyboard no | inert - | said "Solution, N moves"
 mouse solution 1200x800 4x4 [solution] | focus:replay-next - -> focus replay-next role button name "Next ▶" | dialog - | ring none | keyboard no | inert - | said -
 mouse solution 1200x800 4x4 [solution] | Enter native -> focus replay-next role button name "Next ▶" | dialog - | ring solid | keyboard yes | inert - | said "Step N of N: LINE N DIR N"
@@ -37,3 +37,9 @@ mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no |
 mouse play 1200x800 4x4 | click:New - -> focus size-4 role button name "4x4" | dialog "New game size" | ring none | keyboard no | inert DIV.stage DIV.panel FOOTER.footer | said -
 mouse play 1200x800 4x4 | click:5x5 - -> focus new role button name "New" | dialog - | ring none | keyboard no | inert - | said "New 5x5 game"
 mouse play 1200x800 4x4 | click:▶ - -> focus new role button name "New" | dialog - | ring none | keyboard no | inert - | said "Row 1 right, 1 move"
+mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert - | said "New NxN game" | grid table "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" | read-board enabled
+mouse play 1200x800 4x4 | focus:read-board - -> focus read-board role button name "Read board" | dialog - | ring none | keyboard no | inert - | said - | grid table "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" | read-board enabled
+mouse play 1200x800 4x4 | Enter native -> focus read-board role button name "Read board" | dialog - | ring solid | keyboard yes | inert - | said "Row N: N, N, N, N. Row N: N, N, N, N. Row N: N, N, N, N. Row N: N, N, N, N. N tiles in place." | grid table "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" | read-board enabled
+mouse play 1200x800 4x4 | click:▶ - -> focus read-board role button name "Read board" | dialog - | ring solid | keyboard yes | inert - | said "Row N right, N moves" | grid table "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" | read-board enabled
+mouse play 1200x800 4x4 | Enter native -> focus read-board role button name "Read board" | dialog - | ring solid | keyboard yes | inert - | said "Row N: N, N, N, N. Row N: N, N, N, N. Row N: N, N, N, N. Row N: N, N, N, N. N tiles in place." | grid table "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" | read-board enabled
+mouse play 1200x800 4x4 | click:Labels - -> focus label-numbers role radio name "●Numbers1 2 3 4" checked | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said - | grid table "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" | read-board disabled
