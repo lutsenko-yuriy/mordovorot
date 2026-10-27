@@ -89,7 +89,10 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         root.classList.toggle("solution", state.solution != null)
         root.append(
             // The box the tall layout sizes the tiles from (GH-147).
-            element("div", "stage").apply { append(board(state, justSolved = state.solved && before?.solved == false)) },
+            element("div", "stage").apply {
+                state.boardWords?.let { append(readBoardButton(it, dialog != null, announcer)) }
+                append(board(state, justSolved = state.solved && before?.solved == false))
+            },
             *listOfNotNull(state.solution?.let { stepList(it) }).toTypedArray(),
             // Beside the board when the window is wide; when tall, its items stack around it (styles.css).
             element("div", "panel").apply {
@@ -219,7 +222,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         fun arrows(arrow: Arrow, label: String, axis: String) =
             element("div", "arrows $axis").apply { repeat(side) { append(arrow(label, arrow, it)) } }
 
-        val layer = element("div", "tiles")
+        val layer = asTable(element("div", "tiles"), state.arrowsEnabled)
         tiles = layer
         drawTiles(layer, state, state.drag ?: slideOffset())
 
@@ -235,24 +238,27 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         }
     }
 
-    /** Fills [layer] with the board's tiles, the line [offset] names moved by it: a tile pushed past one
-     *  end shows at the other as well, and the layer clips both. */
+    /** Fills [layer] with the board's tiles, a row element per board row (GH-167), the line [offset]
+     *  names moved by it: a tile pushed past one end shows at the other as well, and the layer clips both. */
     private fun drawTiles(layer: Element, state: WebState, offset: LineOffset?) {
         val side = state.side
         val wrapped = offset?.let { WrapPositions.of(side, it.tiles) }
         val texts = state.tileTexts
+        val home = state.home
+        val playing = state.arrowsEnabled
         layer.clear()
         repeat(side) { row ->
+            val cells = gridRow(layer, playing)
             repeat(side) { col ->
                 val value = state.tiles[row * side + col]
                 val label = texts[row * side + col]
                 val x = if (offset?.axis == Axis.ROW && offset.line == row) wrapped!![col] else col.toDouble()
                 val y = if (offset?.axis == Axis.COLUMN && offset.line == col) wrapped!![row] else row.toDouble()
-                layer.append(tile(value, label, side, x, y).apply {
+                cells.append(asCell(tile(value, label, side, x, y), playing, playing && home[row * side + col]).apply {
                     addEventListener("pointerdown", { startDrag(it as PointerEvent, layer, side, row, col) })
                 })
-                if (x > side - 1) layer.append(tile(value, label, side, x - side, y))
-                if (y > side - 1) layer.append(tile(value, label, side, x, y - side))
+                if (x > side - 1) cells.append(asCopy(tile(value, label, side, x - side, y)))
+                if (y > side - 1) cells.append(asCopy(tile(value, label, side, x, y - side)))
             }
         }
     }
