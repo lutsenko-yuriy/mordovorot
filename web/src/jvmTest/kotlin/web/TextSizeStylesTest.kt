@@ -4,12 +4,14 @@ import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/** GH-168: with larger text, rows of buttons wrap rather than run past the window's side. */
+/** GH-168: the page's text follows the system text size, and with larger text, rows of buttons wrap
+ *  rather than run past the window's side. */
 class TextSizeStylesTest {
     private val styles = File("src/jsMain/resources/styles.css").readText()
     private val solution = File("src/jsMain/resources/solution.css").readText()
     private val dialogs = File("src/jsMain/resources/dialogs.css").readText()
     private val fit = File("src/jsMain/resources/fit.css").readText()
+    private val board = File("src/jsMain/resources/board.css").readText()
 
     /** Every top-level block in [css] that opens with [opening], up to its closing brace, joined. */
     private fun block(opening: String, css: String = styles): String =
@@ -77,5 +79,32 @@ class TextSizeStylesTest {
         val wide = rule(block("@media (orientation: landscape)"), ":root")
 
         assertTrue("--footer: max(26px, 1.625rem);" in wide, wide)
+    }
+
+    /** In rem, so it follows the root size DomTextSize sets; 16px at the standard size, as before. */
+    @Test
+    fun `the page's text is 1rem`() {
+        assertTrue("font: 1rem/1.4 system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif;" in rule(styles, "body"), rule(styles, "body"))
+    }
+
+    /** A px size ignores the system text size. Tile labels and arrows follow the tile instead, and
+     *  the save name field's 16px floor keeps iOS from zooming into it (GH-149). */
+    @Test
+    fun `no text is sized in bare px`() {
+        val sheets = File("src/jsMain/resources").listFiles { f -> f.extension == "css" }.orEmpty()
+        val px = sheets.flatMap { sheet ->
+            Regex("""font(?:-size)?:[^;]*\d+px[^;]*;""").findAll(sheet.readText()).map { "${sheet.name}: ${it.value}" }
+        }
+
+        assertTrue(px == listOf("dialogs.css: font-size: max(16px, 1em);"), px.toString())
+    }
+
+    /** Grown with the text, up to the size at which a two-character label still fits its tile. At
+     *  the standard size the first term wins, as before. */
+    @Test
+    fun `tile labels grow with the text, up to their tile`() {
+        val tile = rule(board, ".tile")
+
+        assertTrue("font-size: calc(var(--tile) * min(0.4 * var(--text-scale, 1), 0.6));" in tile, tile)
     }
 }
