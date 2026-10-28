@@ -7,6 +7,8 @@ import viewmodel.TileLabels
 sealed class Focus(val key: String) {
     /** The [arrow] shifting [line], 0-based. */
     data class ArrowButton(val arrow: Arrow, val line: Int) : Focus("arrow-${arrow.name.lowercase()}-$line")
+    /** The hidden Read board button (GH-167). */
+    data object ReadBoard : Focus("read-board")
     data class SizeChoice(val side: Int) : Focus("size-$side")
     data object SaveName : Focus("save-name")
     data object FirstSave : Focus("first-save")

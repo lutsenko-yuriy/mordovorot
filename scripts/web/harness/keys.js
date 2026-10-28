@@ -76,7 +76,26 @@ function snapshot(win) {
     return `focus ${el ? describe(doc, el) : "-"} | dialog ${title ? `"${flat(title.textContent)}"` : "-"} `
         + `| ring ${el ? win.getComputedStyle(el).outlineStyle : "-"} `
         + `| keyboard ${doc.querySelector(".app.keyboard") ? "yes" : "no"} | inert ${inert.join(" ") || "-"} `
-        + `| said ${said ? `"${said}"` : "-"}`;
+        + `| said ${said ? `"${said}"` : "-"}` + (new URLSearchParams(location.search).get("grid") ? ` | ${grid(doc)}` : "");
+}
+
+/** GH-167: the board as a screen reader's table - its name, rows and cells, how many copies of a
+ *  wrapping tile it would read, how many cells say `in place`, and the first row's cells - and
+ *  the Read board button: `enabled`, `disabled` or `-`. */
+function grid(doc) {
+    const button = doc.querySelector('[data-focus="read-board"]');
+    const read = `read-board ${button ? (button.disabled ? "disabled" : "enabled") : "-"}`;
+    const table = doc.querySelector('[role="table"]');
+    if (!table) return `grid - | ${read}`;
+    const rows = table.querySelectorAll('[role="row"]');
+    const cells = table.querySelectorAll('[role="cell"]');
+    const unread = [...table.querySelectorAll(".tile")].filter(t => !t.matches('[role="cell"], [aria-hidden="true"]'));
+    // What a reader hears from a cell: its text, less what is aria-hidden.
+    const heard = c => flat([...c.childNodes].filter(n => !n.getAttribute?.("aria-hidden")).map(n => n.textContent).join(""));
+    const home = [...cells].filter(c => heard(c).endsWith("in place")).length;
+    const first = [...(rows[0]?.querySelectorAll('[role="cell"]') || [])].map(heard).join(" / ");
+    return `grid table "${table.getAttribute("aria-label")}" rows ${rows.length} cells ${cells.length} `
+        + `unread-copies ${unread.length} in-place ${home} row1 "${first}" | ${read}`;
 }
 
 /** Its data-focus key (or tag and text), role, accessible name and checked state. */

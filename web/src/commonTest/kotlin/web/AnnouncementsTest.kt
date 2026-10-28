@@ -63,4 +63,28 @@ class AnnouncementsTest {
         assertEquals("Step 3 of 4: Row 2 right 1", Announcements.step(steps, current = 2))
         assertEquals("Step 4 of 4: Column 1 down 3", Announcements.step(steps, current = 3))
     }
+
+    @Test
+    fun `a board read says each row from 1, then how many tiles are in place`() {
+        val texts = listOf("5", "2", "9", "1", "4", "6", "7", "8", "3")
+        val home = listOf(false, true, false, false, false, true, true, true, false)
+        assertEquals("Row 1: 5, 2, 9. Row 2: 1, 4, 6. Row 3: 7, 8, 3. 4 tiles in place.", Announcements.board(texts, home, 3))
+    }
+
+    @Test
+    fun `a board read counts 1 tile and 0 tiles, and says letters phonetically`() {
+        val texts = listOf("B", "A", "D", "C")
+        assertEquals("Row 1: bravo, alpha. Row 2: delta, charlie. 0 tiles in place.", Announcements.board(texts, List(4) { false }, 2))
+        assertEquals("Row 1: bravo, alpha. Row 2: delta, charlie. 1 tile in place.", Announcements.board(texts, listOf(false, false, false, true), 2))
+    }
+
+    @Test
+    fun `a label is spoken letter by letter in the phonetic alphabet, numbers as they are`() {
+        assertEquals("alpha", Announcements.spoken("A"))
+        assertEquals("bravo charlie", Announcements.spoken("BC"))
+        assertEquals("juliet yankee", Announcements.spoken("JY"))
+        assertEquals("x-ray zulu", Announcements.spoken("XZ"))
+        assertEquals("12", Announcements.spoken("12"))
+        assertEquals("0", Announcements.spoken("0"))
+    }
 }

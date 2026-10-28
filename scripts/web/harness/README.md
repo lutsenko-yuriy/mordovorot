@@ -1,4 +1,4 @@
-# Web harness (GH-147, GH-148, GH-156, GH-174)
+# Web harness (GH-147, GH-148, GH-156, GH-174, GH-167)
 
 Checks that the web game fits phone screens, headless, compares its computed styles against master,
 checks it from the keyboard and serves it to a real phone.
@@ -30,6 +30,7 @@ Query options (harness.html):
 | `rows` | `1` | toolbar rows allowed (`2` under 300px wide) |
 | `report` | `fit` | `fit` (one line per case, above), `styles` (every element's computed styles, for `styles_diff.sh`) or `keys` (below; `sizes` then defaults to `1200x800` and `boards` to `4`) |
 | `keys` | | with `report=keys`, the steps to play, comma-separated (below) |
+| `grid` | | with `report=keys`, `1` adds the board as a screen reader's table to each line (below, GH-167) |
 
 To compare against master, build master's bundle into another directory and pass it with
 `--baseline <dir>`; positions in the `master` lines should match the `mouse` ones where nothing
@@ -108,6 +109,10 @@ name; the ring, the focused control's computed `outline-style` (`:focus-visible`
 misled in GH-163); whether the page has seen a key (`.keyboard`, which turns the rings on); the
 `inert` elements; and `said`, what the live region `#announcer` holds once the step is done,
 which is what a screen reader would announce (GH-166; emptied before each step, `-` for nothing).
+With `grid=1`, two more fields (GH-167): `grid`, the board's table (its name, `rows`, `cells`,
+`unread-copies` - copies of a wrapping tile neither a cell nor `aria-hidden`, so `0` -, how many
+cells say `in place`, and the first row's cells as heard, without what is `aria-hidden`), or `grid -` off play; and `read-board`, the
+hidden Read board button: `enabled`, `disabled` or `-`.
 
 Headless can't show what VoiceOver says or how a ring looks; those stay a short checklist for
 the user (`docs/workflows/FEATURE.md` step 10.0).
@@ -115,11 +120,13 @@ the user (`docs/workflows/FEATURE.md` step 10.0).
 `keys_check.sh` builds the bundle, plays GH-163's dialog flows (Labels with Tab and Shift+Tab
 wrapping, New from Enter, Save, each closed with Escape) and GH-164's kept focus (Tab on from
 Load after its dialog closes; an arrow pressed twice, then a held Enter and Tab; Prev at the first
-step and Restart on the solution screen) and GH-166's announcements (New 5x5, then an arrow) and
+step and Restart on the solution screen), GH-166's announcements (New 5x5, then an arrow) and
+GH-167's board table and Read board (pressed, after a shift, under the Labels dialog, with
+Letters said phonetically, and absent from the solution screen) and
 diffs the lines against
 `tests/keys_expected.txt`. Exit 0 means as expected, 1 differences (the diff is printed), 2 a
 failed build or a `TIMEOUT`. The solution screen's board is random, so on its lines `said` keeps
-only the shape (`Step N of N: LINE N DIR N`). It needs Chrome, so the agent runs it rather than CI. When a change
+only the shape (`Step N of N: LINE N DIR N`); so does the play board on `grid` lines. It needs Chrome, so the agent runs it rather than CI. When a change
 to the page's keys or focus is meant, update the expected file and check each changed line.
 
 ## On a real phone

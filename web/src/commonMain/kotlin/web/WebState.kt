@@ -35,6 +35,12 @@ data class WebState(
     /** Each tile's text, in [tiles]' order. */
     val tileTexts: List<String> get() = tiles.map { labels.label(it - 1, side) }
 
+    /** During play, whether each tile, in [tiles]' order, is home (GH-167); empty off play. */
+    val home: List<Boolean> get() = if (arrowsEnabled) tiles.mapIndexed { i, value -> value == i + 1 } else emptyList()
+
+    /** Read board's words during play (GH-167), `null` off play. */
+    val boardWords: String? get() = if (arrowsEnabled) Announcements.board(tileTexts, home, side) else null
+
     val arrowsEnabled: Boolean get() = !solved && solution == null
     val movesShown: Boolean get() = solution == null
 }

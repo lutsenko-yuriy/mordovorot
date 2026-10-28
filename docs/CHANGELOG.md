@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.25.0] — 2026-10-28 (PR #181 merged)
+
+### Added
+- [user] (PR #181) GH-167: Screen readers can read the web board: the tiles as a grid, and a Read board button that says it row by row, letters in the phonetic alphabet.
+- [non-user] The words live in `Announcements.board`; the DOM grid is `DomBoardGrid.kt`; `report=keys` hears the cells as said, and a Letters flow in `keys_check.sh`.
+
 ## [0.24.0] — 2026-10-26 (PR #178 merged)
 
 ### Added
