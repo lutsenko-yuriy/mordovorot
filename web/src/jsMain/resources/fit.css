@@ -2,8 +2,9 @@
    spacing on short and narrow phones, while the wide fit itself stays with the wide layout in
    styles.css. Linked right after styles.css, whose rules these override. */
 
-/* Tall: the page is the window's height and never scrolls; the board takes the room the rest
-   leaves and its tiles fit the stage (GH-147). Browsers without size queries keep the estimate. */
+/* Tall: the page is the window's height; the board takes the room the rest leaves and its tiles fit
+   the stage (GH-147), down to 16px tiles, past which the page grows and scrolls (GH-168). Browsers
+   without size queries keep the estimate. */
 @supports (container-type: size) {
     @media (orientation: portrait) {
         html {
@@ -13,11 +14,11 @@
         body {
             display: grid;
             grid-template-rows: minmax(0, 1fr) auto;
-            height: var(--vh);
+            min-height: var(--vh);
         }
 
         .app {
-            grid-template-rows: auto auto minmax(0, 1fr) auto auto auto;
+            grid-template-rows: auto auto minmax(var(--board-min), 1fr) auto auto auto;
             align-content: stretch;
             gap: 8px;
             min-height: 0;
@@ -41,7 +42,7 @@
     }
 }
 
-/* Wide: the footer is one line of fixed height, left out of the board's room (GH-148). */
+/* Wide: the footer is one line of set height, left out of the board's room (GH-148). */
 @media (orientation: landscape) {
     .footer {
         height: var(--footer);
@@ -85,7 +86,7 @@
 /* Narrow: slimmer columns, so the board keeps room. */
 @media (orientation: landscape) and (max-width: 760px) {
     .app {
-        --panel: 18rem;
+        --panel-max: 18rem;
         --column-gap: 16px;
     }
 }

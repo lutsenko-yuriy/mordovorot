@@ -5,13 +5,14 @@
 
 :root {
     /* The footer's height, left out of the board's room (GH-111): up to three lines when tall,
-       one fixed line when wide (GH-148). Tall, only where size queries are missing (GH-147). */
+       one line when wide (GH-148), as tall as its text (GH-168). Tall, only where size queries are
+       missing (GH-147). */
     --footer: 76px;
 }
 
 @media (orientation: landscape) {
     :root {
-        --footer: 26px;
+        --footer: max(26px, 1.625rem);
     }
 }
 
@@ -55,6 +56,8 @@ body {
     --rest: 330px;
     /* The arrows' room around the tiles, in tiles, and the gap above the first row of tiles. */
     --band: 2;
+    /* The board at its smallest, 16px tiles, which larger text can leave it (GH-168). */
+    --board-min: calc(16px * (var(--side) * 1.1 + var(--band)));
     --tile: clamp(28px, min(calc((100vw - 40px) / (var(--side) * 1.1 + var(--band))), calc((var(--vh) - var(--rest) - var(--footer)) / (var(--side) * 1.1 + var(--band)))), 84px);
     --gap: calc(var(--tile) * 0.1);
     --pitch: calc(var(--tile) + var(--gap));
@@ -74,8 +77,9 @@ body {
 }
 
 /* Wider than tall, as layoutOf counts it: the board on the left, the rest on the right. The page is
-   the window's height and never scrolls; the board takes the room the panel, the padding and the
-   footer leave, which nothing else shares here (GH-148). */
+   the window's height; the board takes the room the panel, the padding and the footer leave, which
+   nothing else shares here (GH-148). A panel taller than the window, with larger text, scrolls the
+   page (GH-168). */
 @media (orientation: landscape) {
     html {
         overscroll-behavior: none;
@@ -84,14 +88,17 @@ body {
     body {
         display: grid;
         grid-template-rows: minmax(0, 1fr) auto;
-        height: var(--vh);
+        min-height: var(--vh);
     }
 
     .app {
-        /* The panel's column is wide enough for the four toolbar buttons (GH-139). */
-        --panel: 21rem;
         --column-gap: 40px;
         --pad-x: 16px;
+        /* The most the columns beside the board take: all but the smallest board and a scrollbar (GH-168). */
+        --room: calc(100vw - 20px - var(--board-min) - 2 * var(--pad-x));
+        /* The panel's column is wide enough for the four toolbar buttons (GH-139). */
+        --panel-max: 21rem;
+        --panel: min(var(--panel-max), var(--room) - var(--column-gap));
         --pad-y: 20px;
         --beside: calc(var(--panel) + var(--column-gap) + 2 * var(--pad-x));
         --tile: clamp(16px, min(100vw - var(--beside), var(--vh) - var(--footer) - 2 * var(--pad-y)) / (var(--side) * 1.1 + var(--band)), 84px);
@@ -124,6 +131,10 @@ body {
 @media (orientation: portrait) {
     .panel {
         display: contents;
+    }
+
+    .toolbar {
+        justify-content: center;
     }
 }
 
@@ -169,8 +180,8 @@ body {
     z-index: 1;
     background: var(--page);
     display: flex;
-    /* One row even on the narrowest phones (GH-147). */
-    flex-wrap: nowrap;
+    /* One row even on the narrowest phones (GH-147), two when larger text needs them (GH-168). */
+    flex-wrap: wrap;
     gap: 10px;
 }
 
@@ -182,14 +193,6 @@ body {
 
     .toolbar button {
         padding: 0.55em 0.8em;
-    }
-}
-
-/* Even the tighter row doesn't fit (a Fold's cover screen, a zoomed page): two rows beat a hidden button. */
-@media (max-width: 300px) {
-    .toolbar {
-        flex-wrap: wrap;
-        justify-content: center;
     }
 }
 
@@ -230,7 +233,6 @@ body {
         min-height: 0;
         padding: 4px 12px;
         font-size: 0.75rem;
-        white-space: nowrap;
     }
 
     .footer .wide-only {

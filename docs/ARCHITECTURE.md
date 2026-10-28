@@ -234,10 +234,12 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/jsMain/resources/styles.css     # The look: layout tokens, wide/tall by `orientation` (as layoutOf
 │                                       # counts), panel, toolbar, footer, buttons; wide: the page is
 │                                       # the window's height, the board's room from named column
-│                                       # widths and a fixed-height footer, no size container (GH-148)
+│                                       # widths and a one-line footer, no size container (GH-148);
+│                                       # past 16px tiles the page scrolls and rows wrap (GH-168)
 ├── src/jsMain/resources/fit.css        # GH-148: fitting phones: tall, the page is the window's
-│                                       # height and tiles fit `.stage` (GH-147); wide, the fixed
-│                                       # footer and tighter spacing on short and narrow phones
+│                                       # height and tiles fit `.stage` (GH-147), scrolling past 16px
+│                                       # tiles (GH-168); wide, the one-line footer and tighter spacing
+│                                       # on short and narrow phones
 ├── src/jsMain/resources/board.css      # GH-153: tile colours by home row/column, arrows, solve
 │                                       # animations; no arrows under `pointer: coarse` (GH-111)
 ├── src/jsMain/resources/dialogs.css    # GH-153: the modal dialogs, the Tile labels picker (GH-139)
@@ -262,6 +264,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # build's; the footer's credit matches the README's
 ├── src/jvmTest/kotlin/web/PhoneFitStylesTest.kt # GH-147, GH-148: pins the tall and wide fit rules
 │                                       # (styles.css, fit.css, solution.css)
+├── src/jvmTest/kotlin/web/TextSizeStylesTest.kt # GH-168: with larger text, rows wrap and the
+│                                       # columns beside the board leave it 16px tiles
 ├── src/jvmTest/kotlin/web/ColourContrastStylesTest.kt # GH-165: palette.css's text pairs, non-text
 │                                       # edges and every tile label of every board meet WCAG AA
 │                                       # in both themes; pins board.css's tile formula (Wcag.kt)
