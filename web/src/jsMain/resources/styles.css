@@ -94,8 +94,8 @@ body {
     .app {
         --column-gap: 40px;
         --pad-x: 16px;
-        /* The width beside the smallest board, which the columns beside it never take more of (GH-168). */
-        --room: calc(100vw - var(--board-min) - 2 * var(--pad-x));
+        /* The most the columns beside the board take: all but the smallest board and a scrollbar (GH-168). */
+        --room: calc(100vw - 20px - var(--board-min) - 2 * var(--pad-x));
         /* The panel's column is wide enough for the four toolbar buttons (GH-139). */
         --panel-max: 21rem;
         --panel: min(var(--panel-max), var(--room) - var(--column-gap));

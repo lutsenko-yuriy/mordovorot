@@ -7,10 +7,11 @@
 }
 
 @media (orientation: landscape) {
-    /* The steps between the board and the panel, the two sharing the room beside the board (GH-168). */
+    /* The steps between the board and the panel. Short of room beside the board, the panel gives way
+       first, its toolbar wrapping; the steps, which don't wrap, only past half of it (GH-168). */
     .app.solution {
-        --panel: min(var(--panel-max), (var(--room) - 2 * var(--column-gap)) * 0.65);
-        --steps: min(11rem, (var(--room) - 2 * var(--column-gap)) * 0.35);
+        --steps: min(11rem, (var(--room) - 2 * var(--column-gap)) / 2);
+        --panel: min(var(--panel-max), var(--room) - 2 * var(--column-gap) - var(--steps));
         --beside: calc(var(--panel) + var(--steps) + 2 * var(--column-gap) + 2 * var(--pad-x));
         grid-template-areas: "board steps panel";
         grid-template-columns: auto var(--steps) var(--panel);
@@ -29,7 +30,7 @@
 /* Narrow wide phones: about the narrowest column a step like `12. Row 4 → ×3` fits without scrolling sideways (GH-148). */
 @media (orientation: landscape) and (max-width: 760px) {
     .app.solution {
-        --steps: min(9.5rem, (var(--room) - 2 * var(--column-gap)) * 0.35);
+        --steps: min(9.5rem, (var(--room) - 2 * var(--column-gap)) / 2);
     }
 }
 

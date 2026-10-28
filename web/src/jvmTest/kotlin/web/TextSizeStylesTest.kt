@@ -42,7 +42,9 @@ class TextSizeStylesTest {
         assertTrue("nowrap" !in narrow, narrow)
     }
 
-    /** Grown with the text, the columns beside the board would leave it less than 16px tiles. */
+    /** Grown with the text, the columns beside the board would leave it less than 16px tiles. A classic
+     *  scrollbar, once the page scrolls, comes out of 100vw too. The steps, whose lines never wrap, keep
+     *  their width up to half the room; the panel, whose toolbar wraps, gives way first. */
     @Test
     fun `wide, the columns beside the board give way to its 16px tiles`() {
         val wide = rule(block("@media (orientation: landscape)"), ".app")
@@ -51,12 +53,12 @@ class TextSizeStylesTest {
         val narrowSteps = rule(block("@media (orientation: landscape) and (max-width: 760px)", solution), ".app.solution")
 
         assertTrue("--board-min: calc(16px * (var(--side) * 1.1 + var(--band)));" in rule(styles, ".app"), rule(styles, ".app"))
-        assertTrue("--room: calc(100vw - var(--board-min) - 2 * var(--pad-x));" in wide, wide)
+        assertTrue("--room: calc(100vw - 20px - var(--board-min) - 2 * var(--pad-x));" in wide, wide)
         assertTrue("--panel-max: 21rem;" in wide && "--panel-max: 18rem;" in narrowWide, wide + narrowWide)
         assertTrue("--panel: min(var(--panel-max), var(--room) - var(--column-gap));" in wide, wide)
-        assertTrue("--panel: min(var(--panel-max), (var(--room) - 2 * var(--column-gap)) * 0.65);" in steps, steps)
-        assertTrue("--steps: min(11rem, (var(--room) - 2 * var(--column-gap)) * 0.35);" in steps, steps)
-        assertTrue("--steps: min(9.5rem, (var(--room) - 2 * var(--column-gap)) * 0.35);" in narrowSteps, narrowSteps)
+        assertTrue("--panel: min(var(--panel-max), var(--room) - 2 * var(--column-gap) - var(--steps));" in steps, steps)
+        assertTrue("--steps: min(11rem, (var(--room) - 2 * var(--column-gap)) / 2);" in steps, steps)
+        assertTrue("--steps: min(9.5rem, (var(--room) - 2 * var(--column-gap)) / 2);" in narrowSteps, narrowSteps)
         // The widest panel is named once per width, so the solution screen's narrow block only resizes the steps.
         assertTrue("--panel" !in narrowSteps && "--panel:" !in narrowWide, narrowSteps + narrowWide)
     }
