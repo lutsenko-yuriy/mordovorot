@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.25.1] — 2026-10-28 (PR #183 merged)
+
+### Added
+- [wip] (PR #183) GH-168 (WU1/3): the web harness measures the game at a larger browser font size: `measure.sh` and `styles_diff.sh` take `--text-size=<percent>` (50-400, set in the throwaway Chrome profile), and `fit=scroll` checks a page allowed to scroll at larger text (nothing past a side, no sideways scroll, labels inside their tiles, tiles at least 16px).
+
 ## [0.25.0] — 2026-10-28 (PR #181 merged)
 
 ### Added
