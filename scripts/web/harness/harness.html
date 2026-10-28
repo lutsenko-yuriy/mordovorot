@@ -131,8 +131,10 @@ async function run(size, board) {
     await wait(100);
     const solution = win.document.querySelector(".app.solution") ? " [solution]" : "";
     // GH-168: the root's font size, when --text-size or the page made it other than the standard 16px.
+    // Not in a styles case's name, which pairs branch with master: their sizes may differ, and the
+    // diff should show that as html's font-size, not as every case on one side only.
     const rootPx = parseFloat(win.getComputedStyle(win.document.documentElement).fontSize);
-    const text = rootPx === 16 ? "" : ` text ${rootPx}px`;
+    const text = rootPx === 16 || report === "styles" ? "" : ` text ${rootPx}px`;
     const label = `${mode} ${w}x${h} ${board}x${board}${solution}${text}`;
     if (keys) {
         results.push(...await runKeys(win, (q.get("keys") || "").split(",").filter(Boolean), `${variant} ${label}`));

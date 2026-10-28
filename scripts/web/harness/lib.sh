@@ -18,13 +18,18 @@ make_work() {
 }
 
 # GH-168: the browser's font size as a whole percent of the standard 16px, in the throwaway profile's
-# Preferences, as a player's browser setting would set it; 100 leaves the profile as it is.
-text_size_pattern='^[1-9][0-9]*$'
+# Preferences, as a player's browser setting would set it, rounded to the nearest px; 100 leaves the
+# profile as it is.
 text_size_prefs() {
-  [[ "$1" =~ $text_size_pattern ]] || return 1
+  valid_text_size "$1" || return 1
   [[ "$1" -eq 100 ]] && return 0
   mkdir -p "$2/Default"
-  printf '{"webkit":{"webprefs":{"default_font_size":%d}}}\n' $(($1 * 16 / 100)) >"$2/Default/Preferences"
+  printf '{"webkit":{"webprefs":{"default_font_size":%d}}}\n' $((($1 * 16 + 50) / 100)) >"$2/Default/Preferences"
+}
+
+# A whole percent from 50 to 400 (8px to 64px).
+valid_text_size() {
+  [[ "$1" =~ ^[1-9][0-9]{0,2}$ ]] && (($1 >= 50 && $1 <= 400))
 }
 
 # Sets text_size from a leading --text-size=<percent> and returns 0 when it took one, 1 when $1 is
@@ -32,8 +37,8 @@ text_size_prefs() {
 take_text_size() {
   [[ "${1:-}" == --text-size=* ]] || return 1
   text_size="${1#*=}"
-  if [[ ! "$text_size" =~ $text_size_pattern ]]; then
-    echo "--text-size takes a whole percent of the standard 16px, e.g. --text-size=150" >&2
+  if ! valid_text_size "$text_size"; then
+    echo "--text-size takes a whole percent of the standard 16px from 50 to 400, e.g. --text-size=150" >&2
     exit 2
   fi
 }

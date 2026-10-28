@@ -751,6 +751,8 @@ game looks the same; its compare logic, `styles_diff.py`, is tested in `tests.ym
 `report=keys` (GH-174, `keys.js`) plays keys and clicks and reports focus, accessible names, the
 ring and `inert` after each; `keys_check.sh` diffs the GH-163 dialog flows against
 `tests/keys_expected.txt`, run by the agent rather than CI (it needs Chrome and a bundle).
+`--text-size=<percent>` (GH-168) sets the throwaway profile's font size for both scripts, and
+`fit=scroll` checks a page allowed to scroll at larger text.
 
 ## Dependencies
 

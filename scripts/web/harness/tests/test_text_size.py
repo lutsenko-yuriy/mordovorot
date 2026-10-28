@@ -42,12 +42,21 @@ class TextSizePrefsTest(unittest.TestCase):
         self.prefs("75")
         self.assertEqual(12, self.font_size())
 
+    def test_rounds_to_the_nearest_px(self):
+        self.prefs("110")
+        self.assertEqual(18, self.font_size())
+
     def test_100_leaves_the_profile_untouched(self):
         self.assertEqual(0, self.prefs("100").returncode)
         self.assertFalse((self.profile / "Default/Preferences").exists())
 
     def test_anything_but_a_whole_percent_is_refused(self):
         for bad in ["", "abc", "0", "-50", "1.5", "150%"]:
+            with self.subTest(bad=bad):
+                self.assertEqual(1, self.prefs(bad).returncode)
+
+    def test_outside_50_to_400_is_refused(self):
+        for bad in ["1", "49", "401", "99999999999999999999"]:
             with self.subTest(bad=bad):
                 self.assertEqual(1, self.prefs(bad).returncode)
 

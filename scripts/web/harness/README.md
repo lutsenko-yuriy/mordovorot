@@ -31,9 +31,11 @@ scripts/web/harness/styles_diff.sh --text-size=200 --build-baseline ../master-di
 ```
 
 `--text-size=<percent>`, first, sets the browser's font size as a whole percent of the standard
-16px (`150` is 24px), as a player's browser setting would: it writes
+16px, from 50 to 400, rounded to the nearest px (`150` is 24px), as a player's browser setting would: it writes
 `webkit.webprefs.default_font_size` into the throwaway profile's `Preferences`. Each line's label
 then says the page's root size (`text 24px`); at 16px it says nothing, so lines read as before.
+`report=styles` leaves it out, so a branch and a master case still pair up when their root sizes
+differ.
 `styles_diff.sh` sets it for both bundles.
 
 Query options (harness.html):
