@@ -1,11 +1,11 @@
 #!/bin/bash
 # GH-147: measures the built web game at phone sizes in headless Chrome and prints one line per case.
 #
-# Usage: measure.sh [--baseline <dist dir>] <query>...
+# Usage: measure.sh [--text-size=<percent>] [--baseline <dist dir>] <query>...
 #   Run `./gradlew :web:jsBrowserDistribution` first. Each <query> is harness.html's query string
 #   (see README.md), e.g. "v=touch&mode=solution&boards=3" or "report=keys&keys=click:Labels,Tab"
 #   (GH-174). Variants: mouse, touch (the `pointer: coarse` rules always on), and with --baseline,
-#   master and master-touch from that bundle.
+#   master and master-touch from that bundle. --text-size sets the browser's font size (GH-168).
 #
 # Chrome runs headless in real time with a throwaway profile; see lib.sh.
 
@@ -20,13 +20,15 @@ port="${PHONE_FIT_PORT:-8765}"
 max_wait_s=600
 source "$here/lib.sh"
 
+text_size=100
+take_text_size "${1:-}" && shift
 baseline=""
 if [[ "${1:-}" == "--baseline" ]]; then
   baseline="$2"
   shift 2
 fi
 if [[ $# -eq 0 || ! -f "$dist/index.html" ]]; then
-  echo "Usage: $0 [--baseline <dist dir>] <query>... (after ./gradlew :web:jsBrowserDistribution)" >&2
+  echo "Usage: $0 [--text-size=<percent>] [--baseline <dist dir>] <query>... (after ./gradlew :web:jsBrowserDistribution)" >&2
   exit 2
 fi
 

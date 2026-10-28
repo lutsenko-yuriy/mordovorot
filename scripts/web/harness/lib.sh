@@ -1,5 +1,6 @@
-# GH-156: shared by measure.sh and styles_diff.sh, which set here, chrome, port and max_wait_s first.
-# make_work sets work, results and server for them; stop_work, the EXIT trap, removes them.
+# GH-156: shared by measure.sh and styles_diff.sh, which set here, chrome, port and max_wait_s first,
+# and text_size (GH-168) through take_text_size. make_work sets work, results and server for them;
+# stop_work, the EXIT trap, removes them.
 #
 # Real time, never --virtual-time-budget: Mordie's search keeps virtual time from ever running out.
 # Chrome runs headless with a throwaway profile, never the user's own (docs/CONSTRAINTS.md).
@@ -13,6 +14,28 @@ make_work() {
   cp "$here/harness.html" "$here/keys.js" "$work/site/"
   results="$work/results.txt"
   : >"$results"
+  text_size_prefs "$text_size" "$work/profile"
+}
+
+# GH-168: the browser's font size as a whole percent of the standard 16px, in the throwaway profile's
+# Preferences, as a player's browser setting would set it; 100 leaves the profile as it is.
+text_size_pattern='^[1-9][0-9]*$'
+text_size_prefs() {
+  [[ "$1" =~ $text_size_pattern ]] || return 1
+  [[ "$1" -eq 100 ]] && return 0
+  mkdir -p "$2/Default"
+  printf '{"webkit":{"webprefs":{"default_font_size":%d}}}\n' $(($1 * 16 / 100)) >"$2/Default/Preferences"
+}
+
+# Sets text_size from a leading --text-size=<percent> and returns 0 when it took one, 1 when $1 is
+# something else; exits 2 on a bad value.
+take_text_size() {
+  [[ "${1:-}" == --text-size=* ]] || return 1
+  text_size="${1#*=}"
+  if [[ ! "$text_size" =~ $text_size_pattern ]]; then
+    echo "--text-size takes a whole percent of the standard 16px, e.g. --text-size=150" >&2
+    exit 2
+  fi
 }
 
 stop_work() {
