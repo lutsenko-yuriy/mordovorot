@@ -28,6 +28,7 @@ class TouchStylesTest {
     fun `touch screens give the arrows' room to the tiles`() {
         assertTrue(Regex("""--band: [0-9.]+;""").containsMatchIn(touch), touch)
         assertTrue(Regex("""--lead: 0px;""").containsMatchIn(touch), touch)
-        assertTrue(sheets.split("var(--side) * 1.1 + var(--band)").size == 5, "every --tile budget uses --band")
+        val budgets = Regex("""--(?:tile|board-min): .*""").findAll(sheets).map { it.value }.toList()
+        assertTrue(budgets.size == 4 && budgets.all { "var(--side) * 1.1 + var(--band)" in it }, "every tile budget uses --band: $budgets")
     }
 }

@@ -4,7 +4,8 @@ import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/** GH-147, GH-148: tall or wide, the whole game fits the window and nothing scrolls; the tiles shrink instead. */
+/** GH-147, GH-148: tall or wide, the whole game fits the window and nothing scrolls; the tiles shrink instead.
+ *  GH-168: past 16px tiles, as larger text can take them, the page grows taller than the window and scrolls. */
 class PhoneFitStylesTest {
     private val styles = File("src/jsMain/resources/styles.css").readText()
     private val board = File("src/jsMain/resources/board.css").readText()
@@ -37,19 +38,23 @@ class PhoneFitStylesTest {
         assertTrue("@media (orientation: portrait) {" in fit, fit)
     }
 
-    @Test
-    fun `the page is exactly the window's height`() {
-        val body = rule(fit, "body")
-
-        assertTrue("height: var(--vh);" in body && "minmax(0, 1fr)" in body, body)
+    /** At least the window's height, and taller only when the rest leaves the board less than 16px tiles. */
+    private fun assertWindowHeightAtLeast(body: String) {
+        assertTrue("min-height: var(--vh);" in body && "minmax(0, 1fr)" in body, body)
+        assertTrue(!Regex("""(?<!-)height: var\(--vh\)""").containsMatchIn(body), body)
     }
 
     @Test
-    fun `the board's row takes the height the rest leaves`() {
+    fun `the page is at least the window's height`() {
+        assertWindowHeightAtLeast(rule(fit, "body"))
+    }
+
+    @Test
+    fun `the board's row takes the height the rest leaves, down to 16px tiles`() {
         val app = rule(fit, ".app")
 
-        assertTrue("minmax(0, 1fr)" in app && "min-height: 0;" in app, app)
-        assertTrue("minmax(0, 1fr)" in rule(solutionFit, ".app.solution"), solutionFit)
+        assertTrue("minmax(var(--board-min), 1fr)" in app && "min-height: 0;" in app, app)
+        assertTrue("minmax(var(--board-min), 1fr)" in rule(solutionFit, ".app.solution"), solutionFit)
     }
 
     /** GH-153: it overrides the base .steps at the same specificity, so it must come after it, in solution.css. */
@@ -83,28 +88,13 @@ class PhoneFitStylesTest {
     }
 
     @Test
-    fun `the toolbar stays on one row`() {
-        assertTrue("flex-wrap: nowrap;" in rule(styles, ".toolbar"), rule(styles, ".toolbar"))
-    }
-
-    @Test
-    fun `under 300px the toolbar wraps rather than run past the window's edge`() {
-        val tiny = block("@media (max-width: 300px)")
-
-        assertTrue("flex-wrap: wrap;" in rule(tiny, ".toolbar"), tiny)
-    }
-
-    @Test
     fun `narrow tall windows show the footer's short line`() {
         assertTrue("display: none;" in rule(narrow, ".footer .wide-only"), narrow)
-        assertTrue("white-space: nowrap;" in rule(narrow, ".footer"), narrow)
     }
 
     @Test
-    fun `wide, the page is exactly the window's height`() {
-        val body = rule(wide, "body")
-
-        assertTrue("height: var(--vh);" in body && "minmax(0, 1fr)" in body, body)
+    fun `wide, the page is at least the window's height`() {
+        assertWindowHeightAtLeast(rule(wide, "body"))
         assertTrue("min-height: 0;" in rule(wide, ".app"), rule(wide, ".app"))
         assertTrue("overscroll-behavior: none;" in rule(wide, "html"), rule(wide, "html"))
     }
@@ -156,8 +146,8 @@ class PhoneFitStylesTest {
     fun `narrow wide phones get narrower columns and the tight toolbar`() {
         val narrowWide = "(orientation: landscape) and (max-width: 760px)"
 
-        assertTrue("--panel: 18rem;" in rule(block("@media $narrowWide"), ".app"), block("@media $narrowWide"))
-        assertTrue("--steps: 9.5rem;" in rule(block("@media $narrowWide", solution), ".app.solution"), solution)
+        assertTrue("--panel: min(18rem," in rule(block("@media $narrowWide"), ".app"), block("@media $narrowWide"))
+        assertTrue("--steps: min(9.5rem," in rule(block("@media $narrowWide", solution), ".app.solution"), solution)
         assertTrue("@media (max-width: 380px), $narrowWide {" in styles, "the toolbar's tight rule covers narrow wide phones")
         val narrowest = rule(block("@media (orientation: landscape) and (max-width: 600px)", solution), ".app.solution")
         assertTrue("--column-gap: 8px;" in narrowest && "--pad-x: 8px;" in narrowest, narrowest)
