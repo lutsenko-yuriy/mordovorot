@@ -2,11 +2,12 @@
 # GH-156: compares every element's computed styles in the built web game against a baseline bundle, case by
 # case, so a CSS refactor can show the game looks the same.
 #
-# Usage: styles_diff.sh [--build-baseline[=<ref>]] <baseline dist dir> [<query>...]
+# Usage: styles_diff.sh [--text-size=<percent>] [--build-baseline[=<ref>]] <baseline dist dir> [<query>...]
 #   Builds the branch's bundle first, so it's never stale. --build-baseline builds <ref> (default
 #   origin/master) into <baseline dist dir>, and later runs reuse it until <ref> moves. Each <query> is
 #   harness.html's query string without v and report (see README.md); by default the play, dialog and
-#   solution screens on a 4x4 board at 390x844, 844x390 and 1200x800.
+#   solution screens on a 4x4 board at 390x844, 844x390 and 1200x800. --text-size sets the browser's
+#   font size for both bundles (GH-168).
 #   Exit 0: no differences; 1: differences, or a case on one side only; 2: usage, build or TIMEOUT.
 
 set -u
@@ -20,13 +21,15 @@ port="${STYLES_DIFF_PORT:-8767}"
 max_wait_s=600
 source "$here/lib.sh"
 
+text_size=100
+take_text_size "${1:-}" && shift
 ref=""
 case "${1:-}" in
   --build-baseline) ref=origin/master; shift ;;
   --build-baseline=*) ref="${1#*=}"; shift ;;
 esac
 if [[ $# -eq 0 ]]; then
-  echo "Usage: $0 [--build-baseline[=<ref>]] <baseline dist dir> [<query>...]" >&2
+  echo "Usage: $0 [--text-size=<percent>] [--build-baseline[=<ref>]] <baseline dist dir> [<query>...]" >&2
   exit 2
 fi
 baseline="$1"

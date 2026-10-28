@@ -25,6 +25,8 @@ const boards = (q.get("boards") || (keys ? "4" : "3,4,5")).split(",").map(Number
 const mode = q.get("mode") || "play"; // play | dialog | solution
 const shorter = Number(q.get("shorter") || 0);
 const toolbarRows = Number(q.get("rows") || 1);
+// GH-168: `scroll` lets larger text make the page taller than the window; see measure().
+const fit = q.get("fit") || "window"; // window | scroll
 // Mordie's longest line, so its spot is as tall as it gets.
 const LONG = "Found it! I had to make 12 moves to find the solution! Can you beat it?";
 const wait = ms => new Promise(r => setTimeout(r, ms));
@@ -39,7 +41,9 @@ function clickText(doc, text) {
 
 /** One line: OK when the page is the window's size, nothing visible is past an edge, the toolbar has at
  *  most `rows` rows, the footer one line and the steps don't scroll sideways; then the sizes and positions
- *  to compare across runs. */
+ *  to compare across runs. With fit=scroll (GH-168) the page may be taller than the window and rows may
+ *  wrap, but nothing may be past a side or the top, every tile label must fit its tile, and tiles stay
+ *  at least 16px. */
 function measure(win, label) {
     const doc = win.document;
     const de = doc.documentElement;
@@ -52,21 +56,26 @@ function measure(win, label) {
     for (const el of doc.querySelectorAll(".app button:not(.arrow):not(.dialog *), .footer, .status, .tiles, .steps, .dialog")) {
         const r = el.getBoundingClientRect();
         if (r.width === 0) continue;
-        const past = Math.max(r.bottom - win.innerHeight, r.right - win.innerWidth, -r.left, -r.top);
+        const bottom = fit === "scroll" ? -Infinity : r.bottom - win.innerHeight;
+        const past = Math.max(bottom, r.right - win.innerWidth, -r.left, -r.top);
         if (past > overflow) { overflow = past; culprit = el.className || el.textContent; }
     }
     const steps = doc.querySelector(".steps");
     const sideways = steps ? steps.scrollWidth - steps.clientWidth : 0;
     const dialog = doc.querySelector(".dialog");
-    const ok = de.scrollHeight <= win.innerHeight && de.scrollWidth <= win.innerWidth && overflow <= 0.5
-        && toolbar && button && toolbar.height < button.height * (toolbarRows + 0.5) && footer && footer.height < 30
-        && sideways <= 0;
+    const labelsOut = [...doc.querySelectorAll(".tile")]
+        .filter(t => t.scrollWidth > t.clientWidth || t.scrollHeight > t.clientHeight).length;
+    const fits = fit === "scroll"
+        ? labelsOut === 0 && tile?.width >= 16
+        : de.scrollHeight <= win.innerHeight && toolbar && button
+            && toolbar.height < button.height * (toolbarRows + 0.5) && footer && footer.height < 30;
+    const ok = fits && de.scrollWidth <= win.innerWidth && overflow <= 0.5 && sideways <= 0;
     return `${ok ? "OK  " : "BAD "}${label} page ${de.scrollWidth}x${de.scrollHeight} win ${win.innerWidth}x${win.innerHeight} `
         + `toolbar h${Math.round(toolbar?.height)} w${Math.round(toolbar?.width)}@${round(toolbar)} `
         + `footer h${Math.round(footer?.height)} tiles@${round(tiles)} tile ${Math.round(tile?.width)} `
         + `mordie h${Math.round(mordie?.height)}${panel?.height ? ` panel h${Math.round(panel.height)}` : ""}`
         + `${steps ? ` steps sideways ${sideways}` : ""}${dialog ? ` dialog h${dialog.clientHeight}/${dialog.scrollHeight}` : ""} `
-        + `overflow ${Math.round(overflow)} ${culprit}`;
+        + `${fit === "scroll" ? `labels out ${labelsOut} ` : ""}overflow ${Math.round(overflow)} ${culprit}`;
 }
 
 /** Every element's computed styles, once the animations have finished: a dialog's fade caught partway
@@ -121,7 +130,12 @@ async function run(size, board) {
     }
     await wait(100);
     const solution = win.document.querySelector(".app.solution") ? " [solution]" : "";
-    const label = `${mode} ${w}x${h} ${board}x${board}${solution}`;
+    // GH-168: the root's font size, when --text-size or the page made it other than the standard 16px.
+    // Not in a styles case's name, which pairs branch with master: their sizes may differ, and the
+    // diff should show that as html's font-size, not as every case on one side only.
+    const rootPx = parseFloat(win.getComputedStyle(win.document.documentElement).fontSize);
+    const text = rootPx === 16 || report === "styles" ? "" : ` text ${rootPx}px`;
+    const label = `${mode} ${w}x${h} ${board}x${board}${solution}${text}`;
     if (keys) {
         results.push(...await runKeys(win, (q.get("keys") || "").split(",").filter(Boolean), `${variant} ${label}`));
     } else if (report === "styles") {

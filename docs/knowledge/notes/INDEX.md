@@ -66,6 +66,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-165: Web: colour contrast and colour-blind check](GH-165.md)
 - [GH-166: Web: screen reader announcements](GH-166.md)
 - [GH-167: Web: a board screen readers can read](GH-167.md)
+- [GH-168: Web: larger text without browser zoom](GH-168.md)
 - [GH-174: Web harness: a keyboard and accessibility mode](GH-174.md)
 - [GH-23: Split Presenter into console/TUI-specific presenters](GH-23.md)
 - [GH-41: Kotlin Multiplatform shared modules: Core, Analytics, Mordie, Storage, ViewModel](GH-41.md)

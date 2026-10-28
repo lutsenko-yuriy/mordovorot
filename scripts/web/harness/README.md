@@ -1,4 +1,4 @@
-# Web harness (GH-147, GH-148, GH-156, GH-174, GH-167)
+# Web harness (GH-147, GH-148, GH-156, GH-174, GH-167, GH-168)
 
 Checks that the web game fits phone screens, headless, compares its computed styles against master,
 checks it from the keyboard and serves it to a real phone.
@@ -18,6 +18,26 @@ four edges. `OK` means the page is exactly the window's size, nothing is past an
 has at most `rows` rows, the footer one line and the steps don't scroll sideways. A dialog's own
 buttons don't count, since they scroll inside it; the dialog box itself does.
 
+With `fit=scroll` (GH-168), for larger text, the page may be taller than the window and the toolbar
+and footer may wrap: `OK` then means nothing is past a side or the top, the page doesn't scroll
+sideways, every tile label fits its tile (`labels out N` counts those that don't) and tiles are at
+least 16px.
+
+## Larger text (GH-168)
+
+```
+scripts/web/harness/measure.sh --text-size=150 "v=mouse&fit=scroll" "v=touch&fit=scroll&sizes=landscape"
+scripts/web/harness/styles_diff.sh --text-size=200 --build-baseline ../master-dist
+```
+
+`--text-size=<percent>`, first, sets the browser's font size as a whole percent of the standard
+16px, from 50 to 400, rounded to the nearest px (`150` is 24px), as a player's browser setting would: it writes
+`webkit.webprefs.default_font_size` into the throwaway profile's `Preferences`. Each line's label
+then says the page's root size (`text 24px`); at 16px it says nothing, so lines read as before.
+`report=styles` leaves it out, so a branch and a master case still pair up when their root sizes
+differ.
+`styles_diff.sh` sets it for both bundles.
+
 Query options (harness.html):
 
 | Option | Default | Meaning |
@@ -28,6 +48,7 @@ Query options (harness.html):
 | `mode` | `play` | `play`, `dialog` (Tile labels open) or `solution` (shifts until Give Up lights, then gives up) |
 | `shorter` | `0` | px taken off each height, standing in for the browser's own toolbars (try `100`) |
 | `rows` | `1` | toolbar rows allowed (`2` under 300px wide) |
+| `fit` | `window` | `window` (the page is the window's size) or `scroll` (larger text: may be taller, see above, GH-168) |
 | `report` | `fit` | `fit` (one line per case, above), `styles` (every element's computed styles, for `styles_diff.sh`) or `keys` (below; `sizes` then defaults to `1200x800` and `boards` to `4`) |
 | `keys` | | with `report=keys`, the steps to play, comma-separated (below) |
 | `grid` | | with `report=keys`, `1` adds the board as a screen reader's table to each line (below, GH-167) |

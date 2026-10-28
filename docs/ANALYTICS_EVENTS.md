@@ -313,6 +313,10 @@ already tells keyboard from mouse): `button` (Cancel / No clicked or activated) 
 session as "probably uses a screen reader": health and disability information, sensitive even
 without a user ID. Whether any accessibility usage signal is acceptable is GH-180's question.
 
+*GH-168:* nothing tracked. The system text size in effect at load (even bucketed), or the page
+scrolling because large text didn't fit, would mark a session as "probably low vision". GH-180
+settled it: no accessibility usage signal is acceptable, on any terms.
+
 <!-- All events above are sent through `analytics.AnalyticsService`, currently backed by
      `analytics.NoopAnalyticsService` (no real SDK wired up yet). -->
 
