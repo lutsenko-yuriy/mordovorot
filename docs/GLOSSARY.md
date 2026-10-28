@@ -28,6 +28,7 @@ When a new term is introduced during a `brief` session, add it here before creat
 | Solved | The board state where all values are in ascending order. "Correct" is the board-model name for the same check | `isSolved()`, `isCorrect()` |
 | Square side | The board's edge length (default 4, giving a 4×4 board) | `squareSide` |
 | Startup restore prompt | The launch-time offer to restore an existing save before the first move (a TUI dialog) | `restoreOnStartup()` |
+| System text size | Web client only: the text size the player set outside the game (the browser's font size, Android's text scaling, iOS Dynamic Type). The page's text and tile labels follow it when it is larger than standard, from the next page load; tile labels stop at their tile's size (GH-168) | — |
 | Tile labels | How tiles are labelled, one of six schemes: Numbers (default, `1..side²`), Numbers from 0, Pairs (`23`), Pairs from 0 (`12`), Letters (`G`), Letter pairs (`BC`). Chosen in the Tile labels dialog; remembered as a preference and stored in saves, a save's labels winning for that game (GH-139); Letters only labels up to 5x5 - on 6x6 Numbers stand in and the preference is kept (GH-160) | — |
 | Toolbar | The TUI's row of buttons below the board — `[ New ] [ Save ] [ Load ] [ Exit ]` — plus the input-mode switch row beneath it | `HitTarget.Toolbar*` |
 | Unsaved progress | At least one shift since the last New game, successful save or successful load. The web client asks before the tab is closed or reloaded with it (GH-110) | — |
