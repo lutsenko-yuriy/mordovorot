@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.25.2] — 2026-10-28 (PR #184 merged)
+
+### Changed
+- [wip] (PR #184) GH-168 WU2: the web layout gives way to larger text: past 16px tiles the page scrolls vertically, button rows wrap, and the columns beside the board in landscape never squeeze it below 16px tiles. No change at the standard text size.
+
 ## [0.25.1] — 2026-10-28 (PR #183 merged)
 
 ### Added
