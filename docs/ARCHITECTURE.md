@@ -197,7 +197,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/jsMain/kotlin/web/Main.kt       # The page's composition root: BoardImpl, saves and
 │                                       # preferences in localStorage, Mordie with the background search,
 │                                       # MainScope, the window's Layout, the beforeunload prompt;
-│                                       # the footer, once, outside #app (GH-111); stopPinchZoom
+│                                       # the footer, once, outside #app (GH-111); stopPinchZoom;
+│                                       # applySystemTextSize first (GH-168)
 ├── src/jsMain/kotlin/web/DomGestures.kt # stopPinchZoom: on touch screens, cancels WebKit's pinch
 │                                       # events, which iOS fires whatever touch-action says (GH-149)
 ├── src/jsMain/kotlin/web/DomRenderer.kt # WebState -> DOM, clicks and pointer drags -> WebGame
@@ -225,23 +226,27 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/jsMain/kotlin/web/DomAnnouncer.kt # GH-166: says WebState.announcement through #announcer,
 │                                       # emptied then refilled after 100 ms so a repeat is re-read
 ├── src/jsMain/kotlin/web/storage/LocalStorageStore.kt # KeyValueStore over window.localStorage
-├── src/jsMain/resources/index.html     # The page: `<title>Mordovorot</title>`, links the six
+├── src/jsMain/resources/index.html     # The page: `<title>Mordovorot</title>`, links the seven
 │                                       # sheets below in this order (the cascade relies on it), loads web.js;
 │                                       # #announcer, the polite live region, next to #app so no redraw
-│                                       # or `inert` touches it (GH-166)
+│                                       # or `inert` touches it (GH-166); the `text-scale` meta, for
+│                                       # Chrome for Android's text size (GH-168)
 ├── src/jsMain/resources/palette.css    # GH-165: the colour tokens, light and dark (one set of tile
 │                                       # colours for both); linked first
 ├── src/jsMain/resources/styles.css     # The look: layout tokens, wide/tall by `orientation` (as layoutOf
-│                                       # counts), panel, toolbar, footer, buttons; wide: the page is
+│                                       # counts), panel, toolbar, footer; wide: the page is
 │                                       # the window's height, the board's room from named column
 │                                       # widths and a one-line footer, no size container (GH-148);
 │                                       # past 16px tiles the page scrolls and rows wrap (GH-168)
+├── src/jsMain/resources/buttons.css    # Buttons and the keyboard focus ring (GH-163), split from
+│                                       # styles.css (GH-168)
 ├── src/jsMain/resources/fit.css        # GH-148: fitting phones: tall, the page is the window's
 │                                       # height and tiles fit `.stage` (GH-147), scrolling past 16px
 │                                       # tiles (GH-168); wide, the one-line footer and tighter spacing
 │                                       # on short and narrow phones
 ├── src/jsMain/resources/board.css      # GH-153: tile colours by home row/column, arrows, solve
-│                                       # animations; no arrows under `pointer: coarse` (GH-111)
+│                                       # animations; no arrows under `pointer: coarse` (GH-111);
+│                                       # tile labels grow with `--text-scale`, capped (GH-168)
 ├── src/jsMain/resources/dialogs.css    # GH-153: the modal dialogs, the Tile labels picker (GH-139)
 ├── src/jsMain/resources/solution.css   # GH-153: `.app.solution` and the step list (GH-126); its
 │                                       # tall `.steps` overrides the base `.steps` by coming later
@@ -252,6 +257,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/commonTest/kotlin/web/FooterTest.kt # GH-111: the footer's wording and links
 ├── src/commonTest/kotlin/web/HostTest.kt # GH-111: hostOf's buckets
 ├── src/commonTest/kotlin/web/LayoutTest.kt, SlidesTest.kt, MessageFeedTest.kt, AnnouncementsTest.kt
+├── src/commonTest/kotlin/web/TextScaleTest.kt # GH-168: textScaleOf's ratios, floor and bad readings
 ├── src/commonTest/kotlin/web/drag/     # LineDragTest, WrapPositionsTest
 ├── src/commonTest/kotlin/web/storage/  # BrowserSaveRepositoryTest, BrowserPreferenceRepositoryTest
 │                                       # over InMemoryKeyValueStore
@@ -264,7 +270,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # build's; the footer's credit matches the README's
 ├── src/jvmTest/kotlin/web/PhoneFitStylesTest.kt # GH-147, GH-148: pins the tall and wide fit rules
 │                                       # (styles.css, fit.css, solution.css)
-├── src/jvmTest/kotlin/web/TextSizeStylesTest.kt # GH-168: with larger text, rows wrap and the
+├── src/jvmTest/kotlin/web/TextSizeStylesTest.kt # GH-168: text in rem, tile labels' cap; with larger text, rows wrap and the
 │                                       # columns beside the board leave it 16px tiles
 ├── src/jvmTest/kotlin/web/ColourContrastStylesTest.kt # GH-165: palette.css's text pairs, non-text
 │                                       # edges and every tile label of every board meet WCAG AA
