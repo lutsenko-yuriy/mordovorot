@@ -97,7 +97,8 @@ body {
         /* The width beside the smallest board, which the columns beside it never take more of (GH-168). */
         --room: calc(100vw - var(--board-min) - 2 * var(--pad-x));
         /* The panel's column is wide enough for the four toolbar buttons (GH-139). */
-        --panel: min(21rem, var(--room) - var(--column-gap));
+        --panel-max: 21rem;
+        --panel: min(var(--panel-max), var(--room) - var(--column-gap));
         --pad-y: 20px;
         --beside: calc(var(--panel) + var(--column-gap) + 2 * var(--pad-x));
         --tile: clamp(16px, min(100vw - var(--beside), var(--vh) - var(--footer) - 2 * var(--pad-y)) / (var(--side) * 1.1 + var(--band)), 84px);

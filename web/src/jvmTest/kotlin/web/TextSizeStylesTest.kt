@@ -52,12 +52,13 @@ class TextSizeStylesTest {
 
         assertTrue("--board-min: calc(16px * (var(--side) * 1.1 + var(--band)));" in rule(styles, ".app"), rule(styles, ".app"))
         assertTrue("--room: calc(100vw - var(--board-min) - 2 * var(--pad-x));" in wide, wide)
-        assertTrue("--panel: min(21rem, var(--room) - var(--column-gap));" in wide, wide)
-        assertTrue("--panel: min(18rem, var(--room) - var(--column-gap));" in narrowWide, narrowWide)
-        assertTrue("--panel: min(21rem, (var(--room) - 2 * var(--column-gap)) * 0.65);" in steps, steps)
+        assertTrue("--panel-max: 21rem;" in wide && "--panel-max: 18rem;" in narrowWide, wide + narrowWide)
+        assertTrue("--panel: min(var(--panel-max), var(--room) - var(--column-gap));" in wide, wide)
+        assertTrue("--panel: min(var(--panel-max), (var(--room) - 2 * var(--column-gap)) * 0.65);" in steps, steps)
         assertTrue("--steps: min(11rem, (var(--room) - 2 * var(--column-gap)) * 0.35);" in steps, steps)
-        assertTrue("--panel: min(18rem, (var(--room) - 2 * var(--column-gap)) * 0.65);" in narrowSteps, narrowSteps)
         assertTrue("--steps: min(9.5rem, (var(--room) - 2 * var(--column-gap)) * 0.35);" in narrowSteps, narrowSteps)
+        // The widest panel is named once per width, so the solution screen's narrow block only resizes the steps.
+        assertTrue("--panel" !in narrowSteps && "--panel:" !in narrowWide, narrowSteps + narrowWide)
     }
 
     /** A fixed width would set the page's narrowest, however small the window (max-width doesn't). */

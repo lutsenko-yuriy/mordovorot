@@ -146,7 +146,7 @@ class PhoneFitStylesTest {
     fun `narrow wide phones get narrower columns and the tight toolbar`() {
         val narrowWide = "(orientation: landscape) and (max-width: 760px)"
 
-        assertTrue("--panel: min(18rem," in rule(block("@media $narrowWide"), ".app"), block("@media $narrowWide"))
+        assertTrue("--panel-max: 18rem;" in rule(block("@media $narrowWide"), ".app"), block("@media $narrowWide"))
         assertTrue("--steps: min(9.5rem," in rule(block("@media $narrowWide", solution), ".app.solution"), solution)
         assertTrue("@media (max-width: 380px), $narrowWide {" in styles, "the toolbar's tight rule covers narrow wide phones")
         val narrowest = rule(block("@media (orientation: landscape) and (max-width: 600px)", solution), ".app.solution")

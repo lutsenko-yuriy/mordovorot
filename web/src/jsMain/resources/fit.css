@@ -86,7 +86,7 @@
 /* Narrow: slimmer columns, so the board keeps room. */
 @media (orientation: landscape) and (max-width: 760px) {
     .app {
-        --panel: min(18rem, var(--room) - var(--column-gap));
+        --panel-max: 18rem;
         --column-gap: 16px;
     }
 }
