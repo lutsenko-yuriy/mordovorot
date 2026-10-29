@@ -146,7 +146,9 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │                                     # launch size, GH-160), SolutionUseCase (the Give Up row,
 │                                     # entering the solution screen, the replay and its
 │                                     # analytics, GH-126), TileLabelsUseCase (the labels dialog's
-│                                     # screen view and OK, GH-139)
+│                                     # screen view and OK, GH-139), ControlsDialogUseCase (the
+│                                     # Controls dialog's screen view, GH-170); both take `screen`
+│                                     # from ScreenName.kt's one rule
 └── testing/             # :shared:testing - plain JVM module of test doubles shared by every
                            # module's tests: FakeBoardModel / FakeSaveRepository / FakePreferenceRepository /
                            # RecordingAnalyticsService / FakeMordieSearch + FakeMordieSearchFactory /
@@ -342,8 +344,8 @@ src/main/kotlin/                # the terminal app (the root project)
         │                                               # (GH-126); function keys are swallowed
         │                                               # whole (GH-170)
         ├── BoardLayout.kt / HitTarget.kt   # Pure board geometry + click hit-testing, incl. the
-        │                                     # toolbar's mode-switch buttons
-        │                                     # (HitTarget.ToolbarMode) (GH-30), the reserved
+        │                                     # second row's Labels and Controls
+        │                                     # (HitTarget.ToolbarControls, GH-170), the reserved
         │                                     # Mordie rows under `Moves:` (GH-83), and the Give Up
         │                                     # row, the step list and Prev/Next/Restart (GH-126)
         ├── StepListWindow.kt # Which steps of the solution screen's list show: follows the
@@ -355,7 +357,8 @@ src/main/kotlin/                # the terminal app (the root project)
         │                      # Plus KeyboardSelection, its session-lifetime holder (made by
         │                      # buildGameSession, so it survives mode switches)
         ├── BoardKeys.kt     # Keyboard mode's key scheme (ADR-0003): the board keys (select /
-        │                      # shift), the solution screen's keys, and every hint text (GH-170)
+        │                      # shift), the solution screen's keys, every hint text and the
+        │                      # Controls dialog's key list (GH-170)
         ├── Dialog.kt / DialogLayout.kt     # One model + one geometry class for all four
         │                                     # modal dialogs (Save/Load/Exit/Size (GH-44, a
         │                                     # buttons-only kind, so DialogLayout/DialogFocus
@@ -364,11 +367,21 @@ src/main/kotlin/                # the terminal app (the root project)
         │                                     # Dialog also carries keyboard focus state
         │                                     # (focusedButtonId, textFieldFocused) (GH-18)
         │                                     # and disabledRows: dimmed, unclickable and
-        │                                     # out of the focus ring (GH-160)
-        ├── DialogFocus.kt   # Pure focus ring over a dialog's controls (text field/list rows,
-        │                      # then buttons) for Tab/arrow-key dialog navigation (GH-18)
+        │                                     # out of the focus ring (GH-160); CONTROLS's
+        │                                     # option groups (one row each, an option
+        │                                     # hit-tests to HitTarget.DialogOption) and
+        │                                     # notes (GH-170)
+        ├── DialogFocus.kt   # Pure focus ring over a dialog's controls (option groups, text
+        │                      # field/list rows, then buttons) for Tab/arrow-key dialog
+        │                      # navigation (GH-18)
+        ├── DialogKeys.kt    # The dialog keys over that ring, owning the focus index (GH-18,
+        │                      # out of KeyboardInput for GH-170): every dialog in keyboard mode,
+        │                      # the Controls dialog in mouse mode too
+        ├── Canvas.kt        # The character grid both renderers draw on, SGR spans folded into
+        │                      # single cells (split out of ScreenRenderer, GH-170)
+        ├── DialogRenderer.kt # Draws the dialog overlay at DialogLayout's coordinates (GH-170)
         ├── ScreenState.kt / ScreenRenderer.kt # Pure ScreenState -> frame String rendering,
-        │                                        # including the dialog overlay, keyboard mode's
+        │                                        # including keyboard mode's
         │                                        # selected tile with its row and column
         │                                        # coloured, side hints (GH-170, arrows
         │                                        # hidden), the controls hint, and
@@ -380,12 +393,12 @@ src/main/kotlin/                # the terminal app (the root project)
         │                      # can reset per-session state at an explicit boundary, even when
         │                      # one dialog opens another directly with no board repaint in
         │                      # between (e.g. Exit -> Save) (GH-18)
-        ├── MouseInput.kt    # TuiInput impl: today's click-driven behaviour, stateless. Used
-        │                      # by both the default mouse mode and the explicit --mouse flag
-        │                      # (GH-18)
+        ├── MouseInput.kt    # TuiInput impl: today's click-driven behaviour, plus 6 and the
+        │                      # Controls dialog's DialogKeys (GH-170). Used by both the default
+        │                      # mouse mode and the explicit --mouse flag (GH-18)
         ├── KeyboardInput.kt # TuiInput impl for --keyboard mode (GH-18): BoardKeys over the
         │                      # shared KeyboardSelection, the toolbar digits (GH-170) and
-        │                      # DialogFocus state
+        │                      # DialogKeys
         ├── dialog/          # One controller per dialog flow (GH-78), each over TuiScreen's
         │                      # runModal: SaveDialogController (toolbar Save + the exit flow's
         │                      # name prompt), ExitDialogController (owns the toolbar answer the
@@ -395,11 +408,13 @@ src/main/kotlin/                # the terminal app (the root project)
         │                      # SizeDialogController (toolbar New/1 + ChooseBoardSize),
         │                      # UnsolvableDialogController (GH-74's repair/new game/exit),
         │                      # GiveUpDialogController (Give Up/5's confirmation, GH-126),
-        │                      # LabelsDialogController (Labels/4's Tile labels dialog, GH-139)
+        │                      # LabelsDialogController (Labels/4's Tile labels dialog, GH-139),
+        │                      # ControlsDialogController (Controls/6: Play with + the key list,
+        │                      # OK switches mode through ModeSwitcher, GH-170)
         ├── UiRequestRouter.kt # Answers each UiRequest with the dialog that owns it - an
         │                      # exhaustive `when`, so a new request needs an answer to compile
         ├── ToolbarRouter.kt # Runs the activated toolbar button: Save/Load/Exit/New, Labels
-        │                      # (GH-139) and the mode switch (GH-78); InputAction.Activate's
+        │                      # (GH-139) and Controls (GH-170); InputAction.Activate's
         │                      # shortcut flag says a key, not a click, made it (GH-170)
         ├── TuiScreen.kt     # What the TUI draws (GH-78): the last-drawn BoardLayout/DialogLayout,
         │                      # the parked status message, wasSolved, repaint, and runModal -
@@ -429,9 +444,11 @@ src/test/kotlin/                # the terminal app's tests; board_model / analyt
 ├── GiveUpScenarioTest.kt  # GH-126 end to end: Give Up, the solution screen and its replay
 ├── TileLabelsScenarioTest.kt # GH-139 end to end: the Tile labels dialog, the preference and
 │                            # saves' labels, in mouse and keyboard mode
+├── KeyboardTileSelectionScenarioTest.kt / ControlsScenarioTest.kt # GH-170 end to end: the
+│                            # selected tile, the digit toolbar, the Controls dialog and its switch
 ├── GameSessionTest.kt     # Session loop: startupRestoreDone seeding, multi-switch chains,
 │                            # failed-switch fallback, Mordie stopped on exit (GH-30)
-├── AppWiringTest.kt      # Composition root: each mode's switch key really switches, a mode
+├── AppWiringTest.kt      # Composition root: each mode's Controls switch really switches, a mode
 │                            # switch rebuilds around the session's one board and Mordie, which
 │                            # analytics each collaborator gets (GH-78)
 ├── ModeSwitcherTest.kt    # input_mode_switched tracking, trigger pass-through, same-mode
@@ -741,10 +758,10 @@ message sinks are injectable parameters, so all of this is unit-tested without
 a real terminal.
 
 `InputMode` no longer only decides where a session *begins* — `GameSession`
-lets it switch mid-session, driven by `ModeSwitcher`. `TuiView`'s toolbar
-`[ Keyboard 6 ]` / `[Mouse 6]` buttons and the 6 key in either mode (GH-170), reached via
-`HitTarget.ToolbarMode`/`ScreenState.modeButtons`, go through `ToolbarRouter` to `ModeSwitcherImpl`,
-which tracks `input_mode_switched` and throws `ModeSwitchRequestedException`.
+lets it switch mid-session, driven by `ModeSwitcher`. The Controls dialog
+(`[ Controls 6 ]` / 6 in either mode, GH-170) opens with `ModeSwitcher.currentMode` marked; OK
+with the other mode marked has `ControlsDialogController` call `ModeSwitcherImpl`, which tracks
+`input_mode_switched` (`trigger: controls_dialog`) and throws `ModeSwitchRequestedException`.
 `GameSession` catches the exception, rebuilds the `View`/viewmodel/analytics
 stack for the new mode (through `buildGameSession`'s closure) around the *same*
 `BoardImpl`/`FileSaveRepository` instances, and re-enters `play()` — so switching preserves board state and

@@ -106,13 +106,13 @@ Fired when the user cancels the Save, Load, Exit, or Size dialog in the mouse-dr
 
 ### `input_mode_switched`
 
-Fired when the user requests a switch to a *different* input mode mid-session — a toolbar button click (`toolbar`) or a key (`shortcut`: 6 in either terminal mode since GH-170, F7 in keyboard mode before). Requesting the mode that's already active is a no-op instead: no event, no message, no exception (audit finding on PR #36). *(GH-30)*
+Fired when the user requests a switch to a *different* input mode mid-session — OK in the Controls dialog with the other mode marked (`controls_dialog`, GH-170); before GH-170 a toolbar button click (`toolbar`) or a key (`shortcut`). Requesting the mode that's already active is a no-op instead: no event, no message, no exception (audit finding on PR #36). *(GH-30)*
 
 | Property | Type | Description |
 |---|---|---|
 | `from_mode` | `string` | `mouse` or `keyboard` — mode active before the switch. *(`console` retired — GH-79)* |
 | `to_mode` | `string` | `mouse` or `keyboard` — requested target mode. *(`console` retired — GH-79)* |
-| `trigger` | `string` | `toolbar` or `shortcut`. *(`command` retired — GH-79)* |
+| `trigger` | `string` | `controls_dialog` (GH-170). *(`command` retired — GH-79; `toolbar` and `shortcut` retired on `terminal` — GH-170)* |
 | `result` | `string` | Always `success`. *(`rejected_no_tty` retired — GH-79: a running TUI always has a terminal)* |
 
 ### `new_game_size_selected`

@@ -117,11 +117,20 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 - On launch, the app runs a mouse-clickable terminal UI by default: a centered board with
   `◀`/`▶`/`▲`/`▼` arrows at the ends of each row/column, the `[ Give Up ]` row (Feature 10)
   below the down arrows, a toolbar (`[ New ] [ Save ] [ Load ] [ Exit ]`) below that, and a second row below that with
-  `[ Labels ]` (GH-139) and `[ Keyboard 6 ]` for switching to keyboard mode without losing the current game (GH-30);
-  6 on the keyboard does the same, the one key mouse mode's board answers to (GH-170).
+  `[ Labels ]` (GH-139) and `[ Controls 6 ]` (GH-170), which opens the **Controls** dialog;
+  6 on the keyboard does the same, the one key mouse mode's board answers to, and the only button
+  that shows its key.
   Clicking an arrow shifts that row/column; every click repaints the whole screen. `[ New ]`
   (GH-44) opens the same size-picker dialog as the startup prompt and starts a fresh game at
   whichever size is chosen; Cancel leaves the current game untouched.
+- The **Controls** dialog (GH-170), in both modes: `Play with ● Mouse ○ Keyboard` with the
+  current mode marked, then the keyboard mode's key list (board, toolbar and solution-screen
+  keys), then `[ OK ] [ Cancel ]`. Clicking an option marks it; from the keyboard (it opens
+  focused on `Play with`) the arrows move the mark, Tab / Shift+Tab move focus over the group, OK
+  and Cancel, Enter is OK except on Cancel, and Escape cancels. OK with the other mode marked
+  switches to it without losing the current game, the keyboard selection included (GH-30);
+  Cancel changes nothing. If the switch fails (e.g. no `stty`), the game stays in the current
+  mode with `Could not switch to <mode> mode (<reason>) - staying in <current> mode.` (GH-79).
 - `[ Labels ]` (GH-139) opens the **Tile labels** dialog: one row per scheme (Numbers, Numbers
   from 0, Pairs, Pairs from 0, Letters, Letter pairs), each with the solved board's first row as
   a sample, the current scheme marked `●` and the rest `○`. Clicking a row marks it; OK relabels
@@ -176,14 +185,14 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   - Once solved, the highlight disappears and the selection and shift keys go inert, matching
     mouse mode's dimmed arrows; the hints stay.
 - **Toolbar digits (GH-170)**, shown in light blue on the toolbar buttons
-  (`[New 1] [Save 2] [Load 3] [Exit Esc]`, then `[Labels 4] [Mouse 6]`, mirroring mouse mode's
-  `[ Labels ] [ Keyboard 6 ]` row) and always live regardless of the selection or solved state,
+  (`[New 1] [Save 2] [Load 3] [Exit Esc]`, then `[Labels 4] [Controls 6]`, mirroring mouse mode's
+  `[ Labels ] [ Controls 6 ]` row) and always live regardless of the selection or solved state,
   on the solution screen too: **1** opens the New-game size picker (GH-44), **2** Save, **3**
   Load, **4** Tile labels (GH-139), **5** is the Give Up row's button (`[Give Up 5]` or
-  `[Mordie's solution 5]`, GH-126), **6** switches to mouse mode, and **Escape** opens the Exit
+  `[Mordie's solution 5]`, GH-126), **6** opens the Controls dialog (Feature 6), and **Escape** opens the Exit
   dialog. Inside a dialog the digits are the dialog's own (they type into the Save name field).
   The function keys do nothing. A controls-hint line below the toolbar spells these out:
-  `1 New · 2 Save · 3 Load · 4 Labels · 5 Give Up · 6 Mouse · Esc Exit`.
+  `1 New · 2 Save · 3 Load · 4 Labels · 5 Give Up · 6 Controls · Esc Exit`.
 - **Dialog navigation:** Tab/Shift+Tab (or the arrow keys) cycle focus between a dialog's
   controls (text field, list rows, buttons); Enter activates whatever has focus; Escape cancels
   the dialog, same as clicking Cancel. Typing and Backspace work on the focused text field as in
