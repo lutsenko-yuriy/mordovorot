@@ -8,7 +8,7 @@
 
 @media (orientation: landscape) {
     /* The steps between the board and the panel. Short of room beside the board, the panel gives way
-       first, its toolbar wrapping; the steps, which don't wrap, only past half of it (GH-168). */
+       first, its toolbar wrapping; the steps only past half of it, their lines wrapping last (GH-168). */
     .app.solution {
         --steps: min(11rem, (var(--room) - 2 * var(--column-gap)) / 2);
         --panel: min(var(--panel-max), var(--room) - 2 * var(--column-gap) - var(--steps));
@@ -58,7 +58,6 @@
     padding: 0.25em 0.7em;
     border-radius: 6px;
     font-variant-numeric: tabular-nums;
-    white-space: nowrap;
 }
 
 .step.current {

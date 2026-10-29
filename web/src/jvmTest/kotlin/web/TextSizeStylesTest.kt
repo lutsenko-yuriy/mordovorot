@@ -45,8 +45,8 @@ class TextSizeStylesTest {
     }
 
     /** Grown with the text, the columns beside the board would leave it less than 16px tiles. A classic
-     *  scrollbar, once the page scrolls, comes out of 100vw too. The steps, whose lines never wrap, keep
-     *  their width up to half the room; the panel, whose toolbar wraps, gives way first. */
+     *  scrollbar, once the page scrolls, comes out of 100vw too. The steps, whose lines wrap only as a
+     *  last resort, keep their width up to half the room; the panel, whose toolbar wraps, gives way first. */
     @Test
     fun `wide, the columns beside the board give way to its 16px tiles`() {
         val wide = rule(block("@media (orientation: landscape)"), ".app")
@@ -63,6 +63,23 @@ class TextSizeStylesTest {
         assertTrue("--steps: min(9.5rem, (var(--room) - 2 * var(--column-gap)) / 2);" in narrowSteps, narrowSteps)
         // The widest panel is named once per width, so the solution screen's narrow block only resizes the steps.
         assertTrue("--panel" !in narrowSteps && "--panel:" !in narrowWide, narrowSteps + narrowWide)
+    }
+
+    /** Sized from 100vw, the board and panel are a classic scrollbar's width wider than the window once
+     *  larger text makes the page scroll. The page's column stays the window's width, so they overflow
+     *  into the app's side padding, and the footer isn't stretched past the edge. */
+    @Test
+    fun `wide, the page's column is never wider than the window`() {
+        val body = rule(block("@media (orientation: landscape)"), "body")
+
+        assertTrue("grid-template-columns: minmax(0, 1fr);" in body, body)
+        assertTrue("overflow-x" !in rule(styles, "body"), rule(styles, "body"))
+    }
+
+    /** At the largest sizes a step's line is wider than its column; it wraps rather than scroll sideways. */
+    @Test
+    fun `a step's line wraps when its column is too narrow`() {
+        assertTrue("nowrap" !in rule(solution, ".step"), rule(solution, ".step"))
     }
 
     /** A fixed width would set the page's narrowest, however small the window (max-width doesn't). */

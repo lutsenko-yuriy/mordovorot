@@ -88,6 +88,9 @@ body {
 
     body {
         display: grid;
+        /* The window's width: once larger text scrolls the page, a classic scrollbar leaves less than
+           the 100vw the app is sized from, which then overflows into its own side padding (GH-168). */
+        grid-template-columns: minmax(0, 1fr);
         grid-template-rows: minmax(0, 1fr) auto;
         min-height: var(--vh);
     }
