@@ -74,7 +74,7 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   - A successful load sets it (Load dialog, startup restore, Repair & load), and so does a
     successful save under any name: load `foo`, save as `bar`, and the next Save dialog shows
     `bar`.
-  - A new game clears it (`[ New ]`/F9, the startup size prompt, New game from the
+  - A new game clears it (`[ New ]`/1, the startup size prompt, New game from the
     `Can't be solved` dialog), as does a fresh launch - it isn't stored anywhere.
   - A failed save or load, or a cancelled dialog, leaves it unchanged. Switching input mode
     keeps it.
@@ -117,7 +117,8 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 - On launch, the app runs a mouse-clickable terminal UI by default: a centered board with
   `◀`/`▶`/`▲`/`▼` arrows at the ends of each row/column, the `[ Give Up ]` row (Feature 10)
   below the down arrows, a toolbar (`[ New ] [ Save ] [ Load ] [ Exit ]`) below that, and a second row below that with
-  `[ Labels ]` (GH-139) and `[ Keyboard ]` for switching to keyboard mode without losing the current game (GH-30).
+  `[ Labels ]` (GH-139) and `[ Keyboard 6 ]` for switching to keyboard mode without losing the current game (GH-30);
+  6 on the keyboard does the same, the one key mouse mode's board answers to (GH-170).
   Clicking an arrow shifts that row/column; every click repaints the whole screen. `[ New ]`
   (GH-44) opens the same size-picker dialog as the startup prompt and starts a fresh game at
   whichever size is chosen; Cancel leaves the current game untouched.
@@ -160,32 +161,29 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 - `--keyboard` runs the same TUI screens as Feature 6 (board, toolbar, dialogs, Congratulations
   screen), but driven entirely from the keyboard instead of the mouse. Launch rules are the same
   as mouse mode (Feature 3).
-- **Line selection (GH-101):** keyboard mode doesn't draw the `◀`/`▶`/`▲`/`▼` arrows. It
-  remembers a selected row and a selected column, one of them active, and shows the active
-  line's tiles in reverse video.
-  - **W/S** move the row selection up/down; with a column active they switch to the remembered
-    row without moving it. **A/D** do the same for columns. Movement wraps at the edges.
-  - **H/L** or **←/→** shift the selected row left/right; **J/K** or **↓/↑** shift the selected
-    column down/up. A shift key on the other axis switches the selection to the remembered line
-    on that axis instead of shifting. Letters work in either case; Enter and Space do nothing
-    on the board.
-  - Row 1 is active at launch, with column 1 remembered. A new game, a load or a size change
-    keeps the selection, each number clamped to a smaller board (row 4 / column 2 on 5x5 becomes
-    row 3 / column 2 on 3x3); switching to mouse mode and back keeps it too.
-  - The board stays centred: `W/S row` / `A/D column` sit to its left, `←/→ H/L shift row` /
-    `↑/↓ K/J shift column` to its right.
+- **Tile selection (GH-170, the keyboard scheme of ADR-0003):** keyboard mode doesn't draw the
+  `◀`/`▶`/`▲`/`▼` arrows. One tile is selected: it is drawn in reverse video, the rest of its
+  row on a pale yellow background and the rest of its column on light grey, with black text.
+  - **W/A/S/D** move the selected tile up/left/down/right, wrapping at the edges.
+  - **H/L** or **←/→** shift its row left/right; **K/J** or **↑/↓** shift its column up/down.
+    The selection stays where it is after a shift. Letters work in either case; Enter and
+    Space do nothing on the board.
+  - Row 1 / column 1 is selected at launch. A new game, a load or a size change keeps the
+    selection, clamped to a smaller board (row 5 / column 2 on 5x5 becomes row 3 / column 2 on
+    3x3); switching to mouse mode and back keeps it too.
+  - The board stays centred: `W/A/S/D select` sits to its left, `←/→ H/L row` /
+    `↑/↓ K/J column` to its right.
   - Once solved, the highlight disappears and the selection and shift keys go inert, matching
     mouse mode's dimmed arrows; the hints stay.
-- **Toolbar shortcuts**, shown in light blue on the toolbar buttons — including a second row
-  below `[ New ] [ Save ] [ Load ] [ Exit ]` for `[Labels F4] [Mouse F7]` (GH-30, GH-139), mirroring the mouse
-  mode's `[ Labels ] [ Keyboard ]` row — and always live regardless of the selection or solved state:
-  **F5** opens Save, **F6** opens Load, **F9** opens the New-game size picker (GH-44), **F4**
-  opens Tile labels (GH-139; on a Mac keyboard it may need fn+F4), **F7**
-  switches to mouse mode, **F8** is the Give Up row's button (`[Give Up F8]` or
-  `[Mordie's solution F8]`, GH-126), and **Escape** opens the Exit dialog. A controls-hint line
-  below the toolbar spells these out in plain text:
-  `F5/F6/F9 Save/Load/New · F4 Labels · F8 Give Up · F7 Mouse · Esc` (the board keys have their own side
-  hints, GH-101).
+- **Toolbar digits (GH-170)**, shown in light blue on the toolbar buttons
+  (`[New 1] [Save 2] [Load 3] [Exit Esc]`, then `[Labels 4] [Mouse 6]`, mirroring mouse mode's
+  `[ Labels ] [ Keyboard 6 ]` row) and always live regardless of the selection or solved state,
+  on the solution screen too: **1** opens the New-game size picker (GH-44), **2** Save, **3**
+  Load, **4** Tile labels (GH-139), **5** is the Give Up row's button (`[Give Up 5]` or
+  `[Mordie's solution 5]`, GH-126), **6** switches to mouse mode, and **Escape** opens the Exit
+  dialog. Inside a dialog the digits are the dialog's own (they type into the Save name field).
+  The function keys do nothing. A controls-hint line below the toolbar spells these out:
+  `1 New · 2 Save · 3 Load · 4 Labels · 5 Give Up · 6 Mouse · Esc Exit`.
 - **Dialog navigation:** Tab/Shift+Tab (or the arrow keys) cycle focus between a dialog's
   controls (text field, list rows, buttons); Enter activates whatever has focus; Escape cancels
   the dialog, same as clicking Cancel. Typing and Backspace work on the focused text field as in
@@ -427,10 +425,10 @@ Applies to terminal mouse mode, terminal keyboard mode and the web client.
 - **Give Up:** `[ Give Up ]` sits on its own row, directly above the toolbar. It is dimmed and
   inert until Mordie has found its solution (the `Found it!` moment, Feature 8), so on boards
   where Mordie never finishes (often 5x5) it stays dimmed. On 6x6, which Mordie sits out, it isn't
-  shown at all (GH-160). Keyboard mode: F8. Pressing it asks
+  shown at all (GH-160). Keyboard mode: 5. Pressing it asks
   `Give up and see Mordie's solution?` `[ Yes ] [ No ]`: No (or Escape) keeps playing; Yes
   discards the player's moves and opens the solution screen.
-- **After a win:** the row shows `[ Mordie's solution ]` instead (keyboard mode: F8) if Mordie
+- **After a win:** the row shows `[ Mordie's solution ]` instead (keyboard mode: 5) if Mordie
   had found its solution by then. It opens the solution screen with no confirmation. After the
   `You beat me!` ending the row is empty.
 - **Solution screen:**
@@ -441,15 +439,15 @@ Applies to terminal mouse mode, terminal keyboard mode and the web client.
     `<n>. Col <i> <↑|↓> ×<k>`, each the shortest way round its line (a tie goes → or ↓). Numbers
     are zero-padded to the total's width (`01.` to `12.`). It sits right of the board (the
     terminal, the wide web) or below it (the tall web), scrolls when it doesn't fit (the mouse
-    wheel in mouse mode and on the web; W/S or ↑/↓ in keyboard mode), and keeps the current step
+    wheel in mouse mode and on the web; ↑/↓, W/S or K/J in keyboard mode), and keeps the current step
     in view.
   - **Stepping, by hand:** `[ ◀ Prev ] [ Next ▶ ] [ ↻ Restart ]`. Next applies one shift of the
     current step, Prev undoes one, Restart goes back to the original arrangement. Prev and
     Restart are dimmed at the start, Next on the solved board. The step of the last shift made
     is highlighted: reverse video in the terminal, a coloured background on the web. On the web
     each shift slides one tile, as a player's shift does.
-  - **Keyboard mode:** ←/→ or A/D are Prev/Next, Space and Enter are Next too, R is Restart, and
-    W/S or ↑/↓ scroll the steps; side hints spell these out.
+  - **Keyboard mode:** ←/→, A/D or H/L are Prev/Next, Space and Enter are Next too, R is
+    Restart, and ↑/↓, W/S or K/J scroll the steps; side hints spell these out (GH-170).
   - **Toolbar:** New, Save, Load (and Exit in the terminal) work as before. New and Load leave
     the screen. Saving there saves the solution screen (Feature 4). Switching input mode in the
     terminal keeps the screen and the replay's place.
@@ -475,7 +473,7 @@ Applies to terminal mouse mode, terminal keyboard mode and the web client.
   row as a sample, the current scheme marked `●` and the rest `○`. Picking a row marks it; OK
   relabels the board at once, Cancel changes nothing. On the web the board already shows the
   marked scheme while the dialog is open, and Cancel puts the old labels back. It opens from `[ Labels ]` in both clients
-  (terminal keyboard mode: `[Labels F4]` and F4; details in Features 6, 7 and 9), during play,
+  (terminal keyboard mode: `[Labels 4]` and 4; details in Features 6, 7 and 9), during play,
   after a win and on the solution screen. Escape cancels it in both clients (on the web since GH-163).
 - **Which labels a game shows:** a loaded save's own labels (Feature 4) win for that game; then
   the remembered preference; then Numbers. A new game goes back to the preference.

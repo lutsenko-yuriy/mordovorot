@@ -337,23 +337,25 @@ src/main/kotlin/                # the terminal app (the root project)
         │                                     # touching the real terminal
         ├── TerminalEvent.kt / TerminalInputParser.kt # Byte-stream -> event decoding (SGR-1006
         │                                               # and legacy X10 mouse reports, keys,
-        │                                               # arrow/Tab/BackTab/function-key
-        │                                               # decoding for keyboard mode, incl.
-        │                                               # F7 for the mode-switch shortcut)
-        │                                               # (GH-18, GH-30), wheel notches (GH-126)
+        │                                               # arrow/Tab/BackTab decoding for
+        │                                               # keyboard mode (GH-18), wheel notches
+        │                                               # (GH-126); function keys are swallowed
+        │                                               # whole (GH-170)
         ├── BoardLayout.kt / HitTarget.kt   # Pure board geometry + click hit-testing, incl. the
         │                                     # toolbar's mode-switch buttons
         │                                     # (HitTarget.ToolbarMode) (GH-30), the reserved
         │                                     # Mordie rows under `Moves:` (GH-83), and the Give Up
         │                                     # row, the step list and Prev/Next/Restart (GH-126)
         ├── StepListWindow.kt # Which steps of the solution screen's list show: follows the
-        │                      # current step, scrolled by the wheel or W/S (GH-126)
+        │                      # current step, scrolled by the wheel, W/S or K/J (GH-126)
         ├── WordWrap.kt      # Shared word wrap for dialogs and the Mordie line (GH-83)
-        ├── LineSelection.kt # Pure keyboard line selection (GH-101, replaced GH-18's ArrowRing):
-        │                      # LineSelection(row, col, axis) - WASD select with wraparound,
-        │                      # HJKL/arrows shift the active line or switch axis, clampedTo(side).
+        ├── TileSelection.kt # Pure keyboard tile selection (GH-170, replaced GH-101's line
+        │                      # selection): TileSelection(row, col) - move with wraparound,
+        │                      # shiftTarget(direction) for its row/column, clampedTo(side).
         │                      # Plus KeyboardSelection, its session-lifetime holder (made by
         │                      # buildGameSession, so it survives mode switches)
+        ├── BoardKeys.kt     # Keyboard mode's key scheme (ADR-0003): the board keys (select /
+        │                      # shift), the solution screen's keys, and every hint text (GH-170)
         ├── Dialog.kt / DialogLayout.kt     # One model + one geometry class for all four
         │                                     # modal dialogs (Save/Load/Exit/Size (GH-44, a
         │                                     # buttons-only kind, so DialogLayout/DialogFocus
@@ -367,8 +369,9 @@ src/main/kotlin/                # the terminal app (the root project)
         │                      # then buttons) for Tab/arrow-key dialog navigation (GH-18)
         ├── ScreenState.kt / ScreenRenderer.kt # Pure ScreenState -> frame String rendering,
         │                                        # including the dialog overlay, keyboard mode's
-        │                                        # selected-line highlight and side hints
-        │                                        # (GH-101, arrows hidden), the controls hint, and
+        │                                        # selected tile with its row and column
+        │                                        # coloured, side hints (GH-170, arrows
+        │                                        # hidden), the controls hint, and
         │                                        # toolbar shortcut labels (GH-18)
         ├── TuiInput.kt      # Per-mode input strategy interface (prepare/onBoardEvent/
         │                      # onDialogEvent/decorateBoard/decorateDialog/onDialogOpened) +
@@ -380,22 +383,24 @@ src/main/kotlin/                # the terminal app (the root project)
         ├── MouseInput.kt    # TuiInput impl: today's click-driven behaviour, stateless. Used
         │                      # by both the default mouse mode and the explicit --mouse flag
         │                      # (GH-18)
-        ├── KeyboardInput.kt # TuiInput impl for --keyboard mode (GH-18): the WASD/HJKL key map
-        │                      # over the shared KeyboardSelection (GH-101) and DialogFocus state
+        ├── KeyboardInput.kt # TuiInput impl for --keyboard mode (GH-18): BoardKeys over the
+        │                      # shared KeyboardSelection, the toolbar digits (GH-170) and
+        │                      # DialogFocus state
         ├── dialog/          # One controller per dialog flow (GH-78), each over TuiScreen's
         │                      # runModal: SaveDialogController (toolbar Save + the exit flow's
         │                      # name prompt), ExitDialogController (owns the toolbar answer the
         │                      # viewModel's ConfirmSaveBeforeExit then consumes),
         │                      # LoadDialogController (toolbar Load + the Load-shaped dialog),
         │                      # RestoreDialogController (startup restore prompt over it),
-        │                      # SizeDialogController (toolbar New/F9 + ChooseBoardSize),
+        │                      # SizeDialogController (toolbar New/1 + ChooseBoardSize),
         │                      # UnsolvableDialogController (GH-74's repair/new game/exit),
-        │                      # GiveUpDialogController (Give Up/F8's confirmation, GH-126),
-        │                      # LabelsDialogController (Labels/F4's Tile labels dialog, GH-139)
+        │                      # GiveUpDialogController (Give Up/5's confirmation, GH-126),
+        │                      # LabelsDialogController (Labels/4's Tile labels dialog, GH-139)
         ├── UiRequestRouter.kt # Answers each UiRequest with the dialog that owns it - an
         │                      # exhaustive `when`, so a new request needs an answer to compile
         ├── ToolbarRouter.kt # Runs the activated toolbar button: Save/Load/Exit/New, Labels
-        │                      # (GH-139) and the mode switch (GH-78)
+        │                      # (GH-139) and the mode switch (GH-78); InputAction.Activate's
+        │                      # shortcut flag says a key, not a click, made it (GH-170)
         ├── TuiScreen.kt     # What the TUI draws (GH-78): the last-drawn BoardLayout/DialogLayout,
         │                      # the parked status message, wasSolved, repaint, and runModal -
         │                      # the one blocking dialog loop (inline, calls
@@ -668,7 +673,7 @@ for exactly the default" - warning and falling back to 4 on `null`; reported as
 `app_launched.board_size`); a startup prompt raised by
 `StartupRestoreUseCase.restoreOnStartup` as `UiRequest.ChooseBoardSize`, answered by
 the TUI's `Dialog.Kind.SIZE` picker; and the TUI's `[ New ]`
-toolbar button (`HitTarget.ToolbarNew`, F9 in keyboard mode), which opens the
+toolbar button (`HitTarget.ToolbarNew`, 1 in keyboard mode), which opens the
 same picker. All of them funnel into `ViewModel.newGame(size, trigger)` →
 `BoardImpl.newGame`, which is also where `new_game_size_selected` is tracked
 (only on success). Save/load auto-resizes instead of rejecting a size
@@ -737,7 +742,7 @@ a real terminal.
 
 `InputMode` no longer only decides where a session *begins* — `GameSession`
 lets it switch mid-session, driven by `ModeSwitcher`. `TuiView`'s toolbar
-`[ Keyboard ]` button (mouse mode) and F7 (keyboard mode), reached via
+`[ Keyboard 6 ]` / `[Mouse 6]` buttons and the 6 key in either mode (GH-170), reached via
 `HitTarget.ToolbarMode`/`ScreenState.modeButtons`, go through `ToolbarRouter` to `ModeSwitcherImpl`,
 which tracks `input_mode_switched` and throws `ModeSwitchRequestedException`.
 `GameSession` catches the exception, rebuilds the `View`/viewmodel/analytics
