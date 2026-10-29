@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.26.1] — 2026-10-29 (PR #188 merged)
+
+### Changed
+- [meta] (PR #188) GH-169: one keyboard scheme for the terminal and the web, recorded in ADR-0003; the glossary gains the keyboard-scheme terms; the GH-169 debrief note.
+
 ## [0.26.0] — 2026-10-29 (PR #185 merged)
 
 ### Changed
