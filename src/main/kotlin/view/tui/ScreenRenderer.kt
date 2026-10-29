@@ -3,14 +3,6 @@ package view.tui
 import viewmodel.GiveUpButton
 import viewmodel.SolutionState
 
-private const val DIM_ON = "\u001B[2m"
-private const val DIM_OFF = "\u001B[22m"
-
-/** SGR reverse-video on/off - GH-18's dialog focus highlight (a focused button) and GH-170's
- *  selected tile. */
-private const val REVERSE_ON = "\u001B[7m"
-private const val REVERSE_OFF = "\u001B[27m"
-
 /** The rest of the selected tile's row (pale yellow) and column (light grey), black text
  *  (GH-170): 256-colour backgrounds. Provisional until GH-170 WU4 picks the final palette. */
 private const val SELECTED_ROW_ON = "\u001B[30;48;5;230m"
@@ -25,11 +17,6 @@ private const val SHORTCUT_COLOR_OFF = "\u001B[39m"
 private const val MORDIE_COLOR_ON = "\u001B[35m"
 private const val MORDIE_COLOR_OFF = "\u001B[39m"
 private const val MORDIE_PREFIX = "Mordie:"
-
-/** Appended to the Save dialog's text field when keyboard focus (GH-18) is on it. Internal,
- *  not private - [DialogLayout.structuralContentWidth] reserves room for it unconditionally so
- *  the box doesn't resize (and truncate the caret) the moment focus lands on the field. */
-internal const val TEXT_FIELD_FOCUS_MARKER = " ◀"
 
 /** Clears the screen and homes the cursor - every frame is a full repaint. */
 private const val CLEAR_AND_HOME = "\u001B[2J\u001B[H"
@@ -66,7 +53,7 @@ class ScreenRenderer {
         // on GH-18 WU2 PR #31). Off-canvas is fine here, same as every other BoardLayout
         // coordinate on a too-small terminal (see that class's KDoc) - canvas.put no-ops.
         state.controlsHint?.let { canvas.put(0, layout.toolbarRow + 3, it) }
-        state.dialog?.let { drawDialog(canvas, it, terminalSize) }
+        state.dialog?.let { DialogRenderer.draw(canvas, it, terminalSize) }
 
         return CLEAR_AND_HOME + canvas.render()
     }
@@ -181,102 +168,4 @@ class ScreenRenderer {
             else canvas.put(button.x, button.y, button.text)
         }
     }
-
-    private fun drawDialog(canvas: Canvas, dialog: Dialog, terminalSize: TerminalSize) {
-        val layout = DialogLayout(dialog, terminalSize)
-        // DialogLayout.width can be capped below what the content actually needs (a terminal
-        // too narrow to fit it in full) - truncating here is what keeps that content from
-        // overwriting the box's own right border (audit round 2 on PR #24).
-        val maxLineWidth = (layout.width - 4).coerceAtLeast(1)
-        drawDialogBox(canvas, layout)
-        canvas.put(layout.left + 2, layout.titleRow(), truncate(dialog.title, maxLineWidth))
-        // The message is already word-wrapped to fit maxLineWidth (DialogLayout.messageLines) -
-        // drawn one line per row, not truncated, so a long multi-clause message (e.g. the exit
-        // flow's invalid-name explanation) doesn't lose its actionable half (audit round 3 on
-        // PR #24).
-        layout.messageLines.forEachIndexed { index, line -> canvas.put(layout.left + 2, layout.messageRowPosition(index), line) }
-        layout.textFieldRow?.let { row ->
-            val focusMarker = if (dialog.textFieldFocused) TEXT_FIELD_FOCUS_MARKER else ""
-            canvas.put(layout.left + 2, row, truncate("Name: ${dialog.textFieldValue}_$focusMarker", maxLineWidth))
-        }
-        for (index in dialog.listItems.indices) {
-            val selected = index == dialog.selectedIndex
-            val marker = when {
-                dialog.kind == Dialog.Kind.LABELS -> if (selected) "● " else "○ "
-                selected -> "> "
-                else -> "  "
-            }
-            val text = truncate("$marker${dialog.listItems[index]}", maxLineWidth)
-            if (index in dialog.disabledRows) canvas.putColored(layout.left + 2, layout.listRowPosition(index), text, DIM_ON, DIM_OFF)
-            else canvas.put(layout.left + 2, layout.listRowPosition(index), text)
-        }
-        val focusedTarget = dialog.focusedButtonId?.let { HitTarget.DialogButton(it) }
-        for (button in layout.buttons()) {
-            if (button.target == focusedTarget) canvas.putHighlighted(button.x, layout.buttonsRow(), button.text)
-            else canvas.put(button.x, layout.buttonsRow(), button.text)
-        }
-    }
-
-    private fun truncate(text: String, maxWidth: Int): String =
-        if (text.length <= maxWidth) text else text.take((maxWidth - 1).coerceAtLeast(0)) + "…"
-
-    private fun drawDialogBox(canvas: Canvas, layout: DialogLayout) {
-        val top = layout.titleRow() - 1
-        val bottom = layout.bottomRow() + 1
-        val left = layout.left - 1
-        val boxWidth = layout.width + 2
-        canvas.put(left, top, "┌" + "─".repeat(boxWidth - 2) + "┐")
-        for (row in (top + 1) until bottom) canvas.put(left, row, "│" + " ".repeat(boxWidth - 2) + "│")
-        canvas.put(left, bottom, "└" + "─".repeat(boxWidth - 2) + "┘")
-    }
-}
-
-/**
- * A fixed-size character grid, written to by column/row coordinate and rendered as one
- * newline-joined string. Writes fully or partially outside the canvas are clipped rather than
- * thrown - [BoardLayout] can hand back coordinates past a too-small terminal (see its own
- * KDoc), and drawing must degrade gracefully, not crash.
- *
- * Each cell holds one display-width unit: [put] writes plain text one character per column,
- * while [putGlyph] writes a whole escape-wrapped glyph (e.g. a colored arrow) into exactly one
- * cell, so the ANSI codes never shift surrounding columns. [putHighlighted]/[putColored] are the
- * multi-character equivalent (a focused dialog button, a keyboard-mode toolbar label): the SGR
- * codes fold into the first and last cell only, for the same reason.
- */
-private class Canvas(private val width: Int, private val height: Int) {
-    private val rows = Array(height) { arrayOfNulls<String>(width) }
-
-    fun put(x: Int, y: Int, text: String) {
-        if (y !in 0 until height) return
-        for (i in text.indices) {
-            val col = x + i
-            if (col in 0 until width) rows[y][col] = text[i].toString()
-        }
-    }
-
-    fun putGlyph(x: Int, y: Int, content: String) {
-        if (y in 0 until height && x in 0 until width) rows[y][x] = content
-    }
-
-    fun putHighlighted(x: Int, y: Int, text: String) = putStyled(x, y, text, REVERSE_ON, REVERSE_OFF)
-
-    fun putColored(x: Int, y: Int, text: String, onCode: String, offCode: String) = putStyled(x, y, text, onCode, offCode)
-
-    private fun putStyled(x: Int, y: Int, text: String, onCode: String, offCode: String) {
-        if (text.isEmpty() || y !in 0 until height) return
-        // on/offCode go on the first/last *visible* index, not text's own - otherwise a span
-        // clipped by the canvas edge never writes its close code, leaking the style downstream.
-        val visible = text.indices.filter { x + it in 0 until width }
-        if (visible.isEmpty()) return
-        val first = visible.first()
-        val last = visible.last()
-        for (i in visible) {
-            val col = x + i
-            val on = if (i == first) onCode else ""
-            val off = if (i == last) offCode else ""
-            rows[y][col] = "$on${text[i]}$off"
-        }
-    }
-
-    fun render(): String = rows.joinToString("\r\n") { row -> row.joinToString("") { it ?: " " } }
 }
