@@ -26,7 +26,8 @@ import view.tui.TerminalSize
 /** GH-101: keyboard mode's line selection - WASD selects a row/column (wrapping, switching
  *  back to the remembered line), HJKL/arrows shift it, no arrows drawn, the active line's
  *  tiles highlighted. Real BoardImpl + ViewModelImpl driven through FakeTerminal in keyboard
- *  mode. Mouse mode is unchanged (its own tests run unmodified). */
+ *  mode. Mouse mode is unchanged (its own tests run unmodified).
+ *  Legacy: GH-170 WU1 deletes it along with line selection ([KeyboardTileSelectionScenarioTest]). */
 class KeyboardLineSelectionScenarioTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
