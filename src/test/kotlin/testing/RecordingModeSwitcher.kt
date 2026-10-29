@@ -6,7 +6,7 @@ import viewmodel.ModeSwitcher
 /** A [ModeSwitcher] test double that records every `switchTo` call instead of acting on it -
  *  never throws, so callers can be driven and inspected without unwinding via
  *  `ModeSwitchRequestedException`. */
-class RecordingModeSwitcher : ModeSwitcher {
+class RecordingModeSwitcher(override val currentMode: InputMode = InputMode.MOUSE) : ModeSwitcher {
 
     data class Call(val target: InputMode, val trigger: String)
 

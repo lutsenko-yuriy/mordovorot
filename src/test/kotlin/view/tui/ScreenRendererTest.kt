@@ -1,6 +1,5 @@
 package view.tui
 
-import InputMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -89,13 +88,12 @@ class ScreenRendererTest {
     }
 
     @Test
-    fun `mode buttons render in both label styles`() {
+    fun `Controls renders in both label styles`() {
         val plain = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false)
-            .copy(modeButtons = listOf(InputMode.KEYBOARD))
-        val shortcuts = plain.copy(toolbarShortcuts = true, modeButtons = listOf(InputMode.MOUSE))
+        val shortcuts = plain.copy(toolbarShortcuts = true)
 
-        assertTrue(renderer.render(plain, terminalSize).contains("[ Keyboard 6 ]"))
-        assertTrue(renderer.render(shortcuts, terminalSize).contains("[Mouse 6]"))
+        assertTrue(renderer.render(plain, terminalSize).contains("[ Controls 6 ]"))
+        assertTrue(renderer.render(shortcuts, terminalSize).contains("[Controls 6]"))
     }
 
     @Test
@@ -223,9 +221,9 @@ class ScreenRendererTest {
         assertTrue(shortcutFrame.contains("[Exit Esc]"))
         assertTrue(shortcutFrame.contains("[Labels 4]"))
         // One matched on/off pair per button - New/Save/Load/Exit (GH-44 WU3 added New) and the
-        // second row's Labels (GH-139).
-        assertEquals(5,Regex(Regex.escape("[96m")).findAll(shortcutFrame).count())
-        assertEquals(5, Regex(Regex.escape("[39m")).findAll(shortcutFrame).count())
+        // second row's Labels (GH-139) and Controls (GH-170).
+        assertEquals(6, Regex(Regex.escape("[96m")).findAll(shortcutFrame).count())
+        assertEquals(6, Regex(Regex.escape("[39m")).findAll(shortcutFrame).count())
     }
 
     @Test

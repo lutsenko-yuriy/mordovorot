@@ -1,6 +1,5 @@
 package view.tui
 
-import InputMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -17,7 +16,7 @@ import viewmodel.TileLabels
 class TuiViewLabelsDialogTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
-    private val boardLayout = BoardLayout(terminalSize, 4, modeButtons = listOf(InputMode.KEYBOARD))
+    private val boardLayout = BoardLayout(terminalSize, 4)
     private val dialogLayout = DialogLayout(
         Dialog(
             Dialog.Kind.LABELS, "Tile labels", listItems = List(6) { "" },
@@ -81,7 +80,7 @@ class TuiViewLabelsDialogTest {
 
     @Test
     fun `on 6x6 the Letters row reads up to 5x5, and clicking it marks nothing (GH-160)`() {
-        val open6 = BoardLayout(terminalSize, 6, modeButtons = listOf(InputMode.KEYBOARD)).labelsButtonPosition()
+        val open6 = BoardLayout(terminalSize, 6).labelsButtonPosition()
             .let { (x, y) -> TerminalEvent.MouseClick(x, y) }
         val run = runBlocking {
             val terminal = FakeTerminal(mutableListOf(open6, row(4), clickButton("ok")), terminalSize)

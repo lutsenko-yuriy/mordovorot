@@ -1,6 +1,5 @@
 package view.tui
 
-import InputMode
 import viewmodel.GiveUpButton
 import viewmodel.MordieText
 import viewmodel.SolutionState
@@ -20,7 +19,7 @@ internal const val CELL_WIDTH = 4
  * a blank row, the up-arrows row, the grid (box-drawing
  * borders around [squareSide] x [squareSide] cells, with left/right arrows flanking each row),
  * the down-arrows row, the Give Up row (GH-126, [giveUpRow]), the toolbar row, and (GH-30) the mode row directly below it
- * for the mode-switch button - kept on their own row, not appended to the toolbar
+ * for Labels and Controls (GH-139, GH-170) - kept on their own row, not appended to the toolbar
  * row, so a narrow terminal that fit the original three-button toolbar still fits it (audit
  * finding on PR #38: a single five-button row overflowed off-screen below 51 columns). Centered
  * in [terminalSize]; a terminal too small to fit it still produces coordinates (some off-screen)
@@ -35,8 +34,6 @@ class BoardLayout(
      *  sites from the same [ScreenState.toolbarShortcuts] flag, or the drawn and hit-tested
      *  toolbars disagree (this class's own KDoc invariant). */
     private val toolbarShortcuts: Boolean = false,
-    /** The other input modes offered on the second row, after Labels (GH-30, GH-139, [modeRow]). */
-    private val modeButtons: List<InputMode> = emptyList(),
     /** The Give Up row's button (GH-126): drawn dimmed and inert when [GiveUpButton.DIMMED]. */
     private val giveUp: GiveUpButton = GiveUpButton.HIDDEN,
     /** The solution screen (GH-126), `null` off it. */
@@ -48,8 +45,12 @@ class BoardLayout(
     private val fullWidth = LEFT_GUTTER + innerCols + RIGHT_GUTTER
 
     private val primaryEntries = primaryButtons(toolbarShortcuts)
-    private val secondRowEntries = listOf(HitTarget.ToolbarLabels to if (toolbarShortcuts) "[Labels 4]" else "[ Labels ]") +
-        modeButtons.map { HitTarget.ToolbarMode(it) to modeButtonLabel(it, toolbarShortcuts) }
+    /** In mouse mode only Controls shows its key, the one key that works there (GH-170). */
+    private val secondRowEntries = if (toolbarShortcuts) {
+        listOf(HitTarget.ToolbarLabels to "[Labels 4]", HitTarget.ToolbarControls to "[Controls 6]")
+    } else {
+        listOf(HitTarget.ToolbarLabels to "[ Labels ]", HitTarget.ToolbarControls to "[ Controls 6 ]")
+    }
 
     /** On a board Mordie sits out (GH-160), its one line: it runs to its own width, so it takes a
      *  single row and 6x6 fits 24 rows. */
@@ -98,7 +99,7 @@ class BoardLayout(
     internal val stepListTop: Int get() = gridTop
     internal val stepRows: Int get() = innerRows
 
-    /** The second row, directly below [toolbarRow]: Labels (GH-139), then the mode switch (GH-30). */
+    /** The second row, directly below [toolbarRow]: Labels (GH-139), then Controls (GH-170). */
     internal val modeRow = toolbarRow + 1
 
     /** The grid's top-left corner and size, for [ScreenRenderer] to draw the box-drawing frame
@@ -126,6 +127,7 @@ class BoardLayout(
     fun exitButtonPosition(): Pair<Int, Int> = buttonPosition(HitTarget.ToolbarExit)
     fun newButtonPosition(): Pair<Int, Int> = buttonPosition(HitTarget.ToolbarNew)
     fun labelsButtonPosition(): Pair<Int, Int> = buttonPosition(HitTarget.ToolbarLabels)
+    fun controlsButtonPosition(): Pair<Int, Int> = buttonPosition(HitTarget.ToolbarControls)
     fun giveUpButtonPosition(): Pair<Int, Int>? = giveUpButton()?.let { it.x to it.y }
 
     /** The Give Up row's button, `null` when [GiveUpButton.HIDDEN]. Its target is
@@ -157,7 +159,7 @@ class BoardLayout(
     }
 
     /** Looks a button up by target rather than a fixed index or row - defensive against either
-     *  moving again (GH-30's mode buttons already moved once, off the toolbar row entirely). */
+     *  moving again (GH-30's mode buttons moved once, off the toolbar row entirely). */
     private fun buttonPosition(target: HitTarget): Pair<Int, Int> =
         toolbarButtons().first { it.target == target }.let { it.range.first to it.y }
 
@@ -180,7 +182,7 @@ class BoardLayout(
     private fun contentRowY(row: Int) = gridTop + 1 + 2 * row
     private fun cellCenterX(col: Int) = gridLeft + 1 + col * (CELL_WIDTH + 1) + CELL_WIDTH / 2
 
-    /** [toolbarRow]'s New/Save/Load/Exit buttons plus [modeRow]'s Labels and mode-switch buttons, each row
+    /** [toolbarRow]'s New/Save/Load/Exit buttons plus [modeRow]'s Labels and Controls buttons, each row
      *  independently centered - shared by [hitTest] (via [ToolbarButton.range]/[ToolbarButton.y])
      *  and [ScreenRenderer] (via [ToolbarButton.text]). Internal, not private, so [ScreenRenderer]
      *  can draw exactly what's clickable. */
@@ -213,13 +215,6 @@ class BoardLayout(
             x += text.length + 1
             button
         }
-    }
-
-    /** `[ Keyboard 6 ]` (mouse mode) vs. `[Mouse 6]` (keyboard mode): 6 works in both (GH-170),
-     *  until WU2's Controls dialog replaces the switch. */
-    private fun modeButtonLabel(mode: InputMode, shortcut: Boolean): String {
-        val name = mode.name.lowercase().replaceFirstChar { it.uppercase() }
-        return if (shortcut) "[$name 6]" else "[ $name 6 ]"
     }
 
     internal data class ToolbarButton(val target: HitTarget, val text: String, val x: Int, val y: Int, val range: IntRange)

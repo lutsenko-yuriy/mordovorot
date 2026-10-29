@@ -1,6 +1,5 @@
 package view.tui
 
-import InputMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -20,7 +19,7 @@ class TuiViewGiveUpTest {
     private val analytics = RecordingAnalyticsService()
 
     private fun layout(giveUp: GiveUpButton, solution: SolutionState? = null) =
-        BoardLayout(terminalSize, 4, arrowsEnabled = solution == null, modeButtons = listOf(InputMode.KEYBOARD), giveUp = giveUp, solution = solution)
+        BoardLayout(terminalSize, 4, arrowsEnabled = solution == null, giveUp = giveUp, solution = solution)
 
     private val confirm = Dialog(
         Dialog.Kind.GIVE_UP, "Give up and see Mordie's solution?",

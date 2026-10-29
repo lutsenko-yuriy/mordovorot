@@ -1,12 +1,12 @@
 package view.tui
 
+import view.tui.dialog.ControlsDialogController
 import view.tui.dialog.ExitDialogController
 import view.tui.dialog.GiveUpDialogController
 import view.tui.dialog.LabelsDialogController
 import view.tui.dialog.LoadDialogController
 import view.tui.dialog.SaveDialogController
 import view.tui.dialog.SizeDialogController
-import viewmodel.ModeSwitcher
 import viewmodel.ViewModel
 
 /** Runs the toolbar button (or its keyboard shortcut) the player activated (GH-78), the Give Up
@@ -18,8 +18,8 @@ internal class ToolbarRouter(
     private val sizeDialog: SizeDialogController,
     private val giveUpDialog: GiveUpDialogController,
     private val labelsDialog: LabelsDialogController,
+    private val controlsDialog: ControlsDialogController,
     private val viewModel: ViewModel,
-    private val modeSwitcher: ModeSwitcher,
 ) {
 
     /** [shortcut]: a key, not a click (GH-170). Any other target is ignored. */
@@ -36,7 +36,7 @@ internal class ToolbarRouter(
             HitTarget.ReplayPrevious -> viewModel.replayPrevious()
             HitTarget.ReplayNext -> viewModel.replayNext()
             HitTarget.ReplayRestart -> viewModel.replayRestart()
-            is HitTarget.ToolbarMode -> modeSwitcher.switchTo(target.mode, trigger = openedFrom)
+            HitTarget.ToolbarControls -> controlsDialog.onToolbar(openedFrom)
             else -> {}
         }
     }

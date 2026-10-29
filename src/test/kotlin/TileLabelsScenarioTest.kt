@@ -15,6 +15,7 @@ import storage.FileSaveRepository
 import testing.FakeMordieSearchFactory
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
+import testing.switchModeKeys
 import testing.testGameSession
 import view.tui.BoardLayout
 import view.tui.Dialog
@@ -32,8 +33,8 @@ import viewmodel.GiveUpButton
 class TileLabelsScenarioTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
-    private val mouseLayout = BoardLayout(terminalSize, 4, modeButtons = listOf(InputMode.KEYBOARD))
-    private val keyboardLayout = BoardLayout(terminalSize, 4, toolbarShortcuts = true, modeButtons = listOf(InputMode.MOUSE))
+    private val mouseLayout = BoardLayout(terminalSize, 4)
+    private val keyboardLayout = BoardLayout(terminalSize, 4, toolbarShortcuts = true)
 
     /** 4x4 with tile 6 at row 2, column 1 (index 9): `7` in Numbers, `23` in Pairs, `G` in Letters. */
     private val scrambled = IntArray(16) { 15 - it }
@@ -198,7 +199,7 @@ class TileLabelsScenarioTest {
             snaps.clear()
             val run = session(listOf(snap(), open, snap()), mode)
 
-            val expectedRow = if (mode == InputMode.MOUSE) "[ Labels ] [ Keyboard 6 ]" else "[Labels 4] [Mouse 6]"
+            val expectedRow = if (mode == InputMode.MOUSE) "[ Labels ] [ Controls 6 ]" else "[Labels 4] [Controls 6]"
             assertEquals(expectedRow, secondRowShown(snaps[0], layout))
             assertTrue(dialogShown(snaps[1], marked = numbers), "$mode: the dialog, Numbers marked")
             val opened = run.event("screen_labels_dialog")
@@ -245,7 +246,7 @@ class TileLabelsScenarioTest {
         val dir = dir()
         // Keyboard mode's New game dialog: focus starts on 3x3, Tab to 4x4.
         session(
-            choose(letters) + click(mouseLayout.toolbarButtons().first { it.target is HitTarget.ToolbarMode }.let { it.x to it.y }) + snap() +
+            choose(letters) + switchModeKeys.map(::key) + snap() +
                 key(TerminalEvent.KeyPress('1')) + key(TerminalEvent.Tab) + key(TerminalEvent.Enter) + snap(),
             dir = dir,
         )
@@ -312,7 +313,7 @@ class TileLabelsScenarioTest {
         val original = intArrayOf(9, 2, 3, 0, 4, 13, 6, 7, 8, 1, 10, 11, 12, 5, 14, 15)
         val path = listOf(SolutionMove(isRow = true, index = 0, amount = 1), SolutionMove(isRow = false, index = 1, amount = 2))
         val found = Act { factory.latest.progress = SearchProgress(path.size, found = true, elapsedMs = 0, solution = path) }
-        val giveUp = BoardLayout(terminalSize, 4, modeButtons = listOf(InputMode.KEYBOARD), giveUp = GiveUpButton.GIVE_UP).giveUpButtonPosition()
+        val giveUp = BoardLayout(terminalSize, 4, giveUp = GiveUpButton.GIVE_UP).giveUpButtonPosition()
         val confirm = DialogLayout(
             Dialog(Dialog.Kind.GIVE_UP, "Give up and see Mordie's solution?", buttons = listOf(DialogButtonSpec("yes", "Yes"), DialogButtonSpec("cancel", "No"))),
             terminalSize,

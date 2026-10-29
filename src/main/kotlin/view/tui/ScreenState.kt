@@ -1,6 +1,5 @@
 package view.tui
 
-import InputMode
 import viewmodel.GiveUpButton
 import viewmodel.SolutionState
 import viewmodel.TileLabels
@@ -46,11 +45,6 @@ data class ScreenState(
      *  `[ Save ]` (mouse mode) - see [BoardLayout.toolbarButtons]'s KDoc for why this must be
      *  carried on [ScreenState] rather than decided independently by each construction site. */
     val toolbarShortcuts: Boolean = false,
-    /** The other input modes offered on the toolbar (GH-30) - never the mode the view is
-     *  already in. Set by [TuiInput.decorateBoard]
-     *  ([MouseInput]'s WU3, `KeyboardInput`'s WU4), never by [forBoard] itself, same as
-     *  [selection]/[controlsHint]. */
-    val modeButtons: List<InputMode> = emptyList(),
     /** Moves made this game (GH-62), drawn under the title. */
     val moveCount: Int = 0,
     /** What Mordie says under [moveCount] (GH-83), without the `Mordie:` prefix; `null` for none. */
@@ -95,5 +89,5 @@ data class ScreenState(
 
     /** The geometry this state is drawn and hit-tested against. */
     fun layout(terminalSize: TerminalSize): BoardLayout =
-        BoardLayout(terminalSize, squareSide, arrowsEnabled, toolbarShortcuts, modeButtons, giveUpButton, solution)
+        BoardLayout(terminalSize, squareSide, arrowsEnabled, toolbarShortcuts, giveUpButton, solution)
 }

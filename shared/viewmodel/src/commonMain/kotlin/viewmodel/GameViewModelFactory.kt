@@ -4,6 +4,7 @@ import analytics.AnalyticsService
 import board_model.BoardModel
 import mordie.Mordie
 import storage.SaveRepository
+import viewmodel.usecase.ControlsDialogUseCase
 import viewmodel.usecase.LoadGameUseCase
 import viewmodel.usecase.NewGameUseCase
 import viewmodel.usecase.ResolveUnsolvableSaveUseCase
@@ -50,6 +51,6 @@ fun buildGameViewModel(
     )
     return GameViewModelImpl(
         board, analytics, mordieHooks, ui, catalog, newGame, saveGame, loadGame, startupRestore, solution, tileLabelsUseCase,
-        currentSaveName, gameShiftSources, unsavedProgress, tileLabels, unsolvableExit,
+        ControlsDialogUseCase(board, analytics, solution), currentSaveName, gameShiftSources, unsavedProgress, tileLabels, unsolvableExit,
     )
 }

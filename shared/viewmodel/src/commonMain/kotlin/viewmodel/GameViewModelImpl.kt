@@ -4,6 +4,7 @@ import analytics.AnalyticsService
 import board_model.BoardModel
 import kotlin.math.abs
 import kotlinx.coroutines.channels.ReceiveChannel
+import viewmodel.usecase.ControlsDialogUseCase
 import viewmodel.usecase.LoadGameUseCase
 import viewmodel.usecase.LoadResult
 import viewmodel.usecase.NewGameUseCase
@@ -29,6 +30,7 @@ class GameViewModelImpl internal constructor(
     private val startupRestoreUseCase: StartupRestoreUseCase,
     private val solutionUseCase: SolutionUseCase,
     private val tileLabelsUseCase: TileLabelsUseCase,
+    private val controlsDialogUseCase: ControlsDialogUseCase,
     private val currentSaveName: CurrentSaveName,
     private val gameShiftSources: GameShiftSources,
     private val unsavedProgress: UnsavedProgress,
@@ -135,4 +137,6 @@ class GameViewModelImpl internal constructor(
     override fun tileLabelsDialogOpened(openedFrom: String) = tileLabelsUseCase.dialogOpened(openedFrom)
 
     override fun changeTileLabels(labels: TileLabels) = tileLabelsUseCase.change(labels)
+
+    override fun controlsDialogOpened(openedFrom: String) = controlsDialogUseCase.dialogOpened(openedFrom)
 }

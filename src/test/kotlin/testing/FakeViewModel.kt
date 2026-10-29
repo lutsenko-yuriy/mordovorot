@@ -185,4 +185,8 @@ class FakeViewModel : ViewModel {
     override fun changeTileLabels(labels: TileLabels) {
         calls.add("changeTileLabels($labels)")
     }
+
+    override fun controlsDialogOpened(openedFrom: String) {
+        calls.add("controlsDialogOpened($openedFrom)")
+    }
 }

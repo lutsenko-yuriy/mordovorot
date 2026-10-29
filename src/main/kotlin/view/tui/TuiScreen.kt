@@ -89,8 +89,8 @@ internal class TuiScreen(
         // Both the state and dialog run through the active input's decoration (selection, focus
         // highlight, toolbar shortcut labels) before layout is built from them - draw and
         // hit-test must always agree on the same geometry, same invariant every layout class in
-        // this package already keeps. MouseInput's decoration is the identity, so this is a
-        // no-op for mouse mode (WU3's "no behaviour change" requirement).
+        // this package already keeps. MouseInput's decoration is the identity outside the
+        // Controls dialog (GH-170).
         val decoratedDialog = dialog?.let { input.decorateDialog(it) }
         val solution = viewModel.solution()
         val base = input.decorateBoard(
