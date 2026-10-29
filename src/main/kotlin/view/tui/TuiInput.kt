@@ -52,7 +52,7 @@ interface TuiInput {
     /** Called once, right when a new modal dialog loop begins, so a stateful mode (GH-18's
      *  `KeyboardInput`) can reset its per-session state (e.g. dialog focus) at a precise
      *  boundary - including when one dialog opens another with no board repaint in between (the
-     *  exit flow's Yes -> Save handoff). Default no-op - [MouseInput] has no per-session state. */
+     *  exit flow's Yes -> Save handoff). Default no-op; [MouseInput] resets its Controls dialog keys (GH-170). */
     fun onDialogOpened() {}
 
     /** Decorates a freshly-built board [ScreenState] with this mode's presentation (selection,
@@ -61,6 +61,6 @@ interface TuiInput {
     fun decorateBoard(state: ScreenState): ScreenState
 
     /** Decorates a freshly-built [Dialog] with this mode's focus highlight before it's rendered
-     *  and laid out. Identity for [MouseInput]. */
+     *  and laid out. Identity for [MouseInput] outside the Controls dialog (GH-170). */
     fun decorateDialog(dialog: Dialog): Dialog
 }
