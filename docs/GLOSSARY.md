@@ -9,6 +9,7 @@ When a new term is introduced during a `brief` session, add it here before creat
 |---|---|---|
 | Board | The square side × square side grid of tiles holding the puzzle state | `BoardModel`, `BoardImpl` |
 | Board size | The valid range of square sides a game can use: 3–6, default 4 (6x6 since GH-160; Mordie sits 6x6 out until GH-116). Chosen via `--size=N`, the startup size prompt, or `[ New ]` | `BoardSize` |
+| Controls dialog | The dialog `[ Controls ]` / 6 opens in both clients and modes: picks the input mode (Mouse or Keyboard) and the keyboard layout, and lists the keys of the marked layout. Replaces the mode-switch button (GH-189; built in GH-170, GH-171) | — |
 | Current save name | The name of the save the current game was most recently loaded from or saved to; prefills the Save dialog. Cleared by a new game, not kept across launches (GH-99) | `CurrentSaveName`, `ViewModel.currentSaveName()` |
 | Dialog | A modal box in the TUI (Save, Load, Exit, New-game size picker, Startup restore) that takes over input until confirmed or cancelled | `Dialog`, `DialogLayout` |
 | Drag | Web client only: pressing on a tile and dragging slides its row (horizontal drag) or column (vertical drag) under the pointer, snapping to whole tiles on release. Each tile of distance is one shift; the whole drag is one move (GH-110) | — |
@@ -16,6 +17,7 @@ When a new term is introduced during a `brief` session, add it here before creat
 | Give up | Ending a game by accepting Mordie's solution: `[ Give Up ]` (own row above the toolbar, enabled once Mordie has found its solution) asks for confirmation, then opens the solution screen. The player's moves are discarded (GH-126) | — |
 | Input mode | Which front-end is driving the game: mouse TUI or keyboard TUI. Switchable mid-session without losing the game | `InputMode` |
 | Move | A run of consecutive shifts on the same row or column, in any direction; shifting a different line starts a new move, and so does the first shift after a load. Counted and shown as `Moves: N` | `BoardModel.moveCount` / `ViewModel.moveCount()` |
+| Keyboard layout | Which hand does which job in keyboard mode: Right-handed (default; WASD select, HJKL/arrows shift) or Left-handed (HJKL/arrows select, WASD shift). Chosen in the Controls dialog, remembered as a preference (GH-189) | — |
 | Line selection | Keyboard mode's selected row and selected column, one of them active; WASD selects, HJKL/arrows shift the active line. Its tiles are highlighted (GH-101); to be replaced by the selected tile (GH-169) | — |
 | Mordie | The computer opponent: searches in the background for the shortest solution of the game's original arrangement (in moves), reports its progress under `Moves:`, and its result against the player's move count becomes the solved title | `Mordie`, `MordieHooks`, `MordieText` |
 | Public site | The web client published on GitHub Pages at `https://lutsenko-yuriy.github.io/mordovorot/`, updated on every merge to `master` whose build and tests pass (GH-111) | — |

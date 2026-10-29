@@ -13,6 +13,7 @@ The terminal's keyboard mode (GH-18, GH-101) selected a row or a column, one of 
 - **Web:** a fifth toolbar button `[ Keyboard 6 ]` / `[ Mouse 6 ]` after `[ Labels ]`, hidden where the main input is touch; the mode is remembered between visits.
 - **Solution screen:** as before, with H/L also Prev/Next and K/J also scrolling: HJKL are the arrows' twins everywhere.
 - Dialogs keep their own keys while open.
+- **Amendment (2026-10-29, GH-189):** 6 opens a **Controls** dialog in both modes instead of switching mode: `Play with ○ Mouse ○ Keyboard`, `Keyboard keys ○ Right-handed ○ Left-handed`, and the key list for the marked layout. Its button is `[ Controls ]` (`[ Controls 6 ]` in keyboard mode) and replaces `[ Keyboard 6 ]` / `[ Mouse 6 ]` and the terminal's `[ Keyboard ]`. Switching mode takes three steps (6, pick, OK) in exchange for one button that also shows the controls. The **left-handed** layout mirrors the hands: H/J/K/L or the arrows move the selected tile, A/D shift its row, W/S its column; digits and the solution screen are unchanged. The layout is remembered in both clients.
 
 ## Alternatives considered
 | Option | Why not chosen |
@@ -24,9 +25,12 @@ The terminal's keyboard mode (GH-18, GH-101) selected a row or a column, one of 
 | Digits always on in mouse mode too | No way to turn single-key shortcuts off (WCAG 2.1.4) |
 | Web without a mode (keys whenever the board has focus) | User preferred matching the terminal's mode |
 | Enter web keyboard mode by pressing 6 twice, no button | Hard to discover; a visible button shows the way in |
+| Left-handed: numpad bindings | Most laptops have no numpad (GH-189) |
+| Left-handed: full key remapping | A settings dialog, clash detection and reset for one need a mirrored preset meets (GH-189) |
+| Mode switch cycling Mouse → Keyboard → Keyboard (left-handed) | 6 would stop being a plain toggle; superseded by the Controls dialog anyway (GH-189) |
 
 ## Related ticket
-GH-169 (built in GH-170 terminal, GH-171 web)
+GH-169, amended by GH-189 (built in GH-170 terminal, GH-171 web)
 
 ## Date
 2026-10-29
