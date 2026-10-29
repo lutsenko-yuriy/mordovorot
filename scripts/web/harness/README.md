@@ -19,7 +19,7 @@ has at most `rows` rows, the footer one line and the steps don't scroll sideways
 buttons don't count, since they scroll inside it; the dialog box itself does.
 
 With `fit=scroll` (GH-168), for larger text, the page may be taller than the window and the toolbar
-and footer may wrap: `OK` then means nothing is past a side or the top, the page doesn't scroll
+and footer may wrap: `OK` then means nothing is past a side or the page's top (a page scrolled down isn't), the page doesn't scroll
 sideways, every tile label fits its tile (`labels out N` counts those that don't) and tiles are at
 least 16px.
 

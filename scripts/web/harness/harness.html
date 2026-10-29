@@ -42,8 +42,8 @@ function clickText(doc, text) {
 /** One line: OK when the page is the window's size, nothing visible is past an edge, the toolbar has at
  *  most `rows` rows, the footer one line and the steps don't scroll sideways; then the sizes and positions
  *  to compare across runs. With fit=scroll (GH-168) the page may be taller than the window and rows may
- *  wrap, but nothing may be past a side or the top, every tile label must fit its tile, and tiles stay
- *  at least 16px. */
+ *  wrap, but nothing may be past a side or the page's top, every tile label must fit its tile, and
+ *  tiles stay at least 16px. */
 function measure(win, label) {
     const doc = win.document;
     const de = doc.documentElement;
@@ -52,12 +52,14 @@ function measure(win, label) {
     const tiles = rect(".tiles"), tile = rect(".tile"), mordie = rect(".mordie"), panel = rect(".panel");
     // Past any of the window's four edges (GH-148). The arrows hidden on touch screens are 1px boxes
     // wherever they land, and a dialog's buttons scroll inside it, so neither counts; the dialog does.
+    // With fit=scroll the top is the page's, not the window's: a page scrolled down isn't past it.
+    const scrolled = fit === "scroll" ? win.scrollY : 0;
     let overflow = 0, culprit = "";
     for (const el of doc.querySelectorAll(".app button:not(.arrow):not(.dialog *), .footer, .status, .tiles, .steps, .dialog")) {
         const r = el.getBoundingClientRect();
         if (r.width === 0) continue;
         const bottom = fit === "scroll" ? -Infinity : r.bottom - win.innerHeight;
-        const past = Math.max(bottom, r.right - win.innerWidth, -r.left, -r.top);
+        const past = Math.max(bottom, r.right - de.clientWidth, -r.left, -(r.top + scrolled));
         if (past > overflow) { overflow = past; culprit = el.className || el.textContent; }
     }
     const steps = doc.querySelector(".steps");
@@ -69,13 +71,14 @@ function measure(win, label) {
         ? labelsOut === 0 && tile?.width >= 16
         : de.scrollHeight <= win.innerHeight && toolbar && button
             && toolbar.height < button.height * (toolbarRows + 0.5) && footer && footer.height < 30;
-    const ok = fits && de.scrollWidth <= win.innerWidth && overflow <= 0.5 && sideways <= 0;
+    // clientWidth, not innerWidth: a classic scrollbar, once the page scrolls, takes from the window (GH-168).
+    const ok = fits && de.scrollWidth <= de.clientWidth && overflow <= 0.5 && sideways <= 0;
     return `${ok ? "OK  " : "BAD "}${label} page ${de.scrollWidth}x${de.scrollHeight} win ${win.innerWidth}x${win.innerHeight} `
         + `toolbar h${Math.round(toolbar?.height)} w${Math.round(toolbar?.width)}@${round(toolbar)} `
         + `footer h${Math.round(footer?.height)} tiles@${round(tiles)} tile ${Math.round(tile?.width)} `
         + `mordie h${Math.round(mordie?.height)}${panel?.height ? ` panel h${Math.round(panel.height)}` : ""}`
         + `${steps ? ` steps sideways ${sideways}` : ""}${dialog ? ` dialog h${dialog.clientHeight}/${dialog.scrollHeight}` : ""} `
-        + `${fit === "scroll" ? `labels out ${labelsOut} ` : ""}overflow ${Math.round(overflow)} ${culprit}`;
+        + `${fit === "scroll" ? `labels out ${labelsOut} ${scrolled ? `scrolled ${Math.round(scrolled)} ` : ""}` : ""}overflow ${Math.round(overflow)} ${culprit}`;
 }
 
 /** Every element's computed styles, once the animations have finished: a dialog's fade caught partway
