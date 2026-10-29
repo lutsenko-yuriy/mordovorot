@@ -126,4 +126,8 @@ interface GameViewModel {
     /** The Tile labels dialog's OK: relabels and remembers [labels] as the preference, tracking
      *  `tile_labels_changed`. Does nothing when [labels] is already shown. */
     fun changeTileLabels(labels: TileLabels)
+
+    /** Tracks `screen_controls_dialog` as the Controls dialog opens (GH-170); [openedFrom] is
+     *  `toolbar` or `shortcut`. */
+    fun controlsDialogOpened(openedFrom: String)
 }

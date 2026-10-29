@@ -16,7 +16,7 @@ internal class TileLabelsUseCase(
     /** [openedFrom] is `toolbar`, `shortcut` or `letters_save` (GH-160). */
     fun dialogOpened(openedFrom: String) = analytics.track(
         "screen_labels_dialog",
-        mapOf("opened_from" to openedFrom, "screen" to screen(), "current_labels" to labels.current.wireName),
+        mapOf("opened_from" to openedFrom, "screen" to screenName(board, solution), "current_labels" to labels.current.wireName),
     )
 
     /** Tracks `tile_labels_changed` only when [to] isn't already shown. */
@@ -28,14 +28,8 @@ internal class TileLabelsUseCase(
             "tile_labels_changed",
             mapOf(
                 "from" to from.wireName, "to" to to.wireName, "from_source" to fromSource.name.lowercase(),
-                "screen" to screen(), "board_size" to board.squareSide,
+                "screen" to screenName(board, solution), "board_size" to board.squareSide,
             ),
         )
-    }
-
-    private fun screen() = when {
-        solution.onScreen -> "solution"
-        board.isCorrect() -> "solved"
-        else -> "play"
     }
 }
