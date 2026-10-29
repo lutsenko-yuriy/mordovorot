@@ -186,7 +186,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── Launch.kt        # startWebGame: the page's wiring (PlatformAnalyticsService "web" wrapped
 │   │                    # by InputMethodAnalyticsService "rich_ui"), app_launched {mode, layout,
 │   │                    # app_version, host} (GH-111) and tile_labels (GH-139)
-│   ├── TextScale.kt     # GH-168: textScaleOf(root, appleBody): the system text size as a scale, never below 1
+│   ├── TextScale.kt     # GH-168: textScaleOf(root, appleBody): the system text size as a scale, never below 1;
+│   │                    # rootFontPx: the root's size for it, null when the default already is
 │   ├── Host.kt          # hostOf(hostname): PUBLIC_SITE, LOCALHOST or OTHER - only the bucket is sent (GH-111)
 │   ├── Footer.kt        # footer(version): the footer line as Text/Link parts, worded as the README's Credits (GH-111)
 │   ├── drag/            # LineDrag: one drag in pixels - axis lock past a threshold, live offset,
@@ -214,7 +215,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # button, which says its words through DomAnnouncer
 ├── src/jsMain/kotlin/web/DomTextSize.kt # GH-168: at load, reads the browser's font size and (iPhone/iPad)
 │                                       # Dynamic Type from a removed `-apple-system-body` probe; sets
-│                                       # `--text-scale` and the root font size
+│                                       # `--text-scale`, and the root font size where the default isn't it
 ├── src/jsMain/kotlin/web/DomFooter.kt  # footerElement: <footer>, its links in a new tab (GH-111);
 │                                       # wide-only parts in `.wide-only` (GH-147)
 ├── src/jsMain/kotlin/web/DomDialogs.kt  # The modal dialogs; DomElements.kt: element/text/button helpers
@@ -257,7 +258,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/commonTest/kotlin/web/FooterTest.kt # GH-111: the footer's wording and links
 ├── src/commonTest/kotlin/web/HostTest.kt # GH-111: hostOf's buckets
 ├── src/commonTest/kotlin/web/LayoutTest.kt, SlidesTest.kt, MessageFeedTest.kt, AnnouncementsTest.kt
-├── src/commonTest/kotlin/web/TextScaleTest.kt # GH-168: textScaleOf's ratios, floor and bad readings
+├── src/commonTest/kotlin/web/TextScaleTest.kt # GH-168: textScaleOf's ratios, floor and bad readings;
+│                                       # when rootFontPx leaves the default alone
 ├── src/commonTest/kotlin/web/drag/     # LineDragTest, WrapPositionsTest
 ├── src/commonTest/kotlin/web/storage/  # BrowserSaveRepositoryTest, BrowserPreferenceRepositoryTest
 │                                       # over InMemoryKeyValueStore
