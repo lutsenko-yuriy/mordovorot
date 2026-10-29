@@ -4,7 +4,7 @@ import viewmodel.ShiftKey
 
 /** What a board key does in keyboard mode (GH-170): move the selected tile, or shift its row or
  *  column, tagged with the [ShiftKey] that made it. */
-sealed class BoardKey {
+internal sealed class BoardKey {
     data class Select(val direction: Direction) : BoardKey()
     data class Shift(val direction: Direction, val key: ShiftKey) : BoardKey()
 }
