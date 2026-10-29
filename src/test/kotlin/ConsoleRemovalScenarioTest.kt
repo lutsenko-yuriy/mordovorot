@@ -149,19 +149,19 @@ class ConsoleRemovalScenarioTest {
     fun `the mouse toolbar offers only the Keyboard switch`() {
         val frame = session(InputMode.MOUSE).terminal.frames.first()
 
-        assertTrue(frame.contains("[ Keyboard ]"))
+        assertTrue(frame.contains("[ Keyboard 6 ]"))
         assertFalse(frame.contains("Console"))
     }
 
     @Test
-    fun `keyboard mode offers only Mouse F7, and F8 does nothing before Mordie's solution`() {
-        val run = session(InputMode.KEYBOARD, listOf(TerminalEvent.FunctionKey(8)))
+    fun `keyboard mode offers only Mouse 6, and 5 does nothing before Mordie's solution`() {
+        val run = session(InputMode.KEYBOARD, listOf(TerminalEvent.KeyPress('5')))
 
         for (frame in run.terminal.frames) {
-            assertTrue(frame.contains("[Mouse F7]"))
+            assertTrue(frame.contains("[Mouse 6]"))
             assertFalse(frame.contains("Console"))
         }
-        // F8 is Give Up since GH-126, dimmed until Mordie finds its solution.
+        // 5 is Give Up (GH-126, GH-170), dimmed until Mordie finds its solution.
         assertTrue(run.analytics.events.none { it.name == "input_mode_switched" || it.name == "screen_give_up_dialog" })
         assertEquals(scrambled.toList(), run.board.boardArray.toList())
     }

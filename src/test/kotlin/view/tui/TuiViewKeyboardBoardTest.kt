@@ -35,7 +35,7 @@ class TuiViewKeyboardBoardTest {
     }
 
     @Test
-    fun `D then the down arrow shifts column 1 down, passing the ARROW key`(): Unit = runBlocking {
+    fun `D then the down arrow shifts column 2 down, passing the ARROW key`(): Unit = runBlocking {
         val viewModel = FakeViewModel()
         val terminal = FakeTerminal(
             events = mutableListOf(TerminalEvent.KeyPress('d'), TerminalEvent.Arrow(Direction.DOWN)),
@@ -44,11 +44,11 @@ class TuiViewKeyboardBoardTest {
 
         view(terminal, viewModel).play()
 
-        assertEquals(listOf("shiftDown(0, ARROW)"), viewModel.calls.filter { it.startsWith("shift") })
+        assertEquals(listOf("shiftDown(1, ARROW)"), viewModel.calls.filter { it.startsWith("shift") })
     }
 
     @Test
-    fun `F5, F6 open Save and Load, Escape opens Exit, all regardless of cursor position`(): Unit = runBlocking {
+    fun `2 and 3 open Save and Load, Escape opens Exit, all regardless of cursor position`(): Unit = runBlocking {
         // Any frame, not just the last - EndOfInput closing the dialog triggers one more board
         // repaint before quitting.
         suspend fun framesFor(event: TerminalEvent): List<String> {
@@ -61,8 +61,8 @@ class TuiViewKeyboardBoardTest {
             return terminal.frames
         }
 
-        assertTrue(framesFor(TerminalEvent.FunctionKey(5)).any { it.contains("Save game") })
-        assertTrue(framesFor(TerminalEvent.FunctionKey(6)).any { it.contains("Load game") })
+        assertTrue(framesFor(TerminalEvent.KeyPress('2')).any { it.contains("Save game") })
+        assertTrue(framesFor(TerminalEvent.KeyPress('3')).any { it.contains("Load game") })
         assertTrue(framesFor(TerminalEvent.Escape).any { it.contains("Save before quitting?") })
     }
 

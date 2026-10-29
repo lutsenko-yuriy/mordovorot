@@ -290,10 +290,10 @@ class GiveUpScenarioTest {
     }
 
     @Test
-    fun `keyboard mode - F8 gives up, arrows A D Space Enter step, R restarts, W and S scroll the steps`() {
+    fun `keyboard mode - 5 gives up, arrows A D Space Enter step, R restarts, W and S scroll the steps`() {
         val run = session(
-            keys(TerminalEvent.FunctionKey(8)) + snap() + searchFinds(longPath) + keys(*Array(5) { TerminalEvent.KeyPress('h') }) +
-                keys(TerminalEvent.FunctionKey(8), TerminalEvent.Escape, TerminalEvent.FunctionKey(8), TerminalEvent.Enter) + snap() +
+            keys(TerminalEvent.KeyPress('5')) + snap() + searchFinds(longPath) + keys(*Array(5) { TerminalEvent.KeyPress('h') }) +
+                keys(TerminalEvent.KeyPress('5'), TerminalEvent.Escape, TerminalEvent.KeyPress('5'), TerminalEvent.Enter) + snap() +
                 step(TerminalEvent.Arrow(Direction.RIGHT), TerminalEvent.KeyPress('d'), TerminalEvent.KeyPress(' '), TerminalEvent.Enter) +
                 step(TerminalEvent.Arrow(Direction.LEFT), TerminalEvent.KeyPress('a')) +
                 step(TerminalEvent.KeyPress('r')) +
@@ -302,12 +302,12 @@ class GiveUpScenarioTest {
             mode = InputMode.KEYBOARD,
         )
 
-        assertTrue("F8 Give Up" in rows(snaps[0]).joinToString("\n"))
+        assertTrue("5 Give Up" in rows(snaps[0]).joinToString("\n"))
         assertFalse("Give up and see" in snaps[0])
         assertEquals("give_up", run.event("dialog_cancelled")["dialog"])
         assertEquals("", giveUpRowShown(snaps[1]))
         assertEquals(replayRow, replayRowShown(snaps[1]))
-        assertTrue(rows(snaps[1]).any { "←/→ A/D  step" in it })
+        assertTrue(rows(snaps[1]).any { "←/→ A/D H/L  step" in it })
         assertEquals("04.", highlighted(snaps[2]).single().take(3))
         assertEquals("02.", highlighted(snaps[3]).single().take(3))
         assertTrue(highlighted(snaps[4]).isEmpty())
@@ -379,7 +379,7 @@ class GiveUpScenarioTest {
         val keyboardButton = layout.toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.KEYBOARD) }
         session(givenUp() + next + click(keyboardButton.x to keyboardButton.y) + snap() + key(TerminalEvent.Arrow(Direction.RIGHT)) + snap())
 
-        assertTrue("F7 Mouse" in rows(snaps[0]).joinToString("\n"))
+        assertTrue("6 Mouse" in rows(snaps[0]).joinToString("\n"))
         assertEquals(afterFirstStep.toList(), tilesShown(snaps[0]))
         assertEquals(listOf(steps[0]), highlighted(snaps[0]))
         assertEquals(replayRow, replayRowShown(snaps[0]))

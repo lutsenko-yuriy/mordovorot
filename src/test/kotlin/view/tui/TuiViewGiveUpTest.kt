@@ -112,7 +112,7 @@ class TuiViewGiveUpTest {
     @Test
     fun `in keyboard mode F8 opens the confirmation and Enter on the solution screen goes next`() {
         val giveUp = FakeViewModel().apply { giveUpButton = GiveUpButton.GIVE_UP }
-        play(giveUp, TerminalEvent.FunctionKey(8), TerminalEvent.Escape, input = KeyboardInput(KeyboardSelection()))
+        play(giveUp, TerminalEvent.KeyPress('5'), TerminalEvent.Escape, input = KeyboardInput(KeyboardSelection()))
         assertEquals(1, analytics.events.count { it.name == "screen_give_up_dialog" })
 
         val screen = onScreen()

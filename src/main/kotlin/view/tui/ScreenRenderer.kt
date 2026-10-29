@@ -6,10 +6,16 @@ import viewmodel.SolutionState
 private const val DIM_ON = "\u001B[2m"
 private const val DIM_OFF = "\u001B[22m"
 
-/** SGR reverse-video on/off - GH-18's dialog focus highlight (a focused button) and GH-101's
- *  selected line. */
+/** SGR reverse-video on/off - GH-18's dialog focus highlight (a focused button) and GH-170's
+ *  selected tile. */
 private const val REVERSE_ON = "\u001B[7m"
 private const val REVERSE_OFF = "\u001B[27m"
+
+/** The rest of the selected tile's row (pale yellow) and column (light grey), black text
+ *  (GH-170): 256-colour backgrounds. Provisional until GH-170 WU4 picks the final palette. */
+private const val SELECTED_ROW_ON = "\u001B[30;48;5;230m"
+private const val SELECTED_COLUMN_ON = "\u001B[30;48;5;252m"
+private const val SELECTED_LINE_OFF = "\u001B[39;49m"
 
 /** SGR bright-cyan foreground on/off - GH-18's keyboard-mode toolbar shortcut labels. */
 private const val SHORTCUT_COLOR_ON = "\u001B[96m"
@@ -99,7 +105,14 @@ class ScreenRenderer {
                 val text = label.padStart(CELL_WIDTH - 1).padEnd(CELL_WIDTH)
                 val x = gridLeft + 1 + col * (CELL_WIDTH + 1)
                 val y = gridTop + 1 + 2 * row
-                if (state.selection?.covers(row, col) == true) canvas.putHighlighted(x, y, text) else canvas.put(x, y, text)
+                val selection = state.selection
+                when {
+                    selection == null -> canvas.put(x, y, text)
+                    row == selection.row && col == selection.col -> canvas.putHighlighted(x, y, text)
+                    row == selection.row -> canvas.putColored(x, y, text, SELECTED_ROW_ON, SELECTED_LINE_OFF)
+                    col == selection.col -> canvas.putColored(x, y, text, SELECTED_COLUMN_ON, SELECTED_LINE_OFF)
+                    else -> canvas.put(x, y, text)
+                }
             }
         }
     }

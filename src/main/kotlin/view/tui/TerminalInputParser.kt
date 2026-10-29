@@ -10,7 +10,8 @@ private const val MAX_ESCAPE_SEQUENCE_LENGTH = 32
 /**
  * Pure byte-stream -> [TerminalEvent] decoder for GH-3's mouse TUI and GH-18's keyboard TUI:
  * SGR-1006 mouse reports (primary), the legacy X10 `ESC[M` fallback, single-byte keys for the
- * save-name field, and arrow/Tab/BackTab/function-key decoding for keyboard navigation. No
+ * save-name field, and arrow/Tab/BackTab decoding for keyboard navigation; function keys are
+ * swallowed whole (GH-170: the digits replaced them). No
  * terminal I/O here - [AnsiTerminal] feeds it real bytes and tests feed it directly. A sequence
  * split across two [feed] calls is buffered and completed on the next one.
  */
@@ -69,13 +70,11 @@ class TerminalInputParser {
     }
 
     /** `ESC O <char>` - SS3, used for arrow keys when the terminal is in application cursor-key
-     *  mode (tmux/screen, some terminals' default), and for F4 (`ESC O S`, GH-139) by xterm,
-     *  macOS Terminal and iTerm2. Same direction mapping as the CSI form decoded in
-     *  [decodeUnknownCsi]; any other final byte is discarded whole. */
+     *  mode (tmux/screen, some terminals' default). Same direction mapping as the CSI form
+     *  decoded in [decodeUnknownCsi]; any other final byte (F1-F4 among them) is discarded whole. */
     private fun decodeSs3(data: ByteArray, from: Int, events: MutableList<TerminalEvent>): Int {
         if (from + 2 >= data.size) return 0
         val finalByte = data[from + 2].toInt().toChar()
-        if (finalByte == 'S') events += TerminalEvent.FunctionKey(4)
         arrowDirection(finalByte)?.let { events += TerminalEvent.Arrow(it) }
         return 3
     }
@@ -124,10 +123,9 @@ class TerminalInputParser {
         else -> null
     }
 
-    /** Arrow keys (`ESC [ A..D`), Tab-reverse (`ESC [ Z`), and the F4/F5/F6/F7/F8/F9 function keys
-     *  (`ESC [ 14~` (rxvt-style F4) / `15~` / `17~` / `18~` / `19~` / `20~`) decode here; any other CSI sequence (Home/End, page
-     *  keys, other function keys, ...) is discarded whole rather than left to leak its individual
-     *  bytes out as bogus [TerminalEvent.KeyPress]es. */
+    /** Arrow keys (`ESC [ A..D`) and Tab-reverse (`ESC [ Z`) decode here; any other CSI sequence
+     *  (Home/End, page keys, function keys, ...) is discarded whole rather than left to leak its
+     *  individual bytes out as bogus [TerminalEvent.KeyPress]es. */
     private fun decodeUnknownCsi(data: ByteArray, from: Int, events: MutableList<TerminalEvent>): Int {
         var i = from + 2 // the final byte can be immediately after '[' (e.g. arrow keys: ESC [ A)
         while (i < data.size) {
@@ -147,19 +145,7 @@ class TerminalInputParser {
      *  terminal/multiplexer, not decoded as a plain key. */
     private fun decodeCsiFinal(finalByte: Char, params: String): TerminalEvent? {
         if (params.isEmpty() || params == "1") arrowDirection(finalByte)?.let { return TerminalEvent.Arrow(it) }
-        return when (finalByte) {
-            'Z' -> TerminalEvent.BackTab
-            '~' -> when (params.toIntOrNull()) {
-                14 -> TerminalEvent.FunctionKey(4)
-                15 -> TerminalEvent.FunctionKey(5)
-                17 -> TerminalEvent.FunctionKey(6)
-                18 -> TerminalEvent.FunctionKey(7)
-                19 -> TerminalEvent.FunctionKey(8)
-                20 -> TerminalEvent.FunctionKey(9)
-                else -> null
-            }
-            else -> null
-        }
+        return if (finalByte == 'Z') TerminalEvent.BackTab else null
     }
 
     private fun arrowDirection(finalByte: Char): Direction? = when (finalByte) {

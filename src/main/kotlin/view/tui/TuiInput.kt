@@ -10,7 +10,9 @@ import viewmodel.ShiftKey
  * confirm on the currently-focused control (GH-18's `KeyboardInput`).
  */
 sealed class InputAction {
-    data class Activate(val target: HitTarget) : InputAction()
+    /** [shortcut]: a toolbar key rather than a click (GH-170) - what `opened_from` and
+     *  `input_mode_switched.trigger` report. */
+    data class Activate(val target: HitTarget, val shortcut: Boolean = false) : InputAction()
     /** A keyboard shift (GH-101), tagged with the [key] that made it - kept apart from
      *  [Activate] so a click or toolbar target never carries one. */
     data class Shift(val target: HitTarget, val key: ShiftKey) : InputAction()
@@ -18,10 +20,10 @@ sealed class InputAction {
     object EraseChar : InputAction()
     object Submit : InputAction()
     object Cancel : InputAction()
-    /** Redraw without otherwise acting - a keyboard selection change (GH-101) is the only
+    /** Redraw without otherwise acting - a keyboard selection change (GH-170) is the only
      *  source of this today; a mouse click never produces it (see [MouseInput]). */
     object Redraw : InputAction()
-    /** Scrolls the solution screen's step list by [delta] rows (GH-126): a wheel notch, W/S. */
+    /** Scrolls the solution screen's step list by [delta] rows (GH-126): a wheel notch, W/S, K/J. */
     data class Scroll(val delta: Int) : InputAction()
     object Quit : InputAction()
     object None : InputAction()
@@ -30,17 +32,11 @@ sealed class InputAction {
 /**
  * The per-mode input strategy [TuiView] delegates to (GH-18): translating a raw [TerminalEvent]
  * into an [InputAction], and decorating the [ScreenState]/[Dialog] each repaint draws with
- * whatever presentation the mode owns (a selected line, focus highlight, toolbar shortcut
+ * whatever presentation the mode owns (a selected tile, focus highlight, toolbar shortcut
  * labels). [MouseInput] is today's mouse behaviour, extracted verbatim; GH-18's `KeyboardInput`
  * is the other implementation.
  */
 interface TuiInput {
-    /** The `trigger` value [TuiView] reports on `input_mode_switched` for a mode-button
-     *  activation from this input (GH-30) - `"toolbar"` for a click, `"shortcut"` for a
-     *  keyboard function key. Keeps [TuiView] itself mode-agnostic, same as everything else
-     *  here. */
-    val switchTrigger: String
-
     /** Runs once, right after [Terminal.enterRawMode] - mouse reporting on for [MouseInput],
      *  left off for a keyboard-only mode. */
     fun prepare(terminal: Terminal)

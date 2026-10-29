@@ -53,7 +53,7 @@ class TuiView internal constructor(
                 when (val action = input.onBoardEvent(terminal.readEvent(), checkNotNull(screen.layout))) {
                     is InputAction.Activate -> {
                         try {
-                            handleTarget(action.target)
+                            handleTarget(action.target, shortcut = action.shortcut)
                         } catch (e: ExitRequestedException) {
                             return@coroutineScope
                         }
@@ -79,14 +79,15 @@ class TuiView internal constructor(
         }
     }
 
-    /** [key] is the keyboard key behind a shift (GH-101), `null` for a click. */
-    private suspend fun handleTarget(target: HitTarget, key: ShiftKey? = null) {
+    /** [key] is the keyboard key behind a shift (GH-101), `null` for a click; [shortcut] says
+     *  a toolbar target came from a key (GH-170). */
+    private suspend fun handleTarget(target: HitTarget, key: ShiftKey? = null, shortcut: Boolean = false) {
         when (target) {
             is HitTarget.ShiftLeft -> shift { viewModel.shiftLeft(target.row, key) }
             is HitTarget.ShiftRight -> shift { viewModel.shiftRight(target.row, key) }
             is HitTarget.ShiftUp -> shift { viewModel.shiftUp(target.col, key) }
             is HitTarget.ShiftDown -> shift { viewModel.shiftDown(target.col, key) }
-            else -> toolbar.handle(target)
+            else -> toolbar.handle(target, shortcut)
         }
     }
 

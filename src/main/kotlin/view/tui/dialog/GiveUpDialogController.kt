@@ -8,7 +8,7 @@ import view.tui.InputAction
 import view.tui.TuiScreen
 import viewmodel.ViewModel
 
-/** The give-up confirmation (GH-126): `[ Give Up ]` / F8. No or Escape keeps playing. */
+/** The give-up confirmation (GH-126): `[ Give Up ]` / 5. No or Escape keeps playing. */
 internal class GiveUpDialogController(
     private val screen: TuiScreen,
     private val analytics: AnalyticsService,

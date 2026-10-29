@@ -88,7 +88,7 @@ class TuiViewKeyboardDialogTest {
     fun `Save dialog opens prefilled in keyboard mode and typing appends`(): Unit = runBlocking {
         val viewModel = FakeViewModel().apply { currentSaveName = "foo" }
         val terminal = FakeTerminal(
-            events = mutableListOf(TerminalEvent.FunctionKey(5), TerminalEvent.KeyPress('x'), TerminalEvent.Enter),
+            events = mutableListOf(TerminalEvent.KeyPress('2'), TerminalEvent.KeyPress('x'), TerminalEvent.Enter),
             terminalSize = terminalSize,
         )
 
@@ -104,7 +104,7 @@ class TuiViewKeyboardDialogTest {
         val board = FakeBoardModel()
         val terminal = FakeTerminal(
             events = mutableListOf(
-                TerminalEvent.FunctionKey(5),
+                TerminalEvent.KeyPress('2'),
                 TerminalEvent.KeyPress('h'), TerminalEvent.KeyPress('i'),
                 TerminalEvent.Tab,
                 TerminalEvent.Enter,
@@ -124,7 +124,7 @@ class TuiViewKeyboardDialogTest {
         val recording = RecordingAnalyticsService()
         val analytics = InputMethodAnalyticsService(recording, inputMethod = "keyboard")
         val terminal = FakeTerminal(
-            events = mutableListOf(TerminalEvent.FunctionKey(5), TerminalEvent.Escape),
+            events = mutableListOf(TerminalEvent.KeyPress('2'), TerminalEvent.Escape),
             terminalSize = terminalSize,
         )
 
@@ -145,7 +145,7 @@ class TuiViewKeyboardDialogTest {
         // mouse side by TuiViewDialogTest).
         val saves = FakeSaveRepository()
         val terminal = FakeTerminal(
-            events = mutableListOf(TerminalEvent.FunctionKey(5), TerminalEvent.Enter),
+            events = mutableListOf(TerminalEvent.KeyPress('2'), TerminalEvent.Enter),
             terminalSize = terminalSize,
         )
 
@@ -164,7 +164,7 @@ class TuiViewKeyboardDialogTest {
         val board = FakeBoardModel()
         val terminal = FakeTerminal(
             events = mutableListOf(
-                TerminalEvent.FunctionKey(6),
+                TerminalEvent.KeyPress('3'),
                 TerminalEvent.Arrow(Direction.DOWN), // selection: "bar" (row 0) -> "foo" (row 1)
                 TerminalEvent.Tab, // focus -> the Load button
                 TerminalEvent.Enter,
@@ -182,7 +182,7 @@ class TuiViewKeyboardDialogTest {
         val saves = FakeSaveRepository()
         val board = FakeBoardModel()
         val terminal = FakeTerminal(
-            events = mutableListOf(TerminalEvent.FunctionKey(6), TerminalEvent.Tab, TerminalEvent.Enter),
+            events = mutableListOf(TerminalEvent.KeyPress('3'), TerminalEvent.Tab, TerminalEvent.Enter),
             terminalSize = terminalSize,
         )
 

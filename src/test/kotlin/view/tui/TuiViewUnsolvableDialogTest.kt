@@ -42,7 +42,7 @@ class TuiViewUnsolvableDialogTest {
     private val restoreAtStartup = listOf(TerminalEvent.Tab, TerminalEvent.Enter)
 
     /** F6, then the same Tab + Enter on the Load dialog. */
-    private val loadMidGame = listOf(TerminalEvent.FunctionKey(6), TerminalEvent.Tab, TerminalEvent.Enter)
+    private val loadMidGame = listOf(TerminalEvent.KeyPress('3'), TerminalEvent.Tab, TerminalEvent.Enter)
 
     @Test
     fun `restoring an unsolvable save at startup opens the dialog, and Repair loads the fixed board`() {

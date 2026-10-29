@@ -20,7 +20,6 @@ import view.tui.TerminalEvent
 import view.tui.TerminalEvent.Backspace
 import view.tui.TerminalEvent.Enter
 import view.tui.TerminalEvent.Escape
-import view.tui.TerminalEvent.FunctionKey
 import view.tui.TerminalEvent.KeyPress
 import view.tui.TerminalEvent.Tab
 import view.tui.TerminalSize
@@ -73,7 +72,7 @@ class SaveNamePrefillScenarioTest {
             0 -> listOf(TerminalEvent.BackTab, TerminalEvent.BackTab)
             else -> error("row $index of $count can't reach Load without selecting another row")
         }
-        return listOf(FunctionKey(6)) + toLoad + Enter
+        return listOf(KeyPress('3')) + toLoad + Enter
     }
 
     /** H: shift the selected row (GH-101). */
@@ -91,7 +90,7 @@ class SaveNamePrefillScenarioTest {
     fun `load then save prefills the loaded name and overwrites it`() {
         val dir = savesDir(fooSave)
 
-        val run = session(loadRow(0, 1) + shift + FunctionKey(5) + Enter, dir)
+        val run = session(loadRow(0, 1) + shift + KeyPress('2') + Enter, dir)
 
         val dialog = run.lastSaveDialog()
         assertTrue(dialog.contains("Name: foo_"))
@@ -106,7 +105,7 @@ class SaveNamePrefillScenarioTest {
     fun `saving under a new name makes it the next prefill`() {
         val dir = savesDir(fooSave)
 
-        val run = session(loadRow(0, 1) + FunctionKey(5) + typed("x") + Enter + FunctionKey(5), dir)
+        val run = session(loadRow(0, 1) + KeyPress('2') + typed("x") + Enter + KeyPress('2'), dir)
 
         assertTrue(dir.resolve("foox.save").exists())
         assertEquals("edited", run.events("save_command_used").single()["name_source"])
@@ -115,14 +114,14 @@ class SaveNamePrefillScenarioTest {
 
     @Test
     fun `startup restore prefills the restored name`() {
-        val run = session(restoreAtStartup + FunctionKey(5), savesDir(fooSave), sizeChosenAtLaunch = false)
+        val run = session(restoreAtStartup + KeyPress('2'), savesDir(fooSave), sizeChosenAtLaunch = false)
 
         assertTrue(run.lastSaveDialog().contains("Name: foo_"))
     }
 
     @Test
     fun `repair and load prefills the repaired save name`() {
-        val run = session(restoreAtStartup + Enter + FunctionKey(5), savesDir(oddSave), sizeChosenAtLaunch = false)
+        val run = session(restoreAtStartup + Enter + KeyPress('2'), savesDir(oddSave), sizeChosenAtLaunch = false)
 
         assertEquals("repair", run.events("unsolvable_save_resolved").single()["choice"])
         assertTrue(run.lastSaveDialog().contains("Name: odd_"))
@@ -130,7 +129,7 @@ class SaveNamePrefillScenarioTest {
 
     @Test
     fun `new game clears the prefill`() {
-        val run = session(loadRow(0, 1) + FunctionKey(9) + pickSize + FunctionKey(5) + Escape, savesDir(fooSave))
+        val run = session(loadRow(0, 1) + KeyPress('1') + pickSize + KeyPress('2') + Escape, savesDir(fooSave))
 
         assertTrue(run.lastSaveDialog().contains("Name: _"))
         assertEquals(false, run.events("screen_save_dialog").single()["prefilled"])
@@ -140,7 +139,7 @@ class SaveNamePrefillScenarioTest {
     fun `new game from the unsolvable dialog clears the prefill`() {
         val chooseNewGame = listOf(Tab, Enter)
 
-        val run = session(loadRow(0, 2) + loadRow(1, 2) + chooseNewGame + pickSize + FunctionKey(5), savesDir(fooSave, oddSave))
+        val run = session(loadRow(0, 2) + loadRow(1, 2) + chooseNewGame + pickSize + KeyPress('2'), savesDir(fooSave, oddSave))
 
         assertEquals("new_game", run.events("unsolvable_save_resolved").single()["choice"])
         assertTrue(run.lastSaveDialog().contains("Name: _"))
@@ -172,7 +171,7 @@ class SaveNamePrefillScenarioTest {
     fun `clearing the prefilled field cancels without saving`() {
         val dir = savesDir(fooSave)
 
-        val run = session(loadRow(0, 1) + shift + FunctionKey(5) + List(3) { Backspace } + Enter, dir)
+        val run = session(loadRow(0, 1) + shift + KeyPress('2') + List(3) { Backspace } + Enter, dir)
 
         assertTrue(run.lastSaveDialog().contains("Name: _"))
         assertEquals(fooContent, dir.resolve("foo.save").readText())
@@ -184,7 +183,7 @@ class SaveNamePrefillScenarioTest {
         val saveButton = BoardLayout(terminalSize, 4, modeButtons = listOf(InputMode.KEYBOARD)).saveButtonPosition()
 
         val run = session(
-            loadRow(0, 1) + FunctionKey(7) + TerminalEvent.MouseClick(saveButton.first, saveButton.second),
+            loadRow(0, 1) + KeyPress('6') + TerminalEvent.MouseClick(saveButton.first, saveButton.second),
             savesDir(fooSave),
         )
 
@@ -194,7 +193,7 @@ class SaveNamePrefillScenarioTest {
 
     @Test
     fun `a failed load leaves the prefill unchanged`() {
-        val run = session(loadRow(1, 2) + loadRow(0, 2) + FunctionKey(5), savesDir(fooSave, badSave))
+        val run = session(loadRow(1, 2) + loadRow(0, 2) + KeyPress('2'), savesDir(fooSave, badSave))
 
         assertEquals(listOf("success", "error"), run.events("load_command_used").map { it["result"] })
         assertTrue(run.lastSaveDialog().contains("Name: foo_"))

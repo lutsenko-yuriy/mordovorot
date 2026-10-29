@@ -55,7 +55,7 @@ class TuiViewModeSwitchTest {
     fun `pressing F7 in keyboard mode requests a switch to mouse mode with trigger=shortcut, even when solved`(): Unit = runBlocking {
         val switcher = RecordingModeSwitcher()
         val viewModel = FakeViewModel().apply { solved = true }
-        val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.FunctionKey(7)))
+        val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.KeyPress('6')))
         val view = testTuiView(terminal, input = KeyboardInput(KeyboardSelection()), modeSwitcher = switcher, viewModel = viewModel)
 
         view.play()
@@ -66,7 +66,7 @@ class TuiViewModeSwitchTest {
     @Test
     fun `pressing F8 in keyboard mode requests no switch`(): Unit = runBlocking {
         val switcher = RecordingModeSwitcher()
-        val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.FunctionKey(8)))
+        val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.KeyPress('5')))
         val view = testTuiView(terminal, input = KeyboardInput(KeyboardSelection()), modeSwitcher = switcher, viewModel = FakeViewModel())
 
         view.play()
@@ -82,7 +82,7 @@ class TuiViewModeSwitchTest {
         val throwingSwitcher = object : ModeSwitcher {
             override suspend fun switchTo(target: InputMode, trigger: String) = throw ModeSwitchRequestedException(target)
         }
-        val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.FunctionKey(7)))
+        val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.KeyPress('6')))
         val view = testTuiView(terminal, input = KeyboardInput(KeyboardSelection()), modeSwitcher = throwingSwitcher, viewModel = FakeViewModel())
 
         assertFailsWith<ModeSwitchRequestedException> { view.play() }

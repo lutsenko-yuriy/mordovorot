@@ -29,10 +29,10 @@ data class ScreenState(
     /** A one-shot status line from the viewModel (e.g. "Saved as 'x'.", "Not quitting - ...") -
      *  board-only, since dialogs show their own [Dialog.message] instead (WU4). */
     val message: String? = null,
-    /** Keyboard mode's selected line (GH-101), its tiles drawn highlighted - `null` in mouse
-     *  mode and whenever [arrowsEnabled] is false (solved). Set by
+    /** Keyboard mode's selected tile (GH-170), drawn with its row and column marked - `null` in
+     *  mouse mode and whenever [arrowsEnabled] is false (solved). Set by
      *  [view.tui.KeyboardInput.decorateBoard], never by [forBoard] itself. */
-    val selection: LineSelection? = null,
+    val selection: TileSelection? = null,
     /** Whether the shift arrows are drawn - keyboard mode hides them (GH-101). Their space stays
      *  reserved, so the board doesn't move on a mode switch. */
     val showArrows: Boolean = true,
@@ -42,7 +42,7 @@ data class ScreenState(
     val shiftHint: List<String> = emptyList(),
     /** A bottom-left reminder of the keyboard controls (GH-18), or `null` in mouse mode. */
     val controlsHint: String? = null,
-    /** Whether the toolbar shows `[Save F5]`-style labels (keyboard mode) instead of
+    /** Whether the toolbar shows `[Save 2]`-style labels (keyboard mode) instead of
      *  `[ Save ]` (mouse mode) - see [BoardLayout.toolbarButtons]'s KDoc for why this must be
      *  carried on [ScreenState] rather than decided independently by each construction site. */
     val toolbarShortcuts: Boolean = false,

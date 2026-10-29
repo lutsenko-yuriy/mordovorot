@@ -8,7 +8,7 @@ import view.tui.TuiScreen
 import viewmodel.TileLabels
 import viewmodel.ViewModel
 
-/** The Tile labels dialog (GH-139): the second row's `[ Labels ]` / F4. One row per scheme with
+/** The Tile labels dialog (GH-139): the second row's `[ Labels ]` / 4. One row per scheme with
  *  its sample of the solved board's first row, the current scheme marked; OK (or Enter on a row
  *  in keyboard mode) hands the marked one to the viewModel. */
 internal class LabelsDialogController(
@@ -16,7 +16,7 @@ internal class LabelsDialogController(
     private val viewModel: ViewModel,
 ) {
 
-    /** [openedFrom] is `toolbar` or `shortcut`, the input's [view.tui.TuiInput.switchTrigger]. */
+    /** [openedFrom] is `toolbar` (a click) or `shortcut` (a key). */
     fun onToolbar(openedFrom: String) {
         viewModel.tileLabelsDialogOpened(openedFrom)
         runLabelsDialog()?.let { viewModel.changeTileLabels(it) }

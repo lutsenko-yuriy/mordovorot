@@ -195,23 +195,13 @@ class TerminalInputParserTest {
     }
 
     @Test
-    fun `F5, F6, F7, F8, and F9 CSI sequences decode to their FunctionKey events`() {
+    fun `function keys are swallowed whole, CSI and SS3 alike (GH-170)`() {
         val parser = TerminalInputParser()
 
-        assertEquals(listOf(TerminalEvent.FunctionKey(5)), parser.feed(csi("15~")))
-        assertEquals(listOf(TerminalEvent.FunctionKey(6)), parser.feed(csi("17~")))
-        assertEquals(listOf(TerminalEvent.FunctionKey(7)), parser.feed(csi("18~")))
-        assertEquals(listOf(TerminalEvent.FunctionKey(8)), parser.feed(csi("19~")))
-        assertEquals(listOf(TerminalEvent.FunctionKey(9)), parser.feed(csi("20~"))) // GH-44 WU3
-    }
-
-    @Test
-    fun `F4 decodes from both its SS3 and its CSI form (GH-139)`() {
-        val parser = TerminalInputParser()
-
-        // ESC O S - xterm, macOS Terminal and iTerm2; ESC [ 14 ~ - rxvt-style terminals.
-        assertEquals(listOf(TerminalEvent.FunctionKey(4)), parser.feed(byteArrayOf(ESC, 'O'.code.toByte(), 'S'.code.toByte())))
-        assertEquals(listOf(TerminalEvent.FunctionKey(4)), parser.feed(csi("14~")))
+        for (params in listOf("14~", "15~", "17~", "18~", "19~", "20~")) assertEquals(emptyList(), parser.feed(csi(params)), params)
+        // ESC O P..S - F1-F4 as xterm, macOS Terminal and iTerm2 send them.
+        for (final in "PQRS") assertEquals(emptyList(), parser.feed(byteArrayOf(ESC, 'O'.code.toByte(), final.code.toByte())), "SS3 $final")
+        assertEquals(listOf(TerminalEvent.KeyPress('x')), parser.feed("x".toByteArray()))
     }
 
     @Test

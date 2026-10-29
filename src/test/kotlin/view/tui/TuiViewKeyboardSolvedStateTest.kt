@@ -47,8 +47,8 @@ class TuiViewKeyboardSolvedStateTest {
             return terminal.frames
         }
 
-        assertTrue(framesFor(TerminalEvent.FunctionKey(5)).any { it.contains("Save game") })
-        assertTrue(framesFor(TerminalEvent.FunctionKey(6)).any { it.contains("Load game") })
+        assertTrue(framesFor(TerminalEvent.KeyPress('2')).any { it.contains("Save game") })
+        assertTrue(framesFor(TerminalEvent.KeyPress('3')).any { it.contains("Load game") })
         assertTrue(framesFor(TerminalEvent.Escape).any { it.contains("Save before quitting?") })
     }
 
@@ -63,7 +63,7 @@ class TuiViewKeyboardSolvedStateTest {
         }
         val terminal = FakeTerminal(
             events = mutableListOf(
-                TerminalEvent.FunctionKey(6), // open the Load dialog - focus starts on its only row
+                TerminalEvent.KeyPress('3'), // open the Load dialog - focus starts on its only row
                 TerminalEvent.Tab, // move focus from the row to the Load button
                 TerminalEvent.Enter, // confirm - loads "save1", flipping solved to false
                 TerminalEvent.KeyPress('h'), // row 1 is selected again - shift it

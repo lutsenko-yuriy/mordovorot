@@ -21,7 +21,7 @@ sealed class HitTarget {
      *  startup prompt ([viewmodel.ViewModel.newGame]'s `"toolbar"` trigger). */
     object ToolbarNew : HitTarget()
 
-    /** The `[ Labels ]` button / F4 (GH-139) - opens the Tile labels dialog. */
+    /** The `[ Labels ]` button / 4 (GH-139) - opens the Tile labels dialog. */
     object ToolbarLabels : HitTarget()
 
     /** A toolbar button requesting a switch to [mode] (GH-30) - one per entry in
@@ -35,10 +35,10 @@ sealed class HitTarget {
     /** A click on row [index] of a dialog's selectable list (WU4's Load dialog). */
     data class DialogListRow(val index: Int) : HitTarget()
 
-    /** The live `[ Give Up ]` button / F8 (GH-126) - opens the give-up confirmation. */
+    /** The live `[ Give Up ]` button / 5 (GH-126) - opens the give-up confirmation. */
     object GiveUp : HitTarget()
 
-    /** `[ Mordie's solution ]` after a win / F8 (GH-126) - opens the solution screen. */
+    /** `[ Mordie's solution ]` after a win / 5 (GH-126) - opens the solution screen. */
     object MordiesSolution : HitTarget()
 
     /** The solution screen's Prev / Next / Restart (GH-126): one shift back, one forward, or
