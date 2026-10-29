@@ -2,6 +2,7 @@ package web
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 /** GH-168: the page's text scale from the browser's default font size and iOS's Dynamic Type body size. */
 class TextScaleTest {
@@ -44,7 +45,24 @@ class TextScaleTest {
 
     @Test
     fun `the root's font size is the standard 16px times the scale`() {
-        assertEquals(16.0, rootFontPx(1.0))
-        assertEquals(24.0, rootFontPx(1.5))
+        assertEquals(23.0, rootFontPx(16.0, 23.0 / 16))
+    }
+
+    @Test
+    fun `a smaller default is raised to 16px`() {
+        assertEquals(16.0, rootFontPx(12.0, 1.0))
+    }
+
+    /** Set anyway, Firefox's text zoom, if the default carries it, would apply to it a second time. */
+    @Test
+    fun `a default that is already the size is left alone`() {
+        assertNull(rootFontPx(16.0, 1.0))
+        assertNull(rootFontPx(24.0, 1.5))
+        assertNull(rootFontPx(24.004, 1.5))
+    }
+
+    @Test
+    fun `a missing default is set`() {
+        assertEquals(24.0, rootFontPx(null, 1.5))
     }
 }

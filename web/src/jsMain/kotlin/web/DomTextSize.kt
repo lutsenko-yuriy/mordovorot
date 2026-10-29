@@ -7,13 +7,15 @@ import org.w3c.dom.Window
 
 /** GH-168: the page's text follows the system text size, read once at load: the root's font size, before
  *  any is set, is the browser's default (Chrome on Android's text scaling too, with the `text-scale`
- *  meta), and on iOS a probe reads Dynamic Type, which the default never shows. Sets the root's font
- *  size, which every rem follows, and `--text-scale`, which tile labels follow. */
+ *  meta), and on iOS a probe reads Dynamic Type, which the default never shows. Sets `--text-scale`,
+ *  which tile labels follow, and the root's font size, which every rem follows, where the default
+ *  isn't it already. */
 internal fun applySystemTextSize(document: Document, window: Window) {
     val root = document.documentElement as? HTMLElement ?: return
-    val scale = textScaleOf(pxOf(window.getComputedStyle(root).fontSize), appleBodyPx(document, window))
+    val rootPx = pxOf(window.getComputedStyle(root).fontSize)
+    val scale = textScaleOf(rootPx, appleBodyPx(document, window))
     root.style.setProperty("--text-scale", scale.toString())
-    root.style.fontSize = "${rootFontPx(scale)}px"
+    rootFontPx(rootPx, scale)?.let { root.style.fontSize = "${it}px" }
 }
 
 /** Dynamic Type's body size, iOS and iPadOS only: macOS Safari knows the same font, at 13px. */
