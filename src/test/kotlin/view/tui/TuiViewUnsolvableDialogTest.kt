@@ -10,6 +10,7 @@ import testing.FakeBoardModel
 import testing.FakeSaveRepository
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
+import testing.sessionKeyboardLayout
 import testing.testTuiView
 import testing.testViewModel
 
@@ -29,7 +30,7 @@ class TuiViewUnsolvableDialogTest {
         fun restored() = board.calls.filter { it.startsWith("restoreState") }
     }
 
-    private fun play(events: List<TerminalEvent>, midGame: Boolean, input: TuiInput = KeyboardInput(KeyboardSelection())): Run = runBlocking {
+    private fun play(events: List<TerminalEvent>, midGame: Boolean, input: TuiInput = KeyboardInput(KeyboardSelection(), sessionKeyboardLayout())): Run = runBlocking {
         val saves = FakeSaveRepository(mutableMapOf("odd" to SavedBoard(3, oddState.copyOf(), 5)))
         val board = FakeBoardModel()
         val analytics = RecordingAnalyticsService()

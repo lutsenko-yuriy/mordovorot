@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.27.0] — 2026-10-30 (PR #194 merged)
+
+### Added
+- [user] (PR #194) GH-170: terminal keyboard mode on the new keyboard scheme (ADR-0003): one selected tile (reverse video, its row pale yellow, its column light grey), digits 1-6 for the toolbar and Esc for Exit, and the Controls dialog (`[ Controls 6 ]` / 6 in both modes) to pick the input mode and the keyboard layout. The left-handed layout selects with H/J/K/L or the arrows and shifts with A/D (row) and W/S (column); it is remembered in saves/preferences. Left-handed solves send board_solved without shift_keys.
+
 ## [0.26.4] — 2026-10-30 (PR #193 merged)
 
 ### Changed

@@ -15,6 +15,7 @@ import testing.FakePreferenceRepository
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
 import testing.RecordingAnalyticsService.Event
+import testing.sessionKeyboardLayout
 import testing.switchModeKeys
 import testing.testGameSession
 import view.tui.BoardLayout
@@ -185,7 +186,7 @@ class ConsoleRemovalScenarioTest {
             buildView = { mode, restoreDone ->
                 builds += mode to restoreDone
                 if (mode == InputMode.KEYBOARD) throw RuntimeException("stty not found")
-                defaultView(mode, board, saves, RecordingAnalyticsService(), restoreDone, sizeChosenAtLaunch = true, mordie, CurrentSaveName(), GameShiftSources(), UnsavedProgress(), SolutionScreen(), SessionTileLabels(TileLabelsPreference(FakePreferenceRepository())), KeyboardSelection()) { terminal }
+                defaultView(mode, board, saves, RecordingAnalyticsService(), restoreDone, sizeChosenAtLaunch = true, mordie, CurrentSaveName(), GameShiftSources(), UnsavedProgress(), SolutionScreen(), SessionTileLabels(TileLabelsPreference(FakePreferenceRepository())), KeyboardSelection(), sessionKeyboardLayout()) { terminal }
             },
         ).run()
 

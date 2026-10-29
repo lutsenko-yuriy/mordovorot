@@ -29,6 +29,7 @@ import viewmodel.ExitRequestedException
 import viewmodel.GameShiftSources
 import viewmodel.ModeSwitcher
 import viewmodel.ModeSwitcherImpl
+import viewmodel.SessionKeyboardLayout
 import viewmodel.SessionTileLabels
 import viewmodel.SolutionScreen
 import viewmodel.UiRequestChannel
@@ -49,7 +50,7 @@ internal fun terminalAnalytics(delegate: AnalyticsService): AnalyticsService =
     PlatformAnalyticsService(delegate, "terminal")
 
 /** A [GameSession] whose every rebuild shares [board], [saves], [mordie], [tileLabels] (GH-139),
- *  one [CurrentSaveName] (GH-99), one [GameShiftSources] and one [KeyboardSelection] (GH-170), one
+ *  [keyboardLayout] (GH-170), one [CurrentSaveName] (GH-99), one [GameShiftSources] and one [KeyboardSelection] (GH-170), one
  *  [UnsavedProgress] (GH-110), which the terminal never reads, and one [SolutionScreen] (GH-126). */
 internal fun buildGameSession(
     initialMode: InputMode,
@@ -59,6 +60,7 @@ internal fun buildGameSession(
     sizeChosenAtLaunch: Boolean,
     mordie: Mordie,
     tileLabels: SessionTileLabels,
+    keyboardLayout: SessionKeyboardLayout,
     terminalFactory: () -> Terminal,
 ): GameSession {
     val currentSaveName = CurrentSaveName()
@@ -69,7 +71,7 @@ internal fun buildGameSession(
     return GameSession(initialMode, mordie) { mode, startupRestoreDone ->
         defaultView(
             mode, board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftSources,
-            unsavedProgress, solutionScreen, tileLabels, keyboardSelection, terminalFactory,
+            unsavedProgress, solutionScreen, tileLabels, keyboardSelection, keyboardLayout, terminalFactory,
         )
     }
 }
@@ -90,6 +92,7 @@ internal fun defaultView(
     solutionScreen: SolutionScreen,
     tileLabels: SessionTileLabels,
     keyboardSelection: KeyboardSelection,
+    keyboardLayout: SessionKeyboardLayout,
     terminalFactory: () -> Terminal,
 ): View {
     val decoratedAnalytics = InputMethodAnalyticsService(analytics, mode.name.lowercase())
@@ -100,9 +103,10 @@ internal fun defaultView(
     return buildTuiView(
         terminalFactory(),
         decoratedAnalytics,
-        if (mode == InputMode.KEYBOARD) KeyboardInput(keyboardSelection) else MouseInput(),
+        if (mode == InputMode.KEYBOARD) KeyboardInput(keyboardSelection, keyboardLayout) else MouseInput(),
         ModeSwitcherImpl(currentMode = mode, analytics = analytics),
         viewModel,
+        keyboardLayout,
     )
 }
 
@@ -141,6 +145,7 @@ internal fun buildTuiView(
     input: TuiInput,
     modeSwitcher: ModeSwitcher,
     viewModel: ViewModel,
+    keyboardLayout: SessionKeyboardLayout,
 ): TuiView {
     val screen = TuiScreen(terminal, input, ScreenRenderer(), viewModel, analytics)
     val saveDialog = SaveDialogController(screen, analytics, viewModel)
@@ -158,7 +163,7 @@ internal fun buildTuiView(
         labelsDialog,
     )
     val giveUpDialog = GiveUpDialogController(screen, analytics, viewModel)
-    val controlsDialog = ControlsDialogController(screen, viewModel, modeSwitcher)
+    val controlsDialog = ControlsDialogController(screen, viewModel, modeSwitcher, keyboardLayout)
     val toolbar = ToolbarRouter(saveDialog, loadDialog, exitDialog, sizeDialog, giveUpDialog, labelsDialog, controlsDialog, viewModel)
     return TuiView(terminal, analytics, input, viewModel, screen, requests, toolbar)
 }

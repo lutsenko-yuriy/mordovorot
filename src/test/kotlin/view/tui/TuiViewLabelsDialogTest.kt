@@ -7,6 +7,7 @@ import kotlinx.coroutines.runBlocking
 import testing.FakeTerminal
 import testing.FakeViewModel
 import testing.RecordingAnalyticsService
+import testing.sessionKeyboardLayout
 import testing.testTuiView
 import viewmodel.TileLabels
 
@@ -63,7 +64,7 @@ class TuiViewLabelsDialogTest {
     fun `F4 opens it from the keyboard, Down marks the next scheme and Enter confirms it`() {
         val run = play(
             listOf(TerminalEvent.KeyPress('4'), TerminalEvent.Arrow(Direction.DOWN), TerminalEvent.Enter),
-            KeyboardInput(KeyboardSelection()),
+            KeyboardInput(KeyboardSelection(), sessionKeyboardLayout()),
             labels = TileLabels.PAIRS,
         )
 
@@ -72,7 +73,7 @@ class TuiViewLabelsDialogTest {
 
     @Test
     fun `Escape cancels from the keyboard`() {
-        val run = play(listOf(TerminalEvent.KeyPress('4'), TerminalEvent.Arrow(Direction.DOWN), TerminalEvent.Escape), KeyboardInput(KeyboardSelection()))
+        val run = play(listOf(TerminalEvent.KeyPress('4'), TerminalEvent.Arrow(Direction.DOWN), TerminalEvent.Escape), KeyboardInput(KeyboardSelection(), sessionKeyboardLayout()))
 
         assertTrue(run.viewModel.calls.none { it.startsWith("changeTileLabels") })
         assertEquals(listOf<Any?>("labels"), run.analytics.events.filter { it.name == "dialog_cancelled" }.map { it.properties["dialog"] })

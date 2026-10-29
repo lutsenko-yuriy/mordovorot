@@ -7,6 +7,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import testing.FakeTerminal
 import testing.FakeViewModel
+import testing.sessionKeyboardLayout
 import testing.testTuiView
 
 /**
@@ -19,7 +20,7 @@ class TuiViewKeyboardBoardTest {
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
 
     private fun view(terminal: FakeTerminal, viewModel: FakeViewModel): TuiView =
-        testTuiView(terminal, input = KeyboardInput(KeyboardSelection()), viewModel = viewModel)
+        testTuiView(terminal, input = KeyboardInput(KeyboardSelection(), sessionKeyboardLayout()), viewModel = viewModel)
 
     @Test
     fun `S then H shifts row 2 left, passing the HJKL key to the viewModel`(): Unit = runBlocking {

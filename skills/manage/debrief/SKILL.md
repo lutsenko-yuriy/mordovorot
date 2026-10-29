@@ -54,6 +54,8 @@ Identify actionable improvements from the dialog. For each:
 - Show the exact change (diff-style: what line/block is replaced and with what)
 - One-sentence rationale tied to what the user said
 
+A follow-up the user wants handled at the next checkup goes in as a row of `docs/knowledge/checkups/LEDGER.md`'s **Carried in** table, not a ticket.
+
 Group by artifact. Present everything to the user and wait for approval. Do not write any files before approval.
 
 If no actionable improvements emerged, say so explicitly and proceed to step 5.

@@ -2,19 +2,23 @@ package view.tui
 
 import board_model.BoardSize
 import viewmodel.GiveUpButton
+import viewmodel.SessionKeyboardLayout
 
 /**
  * GH-18's keyboard-driven [TuiInput], working the session's shared [KeyboardSelection]; its
  * dialog keys are [DialogKeys].
  *
- * Board (GH-170, ADR-0003): the keys of [BoardKeys] move the selected tile and shift its row or
- * column. The digits are the toolbar - 1 New, 2 Save, 3 Load, 4 Labels, 5 the Give Up row's
- * button, 6 Controls - and Escape opens Exit; all stay live when solved (the
+ * Board (GH-170, ADR-0003): the keys of [BoardKeys] for the session's [keyboardLayout], read per event,
+ * move the selected tile and shift its row or column. The digits are the toolbar - 1 New, 2 Save,
+ * 3 Load, 4 Labels, 5 the Give Up row's button, 6 Controls - and Escape opens Exit; all stay live when solved (the
  * selection and shift keys go inert instead, the selection stops rendering) and on the solution
  * screen, whose own keys are [BoardKeys.solutionAction]. Board and dialog events are mutually
  * exclusive, so Escape can't collide with a dialog's Cancel, nor a digit with the Save name field.
  */
-class KeyboardInput(private val selection: KeyboardSelection) : TuiInput {
+class KeyboardInput(
+    private val selection: KeyboardSelection,
+    private val keyboardLayout: SessionKeyboardLayout,
+) : TuiInput {
 
     private var squareSide = BoardSize.DEFAULT
     private var arrowsEnabled = true
@@ -36,7 +40,7 @@ class KeyboardInput(private val selection: KeyboardSelection) : TuiInput {
             event == TerminalEvent.EndOfInput -> InputAction.Quit
             onSolutionScreen -> BoardKeys.solutionAction(event)
             !arrowsEnabled -> InputAction.None // solved: nothing to select or shift
-            else -> when (val key = BoardKeys.boardKey(event)) {
+            else -> when (val key = BoardKeys.boardKey(event, keyboardLayout.current)) {
                 is BoardKey.Select -> {
                     selection.current = selection.current.move(key.direction, squareSide)
                     InputAction.Redraw
@@ -62,8 +66,8 @@ class KeyboardInput(private val selection: KeyboardSelection) : TuiInput {
         return state.copy(
             selection = if (arrowsEnabled) selection.current else null,
             showArrows = false,
-            selectionHint = if (onSolutionScreen) BoardKeys.SOLUTION_HINT else BoardKeys.SELECTION_HINT,
-            shiftHint = if (onSolutionScreen) emptyList() else BoardKeys.SHIFT_HINT,
+            leftHint = if (onSolutionScreen) BoardKeys.SOLUTION_HINT else BoardKeys.leftHint(keyboardLayout.current),
+            rightHint = if (onSolutionScreen) emptyList() else BoardKeys.rightHint(keyboardLayout.current),
             controlsHint = BoardKeys.CONTROLS_HINT,
             toolbarShortcuts = true,
         )

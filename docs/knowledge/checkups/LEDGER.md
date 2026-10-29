@@ -11,6 +11,14 @@ Each tier is tracked as "not yet done this period" — a period label, not an ex
 | Light | 1st of every calendar month | 2026-10-14 | 2026-10 | 2026-11-01 |
 | Heavy | 14th of Jan/Apr/Jul/Oct | 2026-10-14 | 2026-Q4 | 2027-01-14 |
 
+## Carried in
+
+Items raised outside a checkup (e.g. a debrief) for the next run to walk, each under the dimension it names. The run removes the row once handled: fixed inline, or deferred to Open findings.
+
+| Raised | From | For | Dimension | Item |
+|---|---|---|---|---|
+| 2026-10-30 | GH-170 debrief | next light (2026-11) | Unused functionality | `docs/ANALYTICS_EVENTS.md`: remove events, properties and values no code emits anymore (console-era events; terminal `input_mode_switched.trigger` `toolbar`/`shortcut`, retired by GH-170) |
+
 ## Open findings
 
 Findings needing human decision or larger effort, each carrying an explicit deadline — no individual PM ticket is filed at checkup time; a scheduled finding links its ticket as `→ GH-XX` (per ADR-0001 and its 2026-10-14 amendment). Classified using [Fowler's Technical Debt Quadrant](https://martinfowler.com/bliki/TechnicalDebtQuadrant.html) before being written up.

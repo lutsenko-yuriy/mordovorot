@@ -5,13 +5,14 @@ import kotlin.test.assertEquals
 import kotlinx.coroutines.runBlocking
 import testing.FakeTerminal
 import testing.FakeViewModel
+import testing.sessionKeyboardLayout
 import testing.testTuiView
 
 /** GH-83: the viewModel's Mordie line and ending reach the frame, identically in both input modes. */
 class TuiViewMordieTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
-    private val inputs = listOf<() -> TuiInput>(::MouseInput, { KeyboardInput(KeyboardSelection()) })
+    private val inputs = listOf<() -> TuiInput>(::MouseInput, { KeyboardInput(KeyboardSelection(), sessionKeyboardLayout()) })
 
     private fun lastFrame(input: TuiInput, viewModel: FakeViewModel): List<String> = runBlocking {
         val terminal = FakeTerminal(terminalSize = terminalSize)

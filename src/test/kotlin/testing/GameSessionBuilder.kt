@@ -11,6 +11,8 @@ import storage.PreferenceRepository
 import storage.SaveRepository
 import view.View
 import view.tui.Terminal
+import viewmodel.KeyboardLayoutPreference
+import viewmodel.SessionKeyboardLayout
 import viewmodel.SessionTileLabels
 import viewmodel.TileLabelsPreference
 
@@ -26,7 +28,7 @@ fun testGameSession(
     preferences: PreferenceRepository = FakePreferenceRepository(),
 ): GameSession = buildGameSession(
     initialMode, board, saves, analytics, sizeChosenAtLaunch, mordie, SessionTileLabels(TileLabelsPreference(preferences)),
-    terminalFactory,
+    SessionKeyboardLayout(KeyboardLayoutPreference(preferences)), terminalFactory,
 )
 
 /** A [GameSession] over a scripted [buildView], for tests of the session loop itself. */

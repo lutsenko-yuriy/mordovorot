@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-- GH-170: Terminal: keyboard mode on the new keyboard scheme (WU2/4 merged; WU3-4 pending)
+_(nothing in progress)_
 
 ---
 

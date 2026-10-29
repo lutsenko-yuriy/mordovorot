@@ -2,6 +2,8 @@ package view.tui
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import testing.sessionKeyboardLayout
+import viewmodel.KeyboardLayout
 
 /** GH-170: [DialogKeys] on the Controls dialog - focus starts on the option group, the arrows
  *  move its mark there and focus on the buttons, Enter is OK except on Cancel. In both modes. */
@@ -13,11 +15,11 @@ class DialogKeysControlsTest {
         kind = Dialog.Kind.CONTROLS,
         title = "Controls",
         optionGroups = listOf(DialogOptionGroup("Play with", listOf("Mouse", "Keyboard"), selected)),
-        notes = BoardKeys.KEY_LIST,
+        notes = BoardKeys.keyList(KeyboardLayout.RIGHT_HANDED),
         buttons = listOf(DialogButtonSpec("ok", "OK"), DialogButtonSpec("cancel", "Cancel")),
     )
 
-    private val inputs = listOf(KeyboardInput(KeyboardSelection()), MouseInput())
+    private val inputs = listOf(KeyboardInput(KeyboardSelection(), sessionKeyboardLayout()), MouseInput())
 
     private fun TuiInput.press(event: TerminalEvent, dialog: Dialog = dialog()) =
         onDialogEvent(event, dialog, DialogLayout(dialog, terminalSize))

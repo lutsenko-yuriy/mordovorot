@@ -124,12 +124,14 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   (GH-44) opens the same size-picker dialog as the startup prompt and starts a fresh game at
   whichever size is chosen; Cancel leaves the current game untouched.
 - The **Controls** dialog (GH-170), in both modes: `Play with ● Mouse ○ Keyboard` with the
-  current mode marked, then the keyboard mode's key list (board, toolbar and solution-screen
-  keys), then `[ OK ] [ Cancel ]`. Clicking an option marks it; from the keyboard (it opens
-  focused on `Play with`) the arrows move the mark, Tab / Shift+Tab move focus over the group, OK
-  and Cancel, Enter is OK except on Cancel, and Escape cancels. OK with the other mode marked
-  switches to it without losing the current game, the keyboard selection included (GH-30);
-  Cancel changes nothing. If the switch fails (e.g. no `stty`), the game stays in the current
+  current mode marked, `Keyboard keys ● Right-handed ○ Left-handed` with the current layout
+  marked (Feature 7), then the keyboard mode's key list for the marked layout (board, toolbar and
+  solution-screen keys; it changes as the mark moves), then `[ OK ] [ Cancel ]`. Clicking an
+  option marks it; from the keyboard (it opens focused on `Play with`) the arrows move the mark,
+  Tab / Shift+Tab move focus over the groups, OK and Cancel, Enter is OK except on Cancel, and
+  Escape cancels. OK applies the marked layout and remembers it in `saves/preferences`
+  (`keyboard_layout=left_handed`); with the other mode marked it then switches to it without
+  losing the current game, the keyboard selection included (GH-30). Cancel changes nothing. If the switch fails (e.g. no `stty`), the game stays in the current
   mode with `Could not switch to <mode> mode (<reason>) - staying in <current> mode.` (GH-79).
 - `[ Labels ]` (GH-139) opens the **Tile labels** dialog: one row per scheme (Numbers, Numbers
   from 0, Pairs, Pairs from 0, Letters, Letter pairs), each with the solved board's first row as
@@ -173,15 +175,21 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 - **Tile selection (GH-170, the keyboard scheme of ADR-0003):** keyboard mode doesn't draw the
   `◀`/`▶`/`▲`/`▼` arrows. One tile is selected: it is drawn in reverse video, the rest of its
   row on a pale yellow background and the rest of its column on light grey, with black text.
-  - **W/A/S/D** move the selected tile up/left/down/right, wrapping at the edges.
-  - **H/L** or **←/→** shift its row left/right; **K/J** or **↑/↓** shift its column up/down.
-    The selection stays where it is after a shift. Letters work in either case; Enter and
+  The keys depend on the layout picked in the Controls dialog (right-handed by default):
+  - Right-handed: **W/A/S/D** move the selected tile up/left/down/right, wrapping at the edges;
+    **H/L** or **←/→** shift its row left/right; **K/J** or **↑/↓** shift its column up/down.
+  - Left-handed: **H/J/K/L** or the arrows move the selected tile; **A/D** shift its row,
+    **W/S** its column. The toolbar digits and the solution screen's keys are the same in both.
+  - The selection stays where it is after a shift. Letters work in either case; Enter and
     Space do nothing on the board.
   - Row 1 / column 1 is selected at launch. A new game, a load or a size change keeps the
     selection, clamped to a smaller board (row 5 / column 2 on 5x5 becomes row 3 / column 2 on
     3x3); switching to mouse mode and back keeps it too.
-  - The board stays centred: `W/A/S/D select` sits to its left, `←/→ H/L row` /
-    `↑/↓ K/J column` to its right.
+  - The board stays centred, each hand's keys on its side: right-handed `W/A/S/D select` to its
+    left and `←/→ H/L row` / `↑/↓ K/J column` to its right; left-handed `A/D row` / `W/S column`
+    to its left and `←↑↓→ H/J/K/L select` to its right.
+  - The layout is remembered between sessions in `saves/preferences` and kept across mode
+    switches; a storage error just means it isn't remembered.
   - Once solved, the highlight disappears and the selection and shift keys go inert, matching
     mouse mode's dimmed arrows; the hints stay.
 - **Toolbar digits (GH-170)**, shown in light blue on the toolbar buttons

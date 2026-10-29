@@ -29,7 +29,7 @@ If both tiers are due (or both are forced across the conversation), run them one
 
 ### 2. Walk the tier's dimensions
 
-Read `resources/light-dimensions.md` (light tier, 5 dimensions) or `resources/heavy-dimensions.md` (heavy tier, 4 dimensions). Work through each dimension in order, applying its heuristic to the current codebase.
+Read `resources/light-dimensions.md` (light tier, 5 dimensions) or `resources/heavy-dimensions.md` (heavy tier, 4 dimensions). Work through each dimension in order, applying its heuristic to the current codebase. Also walk every row of the ledger's **Carried in** table whose `For` matches this tier, under its dimension; remove each row once handled (fixed inline, or deferred to Open findings).
 
 ### 3. Handle each finding
 

@@ -323,6 +323,8 @@ settled it: no accessibility usage signal is acceptable, on any terms.
   dialog is now the only way to switch.
 - `dialog_cancelled.dialog` takes a new value, `controls` (Cancel or Escape in the Controls dialog).
 - `board_solved.shift_keys` is sent only in the right-handed layout; absent in the left-handed one.
+  Left-handed shifts aren't counted at all, so a game that switched layout mid-way reports only its
+  right-handed keys: a left-handed key value would reveal the layout (see below).
 - The keyboard layout itself is not tracked anywhere (no change event, nothing on `app_launched` or
   `board_solved`): someone with an injured or impaired hand may pick the left-handed layout, which
   makes it the kind of accessibility usage signal GH-180 ruled out.
