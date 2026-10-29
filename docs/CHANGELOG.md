@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.26.2] — 2026-10-29 (PR #190 merged)
+
+### Changed
+- [meta] (PR #190) GH-189: a Controls dialog and a left-handed layout, recorded as an amendment to ADR-0003; the glossary gains the controls and handedness terms; the GH-189 debrief note.
+
 ## [0.26.1] — 2026-10-29 (PR #188 merged)
 
 ### Changed
