@@ -90,6 +90,8 @@ entry (`DIV.step[1-6]`), and `inline-size` and the like are left out when they o
 means no differences; 1 means differences, or a case on one side only; 2 means a usage error, a
 failed build or a `TIMEOUT`. It serves on port 8767 (`STYLES_DIFF_PORT`), so it can run
 next to `measure.sh` (8765) and `serve_lan.sh` (8766).
+Two runs on the same port, from two sessions or from a review agent next to you, mix up their
+results: give each its own `PHONE_FIT_PORT` and `STYLES_DIFF_PORT` (GH-168).
 
 Before calling a difference a regression, rerun the cases it's in. The harness waits for
 animations to finish (up to 5s) before reading the styles, but a case can still be caught midway
