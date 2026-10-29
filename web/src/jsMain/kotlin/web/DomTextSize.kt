@@ -13,7 +13,7 @@ internal fun applySystemTextSize(document: Document, window: Window) {
     val root = document.documentElement as? HTMLElement ?: return
     val scale = textScaleOf(pxOf(window.getComputedStyle(root).fontSize), appleBodyPx(document, window))
     root.style.setProperty("--text-scale", scale.toString())
-    root.style.fontSize = "${16 * scale}px"
+    root.style.fontSize = "${rootFontPx(scale)}px"
 }
 
 /** Dynamic Type's body size, iOS and iPadOS only: macOS Safari knows the same font, at 13px. */

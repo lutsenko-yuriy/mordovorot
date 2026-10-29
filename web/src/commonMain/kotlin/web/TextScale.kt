@@ -10,5 +10,8 @@ private const val STANDARD_APPLE_BODY_PX = 17.0
 fun textScaleOf(rootPx: Double?, appleBodyPx: Double?): Double =
     maxOf(1.0, ratio(rootPx, STANDARD_ROOT_PX), ratio(appleBodyPx, STANDARD_APPLE_BODY_PX))
 
+/** The root's font size for [scale], which every rem follows. */
+fun rootFontPx(scale: Double): Double = STANDARD_ROOT_PX * scale
+
 private fun ratio(px: Double?, standard: Double): Double =
     if (px != null && px.isFinite() && px > 0) px / standard else 1.0

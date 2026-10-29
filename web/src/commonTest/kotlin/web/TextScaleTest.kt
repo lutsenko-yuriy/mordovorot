@@ -41,4 +41,10 @@ class TextScaleTest {
             assertEquals(1.25, textScaleOf(20.0, bad), "$bad")
         }
     }
+
+    @Test
+    fun `the root's font size is the standard 16px times the scale`() {
+        assertEquals(16.0, rootFontPx(1.0))
+        assertEquals(24.0, rootFontPx(1.5))
+    }
 }

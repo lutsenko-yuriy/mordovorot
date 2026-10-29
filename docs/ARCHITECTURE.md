@@ -263,15 +263,17 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # over InMemoryKeyValueStore
 ├── src/jvmTest/kotlin/web/IndexPageTest.kt # Pins the title rule (the title appears only in the tab)
 │                                       # and relative asset URLs (GH-111: the public site's sub-path);
-│                                       # every sheet linked, in order (GH-153); #announcer (GH-166)
+│                                       # every sheet linked, in order (GH-153); #announcer (GH-166);
+│                                       # the `text-scale` meta (GH-168)
 ├── src/jvmTest/kotlin/web/AnnouncerStylesTest.kt # GH-166: .visually-hidden clips, never hides from
 │                                       # screen readers (no display: none or visibility: hidden)
 ├── src/jvmTest/kotlin/web/BuildInfoTest.kt, CreditsTest.kt # GH-111: the stamped version is the
 │                                       # build's; the footer's credit matches the README's
 ├── src/jvmTest/kotlin/web/PhoneFitStylesTest.kt # GH-147, GH-148: pins the tall and wide fit rules
 │                                       # (styles.css, fit.css, solution.css)
-├── src/jvmTest/kotlin/web/TextSizeStylesTest.kt # GH-168: text in rem, tile labels' cap; with larger text, rows wrap and the
-│                                       # columns beside the board leave it 16px tiles
+├── src/jvmTest/kotlin/web/TextSizeStylesTest.kt # GH-168: text in rem, tile labels' cap; with
+│                                       # larger text, rows and step lines wrap, the columns beside
+│                                       # the board leave it 16px tiles, never wider than the window
 ├── src/jvmTest/kotlin/web/ColourContrastStylesTest.kt # GH-165: palette.css's text pairs, non-text
 │                                       # edges and every tile label of every board meet WCAG AA
 │                                       # in both themes; pins board.css's tile formula (Wcag.kt)
