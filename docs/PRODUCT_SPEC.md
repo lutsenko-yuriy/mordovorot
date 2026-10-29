@@ -346,9 +346,8 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
     doesn't select the game's text or offer to copy it. The save name field and the footer stay
     selectable.
   - **No zoom on touch screens (GH-149):** a pinch doesn't zoom the page either, and focusing the
-    save name field doesn't zoom into it. Desktop zoom (keys, wheel, trackpad) still works. This
-    takes zoom from players who need bigger text; GH-150 is to give the game its own way to read
-    larger.
+    save name field doesn't zoom into it. Desktop zoom (keys, wheel, trackpad) still works. Players
+    who need bigger text get it from their system's text size instead (GH-168).
 - **Dragging:** press a tile and drag. Once the pointer has moved a few pixels, the larger
   direction picks the tile's row or column. The line follows the pointer with wrap-around, and
   on release it slides to the nearest whole tile.
@@ -400,6 +399,13 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
     the older estimate, which can scroll on short phones.
   - The toolbar's buttons stay on one row, tighter on screens under 380px wide (GH-147) and on
     wide ones under 760px wide (GH-148).
+  - **Larger text (GH-168):** the page's text follows the text size the player set outside the
+    game: the browser's font size, Android's text scaling (Chrome for Android 156 and later) or
+    iOS Dynamic Type, accessibility sizes included. Tile labels grow with it until they fill
+    their tile. A smaller setting leaves the text at the standard size, and a change shows from
+    the next page load. Where the larger text no longer fits, the board shrinks down to 16px tiles,
+    then the page scrolls vertically; rows of buttons wrap, and the page never scrolls sideways.
+    At the standard size the page is as above.
   - The footer sits at the very bottom in both (GH-111).
 - **Footer (GH-111):** one small muted line,
   `v<version> · Based on Loopover by Cary Huang (carykh) · original · loopover.xyz`. The version is

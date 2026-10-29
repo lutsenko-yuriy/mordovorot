@@ -6,7 +6,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /** GH-110: the tab title is `Mordovorot`, and the title appears nowhere else on the page. GH-166:
- *  the screen reader's live region. */
+ *  the screen reader's live region. GH-168: Chrome on Android passes the system text size to the page. */
 class IndexPageTest {
     private val page = File("src/jsMain/resources/index.html").readText()
 
@@ -25,7 +25,7 @@ class IndexPageTest {
     fun `page loads its files by relative URLs, so it works under the public site's sub-path`() {
         val urls = Regex("""(?:src|href)="([^"]*)"""").findAll(page).map { it.groupValues[1] }.toList()
 
-        assertEquals(listOf("palette.css", "styles.css", "fit.css", "board.css", "dialogs.css", "solution.css", "web.js"), urls)
+        assertEquals(listOf("palette.css", "styles.css", "buttons.css", "fit.css", "board.css", "dialogs.css", "solution.css", "web.js"), urls)
     }
 
     /** GH-153: a sheet left unlinked would ship in the bundle but never load. */
@@ -53,5 +53,11 @@ class IndexPageTest {
     @Test
     fun `page loads the compiled game script`() {
         assertTrue("""<script src="web.js"></script>""" in page)
+    }
+
+    /** GH-168: without it, Chrome on Android leaves the default font size at 16px whatever the system's. */
+    @Test
+    fun `page asks for the system text size`() {
+        assertTrue("""<meta name="text-scale" content="scale">""" in page.substringBefore("</head>"))
     }
 }

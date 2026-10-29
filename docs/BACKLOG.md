@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-- GH-168: Web: larger text without browser zoom (WU2/3 merged; WU3 pending)
+_(nothing in progress)_
 
 ---
 

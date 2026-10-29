@@ -1,0 +1,37 @@
+/* GH-110: buttons, and the keyboard focus ring (GH-163). Split from styles.css (GH-168). */
+
+button {
+    font: inherit;
+    font-weight: 600;
+    border: 0;
+    border-radius: 8px;
+    padding: 0.55em 1.1em;
+    background: var(--button);
+    color: var(--button-ink);
+    cursor: pointer;
+    transition: background-color 0.15s, transform 0.1s;
+}
+
+button:hover:not(:disabled) {
+    background: var(--button-hover);
+}
+
+button:active:not(:disabled) {
+    transform: scale(0.96);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+/* GH-163: dialogs focus a control by script, which would ring it for the mouse too, so the ring
+   waits for the first key press (DomKeyboard sets `keyboard`). */
+button:focus-visible {
+    outline: none;
+}
+
+.app.keyboard button:focus-visible {
+    outline: 3px solid var(--warning);
+    outline-offset: 2px;
+}

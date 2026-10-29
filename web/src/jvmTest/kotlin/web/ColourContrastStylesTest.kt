@@ -39,7 +39,7 @@ class ColourContrastStylesTest {
     @Test
     fun `text meets 4_5 to 1`() {
         val ink = paint("styles.css", "body", "color")
-        val buttonInk = paint("styles.css", "button", "color")
+        val buttonInk = paint("buttons.css", "button", "color")
         val failures = listOf(
             check(ink, "page", 4.5, "moves and text"),
             check(ink, "frame", 4.5, "solution steps"),
@@ -61,7 +61,7 @@ class ColourContrastStylesTest {
 
     @Test
     fun `non-text meets 3 to 1`() {
-        val ring = paint("styles.css", ".app.keyboard button:focus-visible", "outline")
+        val ring = paint("buttons.css", ".app.keyboard button:focus-visible", "outline")
         val failures = listOf(
             check(ring, "page", 3.0, "focus ring"),
             check(ring, "frame", 3.0, "focus ring on the board's frame"),

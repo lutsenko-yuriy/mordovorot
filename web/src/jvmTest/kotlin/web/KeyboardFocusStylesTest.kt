@@ -7,7 +7,7 @@ import kotlin.test.assertTrue
 /** GH-163: dialogs focus their default control by script, which would draw the focus ring for
  *  mouse users too, so the ring waits for the first key press (DomKeyboard's `keyboard` class). */
 class KeyboardFocusStylesTest {
-    private val styles = File("src/jsMain/resources/styles.css").readText()
+    private val styles = File("src/jsMain/resources/buttons.css").readText()
 
     private fun rule(selector: String) =
         Regex("""(?m)^${Regex.escape(selector)} \{([^}]*)}""").find(styles)?.groupValues?.get(1).orEmpty()

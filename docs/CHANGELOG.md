@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.26.0] — 2026-10-29 (PR #185 merged)
+
+### Changed
+- [user] (PR #185) GH-168: The web game's text follows the text size set in your browser or on your phone, and the page scrolls when it no longer fits.
+
 ## [0.25.2] — 2026-10-28 (PR #184 merged)
 
 ### Changed

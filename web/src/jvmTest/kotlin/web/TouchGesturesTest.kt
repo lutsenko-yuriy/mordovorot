@@ -36,7 +36,8 @@ class TouchGesturesTest {
 
     @Test
     fun `the save field is never under 16px, so iOS doesn't zoom into it`() {
-        assertTrue("font: 16px/" in rule("body"), rule("body"))
+        // GH-168: 1rem, which DomTextSize never lets under 16px.
+        assertTrue("font: 1rem/" in rule("body"), rule("body"))
         assertTrue("font-size: max(16px, 1em);" in rule(".dialog input", dialogs), rule(".dialog input", dialogs))
     }
 

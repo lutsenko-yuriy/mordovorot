@@ -14,6 +14,8 @@ import web.storage.LocalStorageStore
 
 /** The page's composition root (GH-110). */
 fun main() {
+    // First, while the root's font size is still the browser's default.
+    applySystemTextSize(document, window)
     val root = document.getElementById("app") as? HTMLElement ?: return
     stopPinchZoom(document, window.navigator)
     // Outside #app, which DomRenderer rebuilds every frame: the footer never changes.

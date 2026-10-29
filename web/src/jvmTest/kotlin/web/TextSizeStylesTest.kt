@@ -4,12 +4,14 @@ import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/** GH-168: with larger text, rows of buttons wrap rather than run past the window's side. */
+/** GH-168: the page's text follows the system text size, and with larger text, rows of buttons wrap
+ *  rather than run past the window's side. */
 class TextSizeStylesTest {
     private val styles = File("src/jsMain/resources/styles.css").readText()
     private val solution = File("src/jsMain/resources/solution.css").readText()
     private val dialogs = File("src/jsMain/resources/dialogs.css").readText()
     private val fit = File("src/jsMain/resources/fit.css").readText()
+    private val board = File("src/jsMain/resources/board.css").readText()
 
     /** Every top-level block in [css] that opens with [opening], up to its closing brace, joined. */
     private fun block(opening: String, css: String = styles): String =
@@ -43,8 +45,8 @@ class TextSizeStylesTest {
     }
 
     /** Grown with the text, the columns beside the board would leave it less than 16px tiles. A classic
-     *  scrollbar, once the page scrolls, comes out of 100vw too. The steps, whose lines never wrap, keep
-     *  their width up to half the room; the panel, whose toolbar wraps, gives way first. */
+     *  scrollbar, once the page scrolls, comes out of 100vw too. The steps, whose lines wrap only as a
+     *  last resort, keep their width up to half the room; the panel, whose toolbar wraps, gives way first. */
     @Test
     fun `wide, the columns beside the board give way to its 16px tiles`() {
         val wide = rule(block("@media (orientation: landscape)"), ".app")
@@ -63,6 +65,23 @@ class TextSizeStylesTest {
         assertTrue("--panel" !in narrowSteps && "--panel:" !in narrowWide, narrowSteps + narrowWide)
     }
 
+    /** Sized from 100vw, the board and panel are a classic scrollbar's width wider than the window once
+     *  larger text makes the page scroll. The page's column stays the window's width, so they overflow
+     *  into the app's side padding, and the footer isn't stretched past the edge. */
+    @Test
+    fun `wide, the page's column is never wider than the window`() {
+        val body = rule(block("@media (orientation: landscape)"), "body")
+
+        assertTrue("grid-template-columns: minmax(0, 1fr);" in body, body)
+        assertTrue("overflow-x" !in rule(styles, "body"), rule(styles, "body"))
+    }
+
+    /** At the largest sizes a step's line is wider than its column; it wraps rather than scroll sideways. */
+    @Test
+    fun `a step's line wraps when its column is too narrow`() {
+        assertTrue("nowrap" !in rule(solution, ".step"), rule(solution, ".step"))
+    }
+
     /** A fixed width would set the page's narrowest, however small the window (max-width doesn't). */
     @Test
     fun `tall, the steps are never wider than the window`() {
@@ -77,5 +96,32 @@ class TextSizeStylesTest {
         val wide = rule(block("@media (orientation: landscape)"), ":root")
 
         assertTrue("--footer: max(26px, 1.625rem);" in wide, wide)
+    }
+
+    /** In rem, so it follows the root size DomTextSize sets; 16px at the standard size, as before. */
+    @Test
+    fun `the page's text is 1rem`() {
+        assertTrue("font: 1rem/1.4 system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif;" in rule(styles, "body"), rule(styles, "body"))
+    }
+
+    /** A px size ignores the system text size. Tile labels and arrows follow the tile instead, and
+     *  the save name field's 16px floor keeps iOS from zooming into it (GH-149). */
+    @Test
+    fun `no text is sized in bare px`() {
+        val sheets = File("src/jsMain/resources").listFiles { f -> f.extension == "css" }.orEmpty()
+        val px = sheets.flatMap { sheet ->
+            Regex("""font(?:-size)?:[^;]*\d+px[^;]*;""").findAll(sheet.readText()).map { "${sheet.name}: ${it.value}" }
+        }
+
+        assertTrue(px == listOf("dialogs.css: font-size: max(16px, 1em);"), px.toString())
+    }
+
+    /** Grown with the text, up to the size at which a two-character label still fits its tile. At
+     *  the standard size the first term wins, as before. */
+    @Test
+    fun `tile labels grow with the text, up to their tile`() {
+        val tile = rule(board, ".tile")
+
+        assertTrue("font-size: calc(var(--tile) * min(0.4 * var(--text-scale, 1), 0.6));" in tile, tile)
     }
 }

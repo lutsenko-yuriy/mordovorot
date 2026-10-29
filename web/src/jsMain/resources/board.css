@@ -76,7 +76,8 @@
     /* Each row its own hue, darker along the row, so where a tile belongs shows at a glance. */
     background: hsl(calc(var(--row) * 360deg / var(--side) + 8deg) 68% calc(var(--tile-light) - var(--col) * var(--tile-ramp) / (var(--side) - 1)));
     color: var(--tile-ink);
-    font-size: calc(var(--tile) * 0.4);
+    /* Grown with the text (GH-168), up to the size at which a two-character label still fits. */
+    font-size: calc(var(--tile) * min(0.4 * var(--text-scale, 1), 0.6));
     font-weight: 700;
     box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12);
     user-select: none;

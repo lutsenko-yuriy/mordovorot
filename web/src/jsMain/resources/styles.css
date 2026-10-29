@@ -1,7 +1,8 @@
 /* GH-110: the browser game's look. DomRenderer sets --side on #app and each tile's --x/--y (where it
-   sits) and --row/--col (where it belongs, which picks its colour). The board, the dialogs and the
-   solution screen have sheets of their own, linked after this one (GH-153), and so do the rules that
-   fit the page to phones (fit.css, GH-148). The colours are in palette.css, linked first (GH-165). */
+   sits) and --row/--col (where it belongs, which picks its colour). The buttons (GH-168), the board,
+   the dialogs and the solution screen have sheets of their own, linked after this one (GH-153), and so
+   do the rules that fit the page to phones (fit.css, GH-148). The colours are in palette.css, linked
+   first (GH-165). */
 
 :root {
     /* The footer's height, left out of the board's room (GH-111): up to three lines when tall,
@@ -46,7 +47,7 @@ html {
 body {
     background: var(--page);
     color: var(--ink);
-    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font: 1rem/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 /* Sized so the board and its arrows fit the window beside (wide) or under (tall) the rest. */
@@ -87,6 +88,9 @@ body {
 
     body {
         display: grid;
+        /* The window's width: once larger text scrolls the page, a classic scrollbar leaves less than
+           the 100vw the app is sized from, which then overflows into its own side padding (GH-168). */
+        grid-template-columns: minmax(0, 1fr);
         grid-template-rows: minmax(0, 1fr) auto;
         min-height: var(--vh);
     }
@@ -246,44 +250,6 @@ body {
 
 .footer a:hover {
     color: var(--ink);
-}
-
-/* ---- Buttons ---- */
-
-button {
-    font: inherit;
-    font-weight: 600;
-    border: 0;
-    border-radius: 8px;
-    padding: 0.55em 1.1em;
-    background: var(--button);
-    color: var(--button-ink);
-    cursor: pointer;
-    transition: background-color 0.15s, transform 0.1s;
-}
-
-button:hover:not(:disabled) {
-    background: var(--button-hover);
-}
-
-button:active:not(:disabled) {
-    transform: scale(0.96);
-}
-
-button:disabled {
-    opacity: 0.5;
-    cursor: default;
-}
-
-/* GH-163: dialogs focus a control by script, which would ring it for the mouse too, so the ring
-   waits for the first key press (DomKeyboard sets `keyboard`). */
-button:focus-visible {
-    outline: none;
-}
-
-.app.keyboard button:focus-visible {
-    outline: 3px solid var(--warning);
-    outline-offset: 2px;
 }
 
 /* ---- The board's stage (the board itself is in board.css, the fits to phones in fit.css) ---- */
