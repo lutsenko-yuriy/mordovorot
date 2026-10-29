@@ -123,6 +123,12 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                             # NUMBERS is the default (GH-139)
 │       ├── TileLabelsPreference.kt # TileLabels over a PreferenceRepository under `tile_labels`;
 │       │                             # a failed read is no preference, a failed write is silent (GH-139)
+│       ├── KeyboardLayout.kt      # RIGHT_HANDED (default) / LEFT_HANDED: wireName (the preference
+│       │                             # only, never analytics) and title (GH-170)
+│       ├── KeyboardLayoutPreference.kt # KeyboardLayout under `keyboard_layout`, like
+│       │                             # TileLabelsPreference (GH-170)
+│       ├── SessionKeyboardLayout.kt # The session's layout: the preference read once; choose()
+│       │                             # applies and writes it. One per session, so a mode switch keeps it (GH-170)
 │       ├── SessionTileLabels.kt   # The session's labels and TileLabelsSource: a save's labels
 │       │                             # beat the preference, which beats NUMBERS. One per session,
 │       │                             # so a mode switch keeps them; reads the preference once (GH-139).
@@ -299,7 +305,7 @@ src/main/kotlin/                # the terminal app (the root project)
 │                          # through its buildView(mode, startupRestoreDone) - wired by
 │                          # buildGameSession so every rebuild shares one board, saves and
 │                          # CurrentSaveName (GH-99), KeyboardSelection and GameShiftSources
-│                          # (GH-101), UnsavedProgress (GH-110) -
+│                          # (GH-101), UnsavedProgress (GH-110), SessionKeyboardLayout (GH-170) -
 │                          # runs play(), and re-enters on ModeSwitchRequestedException. A
 │                          # rebuild's play() throwing anything else falls back to the previous
 │                          # mode (GH-79) instead of crashing and losing the in-progress game -
@@ -356,9 +362,10 @@ src/main/kotlin/                # the terminal app (the root project)
         │                      # shiftTarget(direction) for its row/column, clampedTo(side).
         │                      # Plus KeyboardSelection, its session-lifetime holder (made by
         │                      # buildGameSession, so it survives mode switches)
-        ├── BoardKeys.kt     # Keyboard mode's key scheme (ADR-0003): the board keys (select /
-        │                      # shift), the solution screen's keys, every hint text and the
-        │                      # Controls dialog's key list (GH-170)
+        ├── BoardKeys.kt     # Keyboard mode's key scheme (ADR-0003) per KeyboardLayout: the board
+        │                      # keys (select / shift; a left-handed shift has no ShiftKey), the
+        │                      # solution screen's keys, every hint text and the Controls
+        │                      # dialog's key list (GH-170)
         ├── Dialog.kt / DialogLayout.kt     # One model + one geometry class for all four
         │                                     # modal dialogs (Save/Load/Exit/Size (GH-44, a
         │                                     # buttons-only kind, so DialogLayout/DialogFocus
@@ -396,8 +403,9 @@ src/main/kotlin/                # the terminal app (the root project)
         ├── MouseInput.kt    # TuiInput impl: today's click-driven behaviour, plus 6 and the
         │                      # Controls dialog's DialogKeys (GH-170). Used by both the default
         │                      # mouse mode and the explicit --mouse flag (GH-18)
-        ├── KeyboardInput.kt # TuiInput impl for --keyboard mode (GH-18): BoardKeys over the
-        │                      # shared KeyboardSelection, the toolbar digits (GH-170) and
+        ├── KeyboardInput.kt # TuiInput impl for --keyboard mode (GH-18): BoardKeys for the
+        │                      # session's SessionKeyboardLayout over the shared
+        │                      # KeyboardSelection, the toolbar digits (GH-170) and
         │                      # DialogKeys
         ├── dialog/          # One controller per dialog flow (GH-78), each over TuiScreen's
         │                      # runModal: SaveDialogController (toolbar Save + the exit flow's
@@ -409,8 +417,9 @@ src/main/kotlin/                # the terminal app (the root project)
         │                      # UnsolvableDialogController (GH-74's repair/new game/exit),
         │                      # GiveUpDialogController (Give Up/5's confirmation, GH-126),
         │                      # LabelsDialogController (Labels/4's Tile labels dialog, GH-139),
-        │                      # ControlsDialogController (Controls/6: Play with + the key list,
-        │                      # OK switches mode through ModeSwitcher, GH-170)
+        │                      # ControlsDialogController (Controls/6: Play with, Keyboard keys
+        │                      # and the key list; OK applies the layout, then switches mode
+        │                      # through ModeSwitcher, GH-170)
         ├── UiRequestRouter.kt # Answers each UiRequest with the dialog that owns it - an
         │                      # exhaustive `when`, so a new request needs an answer to compile
         ├── ToolbarRouter.kt # Runs the activated toolbar button: Save/Load/Exit/New, Labels
@@ -445,7 +454,8 @@ src/test/kotlin/                # the terminal app's tests; board_model / analyt
 ├── TileLabelsScenarioTest.kt # GH-139 end to end: the Tile labels dialog, the preference and
 │                            # saves' labels, in mouse and keyboard mode
 ├── KeyboardTileSelectionScenarioTest.kt / ControlsScenarioTest.kt # GH-170 end to end: the
-│                            # selected tile, the digit toolbar, the Controls dialog and its switch
+│                            # selected tile, the digit toolbar, the Controls dialog, its switch
+│                            # and the left-handed layout
 ├── GameSessionTest.kt     # Session loop: startupRestoreDone seeding, multi-switch chains,
 │                            # failed-switch fallback, Mordie stopped on exit (GH-30)
 ├── AppWiringTest.kt      # Composition root: each mode's Controls switch really switches, a mode
@@ -759,8 +769,9 @@ a real terminal.
 
 `InputMode` no longer only decides where a session *begins* — `GameSession`
 lets it switch mid-session, driven by `ModeSwitcher`. The Controls dialog
-(`[ Controls 6 ]` / 6 in either mode, GH-170) opens with `ModeSwitcher.currentMode` marked; OK
-with the other mode marked has `ControlsDialogController` call `ModeSwitcherImpl`, which tracks
+(`[ Controls 6 ]` / 6 in either mode, GH-170) opens with `ModeSwitcher.currentMode` and
+`SessionKeyboardLayout.current` marked; OK applies the marked layout, then, with the other mode
+marked, has `ControlsDialogController` call `ModeSwitcherImpl`, which tracks
 `input_mode_switched` (`trigger: controls_dialog`) and throws `ModeSwitchRequestedException`.
 `GameSession` catches the exception, rebuilds the `View`/viewmodel/analytics
 stack for the new mode (through `buildGameSession`'s closure) around the *same*
