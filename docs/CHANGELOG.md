@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.26.4] — 2026-10-30 (PR #193 merged)
+
+### Changed
+- [wip] (PR #193) GH-170 (WU2/4): the terminal's Controls dialog replaces the mode switch: `[ Controls 6 ]` / 6 in both modes opens it with Play with (Mouse / Keyboard) and the key list; OK with the other mode marked switches mode keeping the game, Cancel/Escape change nothing. New analytics: screen_controls_dialog, dialog_cancelled {controls}, input_mode_switched trigger controls_dialog.
+
 ## [0.26.3] — 2026-10-29 (PR #192 merged)
 
 ### Changed
