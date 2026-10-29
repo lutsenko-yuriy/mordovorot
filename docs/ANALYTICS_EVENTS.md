@@ -317,6 +317,16 @@ without a user ID. Whether any accessibility usage signal is acceptable is GH-18
 scrolling because large text didn't fit, would mark a session as "probably low vision". GH-180
 settled it: no accessibility usage signal is acceptable, on any terms.
 
+*GH-170:* the Controls dialog (`[ Controls 6 ]` / 6) replaces the terminal's mode switch.
+- `input_mode_switched` fires on OK in the Controls dialog with a different mode marked; `trigger`
+  takes a new value, `controls_dialog`. On `terminal`, `toolbar` and `shortcut` are retired: the
+  dialog is now the only way to switch.
+- `dialog_cancelled.dialog` takes a new value, `controls` (Cancel or Escape in the Controls dialog).
+- `board_solved.shift_keys` is sent only in the right-handed layout; absent in the left-handed one.
+- The keyboard layout itself is not tracked anywhere (no change event, nothing on `app_launched` or
+  `board_solved`): someone with an injured or impaired hand may pick the left-handed layout, which
+  makes it the kind of accessibility usage signal GH-180 ruled out.
+
 <!-- All events above are sent through `analytics.AnalyticsService`, currently backed by
      `analytics.NoopAnalyticsService` (no real SDK wired up yet). -->
 
@@ -361,3 +371,9 @@ settled it: no accessibility usage signal is acceptable, on any terms.
 *GH-160:* `screen_labels_dialog.opened_from` takes a new value, `letters_save`: the dialog opened by
 itself after the warning for a 6x6 save with Letters labels. Cancel there is `dialog_cancelled`
 with `dialog: labels`, as usual.
+
+*GH-170:* new screen view:
+
+| Screen name | When tracked |
+|---|---|
+| `screen_controls_dialog` | The Controls dialog opens. Properties `opened_from`: `toolbar` (`[ Controls 6 ]` click) or `shortcut` (6, in either mode); `screen`: `play`, `solved` or `solution`; `input_method`: `mouse` or `keyboard`. *(GH-170)* |
