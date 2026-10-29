@@ -10,6 +10,7 @@ import testing.FakeSaveRepository
 import testing.FakeTerminal
 import testing.FakeViewModel
 import testing.RecordingAnalyticsService
+import testing.sessionKeyboardLayout
 import testing.testTuiView
 import testing.testViewModel
 import viewmodel.ViewModelImpl
@@ -95,7 +96,7 @@ class TuiViewSizeDialogTest {
             terminalSize = terminalSize,
         )
 
-        testTuiView(terminal, analytics, input = KeyboardInput(KeyboardSelection()), viewModel = testViewModel(board, saves, analytics, sizeChosenAtLaunch = true)).play()
+        testTuiView(terminal, analytics, input = KeyboardInput(KeyboardSelection(), sessionKeyboardLayout()), viewModel = testViewModel(board, saves, analytics, sizeChosenAtLaunch = true)).play()
 
         assertTrue(terminal.frames.any { it.contains("New game size") })
         assertTrue(board.calls.contains("newGame(3)"))

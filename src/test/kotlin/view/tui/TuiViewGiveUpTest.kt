@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import testing.FakeTerminal
 import testing.FakeViewModel
 import testing.RecordingAnalyticsService
+import testing.sessionKeyboardLayout
 import testing.testTuiView
 import viewmodel.GiveUpButton
 import viewmodel.SolutionState
@@ -111,11 +112,11 @@ class TuiViewGiveUpTest {
     @Test
     fun `in keyboard mode F8 opens the confirmation and Enter on the solution screen goes next`() {
         val giveUp = FakeViewModel().apply { giveUpButton = GiveUpButton.GIVE_UP }
-        play(giveUp, TerminalEvent.KeyPress('5'), TerminalEvent.Escape, input = KeyboardInput(KeyboardSelection()))
+        play(giveUp, TerminalEvent.KeyPress('5'), TerminalEvent.Escape, input = KeyboardInput(KeyboardSelection(), sessionKeyboardLayout()))
         assertEquals(1, analytics.events.count { it.name == "screen_give_up_dialog" })
 
         val screen = onScreen()
-        play(screen, TerminalEvent.Enter, input = KeyboardInput(KeyboardSelection()))
+        play(screen, TerminalEvent.Enter, input = KeyboardInput(KeyboardSelection(), sessionKeyboardLayout()))
         assertTrue("replayNext" in screen.calls)
     }
 

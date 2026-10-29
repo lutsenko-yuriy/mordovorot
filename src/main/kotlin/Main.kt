@@ -8,6 +8,8 @@ import mordie.Mordie
 import storage.FilePreferenceRepository
 import storage.FileSaveRepository
 import view.tui.AnsiTerminal
+import viewmodel.KeyboardLayoutPreference
+import viewmodel.SessionKeyboardLayout
 import viewmodel.SessionTileLabels
 import viewmodel.TileLabels
 import viewmodel.TileLabelsPreference
@@ -20,7 +22,8 @@ fun main(args: Array<String>): Unit = runBlocking {
     val parsedSize = resolveBoardSize(args)
     val boardSize = parsedSize ?: BoardSize.DEFAULT
     // No terminal: the abort message is already printed - return normally, so the exit is 0.
-    val tileLabels = SessionTileLabels(TileLabelsPreference(FilePreferenceRepository()))
+    val preferences = FilePreferenceRepository()
+    val tileLabels = SessionTileLabels(TileLabelsPreference(preferences))
     val mode = resolveInputMode(args, analytics, boardSize = boardSize, tileLabels = tileLabels.effectivePreference.wireName)
         ?: return@runBlocking
     // An invalid --size=N (out of range, non-numeric, blank) degrades to "no flag given" here
@@ -36,6 +39,7 @@ fun main(args: Array<String>): Unit = runBlocking {
         sizeChosenAtLaunch = sizeChosenAtLaunch,
         mordie = Mordie(BackgroundMordieSearch.Factory()),
         tileLabels = tileLabels,
+        keyboardLayout = SessionKeyboardLayout(KeyboardLayoutPreference(preferences)),
         terminalFactory = { AnsiTerminal() },
     ).run()
 }

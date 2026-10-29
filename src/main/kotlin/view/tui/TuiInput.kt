@@ -13,9 +13,9 @@ sealed class InputAction {
     /** [shortcut]: a toolbar key rather than a click (GH-170) - what `opened_from` and
      *  `input_mode_switched.trigger` report. */
     data class Activate(val target: HitTarget, val shortcut: Boolean = false) : InputAction()
-    /** A keyboard shift (GH-101), tagged with the [key] that made it - kept apart from
-     *  [Activate] so a click or toolbar target never carries one. */
-    data class Shift(val target: HitTarget, val key: ShiftKey) : InputAction()
+    /** A keyboard shift (GH-101), tagged with the [key] that made it (`null` for a left-handed
+     *  one, GH-170) - kept apart from [Activate] so a click or toolbar target never carries one. */
+    data class Shift(val target: HitTarget, val key: ShiftKey?) : InputAction()
     data class TextChar(val char: Char) : InputAction()
     object EraseChar : InputAction()
     object Submit : InputAction()

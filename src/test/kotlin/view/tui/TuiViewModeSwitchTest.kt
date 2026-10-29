@@ -10,7 +10,9 @@ import testing.FakeTerminal
 import testing.FakeViewModel
 import testing.RecordingAnalyticsService
 import testing.RecordingModeSwitcher
+import testing.sessionKeyboardLayout
 import testing.testTuiView
+import viewmodel.KeyboardLayout
 import viewmodel.ModeSwitchRequestedException
 import viewmodel.ModeSwitcher
 
@@ -30,8 +32,11 @@ class TuiViewModeSwitchTest {
         Dialog(
             kind = Dialog.Kind.CONTROLS,
             title = "Controls",
-            optionGroups = listOf(DialogOptionGroup("Play with", listOf("Mouse", "Keyboard"), marked.ordinal)),
-            notes = BoardKeys.KEY_LIST,
+            optionGroups = listOf(
+                DialogOptionGroup("Play with", listOf("Mouse", "Keyboard"), marked.ordinal),
+                DialogOptionGroup("Keyboard keys", listOf("Right-handed", "Left-handed"), 0),
+            ),
+            notes = BoardKeys.keyList(KeyboardLayout.RIGHT_HANDED),
             buttons = listOf(DialogButtonSpec("ok", "OK"), DialogButtonSpec("cancel", "Cancel")),
         ),
         terminalSize,
@@ -75,7 +80,7 @@ class TuiViewModeSwitchTest {
         val viewModel = FakeViewModel().apply { solved = true }
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.KeyPress('6'), TerminalEvent.Arrow(Direction.LEFT), TerminalEvent.Enter))
 
-        testTuiView(terminal, input = KeyboardInput(KeyboardSelection()), modeSwitcher = switcher, viewModel = viewModel).play()
+        testTuiView(terminal, input = KeyboardInput(KeyboardSelection(), sessionKeyboardLayout()), modeSwitcher = switcher, viewModel = viewModel).play()
 
         assertEquals(listOf(RecordingModeSwitcher.Call(InputMode.MOUSE, "controls_dialog")), switcher.calls)
         assertEquals(listOf("controlsDialogOpened(shortcut)"), viewModel.calls.filter { "controls" in it })
@@ -101,7 +106,7 @@ class TuiViewModeSwitchTest {
     fun `5 in keyboard mode requests no switch`(): Unit = runBlocking {
         val switcher = RecordingModeSwitcher(InputMode.KEYBOARD)
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.KeyPress('5')))
-        val view = testTuiView(terminal, input = KeyboardInput(KeyboardSelection()), modeSwitcher = switcher, viewModel = FakeViewModel())
+        val view = testTuiView(terminal, input = KeyboardInput(KeyboardSelection(), sessionKeyboardLayout()), modeSwitcher = switcher, viewModel = FakeViewModel())
 
         view.play()
 
@@ -111,7 +116,7 @@ class TuiViewModeSwitchTest {
     @Test
     fun `a switch with a real ModeSwitcher unwinds ModeSwitchRequestedException out of play() and restores the terminal`(): Unit = runBlocking {
         val terminal = FakeTerminal(events = mutableListOf(TerminalEvent.KeyPress('6'), TerminalEvent.Arrow(Direction.LEFT), TerminalEvent.Enter))
-        val view = testTuiView(terminal, input = KeyboardInput(KeyboardSelection()), modeSwitcher = throwingSwitcher, viewModel = FakeViewModel())
+        val view = testTuiView(terminal, input = KeyboardInput(KeyboardSelection(), sessionKeyboardLayout()), modeSwitcher = throwingSwitcher, viewModel = FakeViewModel())
 
         assertFailsWith<ModeSwitchRequestedException> { view.play() }
         assertTrue(terminal.restored)

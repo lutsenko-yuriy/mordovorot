@@ -6,6 +6,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import testing.FakeTerminal
 import testing.FakeViewModel
+import testing.sessionKeyboardLayout
 import testing.testTuiView
 import viewmodel.ViewModel
 
@@ -20,7 +21,7 @@ class TuiViewKeyboardSolvedStateTest {
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
 
     private fun view(terminal: FakeTerminal, viewModel: ViewModel): TuiView =
-        testTuiView(terminal, input = KeyboardInput(KeyboardSelection()), viewModel = viewModel)
+        testTuiView(terminal, input = KeyboardInput(KeyboardSelection(), sessionKeyboardLayout()), viewModel = viewModel)
 
     @Test
     fun `once solved, no selection is highlighted and the selection and shift keys are inert`(): Unit = runBlocking {

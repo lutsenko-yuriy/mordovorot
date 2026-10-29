@@ -3,11 +3,13 @@ import kotlin.io.path.createTempDirectory
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import mordie.Mordie
 import storage.FileSaveRepository
 import testing.FakeMordieSearchFactory
+import testing.FakePreferenceRepository
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
 import testing.testGameSession
@@ -25,8 +27,7 @@ import view.tui.TerminalEvent.Tab
 import view.tui.TerminalSize
 
 /** GH-170: the Controls dialog (`[ Controls 6 ]` / 6, both modes) picks the input mode and the
- *  keyboard layout; the left-handed layout mirrors the hands and is remembered. Stubs until
- *  WU3 (layout) makes the last three green. */
+ *  keyboard layout; the left-handed layout mirrors the hands and is remembered. */
 class ControlsScenarioTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
@@ -42,11 +43,13 @@ class ControlsScenarioTest {
     private fun session(
         mode: InputMode,
         events: List<TerminalEvent>,
+        start: IntArray = scrambled,
+        preferences: FakePreferenceRepository = FakePreferenceRepository(),
         terminalFactory: ((FakeTerminal) -> Terminal)? = null,
     ): Run = runBlocking {
         val terminal = FakeTerminal(events.toMutableList(), terminalSize)
         val analytics = RecordingAnalyticsService()
-        val board = BoardImpl(4).apply { restoreState(scrambled, 0) }
+        val board = BoardImpl(4).apply { restoreState(start, 0) }
         testGameSession(
             initialMode = mode,
             board = board,
@@ -55,6 +58,7 @@ class ControlsScenarioTest {
             sizeChosenAtLaunch = true,
             terminalFactory = terminalFactory?.let { { it(terminal) } } ?: { terminal },
             mordie = Mordie(FakeMordieSearchFactory()),
+            preferences = preferences,
         ).run()
         Run(terminal, board, analytics)
     }
@@ -68,6 +72,13 @@ class ControlsScenarioTest {
     private val shiftRowOneLeft = layout.leftArrowPosition(0).let { (x, y) -> MouseClick(x, y) }
 
     private fun shiftedLeft() = BoardImpl(4).apply { restoreState(scrambled, 0); shiftLeft(0) }.boardArray
+
+    /** The number on the reverse-video selected tile of [frame]. */
+    private fun selectedTile(frame: String) =
+        Regex(Regex.escape("\u001B[7m") + "(.*?)" + Regex.escape("\u001B[27m")).find(frame)?.groupValues?.get(1)?.trim()
+
+    /** 6, Tab to `Keyboard keys`, mark Left-handed, OK. */
+    private val chooseLeftHanded = keys("6") + Tab + Arrow(Direction.RIGHT) + Enter
 
     private fun inMouseMode(frame: String) = "[ New ] [ Save ] [ Load ] [ Exit ]" in plain(frame)
     private fun inKeyboardMode(frame: String) = "[New 1] [Save 2] [Load 3] [Exit Esc]" in plain(frame)
@@ -106,7 +117,7 @@ class ControlsScenarioTest {
 
     @Test
     fun `Cancel and Escape in Controls change nothing`() {
-        val run = session(InputMode.MOUSE, keys("6") + Arrow(Direction.RIGHT) + Escape + keys("6") + Arrow(Direction.RIGHT) + Tab + Tab + Enter)
+        val run = session(InputMode.MOUSE, keys("6") + Arrow(Direction.RIGHT) + Escape + keys("6") + Arrow(Direction.RIGHT) + Tab + Tab + Tab + Enter)
 
         assertTrue(inMouseMode(run.terminal.frames.last()))
         assertEquals(listOf("controls", "controls"), run.events("dialog_cancelled").map { it["dialog"] })
@@ -121,9 +132,7 @@ class ControlsScenarioTest {
         val run = session(InputMode.KEYBOARD, keys("sdd") + toMouse + toKeyboard)
 
         assertEquals(listOf("mouse", "keyboard"), run.events("input_mode_switched").map { it["to_mode"] })
-        val last = run.terminal.frames.last()
-        val selected = Regex(Regex.escape("\u001B[7m") + "(.*?)" + Regex.escape("\u001B[27m")).find(last)?.groupValues?.get(1)?.trim()
-        assertEquals("${scrambled[1 * 4 + 2] + 1}", selected)
+        assertEquals("${scrambled[1 * 4 + 2] + 1}", selectedTile(run.terminal.frames.last()))
     }
 
     @Test
@@ -142,21 +151,42 @@ class ControlsScenarioTest {
 
     @Test
     fun `the left-handed layout selects with HJKL and the arrows and shifts with WASD`() {
-        // TODO: 6, Tab, → - Left-handed marked, the key list shows the mirrored keys
-        // TODO: Enter
-        // TODO: hints read `A/D row`, `W/S column` on the left and `←↑↓→ H/J/K/L select` on the right
-        // TODO: j, l select row 2, column 2; d shifts row 2 right; w shifts column 2 up
+        // j l: row 2, column 2; d shifts row 2 right, w shifts column 2 up.
+        val run = session(InputMode.KEYBOARD, chooseLeftHanded + keys("jldw"))
+
+        val dialog = plain(run.terminal.frames.last { "Left-handed" in plain(it) && "Play with" in plain(it) })
+        assertTrue("Keyboard keys  ○ Right-handed  ● Left-handed" in dialog)
+        assertTrue("Select tile    ← ↑ ↓ →  H J K L" in dialog)
+        assertTrue("Shift row      A D" in dialog)
+        val last = plain(run.terminal.frames.last())
+        for (hint in listOf("A/D row", "W/S column", "←↑↓→ H/J/K/L select")) assertTrue(hint in last, hint)
+        assertFalse("W/A/S/D select" in last)
+        val expected = BoardImpl(4).apply { restoreState(scrambled, 0); shiftRight(1); shiftUp(1) }
+        assertContentEquals(expected.boardArray, run.board.boardArray)
+        assertTrue(run.events("input_mode_switched").isEmpty())
     }
 
     @Test
     fun `the keyboard layout is remembered by the next session`() {
-        // TODO: pick Left-handed, OK
-        // TODO: a fresh session over the same preference store starts left-handed: h moves the selection and doesn't shift
+        val preferences = FakePreferenceRepository()
+        session(InputMode.KEYBOARD, chooseLeftHanded, preferences = preferences)
+
+        // h moves the selection from column 1 to column 4 (wrapping) instead of shifting row 1.
+        val next = session(InputMode.KEYBOARD, keys("h"), preferences = preferences)
+
+        assertEquals("left_handed", preferences.values["keyboard_layout"])
+        assertEquals(0, next.board.moveCount)
+        assertEquals("${scrambled[3] + 1}", selectedTile(next.terminal.frames.last()))
     }
 
     @Test
     fun `a left-handed solve sends board_solved without shift_keys`() {
-        // TODO: left-handed, start one shift away from solved, solve it with a/d/w/s
-        // TODO: board_solved has no shift_keys
+        val solved = IntArray(16) { it }
+        val oneShiftAway = BoardImpl(4).apply { restoreState(solved, 0); shiftLeft(0) }.boardArray
+
+        val run = session(InputMode.KEYBOARD, chooseLeftHanded + keys("d"), start = oneShiftAway)
+
+        val boardSolved = run.events("board_solved").single()
+        assertFalse("shift_keys" in boardSolved, "$boardSolved")
     }
 }

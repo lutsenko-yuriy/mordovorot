@@ -3,6 +3,7 @@ package view.tui
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import viewmodel.KeyboardLayout
 
 /** GH-170: the Controls dialog's geometry and drawing - one row per option group, the key list
  *  under it, the focused group's marked option in reverse video. */
@@ -14,7 +15,7 @@ class DialogLayoutControlsTest {
         kind = Dialog.Kind.CONTROLS,
         title = "Controls",
         optionGroups = listOf(DialogOptionGroup("Play with", listOf("Mouse", "Keyboard"), 1)),
-        notes = BoardKeys.KEY_LIST,
+        notes = BoardKeys.keyList(KeyboardLayout.RIGHT_HANDED),
         buttons = listOf(DialogButtonSpec("ok", "OK"), DialogButtonSpec("cancel", "Cancel")),
         focusedGroup = focusedGroup,
     )
@@ -33,10 +34,10 @@ class DialogLayoutControlsTest {
 
         assertEquals(layout.titleRow() + 2, layout.groupRowPosition(0))
         assertEquals(layout.groupRowPosition(0) + 2, layout.noteRowPosition(0))
-        assertEquals(layout.noteRowPosition(BoardKeys.KEY_LIST.lastIndex) + 2, layout.buttonsRow())
+        assertEquals(layout.noteRowPosition(BoardKeys.keyList(KeyboardLayout.RIGHT_HANDED).lastIndex) + 2, layout.buttonsRow())
         assertTrue(layout.titleRow() >= 1 && layout.bottomRow() + 1 < 24)
         assertEquals("Play with      ○ Mouse  ● Keyboard", rows[layout.groupRowPosition(0)].substring(layout.left + 2).trimEnd('│', ' '))
-        BoardKeys.KEY_LIST.forEachIndexed { i, line -> assertTrue(line in rows[layout.noteRowPosition(i)], line) }
+        BoardKeys.keyList(KeyboardLayout.RIGHT_HANDED).forEachIndexed { i, line -> assertTrue(line in rows[layout.noteRowPosition(i)], line) }
     }
 
     @Test
@@ -55,5 +56,22 @@ class DialogLayoutControlsTest {
     fun `only the focused group's marked option is reverse video`() {
         assertTrue("\u001B[7m● Keyboard\u001B[27m" in render(dialog(focusedGroup = 0)))
         assertTrue("\u001B[7m" !in render(dialog()))
+    }
+
+    @Test
+    fun `both groups and the longer left-handed key list fit 80x24, the second group hit-testing as group 1`() {
+        val both = dialog().copy(
+            optionGroups = dialog().optionGroups + DialogOptionGroup("Keyboard keys", listOf("Right-handed", "Left-handed"), 1),
+            notes = BoardKeys.keyList(KeyboardLayout.LEFT_HANDED),
+        )
+        val layout = DialogLayout(both, terminalSize)
+        val rows = rows(render(both))
+        val (_, leftHanded) = layout.options(1)
+
+        assertEquals(layout.groupRowPosition(0) + 1, layout.groupRowPosition(1))
+        assertTrue(layout.titleRow() >= 1 && layout.bottomRow() + 1 < 24)
+        assertEquals("Keyboard keys  ○ Right-handed  ● Left-handed", rows[layout.groupRowPosition(1)].substring(layout.left + 2).trimEnd('│', ' '))
+        assertEquals(HitTarget.DialogOption(1, 1), layout.hitTest(leftHanded.range.first, layout.groupRowPosition(1)))
+        BoardKeys.keyList(KeyboardLayout.LEFT_HANDED).forEachIndexed { i, line -> assertTrue(line in rows[layout.noteRowPosition(i)], line) }
     }
 }

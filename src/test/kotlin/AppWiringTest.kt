@@ -11,6 +11,7 @@ import testing.FakePreferenceRepository
 import testing.FakeSaveRepository
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
+import testing.sessionKeyboardLayout
 import testing.switchModeKeys
 import testing.testGameSession
 import view.tui.BoardLayout
@@ -48,6 +49,7 @@ class AppWiringTest {
                 solutionScreen = SolutionScreen(),
                 tileLabels = SessionTileLabels(TileLabelsPreference(FakePreferenceRepository())),
                 keyboardSelection = KeyboardSelection(),
+                keyboardLayout = sessionKeyboardLayout(),
                 terminalFactory = { FakeTerminal(switchModeKeys.toMutableList(), terminalSize) },
             )
 

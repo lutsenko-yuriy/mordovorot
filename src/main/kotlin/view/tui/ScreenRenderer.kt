@@ -4,7 +4,7 @@ import viewmodel.GiveUpButton
 import viewmodel.SolutionState
 
 /** The rest of the selected tile's row (pale yellow) and column (light grey), black text
- *  (GH-170): 256-colour backgrounds. Provisional until GH-170 WU4 picks the final palette. */
+ *  (GH-170): 256-colour backgrounds. */
 private const val SELECTED_ROW_ON = "\u001B[30;48;5;230m"
 private const val SELECTED_COLUMN_ON = "\u001B[30;48;5;252m"
 private const val SELECTED_LINE_OFF = "\u001B[39;49m"
@@ -133,8 +133,8 @@ class ScreenRenderer {
     /** Keyboard mode's hints (GH-101): selection keys right-aligned left of the board, shift
      *  keys right of it. A too-narrow terminal clips them, like every other off-canvas text. */
     private fun drawSideHints(canvas: Canvas, layout: BoardLayout, state: ScreenState) {
-        state.selectionHint.forEachIndexed { i, line -> canvas.put(layout.leftHintEndX - line.length, layout.sideHintRow(i), line) }
-        state.shiftHint.forEachIndexed { i, line -> canvas.put(layout.rightHintX, layout.sideHintRow(i), line) }
+        state.leftHint.forEachIndexed { i, line -> canvas.put(layout.leftHintEndX - line.length, layout.sideHintRow(i), line) }
+        state.rightHint.forEachIndexed { i, line -> canvas.put(layout.rightHintX, layout.sideHintRow(i), line) }
     }
 
     private fun drawToolbar(canvas: Canvas, layout: BoardLayout, toolbarShortcuts: Boolean) {

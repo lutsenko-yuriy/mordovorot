@@ -2,6 +2,7 @@ package view.tui
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import testing.sessionKeyboardLayout
 import viewmodel.SolutionState
 
 /** GH-139 in [KeyboardInput]: 4 opens Labels in every board state, and the Labels dialog opens on
@@ -29,7 +30,7 @@ class KeyboardInputLabelsTest {
     fun `4 activates Labels while playing, once solved and on the solution screen (GH-139)`() {
         val solution = unsolvedBoard().copy(solution = SolutionState(listOf("1. Row 1 → ×1"), null, atStart = true, atEnd = false, moves = emptyList()))
         for (state in listOf(unsolvedBoard(), solvedBoard(), solution)) {
-            val input = KeyboardInput(KeyboardSelection()).also { it.decorateBoard(state) }
+            val input = KeyboardInput(KeyboardSelection(), sessionKeyboardLayout()).also { it.decorateBoard(state) }
             assertEquals(InputAction.Activate(HitTarget.ToolbarLabels, shortcut = true), input.onBoardEvent(TerminalEvent.KeyPress('4'), boardLayout))
         }
     }
@@ -44,7 +45,7 @@ class KeyboardInputLabelsTest {
 
     @Test
     fun `a fresh Labels dialog focuses the marked row, and Down marks the next (GH-139)`() {
-        val input = KeyboardInput(KeyboardSelection())
+        val input = KeyboardInput(KeyboardSelection(), sessionKeyboardLayout())
         input.onDialogOpened()
         val dialog = input.decorateDialog(labelsDialog(selected = 2))
 
@@ -53,7 +54,7 @@ class KeyboardInputLabelsTest {
 
     @Test
     fun `Enter on a Labels row submits it, while Enter on a Load row only selects (GH-139)`() {
-        val input = KeyboardInput(KeyboardSelection())
+        val input = KeyboardInput(KeyboardSelection(), sessionKeyboardLayout())
         input.onDialogOpened()
         val labels = input.decorateDialog(labelsDialog(selected = 4))
         assertEquals(InputAction.Submit, input.onDialogEvent(TerminalEvent.Enter, labels, dialogLayoutFor(labels)))
@@ -65,7 +66,7 @@ class KeyboardInputLabelsTest {
 
     @Test
     fun `Down and Up skip a disabled Labels row (GH-160)`() {
-        val input = KeyboardInput(KeyboardSelection())
+        val input = KeyboardInput(KeyboardSelection(), sessionKeyboardLayout())
         input.onDialogOpened()
         val dialog = input.decorateDialog(labelsDialog(selected = 3).copy(disabledRows = setOf(4)))
 

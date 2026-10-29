@@ -35,10 +35,10 @@ data class ScreenState(
     /** Whether the shift arrows are drawn - keyboard mode hides them (GH-101). Their space stays
      *  reserved, so the board doesn't move on a mode switch. */
     val showArrows: Boolean = true,
-    /** Keyboard mode's selection hint lines, left of the board (GH-101). */
-    val selectionHint: List<String> = emptyList(),
-    /** Keyboard mode's shift hint lines, right of the board (GH-101). */
-    val shiftHint: List<String> = emptyList(),
+    /** Keyboard mode's hint lines left of the board (GH-101): the left hand's keys (GH-170). */
+    val leftHint: List<String> = emptyList(),
+    /** Keyboard mode's hint lines right of the board (GH-101): the right hand's keys (GH-170). */
+    val rightHint: List<String> = emptyList(),
     /** A bottom-left reminder of the keyboard controls (GH-18), or `null` in mouse mode. */
     val controlsHint: String? = null,
     /** Whether the toolbar shows `[Save 2]`-style labels (keyboard mode) instead of

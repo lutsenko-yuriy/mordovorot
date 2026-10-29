@@ -5,6 +5,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import testing.sessionKeyboardLayout
 import viewmodel.GiveUpButton
 import viewmodel.ShiftKey
 import viewmodel.SolutionState
@@ -30,7 +31,7 @@ class KeyboardInputTest {
     private fun arrow(d: Direction) = TerminalEvent.Arrow(d)
 
     private fun input(selection: KeyboardSelection = KeyboardSelection()) =
-        KeyboardInput(selection).also { it.decorateBoard(unsolvedBoard()) }
+        KeyboardInput(selection, sessionKeyboardLayout()).also { it.decorateBoard(unsolvedBoard()) }
 
     @Test
     fun `W A S D move the selected tile and redraw`() {
@@ -120,7 +121,7 @@ class KeyboardInputTest {
             GiveUpButton.HIDDEN to InputAction.None,
         )
         for ((button, action) in expected) {
-            val input = KeyboardInput(KeyboardSelection())
+            val input = KeyboardInput(KeyboardSelection(), sessionKeyboardLayout())
             input.decorateBoard(unsolvedBoard().copy(giveUpButton = button))
 
             assertEquals(action, input.onBoardEvent(TerminalEvent.KeyPress('5'), boardLayout), "$button")
@@ -135,7 +136,7 @@ class KeyboardInputTest {
     @Test
     fun `on the solution screen the arrows, A D and H L step, Space and Enter go next, R restarts, W S K J up down scroll`() {
         val selection = KeyboardSelection()
-        val input = KeyboardInput(selection)
+        val input = KeyboardInput(selection, sessionKeyboardLayout())
         input.decorateBoard(solutionScreen())
 
         val expected = mapOf(
@@ -172,11 +173,11 @@ class KeyboardInputTest {
 
     @Test
     fun `the solution screen's hints are step, restart and scroll, with no shift hint (GH-126)`() {
-        val decorated = KeyboardInput(KeyboardSelection()).decorateBoard(solutionScreen())
+        val decorated = KeyboardInput(KeyboardSelection(), sessionKeyboardLayout()).decorateBoard(solutionScreen())
 
         assertNull(decorated.selection)
-        assertEquals(listOf("←/→ A/D H/L  step", "Space/Enter  next", "R  restart", "↑/↓ W/S K/J  scroll"), decorated.selectionHint)
-        assertEquals(emptyList(), decorated.shiftHint)
+        assertEquals(listOf("←/→ A/D H/L  step", "Space/Enter  next", "R  restart", "↑/↓ W/S K/J  scroll"), decorated.leftHint)
+        assertEquals(emptyList(), decorated.rightHint)
     }
 
     @Test
@@ -197,7 +198,7 @@ class KeyboardInputTest {
     @Test
     fun `once solved, selection and shift keys are None but the toolbar shortcuts stay live`() {
         val selection = KeyboardSelection()
-        val input = KeyboardInput(selection)
+        val input = KeyboardInput(selection, sessionKeyboardLayout())
         input.decorateBoard(solvedBoard())
 
         for (event in listOf(key('s'), key('d'), key('h'), key('L'), arrow(Direction.DOWN), arrow(Direction.LEFT))) {
@@ -212,24 +213,24 @@ class KeyboardInputTest {
 
     @Test
     fun `decorateBoard shows the selection, hides the arrows and sets the hints and toolbar shortcuts`() {
-        val input = KeyboardInput(KeyboardSelection())
+        val input = KeyboardInput(KeyboardSelection(), sessionKeyboardLayout())
 
         val unsolved = input.decorateBoard(unsolvedBoard())
         assertEquals(TileSelection.INITIAL, unsolved.selection)
         assertFalse(unsolved.showArrows)
-        assertEquals(listOf("W/A/S/D select"), unsolved.selectionHint)
-        assertEquals(listOf("←/→ H/L row", "↑/↓ K/J column"), unsolved.shiftHint)
+        assertEquals(listOf("W/A/S/D select"), unsolved.leftHint)
+        assertEquals(listOf("←/→ H/L row", "↑/↓ K/J column"), unsolved.rightHint)
         assertEquals("1 New · 2 Save · 3 Load · 4 Labels · 5 Give Up · 6 Controls · Esc Exit", unsolved.controlsHint)
         assertEquals(true, unsolved.toolbarShortcuts)
 
         val solved = input.decorateBoard(solvedBoard())
         assertNull(solved.selection)
-        assertEquals(unsolved.selectionHint, solved.selectionHint)
+        assertEquals(unsolved.leftHint, solved.leftHint)
     }
 
     @Test
     fun `the controls hint fits inside an 80-column terminal (audit finding on PR #40)`() {
-        val hint = KeyboardInput(KeyboardSelection()).decorateBoard(unsolvedBoard()).controlsHint
+        val hint = KeyboardInput(KeyboardSelection(), sessionKeyboardLayout()).decorateBoard(unsolvedBoard()).controlsHint
 
         assertTrue((hint?.length ?: 0) <= 80)
     }
@@ -237,7 +238,7 @@ class KeyboardInputTest {
     @Test
     fun `a smaller board clamps the selection, and a solved spell doesn't reset it`() {
         val selection = KeyboardSelection().apply { current = TileSelection(4, 1) }
-        val input = KeyboardInput(selection)
+        val input = KeyboardInput(selection, sessionKeyboardLayout())
 
         input.decorateBoard(solvedBoard(squareSide = 5))
         assertEquals(TileSelection(4, 1), input.decorateBoard(unsolvedBoard(squareSide = 5)).selection)
@@ -264,7 +265,7 @@ class KeyboardInputTest {
 
     @Test
     fun `a fresh dialog focuses the text field, so printable keys and digits type`() {
-        val input = KeyboardInput(KeyboardSelection())
+        val input = KeyboardInput(KeyboardSelection(), sessionKeyboardLayout())
         input.decorateBoard(unsolvedBoard().copy(dialog = saveDialog()))
         val dialog = saveDialog()
 
@@ -275,7 +276,7 @@ class KeyboardInputTest {
 
     @Test
     fun `Tab moves focus from the text field to the Save button, then Enter submits`() {
-        val input = KeyboardInput(KeyboardSelection())
+        val input = KeyboardInput(KeyboardSelection(), sessionKeyboardLayout())
         input.decorateBoard(unsolvedBoard().copy(dialog = saveDialog("hi")))
         val dialog = saveDialog("hi")
 
@@ -286,7 +287,7 @@ class KeyboardInputTest {
 
     @Test
     fun `Escape cancels and EndOfInput quits a dialog session regardless of focus`() {
-        val input = KeyboardInput(KeyboardSelection())
+        val input = KeyboardInput(KeyboardSelection(), sessionKeyboardLayout())
         val dialog = saveDialog()
         input.decorateBoard(unsolvedBoard().copy(dialog = dialog))
 
@@ -304,7 +305,7 @@ class KeyboardInputTest {
 
     @Test
     fun `Down on a Load dialog selects the next row, same target a click on it would produce`() {
-        val input = KeyboardInput(KeyboardSelection())
+        val input = KeyboardInput(KeyboardSelection(), sessionKeyboardLayout())
         val dialog = loadDialog(listOf("foo", "bar"), selected = 0)
         input.decorateBoard(unsolvedBoard().copy(dialog = dialog))
 
@@ -315,7 +316,7 @@ class KeyboardInputTest {
 
     @Test
     fun `dialogFocusIndex resets to the first control once decorateBoard sees no dialog`() {
-        val input = KeyboardInput(KeyboardSelection())
+        val input = KeyboardInput(KeyboardSelection(), sessionKeyboardLayout())
         val dialog = saveDialog()
         input.decorateBoard(unsolvedBoard().copy(dialog = dialog))
         input.onDialogEvent(TerminalEvent.Tab, dialog, dialogLayoutFor(dialog)) // focus -> the Save button
@@ -330,7 +331,7 @@ class KeyboardInputTest {
     fun `onDialogOpened resets focus to the first control, even with no board repaint in between`() {
         // Regression: the exit flow's Yes -> Save handoff chains straight into a new dialog
         // session with no decorateBoard(dialog = null) repaint in between.
-        val input = KeyboardInput(KeyboardSelection())
+        val input = KeyboardInput(KeyboardSelection(), sessionKeyboardLayout())
         val exitDialog = Dialog(
             kind = Dialog.Kind.EXIT,
             title = "Save before quitting?",

@@ -150,8 +150,8 @@ class ScreenRendererTest {
         ScreenState.forBoard(board = (0 until side * side).toList(), squareSide = side, solved = false).copy(
             selection = selection,
             showArrows = false,
-            selectionHint = listOf("W/A/S/D select"),
-            shiftHint = listOf("←/→ H/L row", "↑/↓ K/J column"),
+            leftHint = listOf("W/A/S/D select"),
+            rightHint = listOf("←/→ H/L row", "↑/↓ K/J column"),
         )
 
     private fun styled(frame: String, on: String, off: String) =
