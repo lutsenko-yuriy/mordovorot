@@ -94,8 +94,8 @@ class ScreenRendererTest {
             .copy(modeButtons = listOf(InputMode.KEYBOARD))
         val shortcuts = plain.copy(toolbarShortcuts = true, modeButtons = listOf(InputMode.MOUSE))
 
-        assertTrue(renderer.render(plain, terminalSize).contains("[ Keyboard ]"))
-        assertTrue(renderer.render(shortcuts, terminalSize).contains("[Mouse F7]"))
+        assertTrue(renderer.render(plain, terminalSize).contains("[ Keyboard 6 ]"))
+        assertTrue(renderer.render(shortcuts, terminalSize).contains("[Mouse 6]"))
     }
 
     @Test
@@ -148,16 +148,18 @@ class ScreenRendererTest {
         assertTrue(frame.contains("Cancel"))
     }
 
-    private fun keyboardState(side: Int = 4, selection: LineSelection? = LineSelection.INITIAL) =
+    private fun keyboardState(side: Int = 4, selection: TileSelection? = TileSelection.INITIAL) =
         ScreenState.forBoard(board = (0 until side * side).toList(), squareSide = side, solved = false).copy(
             selection = selection,
             showArrows = false,
-            selectionHint = listOf("W/S  row", "A/D  column"),
-            shiftHint = listOf("←/→ H/L  shift row", "↑/↓ K/J  shift column"),
+            selectionHint = listOf("W/A/S/D select"),
+            shiftHint = listOf("←/→ H/L row", "↑/↓ K/J column"),
         )
 
-    private fun highlighted(frame: String) =
-        Regex("\u001B\\[7m(.*?)\u001B\\[27m").findAll(frame).map { it.groupValues[1].trim() }.toList()
+    private fun styled(frame: String, on: String, off: String) =
+        Regex(Regex.escape(on) + "(.*?)" + Regex.escape(off)).findAll(frame).map { it.groupValues[1].trim() }.toList()
+
+    private fun highlighted(frame: String) = styled(frame, "\u001B[7m", "\u001B[27m")
 
     @Test
     fun `keyboard mode draws no arrows (GH-101)`() {
@@ -174,17 +176,12 @@ class ScreenRendererTest {
     }
 
     @Test
-    fun `a selected row's tiles, and only those, are reverse video`() {
-        val frame = renderer.render(keyboardState(selection = LineSelection(1, 3, LineSelection.Axis.ROW)), terminalSize)
+    fun `the selected tile is reverse video, the rest of its row pale yellow and of its column light grey (GH-170)`() {
+        val frame = renderer.render(keyboardState(selection = TileSelection(1, 2)), terminalSize)
 
-        assertEquals(listOf("5", "6", "7", "8"), highlighted(frame))
-    }
-
-    @Test
-    fun `a selected column's tiles, and only those, are reverse video`() {
-        val frame = renderer.render(keyboardState(selection = LineSelection(1, 2, LineSelection.Axis.COLUMN)), terminalSize)
-
-        assertEquals(listOf("3", "7", "11", "15"), highlighted(frame))
+        assertEquals(listOf("7"), highlighted(frame))
+        assertEquals(listOf("5", "6", "8"), styled(frame, "\u001B[30;48;5;230m", "\u001B[39;49m"))
+        assertEquals(listOf("3", "11", "15"), styled(frame, "\u001B[30;48;5;252m", "\u001B[39;49m"))
     }
 
     @Test
@@ -199,32 +196,32 @@ class ScreenRendererTest {
         val layout = BoardLayout(terminalSize, 5)
         val (gridLeft, _) = layout.gridOrigin()
 
-        for ((index, hint) in listOf("W/S  row", "A/D  column").withIndex()) {
+        for ((index, hint) in listOf("W/A/S/D select").withIndex()) {
             val row = rows[layout.sideHintRow(index)]
             assertTrue(row.indexOf(hint) in 0 until gridLeft, "left hint '$hint' in: $row")
         }
-        for ((index, hint) in listOf("←/→ H/L  shift row", "↑/↓ K/J  shift column").withIndex()) {
+        for ((index, hint) in listOf("←/→ H/L row", "↑/↓ K/J column").withIndex()) {
             val row = rows[layout.sideHintRow(index)]
             assertTrue(row.indexOf(hint) > gridLeft + layout.gridWidth, "right hint '$hint' in: $row")
         }
     }
 
     @Test
-    fun `toolbarShortcuts renders F-key labels instead of the plain ones, in the shortcut color`() {
+    fun `toolbarShortcuts renders digit labels instead of the plain ones, in the shortcut color`() {
         val plain = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false)
         val shortcuts = plain.copy(toolbarShortcuts = true)
 
         assertTrue(renderer.render(plain, terminalSize).contains("[ Save ]"))
-        assertFalse(renderer.render(plain, terminalSize).contains("[Save F5]"))
+        assertFalse(renderer.render(plain, terminalSize).contains("[Save 2]"))
         // Plain (mouse-mode) toolbar labels never carry the shortcut color.
         assertFalse(renderer.render(plain, terminalSize).contains("[96m"))
 
         val shortcutFrame = renderer.render(shortcuts, terminalSize)
-        assertTrue(shortcutFrame.contains("[New F9]"))
-        assertTrue(shortcutFrame.contains("[Save F5]"))
-        assertTrue(shortcutFrame.contains("[Load F6]"))
-        assertTrue(shortcutFrame.contains("[Exit ESC]"))
-        assertTrue(shortcutFrame.contains("[Labels F4]"))
+        assertTrue(shortcutFrame.contains("[New 1]"))
+        assertTrue(shortcutFrame.contains("[Save 2]"))
+        assertTrue(shortcutFrame.contains("[Load 3]"))
+        assertTrue(shortcutFrame.contains("[Exit Esc]"))
+        assertTrue(shortcutFrame.contains("[Labels 4]"))
         // One matched on/off pair per button - New/Save/Load/Exit (GH-44 WU3 added New) and the
         // second row's Labels (GH-139).
         assertEquals(5,Regex(Regex.escape("[96m")).findAll(shortcutFrame).count())

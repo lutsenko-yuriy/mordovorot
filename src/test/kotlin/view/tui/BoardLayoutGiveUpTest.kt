@@ -50,9 +50,9 @@ class BoardLayoutGiveUpTest {
     }
 
     @Test
-    fun `keyboard mode labels it with F8`() {
-        assertEquals("[Give Up F8]", layout(GiveUpButton.GIVE_UP, shortcuts = true).giveUpButton()!!.text)
-        assertEquals("[Mordie's solution F8]", layout(GiveUpButton.MORDIES_SOLUTION, shortcuts = true).giveUpButton()!!.text)
+    fun `keyboard mode labels it with 5`() {
+        assertEquals("[Give Up 5]", layout(GiveUpButton.GIVE_UP, shortcuts = true).giveUpButton()!!.text)
+        assertEquals("[Mordie's solution 5]", layout(GiveUpButton.MORDIES_SOLUTION, shortcuts = true).giveUpButton()!!.text)
     }
 
     @Test

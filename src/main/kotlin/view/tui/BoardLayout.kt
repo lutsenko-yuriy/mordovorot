@@ -30,7 +30,7 @@ class BoardLayout(
     private val terminalSize: TerminalSize,
     private val squareSide: Int,
     private val arrowsEnabled: Boolean = true,
-    /** Keyboard mode's toolbar labels (`[Save F5]`) vs. mouse mode's (`[ Save ]`) - see
+    /** Keyboard mode's toolbar labels (`[Save 2]`) vs. mouse mode's (`[ Save ]`) - see
      *  [toolbarButtons]. Must reach both [ScreenRenderer.render]'s and [TuiView]'s construction
      *  sites from the same [ScreenState.toolbarShortcuts] flag, or the drawn and hit-tested
      *  toolbars disagree (this class's own KDoc invariant). */
@@ -48,7 +48,7 @@ class BoardLayout(
     private val fullWidth = LEFT_GUTTER + innerCols + RIGHT_GUTTER
 
     private val primaryEntries = primaryButtons(toolbarShortcuts)
-    private val secondRowEntries = listOf(HitTarget.ToolbarLabels to if (toolbarShortcuts) "[Labels F4]" else "[ Labels ]") +
+    private val secondRowEntries = listOf(HitTarget.ToolbarLabels to if (toolbarShortcuts) "[Labels 4]" else "[ Labels ]") +
         modeButtons.map { HitTarget.ToolbarMode(it) to modeButtonLabel(it, toolbarShortcuts) }
 
     /** On a board Mordie sits out (GH-160), its one line: it runs to its own width, so it takes a
@@ -137,7 +137,7 @@ class BoardLayout(
             GiveUpButton.GIVE_UP -> HitTarget.GiveUp to "Give Up"
             GiveUpButton.MORDIES_SOLUTION -> HitTarget.MordiesSolution to "Mordie's solution"
         }
-        return layoutRow(listOf(target to if (toolbarShortcuts) "[$label F8]" else "[ $label ]"), giveUpRow).single()
+        return layoutRow(listOf(target to if (toolbarShortcuts) "[$label 5]" else "[ $label ]"), giveUpRow).single()
     }
 
     /** The solution screen's Prev / Next / Restart, on the down-arrows row (GH-126 D4). One with
@@ -190,10 +190,10 @@ class BoardLayout(
     private fun primaryButtons(shortcuts: Boolean): List<Pair<HitTarget, String>> =
         if (shortcuts) {
             listOf(
-                HitTarget.ToolbarNew to "[New F9]",
-                HitTarget.ToolbarSave to "[Save F5]",
-                HitTarget.ToolbarLoad to "[Load F6]",
-                HitTarget.ToolbarExit to "[Exit ESC]",
+                HitTarget.ToolbarNew to "[New 1]",
+                HitTarget.ToolbarSave to "[Save 2]",
+                HitTarget.ToolbarLoad to "[Load 3]",
+                HitTarget.ToolbarExit to "[Exit Esc]",
             )
         } else {
             listOf(
@@ -215,18 +215,11 @@ class BoardLayout(
         }
     }
 
-    /** `[ Keyboard ]` (mouse mode) vs. `[Mouse F7]` (keyboard mode, WU4). Keyboard mode never offers switching to itself, so it has no assigned shortcut key -
-     *  falls back to the plain label rather than drawing a broken `[Keyboard ]` (audit suggestion
-     *  on PR #38). */
+    /** `[ Keyboard 6 ]` (mouse mode) vs. `[Mouse 6]` (keyboard mode): 6 works in both (GH-170),
+     *  until WU2's Controls dialog replaces the switch. */
     private fun modeButtonLabel(mode: InputMode, shortcut: Boolean): String {
         val name = mode.name.lowercase().replaceFirstChar { it.uppercase() }
-        val key = if (shortcut) {
-            when (mode) {
-                InputMode.MOUSE -> "F7"
-                InputMode.KEYBOARD -> null
-            }
-        } else null
-        return if (key != null) "[$name $key]" else "[ $name ]"
+        return if (shortcut) "[$name 6]" else "[ $name 6 ]"
     }
 
     internal data class ToolbarButton(val target: HitTarget, val text: String, val x: Int, val y: Int, val range: IntRange)

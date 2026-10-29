@@ -26,7 +26,7 @@ Fired when <trigger condition>.
 
 ### `save_command_used`
 
-Fired when the user saves via the Save dialog (toolbar Save / F5) or the exit flow. *(GH-6)* The name dates from the removed console `save` command and is kept for continuity (GH-79).
+Fired when the user saves via the Save dialog (toolbar Save / 2) or the exit flow. *(GH-6)* The name dates from the removed console `save` command and is kept for continuity (GH-79).
 
 | Property | Type | Description |
 |---|---|---|
@@ -42,7 +42,7 @@ Fired when the board is restored from a save file, either via the `load` command
 
 | Property | Type | Description |
 |---|---|---|
-| `trigger` | `string` | `command` (a mid-game load: toolbar Load / F6 - the value predates GH-79 and is kept) or `startup_prompt`. |
+| `trigger` | `string` | `command` (a mid-game load: toolbar Load / 3 - the value predates GH-79 and is kept) or `startup_prompt`. |
 | `result` | `string` | `success` (also covers a load that resized the board to the save's size, GH-44 WU5), `not_found`, `error` (corrupted save file or a filesystem failure), or `unsolvable` (GH-74 - the save can't be solved; `unsolvable_save_resolved` carries the outcome). |
 | `input_method` | `string` | `mouse` or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* *(`console` retired — GH-79)* |
 
@@ -106,7 +106,7 @@ Fired when the user cancels the Save, Load, Exit, or Size dialog in the mouse-dr
 
 ### `input_mode_switched`
 
-Fired when the user requests a switch to a *different* input mode mid-session — toolbar button (mouse mode) or keyboard shortcut (keyboard mode). Requesting the mode that's already active is a no-op instead: no event, no message, no exception (audit finding on PR #36). *(GH-30)*
+Fired when the user requests a switch to a *different* input mode mid-session — a toolbar button click (`toolbar`) or a key (`shortcut`: 6 in either terminal mode since GH-170, F7 in keyboard mode before). Requesting the mode that's already active is a no-op instead: no event, no message, no exception (audit finding on PR #36). *(GH-30)*
 
 | Property | Type | Description |
 |---|---|---|
@@ -138,7 +138,7 @@ never sent. *(GH-74)*
 | Property | Type | Description |
 |---|---|---|
 | `choice` | `string` | `repair`, `new_game`, or `exit`. |
-| `trigger` | `string` | `command` (mid-game load: toolbar Load / F6) or `startup_prompt`. |
+| `trigger` | `string` | `command` (mid-game load: toolbar Load / 3) or `startup_prompt`. |
 | `board_size` | `number` | The save's board side (3 or 5). |
 | `repair_saved` | `boolean` | Only on `repair`: whether the repaired board was written back to the save file (`false` if the overwrite failed; the board is loaded either way). |
 | `input_method` | `string` | `mouse` or `keyboard`. *(`console` retired — GH-79)* |
@@ -236,7 +236,7 @@ anything while it unloads.
 ### `game_given_up`
 
 Fired when the player confirms **Yes** in the `Give up and see Mordie's solution?` dialog
-(`[ Give Up ]` / F8). *(GH-126)*
+(`[ Give Up ]` / 5). *(GH-126)*
 
 | Property | Type | Description |
 |---|---|---|
@@ -344,12 +344,12 @@ settled it: no accessibility usage signal is acceptable, on any terms.
 
 | Screen name | When tracked |
 |---|---|
-| `screen_save_dialog` | Save dialog opens in the TUI (toolbar click/F5, or via the Exit dialog's "Yes"). Property `opened_from`: `toolbar` or `exit_flow`. *(GH-3)* |
-| `screen_load_dialog` | Load dialog opens in the TUI (toolbar click/F6, or startup restore when saves exist). Properties `opened_from`: `toolbar` or `startup`; `save_file_count`: number. *(GH-3)* |
+| `screen_save_dialog` | Save dialog opens in the TUI (toolbar click/2, or via the Exit dialog's "Yes"). Property `opened_from`: `toolbar` or `exit_flow`. *(GH-3)* |
+| `screen_load_dialog` | Load dialog opens in the TUI (toolbar click/3, or startup restore when saves exist). Properties `opened_from`: `toolbar` or `startup`; `save_file_count`: number. *(GH-3)* |
 | `screen_exit_dialog` | Exit dialog opens in the TUI (Exit button click, or Escape in keyboard mode). *(GH-3, GH-18)* |
 | `screen_congratulations` | A shift (click or keyboard Enter/Space) solves the board while the TUI is active - fires once on that transition. Does **not** fire when an already-solved save is restored (toolbar Load or startup restore); the Congratulations screen still renders, but nothing was solved *by playing* this session. *(GH-3)* |
 | `screen_size_dialog` | TUI size-picker dialog opens. Property `opened_from`: `toolbar` (via `[ New ]`), `startup` (no `--size` given, restore prompt declined/empty), or `unsolvable_save` (New game chosen for an unsolvable save mid-game, GH-74). *(GH-44)* |
-| `screen_unsolvable_dialog` | TUI `Can't be solved` dialog opens for an unsolvable save. Property `opened_from`: `toolbar` (Load button/F6) or `startup` (restore dialog). *(GH-74)* |
+| `screen_unsolvable_dialog` | TUI `Can't be solved` dialog opens for an unsolvable save. Property `opened_from`: `toolbar` (Load button/3) or `startup` (restore dialog). *(GH-74)* |
 
 *GH-99:* `screen_save_dialog` takes a new property `prefilled` (`boolean`) - whether the name field opened with the current save name in it.
 
@@ -359,14 +359,14 @@ settled it: no accessibility usage signal is acceptable, on any terms.
 
 | Screen name | When tracked |
 |---|---|
-| `screen_give_up_dialog` | The `Give up and see Mordie's solution?` confirmation opens (`[ Give Up ]` / F8). Properties `board_size`: number; `move_count`: number - the player's moves so far. *(GH-126)* |
+| `screen_give_up_dialog` | The `Give up and see Mordie's solution?` confirmation opens (`[ Give Up ]` / 5). Properties `board_size`: number; `move_count`: number - the player's moves so far. *(GH-126)* |
 | `screen_solution` | The solution screen opens. Properties `opened_from`: `give_up`, `after_win` (`[ Mordie's solution ]`), `load` (toolbar Load) or `startup_prompt` (restore prompt); `board_size`: number; `solution_length`: number - Mordie's N. *(GH-126)* |
 
 *GH-139:* new screen view:
 
 | Screen name | When tracked |
 |---|---|
-| `screen_labels_dialog` | The Tile labels dialog opens. Properties `opened_from`: `toolbar` (`[ Labels ]` click) or `shortcut` (F4 in keyboard mode); `screen`: `play`, `solved` or `solution`; `current_labels`: the scheme shown when it opened. *(GH-139)* |
+| `screen_labels_dialog` | The Tile labels dialog opens. Properties `opened_from`: `toolbar` (`[ Labels ]` click) or `shortcut` (4 in keyboard mode); `screen`: `play`, `solved` or `solution`; `current_labels`: the scheme shown when it opened. *(GH-139)* |
 
 *GH-160:* `screen_labels_dialog.opened_from` takes a new value, `letters_save`: the dialog opened by
 itself after the warning for a 6x6 save with Letters labels. Cancel there is `dialog_cancelled`

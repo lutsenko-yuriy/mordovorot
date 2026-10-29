@@ -11,9 +11,9 @@ class BoardLayoutMordieTest {
 
     private val ample = TerminalSize(columns = 80, rows = 40)
 
-    /** `[ New ] [ Save ] [ Load ] [ Exit ]` and `[New F9] [Save F5] [Load F6] [Exit ESC]`. */
+    /** `[ New ] [ Save ] [ Load ] [ Exit ]` and `[New 1] [Save 2] [Load 3] [Exit Esc]`. */
     private val mouseToolbarWidth = 34
-    private val keyboardToolbarWidth = 39
+    private val keyboardToolbarWidth = 36
 
     @Test
     fun `the wrap width follows the widest widget, not the terminal`() {

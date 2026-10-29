@@ -3,33 +3,17 @@ package view.tui
 import InputMode
 import board_model.BoardSize
 import viewmodel.GiveUpButton
-import viewmodel.ShiftKey
-
-/** Bottom-left controls reminder (GH-18/GH-30/GH-44) - F5/F6/F9/F7/Esc stay live even when
- *  the selection keys don't. Must fit 80 chars, the default/fallback terminal width
- *  ([ScreenRenderer.Canvas.put] has no wrap or ellipsis, unlike dialog content - audit findings
- *  on PR #40 and PR #53). The board keys have their own side hints (GH-101). */
-private const val CONTROLS_HINT = "F5/F6/F9 Save/Load/New · F4 Labels · F8 Give Up · F7 Mouse · Esc"
-
-private val SELECTION_HINT = listOf("W/S  row", "A/D  column")
-private val SHIFT_HINT = listOf("←/→ H/L  shift row", "↑/↓ K/J  shift column")
-private val SOLUTION_HINT = listOf("←/→ A/D  step", "Space/Enter  next", "R  restart", "W/S  scroll")
-
-private val SELECT_KEYS = mapOf('w' to Direction.UP, 's' to Direction.DOWN, 'a' to Direction.LEFT, 'd' to Direction.RIGHT)
-private val HJKL_KEYS = mapOf('h' to Direction.LEFT, 'j' to Direction.DOWN, 'k' to Direction.UP, 'l' to Direction.RIGHT)
 
 /**
  * GH-18's keyboard-driven [TuiInput] - the only stateful one, working the session's shared
  * [KeyboardSelection] and owning the dialog's focus index into its [DialogFocus] ring.
  *
- * Board (GH-101): W/A/S/D select a row or column, H/J/K/L and the arrow keys shift it (see
- * [LineSelection]), letters in either case; F5/F6 open Save/Load, F9 (GH-44 WU3) opens the
- * New-game size picker, F4 (GH-139) opens Tile labels, F7 (GH-30) requests a switch to mouse mode, and Escape opens Exit - all
- * staying live even when solved (the selection and shift keys go inert instead, the highlight
- * stops rendering). F8 (GH-126) is the Give Up row's button. On the solution screen, the
- * left/right arrows or A/D are Prev/Next (Space and Enter Next too), R is Restart, and W/S or
- * the up/down arrows scroll the steps. Escape replaces a function key for Exit - board and dialog events are
- * mutually exclusive, so it can't collide with Escape's dialog-level Cancel.
+ * Board (GH-170, ADR-0003): the keys of [BoardKeys] move the selected tile and shift its row or
+ * column. The digits are the toolbar - 1 New, 2 Save, 3 Load, 4 Labels, 5 the Give Up row's
+ * button, 6 the switch to mouse mode - and Escape opens Exit; all stay live when solved (the
+ * selection and shift keys go inert instead, the selection stops rendering) and on the solution
+ * screen, whose own keys are [BoardKeys.solutionAction]. Board and dialog events are mutually
+ * exclusive, so Escape can't collide with a dialog's Cancel, nor a digit with the Save name field.
  *
  * Dialog: Tab/Down/Right advance the focus ring, Shift-Tab/Up/Left go back, Enter activates
  * whatever's focused (submit, select a row, or click a button), Escape cancels, typing only ever
@@ -38,8 +22,6 @@ private val HJKL_KEYS = mapOf('h' to Direction.LEFT, 'j' to Direction.DOWN, 'k' 
  * reaching OK by Tab would walk the selection past it.
  */
 class KeyboardInput(private val selection: KeyboardSelection) : TuiInput {
-
-    override val switchTrigger = "shortcut"
 
     private var squareSide = BoardSize.DEFAULT
     private var arrowsEnabled = true
@@ -58,42 +40,23 @@ class KeyboardInput(private val selection: KeyboardSelection) : TuiInput {
     }
 
     override fun onBoardEvent(event: TerminalEvent, layout: BoardLayout): InputAction {
-        val letter = (event as? TerminalEvent.KeyPress)?.char?.lowercaseChar()
+        // The toolbar keys stay live regardless of arrowsEnabled - the toolbar never goes dead.
+        digitAction(event)?.let { return it }
         return when {
-            // F5/F6/F7/F9/Escape stay live regardless of arrowsEnabled - the toolbar never goes dead.
-            event is TerminalEvent.FunctionKey -> functionKeyAction(event.n)
-            event == TerminalEvent.Escape -> InputAction.Activate(HitTarget.ToolbarExit)
+            event == TerminalEvent.Escape -> InputAction.Activate(HitTarget.ToolbarExit, shortcut = true)
             event == TerminalEvent.EndOfInput -> InputAction.Quit
-            onSolutionScreen -> solutionAction(event, letter)
+            onSolutionScreen -> BoardKeys.solutionAction(event)
             !arrowsEnabled -> InputAction.None // solved: nothing to select or shift
-            letter in SELECT_KEYS -> {
-                selection.current = selection.current.select(SELECT_KEYS.getValue(letter!!), squareSide)
-                InputAction.Redraw
-            }
-            letter in HJKL_KEYS -> shift(HJKL_KEYS.getValue(letter!!), ShiftKey.HJKL)
-            event is TerminalEvent.Arrow -> shift(event.direction, ShiftKey.ARROW)
-            else -> InputAction.None
-        }
-    }
-
-    private fun solutionAction(event: TerminalEvent, letter: Char?): InputAction = when {
-        letter == 'a' || event == TerminalEvent.Arrow(Direction.LEFT) -> InputAction.Activate(HitTarget.ReplayPrevious)
-        letter == 'd' || letter == ' ' || event == TerminalEvent.Arrow(Direction.RIGHT) || event == TerminalEvent.Enter ->
-            InputAction.Activate(HitTarget.ReplayNext)
-        letter == 'r' -> InputAction.Activate(HitTarget.ReplayRestart)
-        letter == 'w' || event == TerminalEvent.Arrow(Direction.UP) -> InputAction.Scroll(-1)
-        letter == 's' || event == TerminalEvent.Arrow(Direction.DOWN) -> InputAction.Scroll(1)
-        else -> InputAction.None
-    }
-
-    private fun shift(direction: Direction, key: ShiftKey): InputAction =
-        when (val outcome = selection.current.shift(direction)) {
-            is LineSelection.ShiftOutcome.Shift -> InputAction.Shift(outcome.target, key)
-            is LineSelection.ShiftOutcome.Switched -> {
-                selection.current = outcome.selection
-                InputAction.Redraw
+            else -> when (val key = BoardKeys.boardKey(event)) {
+                is BoardKey.Select -> {
+                    selection.current = selection.current.move(key.direction, squareSide)
+                    InputAction.Redraw
+                }
+                is BoardKey.Shift -> InputAction.Shift(selection.current.shiftTarget(key.direction), key.key)
+                null -> InputAction.None
             }
         }
+    }
 
     override fun onDialogEvent(event: TerminalEvent, dialog: Dialog, layout: DialogLayout): InputAction {
         val focus = DialogFocus(dialog)
@@ -128,16 +91,16 @@ class KeyboardInput(private val selection: KeyboardSelection) : TuiInput {
         arrowsEnabled = state.arrowsEnabled
         giveUpButton = state.giveUpButton
         onSolutionScreen = state.solution != null
-        // Kept across new games, loads and solved spells (GH-101), only pulled inside a smaller
+        // Kept across new games, loads and solved spells (GH-170), only pulled inside a smaller
         // board - every repaint sees the current side, whichever mode changed it.
         selection.current = selection.current.clampedTo(squareSide)
         if (state.dialog == null) dialogFocusIndex = 0
         return state.copy(
             selection = if (arrowsEnabled) selection.current else null,
             showArrows = false,
-            selectionHint = if (onSolutionScreen) SOLUTION_HINT else SELECTION_HINT,
-            shiftHint = if (onSolutionScreen) emptyList() else SHIFT_HINT,
-            controlsHint = CONTROLS_HINT,
+            selectionHint = if (onSolutionScreen) BoardKeys.SOLUTION_HINT else BoardKeys.SELECTION_HINT,
+            shiftHint = if (onSolutionScreen) emptyList() else BoardKeys.SHIFT_HINT,
+            controlsHint = BoardKeys.CONTROLS_HINT,
             toolbarShortcuts = true,
             modeButtons = listOf(InputMode.MOUSE),
         )
@@ -182,17 +145,22 @@ class KeyboardInput(private val selection: KeyboardSelection) : TuiInput {
         null -> InputAction.None
     }
 
-    private fun functionKeyAction(n: Int): InputAction = when (n) {
-        4 -> InputAction.Activate(HitTarget.ToolbarLabels)
-        5 -> InputAction.Activate(HitTarget.ToolbarSave)
-        6 -> InputAction.Activate(HitTarget.ToolbarLoad)
-        7 -> InputAction.Activate(HitTarget.ToolbarMode(InputMode.MOUSE))
-        8 -> when (giveUpButton) {
-            GiveUpButton.GIVE_UP -> InputAction.Activate(HitTarget.GiveUp)
-            GiveUpButton.MORDIES_SOLUTION -> InputAction.Activate(HitTarget.MordiesSolution)
-            GiveUpButton.DIMMED, GiveUpButton.HIDDEN -> InputAction.None
+    /** The toolbar's digits (GH-170); `null` for any other event. 5 is inert while the Give Up
+     *  row's button is dimmed or hidden. */
+    private fun digitAction(event: TerminalEvent): InputAction? {
+        val target = when ((event as? TerminalEvent.KeyPress)?.char) {
+            '1' -> HitTarget.ToolbarNew
+            '2' -> HitTarget.ToolbarSave
+            '3' -> HitTarget.ToolbarLoad
+            '4' -> HitTarget.ToolbarLabels
+            '5' -> when (giveUpButton) {
+                GiveUpButton.GIVE_UP -> HitTarget.GiveUp
+                GiveUpButton.MORDIES_SOLUTION -> HitTarget.MordiesSolution
+                GiveUpButton.DIMMED, GiveUpButton.HIDDEN -> return InputAction.None
+            }
+            '6' -> HitTarget.ToolbarMode(InputMode.MOUSE)
+            else -> return null
         }
-        9 -> InputAction.Activate(HitTarget.ToolbarNew)
-        else -> InputAction.None
+        return InputAction.Activate(target, shortcut = true)
     }
 }

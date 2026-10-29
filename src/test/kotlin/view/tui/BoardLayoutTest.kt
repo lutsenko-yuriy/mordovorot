@@ -110,7 +110,7 @@ class BoardLayoutTest {
         val (exitX, exitY) = layout.exitButtonPosition()
         assertEquals(HitTarget.ToolbarExit, layout.hitTest(exitX, exitY))
 
-        // The wider "[Save F5]" label pushes the next button further right than "[ Save ]" does -
+        // The wider "[Save 2]" label pushes the next button further right than "[ Save ]" does -
         // asserting the coordinates actually differ, not just that hit-testing works at whatever
         // they happen to be, is what would catch toolbarShortcuts being ignored by hitTest.
         val plainLayout = BoardLayout(ampleTerminal, squareSide = 4, toolbarShortcuts = false)
@@ -168,12 +168,12 @@ class BoardLayoutTest {
     }
 
     @Test
-    fun `mode button labels switch to F-key shortcuts under toolbarShortcuts`() {
+    fun `mode button labels show 6 in both label styles`() {
         val plain = BoardLayout(ampleTerminal, squareSide = 4, modeButtons = listOf(InputMode.MOUSE))
         val shortcuts = BoardLayout(ampleTerminal, squareSide = 4, toolbarShortcuts = true, modeButtons = listOf(InputMode.MOUSE))
 
-        assertEquals("[ Mouse ]", plain.toolbarButtons().last().text)
-        assertEquals("[Mouse F7]", shortcuts.toolbarButtons().last().text)
+        assertEquals("[ Mouse 6 ]", plain.toolbarButtons().last().text)
+        assertEquals("[Mouse 6]", shortcuts.toolbarButtons().last().text)
     }
 
     @Test
@@ -181,8 +181,8 @@ class BoardLayoutTest {
         val plain = BoardLayout(ampleTerminal, squareSide = 4, modeButtons = listOf(InputMode.KEYBOARD))
         val shortcuts = BoardLayout(ampleTerminal, squareSide = 4, toolbarShortcuts = true, modeButtons = listOf(InputMode.MOUSE))
 
-        assertEquals(listOf("[ Labels ]", "[ Keyboard ]"), plain.toolbarButtons().filter { it.y == plain.modeRow }.map { it.text })
-        assertEquals(listOf("[Labels F4]", "[Mouse F7]"), shortcuts.toolbarButtons().filter { it.y == shortcuts.modeRow }.map { it.text })
+        assertEquals(listOf("[ Labels ]", "[ Keyboard 6 ]"), plain.toolbarButtons().filter { it.y == plain.modeRow }.map { it.text })
+        assertEquals(listOf("[Labels 4]", "[Mouse 6]"), shortcuts.toolbarButtons().filter { it.y == shortcuts.modeRow }.map { it.text })
         for (layout in listOf(plain, shortcuts)) {
             val (x, y) = layout.labelsButtonPosition()
             assertEquals(layout.modeRow, y)

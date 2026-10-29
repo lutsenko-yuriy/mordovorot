@@ -59,7 +59,7 @@ class UnsolvableSaveScenarioTest {
     private val restoreAtStartup = listOf(Tab, Enter)
 
     /** F6, then the same Tab + Enter on the Load dialog. */
-    private val loadMidGame = listOf(TerminalEvent.FunctionKey(6), Tab, Enter)
+    private val loadMidGame = listOf(TerminalEvent.KeyPress('3'), Tab, Enter)
 
     // Can't-be-solved dialog: focus starts on Repair & load.
     private val chooseRepair = listOf(Enter)

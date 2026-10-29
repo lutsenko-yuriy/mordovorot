@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.26.3] — 2026-10-29 (PR #192 merged)
+
+### Changed
+- [wip] (PR #192) GH-170 (WU1/4): terminal keyboard mode selects one tile: W/A/S/D move it, H/L and ←/→ shift its row, K/J and ↑/↓ its column; the tile is drawn in reverse video with its row pale yellow and its column light grey. Digits replace the F-keys on the toolbar (1 New, 2 Save, 3 Load, 4 Labels, 5 Give Up, 6 mode switch until WU2's Controls dialog), and the solution screen adds H/L and K/J.
+
 ## [0.26.2] — 2026-10-29 (PR #190 merged)
 
 ### Changed

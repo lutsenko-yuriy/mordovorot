@@ -4,7 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import viewmodel.SolutionState
 
-/** GH-139 in [KeyboardInput]: F4 opens Labels in every board state, and the Labels dialog opens on
+/** GH-139 in [KeyboardInput]: 4 opens Labels in every board state, and the Labels dialog opens on
  *  the marked row, where Enter confirms. */
 class KeyboardInputLabelsTest {
 
@@ -26,11 +26,11 @@ class KeyboardInputLabelsTest {
     )
 
     @Test
-    fun `F4 activates Labels while playing, once solved and on the solution screen (GH-139)`() {
+    fun `4 activates Labels while playing, once solved and on the solution screen (GH-139)`() {
         val solution = unsolvedBoard().copy(solution = SolutionState(listOf("1. Row 1 → ×1"), null, atStart = true, atEnd = false, moves = emptyList()))
         for (state in listOf(unsolvedBoard(), solvedBoard(), solution)) {
             val input = KeyboardInput(KeyboardSelection()).also { it.decorateBoard(state) }
-            assertEquals(InputAction.Activate(HitTarget.ToolbarLabels), input.onBoardEvent(TerminalEvent.FunctionKey(4), boardLayout))
+            assertEquals(InputAction.Activate(HitTarget.ToolbarLabels, shortcut = true), input.onBoardEvent(TerminalEvent.KeyPress('4'), boardLayout))
         }
     }
 

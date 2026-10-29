@@ -43,6 +43,15 @@ class MouseInputTest {
     }
 
     @Test
+    fun `6 on the board is the mode switch, as a shortcut (GH-170), and other digits do nothing`() {
+        assertEquals(
+            InputAction.Activate(HitTarget.ToolbarMode(InputMode.KEYBOARD), shortcut = true),
+            input.onBoardEvent(TerminalEvent.KeyPress('6'), boardLayout),
+        )
+        for (digit in "12345") assertEquals(InputAction.None, input.onBoardEvent(TerminalEvent.KeyPress(digit), boardLayout), "$digit")
+    }
+
+    @Test
     fun `dialog keys map one-for-one onto text editing and submit-cancel actions`() {
         val dialog = Dialog(Dialog.Kind.SAVE, "Save game", buttons = listOf(DialogButtonSpec("save", "Save"), DialogButtonSpec("cancel", "Cancel")))
         val layout = DialogLayout(dialog, terminalSize)

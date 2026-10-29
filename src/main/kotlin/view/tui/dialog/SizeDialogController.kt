@@ -10,7 +10,7 @@ import view.tui.TuiScreen
 import viewmodel.UiRequest
 import viewmodel.ViewModel
 
-/** The new-game size picker (GH-44, GH-78): the toolbar New / F9 and the viewModel's
+/** The new-game size picker (GH-44, GH-78): the toolbar New / 1 and the viewModel's
  *  [UiRequest.ChooseBoardSize]. */
 internal class SizeDialogController(
     private val screen: TuiScreen,
@@ -28,7 +28,7 @@ internal class SizeDialogController(
     /** Runs the size-picker dialog's own blocking loop: a button per valid side, plus Cancel -
      *  buttons-only, like the Exit dialog, so no text field or list to manage.
      *  Shared by the startup [UiRequest.ChooseBoardSize] handler and (GH-44 WU3) the toolbar
-     *  `[ New ]` button/F9 - [openedFrom] is `"toolbar"` or a [UiRequest.ChooseBoardSize.origin]. Returns the chosen side,
+     *  `[ New ]` button/1 - [openedFrom] is `"toolbar"` or a [UiRequest.ChooseBoardSize.origin]. Returns the chosen side,
      *  or `null` on Cancel/Escape/EOF - deliberately returns a value instead of calling
      *  `viewModel.newGame` itself, so the startup call site stays outside the deadlock-prone
      *  "View calls a request-raising viewModel method from its own request handler" shape (see

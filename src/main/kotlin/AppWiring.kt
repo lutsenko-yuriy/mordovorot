@@ -48,7 +48,7 @@ internal fun terminalAnalytics(delegate: AnalyticsService): AnalyticsService =
     PlatformAnalyticsService(delegate, "terminal")
 
 /** A [GameSession] whose every rebuild shares [board], [saves], [mordie], [tileLabels] (GH-139),
- *  one [CurrentSaveName] (GH-99), one [GameShiftSources] and one [KeyboardSelection] (GH-101), one
+ *  one [CurrentSaveName] (GH-99), one [GameShiftSources] and one [KeyboardSelection] (GH-170), one
  *  [UnsavedProgress] (GH-110), which the terminal never reads, and one [SolutionScreen] (GH-126). */
 internal fun buildGameSession(
     initialMode: InputMode,
@@ -157,6 +157,6 @@ internal fun buildTuiView(
         labelsDialog,
     )
     val giveUpDialog = GiveUpDialogController(screen, analytics, viewModel)
-    val toolbar = ToolbarRouter(saveDialog, loadDialog, exitDialog, sizeDialog, giveUpDialog, labelsDialog, viewModel, modeSwitcher, input)
+    val toolbar = ToolbarRouter(saveDialog, loadDialog, exitDialog, sizeDialog, giveUpDialog, labelsDialog, viewModel, modeSwitcher)
     return TuiView(terminal, analytics, input, viewModel, screen, requests, toolbar)
 }

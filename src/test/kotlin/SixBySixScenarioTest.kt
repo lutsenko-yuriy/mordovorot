@@ -231,12 +231,12 @@ class SixBySixScenarioTest {
             assertEquals(24, rows(frame).size)
             assertEquals(sitsOut, mordieLine(frame))
             assertEquals(36, tilesShown(frame).size)
-            assertFalse("[ Give Up ]" in text(frame) || "[Give Up F8]" in text(frame))
+            assertFalse("[ Give Up ]" in text(frame) || "[Give Up 5]" in text(frame))
         }
         val mouse = text(snaps[0])
         assertTrue("[ New ]" in mouse && "[ Labels ]" in mouse && "Saved as 'fit'." in mouse, mouse)
         val keyboard = text(snaps[1])
-        assertTrue("[New F9]" in keyboard && "[Labels F4]" in keyboard && "F4 Labels" in keyboard, keyboard)
+        assertTrue("[New 1]" in keyboard && "[Labels 4]" in keyboard && "4 Labels" in keyboard, keyboard)
     }
 
     @Test
@@ -260,7 +260,7 @@ class SixBySixScenarioTest {
         // Keyboard: four steps from Numbers skip Letters and land on Letter pairs, by arrow or Tab.
         for (step in listOf(TerminalEvent.Arrow(Direction.DOWN), TerminalEvent.Tab)) {
             val keys = dir("letters")
-            session(listOf(key(TerminalEvent.FunctionKey(4))) + List(4) { key(step) } + key(TerminalEvent.Enter), InputMode.KEYBOARD, keys)
+            session(listOf(key(TerminalEvent.KeyPress('4'))) + List(4) { key(step) } + key(TerminalEvent.Enter), InputMode.KEYBOARD, keys)
             assertEquals("tile_labels=letter_pairs\n", preferenceIn(keys), "$step")
         }
     }

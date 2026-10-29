@@ -14,8 +14,6 @@ import InputMode
  */
 class MouseInput : TuiInput {
 
-    override val switchTrigger = "toolbar"
-
     override fun prepare(terminal: Terminal) {
         terminal.enableMouseReporting()
     }
@@ -24,9 +22,10 @@ class MouseInput : TuiInput {
         is TerminalEvent.MouseClick -> InputAction.Activate(layout.hitTest(event.x, event.y))
         is TerminalEvent.Wheel -> InputAction.Scroll(if (event.up) -1 else 1)
         TerminalEvent.EndOfInput -> InputAction.Quit
-        // Keys/Backspace/Enter/Escape/Resize/Arrow/FunctionKey/Tab/BackTab only matter while a
-        // dialog's modal loop is reading events directly - the mouse-driven board screen acts
-        // only on clicks and wheel notches (GH-126).
+        // 6 is the one key the toolbar shows here (GH-170): the mode switch until WU2's Controls.
+        TerminalEvent.KeyPress('6') -> InputAction.Activate(HitTarget.ToolbarMode(InputMode.KEYBOARD), shortcut = true)
+        // Other keys only matter while a dialog's modal loop is reading events directly - the
+        // mouse-driven board screen acts only on clicks, wheel notches and 6 (GH-126).
         else -> InputAction.None
     }
 

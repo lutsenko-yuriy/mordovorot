@@ -6,7 +6,7 @@ import analytics.AnalyticsService
 /**
  * Requests a switch to a different [InputMode] mid-session: tracks `input_mode_switched` and
  * throws [ModeSwitchRequestedException] - mirrors [viewmodel.usecase.ExitGameUseCase.exitGame]'s contract. Reached
- * from `TuiView`'s toolbar button and F7 (GH-30). No terminal check: a running TUI always has
+ * from `TuiView`'s toolbar button and 6 (GH-30, GH-170). No terminal check: a running TUI always has
  * one (GH-79 removed the console mode that could ask without one).
  *
  * WU2-4 wiring note: pass the *undecorated* [AnalyticsService] - `input_mode_switched` isn't

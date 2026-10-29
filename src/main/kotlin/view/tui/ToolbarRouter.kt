@@ -20,23 +20,23 @@ internal class ToolbarRouter(
     private val labelsDialog: LabelsDialogController,
     private val viewModel: ViewModel,
     private val modeSwitcher: ModeSwitcher,
-    private val input: TuiInput,
 ) {
 
-    /** Any other target is ignored. */
-    suspend fun handle(target: HitTarget) {
+    /** [shortcut]: a key, not a click (GH-170). Any other target is ignored. */
+    suspend fun handle(target: HitTarget, shortcut: Boolean = false) {
+        val openedFrom = if (shortcut) "shortcut" else "toolbar"
         when (target) {
             HitTarget.ToolbarSave -> saveDialog.onToolbar()
             HitTarget.ToolbarLoad -> loadDialog.onToolbar()
             HitTarget.ToolbarExit -> exitDialog.onToolbar()
             HitTarget.ToolbarNew -> sizeDialog.onToolbar()
             HitTarget.GiveUp -> giveUpDialog.onToolbar()
-            HitTarget.ToolbarLabels -> labelsDialog.onToolbar(input.switchTrigger)
+            HitTarget.ToolbarLabels -> labelsDialog.onToolbar(openedFrom)
             HitTarget.MordiesSolution -> viewModel.showSolution()
             HitTarget.ReplayPrevious -> viewModel.replayPrevious()
             HitTarget.ReplayNext -> viewModel.replayNext()
             HitTarget.ReplayRestart -> viewModel.replayRestart()
-            is HitTarget.ToolbarMode -> modeSwitcher.switchTo(target.mode, trigger = input.switchTrigger)
+            is HitTarget.ToolbarMode -> modeSwitcher.switchTo(target.mode, trigger = openedFrom)
             else -> {}
         }
     }

@@ -36,7 +36,7 @@ class AppWiringTest {
             .toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.KEYBOARD) }
         val switchKey = mapOf(
             InputMode.MOUSE to TerminalEvent.MouseClick(keyboardButton.x, keyboardButton.y),
-            InputMode.KEYBOARD to TerminalEvent.FunctionKey(7),
+            InputMode.KEYBOARD to TerminalEvent.KeyPress('6'),
         )
         for (mode in InputMode.entries) {
             val view = defaultView(
@@ -87,7 +87,7 @@ class AppWiringTest {
 
         val shifted = BoardImpl(4).apply { restoreState(scrambled); shiftLeft(0) }
         assertEquals(shifted.boardArray.toList(), board.boardArray.toList(), "not reshuffled by the rebuild")
-        val keyboardFrame = terminal.frames.last { it.contains("[Mouse F7]") }
+        val keyboardFrame = terminal.frames.last { it.contains("[Mouse 6]") }
         assertTrue(keyboardFrame.contains("Moves: 1"), "the keyboard View reads the same board")
         assertEquals(1, factory.started.size, "the keyboard rebuild reuses Mordie's running search")
         val switched = analytics.events.single { it.name == "input_mode_switched" }

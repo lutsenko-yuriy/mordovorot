@@ -94,7 +94,7 @@ class TuiViewSizeDialogTest {
             // A fresh Size dialog focuses its first button ("3") - Enter activates it directly,
             // same as KeyboardInputTest's other dialog-focus tests (KeyboardInput doesn't
             // interpret mouse clicks at all, unlike MouseInput).
-            events = mutableListOf(TerminalEvent.FunctionKey(9), TerminalEvent.Enter),
+            events = mutableListOf(TerminalEvent.KeyPress('1'), TerminalEvent.Enter),
             terminalSize = terminalSize,
         )
 

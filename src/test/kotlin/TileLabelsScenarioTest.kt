@@ -136,7 +136,7 @@ class TileLabelsScenarioTest {
     /** Keyboard: F4 (focus starts on the marked row [from]), arrows to [to], Enter. */
     private fun chooseByKeys(from: Int, to: Int): List<Step> {
         val arrow = if (to > from) Direction.DOWN else Direction.UP
-        return listOf(key(TerminalEvent.FunctionKey(4))) + List(kotlin.math.abs(to - from)) { key(TerminalEvent.Arrow(arrow)) } +
+        return listOf(key(TerminalEvent.KeyPress('4'))) + List(kotlin.math.abs(to - from)) { key(TerminalEvent.Arrow(arrow)) } +
             key(TerminalEvent.Enter)
     }
 
@@ -193,12 +193,12 @@ class TileLabelsScenarioTest {
     fun `labels button opens the dialog with numbers marked`() {
         for ((mode, layout, open) in listOf(
             Triple(InputMode.MOUSE, mouseLayout, openLabels),
-            Triple(InputMode.KEYBOARD, keyboardLayout, key(TerminalEvent.FunctionKey(4))),
+            Triple(InputMode.KEYBOARD, keyboardLayout, key(TerminalEvent.KeyPress('4'))),
         )) {
             snaps.clear()
             val run = session(listOf(snap(), open, snap()), mode)
 
-            val expectedRow = if (mode == InputMode.MOUSE) "[ Labels ] [ Keyboard ]" else "[Labels F4] [Mouse F7]"
+            val expectedRow = if (mode == InputMode.MOUSE) "[ Labels ] [ Keyboard 6 ]" else "[Labels 4] [Mouse 6]"
             assertEquals(expectedRow, secondRowShown(snaps[0], layout))
             assertTrue(dialogShown(snaps[1], marked = numbers), "$mode: the dialog, Numbers marked")
             val opened = run.event("screen_labels_dialog")
@@ -246,7 +246,7 @@ class TileLabelsScenarioTest {
         // Keyboard mode's New game dialog: focus starts on 3x3, Tab to 4x4.
         session(
             choose(letters) + click(mouseLayout.toolbarButtons().first { it.target is HitTarget.ToolbarMode }.let { it.x to it.y }) + snap() +
-                key(TerminalEvent.FunctionKey(9)) + key(TerminalEvent.Tab) + key(TerminalEvent.Enter) + snap(),
+                key(TerminalEvent.KeyPress('1')) + key(TerminalEvent.Tab) + key(TerminalEvent.Enter) + snap(),
             dir = dir,
         )
         session(listOf(snap()), dir = dir)
