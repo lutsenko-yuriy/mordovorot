@@ -2,8 +2,9 @@ package view.tui
 
 /** What focusing item `index` of a [DialogFocus] ring means for [ScreenRenderer] (which control
  *  to highlight) and [TuiInput] (what Enter should do): the dialog's text field, a selectable
- *  list row, or a button ready to activate. */
+ *  list row, an option group (GH-170), or a button ready to activate. */
 sealed class DialogFocusTarget {
+    data class Group(val index: Int) : DialogFocusTarget()
     object TextField : DialogFocusTarget()
     data class ListRow(val index: Int) : DialogFocusTarget()
     data class Button(val hitTarget: HitTarget.DialogButton) : DialogFocusTarget()
@@ -11,13 +12,15 @@ sealed class DialogFocusTarget {
 
 /**
  * Pure focus ring for GH-18's keyboard dialog navigation: the focusable controls of a [Dialog],
- * in order - its text field (Save only), then its list rows (Load and Labels), then its buttons -
+ * in order - its option groups (Controls), its text field (Save only), then its list rows (Load and
+ * Labels), then its buttons -
  * with [next]/[previous] wrapping a 0-based focus index around the ring and [target] mapping
  * that index back to what it means ([DialogFocusTarget]). No terminal or viewModel involved.
  */
 class DialogFocus(dialog: Dialog) {
 
     private val targets: List<DialogFocusTarget> = buildList {
+        dialog.optionGroups.indices.forEach { add(DialogFocusTarget.Group(it)) }
         if (dialog.kind == Dialog.Kind.SAVE) add(DialogFocusTarget.TextField)
         if (dialog.kind.hasList) dialog.listItems.indices.filter { it !in dialog.disabledRows }.forEach { add(DialogFocusTarget.ListRow(it)) }
         dialog.buttons.forEach { add(DialogFocusTarget.Button(HitTarget.DialogButton(it.id))) }

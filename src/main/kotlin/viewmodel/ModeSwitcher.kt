@@ -6,20 +6,23 @@ import analytics.AnalyticsService
 /**
  * Requests a switch to a different [InputMode] mid-session: tracks `input_mode_switched` and
  * throws [ModeSwitchRequestedException] - mirrors [viewmodel.usecase.ExitGameUseCase.exitGame]'s contract. Reached
- * from `TuiView`'s toolbar button and 6 (GH-30, GH-170). No terminal check: a running TUI always has
+ * from the Controls dialog's OK (GH-170). No terminal check: a running TUI always has
  * one (GH-79 removed the console mode that could ask without one).
  *
  * WU2-4 wiring note: pass the *undecorated* [AnalyticsService] - `input_mode_switched` isn't
  * documented with an `input_method` property (same reasoning as `app_launched`).
  */
 interface ModeSwitcher {
-    /** [trigger]: `"toolbar"` or `"shortcut"`. */
+    /** The mode the running View is in - what the Controls dialog opens with marked. */
+    val currentMode: InputMode
+
+    /** [trigger]: `"controls_dialog"`. */
     suspend fun switchTo(target: InputMode, trigger: String)
 }
 
 /** [currentMode] is fixed per instance - `defaultView` builds a fresh one on every rebuild. */
 class ModeSwitcherImpl(
-    private val currentMode: InputMode,
+    override val currentMode: InputMode,
     private val analytics: AnalyticsService,
 ) : ModeSwitcher {
 

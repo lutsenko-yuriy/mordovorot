@@ -26,8 +26,7 @@ import view.tui.TerminalSize
 
 /** GH-170: keyboard mode on the shared keyboard scheme (ADR-0003) - a selected tile moved by
  *  WASD and shifted by HJKL/arrows, the digit toolbar, no F-keys, H/L and K/J on the solution
- *  screen. Replaces GH-101's line selection. Until WU2's Controls dialog, 6 switches mode
- *  directly (`[Mouse 6]`). */
+ *  screen. Replaces GH-101's line selection. */
 class KeyboardTileSelectionScenarioTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
@@ -101,8 +100,8 @@ class KeyboardTileSelectionScenarioTest {
         assertEquals(marked(scrambled, 0, 0), shown(frame))
         for (glyph in listOf("◀", "▶", "▲", "▼")) assertFalse(glyph in text, glyph)
         for (hint in listOf("W/A/S/D select", "←/→ H/L row", "↑/↓ K/J column")) assertTrue(hint in text, hint)
-        for (row in listOf("[New 1] [Save 2] [Load 3] [Exit Esc]", "[Labels 4] [Mouse 6]")) assertTrue(row in text, row)
-        assertTrue("1 New · 2 Save · 3 Load · 4 Labels · 5 Give Up · 6 Mouse · Esc Exit" in text)
+        for (row in listOf("[New 1] [Save 2] [Load 3] [Exit Esc]", "[Labels 4] [Controls 6]")) assertTrue(row in text, row)
+        assertTrue("1 New · 2 Save · 3 Load · 4 Labels · 5 Give Up · 6 Controls · Esc Exit" in text)
     }
 
     @Test

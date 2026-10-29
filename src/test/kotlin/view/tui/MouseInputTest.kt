@@ -1,6 +1,5 @@
 package view.tui
 
-import InputMode
 import testing.FakeTerminal
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -43,9 +42,9 @@ class MouseInputTest {
     }
 
     @Test
-    fun `6 on the board is the mode switch, as a shortcut (GH-170), and other digits do nothing`() {
+    fun `6 on the board opens Controls, as a shortcut (GH-170), and other digits do nothing`() {
         assertEquals(
-            InputAction.Activate(HitTarget.ToolbarMode(InputMode.KEYBOARD), shortcut = true),
+            InputAction.Activate(HitTarget.ToolbarControls, shortcut = true),
             input.onBoardEvent(TerminalEvent.KeyPress('6'), boardLayout),
         )
         for (digit in "12345") assertEquals(InputAction.None, input.onBoardEvent(TerminalEvent.KeyPress(digit), boardLayout), "$digit")
@@ -76,9 +75,9 @@ class MouseInputTest {
     }
 
     @Test
-    fun `decorateBoard offers only Keyboard on the toolbar (GH-30, GH-79), decorateDialog stays the identity`() {
+    fun `decorateBoard and decorateDialog stay the identity outside Controls`() {
         val state = ScreenState.forBoard(board = (0..15).toList(), squareSide = 4, solved = false)
-        assertEquals(state.copy(modeButtons = listOf(InputMode.KEYBOARD)), input.decorateBoard(state))
+        assertEquals(state, input.decorateBoard(state))
 
         val dialog = Dialog(Dialog.Kind.EXIT, "Save before quitting?", buttons = listOf(DialogButtonSpec("yes", "Yes")))
         assertEquals(dialog, input.decorateDialog(dialog))

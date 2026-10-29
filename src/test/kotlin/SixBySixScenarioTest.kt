@@ -31,7 +31,7 @@ import view.tui.TerminalSize
 class SixBySixScenarioTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 24)
-    private fun mouseLayout(side: Int) = BoardLayout(terminalSize, side, modeButtons = listOf(InputMode.KEYBOARD))
+    private fun mouseLayout(side: Int) = BoardLayout(terminalSize, side)
 
     private val sitsOut = "Mordie: 6x6 is too much for me, you're on your own!"
     private val dim = "\u001B[2m"

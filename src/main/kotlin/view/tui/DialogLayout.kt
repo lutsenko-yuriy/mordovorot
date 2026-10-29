@@ -4,6 +4,9 @@ package view.tui
  *  names, save-list rows) that isn't a free-form message. */
 internal const val DIALOG_WIDTH = 44
 
+/** Where an option group's options start, after its label (GH-170): `Keyboard keys` plus a gap. */
+internal const val GROUP_LABEL_WIDTH = 15
+
 /** Absolute floor for the terminal-width cap below - small enough to still fit inside a
  *  pathologically narrow terminal rather than forcing overflow. */
 private const val MIN_WIDTH = 12
@@ -30,6 +33,9 @@ class DialogLayout(private val dialog: Dialog, terminalSize: TerminalSize) {
     private val hasList = dialog.kind.hasList
     private val listRows = if (hasList) dialog.listItems.size.coerceAtLeast(1) else 0
     private val hasTextField = dialog.kind == Dialog.Kind.SAVE
+    private val groupRows = dialog.optionGroups.size
+    /** The notes and the blank row above them (GH-170). */
+    private val noteRows = if (dialog.notes.isEmpty()) 0 else dialog.notes.size + 1
 
     /** The message word-wrapped to fit the chosen [width] - possibly several lines, unlike
      *  every other content line. */
@@ -40,6 +46,8 @@ class DialogLayout(private val dialog: Dialog, terminalSize: TerminalSize) {
         messageLines.size +
         (if (hasTextField) 1 else 0) +
         listRows +
+        groupRows +
+        noteRows +
         2 // blank + buttons
 
     val left = ((terminalSize.columns - width) / 2).coerceAtLeast(0)
@@ -54,13 +62,28 @@ class DialogLayout(private val dialog: Dialog, terminalSize: TerminalSize) {
     // blank row before whatever follows (audit round 4 on PR #24).
     val textFieldRow: Int? = if (hasTextField) (messageStartRow?.plus(messageLines.size - 1) ?: top + 1) + 1 else null
     private val listStartRow = (textFieldRow ?: messageStartRow?.plus(messageLines.size - 1) ?: top + 1) + 1
-    private val buttonsRow = listStartRow + listRows + 1
+    private val groupStartRow = listStartRow + listRows
+    private val buttonsRow = groupStartRow + groupRows + noteRows + 1
 
     fun titleRow(): Int = top
     fun bottomRow(): Int = buttonsRow
     fun buttonsRow(): Int = buttonsRow
     fun messageRowPosition(index: Int): Int = (messageStartRow ?: top + 2) + index
     fun listRowPosition(index: Int): Int = listStartRow + index
+    fun groupRowPosition(index: Int): Int = groupStartRow + index
+    fun noteRowPosition(index: Int): Int = groupStartRow + groupRows + 1 + index
+
+    /** Option group [group]'s options side by side after its label, each `● name` or `○ name`. */
+    internal fun options(group: Int): List<DialogButtonLayout> {
+        val spec = dialog.optionGroups[group]
+        var x = left + 2 + GROUP_LABEL_WIDTH
+        return spec.options.mapIndexed { index, name ->
+            val text = optionText(name, index == spec.selected)
+            val entry = DialogButtonLayout(HitTarget.DialogOption(group, index), text, x, x until (x + text.length))
+            x += text.length + OPTION_GAP
+            entry
+        }
+    }
 
     internal fun buttons(): List<DialogButtonLayout> {
         val texts = dialog.buttons.map { "[ ${it.label} ]" }
@@ -80,6 +103,9 @@ class DialogLayout(private val dialog: Dialog, terminalSize: TerminalSize) {
                 if (y == listRowPosition(index)) return if (index in dialog.disabledRows) HitTarget.Nothing else HitTarget.DialogListRow(index)
             }
         }
+        for (group in dialog.optionGroups.indices) {
+            if (y == groupRowPosition(group)) for (option in options(group)) if (x in option.range) return option.target
+        }
         if (y == buttonsRow) {
             for (button in buttons()) if (x in button.range) return button.target
         }
@@ -87,10 +113,14 @@ class DialogLayout(private val dialog: Dialog, terminalSize: TerminalSize) {
     }
 }
 
+private const val OPTION_GAP = 2
+
+private fun optionText(name: String, selected: Boolean) = (if (selected) "● " else "○ ") + name
+
 internal data class DialogButtonLayout(val target: HitTarget, val text: String, val x: Int, val range: IntRange)
 
 /** The widest single line the dialog's non-message content needs: title, the `Name: <value>_`
- *  text field, the longest list row, or the button row - whichever is longest. The message is
+ *  text field, the longest list row, option group or note, or the button row - whichever is longest. The message is
  *  deliberately excluded - it wraps to fit [DialogLayout.width] instead of driving it. */
 private fun structuralContentWidth(dialog: Dialog): Int {
     val lines = mutableListOf(dialog.title.length)
@@ -101,6 +131,10 @@ private fun structuralContentWidth(dialog: Dialog): Int {
     // finding on GH-18 WU2 PR #31).
     if (dialog.kind == Dialog.Kind.SAVE) lines += "Name: ${dialog.textFieldValue}_$TEXT_FIELD_FOCUS_MARKER".length
     dialog.listItems.forEach { lines += "  $it".length }
+    dialog.optionGroups.forEach { group ->
+        lines += GROUP_LABEL_WIDTH + group.options.sumOf { optionText(it, false).length } + OPTION_GAP * (group.options.size - 1)
+    }
+    dialog.notes.forEach { lines += it.length }
     val buttonsWidth = dialog.buttons.sumOf { "[ ${it.label} ]".length } + (dialog.buttons.size - 1)
     lines += buttonsWidth
     return lines.max()

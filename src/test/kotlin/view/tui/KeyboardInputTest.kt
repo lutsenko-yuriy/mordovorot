@@ -1,6 +1,5 @@
 package view.tui
 
-import InputMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -106,10 +105,10 @@ class KeyboardInputTest {
     }
 
     @Test
-    fun `6 requests a switch to mouse mode`() {
+    fun `6 opens Controls`() {
         val input = input()
 
-        assertEquals(InputAction.Activate(HitTarget.ToolbarMode(InputMode.MOUSE), shortcut = true), input.onBoardEvent(TerminalEvent.KeyPress('6'), boardLayout))
+        assertEquals(InputAction.Activate(HitTarget.ToolbarControls, shortcut = true), input.onBoardEvent(TerminalEvent.KeyPress('6'), boardLayout))
     }
 
     @Test
@@ -207,12 +206,12 @@ class KeyboardInputTest {
         assertEquals(TileSelection.INITIAL, selection.current)
         assertEquals(InputAction.Activate(HitTarget.ToolbarSave, shortcut = true), input.onBoardEvent(TerminalEvent.KeyPress('2'), boardLayout))
         assertEquals(InputAction.Activate(HitTarget.ToolbarExit, shortcut = true), input.onBoardEvent(TerminalEvent.Escape, boardLayout))
-        assertEquals(InputAction.Activate(HitTarget.ToolbarMode(InputMode.MOUSE), shortcut = true), input.onBoardEvent(TerminalEvent.KeyPress('6'), boardLayout))
+        assertEquals(InputAction.Activate(HitTarget.ToolbarControls, shortcut = true), input.onBoardEvent(TerminalEvent.KeyPress('6'), boardLayout))
         assertEquals(InputAction.Activate(HitTarget.ToolbarNew, shortcut = true), input.onBoardEvent(TerminalEvent.KeyPress('1'), boardLayout))
     }
 
     @Test
-    fun `decorateBoard shows the selection, hides the arrows and sets the hints, toolbar shortcuts and mode buttons`() {
+    fun `decorateBoard shows the selection, hides the arrows and sets the hints and toolbar shortcuts`() {
         val input = KeyboardInput(KeyboardSelection())
 
         val unsolved = input.decorateBoard(unsolvedBoard())
@@ -220,9 +219,8 @@ class KeyboardInputTest {
         assertFalse(unsolved.showArrows)
         assertEquals(listOf("W/A/S/D select"), unsolved.selectionHint)
         assertEquals(listOf("←/→ H/L row", "↑/↓ K/J column"), unsolved.shiftHint)
-        assertEquals("1 New · 2 Save · 3 Load · 4 Labels · 5 Give Up · 6 Mouse · Esc Exit", unsolved.controlsHint)
+        assertEquals("1 New · 2 Save · 3 Load · 4 Labels · 5 Give Up · 6 Controls · Esc Exit", unsolved.controlsHint)
         assertEquals(true, unsolved.toolbarShortcuts)
-        assertEquals(listOf(InputMode.MOUSE), unsolved.modeButtons)
 
         val solved = input.decorateBoard(solvedBoard())
         assertNull(solved.selection)

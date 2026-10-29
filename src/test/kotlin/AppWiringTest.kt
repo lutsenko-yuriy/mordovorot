@@ -11,6 +11,7 @@ import testing.FakePreferenceRepository
 import testing.FakeSaveRepository
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
+import testing.switchModeKeys
 import testing.testGameSession
 import view.tui.BoardLayout
 import view.tui.HitTarget
@@ -32,12 +33,6 @@ class AppWiringTest {
     @Test
     fun `the production View is wired with a real ModeSwitcher, not a silent no-op`(): Unit = runBlocking {
         val terminalSize = TerminalSize(80, 40)
-        val keyboardButton = BoardLayout(terminalSize, 4, modeButtons = listOf(InputMode.KEYBOARD))
-            .toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.KEYBOARD) }
-        val switchKey = mapOf(
-            InputMode.MOUSE to TerminalEvent.MouseClick(keyboardButton.x, keyboardButton.y),
-            InputMode.KEYBOARD to TerminalEvent.KeyPress('6'),
-        )
         for (mode in InputMode.entries) {
             val view = defaultView(
                 mode,
@@ -53,7 +48,7 @@ class AppWiringTest {
                 solutionScreen = SolutionScreen(),
                 tileLabels = SessionTileLabels(TileLabelsPreference(FakePreferenceRepository())),
                 keyboardSelection = KeyboardSelection(),
-                terminalFactory = { FakeTerminal(mutableListOf(switchKey.getValue(mode)), terminalSize) },
+                terminalFactory = { FakeTerminal(switchModeKeys.toMutableList(), terminalSize) },
             )
 
             val switch = assertFailsWith<ModeSwitchRequestedException> { view.play(null) }
@@ -64,11 +59,10 @@ class AppWiringTest {
     @Test
     fun `a mode switch rebuilds around the session's one board and Mordie`(): Unit = runBlocking {
         val terminalSize = TerminalSize(80, 40)
-        val layout = BoardLayout(terminalSize, 4, modeButtons = listOf(InputMode.KEYBOARD))
+        val layout = BoardLayout(terminalSize, 4)
         val (leftX, leftY) = layout.leftArrowPosition(0)
-        val keyboardButton = layout.toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.KEYBOARD) }
         val terminal = FakeTerminal(
-            mutableListOf(TerminalEvent.MouseClick(leftX, leftY), TerminalEvent.MouseClick(keyboardButton.x, keyboardButton.y)),
+            (listOf(TerminalEvent.MouseClick(leftX, leftY)) + switchModeKeys).toMutableList(),
             terminalSize,
         )
         val scrambled = IntArray(16) { 15 - it }
@@ -87,7 +81,7 @@ class AppWiringTest {
 
         val shifted = BoardImpl(4).apply { restoreState(scrambled); shiftLeft(0) }
         assertEquals(shifted.boardArray.toList(), board.boardArray.toList(), "not reshuffled by the rebuild")
-        val keyboardFrame = terminal.frames.last { it.contains("[Mouse 6]") }
+        val keyboardFrame = terminal.frames.last { it.contains("[Controls 6]") }
         assertTrue(keyboardFrame.contains("Moves: 1"), "the keyboard View reads the same board")
         assertEquals(1, factory.started.size, "the keyboard rebuild reuses Mordie's running search")
         val switched = analytics.events.single { it.name == "input_mode_switched" }
@@ -97,7 +91,7 @@ class AppWiringTest {
     @Test
     fun `the View tracks with the mode's input_method`(): Unit = runBlocking {
         val terminalSize = TerminalSize(80, 40)
-        val layout = BoardLayout(terminalSize, 4, modeButtons = listOf(InputMode.KEYBOARD))
+        val layout = BoardLayout(terminalSize, 4)
         val newButton = layout.toolbarButtons().first { it.target == HitTarget.ToolbarNew }
         val terminal = FakeTerminal(mutableListOf(TerminalEvent.MouseClick(newButton.x, newButton.y)), terminalSize)
         val analytics = RecordingAnalyticsService()
@@ -117,15 +111,10 @@ class AppWiringTest {
     @Test
     fun `terminal analytics tag every event with platform terminal, launch and mode switch included`(): Unit = runBlocking {
         val terminalSize = TerminalSize(80, 40)
-        val layout = BoardLayout(terminalSize, 4, modeButtons = listOf(InputMode.KEYBOARD))
+        val layout = BoardLayout(terminalSize, 4)
         val newButton = layout.toolbarButtons().first { it.target == HitTarget.ToolbarNew }
-        val keyboardButton = layout.toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.KEYBOARD) }
         val terminal = FakeTerminal(
-            mutableListOf(
-                TerminalEvent.MouseClick(newButton.x, newButton.y),
-                TerminalEvent.Escape,
-                TerminalEvent.MouseClick(keyboardButton.x, keyboardButton.y),
-            ),
+            (listOf(TerminalEvent.MouseClick(newButton.x, newButton.y), TerminalEvent.Escape) + switchModeKeys).toMutableList(),
             terminalSize,
         )
         val recording = RecordingAnalyticsService()

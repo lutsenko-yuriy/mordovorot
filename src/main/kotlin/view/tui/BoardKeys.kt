@@ -28,8 +28,20 @@ internal object BoardKeys {
     val SOLUTION_HINT = listOf("←/→ A/D H/L  step", "Space/Enter  next", "R  restart", "↑/↓ W/S K/J  scroll")
 
     /** Under the toolbar. Must fit 80 columns, the fallback terminal width: [Canvas] clips, it
-     *  doesn't wrap. 6 is the mode switch until GH-170 WU2's Controls dialog. */
-    const val CONTROLS_HINT = "1 New · 2 Save · 3 Load · 4 Labels · 5 Give Up · 6 Mouse · Esc Exit"
+     *  doesn't wrap. */
+    const val CONTROLS_HINT = "1 New · 2 Save · 3 Load · 4 Labels · 5 Give Up · 6 Controls · Esc Exit"
+
+    /** The Controls dialog's key list (GH-170), within its 44-column interior. */
+    val KEY_LIST = listOf(
+        "Select tile    W A S D",
+        "Shift row      ← →  H L",
+        "Shift column   ↑ ↓  K J",
+        "New 1 · Save 2 · Load 3 · Labels 4",
+        "Give Up 5 · Controls 6 · Exit Esc",
+        "Solution: ← → A D H L Prev/Next ·",
+        "  Space/Enter Next · R Restart ·",
+        "  ↑ ↓ W S K J scroll",
+    )
 
     fun boardKey(event: TerminalEvent): BoardKey? {
         if (event is TerminalEvent.Arrow) return BoardKey.Shift(event.direction, ShiftKey.ARROW)

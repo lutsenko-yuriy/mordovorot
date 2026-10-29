@@ -14,6 +14,7 @@ import storage.FileSaveRepository
 import testing.FakeMordieSearchFactory
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
+import testing.switchModeKeys
 import testing.testGameSession
 import view.tui.BoardLayout
 import view.tui.TerminalEvent
@@ -180,10 +181,10 @@ class SaveNamePrefillScenarioTest {
 
     @Test
     fun `switching input mode keeps the prefill`() {
-        val saveButton = BoardLayout(terminalSize, 4, modeButtons = listOf(InputMode.KEYBOARD)).saveButtonPosition()
+        val saveButton = BoardLayout(terminalSize, 4).saveButtonPosition()
 
         val run = session(
-            loadRow(0, 1) + KeyPress('6') + TerminalEvent.MouseClick(saveButton.first, saveButton.second),
+            loadRow(0, 1) + switchModeKeys + TerminalEvent.MouseClick(saveButton.first, saveButton.second),
             savesDir(fooSave),
         )
 

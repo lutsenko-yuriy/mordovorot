@@ -1,6 +1,5 @@
 package view.tui
 
-import InputMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -26,11 +25,9 @@ class TuiViewSizeDialogTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
 
-    /** Matches [MouseInput.decorateBoard]'s GH-30 mode buttons, same as [TuiViewDialogTest]'s
-     *  own helper - the real toolbar always carries them, so a hardcoded position here lines up
-     *  with what [TuiView] actually draws/hit-tests. */
+    /** The mouse-mode layout [TuiView] draws, same as [TuiViewDialogTest]'s own helper. */
     private fun boardLayout(squareSide: Int) =
-        BoardLayout(terminalSize, squareSide, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD))
+        BoardLayout(terminalSize, squareSide, arrowsEnabled = true)
 
     private fun sizeDialog() = Dialog(
         Dialog.Kind.SIZE, "New game size",

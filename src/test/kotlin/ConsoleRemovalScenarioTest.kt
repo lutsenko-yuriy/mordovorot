@@ -15,10 +15,10 @@ import testing.FakePreferenceRepository
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
 import testing.RecordingAnalyticsService.Event
+import testing.switchModeKeys
 import testing.testGameSession
 import view.tui.BoardLayout
 import view.tui.KeyboardSelection
-import view.tui.HitTarget
 import view.tui.TerminalEvent
 import view.tui.TerminalSize
 import viewmodel.CurrentSaveName
@@ -146,19 +146,19 @@ class ConsoleRemovalScenarioTest {
     }
 
     @Test
-    fun `the mouse toolbar offers only the Keyboard switch`() {
+    fun `the mouse toolbar offers Controls, no Console`() {
         val frame = session(InputMode.MOUSE).terminal.frames.first()
 
-        assertTrue(frame.contains("[ Keyboard 6 ]"))
+        assertTrue(frame.contains("[ Controls 6 ]"))
         assertFalse(frame.contains("Console"))
     }
 
     @Test
-    fun `keyboard mode offers only Mouse 6, and 5 does nothing before Mordie's solution`() {
+    fun `keyboard mode offers Controls 6, and 5 does nothing before Mordie's solution`() {
         val run = session(InputMode.KEYBOARD, listOf(TerminalEvent.KeyPress('5')))
 
         for (frame in run.terminal.frames) {
-            assertTrue(frame.contains("[Mouse 6]"))
+            assertTrue(frame.contains("[Controls 6]"))
             assertFalse(frame.contains("Console"))
         }
         // 5 is Give Up (GH-126, GH-170), dimmed until Mordie finds its solution.
@@ -169,11 +169,10 @@ class ConsoleRemovalScenarioTest {
     @Test
     fun `a failed switch falls back to the previous TUI mode and keeps the game`(): Unit = runBlocking {
         val terminalSize = TerminalSize(80, 40)
-        val layout = BoardLayout(terminalSize, 4, modeButtons = listOf(InputMode.KEYBOARD))
+        val layout = BoardLayout(terminalSize, 4)
         val (leftX, leftY) = layout.leftArrowPosition(0)
-        val keyboardButton = layout.toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.KEYBOARD) }
         val terminal = FakeTerminal(
-            mutableListOf(TerminalEvent.MouseClick(leftX, leftY), TerminalEvent.MouseClick(keyboardButton.x, keyboardButton.y)),
+            (listOf(TerminalEvent.MouseClick(leftX, leftY)) + switchModeKeys).toMutableList(),
             terminalSize,
         )
         val board = BoardImpl(4).apply { restoreState(scrambled) }

@@ -15,6 +15,7 @@ import storage.FileSaveRepository
 import testing.FakeMordieSearchFactory
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
+import testing.switchModeKeys
 import testing.testGameSession
 import view.tui.BoardLayout
 import view.tui.Dialog
@@ -373,16 +374,13 @@ class MordieScenarioTest {
 
     @Test
     fun `switching input mode keeps the shift count and line text`() {
-        val keyboardButton = BoardLayout(terminalSize, 4, modeButtons = listOf(InputMode.KEYBOARD))
-            .toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.KEYBOARD) }
-
         session(
-            shifts(3) + snap() + click(keyboardButton.x to keyboardButton.y) + snap() +
+            shifts(3) + snap() + switchModeKeys.map(::key) + snap() +
                 key(TerminalEvent.KeyPress('h')) + snap() + key(TerminalEvent.KeyPress('h')) + snap(),
         )
 
         assertEquals(greeting, mordieShown(snaps[0]))
-        assertTrue(rows(snaps[1]).any { "6 Mouse" in it }) // keyboard mode
+        assertTrue(rows(snaps[1]).any { "[Controls 6]" in it }) // keyboard mode
         assertEquals(listOf(greeting, greeting, ""), snaps.drop(1).map(::mordieShown)) // shifts 3, 4, 5
         assertEquals(1, factory.started.size)
     }

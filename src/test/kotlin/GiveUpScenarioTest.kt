@@ -15,6 +15,7 @@ import storage.FileSaveRepository
 import testing.FakeMordieSearchFactory
 import testing.FakeTerminal
 import testing.RecordingAnalyticsService
+import testing.switchModeKeys
 import testing.testGameSession
 import view.tui.BoardLayout
 import view.tui.Dialog
@@ -34,8 +35,7 @@ import viewmodel.SolutionState
 class GiveUpScenarioTest {
 
     private val terminalSize = TerminalSize(columns = 80, rows = 40)
-    private val modeButton = listOf(InputMode.KEYBOARD)
-    private val layout = BoardLayout(terminalSize, 4, modeButtons = modeButton)
+    private val layout = BoardLayout(terminalSize, 4)
 
     /** 4x4 two moves from solved: row 0 right once, then column 1 down twice. */
     private val original = intArrayOf(9, 2, 3, 0, 4, 13, 6, 7, 8, 1, 10, 11, 12, 5, 14, 15)
@@ -117,7 +117,7 @@ class GiveUpScenarioTest {
     private fun reveal(solution: List<SolutionMove> = path): List<Step> = listOf(searchFinds(solution)) + List(5) { click(layout.upArrowPosition(3)) }
 
     private fun giveUpButton(button: GiveUpButton = GiveUpButton.GIVE_UP) =
-        click(BoardLayout(terminalSize, 4, modeButtons = modeButton, giveUp = button).giveUpButtonPosition())
+        click(BoardLayout(terminalSize, 4, giveUp = button).giveUpButtonPosition())
 
     private val confirm = Dialog(
         Dialog.Kind.GIVE_UP, "Give up and see Mordie's solution?",
@@ -376,10 +376,9 @@ class GiveUpScenarioTest {
 
     @Test
     fun `switching input mode keeps the solution screen and the replay's place`() {
-        val keyboardButton = layout.toolbarButtons().first { it.target == HitTarget.ToolbarMode(InputMode.KEYBOARD) }
-        session(givenUp() + next + click(keyboardButton.x to keyboardButton.y) + snap() + key(TerminalEvent.Arrow(Direction.RIGHT)) + snap())
+        session(givenUp() + next + switchModeKeys.map(::key) + snap() + key(TerminalEvent.Arrow(Direction.RIGHT)) + snap())
 
-        assertTrue("6 Mouse" in rows(snaps[0]).joinToString("\n"))
+        assertTrue("[Controls 6]" in rows(snaps[0]).joinToString("\n"))
         assertEquals(afterFirstStep.toList(), tilesShown(snaps[0]))
         assertEquals(listOf(steps[0]), highlighted(snaps[0]))
         assertEquals(replayRow, replayRowShown(snaps[0]))

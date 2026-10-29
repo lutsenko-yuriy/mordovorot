@@ -37,6 +37,15 @@ internal object DialogRenderer {
             if (index in dialog.disabledRows) canvas.putColored(layout.left + 2, layout.listRowPosition(index), text, DIM_ON, DIM_OFF)
             else canvas.put(layout.left + 2, layout.listRowPosition(index), text)
         }
+        dialog.optionGroups.forEachIndexed { group, spec ->
+            val y = layout.groupRowPosition(group)
+            canvas.put(layout.left + 2, y, spec.label)
+            for (option in layout.options(group)) {
+                val focused = group == dialog.focusedGroup && option.target == HitTarget.DialogOption(group, spec.selected)
+                if (focused) canvas.putHighlighted(option.x, y, option.text) else canvas.put(option.x, y, option.text)
+            }
+        }
+        dialog.notes.forEachIndexed { index, line -> canvas.put(layout.left + 2, layout.noteRowPosition(index), truncate(line, maxLineWidth)) }
         val focusedTarget = dialog.focusedButtonId?.let { HitTarget.DialogButton(it) }
         for (button in layout.buttons()) {
             if (button.target == focusedTarget) canvas.putHighlighted(button.x, layout.buttonsRow(), button.text)

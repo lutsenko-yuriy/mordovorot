@@ -1,6 +1,5 @@
 package view.tui
 
-import InputMode
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -26,10 +25,9 @@ class TuiViewSolvedStateTest {
     private fun view(terminal: FakeTerminal, viewModel: ViewModel, analytics: RecordingAnalyticsService = RecordingAnalyticsService()): TuiView =
         testTuiView(terminal, analytics, viewModel = viewModel)
 
-    // Matches MouseInput.decorateBoard's GH-30 modeButtons - see TuiViewDialogTest's identical
-    // helper for why.
+    // The mouse-mode layout TuiView draws - see TuiViewDialogTest's identical helper.
     private fun boardLayout(viewModel: FakeViewModel) =
-        BoardLayout(terminalSize, viewModel.side, arrowsEnabled = true, modeButtons = listOf(InputMode.KEYBOARD))
+        BoardLayout(terminalSize, viewModel.side, arrowsEnabled = true)
 
     @Test
     fun `when the board becomes solved, arrow clicks make no viewModel call`(): Unit = runBlocking {
