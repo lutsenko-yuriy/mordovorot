@@ -55,6 +55,12 @@ internal object Announcements {
         return "Step ${current + 1} of ${steps.size}: ${line(arrow, step.index)} ${step.count}"
     }
 
+    /** The solution's board as a reader names it on taking focus: `Board, step 3 of 12: Column 3 up 2`. */
+    fun boardStep(steps: List<SolutionStep>, current: Int?) = "Board, " + step(steps, current).replaceFirstChar { it.lowercase() }
+
+    /** [words] for a shift, then the [tile] now under the selection: `Row 2 left, 5 moves. Now charlie`. */
+    fun withNow(words: String, tile: String) = "$words. Now ${spoken(tile)}"
+
     /** `Row 1: 5, 2, 9. Row 2: … 3 tiles in place.`: [texts] row by row on a [side] board, [home]
      *  marking the tiles in place. */
     fun board(texts: List<String>, home: List<Boolean>, side: Int): String {

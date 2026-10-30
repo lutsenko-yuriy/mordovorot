@@ -21,6 +21,14 @@ class KeyHintsTest {
     }
 
     @Test
+    fun `the solution's hints are its keys, in the same form`() {
+        assertEquals(
+            listOf(KeyHint("← → A D H L", "prev/next"), KeyHint("Space Enter", "next"), KeyHint("R", "restart"), KeyHint("↑ ↓ W S K J", "scroll")),
+            KeyHints.SOLUTION,
+        )
+    }
+
+    @Test
     fun `the key list follows the layout, then names the toolbar, Read board and the solution keys`() {
         for (layout in KeyboardLayout.entries) {
             assertEquals(

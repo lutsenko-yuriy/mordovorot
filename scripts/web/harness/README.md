@@ -149,7 +149,8 @@ step and Restart on the solution screen), GH-166's announcements (New 5x5, then 
 GH-167's board table and Read board (pressed, after a shift, under the Labels dialog, with
 Letters said phonetically, and absent from the solution screen), GH-171's Controls dialog, digits and
 board keys (both layouts, the grid's active descendant against the outlines, Tab order, focus after
-a dialog from the board, on leaving keyboard mode and on a footer link) and
+a dialog from the board, on leaving keyboard mode and on a footer link), 0 and the solution screen's
+keys, with whether each frame kept the board (`kept` or `new` on `grid` lines), and
 diffs the lines against
 `tests/keys_expected.txt`. Exit 0 means as expected, 1 differences (the diff is printed), 2 a
 failed build or a `TIMEOUT`. The solution screen's board is random, so on its lines `said` keeps

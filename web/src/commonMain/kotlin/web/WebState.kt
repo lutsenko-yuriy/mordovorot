@@ -36,19 +36,25 @@ data class WebState(
     val mode: PlayMode = PlayMode.DEFAULT,
     /** The `[ Controls 6 ]` row (GH-171), hidden on touch screens. */
     val controlsShown: Boolean = false,
-    /** The selected tile, in keyboard mode during play (GH-171). The board is a Tab stop while it's set. */
+    /** The selected tile, in keyboard mode during play (GH-171). */
     val selection: TileSelection? = null,
-    /** The key hints under the board, in keyboard mode (GH-171). */
+    /** The key hints under the board, or the solution screen's keys, in keyboard mode (GH-171). */
     val hints: List<KeyHint>? = null,
 ) {
     /** The digit [button] shows, `null` when it shows none (GH-171). */
     fun digitOf(button: ToolbarButton): Int? = button.digit.takeIf { WebKeys.live(button, mode, controlsShown) }
 
-    /** Whether this frame differs from [before] only in where the selection is, so the page moves it
-     *  in place: a rebuilt board keeps VoiceOver on the tile it was saying (GH-171). */
-    fun onlyMovesSelectionFrom(before: WebState): Boolean =
-        selection != null && before.selection != null && selection != before.selection && focus == null && slide == null &&
-            copy(selection = before.selection, announcement = null) == before.copy(focus = null, announcement = null, slide = null)
+    /** Keyboard mode's board is a Tab stop, during play and on the solution screen (GH-171). */
+    val boardFocusable: Boolean get() = selection != null || boardName != null
+
+    /** What a reader calls the solution screen's board on taking focus (GH-171); `null` off it and in mouse mode. */
+    val boardName: String? get() = solution?.takeIf { mode == PlayMode.KEYBOARD }?.let { Announcements.boardStep(it.moves, it.current) }
+
+    /** Whether the page keeps the board's element and updates it in place: rebuilt and refocused, it
+     *  has VoiceOver say the board over the live region, or keep saying the tile just left (GH-171). */
+    fun keepsBoardFrom(before: WebState): Boolean =
+        boardFocusable && before.boardFocusable && dialog == null && before.dialog == null &&
+            side == before.side && solved == before.solved && (solution == null) == (before.solution == null)
 
     /** Each tile's text, in [tiles]' order. */
     val tileTexts: List<String> get() = tiles.map { labels.label(it - 1, side) }

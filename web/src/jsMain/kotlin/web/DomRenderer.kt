@@ -54,10 +54,8 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         feed.inMs = if (still) 0.0 else MORDIE_IN_MS
         feed.show(state.mordie?.let { MordieLine(it, ending = state.solved) }, now)
         if (feed.moving(now)) schedule()
-        val selection = state.selection
-        if (before != null && selection != null && state.onlyMovesSelectionFrom(before)) {
-            board.moveSelection(selection)
-            drawMordie(now)
+        if (before != null && state.keepsBoardFrom(before)) {
+            redrawAroundBoard(state, now)
             return
         }
         val dialog = state.dialog
@@ -69,8 +67,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
             return
         }
         saveWarning = null
-        // The rebuilt step list starts where this one was scrolled to.
-        val stepsScroll = root.querySelector(".steps")?.scrollTop
+        val stepsScroll = stepsScrollTop()
         val focused = focusedKey()
         root.clear()
         root.style.setProperty("--side", state.side.toString())
@@ -81,44 +78,72 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         root.append(
             // The box the tall layout sizes the tiles from (GH-147).
             element("div", "stage").apply {
-                state.boardWords?.let { append(readBoardButton(it, dialog != null, announcer)) }
+                if (state.boardWords != null) append(readBoardButton({ shown?.boardWords }, dialog != null, announcer))
                 append(board.draw(state, justSolved = state.solved && before?.solved == false, state.drag ?: slideOffset()))
                 state.hints?.let { append(keyHints(it)) }
             },
             *listOfNotNull(state.solution?.let { stepList(it) }).toTypedArray(),
-            // Beside the board when the window is wide; when tall, its items stack around it (styles.css).
-            element("div", "panel").apply {
-                append(
-                    text("moves", if (state.movesShown) "Moves: ${state.moves}" else "").also { moves = it },
-                    element("div", "mordie").apply { append(element("div", "line")) }.also { mordie = it },
-                    *listOfNotNull(state.solution?.let { replayButtons(it, { game }, dialog != null) }, giveUpRow(state.giveUp, state.digitOf(ToolbarButton.GIVE_UP_ROW), { game }, dialog != null)).toTypedArray(),
-                    element("div", "toolbar").also { toolbar = it }.apply {
-                        append(
-                            toolbarButton("New", ToolbarButton.NEW, Focus.NewButton, state) { game.onNew() },
-                            toolbarButton("Save", ToolbarButton.SAVE, Focus.SaveButton, state) { game.onSave() },
-                            toolbarButton("Load", ToolbarButton.LOAD, Focus.LoadButton, state) { game.onLoad() },
-                            toolbarButton("Labels", ToolbarButton.LABELS, Focus.LabelsButton, state) { game.onLabels() },
-                        )
-                        // A row of its own under the four (GH-171).
-                        if (state.controlsShown) append(element("div", "controls-row").apply {
-                            append(toolbarButton("Controls", ToolbarButton.CONTROLS, Focus.ControlsButton, state) { game.controls.open() })
-                        })
-                    },
-                    text("status", state.status ?: ""),
-                )
-            },
+            panel(state),
         )
-        root.querySelector(".steps")?.let { steps ->
-            // Back at the top on a Restart; otherwise the current step scrolls into view, if it must.
-            steps.scrollTop = stepsScroll?.takeUnless { state.solution?.atStart == true } ?: 0.0
-            (steps.querySelector(".current") as? HTMLElement)?.let { showStep(steps, it) }
-        }
+        placeSteps(state, stepsScroll)
         // Only a dialog that has just opened fades in, not one redrawn as the player picks in it.
         val reopened = dialog != null && before?.dialog?.let { it::class == dialog::class } == true
         dialog?.let { root.append(element("div", if (reopened) "overlay shown" else "overlay").apply { append(dialogElement(it, game) { warning -> saveWarning = warning }) }) }
         drawMordie(now)
         setBehindDialog(root, dialog != null)
         applyFocus(root, state, focused)
+    }
+
+    /** A frame around the kept board (GH-171): the tiles updated, the rest redrawn, focus left or put back. */
+    private fun redrawAroundBoard(state: WebState, now: Double) {
+        val stepsScroll = stepsScrollTop()
+        val focused = focusedKey()
+        root.classList.toggle("dragging", state.drag != null)
+        board.update(state, state.drag ?: slideOffset())
+        state.solution?.let { root.querySelector(".steps")?.replaceWith(stepList(it)) }
+        root.querySelector(".panel")?.replaceWith(panel(state))
+        placeSteps(state, stepsScroll)
+        drawMordie(now)
+        applyFocus(root, state, focused)
+    }
+
+    /** Beside the board when the window is wide; when tall, its items stack around it (styles.css). */
+    private fun panel(state: WebState) = element("div", "panel").apply {
+        val dialogOpen = state.dialog != null
+        append(
+            text("moves", if (state.movesShown) "Moves: ${state.moves}" else "").also { moves = it },
+            element("div", "mordie").apply { append(element("div", "line")) }.also { mordie = it },
+            *listOfNotNull(state.solution?.let { replayButtons(it, { game }, dialogOpen) }, giveUpRow(state.giveUp, state.digitOf(ToolbarButton.GIVE_UP_ROW), { game }, dialogOpen)).toTypedArray(),
+            element("div", "toolbar").also { toolbar = it }.apply {
+                append(
+                    toolbarButton("New", ToolbarButton.NEW, Focus.NewButton, state) { game.onNew() },
+                    toolbarButton("Save", ToolbarButton.SAVE, Focus.SaveButton, state) { game.onSave() },
+                    toolbarButton("Load", ToolbarButton.LOAD, Focus.LoadButton, state) { game.onLoad() },
+                    toolbarButton("Labels", ToolbarButton.LABELS, Focus.LabelsButton, state) { game.onLabels() },
+                )
+                // A row of its own under the four (GH-171).
+                if (state.controlsShown) append(element("div", "controls-row").apply {
+                    append(toolbarButton("Controls", ToolbarButton.CONTROLS, Focus.ControlsButton, state) { game.controls.open() })
+                })
+            },
+            text("status", state.status ?: ""),
+        )
+    }
+
+    private fun stepsScrollTop() = root.querySelector(".steps")?.scrollTop
+
+    /** The redrawn step list starts where it was scrolled to, [scrollTop]: back at the top on a Restart;
+     *  otherwise the current step scrolls into view, if it must. */
+    private fun placeSteps(state: WebState, scrollTop: Double?) {
+        val steps = root.querySelector(".steps") ?: return
+        steps.scrollTop = scrollTop?.takeUnless { state.solution?.atStart == true } ?: 0.0
+        (steps.querySelector(".current") as? HTMLElement)?.let { showStep(steps, it) }
+    }
+
+    override fun scrollSteps(lines: Int) {
+        val steps = root.querySelector(".steps") ?: return
+        val step = steps.querySelector(".step") as? HTMLElement ?: return
+        steps.scrollTop += lines * step.offsetHeight
     }
 
     private fun toolbarButton(label: String, key: ToolbarButton, focus: Focus, state: WebState, onClick: () -> Unit) =

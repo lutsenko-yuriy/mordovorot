@@ -22,7 +22,7 @@ internal class WebSolutionFlows(
                 viewModel.giveUp()
                 game.saying = solutionScreen()
                 // The solution screen has no Give Up.
-                game.closing = Focus.ReplayNext
+                game.closing = onBoard ?: Focus.ReplayNext
             } else game.cancelled("give_up")
         }
     }
@@ -36,7 +36,7 @@ internal class WebSolutionFlows(
         game.status = null
         viewModel.showSolution()
         game.saying = solutionScreen()
-        game.render()
+        game.render(focus = onBoard)
     }
 
     fun onReplayNext() = replay { viewModel.replayNext() }
@@ -57,6 +57,9 @@ internal class WebSolutionFlows(
         if (shifted != null || restart) game.saying = viewModel.solution()?.let { Announcements.step(it.moves, it.current) }
         game.render(shifted?.let(Slides::ofStep))
     }
+
+    /** Where keyboard mode's solution screen starts, the keys working there (GH-171). */
+    private val onBoard get() = Focus.Board.takeIf { game.controls.mode == PlayMode.KEYBOARD }
 
     private fun solutionScreen() = viewModel.solution()?.let { Announcements.solution(it.moves.size) }
 }

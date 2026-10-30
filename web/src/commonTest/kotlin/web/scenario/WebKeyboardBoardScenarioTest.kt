@@ -63,21 +63,37 @@ class WebKeyboardBoardScenarioTest {
         assertEquals(tiles, page.state.tiles)
     }
 
-    /** So VoiceOver moves on to the new tile at once, rather than hearing a rebuilt board. */
+    /** So VoiceOver hears the live region, and moves on to a new tile at once, rather than a refocused board. */
     @Test
-    fun `a select key only moves the selection, while a shift or a tile press redraws`() = webTest {
+    fun `selects, shifts and tile presses keep the board, a dialog or a win doesn't`() = webTest {
         val page = WebHarness(backgroundScope).remembering().startOn(mixedUp)
-        fun moved(action: () -> Unit): Boolean {
+        fun kept(action: () -> Unit): Boolean {
             val before = page.state
             action()
-            return page.state.onlyMovesSelectionFrom(before)
+            return page.state.keepsBoardFrom(before)
         }
 
-        assertTrue(moved { page.key("d") })
-        assertFalse(moved { page.key("h") })
-        assertTrue(moved { page.key("s") }, "right after a shift's slide too")
-        assertFalse(moved { page.game.onTilePressed(3, 3) })
-        assertFalse(moved { page.key("2") })
+        assertTrue(kept { page.key("d") })
+        assertTrue(kept { page.key("h") })
+        assertTrue(kept { page.game.onTilePressed(3, 3) })
+        assertFalse(kept { page.key("2") })
+        assertFalse(kept { page.game.onSaveAnswered(null) }, "the frame the dialog closes in")
+
+        val won = WebHarness(backgroundScope).remembering().startOn()
+        val before = won.state
+        won.press("h", from = Focus.Board)
+        assertFalse(won.state.keepsBoardFrom(before))
+    }
+
+    @Test
+    fun `a size change doesn't keep the board, nor does a mouse-mode frame`() = webTest {
+        val page = WebHarness(backgroundScope).remembering().startOn(mixedUp)
+        assertFalse(page.state.copy(side = 5).keepsBoardFrom(page.state))
+
+        val mouse = WebHarness(backgroundScope).startOn(mixedUp)
+        val before = mouse.state
+        mouse.game.onArrow(Arrow.LEFT, 0)
+        assertFalse(mouse.state.keepsBoardFrom(before))
     }
 
     @Test
@@ -118,7 +134,7 @@ class WebKeyboardBoardScenarioTest {
         page.key("h")
 
         assertEquals(Slides.ofArrow(Arrow.LEFT, 1), page.state.slide)
-        assertEquals(listOf("Row 2 left, 1 move"), page.said)
+        assertEquals(listOf("Row 2 left, 1 move. Now 10"), page.said)
     }
 
     @Test

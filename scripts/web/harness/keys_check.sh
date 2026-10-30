@@ -47,6 +47,11 @@ queries=(
   # A dialog from the board returns there; to mouse mode, focus on Controls; a digit on a footer link returns there.
   "report=keys&input=keyboard&keys=2,Escape,6,ArrowLeft,click:OK"
   "report=keys&input=keyboard&keys=focus:footer-0,2,Escape"
+  # 0 reads the board wherever focus is, once per press; not under a dialog.
+  "report=keys&grid=1&input=keyboard&keys=0,R-0,focus:new,0,2,0,Escape"
+  # The solution screen: the board takes focus and the keys, in place; off the board the keys are nothing.
+  "report=keys&grid=1&input=keyboard&mode=solution&keys=l,Space,R-Space,Enter,h,r,ArrowDown,w,Tab,l,S-Tab,0"
+  "report=keys&input=keyboard&layout=left&mode=solution&keys=ArrowRight,d,a,R"
 )
 
 log="$(cd "$project" && ./gradlew -q :web:jsBrowserDistribution 2>&1)" || {
@@ -58,7 +63,7 @@ log="$(cd "$project" && ./gradlew -q :web:jsBrowserDistribution 2>&1)" || {
 # on grid lines (GH-167): the numbers and phonetic letters said and counted, and which of the first
 # row's cells are in place.
 actual="$("$here/measure.sh" "${queries[@]}" | perl -pe '
-  s{said "\K[^"]*}{$& =~ s/\d+/N/gr =~ s/\b(?:Row|Column) N (?:left|right|up|down)\b/LINE N DIR/gr}e if /^\S+ solution /;
+  s{(?:said|name) "\K[^"]*}{$& =~ s/\d+/N/gr =~ s/\b(?:Row|Column) N (?:left|right|up|down)\b/LINE N DIR/gr}ge if /^\S+ solution /;
   if (/\| grid (?:table|grid) /) { s{(?:said|row1) "\K[^"]*}{$& =~ s/\d+/N/gr =~ s/\b(?:alpha|bravo|charlie|delta|echo|foxtrot|golf|hotel|india|juliet|kilo|lima|mike|november|oscar|papa|quebec|romeo|sierra|tango|uniform|victor|whiskey|x-ray|yankee|zulu)\b/W/gr =~ s/, in place//gr =~ s/\b(tile|move)s?\b/$1s/gr}ge; s/in-place \K\d+/N/ }')"
 if grep -q '^TIMEOUT' <<<"$actual"; then
   echo "$actual" >&2

@@ -22,7 +22,8 @@ internal fun listenForPlayKeys(root: Element, pressedWith: PressedWith, game: ()
         if (game().onKey(press, focusedKey())) {
             held = key.key
             key.preventDefault()
-        }
+        // A held Space the game took once mustn't scroll the page.
+        } else if (key.repeat && key.key == held) key.preventDefault()
     })
     document.addEventListener("keyup", { if ((it as KeyboardEvent).key == held) held = null })
 }

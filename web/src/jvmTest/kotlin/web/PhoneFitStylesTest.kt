@@ -54,7 +54,7 @@ class PhoneFitStylesTest {
         val app = rule(fit, ".app")
 
         assertTrue("minmax(calc(var(--board-min) + var(--hints)), 1fr)" in app && "min-height: 0;" in app, app)
-        assertTrue("minmax(var(--board-min), 1fr)" in rule(solutionFit, ".app.solution"), solutionFit)
+        assertTrue("minmax(calc(var(--board-min) + var(--hints)), 1fr)" in rule(solutionFit, ".app.solution"), solutionFit)
     }
 
     /** GH-153: it overrides the base .steps at the same specificity, so it must come after it, in solution.css. */
