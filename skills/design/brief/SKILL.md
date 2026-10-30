@@ -76,6 +76,11 @@ The dialog is **product-level only**: no architecture, no implementation details
 
 If at any point the user signals abandonment ("I guess we don't need it", "let's postpone", "forget it", or similar), jump to step 6.
 
+**Too big for one ticket?** Keep asking every question that matters, but after about 8 of them,
+or once they cover two or more flows that could ship on their own, stop and propose splitting
+into several tickets, each with its own brief, debrief and release (GH-171: 17 questions led to
+PRs of 500-1000 lines).
+
 ### 3.5 Visual alignment (for features with user-facing screens)
 
 Once the behaviour is clear, ask the user for a visual reference or metaphor:

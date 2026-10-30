@@ -334,7 +334,7 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
     nothing, so it isn't said twice. A shift, by key or drag, says what it says in mouse mode, then
     the tile now under the selection: `Row 2 left, 5 moves. Now charlie`. The solution screen's board
     is named after the current step, `Board, step 3 of 12: Column 3 up 2`, `Board, start, step 0 of
-    12`. Tested in VoiceOver; NVDA and JAWS are untested, and `NVDA+Space` frees stuck keys.
+    12`. Tested only by one sighted developer in VoiceOver, and frozen until volunteers try it (`docs/CONSTRAINTS.md`); NVDA and JAWS are untested, and `NVDA+Space` frees stuck keys.
 - **Screen reader announcements (GH-166):** a screen reader is told what just happened, politely
   (after what it's reading) and without moving focus. Always on; nothing shows on the page.
   - **A shift:** `Row 2 left`, `Column 4 up`; with the move count when it starts a new move
