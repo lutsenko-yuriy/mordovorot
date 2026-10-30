@@ -332,7 +332,8 @@ settled it: no accessibility usage signal is acceptable, on any terms.
 *GH-171 (web keyboard play):*
 - `input_method` on `web` follows the press that fired the event, in either mode: `keyboard` for
   any key (the scheme's keys, and Enter, Space or Escape in dialogs), `rich_ui` for mouse or touch.
-- `app_launched.mode` on `web` is the remembered mode, `mouse` or `keyboard`, instead of `rich_ui`.
+- `app_launched.mode` on `web` is the mode the page starts in, `mouse` or `keyboard`, instead of
+  `rich_ui`: the remembered one, except on a touch screen, which always starts in `mouse`.
 - `input_mode_switched` now fires on `web` too (`trigger`: `controls_dialog`), and
   `dialog_cancelled.dialog` takes `controls` there (with `via`).
 - `board_solved.shift_input` takes a new value, `keys` (only key shifts); `mixed` covers any

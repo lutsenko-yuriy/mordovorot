@@ -37,6 +37,8 @@ queries=(
   # Digits only work in keyboard mode, where each button shows and names its shortcut.
   "report=keys&input=keyboard&keys=focus:new,1,Escape,2,3,Escape,focus:load,3,Escape,focus:save,4,Escape,5,Escape,6,Escape"
   "report=keys&input=keyboard&layout=left&keys=6,Tab,Escape"
+  # A held 2 opens Save once and isn't typed into its name field.
+  "report=keys&input=keyboard&keys=2,R-2,3"
 )
 
 log="$(cd "$project" && ./gradlew -q :web:jsBrowserDistribution 2>&1)" || {

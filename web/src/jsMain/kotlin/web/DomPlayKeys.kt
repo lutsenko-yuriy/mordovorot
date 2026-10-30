@@ -10,10 +10,19 @@ import org.w3c.dom.events.KeyboardEvent
 internal fun listenForPlayKeys(root: Element, pressedWith: PressedWith, game: () -> WebGame) {
     document.addEventListener("keydown", { pressedWith.key() }, true)
     document.addEventListener("pointerdown", { pressedWith.pointer() }, true)
+    // The key the game took, until released: held, it would repeat into the dialog it opened.
+    var held: String? = null
     document.addEventListener("keydown", { event ->
-        if (root.querySelector(".dialog") != null) return@addEventListener
         val key = event as KeyboardEvent
+        if (root.querySelector(".dialog") != null) {
+            if (key.repeat && key.key == held) key.preventDefault()
+            return@addEventListener
+        }
         val press = KeyPress(key.key, key.ctrlKey || key.altKey || key.metaKey || key.composing, key.repeat)
-        if (game().onKey(press, focusedKey(root))) key.preventDefault()
+        if (game().onKey(press, focusedKey(root))) {
+            held = key.key
+            key.preventDefault()
+        }
     })
+    document.addEventListener("keyup", { if ((it as KeyboardEvent).key == held) held = null })
 }

@@ -37,16 +37,17 @@ internal fun listenForKeys(root: Element, game: () -> WebGame) {
     })
 }
 
-/** From the dialog's last control Tab goes to its first, Shift+Tab the other way; from outside it, in. */
+/** Tab moves through the dialog's controls, wrapping at its ends, Shift+Tab the other way; from
+ *  outside it, in. Always by hand: Safari's own Tab skips buttons unless the system's Keyboard
+ *  navigation is on, and would leave the dialog for the address bar (GH-171). */
 private fun wrapTab(dialog: Element, key: KeyboardEvent) {
     val controls = dialog.querySelectorAll("button:not([disabled]):not([tabindex='-1']), input").asList().filterIsInstance<HTMLElement>()
     if (controls.isEmpty()) return
-    val active = document.activeElement
-    val inside = active != null && dialog.contains(active)
+    val from = controls.indexOf(document.activeElement)
     val target = when {
-        key.shiftKey && (!inside || active == controls.first()) -> controls.last()
-        !key.shiftKey && (!inside || active == controls.last()) -> controls.first()
-        else -> return
+        from < 0 -> if (key.shiftKey) controls.last() else controls.first()
+        key.shiftKey -> controls[(from - 1 + controls.size) % controls.size]
+        else -> controls[(from + 1) % controls.size]
     }
     key.preventDefault()
     target.focus()
