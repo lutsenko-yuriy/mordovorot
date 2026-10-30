@@ -36,6 +36,11 @@
             --arrow: calc(var(--tile) * 0.7);
         }
 
+        /* The board and the key hints stay together in the stage's middle (GH-171). */
+        .app.keyboard-mode .stage {
+            align-content: center;
+        }
+
         .footer {
             min-height: 0;
         }
