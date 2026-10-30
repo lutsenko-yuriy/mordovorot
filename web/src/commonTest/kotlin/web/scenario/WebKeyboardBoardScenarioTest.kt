@@ -63,6 +63,23 @@ class WebKeyboardBoardScenarioTest {
         assertEquals(tiles, page.state.tiles)
     }
 
+    /** So VoiceOver moves on to the new tile at once, rather than hearing a rebuilt board. */
+    @Test
+    fun `a select key only moves the selection, while a shift or a tile press redraws`() = webTest {
+        val page = WebHarness(backgroundScope).remembering().startOn(mixedUp)
+        fun moved(action: () -> Unit): Boolean {
+            val before = page.state
+            action()
+            return page.state.onlyMovesSelectionFrom(before)
+        }
+
+        assertTrue(moved { page.key("d") })
+        assertFalse(moved { page.key("h") })
+        assertTrue(moved { page.key("s") }, "right after a shift's slide too")
+        assertFalse(moved { page.game.onTilePressed(3, 3) })
+        assertFalse(moved { page.key("2") })
+    }
+
     @Test
     fun `a held select key keeps moving, a held digit doesn't`() = webTest {
         val page = WebHarness(backgroundScope).remembering().startOn(mixedUp)

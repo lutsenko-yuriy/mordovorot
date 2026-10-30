@@ -31,7 +31,7 @@
 
 .selected-row, .selected-col {
     position: absolute;
-    border: max(2px, calc(var(--gap) * 0.5)) solid var(--ink);
+    border: max(2px, calc(var(--gap) * 0.5)) solid var(--button);
     border-radius: calc(var(--tile) * 0.2);
 }
 

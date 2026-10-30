@@ -54,6 +54,12 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         feed.inMs = if (still) 0.0 else MORDIE_IN_MS
         feed.show(state.mordie?.let { MordieLine(it, ending = state.solved) }, now)
         if (feed.moving(now)) schedule()
+        val selection = state.selection
+        if (before != null && selection != null && state.onlyMovesSelectionFrom(before)) {
+            board.moveSelection(selection)
+            drawMordie(now)
+            return
+        }
         val dialog = state.dialog
         // A rebuild would drop the name field's focus and caret, and nothing else changes while
         // the Save dialog is open, so typing only updates the warning.

@@ -109,7 +109,11 @@ function active(doc, table, rows) {
     const col = cell ? [...cell.parentElement.children].indexOf(cell) : -1;
     const shown = doc.querySelector(".selection")?.getAttribute("style") || "";
     const outlined = /row: (\d+); --selected-col: (\d+)/.exec(shown)?.slice(1).join(",") || "-";
-    return ` active ${row},${col} outlined ${outlined}`;
+    // Whether the frame kept the board's element: a selection move must, for VoiceOver (GH-171).
+    const win = doc.defaultView;
+    const kept = win.lastBoard === table ? "kept" : "new";
+    win.lastBoard = table;
+    return ` active ${row},${col} outlined ${outlined} ${kept}`;
 }
 
 /** Its data-focus key (or tag and text), role, accessible name and checked state. */

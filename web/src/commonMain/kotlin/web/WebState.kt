@@ -44,6 +44,12 @@ data class WebState(
     /** The digit [button] shows, `null` when it shows none (GH-171). */
     fun digitOf(button: ToolbarButton): Int? = button.digit.takeIf { WebKeys.live(button, mode, controlsShown) }
 
+    /** Whether this frame differs from [before] only in where the selection is, so the page moves it
+     *  in place: a rebuilt board keeps VoiceOver on the tile it was saying (GH-171). */
+    fun onlyMovesSelectionFrom(before: WebState): Boolean =
+        selection != null && before.selection != null && selection != before.selection && focus == null && slide == null &&
+            copy(selection = before.selection, announcement = null) == before.copy(focus = null, announcement = null, slide = null)
+
     /** Each tile's text, in [tiles]' order. */
     val tileTexts: List<String> get() = tiles.map { labels.label(it - 1, side) }
 

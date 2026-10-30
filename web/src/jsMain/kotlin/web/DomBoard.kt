@@ -4,6 +4,7 @@ import kotlinx.dom.clear
 import org.w3c.dom.Element
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.pointerevents.PointerEvent
+import viewmodel.TileSelection
 import web.drag.Axis
 import web.drag.LineOffset
 import web.drag.WrapPositions
@@ -16,6 +17,7 @@ internal class DomBoard(private val root: HTMLElement, private val game: () -> W
     private var dragPointer: Int? = null
 
     private var tiles: Element? = null
+    private var outlines: Element? = null
 
     init {
         root.addEventListener("pointermove", { event ->
@@ -54,8 +56,14 @@ internal class DomBoard(private val root: HTMLElement, private val game: () -> W
                 arrows(Arrow.RIGHT, "▶", "column"),
                 element("span"), arrows(Arrow.DOWN, "▼", "row"), element("span"),
             )
-            state.selection?.let { append(selectionOutlines(it)) }
+            outlines = state.selection?.let { selectionOutlines(it).also(::append) }
         }
+    }
+
+    /** Moves the selection without touching the tiles, so a screen reader moves on at once (GH-171). */
+    fun moveSelection(selection: TileSelection) {
+        tiles?.setAttribute("aria-activedescendant", cellId(selection.row, selection.col))
+        outlines?.let { placeOutlines(it, selection) }
     }
 
     /** This frame's tiles again, for a slide's next animation frame. */
@@ -79,8 +87,8 @@ internal class DomBoard(private val root: HTMLElement, private val game: () -> W
                 val label = texts[row * side + col]
                 val x = if (offset?.axis == Axis.ROW && offset.line == row) wrapped!![col] else col.toDouble()
                 val y = if (offset?.axis == Axis.COLUMN && offset.line == col) wrapped!![row] else row.toDouble()
-                val selected = state.selection?.takeIf { it.row == row && it.col == col } != null
-                cells.append(asCell(tile(value, label, side, x, y), label, playing, playing && home[row * side + col], state.selection != null, selected).apply {
+                val gridCell = state.selection?.let { cellId(row, col) }
+                cells.append(asCell(tile(value, label, side, x, y), label, playing, playing && home[row * side + col], gridCell).apply {
                     addEventListener("pointerdown", { startDrag(it as PointerEvent, layer, side, row, col) })
                 })
                 if (x > side - 1) cells.append(asCopy(tile(value, label, side, x - side, y)))

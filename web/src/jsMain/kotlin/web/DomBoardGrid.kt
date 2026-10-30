@@ -8,7 +8,8 @@ import viewmodel.TileSelection
 // GH-171: with a [TileSelection], keyboard mode's board: a grid that is one Tab stop, the selected
 // cell its active descendant, so NVDA and JAWS pass the letter keys on (D4, knowledge note).
 
-private const val SELECTED_CELL = "selected-tile"
+/** Its id, its own per cell: the same id moved along wouldn't tell a screen reader anything changed. */
+internal fun cellId(row: Int, col: Int) = "tile-$row-$col"
 
 /** The tile layer named as a table during play, or a grid with a [selection]; off play it reads as before. */
 internal fun asTable(layer: Element, playing: Boolean, selection: TileSelection?) = layer.apply {
@@ -17,7 +18,7 @@ internal fun asTable(layer: Element, playing: Boolean, selection: TileSelection?
     setAttribute("aria-label", "Board")
     if (selection == null) return@apply
     setAttribute("tabindex", "0")
-    setAttribute("aria-activedescendant", SELECTED_CELL)
+    setAttribute("aria-activedescendant", cellId(selection.row, selection.col))
     focusKey(Focus.Board)
 }
 
@@ -30,11 +31,11 @@ internal fun gridRow(layer: Element, playing: Boolean): Element =
     }
 
 /** [tile] as its row's cell during play: [label] is seen, and heard as [Announcements.spoken] has
- *  it, with `in place` when [home]. In a [grid] it's a grid cell, the [selected] one its active descendant. */
-internal fun asCell(tile: Element, label: String, playing: Boolean, home: Boolean, grid: Boolean, selected: Boolean) = tile.apply {
+ *  it, with `in place` when [home]. With a [gridCell] id it's a grid's cell. */
+internal fun asCell(tile: Element, label: String, playing: Boolean, home: Boolean, gridCell: String?) = tile.apply {
     if (!playing) return@apply
-    setAttribute("role", if (grid) "gridcell" else "cell")
-    if (selected) id = SELECTED_CELL
+    setAttribute("role", if (gridCell != null) "gridcell" else "cell")
+    gridCell?.let { id = it }
     textContent = ""
     val heard = Announcements.spoken(label) + if (home) ", ${Announcements.IN_PLACE}" else ""
     append(
@@ -49,9 +50,12 @@ internal fun asCell(tile: Element, label: String, playing: Boolean, home: Boolea
 /** The rounded rectangles around [selection]'s row and column, and the thicker ring on its tile. Seen, not read. */
 internal fun selectionOutlines(selection: TileSelection) = element("div", "selection").apply {
     setAttribute("aria-hidden", "true")
-    setAttribute("style", "--selected-row: ${selection.row}; --selected-col: ${selection.col};")
+    placeOutlines(this, selection)
     append(element("div", "selected-row"), element("div", "selected-col"), element("div", "selected-tile"))
 }
+
+internal fun placeOutlines(outlines: Element, selection: TileSelection) =
+    outlines.setAttribute("style", "--selected-row: ${selection.row}; --selected-col: ${selection.col};")
 
 /** The key hints under the board: the keys above what they do. */
 internal fun keyHints(hints: List<KeyHint>) = element("div", "key-hints").apply {
