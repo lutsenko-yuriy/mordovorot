@@ -4,6 +4,7 @@ import viewmodel.GiveUpButton
 import viewmodel.KeyboardLayout
 import viewmodel.SolutionState
 import viewmodel.TileLabels
+import viewmodel.TileSelection
 import web.drag.LineOffset
 
 /** One frame of the page (GH-110): what [WebRenderer] draws. [tiles] are 1-based, row by row. */
@@ -35,6 +36,10 @@ data class WebState(
     val mode: PlayMode = PlayMode.DEFAULT,
     /** The `[ Controls 6 ]` row (GH-171), hidden on touch screens. */
     val controlsShown: Boolean = false,
+    /** The selected tile, in keyboard mode during play (GH-171). The board is a Tab stop while it's set. */
+    val selection: TileSelection? = null,
+    /** The key hints under the board, in keyboard mode (GH-171). */
+    val hints: List<KeyHint>? = null,
 ) {
     /** The digit [button] shows, `null` when it shows none (GH-171). */
     fun digitOf(button: ToolbarButton): Int? = button.digit.takeIf { WebKeys.live(button, mode, controlsShown) }

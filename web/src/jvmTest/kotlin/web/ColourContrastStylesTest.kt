@@ -46,6 +46,8 @@ class ColourContrastStylesTest {
             check(paint("styles.css", ".mordie", "color"), "page", 4.5, "Mordie's line"),
             check(paint("styles.css", ".mordie .name", "color"), "page", 4.5, "Mordie's name"),
             check(paint("styles.css", ".status", "color"), "page", 4.5, "status"),
+            check(paint("keyboard.css", ".key-hint .keys", "color"), "page", 4.5, "a key hint's keys"),
+            check(paint("keyboard.css", ".key-hint .does", "color"), "page", 4.5, "what a key hint's keys do"),
             check(paint("styles.css", ".footer", "color"), "page", 4.5, "footer"),
             check(buttonInk, "button", 4.5, "buttons"),
             check(buttonInk, "button-hover", 4.5, "a hovered button"),
@@ -99,6 +101,16 @@ class ColourContrastStylesTest {
                 }
             }
         }
+
+        assertTrue(failures.isEmpty(), failures.joinToString("\n"))
+    }
+
+    /** GH-171: the outlines run in the gaps between tiles and overhang the board. */
+    @Test
+    fun `the selection's outlines meet 3 to 1 against the frame and the page`() {
+        val outline = Regex("""(?s)\.selected-row, \.selected-col \{[^}]*border:[^;]*var\(--([\w-]+)\)""").find(sheet("keyboard.css"))?.groupValues?.get(1)
+        checkNotNull(outline) { "keyboard.css: no outline colour" }
+        val failures = check(outline, "frame", 3.0, "outline in a gap") + check(outline, "page", 3.0, "outline past the board")
 
         assertTrue(failures.isEmpty(), failures.joinToString("\n"))
     }

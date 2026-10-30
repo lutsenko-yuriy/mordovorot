@@ -9,6 +9,18 @@ import viewmodel.KeyboardLayout
 class KeyHintsTest {
 
     @Test
+    fun `the board hints are ordered by hand per layout`() {
+        assertEquals(
+            listOf(KeyHint("W A S D", "select"), KeyHint("← → H L", "row"), KeyHint("↑ ↓ K J", "column")),
+            KeyHints.board(KeyboardLayout.RIGHT_HANDED),
+        )
+        assertEquals(
+            listOf(KeyHint("A D", "row"), KeyHint("W S", "column"), KeyHint("←↑↓→ H J K L", "select")),
+            KeyHints.board(KeyboardLayout.LEFT_HANDED),
+        )
+    }
+
+    @Test
     fun `the key list follows the layout, then names the toolbar, Read board and the solution keys`() {
         for (layout in KeyboardLayout.entries) {
             assertEquals(

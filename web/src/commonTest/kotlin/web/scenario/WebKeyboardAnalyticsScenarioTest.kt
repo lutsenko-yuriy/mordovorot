@@ -3,11 +3,11 @@ package web.scenario
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import viewmodel.KeyboardLayout
+import web.Arrow
 import web.Focus
 import web.PlayMode
 
-/** GH-171: analytics in keyboard play (`docs/ANALYTICS_EVENTS.md`). The shifts' are stubs until
- *  WU3 makes them green. */
+/** GH-171: analytics in keyboard play (`docs/ANALYTICS_EVENTS.md`). */
 class WebKeyboardAnalyticsScenarioTest {
 
     @Test
@@ -65,11 +65,23 @@ class WebKeyboardAnalyticsScenarioTest {
     }
 
     @Test
-    fun `board_solved reports keys or mixed, with shift_keys for right-handed shifts only`() {
-        // TODO: solve with H - keys, with shift_keys
-        // TODO: arrow then key - mixed
-        // TODO: left-handed solve - keys, no shift_keys
+    fun `board_solved reports keys or mixed, with shift_keys for right-handed shifts only`() = webTest {
+        val keys = WebHarness(backgroundScope).remembering().startOn()
+        keys.press("h", from = Focus.Board)
+        assertEquals(mapOf("shift_input" to "keys", "shift_keys" to "hjkl"), keys.solvedProps())
+
+        val mixed = WebHarness(backgroundScope).remembering().startOn()
+        mixed.game.onArrow(Arrow.RIGHT, 0)
+        mixed.press("ArrowLeft", from = Focus.Board)
+        mixed.press("h", from = Focus.Board)
+        assertEquals(mapOf("shift_input" to "mixed", "shift_keys" to "mixed"), mixed.solvedProps())
+
+        val left = WebHarness(backgroundScope).remembering(keys = KeyboardLayout.LEFT_HANDED).startOn()
+        left.press("a", from = Focus.Board)
+        assertEquals(mapOf("shift_input" to "keys"), left.solvedProps())
     }
+
+    private fun WebHarness.solvedProps() = props("board_solved").single().filterKeys { it.startsWith("shift_") }
 
     @Test
     fun `selection moves, 0 and mouse-mode keys send nothing`() = webTest {

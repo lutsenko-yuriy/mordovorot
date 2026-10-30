@@ -6,10 +6,10 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import viewmodel.GameViewModel
-import viewmodel.GiveUpButton
 import viewmodel.PointerShift
 import viewmodel.SaveInfo
 import viewmodel.SessionKeyboardLayout
+import viewmodel.ShiftSource
 import viewmodel.TileLabels
 import viewmodel.UnsolvableSaveChoice
 import viewmodel.displayWithSize
@@ -29,7 +29,7 @@ class WebGame internal constructor(
     private val analytics: AnalyticsService,
     private val renderer: WebRenderer,
     private val scope: CoroutineScope,
-    private val pressedWith: PressedWith,
+    pressedWith: PressedWith,
     keyboardLayout: SessionKeyboardLayout,
     modePreference: PlayModePreference,
     startMode: PlayMode,
@@ -41,6 +41,7 @@ class WebGame internal constructor(
     internal val dialogs = WebDialogFlows(viewModel, analytics, modal, ::cancelled)
     internal val solution = WebSolutionFlows(this, viewModel, analytics, modal)
     internal val controls = WebControlsDialog(this, viewModel, analytics, modal, keyboardLayout, modePreference, startMode)
+    private val keys = WebKeyPlay(this, viewModel, pressedWith, controlsShown)
     private val requests = WebRequestRouter(this)
     internal var status: String? = null
     /** The toolbar action or startup restore under way, if any. */
@@ -54,7 +55,7 @@ class WebGame internal constructor(
     private var sizeAsked = false
     internal val idle get() = modal.shown == null && flow?.isActive != true && drag == null
     /** Mordie's solution screen (GH-126): the board is the replay's, not the player's. */
-    private val playable get() = idle && !viewModel.isSolved() && viewModel.solution() == null
+    internal val playable get() = idle && !viewModel.isSolved() && viewModel.solution() == null
 
     /** Answers the viewModel's requests, then runs the startup restore. */
     internal fun start() {
@@ -63,7 +64,7 @@ class WebGame internal constructor(
         flow = scope.launch {
             viewModel.restoreOnStartup()
             sayAskedNewGame()
-            render(focus = Focus.PageStart)
+            render(focus = if (controls.mode == PlayMode.KEYBOARD) Focus.Board else Focus.PageStart)
         }
     }
 
@@ -71,16 +72,19 @@ class WebGame internal constructor(
     fun hasUnsavedProgress(): Boolean = viewModel.hasUnsavedProgress()
 
     fun onArrow(arrow: Arrow, line: Int) {
-        if (!playable) return
-        shift({ Announcements.shift(arrow, line, it) }) {
+        if (playable) shiftLine(arrow, line, PointerShift.ARROW)
+    }
+
+    /** One step of the line [arrow] and [line] name, by [source], sliding it into place. */
+    internal fun shiftLine(arrow: Arrow, line: Int, source: ShiftSource) =
+        shift({ Announcements.shift(arrow, line, it) }, Slides.ofArrow(arrow, line)) {
             when (arrow) {
-                Arrow.LEFT -> viewModel.shiftLeft(line, PointerShift.ARROW)
-                Arrow.RIGHT -> viewModel.shiftRight(line, PointerShift.ARROW)
-                Arrow.UP -> viewModel.shiftUp(line, PointerShift.ARROW)
-                Arrow.DOWN -> viewModel.shiftDown(line, PointerShift.ARROW)
+                Arrow.LEFT -> viewModel.shiftLeft(line, source)
+                Arrow.RIGHT -> viewModel.shiftRight(line, source)
+                Arrow.UP -> viewModel.shiftUp(line, source)
+                Arrow.DOWN -> viewModel.shiftDown(line, source)
             }
         }
-    }
 
     /** A press on the tile at [row], [col], at ([x], [y]) on a board with tiles [pitch] apart, in pixels. */
     fun onDragStart(row: Int, col: Int, x: Double, y: Double, pitch: Double) {
@@ -115,30 +119,11 @@ class WebGame internal constructor(
     }
 
     /** A key outside a dialog, with focus on the control keyed [from] (GH-171); whether the game
-     *  took it. A dialog a digit opens gives focus back there. */
-    fun onKey(press: KeyPress, from: String? = null): Boolean {
-        pressedWith.key()
-        if (!idle) return false
-        val button = (WebKeys.pageKey(press, controls.mode, controlsShown) as? PageKey.Digit)?.button ?: return false
-        val opener = when (from) {
-            null -> Focus.PageStart
-            Focus.Board.key -> Focus.Board
-            else -> Focus.Restore(from)
-        }
-        when (button) {
-            ToolbarButton.NEW -> onNew(opener)
-            ToolbarButton.SAVE -> onSave(opener)
-            ToolbarButton.LOAD -> onLoad(opener)
-            ToolbarButton.LABELS -> onLabels("shortcut", opener)
-            ToolbarButton.GIVE_UP_ROW -> when (viewModel.giveUpButton()) {
-                GiveUpButton.GIVE_UP -> solution.onGiveUp(opener)
-                GiveUpButton.MORDIES_SOLUTION -> solution.onMordiesSolution()
-                GiveUpButton.DIMMED, GiveUpButton.HIDDEN -> {}
-            }
-            ToolbarButton.CONTROLS -> controls.open("shortcut", opener)
-        }
-        return true
-    }
+     *  took it. */
+    fun onKey(press: KeyPress, from: String? = null): Boolean = keys.onKey(press, from)
+
+    /** A press on a tile (GH-171): in keyboard mode it selects the tile and gives the board focus. */
+    fun onTilePressed(row: Int, col: Int) = keys.onTilePressed(row, col)
 
     /** `[ Labels ]` (GH-139): the picker, live on play, after a win and on the solution screen. */
     fun onLabels(openedFrom: String = "toolbar", opener: Focus = Focus.LabelsButton) = runFlow(opener) { labelsDialog.fromToolbar(openedFrom) }
@@ -227,9 +212,9 @@ class WebGame internal constructor(
     internal fun cancelled(dialog: String) =
         analytics.track("dialog_cancelled", mapOf("dialog" to dialog, "via" to modal.closedVia.wire))
 
-    /** Runs a shift on the unsolved board and renders, saying it in [words] (given the move count
-     *  when the shift started a move), or the win. */
-    private fun shift(words: (newMove: Int?) -> String, action: () -> Unit) {
+    /** Runs a shift on the unsolved board and renders, sliding [slide] and saying it in [words] (given
+     *  the move count when the shift started a move), or the win. */
+    private fun shift(words: (newMove: Int?) -> String, slide: LineOffset? = null, action: () -> Unit) {
         status = null
         val before = viewModel.moveCount()
         action()
@@ -239,7 +224,7 @@ class WebGame internal constructor(
             analytics.track("screen_congratulations")
             Announcements.solved(moves)
         } else words(moves.takeIf { it != before })
-        render()
+        render(slide)
     }
 
     /** A new game once a flow in which the viewModel asked for its size ends. */
@@ -284,6 +269,8 @@ class WebGame internal constructor(
                 announcement = saying,
                 mode = controls.mode,
                 controlsShown = controlsShown,
+                selection = keys.shownSelection(),
+                hints = KeyHints.board(controls.layout).takeIf { controls.mode == PlayMode.KEYBOARD && viewModel.solution() == null },
             ),
         )
         saying = null

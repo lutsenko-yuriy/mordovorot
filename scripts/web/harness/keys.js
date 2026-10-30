@@ -49,7 +49,7 @@ function play(win, step) {
 
 /** Moves focus as Tab would. The page sets no positive tabindex, so the order is the DOM's; past
  *  either end focus leaves the page, as it goes to the browser's own controls. `visibilityProperty`
- *  skips the solution screen's arrows, hidden with `visibility` but still laid out. */
+ *  skips the solution screen's and keyboard mode's arrows, hidden with `visibility` but still laid out. */
 function tab(doc, from, back) {
     const order = [...doc.querySelectorAll("button, input, [href], [tabindex]")].filter(el =>
         !el.disabled && el.getAttribute("tabindex") !== "-1" && !el.closest("[inert]")
@@ -81,21 +81,35 @@ function snapshot(win) {
 
 /** GH-167: the board as a screen reader's table - its name, rows and cells, how many copies of a
  *  wrapping tile it would read, how many cells say `in place`, and the first row's cells - and
- *  the Read board button: `enabled`, `disabled` or `-`. */
+ *  the Read board button: `enabled`, `disabled` or `-`. GH-171: as a grid, its active descendant
+ *  too, which must be the selected cell, by row and column. */
 function grid(doc) {
     const button = doc.querySelector('[data-focus="read-board"]');
     const read = `read-board ${button ? (button.disabled ? "disabled" : "enabled") : "-"}`;
-    const table = doc.querySelector('[role="table"]');
+    const table = doc.querySelector('[role="table"], [role="grid"]');
     if (!table) return `grid - | ${read}`;
+    const cell = '[role="cell"], [role="gridcell"]';
     const rows = table.querySelectorAll('[role="row"]');
-    const cells = table.querySelectorAll('[role="cell"]');
-    const unread = [...table.querySelectorAll(".tile")].filter(t => !t.matches('[role="cell"], [aria-hidden="true"]'));
+    const cells = table.querySelectorAll(cell);
+    const unread = [...table.querySelectorAll(".tile")].filter(t => !t.matches(`${cell}, [aria-hidden="true"]`));
     // What a reader hears from a cell: its text, less what is aria-hidden.
     const heard = c => flat([...c.childNodes].filter(n => !n.getAttribute?.("aria-hidden")).map(n => n.textContent).join(""));
     const home = [...cells].filter(c => heard(c).endsWith("in place")).length;
-    const first = [...(rows[0]?.querySelectorAll('[role="cell"]') || [])].map(heard).join(" / ");
-    return `grid table "${table.getAttribute("aria-label")}" rows ${rows.length} cells ${cells.length} `
-        + `unread-copies ${unread.length} in-place ${home} row1 "${first}" | ${read}`;
+    const first = [...(rows[0]?.querySelectorAll(cell) || [])].map(heard).join(" / ");
+    return `grid ${table.getAttribute("role")} "${table.getAttribute("aria-label")}" rows ${rows.length} cells ${cells.length} `
+        + `unread-copies ${unread.length} in-place ${home} row1 "${first}"${active(doc, table, rows)} | ${read}`;
+}
+
+/** The grid's active descendant by row and column, and the outlined row and column to compare. */
+function active(doc, table, rows) {
+    const id = table.getAttribute("aria-activedescendant");
+    if (!id) return "";
+    const cell = doc.getElementById(id);
+    const row = [...rows].indexOf(cell?.parentElement);
+    const col = cell ? [...cell.parentElement.children].indexOf(cell) : -1;
+    const shown = doc.querySelector(".selection")?.getAttribute("style") || "";
+    const outlined = /row: (\d+); --selected-col: (\d+)/.exec(shown)?.slice(1).join(",") || "-";
+    return ` active ${row},${col} outlined ${outlined}`;
 }
 
 /** Its data-focus key (or tag and text), role, accessible name and checked state. */

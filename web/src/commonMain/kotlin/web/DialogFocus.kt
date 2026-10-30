@@ -29,6 +29,8 @@ sealed class Focus(val key: String) {
     data class LayoutOption(val layout: KeyboardLayout) : Focus("layout-${layout.wireName}")
     /** Back on the control a digit was pressed on, whichever it was (GH-171), or what [fallbackFocus] names. */
     data class Restore(val control: String) : Focus(control)
+    /** The footer's link at [index], outside `#app`. */
+    data class FooterLink(val index: Int) : Focus("footer-$index")
     /** Give Up, or Mordie's solution after a win. */
     data object GiveUpRow : Focus("give-up")
     data object ReplayNext : Focus("replay-next")

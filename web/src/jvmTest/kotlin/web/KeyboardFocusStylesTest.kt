@@ -21,4 +21,14 @@ class KeyboardFocusStylesTest {
     fun `the focus ring once a key is pressed`() {
         assertTrue("outline: 3px solid var(--warning);" in rule(".app.keyboard button:focus-visible"), styles)
     }
+
+    /** GH-171: the board is a Tab stop too, with the same ring, past the outlines. */
+    @Test
+    fun `the board's ring waits for a key press as well`() {
+        val keyboard = File("src/jsMain/resources/keyboard.css").readText()
+        fun boardRule(selector: String) = Regex("""(?m)^${Regex.escape(selector)} \{([^}]*)}""").find(keyboard)?.groupValues?.get(1).orEmpty()
+
+        assertTrue("outline: none;" in boardRule(".tiles:focus-visible"), keyboard)
+        assertTrue("outline: 3px solid var(--warning);" in boardRule(".app.keyboard .tiles:focus-visible"), keyboard)
+    }
 }

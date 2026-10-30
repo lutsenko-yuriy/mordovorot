@@ -15,9 +15,7 @@ import web.Focus
 import web.ToolbarButton
 import web.WebDialog
 
-/** GH-171: playing from the keyboard - the digit toolbar, the selected tile, its shifts in both
- *  layouts, focus and the key hints. The grid's markup is checked by the harness (`keys_check.sh`).
- *  The board's are stubs until WU3 makes them green. */
+/** GH-171: the digit toolbar in keyboard mode. The board's keys are in [WebKeyboardBoardScenarioTest]. */
 class WebKeyboardPlayScenarioTest {
 
     /** Mordie finds a solution, then five shifts reveal it, so Give Up is live. */
@@ -106,44 +104,6 @@ class WebKeyboardPlayScenarioTest {
     }
 
     @Test
-    fun `W A S D move the selected tile with wraparound`() {
-        // TODO: starts at row 1, column 1
-        // TODO: D, S move it
-        // TODO: A, W return it
-        // TODO: W from row 1 wraps to the last row; A likewise
-    }
-
-    @Test
-    fun `H L and the left and right arrows shift the selected row and the selection stays put`() {
-        // TODO: press each key
-        // TODO: the row's tiles shift; the selection and other rows don't
-    }
-
-    @Test
-    fun `K J and the up and down arrows shift the selected column`() {
-        // TODO: press each key
-        // TODO: the column's tiles shift; the selection and other columns don't
-    }
-
-    @Test
-    fun `the left-handed layout selects with HJKL and the arrows and shifts with WASD`() {
-        // TODO: left-handed
-        // TODO: H J K L and the arrows move the selection
-        // TODO: A D shift the row; W S shift the column
-    }
-
-    @Test
-    fun `upper-case letters work too`() {
-        // TODO: D, S and H as capitals - same effect as lower case
-    }
-
-    @Test
-    fun `board keys work only while the board has focus`() {
-        // TODO: focus on `New` - W and H do nothing
-        // TODO: digit 2 still opens Save
-    }
-
-    @Test
     fun `keys with Ctrl, Alt or Meta, and Escape with no dialog, do nothing`() = webTest {
         val page = WebHarness(backgroundScope).remembering().startOn()
         val before = page.frames.size
@@ -153,55 +113,5 @@ class WebKeyboardPlayScenarioTest {
         assertFalse(page.press("Escape"))
 
         assertEquals(before, page.frames.size)
-    }
-
-    @Test
-    fun `the board takes focus after the startup dialog in keyboard mode`() {
-        // TODO: store holds keyboard, with a save
-        // TODO: answer the startup dialog
-        // TODO: focus on the board
-    }
-
-    @Test
-    fun `pressing a tile selects it and gives the board focus`() {
-        // TODO: press a tile at row 3, column 2
-        // TODO: the selection is there and focus is on the board
-    }
-
-    @Test
-    fun `a drag leaves the selection on the dragged line and the mouse still works`() {
-        // TODO: drag row 2
-        // TODO: the row shifted and the selection is on row 2
-        // TODO: click `Save 2` - it opens
-    }
-
-    @Test
-    fun `a smaller board clamps the selection and a new game or load keeps it`() {
-        // TODO: select 4,4 on a 4x4
-        // TODO: new 4x4 - kept
-        // TODO: load a 4x4 - kept
-        // TODO: new 3x3 - 3,3
-    }
-
-    @Test
-    fun `switching mode keeps the selection`() {
-        // TODO: select 2,3
-        // TODO: to mouse and back
-        // TODO: still 2,3
-    }
-
-    @Test
-    fun `a solved board hides the selection and ignores the select and shift keys`() {
-        // TODO: solve with a key
-        // TODO: selection is null
-        // TODO: W and H change nothing; digits still work
-    }
-
-    @Test
-    fun `keyboard mode shows the key hints for its layout and hides the arrows`() {
-        // TODO: right-handed hints
-        // TODO: left-handed hints
-        // TODO: arrows hidden
-        // TODO: mouse mode - no hints
     }
 }

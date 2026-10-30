@@ -65,7 +65,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         saveWarning = null
         // The rebuilt step list starts where this one was scrolled to.
         val stepsScroll = root.querySelector(".steps")?.scrollTop
-        val focused = focusedKey(root)
+        val focused = focusedKey()
         root.clear()
         root.style.setProperty("--side", state.side.toString())
         root.classList.toggle("solved", state.solved)
@@ -77,6 +77,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
             element("div", "stage").apply {
                 state.boardWords?.let { append(readBoardButton(it, dialog != null, announcer)) }
                 append(board.draw(state, justSolved = state.solved && before?.solved == false, state.drag ?: slideOffset()))
+                state.hints?.let { append(keyHints(it)) }
             },
             *listOfNotNull(state.solution?.let { stepList(it) }).toTypedArray(),
             // Beside the board when the window is wide; when tall, its items stack around it (styles.css).
@@ -154,13 +155,11 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         line.style.opacity = frame.alpha.toString()
     }
 
-    /** Eases the line a shift moved into place: one tile after an arrow or a replay shift, the rest
+    /** Eases the line a shift moved into place: one tile after an arrow, a key or a replay shift, the rest
      *  of the way after a drag. Any other change to the tiles, or a new drag, stops a slide under way. */
     private fun startSlide(before: WebState?, state: WebState) {
-        val arrow = board.clicked
         val start = when {
             before == null || state.drag != null -> null
-            arrow != null && state.tiles != before.tiles -> Slides.ofArrow(arrow.first, arrow.second)
             state.slide != null -> state.slide
             before.drag != null -> Slides.afterDrag(before.drag, moved = state.tiles != before.tiles, state.side)
             state.tiles != before.tiles -> null

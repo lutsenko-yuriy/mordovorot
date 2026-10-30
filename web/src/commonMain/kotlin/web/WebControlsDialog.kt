@@ -20,11 +20,13 @@ internal class WebControlsDialog(
     var mode = startMode
         private set
 
+    val layout get() = keyboardLayout.current
+
     /** `[ Controls 6 ]`, or 6 with [openedFrom] `shortcut`. Focus goes back to [opener], or to the
      *  board on entering keyboard mode. */
     fun open(openedFrom: String = "toolbar", opener: Focus = Focus.ControlsButton) = game.runFlow(opener) {
         viewModel.controlsDialogOpened(openedFrom)
-        val chosen = modal.ask<WebDialog.Controls?>(dialog(mode, keyboardLayout.current))
+        val chosen = modal.ask<WebDialog.Controls?>(dialog(mode, layout))
         if (chosen == null) game.cancelled("controls") else apply(chosen)
     }
 

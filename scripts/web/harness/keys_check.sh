@@ -32,13 +32,21 @@ queries=(
   "report=keys&keys=6,ArrowRight,Tab,ArrowDown,ArrowDown,Tab,Tab,Tab,Escape"
   "report=keys&keys=focus:controls,Enter,ArrowLeft,Enter"
   "report=keys&keys=focus:labels,6,Escape,1,Escape"
-  # OK into keyboard mode: the digits then work. Focus goes to the board once it can take it (WU3).
+  # OK into keyboard mode: focus on the board, where the digits then work.
   "report=keys&keys=6,ArrowRight,click:OK,1,Escape"
   # Digits only work in keyboard mode, where each button shows and names its shortcut.
   "report=keys&input=keyboard&keys=focus:new,1,Escape,2,3,Escape,focus:load,3,Escape,focus:save,4,Escape,5,Escape,6,Escape"
   "report=keys&input=keyboard&layout=left&keys=6,Tab,Escape"
   # A held 2 opens Save once and isn't typed into its name field.
   "report=keys&input=keyboard&keys=2,R-2,3"
+  # The board: a grid, the selected cell its active descendant. Selects wrap; shifts stay put; a held key repeats.
+  "report=keys&grid=1&input=keyboard&keys=d,s,w,w,R-a,h,ArrowLeft,l,ArrowUp,j"
+  "report=keys&grid=1&input=keyboard&layout=left&keys=l,ArrowDown,a,W"
+  # Board keys only with focus on the board, which is one Tab stop, the arrows out of the order.
+  "report=keys&input=keyboard&keys=Tab,S-Tab,Tab,w,focus:new,h,Tab"
+  # A dialog from the board returns there; to mouse mode, focus on Controls; a digit on a footer link returns there.
+  "report=keys&input=keyboard&keys=2,Escape,6,ArrowLeft,click:OK"
+  "report=keys&input=keyboard&keys=focus:footer-0,2,Escape"
 )
 
 log="$(cd "$project" && ./gradlew -q :web:jsBrowserDistribution 2>&1)" || {
@@ -51,7 +59,7 @@ log="$(cd "$project" && ./gradlew -q :web:jsBrowserDistribution 2>&1)" || {
 # row's cells are in place.
 actual="$("$here/measure.sh" "${queries[@]}" | perl -pe '
   s{said "\K[^"]*}{$& =~ s/\d+/N/gr =~ s/\b(?:Row|Column) N (?:left|right|up|down)\b/LINE N DIR/gr}e if /^\S+ solution /;
-  if (/\| grid table/) { s{(?:said|row1) "\K[^"]*}{$& =~ s/\d+/N/gr =~ s/\b(?:alpha|bravo|charlie|delta|echo|foxtrot|golf|hotel|india|juliet|kilo|lima|mike|november|oscar|papa|quebec|romeo|sierra|tango|uniform|victor|whiskey|x-ray|yankee|zulu)\b/W/gr =~ s/, in place//gr =~ s/\b(tile|move)s?\b/$1s/gr}ge; s/in-place \K\d+/N/ }')"
+  if (/\| grid (?:table|grid) /) { s{(?:said|row1) "\K[^"]*}{$& =~ s/\d+/N/gr =~ s/\b(?:alpha|bravo|charlie|delta|echo|foxtrot|golf|hotel|india|juliet|kilo|lima|mike|november|oscar|papa|quebec|romeo|sierra|tango|uniform|victor|whiskey|x-ray|yankee|zulu)\b/W/gr =~ s/, in place//gr =~ s/\b(tile|move)s?\b/$1s/gr}ge; s/in-place \K\d+/N/ }')"
 if grep -q '^TIMEOUT' <<<"$actual"; then
   echo "$actual" >&2
   exit 2

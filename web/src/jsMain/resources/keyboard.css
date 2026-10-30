@@ -1,0 +1,85 @@
+/* GH-171: keyboard mode's board: the selection's outlines, the focus ring and the key hints. The
+   outlines run in the gaps between tiles, over the frame, and the ring on a tile, so their colours
+   are the ones already checked there (ColourContrastStylesTest). */
+
+/* Hidden with their room kept, so the board stays put on switching mode (D9). */
+.app.keyboard-mode .arrows {
+    visibility: hidden;
+}
+
+.app.keyboard-mode {
+    --hints: 3.5rem;
+}
+
+.app.keyboard-mode .board {
+    position: relative;
+}
+
+/* Over the tiles, in the board's middle cell: an absolute child takes its grid area as its box. */
+.selection {
+    position: absolute;
+    grid-row: 2 / 3;
+    grid-column: 2 / 3;
+    inset: 0;
+    pointer-events: none;
+}
+
+.selected-row, .selected-col {
+    position: absolute;
+    border: max(2px, calc(var(--gap) * 0.5)) solid var(--ink);
+    border-radius: calc(var(--tile) * 0.2);
+}
+
+.selected-row {
+    left: calc(var(--gap) * -1);
+    right: calc(var(--gap) * -1);
+    top: calc(var(--selected-row) * var(--pitch));
+    height: var(--pitch);
+}
+
+.selected-col {
+    top: calc(var(--gap) * -1);
+    bottom: calc(var(--gap) * -1);
+    left: calc(var(--selected-col) * var(--pitch));
+    width: var(--pitch);
+}
+
+.selected-tile {
+    position: absolute;
+    left: calc(var(--selected-col) * var(--pitch) + var(--gap) / 2);
+    top: calc(var(--selected-row) * var(--pitch) + var(--gap) / 2);
+    width: var(--tile);
+    height: var(--tile);
+    border: max(4px, calc(var(--tile) * 0.07)) solid var(--tile-ink);
+    border-radius: calc(var(--tile) * 0.16);
+}
+
+/* As buttons' rings (buttons.css): a script focuses the board, so the ring waits for a key press. */
+.tiles:focus-visible {
+    outline: none;
+}
+
+.app.keyboard .tiles:focus-visible {
+    outline: 3px solid var(--warning);
+    outline-offset: calc(var(--gap) * 1.5);
+}
+
+/* Under the tiles, in the room the hidden arrows leave and --hints adds. */
+.key-hints {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0 1.5em;
+    margin-top: calc(var(--gap) - var(--arrow));
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+.key-hint .keys {
+    color: var(--ink);
+    font-weight: 700;
+}
+
+.key-hint .does {
+    color: var(--muted);
+}

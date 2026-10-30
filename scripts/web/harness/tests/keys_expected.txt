@@ -74,10 +74,10 @@ mouse play 1200x800 4x4 | Escape - -> focus labels role button name "Labels" | d
 mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert - | said "New 4x4 game"
 mouse play 1200x800 4x4 | 6 page -> focus mode-mouse role radio name "Mouse" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
 mouse play 1200x800 4x4 | ArrowRight page -> focus mode-keyboard role radio name "Keyboard" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
-mouse play 1200x800 4x4 | click:OK - -> focus - | dialog - | ring - | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | click:OK - -> focus board role grid name "Board" | dialog - | ring solid | keyboard yes | inert - | said -
 mouse play 1200x800 4x4 | 1 page -> focus size-4 role button name "4x4" | dialog "New game size" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
-mouse play 1200x800 4x4 | Escape page -> focus - | dialog - | ring - | keyboard yes | inert - | said -
-mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert - | said "New 4x4 game"
+mouse play 1200x800 4x4 | Escape page -> focus board role grid name "Board" | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | start - -> focus board role grid name "Board" | dialog - | ring none | keyboard no | inert - | said "New 4x4 game"
 mouse play 1200x800 4x4 | focus:new - -> focus new role button name "New" shortcut 1 | dialog - | ring none | keyboard no | inert - | said -
 mouse play 1200x800 4x4 | 1 page -> focus size-4 role button name "4x4" | dialog "New game size" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
 mouse play 1200x800 4x4 | Escape page -> focus new role button name "New" shortcut 1 | dialog - | ring solid | keyboard yes | inert - | said -
@@ -94,11 +94,45 @@ mouse play 1200x800 4x4 | 5 page -> focus save role button name "Save" shortcut 
 mouse play 1200x800 4x4 | Escape - -> focus save role button name "Save" shortcut 2 | dialog - | ring solid | keyboard yes | inert - | said -
 mouse play 1200x800 4x4 | 6 page -> focus mode-keyboard role radio name "Keyboard" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
 mouse play 1200x800 4x4 | Escape page -> focus save role button name "Save" shortcut 2 | dialog - | ring solid | keyboard yes | inert - | said -
-mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert - | said "New 4x4 game"
+mouse play 1200x800 4x4 | start - -> focus board role grid name "Board" | dialog - | ring none | keyboard no | inert - | said "New 4x4 game"
 mouse play 1200x800 4x4 | 6 page -> focus mode-keyboard role radio name "Keyboard" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
 mouse play 1200x800 4x4 | Tab page -> focus layout-left_handed role radio name "Left-handed" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
-mouse play 1200x800 4x4 | Escape page -> focus - | dialog - | ring - | keyboard yes | inert - | said -
-mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert - | said "New 4x4 game"
+mouse play 1200x800 4x4 | Escape page -> focus board role grid name "Board" | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | start - -> focus board role grid name "Board" | dialog - | ring none | keyboard no | inert - | said "New 4x4 game"
 mouse play 1200x800 4x4 | 2 page -> focus save-name role textbox name "Save name" | dialog "Save game" | ring none | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
 mouse play 1200x800 4x4 | R-2 page -> focus save-name role textbox name "Save name" | dialog "Save game" | ring none | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
 mouse play 1200x800 4x4 | 3 - -> focus save-name role textbox name "Save name" | dialog "Save game" | ring none | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | start - -> focus board role grid name "Board" | dialog - | ring none | keyboard no | inert - | said "New NxN game" | grid grid "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 0,0 outlined 0,0 | read-board enabled
+mouse play 1200x800 4x4 | d page -> focus board role grid name "Board" | dialog - | ring solid | keyboard yes | inert - | said - | grid grid "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 0,1 outlined 0,1 | read-board enabled
+mouse play 1200x800 4x4 | s page -> focus board role grid name "Board" | dialog - | ring solid | keyboard yes | inert - | said - | grid grid "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 1,1 outlined 1,1 | read-board enabled
+mouse play 1200x800 4x4 | w page -> focus board role grid name "Board" | dialog - | ring solid | keyboard yes | inert - | said - | grid grid "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 0,1 outlined 0,1 | read-board enabled
+mouse play 1200x800 4x4 | w page -> focus board role grid name "Board" | dialog - | ring solid | keyboard yes | inert - | said - | grid grid "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 3,1 outlined 3,1 | read-board enabled
+mouse play 1200x800 4x4 | R-a page -> focus board role grid name "Board" | dialog - | ring solid | keyboard yes | inert - | said - | grid grid "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 3,0 outlined 3,0 | read-board enabled
+mouse play 1200x800 4x4 | h page -> focus board role grid name "Board" | dialog - | ring solid | keyboard yes | inert - | said "Row N left, N moves" | grid grid "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 3,0 outlined 3,0 | read-board enabled
+mouse play 1200x800 4x4 | ArrowLeft page -> focus board role grid name "Board" | dialog - | ring solid | keyboard yes | inert - | said "Row N left" | grid grid "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 3,0 outlined 3,0 | read-board enabled
+mouse play 1200x800 4x4 | l page -> focus board role grid name "Board" | dialog - | ring solid | keyboard yes | inert - | said "Row N right" | grid grid "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 3,0 outlined 3,0 | read-board enabled
+mouse play 1200x800 4x4 | ArrowUp page -> focus board role grid name "Board" | dialog - | ring solid | keyboard yes | inert - | said "Column N up, N moves" | grid grid "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 3,0 outlined 3,0 | read-board enabled
+mouse play 1200x800 4x4 | j page -> focus board role grid name "Board" | dialog - | ring solid | keyboard yes | inert - | said "Column N down" | grid grid "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 3,0 outlined 3,0 | read-board enabled
+mouse play 1200x800 4x4 | start - -> focus board role grid name "Board" | dialog - | ring none | keyboard no | inert - | said "New NxN game" | grid grid "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 0,0 outlined 0,0 | read-board enabled
+mouse play 1200x800 4x4 | l page -> focus board role grid name "Board" | dialog - | ring solid | keyboard yes | inert - | said - | grid grid "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 0,1 outlined 0,1 | read-board enabled
+mouse play 1200x800 4x4 | ArrowDown page -> focus board role grid name "Board" | dialog - | ring solid | keyboard yes | inert - | said - | grid grid "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 1,1 outlined 1,1 | read-board enabled
+mouse play 1200x800 4x4 | a page -> focus board role grid name "Board" | dialog - | ring solid | keyboard yes | inert - | said "Row N left, N moves" | grid grid "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 1,1 outlined 1,1 | read-board enabled
+mouse play 1200x800 4x4 | W page -> focus board role grid name "Board" | dialog - | ring solid | keyboard yes | inert - | said "Column N up, N moves" | grid grid "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 1,1 outlined 1,1 | read-board enabled
+mouse play 1200x800 4x4 | start - -> focus board role grid name "Board" | dialog - | ring none | keyboard no | inert - | said "New 4x4 game"
+mouse play 1200x800 4x4 | Tab native -> focus new role button name "New" shortcut 1 | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | S-Tab native -> focus board role grid name "Board" | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | Tab native -> focus new role button name "New" shortcut 1 | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | w - -> focus new role button name "New" shortcut 1 | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | focus:new - -> focus new role button name "New" shortcut 1 | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | h - -> focus new role button name "New" shortcut 1 | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | Tab native -> focus save role button name "Save" shortcut 2 | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | start - -> focus board role grid name "Board" | dialog - | ring none | keyboard no | inert - | said "New 4x4 game"
+mouse play 1200x800 4x4 | 2 page -> focus save-name role textbox name "Save name" | dialog "Save game" | ring none | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | Escape page -> focus board role grid name "Board" | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | 6 page -> focus mode-keyboard role radio name "Keyboard" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | ArrowLeft page -> focus mode-mouse role radio name "Mouse" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | click:OK - -> focus controls role button name "Controls" shortcut 6 | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | start - -> focus board role grid name "Board" | dialog - | ring none | keyboard no | inert - | said "New 4x4 game"
+mouse play 1200x800 4x4 | focus:footer-0 - -> focus footer-0 role link name "original" | dialog - | ring auto | keyboard no | inert - | said -
+mouse play 1200x800 4x4 | 2 page -> focus save-name role textbox name "Save name" | dialog "Save game" | ring none | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | Escape page -> focus footer-0 role link name "original" | dialog - | ring auto | keyboard yes | inert - | said -

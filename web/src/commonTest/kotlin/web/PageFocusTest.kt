@@ -31,6 +31,17 @@ class PageFocusTest {
     }
 
     @Test
+    fun `the board on a board that got solved passes focus as a winning arrow does`() {
+        assertEquals(Focus.GiveUpRow, fallbackFocus(Focus.Board.key, won.copy(mode = PlayMode.KEYBOARD, giveUp = GiveUpButton.MORDIES_SOLUTION)))
+        assertEquals(Focus.NewButton, fallbackFocus(Focus.Board.key, won.copy(mode = PlayMode.KEYBOARD, giveUp = GiveUpButton.HIDDEN)))
+    }
+
+    @Test
+    fun `the board, once keyboard mode ends, passes focus to Controls`() {
+        assertEquals(Focus.ControlsButton, fallbackFocus(Focus.Board.key, playing.copy(mode = PlayMode.MOUSE)))
+    }
+
+    @Test
     fun `Next at the last step passes focus to Prev`() {
         assertEquals(Focus.ReplayPrev, fallbackFocus(Focus.ReplayNext.key, replay(atStart = false, atEnd = true)))
     }

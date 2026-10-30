@@ -55,11 +55,13 @@ body {
     /* The height left for the board: the rest of the column, Give Up's row included. Tall, only
        where size queries are missing; `.stage` measures it instead (GH-147). */
     --rest: 330px;
+    /* The key hints' room under the board, in keyboard mode (GH-171). */
+    --hints: 0px;
     /* The arrows' room around the tiles, in tiles, and the gap above the first row of tiles. */
     --band: 2;
     /* The board at its smallest, 16px tiles, which larger text can leave it (GH-168). */
     --board-min: calc(16px * (var(--side) * 1.1 + var(--band)));
-    --tile: clamp(28px, min(calc((100vw - 40px) / (var(--side) * 1.1 + var(--band))), calc((var(--vh) - var(--rest) - var(--footer)) / (var(--side) * 1.1 + var(--band)))), 84px);
+    --tile: clamp(28px, min(calc((100vw - 40px) / (var(--side) * 1.1 + var(--band))), calc((var(--vh) - var(--rest) - var(--hints) - var(--footer)) / (var(--side) * 1.1 + var(--band)))), 84px);
     --gap: calc(var(--tile) * 0.1);
     --pitch: calc(var(--tile) + var(--gap));
     --arrow: calc(var(--tile) * 0.7);
@@ -105,7 +107,7 @@ body {
         --panel: min(var(--panel-max), var(--room) - var(--column-gap));
         --pad-y: 20px;
         --beside: calc(var(--panel) + var(--column-gap) + 2 * var(--pad-x));
-        --tile: clamp(16px, min(100vw - var(--beside), var(--vh) - var(--footer) - 2 * var(--pad-y)) / (var(--side) * 1.1 + var(--band)), 84px);
+        --tile: clamp(16px, min(100vw - var(--beside), var(--vh) - var(--footer) - var(--hints) - 2 * var(--pad-y)) / (var(--side) * 1.1 + var(--band)), 84px);
         grid-template-areas: "board panel";
         grid-template-columns: auto var(--panel);
         justify-content: center;

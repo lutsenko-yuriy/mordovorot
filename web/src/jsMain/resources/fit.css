@@ -30,7 +30,7 @@
             justify-self: stretch;
             display: grid;
             place-items: center;
-            --tile: clamp(16px, min(100cqw, 100cqh) / (var(--side) * 1.1 + var(--band)), 84px);
+            --tile: clamp(16px, min(100cqw, 100cqh - var(--hints)) / (var(--side) * 1.1 + var(--band)), 84px);
             --gap: calc(var(--tile) * 0.1);
             --pitch: calc(var(--tile) + var(--gap));
             --arrow: calc(var(--tile) * 0.7);

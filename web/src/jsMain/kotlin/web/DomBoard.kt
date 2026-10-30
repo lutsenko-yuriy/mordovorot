@@ -8,16 +8,12 @@ import web.drag.Axis
 import web.drag.LineOffset
 import web.drag.WrapPositions
 
-/** The board in the page (GH-110): its tiles and arrows, turning clicks and drags into [game] intents.
+/** The board in the page (GH-110): its tiles and arrows, and in keyboard mode its selection, turning clicks and drags into [game] intents.
  *  Split from [DomRenderer] (GH-171). */
 internal class DomBoard(private val root: HTMLElement, private val game: () -> WebGame) {
 
     /** The pointer dragging a line, if any. [root] holds its capture, as the tiles are rebuilt. */
     private var dragPointer: Int? = null
-
-    /** The arrow being clicked, so the frame its shift draws slides the line. */
-    var clicked: Pair<Arrow, Int>? = null
-        private set
 
     private var tiles: Element? = null
 
@@ -38,21 +34,14 @@ internal class DomBoard(private val root: HTMLElement, private val game: () -> W
         val side = state.side
         val disabled = !state.arrowsEnabled || state.dialog != null
         fun arrow(label: String, arrow: Arrow, line: Int) =
-            button(label, "arrow") {
-                clicked = arrow to line
-                try {
-                    game().onArrow(arrow, line)
-                } finally {
-                    clicked = null
-                }
-            }.focusKey(Focus.ArrowButton(arrow, line)).also {
+            button(label, "arrow") { game().onArrow(arrow, line) }.focusKey(Focus.ArrowButton(arrow, line)).also {
                 it.disabled = disabled
                 it.setAttribute("aria-label", Announcements.line(arrow, line))
             }
         fun arrows(arrow: Arrow, label: String, axis: String) =
             element("div", "arrows $axis").apply { repeat(side) { append(arrow(label, arrow, it)) } }
 
-        val layer = asTable(element("div", "tiles"), state.arrowsEnabled)
+        val layer = asTable(element("div", "tiles"), state.arrowsEnabled, state.selection)
         tiles = layer
         drawTiles(layer, state, offset)
 
@@ -65,6 +54,7 @@ internal class DomBoard(private val root: HTMLElement, private val game: () -> W
                 arrows(Arrow.RIGHT, "▶", "column"),
                 element("span"), arrows(Arrow.DOWN, "▼", "row"), element("span"),
             )
+            state.selection?.let { append(selectionOutlines(it)) }
         }
     }
 
@@ -89,7 +79,8 @@ internal class DomBoard(private val root: HTMLElement, private val game: () -> W
                 val label = texts[row * side + col]
                 val x = if (offset?.axis == Axis.ROW && offset.line == row) wrapped!![col] else col.toDouble()
                 val y = if (offset?.axis == Axis.COLUMN && offset.line == col) wrapped!![row] else row.toDouble()
-                cells.append(asCell(tile(value, label, side, x, y), label, playing, playing && home[row * side + col]).apply {
+                val selected = state.selection?.takeIf { it.row == row && it.col == col } != null
+                cells.append(asCell(tile(value, label, side, x, y), label, playing, playing && home[row * side + col], state.selection != null, selected).apply {
                     addEventListener("pointerdown", { startDrag(it as PointerEvent, layer, side, row, col) })
                 })
                 if (x > side - 1) cells.append(asCopy(tile(value, label, side, x - side, y)))
@@ -113,6 +104,8 @@ internal class DomBoard(private val root: HTMLElement, private val game: () -> W
         root.setPointerCapture(pointer.pointerId)
         // Measured, so the drag follows the pointer at any tile size or zoom.
         val pitch = tiles.getBoundingClientRect().width / side
+        // First: it redraws the tiles, and a drag under way would stop it.
+        game().onTilePressed(row, col)
         game().onDragStart(row, col, pointer.clientX.toDouble(), pointer.clientY.toDouble(), pitch)
     }
 
