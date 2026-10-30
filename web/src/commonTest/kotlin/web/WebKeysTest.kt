@@ -7,6 +7,7 @@ import viewmodel.BoardKey
 import viewmodel.Direction
 import viewmodel.KeyboardLayout
 import viewmodel.ShiftKey
+import viewmodel.SolutionKey
 
 /** GH-171: which digit presses which toolbar button, and the board's keys (ADR-0003). */
 class WebKeysTest {
@@ -39,7 +40,7 @@ class WebKeysTest {
 
     @Test
     fun `other keys are nothing`() {
-        for (other in listOf("0", "7", "x", "Enter", "Escape", "F1", "!")) assertNull(key(KeyPress(other)))
+        for (other in listOf("7", "x", "Enter", "Escape", "F1", "!")) assertNull(key(KeyPress(other)))
     }
 
     @Test
@@ -84,5 +85,40 @@ class WebKeysTest {
     fun `board keys need the board and keyboard mode`() {
         assertNull(WebKeys.pageKey(KeyPress("w"), PlayMode.KEYBOARD, true))
         assertNull(WebKeys.pageKey(KeyPress("w"), PlayMode.MOUSE, true, onBoard = true))
+    }
+
+    @Test
+    fun `0 reads the board in keyboard mode, wherever focus is, once per press`() {
+        assertEquals(PageKey.ReadBoard, key(KeyPress("0")))
+        assertNull(key(KeyPress("0"), PlayMode.MOUSE))
+        assertNull(key(KeyPress("0", repeat = true)))
+        assertNull(key(KeyPress("0", modified = true)))
+    }
+
+    private fun solutionKey(key: String, layout: KeyboardLayout = KeyboardLayout.RIGHT_HANDED, repeat: Boolean = false) =
+        (WebKeys.pageKey(KeyPress(key, repeat = repeat), PlayMode.KEYBOARD, true, layout, onSolution = true) as? PageKey.Solution)?.key
+
+    @Test
+    fun `on the solution's board, the keys are the same in both layouts`() {
+        for (layout in KeyboardLayout.entries) {
+            for (next in listOf("ArrowRight", "d", "L", " ", "Enter")) assertEquals(SolutionKey.NEXT, solutionKey(next, layout), next)
+            for (prev in listOf("ArrowLeft", "A", "h")) assertEquals(SolutionKey.PREV, solutionKey(prev, layout), prev)
+            for (up in listOf("ArrowUp", "w", "K")) assertEquals(SolutionKey.SCROLL_UP, solutionKey(up, layout), up)
+            for (down in listOf("ArrowDown", "S", "j")) assertEquals(SolutionKey.SCROLL_DOWN, solutionKey(down, layout), down)
+            assertEquals(SolutionKey.RESTART, solutionKey("r", layout))
+        }
+    }
+
+    @Test
+    fun `on the solution's board, a held Space or Enter is one press and a held direction repeats`() {
+        assertNull(solutionKey(" ", repeat = true))
+        assertNull(solutionKey("Enter", repeat = true))
+        assertEquals(SolutionKey.NEXT, solutionKey("l", repeat = true))
+    }
+
+    @Test
+    fun `solution keys need the board and keyboard mode`() {
+        assertNull(WebKeys.pageKey(KeyPress("r"), PlayMode.KEYBOARD, true))
+        assertNull(WebKeys.pageKey(KeyPress("r"), PlayMode.MOUSE, true, onSolution = true))
     }
 }

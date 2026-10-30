@@ -16,6 +16,12 @@
   profile. The commands for this machine are in `CLAUDE.local.md` (`## Browser`); without them,
   give the URL and don't open it.
 
+## Screen readers
+
+- Frozen until volunteers who use a screen reader test it (GH-171): what's shipped stays, untested
+  beyond one sighted developer's VoiceOver runs. New work adds no screen-reader features and no
+  VoiceOver checklists; keys and focus are still checked, headless and by hand.
+
 ## Budget & compliance
 
 - Free tiers only, no paid services; analytics stay local/no-op and no personal data is collected

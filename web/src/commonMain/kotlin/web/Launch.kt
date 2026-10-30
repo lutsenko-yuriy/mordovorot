@@ -25,7 +25,7 @@ import viewmodel.buildGameViewModel
  *  [preferences], GH-139), then starts a [WebGame] on [scope].
  *  Every event gets `platform: web`, and all but `app_launched` get `input_method` from
  *  [pressedWith] (GH-171). Keyboard mode is out of reach on a [touch] screen, whatever is
- *  stored, and without [keyboardModeEnabled], the flag WU4 removes. */
+ *  stored. */
 fun startWebGame(
     board: BoardModel,
     saves: SaveRepository,
@@ -38,13 +38,12 @@ fun startWebGame(
     appVersion: String,
     host: Host,
     touch: Boolean,
-    keyboardModeEnabled: Boolean,
     pressedWith: PressedWith,
 ): WebGame {
     val platform = PlatformAnalyticsService(analytics, "web")
     val tileLabels = SessionTileLabels(TileLabelsPreference(preferences))
     val modePreference = PlayModePreference(preferences)
-    val controlsShown = keyboardModeEnabled && !touch
+    val controlsShown = !touch
     val startMode = if (controlsShown) modePreference.load() ?: PlayMode.DEFAULT else PlayMode.DEFAULT
     trackAppLaunched(platform, layout, appVersion, host, tileLabels.effectivePreference.wireName, startMode)
     val pressed = InputMethodAnalyticsService(platform) { pressedWith.inputMethod }

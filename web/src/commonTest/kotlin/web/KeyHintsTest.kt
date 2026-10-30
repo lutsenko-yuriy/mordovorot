@@ -21,10 +21,18 @@ class KeyHintsTest {
     }
 
     @Test
+    fun `the solution's hints are its keys, in the same form`() {
+        assertEquals(
+            listOf(KeyHint("← → A D H L", "prev/next"), KeyHint("Space Enter", "next"), KeyHint("R", "restart"), KeyHint("↑ ↓ W S K J", "scroll")),
+            KeyHints.SOLUTION,
+        )
+    }
+
+    @Test
     fun `the key list follows the layout, then names the toolbar, Read board and the solution keys`() {
         for (layout in KeyboardLayout.entries) {
             assertEquals(
-                KeyScheme.boardKeyLines(layout) + listOf("New 1 · Save 2 · Load 3 · Labels 4", "Give Up 5 · Controls 6", "0 Read board (screen reader)") + KeyScheme.SOLUTION_KEY_LINES,
+                KeyScheme.boardKeyLines(layout) + listOf("New 1 · Save 2 · Load 3 · Labels 4", "Give Up 5 · Controls 6", "0 Read board (screen reader)") + KeyScheme.SOLUTION_KEY_LINES + "Letter keys need a Latin keyboard layout",
                 KeyHints.keyList(layout),
             )
         }

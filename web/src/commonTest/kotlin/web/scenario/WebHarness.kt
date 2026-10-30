@@ -41,7 +41,6 @@ internal class WebHarness(
     private val appVersion: String = "9.9.9",
     private val host: Host = Host.LOCALHOST,
     private val touch: Boolean = false,
-    private val keyboardModeEnabled: Boolean = true,
 ) {
     val saves = BrowserSaveRepository(store)
     val preferences = BrowserPreferenceRepository(store)
@@ -61,8 +60,11 @@ internal class WebHarness(
     /** Every announcement so far (GH-166), one per announcing frame; [startOn] clears it. */
     val said: MutableList<String> get() = renderer.said
 
+    /** Every request to scroll the solution's steps, in lines (GH-171). */
+    val scrolled: List<Int> get() = renderer.scrolled
+
     fun start(): WebHarness {
-        game = startWebGame(board, saves, preferences, analytics, mordie, renderer, scope, layout, appVersion, host, touch, keyboardModeEnabled, pressedWith)
+        game = startWebGame(board, saves, preferences, analytics, mordie, renderer, scope, layout, appVersion, host, touch, pressedWith)
         return this
     }
 
@@ -103,6 +105,11 @@ internal class WebHarness(
 private class FakeWebRenderer : WebRenderer {
     val frames = mutableListOf<WebState>()
     val said = mutableListOf<String>()
+    val scrolled = mutableListOf<Int>()
+
+    override fun scrollSteps(lines: Int) {
+        scrolled += lines
+    }
 
     override fun render(state: WebState) {
         frames += state

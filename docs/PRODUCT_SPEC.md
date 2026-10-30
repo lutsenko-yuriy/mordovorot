@@ -269,12 +269,12 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 - **Running it:** the game is published at `https://lutsenko-yuriy.github.io/mordovorot/` (GH-111); for development,
   `./gradlew :web:serve -t` serves it on `http://localhost:8080`. Opening either address starts it. The tab title is `Mordovorot`, and the title appears nowhere else on the page.
   The terminal game is unchanged.
-- **Same game, mouse only:** the rules, board sizes 3-6, solvable new games, `Moves: N` and its
+- **Same game:** the rules, board sizes 3-6, solvable new games, `Moves: N` and its
   move rule (Feature 2), Save/Load (Feature 4), Mordie (Feature 8) and Give Up with its solution
-  screen (Feature 10) work as in the terminal game. There is no keyboard mode, no command-line flags and no Exit.
+  screen (Feature 10) work as in the terminal game. It starts with the mouse; keyboard mode is below. There are no command-line flags and no Exit.
 - **Dialogs from the keyboard (GH-163):** every dialog works without the mouse; the toolbar,
   the arrows and the solution screen's buttons are reached with Tab and pressed with Enter or
-  Space, but there are no shortcuts or keyboard play yet (GH-169, GH-171).
+  Space, in either mode.
   - **Focus on open:** the size picker on the current board's size, Save on its name field, Load
     and `Restore a saved game?` on the first save (Cancel when there are none), `Can't be solved`
     on `Repair & load`, Tile labels on the marked scheme (and on each row picked), Give Up on No.
@@ -285,7 +285,7 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
     opens); `Can't be solved` has no Cancel, and Escape does nothing there.
   - **Focus on close** goes back to the button that opened the dialog, however it closed; to the
     next dialog's default when one leads straight to another (Restore → size picker, Load → `Can't
-    be solved`); to `Next ▶` after Give Up → Yes; to the start of the page after a startup dialog.
+    be solved`); to `Next ▶` after Give Up → Yes (keyboard mode: the board); to the start of the page after a startup dialog.
   - Focus rings show only once a key has been pressed, so a dialog's default control isn't ringed
     for mouse players.
 - **Focus after a press (GH-164):** a pressed arrow, toolbar button or solution-screen button keeps
@@ -293,10 +293,48 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   goes on to the next thing that screen offers:
   - an arrow whose shift solved the board: `Mordie's solution` when shown, else `New`;
   - `Next ▶` at the last step: `◀ Prev`; `◀ Prev` at the first step, and `↻ Restart`: `Next ▶`;
-  - `Mordie's solution` after a win: `Next ▶`, as after Give Up → Yes;
+  - `Mordie's solution` after a win: `Next ▶`, as after Give Up → Yes (keyboard mode: the board);
   - anything else: the start of the page.
 
   A held Enter presses the focused button once, not once per auto-repeat.
+- **Keyboard mode (GH-171, the scheme of ADR-0003):** chosen in the Controls dialog and remembered
+  with the layout in `localStorage`; a first visit is mouse mode, right-handed. Where the main input
+  is touch, `[ Controls 6 ]` is hidden like the arrows and 6 does nothing, so the mode can't be
+  reached, whatever is stored.
+  - **Controls dialog** (`[ Controls 6 ]`, on its own row under the toolbar in both modes, or 6):
+    `Play with ○ Mouse ○ Keyboard`, `Keyboard keys ○ Right-handed ○ Left-handed`, the marked layout's
+    key list, ending with `Letter keys need a Latin keyboard layout`, `[ OK ] [ Cancel ]`. It opens on `Play with`'s marked option; Tab moves between the two
+    groups, OK and Cancel, and the arrows move a group's mark. OK applies both; Cancel or Escape
+    changes nothing.
+  - **Toolbar:** every button shows its digit: `[ New 1 ][ Save 2 ][ Load 3 ][ Labels 4 ]`,
+    `[ Give Up 5 ]` or `[ Mordie's solution 5 ]`, `[ Controls 6 ]`. The digits work wherever focus
+    is, outside dialogs. In mouse mode only 6 works, and only its button shows its digit.
+  - **Board:** one Tab stop, focused at page load in keyboard mode, on entering the mode and when a
+    dialog opened from it closes. While it has focus, right-handed: W/A/S/D move the selected tile,
+    wrapping; H/← L/→ shift its row, K/↑ J/↓ its column. Left-handed: H/J/K/L or the arrows move it;
+    A/D shift its row, W/S its column. Letters work in either case, and held keys repeat.
+  - **Selection:** a rounded rectangle around the selected row and one around its column, crossing at
+    the selected tile, which has a thicker ring; the arrows are hidden, their room kept. It stays put
+    after a shift, starts on row 1, column 1, survives a new game, a load, a size change (clamped) and
+    a mode switch, and goes once solved, when the select and shift keys go inert. A shift that solves
+    the board passes focus on as an arrow's would.
+  - **Mouse in keyboard mode:** drags and clicks work as usual. A press on a tile selects it and gives
+    the board focus, so after a drag the selection sits on the dragged line.
+  - **Key hints:** the keys above what they do, under the board, ordered by hand:
+    `W A S D` select, `← → H L` row, `↑ ↓ K J` column; left-handed `A D` row, `W S` column,
+    `←↑↓→ H J K L` select. The solution screen shows its own: `← → A D H L` prev/next, `Space Enter`
+    next, `R` restart, `↑ ↓ W S K J` scroll.
+  - **Solution screen:** Give Up → Yes and `Mordie's solution` put focus on the board, a Tab stop here
+    too; the keys of Feature 10 work while it has focus.
+  - **0** reads the board, as Read board does, during play, wherever focus is outside dialogs. It has
+    no button or hint; the key list names it. Without a screen reader it does nothing you can see or
+    hear.
+  - **What a screen reader hears:** the reader says the selected cell itself, in VoiceOver
+    `delta, column 4, row 2`, on a selection move and when the board takes focus; the page adds
+    nothing, so it isn't said twice. A shift, by key or drag, says what it says in mouse mode, then
+    the tile now under the selection: `Row 2 left, 5 moves. Now charlie`. The solution screen's board
+    is named after the current step, `Board, step 3 of 12: Column 3 up 2`, `Board, start, step 0 of
+    12`. Tested only by one sighted developer in VoiceOver, and frozen until volunteers try it (`docs/CONSTRAINTS.md`); NVDA and JAWS are untested, and `NVDA+Space` frees stuck keys.
 - **Screen reader announcements (GH-166):** a screen reader is told what just happened, politely
   (after what it's reading) and without moving focus. Always on; nothing shows on the page.
   - **A shift:** `Row 2 left`, `Column 4 up`; with the move count when it starts a new move
@@ -434,8 +472,8 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   publishes the new version; a failed build leaves the last good one up. GitHub may serve the
   previous version for up to ~10 minutes after that. An open tab keeps the version it loaded
   until it's reloaded; the footer's version shows which one is running.
-- **Analytics:** every event carries `platform: web` and `input_method: rich_ui`;
-  see `docs/ANALYTICS_EVENTS.md`.
+- **Analytics:** every event carries `platform: web` and `input_method`, following the actual input
+  in either mode: `keyboard` for key presses, `rich_ui` for mouse and touch; see `docs/ANALYTICS_EVENTS.md`.
 
 ### Feature 10 — Give Up and Mordie's solution (GH-126)
 Applies to terminal mouse mode, terminal keyboard mode and the web client.
@@ -464,7 +502,8 @@ Applies to terminal mouse mode, terminal keyboard mode and the web client.
     is highlighted: reverse video in the terminal, a coloured background on the web. On the web
     each shift slides one tile, as a player's shift does.
   - **Keyboard mode:** ←/→, A/D or H/L are Prev/Next, Space and Enter are Next too, R is
-    Restart, and ↑/↓, W/S or K/J scroll the steps; side hints spell these out (GH-170).
+    Restart, and ↑/↓, W/S or K/J scroll the steps, in both layouts; side hints (terminal, GH-170) or
+    hints under the board (web, while the board has focus, GH-171) spell these out.
   - **Toolbar:** New, Save, Load (and Exit in the terminal) work as before. New and Load leave
     the screen. Saving there saves the solution screen (Feature 4). Switching input mode in the
     terminal keeps the screen and the replay's place.

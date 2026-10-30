@@ -79,6 +79,19 @@ class AnnouncementsTest {
     }
 
     @Test
+    fun `the solution's board is named after its step`() {
+        val steps = listOf(SolutionStep(isRow = false, index = 2, forward = false, count = 2), SolutionStep(isRow = true, index = 0, forward = true, count = 1))
+        assertEquals("Board, start, step 0 of 2", Announcements.boardStep(steps, null))
+        assertEquals("Board, step 1 of 2: Column 3 up 2", Announcements.boardStep(steps, 0))
+    }
+
+    @Test
+    fun `a keyboard shift's words end with the tile now under the selection, as said`() {
+        assertEquals("Row 2 left, 5 moves. Now charlie", Announcements.withNow("Row 2 left, 5 moves", "C"))
+        assertEquals("Row 2 left. Now 7", Announcements.withNow("Row 2 left", "7"))
+    }
+
+    @Test
     fun `a label is spoken letter by letter in the phonetic alphabet, numbers as they are`() {
         assertEquals("alpha", Announcements.spoken("A"))
         assertEquals("bravo charlie", Announcements.spoken("BC"))

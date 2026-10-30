@@ -223,7 +223,7 @@ class WebGame internal constructor(
         saying = if (viewModel.isSolved()) {
             analytics.track("screen_congratulations")
             Announcements.solved(moves)
-        } else words(moves.takeIf { it != before })
+        } else keys.withTileNow(words(moves.takeIf { it != before }))
         render(slide)
     }
 
@@ -248,32 +248,46 @@ class WebGame internal constructor(
         }
     }
 
+    /** 0 (GH-171): as the Read board button. */
+    internal fun readBoard() {
+        saying = frame(null, null).boardWords
+        render()
+    }
+
+    internal fun scrollSteps(lines: Int) = renderer.scrollSteps(lines)
+
     internal fun render(slide: LineOffset? = null, focus: Focus? = null) {
-        val solved = viewModel.isSolved()
-        renderer.render(
-            WebState(
-                side = viewModel.squareSide(),
-                tiles = viewModel.boardState().map { it + 1 },
-                moves = viewModel.moveCount(),
-                mordie = if (solved) viewModel.mordieEnding() ?: SOLVED_TITLE else viewModel.mordieLine(),
-                solved = solved,
-                status = status,
-                dialog = modal.shown,
-                drag = drag?.offset,
-                giveUp = viewModel.giveUpButton(),
-                solution = viewModel.solution(),
-                slide = slide,
-                // The Labels dialog's marked scheme, previewed until OK keeps it or Cancel drops it.
-                labels = (modal.shown as? WebDialog.Labels)?.selected ?: viewModel.tileLabels(),
-                focus = focus,
-                announcement = saying,
-                mode = controls.mode,
-                controlsShown = controlsShown,
-                selection = keys.shownSelection(),
-                hints = KeyHints.board(controls.layout).takeIf { controls.mode == PlayMode.KEYBOARD && viewModel.solution() == null },
-            ),
-        )
+        renderer.render(frame(slide, focus))
         saying = null
+    }
+
+    private fun frame(slide: LineOffset?, focus: Focus?): WebState {
+        val solved = viewModel.isSolved()
+        return WebState(
+            side = viewModel.squareSide(),
+            tiles = viewModel.boardState().map { it + 1 },
+            moves = viewModel.moveCount(),
+            mordie = if (solved) viewModel.mordieEnding() ?: SOLVED_TITLE else viewModel.mordieLine(),
+            solved = solved,
+            status = status,
+            dialog = modal.shown,
+            drag = drag?.offset,
+            giveUp = viewModel.giveUpButton(),
+            solution = viewModel.solution(),
+            slide = slide,
+            // The Labels dialog's marked scheme, previewed until OK keeps it or Cancel drops it.
+            labels = (modal.shown as? WebDialog.Labels)?.selected ?: viewModel.tileLabels(),
+            focus = focus,
+            announcement = saying,
+            mode = controls.mode,
+            controlsShown = controlsShown,
+            selection = keys.shownSelection(),
+            hints = when {
+                controls.mode == PlayMode.MOUSE -> null
+                viewModel.solution() != null -> KeyHints.SOLUTION
+                else -> KeyHints.board(controls.layout)
+            },
+        )
     }
 
     private companion object {

@@ -87,7 +87,7 @@ function grid(doc) {
     const button = doc.querySelector('[data-focus="read-board"]');
     const read = `read-board ${button ? (button.disabled ? "disabled" : "enabled") : "-"}`;
     const table = doc.querySelector('[role="table"], [role="grid"]');
-    if (!table) return `grid - | ${read}`;
+    if (!table) return `grid -${keptBoard(doc)} | ${read}`;
     const cell = '[role="cell"], [role="gridcell"]';
     const rows = table.querySelectorAll('[role="row"]');
     const cells = table.querySelectorAll(cell);
@@ -97,7 +97,7 @@ function grid(doc) {
     const home = [...cells].filter(c => heard(c).endsWith("in place")).length;
     const first = [...(rows[0]?.querySelectorAll(cell) || [])].map(heard).join(" / ");
     return `grid ${table.getAttribute("role")} "${table.getAttribute("aria-label")}" rows ${rows.length} cells ${cells.length} `
-        + `unread-copies ${unread.length} in-place ${home} row1 "${first}"${active(doc, table, rows)} | ${read}`;
+        + `unread-copies ${unread.length} in-place ${home} row1 "${first}"${active(doc, table, rows)}${keptBoard(doc)} | ${read}`;
 }
 
 /** The grid's active descendant by row and column, and the outlined row and column to compare. */
@@ -109,11 +109,20 @@ function active(doc, table, rows) {
     const col = cell ? [...cell.parentElement.children].indexOf(cell) : -1;
     const shown = doc.querySelector(".selection")?.getAttribute("style") || "";
     const outlined = /row: (\d+); --selected-col: (\d+)/.exec(shown)?.slice(1).join(",") || "-";
-    // Whether the frame kept the board's element: a selection move must, for VoiceOver (GH-171).
+    return ` active ${row},${col} outlined ${outlined}`;
+}
+
+/** On keyboard mode's board, whether the frame kept its element and the active cell's: a selection
+ *  move, a shift and a replay step must, for VoiceOver (GH-171). */
+function keptBoard(doc) {
+    const board = doc.querySelector(".tiles[tabindex]");
+    if (!board) return "";
     const win = doc.defaultView;
-    const kept = win.lastBoard === table ? "kept" : "new";
-    win.lastBoard = table;
-    return ` active ${row},${col} outlined ${outlined} ${kept}`;
+    const cell = doc.getElementById(board.getAttribute("aria-activedescendant")) || board.querySelector(".tile");
+    const kept = win.lastBoard === board && win.lastCells?.includes(cell) ? "kept" : "new";
+    win.lastBoard = board;
+    win.lastCells = [...board.querySelectorAll(".tile")];
+    return ` ${kept}`;
 }
 
 /** Its data-focus key (or tag and text), role, accessible name and checked state. */
