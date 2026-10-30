@@ -7,7 +7,7 @@ import viewmodel.SolutionKey
 
 /**
  * The terminal's side of the shared [KeyScheme]: it turns a [TerminalEvent] into its keys, and holds
- * the terminal's hint texts, so the keys and what the screen says about them stay in one place.
+ * the terminal's hint texts.
  */
 internal object BoardKeys {
 
