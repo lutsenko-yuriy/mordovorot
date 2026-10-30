@@ -174,7 +174,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                          # `build.yml`'s `deploy` job publishes it to GitHub Pages (GH-111)
 ├── src/commonMain/kotlin/web/
 │   ├── WebGame.kt       # The browser's View: page intents (onArrow/onDrag*/onNew/onSave/onLoad/dialog answers,
-│   │                    # GH-139's onLabels*, GH-163's onEscape, GH-171's onKey) ->
+│   │                    # GH-139's onLabels*, GH-163's onEscape, GH-171's onKey and onTilePressed) ->
 │   │                    # GameViewModel, a WebState to the WebRenderer after every change; drains
 │   │                    # uiRequests; tracks the view-layer analytics (screen views, dialog_cancelled);
 │   │                    # sets each frame's announcement (GH-166)
@@ -184,10 +184,11 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │                    # like the terminal's ControlsDialogController
 │   ├── PlayMode.kt / PlayModePreference.kt # Mouse or keyboard, kept under `input_mode` (GH-171)
 │   ├── PressedWith.kt   # The session's last input, read per event as input_method (GH-171)
-│   ├── WebKeys.kt       # A key outside a dialog to a PageKey: ToolbarButton's digits, or a shared
-│   │                    # BoardKey while the board has focus (GH-171)
+│   ├── WebKeys.kt       # A key outside a dialog to a PageKey: ToolbarButton's digits, 0, or a shared
+│   │                    # BoardKey or SolutionKey while the board has focus (GH-171)
 │   ├── WebKeyPlay.kt    # WebGame's keys outside dialogs, tile presses and the TileSelection (GH-171)
-│   ├── KeyHints.kt      # The web's Controls key list and the hints under the board (GH-171)
+│   ├── KeyHints.kt      # The web's Controls key list and the hints under the board, in play and on
+│   │                    # the solution screen (GH-171)
 │   ├── Announcements.kt # GH-166: what a screen reader hears - shifts, the win, new game, load,
 │   │                    # solution steps - and the arrows' accessible names; Read board's
 │   │                    # row-by-row words, letters in the phonetic alphabet (GH-167)
@@ -234,13 +235,17 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # scroll across frames, the current step in view (GH-126);
 │                                       # the board sits in `.stage`, the box the tall layout's
 │                                       # tiles are sized from (GH-147)
-├── src/jsMain/kotlin/web/DomBoard.kt   # The board: tiles, arrows and pointer drags -> WebGame, split from DomRenderer (GH-171)
+├── src/jsMain/kotlin/web/DomBoard.kt   # The board: tiles, arrows and pointer drags -> WebGame, split from DomRenderer (GH-171).
+│                                       # Its cells are kept and rewritten across a slide; in keyboard mode, where
+│                                       # WebState.keepsBoardFrom says, across a frame too, so a screen reader hears
+│                                       # the live region rather than a refocused board
 ├── src/jsMain/kotlin/web/DomBoardGrid.kt # GH-167: during play, the tiles as a table for screen
 │                                       # readers - a row element per board row, each cell heard as
 │                                       # said (`delta, in place`), a wrapped copy aria-hidden - and the hidden Read board
 │                                       # button, which says its words through DomAnnouncer. In keyboard
 │                                       # mode a grid, one Tab stop, the selected cell its
-│                                       # aria-activedescendant; the selection's outlines and the key hints (GH-171)
+│                                       # aria-activedescendant; on the solution screen a named group, one Tab stop;
+│                                       # the selection's outlines and the key hints (GH-171)
 ├── src/jsMain/kotlin/web/DomTextSize.kt # GH-168: at load, reads the browser's font size and (iPhone/iPad)
 │                                       # Dynamic Type from a removed `-apple-system-body` probe; sets
 │                                       # `--text-scale`, and the root font size where the default isn't it
