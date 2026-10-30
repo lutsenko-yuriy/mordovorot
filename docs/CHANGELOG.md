@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.27.1] — 2026-10-30 (PR #196 merged)
+
+### Changed
+- [wip] (PR #196) GH-171 (WU1/4): the terminal's keyboard key logic moves to shared code (`Direction`, `TileSelection`, the new `KeyScheme`), so the web can use it from WU2. The terminal behaves the same.
+
 ## [0.27.0] — 2026-10-30 (PR #194 merged)
 
 ### Added

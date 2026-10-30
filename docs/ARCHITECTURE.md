@@ -123,6 +123,13 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                             # NUMBERS is the default (GH-139)
 │       ├── TileLabelsPreference.kt # TileLabels over a PreferenceRepository under `tile_labels`;
 │       │                             # a failed read is no preference, a failed write is silent (GH-139)
+│       ├── Direction.kt           # UP/DOWN/LEFT/RIGHT, what a key can mean (GH-18, shared by GH-171)
+│       ├── TileSelection.kt       # Keyboard mode's selected tile (GH-170, replaced GH-101's line
+│       │                             # selection): (row, col), move with wraparound, clampedTo(side)
+│       ├── KeyScheme.kt           # Keyboard mode's keys (ADR-0003) per KeyboardLayout: boardKey gives
+│       │                             # a BoardKey (select / shift; a left-handed shift has no ShiftKey),
+│       │                             # solutionKey a SolutionKey, boardKeyLines the Controls key list's
+│       │                             # first lines. The clients adapt their own events to it (GH-171)
 │       ├── KeyboardLayout.kt      # RIGHT_HANDED (default) / LEFT_HANDED: wireName (the preference
 │       │                             # only, never analytics) and title (GH-170)
 │       ├── KeyboardLayoutPreference.kt # KeyboardLayout under `keyboard_layout`, like
@@ -357,15 +364,12 @@ src/main/kotlin/                # the terminal app (the root project)
         ├── StepListWindow.kt # Which steps of the solution screen's list show: follows the
         │                      # current step, scrolled by the wheel, W/S or K/J (GH-126)
         ├── WordWrap.kt      # Shared word wrap for dialogs and the Mordie line (GH-83)
-        ├── TileSelection.kt # Pure keyboard tile selection (GH-170, replaced GH-101's line
-        │                      # selection): TileSelection(row, col) - move with wraparound,
-        │                      # shiftTarget(direction) for its row/column, clampedTo(side).
-        │                      # Plus KeyboardSelection, its session-lifetime holder (made by
-        │                      # buildGameSession, so it survives mode switches)
-        ├── BoardKeys.kt     # Keyboard mode's key scheme (ADR-0003) per KeyboardLayout: the board
-        │                      # keys (select / shift; a left-handed shift has no ShiftKey), the
-        │                      # solution screen's keys, every hint text and the Controls
-        │                      # dialog's key list (GH-170)
+        ├── KeyboardSelection.kt # KeyboardSelection, the shared TileSelection's session-lifetime
+        │                      # holder (made by buildGameSession, so it survives mode switches),
+        │                      # and shiftTarget(direction) for its row/column (GH-170, GH-171)
+        ├── BoardKeys.kt     # The terminal's side of the shared KeyScheme: TerminalEvent to its
+        │                      # keys, every hint text and the Controls dialog's key list
+        │                      # (GH-170, GH-171)
         ├── Dialog.kt / DialogLayout.kt     # One model + one geometry class for all four
         │                                     # modal dialogs (Save/Load/Exit/Size (GH-44, a
         │                                     # buttons-only kind, so DialogLayout/DialogFocus

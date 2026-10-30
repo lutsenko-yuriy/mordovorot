@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-_(nothing in progress)_
+- GH-171: Web: keyboard play (WU1/4 merged; WU2-4 pending)
 
 ---
 

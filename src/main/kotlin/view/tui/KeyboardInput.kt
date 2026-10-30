@@ -1,6 +1,7 @@
 package view.tui
 
 import board_model.BoardSize
+import viewmodel.BoardKey
 import viewmodel.GiveUpButton
 import viewmodel.SessionKeyboardLayout
 
