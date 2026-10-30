@@ -7,7 +7,7 @@ import org.w3c.dom.HTMLElement
 import web.drag.LineOffset
 
 /** Draws each [WebState] into [root] and turns its clicks into [game] intents, the board's and drags to [DomBoard] (GH-110).
- *  Plain DOM, rebuilt every frame, with the look in the sheets `index.html` links. */
+ *  Plain DOM, rebuilt every frame, but for keyboard mode's board where [WebState.keepsBoardFrom] says so (GH-171), with the look in the sheets `index.html` links. */
 class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnouncer?) : WebRenderer {
 
     /** Set once the game is built; only the page's events read it, and none can come before then. */

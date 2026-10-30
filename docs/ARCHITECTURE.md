@@ -197,7 +197,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │                    # the replay shift to slide (GH-126); the tile labels and tileTexts (GH-139);
 │   │                    # LabelOption.available and Labels.message (GH-160); the one-time focus (GH-163)
 │   │                    # and announcement (GH-166); which tiles are home and Read board's words (GH-167)
-│   ├── WebRenderer.kt   # fun interface render(WebState) - the DOM on the page, a recorder in tests
+│   ├── WebRenderer.kt   # fun interface render(WebState), and scrollSteps (GH-171) - the DOM on the page, a recorder in tests
 │   ├── WebRequestRouter.kt # Answers each UiRequest (exhaustive `when`, like UiRequestRouter)
 │   ├── WebLabelsDialog.kt # The Tile labels dialog's flows over WebGame's modal (GH-160), like
 │   │                    # the terminal's LabelsDialogController
@@ -711,11 +711,11 @@ functions with fakes.
 
 The browser's composition root is `web`'s `Main.kt` (GH-110): it builds the page's
 collaborators and hands them to `startWebGame` (`Launch.kt`), which decorates analytics
-(`platform: web`, then `input_method: rich_ui` for everything but `app_launched`), calls
+(`platform: web`, then `input_method` from the last press for everything but `app_launched`), calls
 `buildGameViewModel` with no startup shortcuts and no Exit hook, and starts a `WebGame`.
 `Main.kt` also passes the stamped `BuildInfo.VERSION` and `hostOf(window.location.hostname)` for
 `app_launched` (GH-111), and appends the footer to `<body>` once, outside `#app`, which
-`DomRenderer` rebuilds every frame.
+`DomRenderer` rebuilds (all of it every frame, but for keyboard mode's board, GH-171).
 The web scenario tests go through the same `startWebGame` with fakes.
 
 ### Board-size surfaces (GH-44)
@@ -826,7 +826,7 @@ ring and `inert` after each; `keys_check.sh` diffs the GH-163 dialog flows again
 `tests/keys_expected.txt`, run by the agent rather than CI (it needs Chrome and a bundle).
 `--text-size=<percent>` (GH-168) sets the throwaway profile's font size for both scripts, and
 `fit=scroll` checks a page allowed to scroll at larger text. `input=keyboard` and `layout=left` (GH-171) seed
-the preferences. Keyboard mode is on only on localhost until GH-171's last WU, so the harness and the dev server reach it and the public site doesn't.
+the preferences.
 
 ## Dependencies
 

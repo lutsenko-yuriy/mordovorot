@@ -39,8 +39,9 @@ internal class WebKeyPlay(
 
     /** In mouse mode a press on a tile only starts a drag; on the solution screen there's no selection to move. */
     fun onTilePressed(row: Int, col: Int) {
-        if (!keyboardMode || !game.idle) return
-        if (game.playable) selection = TileSelection(row, col) else if (viewModel.solution() == null) return
+        val onSolution = game.idle && viewModel.solution() != null
+        if (!keyboardMode || !(game.playable || onSolution)) return
+        if (game.playable) selection = TileSelection(row, col)
         game.render(focus = Focus.Board)
     }
 

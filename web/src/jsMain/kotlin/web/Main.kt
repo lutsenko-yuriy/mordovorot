@@ -18,7 +18,7 @@ fun main() {
     applySystemTextSize(document, window)
     val root = document.getElementById("app") as? HTMLElement ?: return
     stopPinchZoom(document, window.navigator)
-    // Outside #app, which DomRenderer rebuilds every frame: the footer never changes.
+    // Outside #app, which DomRenderer rebuilds: the footer never changes.
     document.body?.append(footerElement(footer(BuildInfo.VERSION)))
     val renderer = DomRenderer(root, document.getElementById("announcer")?.let(::DomAnnouncer))
     val pressedWith = PressedWith()
