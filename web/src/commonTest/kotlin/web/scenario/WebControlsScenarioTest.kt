@@ -161,16 +161,4 @@ class WebControlsScenarioTest {
         assertEquals(PlayMode.MOUSE, page.state.mode)
         assertEquals("keyboard", page.preferences.get("input_mode"))
     }
-
-    /** WU4 deletes this with the flag (D3). */
-    @Test
-    fun `with the flag off Controls is hidden, 6 is ignored and the mode is mouse`() = webTest {
-        val page = WebHarness(backgroundScope, keyboardModeEnabled = false).remembering().startOn()
-
-        assertEquals(PlayMode.MOUSE, page.state.mode)
-        assertFalse(page.state.controlsShown)
-        assertFalse(page.press("6"))
-        assertNull(page.state.dialog)
-        assertEquals("keyboard", page.preferences.get("input_mode"))
-    }
 }

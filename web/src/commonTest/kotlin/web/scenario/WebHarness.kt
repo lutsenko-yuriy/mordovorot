@@ -41,7 +41,6 @@ internal class WebHarness(
     private val appVersion: String = "9.9.9",
     private val host: Host = Host.LOCALHOST,
     private val touch: Boolean = false,
-    private val keyboardModeEnabled: Boolean = true,
 ) {
     val saves = BrowserSaveRepository(store)
     val preferences = BrowserPreferenceRepository(store)
@@ -62,7 +61,7 @@ internal class WebHarness(
     val said: MutableList<String> get() = renderer.said
 
     fun start(): WebHarness {
-        game = startWebGame(board, saves, preferences, analytics, mordie, renderer, scope, layout, appVersion, host, touch, keyboardModeEnabled, pressedWith)
+        game = startWebGame(board, saves, preferences, analytics, mordie, renderer, scope, layout, appVersion, host, touch, pressedWith)
         return this
     }
 
