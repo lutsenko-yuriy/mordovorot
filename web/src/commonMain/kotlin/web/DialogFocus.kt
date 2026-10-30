@@ -1,5 +1,6 @@
 package web
 
+import viewmodel.KeyboardLayout
 import viewmodel.TileLabels
 
 /** A control the page focuses once a frame is drawn (GH-163), or keeps focused across one (GH-164);
@@ -21,6 +22,13 @@ sealed class Focus(val key: String) {
     data object SaveButton : Focus("save")
     data object LoadButton : Focus("load")
     data object LabelsButton : Focus("labels")
+    data object ControlsButton : Focus("controls")
+    /** The board, one Tab stop in keyboard mode (GH-171). */
+    data object Board : Focus("board")
+    data class ModeOption(val mode: PlayMode) : Focus("mode-${mode.wireName}")
+    data class LayoutOption(val layout: KeyboardLayout) : Focus("layout-${layout.wireName}")
+    /** Back on the control a digit was pressed on, whichever it was (GH-171), or what [fallbackFocus] names. */
+    data class Restore(val control: String) : Focus(control)
     /** Give Up, or Mordie's solution after a win. */
     data object GiveUpRow : Focus("give-up")
     data object ReplayNext : Focus("replay-next")
@@ -38,6 +46,7 @@ fun defaultFocus(dialog: WebDialog): Focus = when (dialog) {
     is WebDialog.Unsolvable -> Focus.Repair
     is WebDialog.Labels -> Focus.Label(dialog.selected)
     WebDialog.GiveUp -> Focus.No
+    is WebDialog.Controls -> Focus.ModeOption(dialog.mode)
 }
 
 /** The dialog's title, which also names it for screen readers. */
@@ -48,4 +57,5 @@ val WebDialog.title: String get() = when (this) {
     is WebDialog.Unsolvable -> "Can't be solved"
     is WebDialog.Labels -> "Tile labels"
     WebDialog.GiveUp -> "Give up and see Mordie's solution?"
+    is WebDialog.Controls -> "Controls"
 }

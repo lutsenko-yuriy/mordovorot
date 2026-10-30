@@ -173,11 +173,18 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                          # `build.yml`'s `deploy` job publishes it to GitHub Pages (GH-111)
 ├── src/commonMain/kotlin/web/
 │   ├── WebGame.kt       # The browser's View: page intents (onArrow/onDrag*/onNew/onSave/onLoad/dialog answers,
-│   │                    # GH-126's onGiveUp/onMordiesSolution/onReplay*, GH-139's onLabels*, GH-163's onEscape) ->
+│   │                    # GH-139's onLabels*, GH-163's onEscape, GH-171's onKey) ->
 │   │                    # GameViewModel, a WebState to the WebRenderer after every change; drains
 │   │                    # uiRequests; tracks the view-layer analytics (screen views, dialog_cancelled);
 │   │                    # sets each frame's announcement (GH-166)
 │   ├── WebDialogFlows.kt # WebGame's Save, Load, size and can't-be-solved dialogs over its modal (GH-166)
+│   ├── WebSolutionFlows.kt # WebGame's Give Up and the solution screen's replay (GH-126, split out in GH-171)
+│   ├── WebControlsDialog.kt # The Controls dialog's flow over WebGame's modal and the session's mode (GH-171),
+│   │                    # like the terminal's ControlsDialogController
+│   ├── PlayMode.kt / PlayModePreference.kt # Mouse or keyboard, kept under `input_mode` (GH-171)
+│   ├── PressedWith.kt   # The session's last input, read per event as input_method (GH-171)
+│   ├── WebKeys.kt       # A key outside a dialog to a PageKey: ToolbarButton's digits (GH-171)
+│   ├── KeyHints.kt      # The web's Controls key list (GH-171)
 │   ├── Announcements.kt # GH-166: what a screen reader hears - shifts, the win, new game, load,
 │   │                    # solution steps - and the arrows' accessible names; Read board's
 │   │                    # row-by-row words, letters in the phonetic alphabet (GH-167)
@@ -238,6 +245,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # open dialog, the page behind it `inert`, applies WebState.focus;
                                        # keeps the focused control across redraws, else fallbackFocus,
                                        # and drops held Enter repeats (GH-164)
+├── src/jsMain/kotlin/web/DomPlayKeys.kt # GH-171: keys outside dialogs -> WebGame.onKey, and PressedWith from
+│                                       # every keydown and pointerdown, in the capture phase
 ├── src/jsMain/kotlin/web/DomSolution.kt # The step list, Prev/Next/Restart and the Give Up row (GH-126)
 ├── src/jsMain/kotlin/web/DomAnnouncer.kt # GH-166: says WebState.announcement through #announcer,
 │                                       # emptied then refilled after 100 ms so a repeat is re-read
@@ -803,7 +812,8 @@ game looks the same; its compare logic, `styles_diff.py`, is tested in `tests.ym
 ring and `inert` after each; `keys_check.sh` diffs the GH-163 dialog flows against
 `tests/keys_expected.txt`, run by the agent rather than CI (it needs Chrome and a bundle).
 `--text-size=<percent>` (GH-168) sets the throwaway profile's font size for both scripts, and
-`fit=scroll` checks a page allowed to scroll at larger text.
+`fit=scroll` checks a page allowed to scroll at larger text. `input=keyboard` and `layout=left` (GH-171) seed
+the preferences. Keyboard mode is on only on localhost until GH-171's last WU, so the harness and the dev server reach it and the public site doesn't.
 
 ## Dependencies
 

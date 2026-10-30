@@ -25,6 +25,11 @@ class TouchStylesTest {
     }
 
     @Test
+    fun `touch screens hide the Controls row`() {
+        assertTrue(Regex("""\.controls-row \{\s*display: none;""").containsMatchIn(touch), touch)
+    }
+
+    @Test
     fun `touch screens give the arrows' room to the tiles`() {
         assertTrue(Regex("""--band: [0-9.]+;""").containsMatchIn(touch), touch)
         assertTrue(Regex("""--lead: 0px;""").containsMatchIn(touch), touch)

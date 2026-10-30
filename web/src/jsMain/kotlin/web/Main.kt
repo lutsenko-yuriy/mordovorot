@@ -21,6 +21,8 @@ fun main() {
     // Outside #app, which DomRenderer rebuilds every frame: the footer never changes.
     document.body?.append(footerElement(footer(BuildInfo.VERSION)))
     val renderer = DomRenderer(root, document.getElementById("announcer")?.let(::DomAnnouncer))
+    val pressedWith = PressedWith()
+    val host = hostOf(window.location.hostname)
     val game = startWebGame(
         BoardImpl(),
         BrowserSaveRepository(LocalStorageStore()),
@@ -31,10 +33,15 @@ fun main() {
         MainScope(),
         layoutOf(window.innerWidth, window.innerHeight),
         BuildInfo.VERSION,
-        hostOf(window.location.hostname),
+        host,
+        touch = window.matchMedia("(pointer: coarse)").matches,
+        // Until GH-171 is finished: not on the public site, where every merge goes live.
+        keyboardModeEnabled = host == Host.LOCALHOST,
+        pressedWith,
     )
     renderer.game = game
     listenForKeys(root) { game }
+    listenForPlayKeys(root, pressedWith) { game }
     // The browser's own "Leave site?" prompt, only while some progress isn't in a save.
     window.addEventListener("beforeunload", { event ->
         if (game.hasUnsavedProgress()) {

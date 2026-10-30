@@ -1,34 +1,108 @@
 package web.scenario
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertIs
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import mordie.SearchProgress
+import mordie.SolutionMove
+import viewmodel.GiveUpButton
+import web.Arrow
+import web.Focus
+import web.ToolbarButton
+import web.WebDialog
 
 /** GH-171: playing from the keyboard - the digit toolbar, the selected tile, its shifts in both
  *  layouts, focus and the key hints. The grid's markup is checked by the harness (`keys_check.sh`).
- *  Stubs until WU2 (digits) and WU3 (the board) make them green. */
+ *  The board's are stubs until WU3 makes them green. */
 class WebKeyboardPlayScenarioTest {
 
-    @Test
-    fun `keyboard mode shows the digit toolbar and the Controls row`() {
-        // TODO: keyboard mode
-        // TODO: labels are `New 1`, `Save 2`, `Load 3`, `Labels 4`, `Give Up 5`, `Controls 6`
+    /** Mordie finds a solution, then five shifts reveal it, so Give Up is live. */
+    private fun WebHarness.revealGiveUp() {
+        mordieSearches.latest.progress = SearchProgress(1, found = true, elapsedMs = 0, solution = listOf(SolutionMove(isRow = true, index = 0, amount = 1)))
+        repeat(5) { game.onArrow(Arrow.UP, 3) }
     }
 
     @Test
-    fun `digits open the toolbar's dialogs wherever focus is`() {
-        // TODO: press each of 1 to 6 with focus off the board
-        // TODO: each opens its dialog (5 once Give Up is enabled)
+    fun `keyboard mode shows the digit toolbar and the Controls row`() = webTest {
+        val page = WebHarness(backgroundScope).remembering().startOn()
+
+        assertEquals(listOf(1, 2, 3, 4, 5, 6), ToolbarButton.entries.map { page.state.digitOf(it) })
+        assertTrue(page.state.controlsShown)
     }
 
     @Test
-    fun `a dialog opened by a digit returns focus where it was`() {
-        // TODO: press 2 from the board, Cancel - focus on the board
-        // TODO: press 2 from `Load`, Cancel - focus on `Load`
+    fun `digits open the toolbar's dialogs wherever focus is`() = webTest {
+        val page = WebHarness(backgroundScope).remembering().startOn()
+        page.revealGiveUp()
+        val dialogs = listOf<Pair<String, (WebDialog?) -> Boolean>>(
+            "1" to { it is WebDialog.Size },
+            "2" to { it is WebDialog.Save },
+            "3" to { it is WebDialog.Load },
+            "4" to { it is WebDialog.Labels },
+            "5" to { it == WebDialog.GiveUp },
+            "6" to { it is WebDialog.Controls },
+        )
+        for ((digit, opened) in dialogs) {
+            assertTrue(page.press(digit, from = Focus.LoadButton), digit)
+            assertTrue(opened(page.state.dialog), digit)
+            page.game.onEscape()
+            assertNull(page.state.dialog)
+        }
     }
 
     @Test
-    fun `digits typed in the Save dialog go into the name field`() {
-        // TODO: open Save
-        // TODO: press 3 - no Load dialog, the game didn't take the key
+    fun `5 does nothing while Give Up is dimmed`() = webTest {
+        val page = WebHarness(backgroundScope).remembering().startOn()
+        assertEquals(GiveUpButton.DIMMED, page.state.giveUp)
+
+        page.press("5")
+
+        assertNull(page.state.dialog)
+    }
+
+    @Test
+    fun `5 opens Mordie's solution after a win`() = webTest {
+        val page = WebHarness(backgroundScope).remembering().startOn()
+        page.revealGiveUp()
+        // Undoes the five shifts of column 3, then the row that solves it.
+        repeat(5) { page.game.onArrow(Arrow.DOWN, 3) }
+        page.game.onArrow(Arrow.LEFT, 0)
+        assertEquals(GiveUpButton.MORDIES_SOLUTION, page.state.giveUp)
+
+        page.press("5")
+
+        assertNotNull(page.state.solution)
+    }
+
+    @Test
+    fun `a dialog opened by a digit returns focus where it was`() = webTest {
+        val page = WebHarness(backgroundScope).remembering().startOn()
+
+        page.press("2", from = Focus.Board)
+        page.game.onSaveAnswered(null)
+        assertEquals(Focus.Board, page.state.focus)
+
+        page.press("2", from = Focus.LoadButton)
+        page.game.onSaveAnswered(null)
+        assertEquals(Focus.Restore(Focus.LoadButton.key), page.state.focus)
+
+        page.press("2")
+        page.game.onSaveAnswered(null)
+        assertEquals(Focus.PageStart, page.state.focus)
+    }
+
+    @Test
+    fun `digits typed in the Save dialog go into the name field`() = webTest {
+        val page = WebHarness(backgroundScope).remembering().startOn()
+        page.press("2")
+
+        assertFalse(page.press("3"))
+
+        assertIs<WebDialog.Save>(page.state.dialog)
     }
 
     @Test
@@ -70,9 +144,15 @@ class WebKeyboardPlayScenarioTest {
     }
 
     @Test
-    fun `keys with Ctrl, Alt or Meta, and Escape with no dialog, do nothing`() {
-        // TODO: Ctrl+S, Meta+1 - not taken
-        // TODO: Escape - nothing changes
+    fun `keys with Ctrl, Alt or Meta, and Escape with no dialog, do nothing`() = webTest {
+        val page = WebHarness(backgroundScope).remembering().startOn()
+        val before = page.frames.size
+
+        assertFalse(page.press("s", modified = true))
+        assertFalse(page.press("1", modified = true))
+        assertFalse(page.press("Escape"))
+
+        assertEquals(before, page.frames.size)
     }
 
     @Test

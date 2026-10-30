@@ -37,7 +37,7 @@ class WebAnalyticsScenarioTest {
         ).start().props("app_launched").single()
 
         fun expected(layout: String) = mapOf<String, Any?>(
-            "mode" to "rich_ui", "layout" to layout, "platform" to "web", "app_version" to "9.9.9", "host" to "localhost",
+            "mode" to "mouse", "layout" to layout, "platform" to "web", "app_version" to "9.9.9", "host" to "localhost",
             "tile_labels" to "numbers",
         )
         assertEquals(expected("wide"), launched(1200, 800))

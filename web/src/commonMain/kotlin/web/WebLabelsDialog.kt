@@ -12,9 +12,9 @@ internal class WebLabelsDialog(
     private val ask: suspend (WebDialog.Labels) -> TileLabels?,
 ) {
 
-    /** `[ Labels ]`: OK hands the marked scheme to the viewModel. */
-    suspend fun fromToolbar() {
-        viewModel.tileLabelsDialogOpened("toolbar")
+    /** `[ Labels ]`, or 4 with [openedFrom] `shortcut`: OK hands the marked scheme to the viewModel. */
+    suspend fun fromToolbar(openedFrom: String) {
+        viewModel.tileLabelsDialogOpened(openedFrom)
         choose()?.let(viewModel::changeTileLabels)
     }
 

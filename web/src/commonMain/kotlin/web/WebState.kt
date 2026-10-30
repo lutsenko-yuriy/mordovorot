@@ -1,6 +1,7 @@
 package web
 
 import viewmodel.GiveUpButton
+import viewmodel.KeyboardLayout
 import viewmodel.SolutionState
 import viewmodel.TileLabels
 import web.drag.LineOffset
@@ -31,7 +32,13 @@ data class WebState(
     /** What a screen reader says once this frame is drawn (GH-166); `null` says nothing. One-time
      *  like [focus], so the same text on two frames is said twice. */
     val announcement: String? = null,
+    val mode: PlayMode = PlayMode.DEFAULT,
+    /** The `[ Controls 6 ]` row (GH-171), hidden on touch screens. */
+    val controlsShown: Boolean = false,
 ) {
+    /** The digit [button] shows, `null` when it shows none (GH-171). */
+    fun digitOf(button: ToolbarButton): Int? = button.digit.takeIf { WebKeys.live(button, mode, controlsShown) }
+
     /** Each tile's text, in [tiles]' order. */
     val tileTexts: List<String> get() = tiles.map { labels.label(it - 1, side) }
 
@@ -65,6 +72,10 @@ sealed interface WebDialog {
     /** The tile labels picker (GH-139): [selected] is marked until Cancel or OK. [message] says why
      *  a load opened it (GH-160). */
     data class Labels(val options: List<LabelOption>, val selected: TileLabels, val message: String? = null) : WebDialog
+
+    /** The Controls dialog (GH-171): [mode] and [layout] are marked until Cancel or OK; [keyList]
+     *  names the marked layout's keys. */
+    data class Controls(val mode: PlayMode, val layout: KeyboardLayout, val keyList: List<String>) : WebDialog
 }
 
 /** A save as a Load row: its [label] is `name (NxN)`, with the unsolvable mark when it applies. */

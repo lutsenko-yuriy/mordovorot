@@ -6,8 +6,10 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import viewmodel.GameViewModel
+import viewmodel.GiveUpButton
 import viewmodel.PointerShift
 import viewmodel.SaveInfo
+import viewmodel.SessionKeyboardLayout
 import viewmodel.TileLabels
 import viewmodel.UnsolvableSaveChoice
 import viewmodel.displayWithSize
@@ -27,12 +29,18 @@ class WebGame internal constructor(
     private val analytics: AnalyticsService,
     private val renderer: WebRenderer,
     private val scope: CoroutineScope,
+    private val pressedWith: PressedWith,
+    keyboardLayout: SessionKeyboardLayout,
+    modePreference: PlayModePreference,
+    startMode: PlayMode,
+    private val controlsShown: Boolean,
 ) {
 
     private val modal = WebModal { render(focus = it) }
     internal val labelsDialog = WebLabelsDialog(viewModel, ::cancelled) { modal.ask(it) }
     internal val dialogs = WebDialogFlows(viewModel, analytics, modal, ::cancelled)
     internal val solution = WebSolutionFlows(this, viewModel, analytics, modal)
+    internal val controls = WebControlsDialog(this, viewModel, analytics, modal, keyboardLayout, modePreference, startMode)
     private val requests = WebRequestRouter(this)
     internal var status: String? = null
     /** The toolbar action or startup restore under way, if any. */
@@ -106,8 +114,34 @@ class WebGame internal constructor(
         if (moved) render()
     }
 
+    /** A key outside a dialog, with focus on the control keyed [from] (GH-171); whether the game
+     *  took it. A dialog a digit opens gives focus back there. */
+    fun onKey(press: KeyPress, from: String? = null): Boolean {
+        pressedWith.key()
+        if (!idle) return false
+        val button = (WebKeys.pageKey(press, controls.mode, controlsShown) as? PageKey.Digit)?.button ?: return false
+        val opener = when (from) {
+            null -> Focus.PageStart
+            Focus.Board.key -> Focus.Board
+            else -> Focus.Restore(from)
+        }
+        when (button) {
+            ToolbarButton.NEW -> onNew(opener)
+            ToolbarButton.SAVE -> onSave(opener)
+            ToolbarButton.LOAD -> onLoad(opener)
+            ToolbarButton.LABELS -> onLabels("shortcut", opener)
+            ToolbarButton.GIVE_UP_ROW -> when (viewModel.giveUpButton()) {
+                GiveUpButton.GIVE_UP -> solution.onGiveUp(opener)
+                GiveUpButton.MORDIES_SOLUTION -> solution.onMordiesSolution()
+                GiveUpButton.DIMMED, GiveUpButton.HIDDEN -> {}
+            }
+            ToolbarButton.CONTROLS -> controls.open("shortcut", opener)
+        }
+        return true
+    }
+
     /** `[ Labels ]` (GH-139): the picker, live on play, after a win and on the solution screen. */
-    fun onLabels() = runFlow(Focus.LabelsButton) { labelsDialog.fromToolbar() }
+    fun onLabels(openedFrom: String = "toolbar", opener: Focus = Focus.LabelsButton) = runFlow(opener) { labelsDialog.fromToolbar(openedFrom) }
 
     /** A Labels row pressed: it becomes the marked one, and the board previews it. */
     fun onLabelsSelected(labels: TileLabels) {
@@ -122,14 +156,14 @@ class WebGame internal constructor(
         modal.answer<WebDialog.Labels, TileLabels?>(if (ok) shown.selected else null)
     }
 
-    fun onNew() = runFlow(Focus.NewButton) {
+    fun onNew(opener: Focus = Focus.NewButton) = runFlow(opener) {
         dialogs.chooseSize("toolbar")?.let {
             viewModel.newGame(it, trigger = "toolbar")
             saying = Announcements.newGame(it)
         }
     }
 
-    fun onSave() = runFlow(Focus.SaveButton) {
+    fun onSave(opener: Focus = Focus.SaveButton) = runFlow(opener) {
         val name = dialogs.askSaveName()
         when {
             name == null -> {}
@@ -148,7 +182,7 @@ class WebGame internal constructor(
     /** The Save dialog's answer; `null` is Cancel. */
     fun onSaveAnswered(name: String?) = modal.answer<WebDialog.Save, String?>(name)
 
-    fun onLoad() = runFlow(Focus.LoadButton) {
+    fun onLoad(opener: Focus = Focus.LoadButton) = runFlow(opener) {
         dialogs.chooseSave(viewModel.listSaves(), restore = false)?.let { viewModel.loadGame(it) }
     }
 
@@ -248,6 +282,8 @@ class WebGame internal constructor(
                 labels = (modal.shown as? WebDialog.Labels)?.selected ?: viewModel.tileLabels(),
                 focus = focus,
                 announcement = saying,
+                mode = controls.mode,
+                controlsShown = controlsShown,
             ),
         )
         saying = null

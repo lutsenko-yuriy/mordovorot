@@ -87,6 +87,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         root.classList.toggle("solved", state.solved)
         root.classList.toggle("dragging", state.drag != null)
         root.classList.toggle("solution", state.solution != null)
+        root.classList.toggle("keyboard-mode", state.mode == PlayMode.KEYBOARD)
         root.append(
             // The box the tall layout sizes the tiles from (GH-147).
             element("div", "stage").apply {
@@ -99,14 +100,18 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
                 append(
                     text("moves", if (state.movesShown) "Moves: ${state.moves}" else "").also { moves = it },
                     element("div", "mordie").apply { append(element("div", "line")) }.also { mordie = it },
-                    *listOfNotNull(state.solution?.let { replayButtons(it, { game }, dialog != null) }, giveUpRow(state.giveUp, { game }, dialog != null)).toTypedArray(),
+                    *listOfNotNull(state.solution?.let { replayButtons(it, { game }, dialog != null) }, giveUpRow(state.giveUp, state.digitOf(ToolbarButton.GIVE_UP_ROW), { game }, dialog != null)).toTypedArray(),
                     element("div", "toolbar").also { toolbar = it }.apply {
                         append(
-                            button("New") { game.onNew() }.focusKey(Focus.NewButton).also { it.disabled = dialog != null },
-                            button("Save") { game.onSave() }.focusKey(Focus.SaveButton).also { it.disabled = dialog != null },
-                            button("Load") { game.onLoad() }.focusKey(Focus.LoadButton).also { it.disabled = dialog != null },
-                            button("Labels") { game.onLabels() }.focusKey(Focus.LabelsButton).also { it.disabled = dialog != null },
+                            toolbarButton("New", ToolbarButton.NEW, Focus.NewButton, state) { game.onNew() },
+                            toolbarButton("Save", ToolbarButton.SAVE, Focus.SaveButton, state) { game.onSave() },
+                            toolbarButton("Load", ToolbarButton.LOAD, Focus.LoadButton, state) { game.onLoad() },
+                            toolbarButton("Labels", ToolbarButton.LABELS, Focus.LabelsButton, state) { game.onLabels() },
                         )
+                        // A row of its own under the four (GH-171).
+                        if (state.controlsShown) append(element("div", "controls-row").apply {
+                            append(toolbarButton("Controls", ToolbarButton.CONTROLS, Focus.ControlsButton, state) { game.controls.open() })
+                        })
                     },
                     text("status", state.status ?: ""),
                 )
@@ -124,6 +129,9 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         setBehindDialog(root, dialog != null)
         applyFocus(root, state, focused)
     }
+
+    private fun toolbarButton(label: String, key: ToolbarButton, focus: Focus, state: WebState, onClick: () -> Unit) =
+        button(label, onClick = onClick).focusKey(focus).withDigit(state.digitOf(key)).also { it.disabled = state.dialog != null }
 
     /** Scrolls [steps] just enough to show [step]. Unlike `scrollIntoView`, never the page, so
      *  the buttons under the pointer stay put. */

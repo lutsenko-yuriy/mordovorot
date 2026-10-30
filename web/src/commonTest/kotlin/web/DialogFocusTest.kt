@@ -2,12 +2,14 @@ package web
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import viewmodel.KeyboardLayout
 import viewmodel.TileLabels
 
 /** GH-163: each dialog's control focused on open, and its title, the dialog's accessible name. */
 class DialogFocusTest {
     private val labels = WebDialog.Labels(listOf(LabelOption(TileLabels.PAIRS, "Pairs", listOf("11"))), TileLabels.PAIRS)
     private val saves = listOf(SaveEntry("foo", "foo (4x4)"))
+    private val controls = WebDialog.Controls(PlayMode.KEYBOARD, KeyboardLayout.LEFT_HANDED, emptyList())
 
     @Test
     fun `each dialog focuses its default control`() {
@@ -19,6 +21,7 @@ class DialogFocusTest {
         assertEquals(Focus.Repair, defaultFocus(WebDialog.Unsolvable("x")))
         assertEquals(Focus.Label(TileLabels.PAIRS), defaultFocus(labels))
         assertEquals(Focus.No, defaultFocus(WebDialog.GiveUp))
+        assertEquals(Focus.ModeOption(PlayMode.KEYBOARD), defaultFocus(controls))
     }
 
     @Test
@@ -30,6 +33,7 @@ class DialogFocusTest {
         assertEquals("Can't be solved", WebDialog.Unsolvable("x").title)
         assertEquals("Tile labels", labels.title)
         assertEquals("Give up and see Mordie's solution?", WebDialog.GiveUp.title)
+        assertEquals("Controls", controls.title)
     }
 
     @Test
@@ -37,8 +41,9 @@ class DialogFocusTest {
         val all = listOf(
             Focus.SizeChoice(3), Focus.SizeChoice(4), Focus.SaveName, Focus.FirstSave, Focus.DialogCancel, Focus.Repair,
             Focus.No, Focus.NewButton, Focus.SaveButton, Focus.LoadButton, Focus.LabelsButton, Focus.GiveUpRow,
-            Focus.ReplayNext, Focus.ReplayPrev, Focus.ReplayRestart, Focus.PageStart,
+            Focus.ReplayNext, Focus.ReplayPrev, Focus.ReplayRestart, Focus.PageStart, Focus.ControlsButton, Focus.Board,
         ) + TileLabels.entries.map { Focus.Label(it) } +
+            PlayMode.entries.map { Focus.ModeOption(it) } + KeyboardLayout.entries.map { Focus.LayoutOption(it) } +
             Arrow.entries.flatMap { arrow -> (0 until 6).map { Focus.ArrowButton(arrow, it) } }
         assertEquals(all.size, all.map { it.key }.toSet().size)
     }

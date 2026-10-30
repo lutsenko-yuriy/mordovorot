@@ -200,6 +200,18 @@ body {
     }
 }
 
+/* `[ Controls 6 ]` on a row of its own under the four buttons (GH-171). */
+.controls-row {
+    flex-basis: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+/* The four buttons' digits need a wider panel to stay on one row. */
+.app.keyboard-mode {
+    --panel-max: 25rem;
+}
+
 .give-up {
     grid-area: giveup;
 }

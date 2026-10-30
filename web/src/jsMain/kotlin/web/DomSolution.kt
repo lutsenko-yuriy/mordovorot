@@ -28,13 +28,13 @@ internal fun replayButtons(solution: SolutionState, game: () -> WebGame, dialogO
 
 /** `Give Up`, disabled until Mordie's solution is revealed, or `Mordie's solution` after a win;
  *  `null` when the row is empty (GH-126). [game] is read only on a click, as in [replayButtons]. */
-internal fun giveUpRow(giveUp: GiveUpButton, game: () -> WebGame, dialogOpen: Boolean): Element? {
+internal fun giveUpRow(giveUp: GiveUpButton, digit: Int?, game: () -> WebGame, dialogOpen: Boolean): Element? {
     val button = when (giveUp) {
         GiveUpButton.HIDDEN -> return null
         GiveUpButton.MORDIES_SOLUTION -> button("Mordie's solution") { game().solution.onMordiesSolution() }
         GiveUpButton.GIVE_UP, GiveUpButton.DIMMED -> button("Give Up") { game().solution.onGiveUp() }
     }
     button.disabled = dialogOpen || giveUp == GiveUpButton.DIMMED
-    button.focusKey(Focus.GiveUpRow)
+    button.focusKey(Focus.GiveUpRow).withDigit(digit)
     return element("div", "give-up").apply { append(button) }
 }

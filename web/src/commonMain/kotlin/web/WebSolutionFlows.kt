@@ -14,9 +14,9 @@ internal class WebSolutionFlows(
 ) {
 
     /** `[ Give Up ]`: the confirmation, then Mordie's solution screen on Yes. */
-    fun onGiveUp() {
+    fun onGiveUp(opener: Focus = Focus.GiveUpRow) {
         if (viewModel.giveUpButton() != GiveUpButton.GIVE_UP) return
-        game.runFlow(Focus.GiveUpRow) {
+        game.runFlow(opener) {
             analytics.track("screen_give_up_dialog", mapOf("board_size" to viewModel.squareSide(), "move_count" to viewModel.moveCount()))
             if (modal.ask(WebDialog.GiveUp)) {
                 viewModel.giveUp()

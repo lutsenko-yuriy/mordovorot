@@ -4,9 +4,9 @@ All events are sent via the analytics service abstraction (a thin wrapper around
 
 *GH-110:* every event and screen view also carries `platform` (`string`): `terminal` or `web`
 (`ios` and `android` are reserved for future clients). A decorator adds it, the same way
-`InputMethodAnalyticsService` adds `input_method`. On `web`, `input_method` is `rich_ui`, since the
-browser client has a single pointer-driven UI with no keyboard mode. The web client also uses
-`NoopAnalyticsService`; no SDK is wired up there either.
+`InputMethodAnalyticsService` adds `input_method`. On `web`, `input_method` follows the press that
+fired the event: `keyboard` for a key, `rich_ui` for mouse or touch (GH-171). The web client also
+uses `NoopAnalyticsService`; no SDK is wired up there either.
 
 ---
 
@@ -227,8 +227,8 @@ loaded. *(GH-83)*
 saved is stored as found; loading that save reveals it at once, and this event never fires for
 that game. Likewise, a board solved before the next check never fires it.
 
-*GH-110 (web):* the web client has no Exit, so `exit_command_used`, `input_mode_switched` and
-`app_launch_aborted` never fire there. `startup_restore_decision.decision` never takes `quit`,
+*GH-110 (web):* the web client has no Exit, so `exit_command_used` and `app_launch_aborted` never
+fire there. `startup_restore_decision.decision` never takes `quit`,
 `unsolvable_save_resolved.choice` never takes `exit`, and `dialog_cancelled.dialog` never takes
 `exit`. Closing the tab and the leave-site prompt are not tracked: a page can't reliably send
 anything while it unloads.

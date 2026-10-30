@@ -16,3 +16,13 @@ internal fun button(label: String, cssClass: String? = null, onClick: () -> Unit
         textContent = label
         addEventListener("click", { onClick() })
     }
+
+/** Shows [digit], the key that presses this button: heard as the shortcut, not in its name (GH-171). */
+internal fun <E : Element> E.withDigit(digit: Int?): E = apply {
+    if (digit == null) return@apply
+    setAttribute("aria-keyshortcuts", digit.toString())
+    append(element("span").apply {
+        setAttribute("aria-hidden", "true")
+        textContent = " $digit"
+    })
+}
