@@ -7,11 +7,14 @@ package analytics
  */
 class InputMethodAnalyticsService(
     private val delegate: AnalyticsService,
-    private val inputMethod: String,
+    private val inputMethod: () -> String,
 ) : AnalyticsService {
 
+    /** For a client whose input method is fixed for the session. */
+    constructor(delegate: AnalyticsService, inputMethod: String) : this(delegate, { inputMethod })
+
     override fun track(event: String, properties: Map<String, Any?>) {
-        val decorated = if ("input_method" in properties) properties else properties + ("input_method" to inputMethod)
+        val decorated = if ("input_method" in properties) properties else properties + ("input_method" to inputMethod())
         delegate.track(event, decorated)
     }
 }

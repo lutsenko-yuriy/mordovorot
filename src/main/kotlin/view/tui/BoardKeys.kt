@@ -35,10 +35,7 @@ internal object BoardKeys {
     private val COMMON_KEYS = listOf(
         "New 1 · Save 2 · Load 3 · Labels 4",
         "Give Up 5 · Controls 6 · Exit Esc",
-        "Solution: ← → A D H L Prev/Next ·",
-        "  Space/Enter Next · R Restart ·",
-        "  ↑ ↓ W S K J scroll",
-    )
+    ) + KeyScheme.SOLUTION_KEY_LINES
 
     fun boardKey(event: TerminalEvent, layout: KeyboardLayout): BoardKey? =
         KeyScheme.boardKey(event.letter, event.arrow, layout)
