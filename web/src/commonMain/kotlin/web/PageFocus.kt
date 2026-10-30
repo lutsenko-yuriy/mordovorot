@@ -16,5 +16,7 @@ fun fallbackFocus(key: String, state: WebState): Focus = when {
     key == Focus.ReplayNext.key -> Focus.ReplayPrev
     key == Focus.ReplayPrev.key || key == Focus.ReplayRestart.key -> Focus.ReplayNext
     key == Focus.GiveUpRow.key && state.solution != null -> Focus.ReplayNext
+    // A new game's row is dimmed or hidden: on to the board, where the keys work (GH-171).
+    key == Focus.GiveUpRow.key && state.selection != null -> Focus.Board
     else -> Focus.PageStart
 }

@@ -53,7 +53,7 @@ class PhoneFitStylesTest {
     fun `the board's row takes the height the rest leaves, down to 16px tiles`() {
         val app = rule(fit, ".app")
 
-        assertTrue("minmax(var(--board-min), 1fr)" in app && "min-height: 0;" in app, app)
+        assertTrue("minmax(calc(var(--board-min) + var(--hints)), 1fr)" in app && "min-height: 0;" in app, app)
         assertTrue("minmax(var(--board-min), 1fr)" in rule(solutionFit, ".app.solution"), solutionFit)
     }
 
