@@ -1,7 +1,7 @@
 package view.tui
 
-/** The four directions an arrow key can decode to (GH-18's keyboard TUI). */
-enum class Direction { UP, DOWN, LEFT, RIGHT }
+/** The shared [viewmodel.Direction], under the name the terminal's call sites use (GH-171). */
+typealias Direction = viewmodel.Direction
 
 /** One decoded terminal input event (GH-3's mouse TUI, GH-18's keyboard TUI), produced by
  *  [TerminalInputParser]. */
