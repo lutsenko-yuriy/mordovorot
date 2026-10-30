@@ -329,6 +329,18 @@ settled it: no accessibility usage signal is acceptable, on any terms.
   `board_solved`): someone with an injured or impaired hand may pick the left-handed layout, which
   makes it the kind of accessibility usage signal GH-180 ruled out.
 
+*GH-171 (web keyboard play):*
+- `input_method` on `web` follows the press that fired the event, in either mode: `keyboard` for
+  any key (the scheme's keys, and Enter, Space or Escape in dialogs), `rich_ui` for mouse or touch.
+- `app_launched.mode` on `web` is the remembered mode, `mouse` or `keyboard`, instead of `rich_ui`.
+- `input_mode_switched` now fires on `web` too (`trigger`: `controls_dialog`), and
+  `dialog_cancelled.dialog` takes `controls` there (with `via`).
+- `board_solved.shift_input` takes a new value, `keys` (only key shifts); `mixed` covers any
+  combination of arrows, drag and keys. `board_solved.shift_keys` is sent on `web` too, under
+  GH-170's rule (right-handed layout only).
+- Not tracked: selection moves (too granular), Read board's key 0 (a screen-reader signal, GH-167,
+  GH-180), the keyboard layout (GH-170), and keys that do nothing in mouse mode.
+
 <!-- All events above are sent through `analytics.AnalyticsService`, currently backed by
      `analytics.NoopAnalyticsService` (no real SDK wired up yet). -->
 
@@ -379,3 +391,6 @@ with `dialog: labels`, as usual.
 | Screen name | When tracked |
 |---|---|
 | `screen_controls_dialog` | The Controls dialog opens. Properties `opened_from`: `toolbar` (`[ Controls 6 ]` click) or `shortcut` (6, in either mode); `screen`: `play`, `solved` or `solution`; `input_method`: `mouse` or `keyboard`. *(GH-170)* |
+
+*GH-171:* `screen_controls_dialog` now fires on `web` too, with `input_method` `keyboard` or
+`rich_ui`; `screen_labels_dialog.opened_from` takes `shortcut` there (4 in keyboard mode).

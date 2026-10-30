@@ -69,6 +69,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-168: Web: larger text without browser zoom](GH-168.md)
 - [GH-169: Keyboard controls: one scheme for the terminal and the web](GH-169.md)
 - [GH-170: Terminal: keyboard mode on the new keyboard scheme](GH-170.md)
+- [GH-171: Web: keyboard play](GH-171.md)
 - [GH-174: Web harness: a keyboard and accessibility mode](GH-174.md)
 - [GH-189: Keyboard controls: a Controls dialog and a left-handed layout](GH-189.md)
 - [GH-23: Split Presenter into console/TUI-specific presenters](GH-23.md)
