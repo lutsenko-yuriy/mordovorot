@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.28.0] — 2026-10-30 (PR #199 merged)
+
+### Added
+- [user] (PR #199) GH-171: Web: keyboard play, now on the public site. Keyboard mode and the Controls dialog (mode and layout remembered), digits for the toolbar, a selected tile with select and shift keys in both layouts, key hints, the solution screen's keys, and for screen readers `Now <tile>` after a shift and 0 to read the board. Letter keys need a Latin keyboard layout (GH-200).
+
 ## [0.27.3] — 2026-10-30 (PR #198 merged)
 
 ### Changed
