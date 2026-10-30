@@ -5,29 +5,47 @@ package viewmodel
  *  game, load or repair starts. */
 class GameShiftSources {
     private val keys = mutableSetOf<ShiftKey>()
-    private val pointers = mutableSetOf<PointerShift>()
+    private val inputs = mutableSetOf<String>()
 
     fun record(source: ShiftSource) {
         when (source) {
             is ShiftKey -> keys += source
-            is PointerShift -> pointers += source
+            is PointerShift -> inputs += POINTER_NAMES.getValue(source)
+            is KeyShift -> {
+                inputs += KEYS
+                source.key?.let { keys += it }
+            }
         }
     }
 
     fun reset() {
         keys.clear()
-        pointers.clear()
+        inputs.clear()
     }
 
-    /** `shift_keys` (`arrows`/`hjkl`/`mixed`) when the [solvingSource] was a key, `shift_input`
-     *  (`arrows`/`drag`/`mixed`) when it was a pointer, nothing for `null`. */
+    /** `shift_keys` (`arrows`/`hjkl`/`mixed`) when the [solvingSource] was a terminal key, `shift_input`
+     *  (`arrows`/`drag`/`keys`/`mixed`) when it was on the web, with `shift_keys` too for a right-handed
+     *  web key (GH-171), nothing for `null`. */
     fun propertiesFor(solvingSource: ShiftSource?): Map<String, String> = when (solvingSource) {
-        is ShiftKey -> mapOf("shift_keys" to summary(keys, ShiftKey.ARROW to "arrows", ShiftKey.HJKL to "hjkl"))
-        is PointerShift -> mapOf("shift_input" to summary(pointers, PointerShift.ARROW to "arrows", PointerShift.DRAG to "drag"))
+        is ShiftKey -> mapOf(SHIFT_KEYS to keysSummary())
+        is PointerShift -> mapOf(SHIFT_INPUT to inputSummary())
+        is KeyShift -> mapOf(SHIFT_INPUT to inputSummary()) + if (solvingSource.key != null) mapOf(SHIFT_KEYS to keysSummary()) else emptyMap()
         null -> emptyMap()
     }
 
-    /** The one kind's name when only it was used, otherwise `mixed`. */
-    private fun <T> summary(used: Set<T>, vararg names: Pair<T, String>): String =
-        names.singleOrNull { (kind, _) -> used == setOf(kind) }?.second ?: "mixed"
+    private fun keysSummary() = when (keys.singleOrNull()) {
+        ShiftKey.ARROW -> "arrows"
+        ShiftKey.HJKL -> "hjkl"
+        null -> MIXED
+    }
+
+    private fun inputSummary() = inputs.singleOrNull() ?: MIXED
+
+    private companion object {
+        const val SHIFT_KEYS = "shift_keys"
+        const val SHIFT_INPUT = "shift_input"
+        const val KEYS = "keys"
+        const val MIXED = "mixed"
+        val POINTER_NAMES = mapOf(PointerShift.ARROW to "arrows", PointerShift.DRAG to "drag")
+    }
 }

@@ -184,4 +184,59 @@ class ViewModelShiftSourcesTest {
 
         assertEquals("arrows", shiftInput(analytics))
     }
+
+    @Test
+    fun `web key shifts report shift_input keys and shift_keys`() {
+        val analytics = RecordingAnalyticsService()
+        val viewModel = testViewModel(nearlySolved(), analytics = analytics)
+
+        viewModel.shiftRight(0, KeyShift(ShiftKey.HJKL))
+
+        assertEquals("keys", shiftInput(analytics))
+        assertEquals("hjkl", shiftKeys(analytics))
+    }
+
+    @Test
+    fun `a left-handed web key shift reports keys and no shift_keys`() {
+        val analytics = RecordingAnalyticsService()
+        val viewModel = testViewModel(nearlySolved(), analytics = analytics)
+
+        viewModel.shiftRight(0, KeyShift(null))
+
+        assertEquals("keys", shiftInput(analytics))
+        assertFalse("shift_keys" in solved(analytics))
+    }
+
+    @Test
+    fun `web key shifts and pointers report mixed, whichever solved it`() {
+        val byKey = RecordingAnalyticsService()
+        testViewModel(nearlySolved(), analytics = byKey).apply {
+            shiftLeft(0, PointerShift.ARROW)
+            shiftLeft(0, KeyShift(ShiftKey.ARROW))
+        }
+        assertEquals("mixed", shiftInput(byKey))
+        assertEquals("arrows", shiftKeys(byKey))
+
+        val byPointer = RecordingAnalyticsService()
+        testViewModel(nearlySolved(), analytics = byPointer).apply {
+            shiftLeft(0, KeyShift(null))
+            shiftLeft(0, PointerShift.DRAG)
+        }
+        assertEquals("mixed", shiftInput(byPointer))
+        assertFalse("shift_keys" in solved(byPointer))
+    }
+
+    @Test
+    fun `a new game forgets web key shifts`() {
+        val analytics = RecordingAnalyticsService()
+        val board = BoardImpl(3)
+        val viewModel = testViewModel(board, analytics = analytics)
+
+        viewModel.shiftUp(0, KeyShift(ShiftKey.HJKL))
+        viewModel.newGame(3, trigger = "toolbar")
+        board.restoreState(intArrayOf(1, 2, 0, 3, 4, 5, 6, 7, 8))
+        viewModel.shiftRight(0, PointerShift.ARROW)
+
+        assertEquals("arrows", shiftInput(analytics))
+    }
 }
