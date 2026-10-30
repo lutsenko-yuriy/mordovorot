@@ -4,10 +4,7 @@ import kotlinx.browser.window
 import kotlinx.dom.clear
 import org.w3c.dom.Element
 import org.w3c.dom.HTMLElement
-import org.w3c.dom.pointerevents.PointerEvent
-import web.drag.Axis
 import web.drag.LineOffset
-import web.drag.WrapPositions
 
 /** Draws each [WebState] into [root] and turns clicks and drags into [game] intents (GH-110).
  *  Plain DOM, rebuilt every frame, with the look in the sheets `index.html` links. */
@@ -19,19 +16,14 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
     /** The open Save dialog's warning line, updated in place while the player types. */
     private var saveWarning: Element? = null
 
-    /** The pointer dragging a line, if any. [root] holds its capture, as the tiles are rebuilt. */
-    private var dragPointer: Int? = null
+    private val board = DomBoard(root) { game }
 
     private var shown: WebState? = null
-
-    /** The arrow being clicked, so the frame its shift draws slides the line. */
-    private var clicked: Pair<Arrow, Int>? = null
 
     /** The line easing into place, redrawn every animation frame until it gets there. */
     private var slide: Slide? = null
     /** An animation frame is queued, so another slide or Mordie line doesn't queue a second. */
     private var framePending = false
-    private var tiles: Element? = null
 
     private class Slide(val start: LineOffset, val startedAt: Double)
 
@@ -48,14 +40,6 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
 
     init {
         root.className = "app"
-        root.addEventListener("pointermove", { event ->
-            val pointer = event as PointerEvent
-            if (pointer.pointerId == dragPointer) game.onDragMove(pointer.clientX.toDouble(), pointer.clientY.toDouble())
-        })
-        root.addEventListener("pointerup", { endDrag(it as PointerEvent) { game.onDragEnd() } })
-        root.addEventListener("pointercancel", { endDrag(it as PointerEvent) { game.onDragCancel() } })
-        // After a pointerup the drag has already ended, so this only catches a capture lost mid-drag.
-        root.addEventListener("lostpointercapture", { endDrag(it as PointerEvent) { game.onDragCancel() } })
     }
 
     override fun render(state: WebState) {
@@ -92,7 +76,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
             // The box the tall layout sizes the tiles from (GH-147).
             element("div", "stage").apply {
                 state.boardWords?.let { append(readBoardButton(it, dialog != null, announcer)) }
-                append(board(state, justSolved = state.solved && before?.solved == false))
+                append(board.draw(state, justSolved = state.solved && before?.solved == false, state.drag ?: slideOffset()))
             },
             *listOfNotNull(state.solution?.let { stepList(it) }).toTypedArray(),
             // Beside the board when the window is wide; when tall, its items stack around it (styles.css).
@@ -173,7 +157,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
     /** Eases the line a shift moved into place: one tile after an arrow or a replay shift, the rest
      *  of the way after a drag. Any other change to the tiles, or a new drag, stops a slide under way. */
     private fun startSlide(before: WebState?, state: WebState) {
-        val arrow = clicked
+        val arrow = board.clicked
         val start = when {
             before == null || state.drag != null -> null
             arrow != null && state.tiles != before.tiles -> Slides.ofArrow(arrow.first, arrow.second)
@@ -201,7 +185,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
             val offset = Slides.at(running.start, (time - running.startedAt) / SLIDE_MS)
             if (offset == null) slide = null
             val state = shown
-            if (state != null) tiles?.let { drawTiles(it, state, offset) }
+            if (state != null) board.redrawTiles(state, offset)
         }
         drawMordie(time)
         if (slide != null || feed.moving(time)) schedule()
@@ -210,90 +194,6 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
     /** The current slide's offset, before its next animation frame. */
     private fun slideOffset(): LineOffset? =
         slide?.let { Slides.at(it.start, (window.performance.now() - it.startedAt) / SLIDE_MS) }
-
-    /** The tiles framed by the arrows: ▲ above and ▼ below each column, ◀ and ▶ at each end of a row. */
-    private fun board(state: WebState, justSolved: Boolean): Element {
-        val side = state.side
-        val disabled = !state.arrowsEnabled || state.dialog != null
-        fun arrow(label: String, arrow: Arrow, line: Int) =
-            button(label, "arrow") {
-                clicked = arrow to line
-                try {
-                    game.onArrow(arrow, line)
-                } finally {
-                    clicked = null
-                }
-            }.focusKey(Focus.ArrowButton(arrow, line)).also {
-                it.disabled = disabled
-                it.setAttribute("aria-label", Announcements.line(arrow, line))
-            }
-        fun arrows(arrow: Arrow, label: String, axis: String) =
-            element("div", "arrows $axis").apply { repeat(side) { append(arrow(label, arrow, it)) } }
-
-        val layer = asTable(element("div", "tiles"), state.arrowsEnabled)
-        tiles = layer
-        drawTiles(layer, state, state.drag ?: slideOffset())
-
-        val classes = listOfNotNull("board", "solved".takeIf { state.solved }, "just-solved".takeIf { justSolved })
-        return element("div", classes.joinToString(" ")).apply {
-            append(
-                element("span"), arrows(Arrow.UP, "▲", "row"), element("span"),
-                arrows(Arrow.LEFT, "◀", "column"),
-                layer,
-                arrows(Arrow.RIGHT, "▶", "column"),
-                element("span"), arrows(Arrow.DOWN, "▼", "row"), element("span"),
-            )
-        }
-    }
-
-    /** Fills [layer] with the board's tiles, a row element per board row (GH-167), the line [offset]
-     *  names moved by it: a tile pushed past one end shows at the other as well, and the layer clips both. */
-    private fun drawTiles(layer: Element, state: WebState, offset: LineOffset?) {
-        val side = state.side
-        val wrapped = offset?.let { WrapPositions.of(side, it.tiles) }
-        val texts = state.tileTexts
-        val home = state.home
-        val playing = state.arrowsEnabled
-        layer.clear()
-        repeat(side) { row ->
-            val cells = gridRow(layer, playing)
-            repeat(side) { col ->
-                val value = state.tiles[row * side + col]
-                val label = texts[row * side + col]
-                val x = if (offset?.axis == Axis.ROW && offset.line == row) wrapped!![col] else col.toDouble()
-                val y = if (offset?.axis == Axis.COLUMN && offset.line == col) wrapped!![row] else row.toDouble()
-                cells.append(asCell(tile(value, label, side, x, y), label, playing, playing && home[row * side + col]).apply {
-                    addEventListener("pointerdown", { startDrag(it as PointerEvent, layer, side, row, col) })
-                })
-                if (x > side - 1) cells.append(asCopy(tile(value, label, side, x - side, y)))
-                if (y > side - 1) cells.append(asCopy(tile(value, label, side, x, y - side)))
-            }
-        }
-    }
-
-    /** Tile [value], showing [label], at column [x], row [y], in tiles; its colour comes from where it belongs. */
-    private fun tile(value: Int, label: String, side: Int, x: Double, y: Double) = text("tile", label).apply {
-        setAttribute(
-            "style",
-            "--x: $x; --y: $y; --row: ${(value - 1) / side}; --col: ${(value - 1) % side};",
-        )
-    }
-
-    private fun startDrag(pointer: PointerEvent, tiles: Element, side: Int, row: Int, col: Int) {
-        if (dragPointer != null || pointer.button.toInt() != 0) return
-        pointer.preventDefault()
-        dragPointer = pointer.pointerId
-        root.setPointerCapture(pointer.pointerId)
-        // Measured, so the drag follows the pointer at any tile size or zoom.
-        val pitch = tiles.getBoundingClientRect().width / side
-        game.onDragStart(row, col, pointer.clientX.toDouble(), pointer.clientY.toDouble(), pitch)
-    }
-
-    private fun endDrag(pointer: PointerEvent, end: () -> Unit) {
-        if (pointer.pointerId != dragPointer) return
-        dragPointer = null
-        end()
-    }
 
     private companion object {
         const val SLIDE_MS = 160.0
