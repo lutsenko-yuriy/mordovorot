@@ -19,7 +19,7 @@ internal fun listenForPlayKeys(root: Element, pressedWith: PressedWith, game: ()
             return@addEventListener
         }
         val press = KeyPress(key.key, key.ctrlKey || key.altKey || key.metaKey || key.composing, key.repeat)
-        if (game().onKey(press, focusedKey(root))) {
+        if (game().onKey(press, focusedKey())) {
             held = key.key
             key.preventDefault()
         }

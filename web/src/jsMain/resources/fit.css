@@ -18,7 +18,7 @@
         }
 
         .app {
-            grid-template-rows: auto auto minmax(var(--board-min), 1fr) auto auto auto;
+            grid-template-rows: auto auto minmax(calc(var(--board-min) + var(--hints)), 1fr) auto auto auto;
             align-content: stretch;
             gap: 8px;
             min-height: 0;
@@ -30,10 +30,15 @@
             justify-self: stretch;
             display: grid;
             place-items: center;
-            --tile: clamp(16px, min(100cqw, 100cqh) / (var(--side) * 1.1 + var(--band)), 84px);
+            --tile: clamp(16px, min(100cqw, 100cqh - var(--hints)) / (var(--side) * 1.1 + var(--band)), 84px);
             --gap: calc(var(--tile) * 0.1);
             --pitch: calc(var(--tile) + var(--gap));
             --arrow: calc(var(--tile) * 0.7);
+        }
+
+        /* The board and the key hints stay together in the stage's middle (GH-171). */
+        .app.keyboard-mode .stage {
+            align-content: center;
         }
 
         .footer {

@@ -53,7 +53,7 @@ class PhoneFitStylesTest {
     fun `the board's row takes the height the rest leaves, down to 16px tiles`() {
         val app = rule(fit, ".app")
 
-        assertTrue("minmax(var(--board-min), 1fr)" in app && "min-height: 0;" in app, app)
+        assertTrue("minmax(calc(var(--board-min) + var(--hints)), 1fr)" in app && "min-height: 0;" in app, app)
         assertTrue("minmax(var(--board-min), 1fr)" in rule(solutionFit, ".app.solution"), solutionFit)
     }
 
@@ -71,7 +71,7 @@ class PhoneFitStylesTest {
         val stage = rule(fit, ".stage")
 
         assertTrue("container-type: size;" in stage, stage)
-        assertTrue(Regex("""--tile: clamp\(16px, min\(100cqw, 100cqh\)""").containsMatchIn(stage), stage)
+        assertTrue(Regex("""--tile: clamp\(16px, min\(100cqw, 100cqh - var\(--hints\)\)""").containsMatchIn(stage), stage)
         // Each refers to --tile, so it must be declared again where --tile changes.
         for (name in listOf("--gap", "--pitch", "--arrow")) assertTrue("$name:" in stage, "$name in $stage")
     }
@@ -103,7 +103,7 @@ class PhoneFitStylesTest {
     fun `wide, the tiles take the room beside the panel and above the footer`() {
         val app = rule(wide, ".app")
 
-        assertTrue("--tile: clamp(16px, min(100vw - var(--beside), var(--vh) - var(--footer) - 2 * var(--pad-y))" in app, app)
+        assertTrue("--tile: clamp(16px, min(100vw - var(--beside), var(--vh) - var(--footer) - var(--hints) - 2 * var(--pad-y))" in app, app)
     }
 
     @Test

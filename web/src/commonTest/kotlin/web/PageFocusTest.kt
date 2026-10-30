@@ -4,6 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import viewmodel.GiveUpButton
 import viewmodel.SolutionState
+import viewmodel.TileSelection
 
 /** GH-164: where focus goes when the control that had it is gone or disabled after a redraw. */
 class PageFocusTest {
@@ -28,6 +29,23 @@ class PageFocusTest {
     fun `Read board on a board that got solved passes focus as a winning arrow does`() {
         assertEquals(Focus.GiveUpRow, fallbackFocus(Focus.ReadBoard.key, won.copy(giveUp = GiveUpButton.MORDIES_SOLUTION)))
         assertEquals(Focus.NewButton, fallbackFocus(Focus.ReadBoard.key, won.copy(giveUp = GiveUpButton.HIDDEN)))
+    }
+
+    @Test
+    fun `the board on a board that got solved passes focus as a winning arrow does`() {
+        assertEquals(Focus.GiveUpRow, fallbackFocus(Focus.Board.key, won.copy(mode = PlayMode.KEYBOARD, giveUp = GiveUpButton.MORDIES_SOLUTION)))
+        assertEquals(Focus.NewButton, fallbackFocus(Focus.Board.key, won.copy(mode = PlayMode.KEYBOARD, giveUp = GiveUpButton.HIDDEN)))
+    }
+
+    @Test
+    fun `the Give Up row gone from a new game passes focus to the board in keyboard mode`() {
+        val keyboardPlay = playing.copy(mode = PlayMode.KEYBOARD, selection = TileSelection.INITIAL, giveUp = GiveUpButton.DIMMED)
+        assertEquals(Focus.Board, fallbackFocus(Focus.GiveUpRow.key, keyboardPlay))
+    }
+
+    @Test
+    fun `the board, once keyboard mode ends, passes focus to Controls`() {
+        assertEquals(Focus.ControlsButton, fallbackFocus(Focus.Board.key, playing.copy(mode = PlayMode.MOUSE)))
     }
 
     @Test

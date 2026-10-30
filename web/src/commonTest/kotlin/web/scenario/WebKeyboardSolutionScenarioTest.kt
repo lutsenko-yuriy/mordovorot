@@ -1,9 +1,16 @@
 package web.scenario
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import mordie.SearchProgress
+import mordie.SolutionMove
+import viewmodel.GiveUpButton
+import web.Arrow
+import web.Focus
+import web.fallbackFocus
 
-/** GH-171: the solution screen from the keyboard, and where focus goes on the way there. Stubs until
- *  WU4 makes them green. */
+/** GH-171: the solution screen from the keyboard, and where focus goes on the way there. The screen's
+ *  are stubs until WU4 makes them green. */
 class WebKeyboardSolutionScenarioTest {
 
     @Test
@@ -29,8 +36,18 @@ class WebKeyboardSolutionScenarioTest {
     }
 
     @Test
-    fun `a solving key shift passes focus to Mordie's solution, else New`() {
-        // TODO: solve with `Mordie's solution` shown - focus there
-        // TODO: solve without it - focus on `New`
+    fun `a solving key shift passes focus to Mordie's solution, else New`() = webTest {
+        val page = WebHarness(backgroundScope).remembering().startOn()
+        page.press("h", from = Focus.Board)
+        assertEquals(GiveUpButton.HIDDEN, page.state.giveUp)
+        assertEquals(Focus.NewButton, fallbackFocus(Focus.Board.key, page.state))
+
+        val revealed = WebHarness(backgroundScope).remembering().startOn()
+        revealed.mordieSearches.latest.progress = SearchProgress(1, found = true, elapsedMs = 0, solution = listOf(SolutionMove(isRow = true, index = 0, amount = 1)))
+        repeat(5) { revealed.game.onArrow(Arrow.UP, 3) }
+        repeat(5) { revealed.game.onArrow(Arrow.DOWN, 3) }
+        revealed.press("h", from = Focus.Board)
+        assertEquals(GiveUpButton.MORDIES_SOLUTION, revealed.state.giveUp)
+        assertEquals(Focus.GiveUpRow, fallbackFocus(Focus.Board.key, revealed.state))
     }
 }

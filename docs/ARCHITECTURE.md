@@ -97,8 +97,9 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                           # save/load/repair, cleared on new game, prefills the Save dialog.
 │       │                           # One per session, made by buildGameSession, so it survives mode
 │       │                           # switches; never persisted (GH-99)
-│       ├── ShiftSource.kt        # What made a shift: ShiftKey {ARROW, HJKL} (GH-101) or
-│       │                           # PointerShift {ARROW, DRAG} (web, GH-110); null for a click
+│       ├── ShiftSource.kt        # What made a shift: ShiftKey {ARROW, HJKL} (GH-101),
+│       │                           # PointerShift {ARROW, DRAG} (web, GH-110) or KeyShift (web,
+│       │                           # its ShiftKey null when left-handed, GH-171); null for a click
 │       ├── GameShiftSources.kt   # Which ShiftSources made this game's shifts, for board_solved.
 │       │                           # shift_keys / shift_input. Reset on new game/load/repair; one
 │       │                           # per session, made by buildGameSession (GH-101, GH-110)
@@ -183,8 +184,10 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │                    # like the terminal's ControlsDialogController
 │   ├── PlayMode.kt / PlayModePreference.kt # Mouse or keyboard, kept under `input_mode` (GH-171)
 │   ├── PressedWith.kt   # The session's last input, read per event as input_method (GH-171)
-│   ├── WebKeys.kt       # A key outside a dialog to a PageKey: ToolbarButton's digits (GH-171)
-│   ├── KeyHints.kt      # The web's Controls key list (GH-171)
+│   ├── WebKeys.kt       # A key outside a dialog to a PageKey: ToolbarButton's digits, or a shared
+│   │                    # BoardKey while the board has focus (GH-171)
+│   ├── WebKeyPlay.kt    # WebGame's keys outside dialogs, tile presses and the TileSelection (GH-171)
+│   ├── KeyHints.kt      # The web's Controls key list and the hints under the board (GH-171)
 │   ├── Announcements.kt # GH-166: what a screen reader hears - shifts, the win, new game, load,
 │   │                    # solution steps - and the arrows' accessible names; Read board's
 │   │                    # row-by-row words, letters in the phonetic alphabet (GH-167)
@@ -224,17 +227,20 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # applySystemTextSize first (GH-168)
 ├── src/jsMain/kotlin/web/DomGestures.kt # stopPinchZoom: on touch screens, cancels WebKit's pinch
 │                                       # events, which iOS fires whatever touch-action says (GH-149)
-├── src/jsMain/kotlin/web/DomRenderer.kt # WebState -> DOM, clicks and pointer drags -> WebGame
+├── src/jsMain/kotlin/web/DomRenderer.kt # WebState -> DOM, clicks -> WebGame
 │                                       # intents; the page root holds a drag's pointer capture;
 │                                       # runs Slides and MessageFeed on animation frames, redrawing
 │                                       # only the tiles and Mordie's line; keeps the step list's
 │                                       # scroll across frames, the current step in view (GH-126);
 │                                       # the board sits in `.stage`, the box the tall layout's
 │                                       # tiles are sized from (GH-147)
+├── src/jsMain/kotlin/web/DomBoard.kt   # The board: tiles, arrows and pointer drags -> WebGame, split from DomRenderer (GH-171)
 ├── src/jsMain/kotlin/web/DomBoardGrid.kt # GH-167: during play, the tiles as a table for screen
 │                                       # readers - a row element per board row, each cell heard as
 │                                       # said (`delta, in place`), a wrapped copy aria-hidden - and the hidden Read board
-│                                       # button, which says its words through DomAnnouncer
+│                                       # button, which says its words through DomAnnouncer. In keyboard
+│                                       # mode a grid, one Tab stop, the selected cell its
+│                                       # aria-activedescendant; the selection's outlines and the key hints (GH-171)
 ├── src/jsMain/kotlin/web/DomTextSize.kt # GH-168: at load, reads the browser's font size and (iPhone/iPad)
 │                                       # Dynamic Type from a removed `-apple-system-body` probe; sets
 │                                       # `--text-scale`, and the root font size where the default isn't it
@@ -269,6 +275,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # height and tiles fit `.stage` (GH-147), scrolling past 16px
 │                                       # tiles (GH-168); wide, the one-line footer and tighter spacing
 │                                       # on short and narrow phones
+├── src/jsMain/resources/keyboard.css   # GH-171: keyboard mode: arrows hidden, the selection's outlines,
+│                                       # the board's focus ring, the key hints
 ├── src/jsMain/resources/board.css      # GH-153: tile colours by home row/column, arrows, solve
 │                                       # animations; no arrows under `pointer: coarse` (GH-111);
 │                                       # tile labels grow with `--text-scale`, capped (GH-168)

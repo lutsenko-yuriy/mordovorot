@@ -3,8 +3,12 @@ package web
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import viewmodel.BoardKey
+import viewmodel.Direction
+import viewmodel.KeyboardLayout
+import viewmodel.ShiftKey
 
-/** GH-171: which digit presses which toolbar button (ADR-0003). */
+/** GH-171: which digit presses which toolbar button, and the board's keys (ADR-0003). */
 class WebKeysTest {
 
     private fun key(press: KeyPress, mode: PlayMode = PlayMode.KEYBOARD, controlsShown: Boolean = true) =
@@ -44,5 +48,41 @@ class WebKeysTest {
         assertEquals(ToolbarButton.entries, shown(PlayMode.KEYBOARD, true))
         assertEquals(listOf(ToolbarButton.CONTROLS), shown(PlayMode.MOUSE, true))
         assertEquals(emptyList(), shown(PlayMode.MOUSE, false))
+    }
+
+    private fun boardKey(key: String, layout: KeyboardLayout = KeyboardLayout.RIGHT_HANDED, repeat: Boolean = false, modified: Boolean = false) =
+        (WebKeys.pageKey(KeyPress(key, modified, repeat), PlayMode.KEYBOARD, true, layout, onBoard = true) as? PageKey.Board)?.key
+
+    @Test
+    fun `on the board, a right-handed key selects or shifts`() {
+        assertEquals(BoardKey.Select(Direction.UP), boardKey("w"))
+        assertEquals(BoardKey.Select(Direction.RIGHT), boardKey("D"))
+        assertEquals(BoardKey.Shift(Direction.LEFT, ShiftKey.HJKL), boardKey("h"))
+        assertEquals(BoardKey.Shift(Direction.DOWN, ShiftKey.ARROW), boardKey("ArrowDown"))
+    }
+
+    @Test
+    fun `on the board, a left-handed key selects or shifts, with no key to report`() {
+        assertEquals(BoardKey.Select(Direction.LEFT), boardKey("ArrowLeft", KeyboardLayout.LEFT_HANDED))
+        assertEquals(BoardKey.Select(Direction.UP), boardKey("K", KeyboardLayout.LEFT_HANDED))
+        assertEquals(BoardKey.Shift(Direction.UP, null), boardKey("w", KeyboardLayout.LEFT_HANDED))
+    }
+
+    @Test
+    fun `on the board, a held key repeats but a modified one is nothing`() {
+        assertEquals(BoardKey.Select(Direction.UP), boardKey("w", repeat = true))
+        assertNull(boardKey("w", modified = true))
+    }
+
+    @Test
+    fun `on the board, digits still press the toolbar and other keys are nothing`() {
+        assertEquals(PageKey.Digit(ToolbarButton.SAVE), WebKeys.pageKey(KeyPress("2"), PlayMode.KEYBOARD, true, onBoard = true))
+        for (other in listOf("x", "Enter", " ", "Tab", "Escape", "F1")) assertNull(boardKey(other))
+    }
+
+    @Test
+    fun `board keys need the board and keyboard mode`() {
+        assertNull(WebKeys.pageKey(KeyPress("w"), PlayMode.KEYBOARD, true))
+        assertNull(WebKeys.pageKey(KeyPress("w"), PlayMode.MOUSE, true, onBoard = true))
     }
 }

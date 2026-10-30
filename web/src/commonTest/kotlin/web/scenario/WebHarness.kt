@@ -125,6 +125,6 @@ private fun sideOf(tiles: IntArray) = generateSequence(1) { it + 1 }.first { it 
 /** [tiles] as the page shows them: 1-based. */
 internal fun shown(tiles: IntArray) = tiles.map { it + 1 }
 
-/** The frame without its one-time focus (GH-163) and announcement (GH-166), for comparing what two
- *  frames show. */
-internal fun WebState.unfocused() = copy(focus = null, announcement = null)
+/** The frame without its one-time focus (GH-163), announcement (GH-166) and slide, for comparing what
+ *  two frames show. */
+internal fun WebState.unfocused() = copy(focus = null, announcement = null, slide = null)

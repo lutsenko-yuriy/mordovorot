@@ -66,28 +66,29 @@ private fun moveMark(key: KeyboardEvent) {
     options[(options.indexOf(radio) + step + options.size) % options.size].click()
 }
 
-/** The focused control's key, read before [root] is rebuilt. */
-internal fun focusedKey(root: Element): String? =
-    document.activeElement?.takeIf { root.contains(it) }?.getAttribute("data-focus")
+/** The focused control's key, read before the page is rebuilt. */
+internal fun focusedKey(): String? = document.activeElement?.getAttribute("data-focus")
 
-/** Focuses [state]'s focus in the rebuilt [root]; with none, or [Focus.Restore], puts back the
- *  control that had focus, [before] or the restored one, or the one [fallbackFocus] names when
- *  it's gone or disabled (GH-164). A control that isn't on the page leaves focus at the page's start. */
+/** Focuses [state]'s focus in the rebuilt [root]; with none, [Focus.Restore] or [Focus.Board], which
+ *  may be gone (GH-171), puts back the control that had focus, [before] or the one asked for, or the
+ *  one [fallbackFocus] names when it's gone or disabled (GH-164). A control that isn't on the page
+ *  leaves focus at the page's start. */
 internal fun applyFocus(root: Element, state: WebState, before: String?) {
     val focus = state.focus
-    if (focus != null && focus !is Focus.Restore) {
+    if (focus != null && focus !is Focus.Restore && focus != Focus.Board) {
         val control = root.querySelector("[data-focus=\"${focus.key}\"]") as? HTMLElement
         if (control != null) control.focus() else blurFocused()
         return
     }
     val key = focus?.key ?: before ?: return
     // Without preventScroll a redraw could scroll the page to the restored control.
-    val control = focusable(root, key) ?: focusable(root, fallbackFocus(key, state).key)
+    val control = focusable(key) ?: focusable(fallbackFocus(key, state).key)
     if (control != null) control.asDynamic().focus(js("({ preventScroll: true })")) else blurFocused()
 }
 
-private fun focusable(root: Element, key: String): HTMLElement? =
-    (root.querySelector("[data-focus=\"$key\"]") as? HTMLElement)?.takeUnless { (it as? HTMLButtonElement)?.disabled == true }
+/** The enabled control keyed [key]: in `#app`, or the footer's. */
+private fun focusable(key: String): HTMLElement? =
+    (document.querySelector("[data-focus=\"$key\"]") as? HTMLElement)?.takeUnless { (it as? HTMLButtonElement)?.disabled == true }
 
 private fun blurFocused() = (document.activeElement as? HTMLElement)?.blur()
 

@@ -53,7 +53,7 @@ Query options (harness.html):
 | `keys` | | with `report=keys`, the steps to play, comma-separated (below) |
 | `input` | | `keyboard` starts in keyboard mode, as a remembered Controls choice would (GH-171) |
 | `layout` | | `left` starts with the left-handed keys (GH-171) |
-| `grid` | | with `report=keys`, `1` adds the board as a screen reader's table to each line (below, GH-167) |
+| `grid` | | with `report=keys`, `1` adds the board as a screen reader's table or grid to each line (below, GH-167, GH-171) |
 
 To compare against master, build master's bundle into another directory and pass it with
 `--baseline <dir>`; positions in the `master` lines should match the `mouse` ones where nothing
@@ -147,7 +147,9 @@ wrapping, New from Enter, Save, each closed with Escape) and GH-164's kept focus
 Load after its dialog closes; an arrow pressed twice, then a held Enter and Tab; Prev at the first
 step and Restart on the solution screen), GH-166's announcements (New 5x5, then an arrow) and
 GH-167's board table and Read board (pressed, after a shift, under the Labels dialog, with
-Letters said phonetically, and absent from the solution screen) and
+Letters said phonetically, and absent from the solution screen), GH-171's Controls dialog, digits and
+board keys (both layouts, the grid's active descendant against the outlines, Tab order, focus after
+a dialog from the board, on leaving keyboard mode and on a footer link) and
 diffs the lines against
 `tests/keys_expected.txt`. Exit 0 means as expected, 1 differences (the diff is printed), 2 a
 failed build or a `TIMEOUT`. The solution screen's board is random, so on its lines `said` keeps
