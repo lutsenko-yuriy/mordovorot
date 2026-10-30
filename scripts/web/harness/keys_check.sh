@@ -28,6 +28,15 @@ queries=(
   "report=keys&grid=1&keys=focus:read-board,Enter,click:▶,Enter,click:Labels"
   # Letters, said in the phonetic alphabet by the cells and Read board.
   "report=keys&grid=1&keys=click:Labels,focus:label-letters,Enter,click:OK,focus:read-board,Enter"
+  # GH-171: Controls with 6 and with Tab+Enter; its groups' Tab stops and arrows; Escape; OK.
+  "report=keys&keys=6,ArrowRight,Tab,ArrowDown,ArrowDown,Tab,Tab,Tab,Escape"
+  "report=keys&keys=focus:controls,Enter,ArrowLeft,Enter"
+  "report=keys&keys=focus:labels,6,Escape,1,Escape"
+  # OK into keyboard mode: the digits then work. Focus goes to the board once it can take it (WU3).
+  "report=keys&keys=6,ArrowRight,click:OK,1,Escape"
+  # Digits only work in keyboard mode, where each button shows and names its shortcut.
+  "report=keys&input=keyboard&keys=focus:new,1,Escape,2,3,Escape,focus:load,3,Escape,focus:save,4,Escape,5,Escape,6,Escape"
+  "report=keys&input=keyboard&layout=left&keys=6,Tab,Escape"
 )
 
 log="$(cd "$project" && ./gradlew -q :web:jsBrowserDistribution 2>&1)" || {

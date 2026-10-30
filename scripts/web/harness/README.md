@@ -51,6 +51,8 @@ Query options (harness.html):
 | `fit` | `window` | `window` (the page is the window's size) or `scroll` (larger text: may be taller, see above, GH-168) |
 | `report` | `fit` | `fit` (one line per case, above), `styles` (every element's computed styles, for `styles_diff.sh`) or `keys` (below; `sizes` then defaults to `1200x800` and `boards` to `4`) |
 | `keys` | | with `report=keys`, the steps to play, comma-separated (below) |
+| `input` | | `keyboard` starts in keyboard mode, as a remembered Controls choice would (GH-171) |
+| `layout` | | `left` starts with the left-handed keys (GH-171) |
 | `grid` | | with `report=keys`, `1` adds the board as a screen reader's table to each line (below, GH-167) |
 
 To compare against master, build master's bundle into another directory and pass it with

@@ -102,9 +102,10 @@ function grid(doc) {
 function describe(doc, el) {
     const role = el.getAttribute("role") || { BUTTON: "button", INPUT: "textbox", A: "link" }[el.tagName] || "-";
     const labelledBy = el.getAttribute("aria-labelledby");
-    const name = el.getAttribute("aria-label") || (labelledBy && doc.getElementById(labelledBy)?.textContent) || el.textContent;
+    const name = el.getAttribute("aria-label") || (labelledBy && doc.getElementById(labelledBy)?.textContent) || heardText(el);
     const key = el.getAttribute("data-focus") || `${el.tagName} "${flat(el.textContent).slice(0, 20)}"`;
-    return `${key} role ${role} name "${flat(name)}"${el.getAttribute("aria-checked") === "true" ? " checked" : ""}`;
+    const digit = el.getAttribute("aria-keyshortcuts");
+    return `${key} role ${role} name "${flat(name)}"${el.getAttribute("aria-checked") === "true" ? " checked" : ""}${digit ? ` shortcut ${digit}` : ""}`;
 }
 
 const flat = text => (text || "").replace(/\s+/g, " ").trim();

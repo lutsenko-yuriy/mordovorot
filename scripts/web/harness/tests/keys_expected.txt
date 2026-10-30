@@ -50,3 +50,51 @@ mouse play 1200x800 4x4 | Enter native -> focus label-letters role radio name "â
 mouse play 1200x800 4x4 | click:OK - -> focus labels role button name "Labels" | dialog - | ring solid | keyboard yes | inert - | said - | grid table "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "W / W / W / W" | read-board enabled
 mouse play 1200x800 4x4 | focus:read-board - -> focus read-board role button name "Read board" | dialog - | ring solid | keyboard yes | inert - | said - | grid table "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "W / W / W / W" | read-board enabled
 mouse play 1200x800 4x4 | Enter native -> focus read-board role button name "Read board" | dialog - | ring solid | keyboard yes | inert - | said "Row N: W, W, W, W. Row N: W, W, W, W. Row N: W, W, W, W. Row N: W, W, W, W. N tiles in place." | grid table "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "W / W / W / W" | read-board enabled
+mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert - | said "New 4x4 game"
+mouse play 1200x800 4x4 | 6 page -> focus mode-mouse role radio name "Mouse" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | ArrowRight page -> focus mode-keyboard role radio name "Keyboard" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | Tab native -> focus layout-right_handed role radio name "Right-handed" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | ArrowDown page -> focus layout-left_handed role radio name "Left-handed" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | ArrowDown page -> focus layout-right_handed role radio name "Right-handed" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | Tab native -> focus BUTTON "OK" role button name "OK" | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | Tab native -> focus BUTTON "Cancel" role button name "Cancel" | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | Tab page -> focus mode-keyboard role radio name "Keyboard" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | Escape page -> focus - | dialog - | ring - | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert - | said "New 4x4 game"
+mouse play 1200x800 4x4 | focus:controls - -> focus controls role button name "Controls" shortcut 6 | dialog - | ring none | keyboard no | inert - | said -
+mouse play 1200x800 4x4 | Enter native -> focus mode-mouse role radio name "Mouse" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | ArrowLeft page -> focus mode-keyboard role radio name "Keyboard" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | Enter native -> focus mode-keyboard role radio name "Keyboard" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert - | said "New 4x4 game"
+mouse play 1200x800 4x4 | focus:labels - -> focus labels role button name "Labels" | dialog - | ring none | keyboard no | inert - | said -
+mouse play 1200x800 4x4 | 6 page -> focus mode-mouse role radio name "Mouse" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | Escape page -> focus labels role button name "Labels" | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | 1 - -> focus labels role button name "Labels" | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | Escape - -> focus labels role button name "Labels" | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert - | said "New 4x4 game"
+mouse play 1200x800 4x4 | 6 page -> focus mode-mouse role radio name "Mouse" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | ArrowRight page -> focus mode-keyboard role radio name "Keyboard" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | click:OK - -> focus - | dialog - | ring - | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | 1 page -> focus size-4 role button name "4x4" | dialog "New game size" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | Escape page -> focus - | dialog - | ring - | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert - | said "New 4x4 game"
+mouse play 1200x800 4x4 | focus:new - -> focus new role button name "New" shortcut 1 | dialog - | ring none | keyboard no | inert - | said -
+mouse play 1200x800 4x4 | 1 page -> focus size-4 role button name "4x4" | dialog "New game size" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | Escape page -> focus new role button name "New" shortcut 1 | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | 2 page -> focus save-name role textbox name "Save name" | dialog "Save game" | ring none | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | 3 - -> focus save-name role textbox name "Save name" | dialog "Save game" | ring none | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | Escape page -> focus new role button name "New" shortcut 1 | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | focus:load - -> focus load role button name "Load" shortcut 3 | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | 3 page -> focus dialog-cancel role button name "Cancel" | dialog "Load game" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | Escape page -> focus load role button name "Load" shortcut 3 | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | focus:save - -> focus save role button name "Save" shortcut 2 | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | 4 page -> focus label-numbers role radio name "â—Numbers1 2 3 4" checked | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | Escape page -> focus save role button name "Save" shortcut 2 | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | 5 page -> focus save role button name "Save" shortcut 2 | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | Escape - -> focus save role button name "Save" shortcut 2 | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | 6 page -> focus mode-keyboard role radio name "Keyboard" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | Escape page -> focus save role button name "Save" shortcut 2 | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert - | said "New 4x4 game"
+mouse play 1200x800 4x4 | 6 page -> focus mode-keyboard role radio name "Keyboard" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | Tab native -> focus layout-left_handed role radio name "Left-handed" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | Escape page -> focus - | dialog - | ring - | keyboard yes | inert - | said -
