@@ -46,6 +46,9 @@ object KeyScheme {
         }
     }
 
+    /** The solution screen's lines of the Controls dialog's key list. */
+    val SOLUTION_KEY_LINES = listOf("Solution: ← → A D H L Prev/Next ·", "  Space/Enter Next · R Restart ·", "  ↑ ↓ W S K J scroll")
+
     /** The first lines of the Controls dialog's key list. */
     fun boardKeyLines(layout: KeyboardLayout) = when (layout) {
         KeyboardLayout.RIGHT_HANDED -> listOf("Select tile    W A S D", "Shift row      ← →  H L", "Shift column   ↑ ↓  K J")

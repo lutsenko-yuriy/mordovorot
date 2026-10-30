@@ -132,8 +132,8 @@ class WebTileLabelsScenarioTest {
             solution = listOf(SolutionMove(isRow = true, index = 0, amount = 1), SolutionMove(isRow = false, index = 1, amount = 2)),
         )
         repeat(5) { page.game.onArrow(Arrow.UP, 3) }
-        page.game.onGiveUp()
-        page.game.onGiveUpAnswered(true)
+        page.game.solution.onGiveUp()
+        page.game.solution.onGiveUpAnswered(true)
         val steps = assertNotNull(page.state.solution).steps
 
         page.choose(TileLabels.LETTERS)

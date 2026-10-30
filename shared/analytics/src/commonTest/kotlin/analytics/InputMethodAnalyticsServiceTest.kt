@@ -56,4 +56,20 @@ class InputMethodAnalyticsServiceTest {
             recording.events,
         )
     }
+
+    @Test
+    fun `a provider is read per event, so the property follows the press`() {
+        val recording = RecordingAnalyticsService()
+        var method = "rich_ui"
+        val analytics = InputMethodAnalyticsService(recording) { method }
+
+        analytics.track("first")
+        method = "keyboard"
+        analytics.track("second")
+
+        assertEquals(
+            listOf(Event("first", mapOf("input_method" to "rich_ui")), Event("second", mapOf("input_method" to "keyboard"))),
+            recording.events,
+        )
+    }
 }

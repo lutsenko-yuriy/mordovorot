@@ -3,6 +3,7 @@ package web
 import org.w3c.dom.Element
 import org.w3c.dom.HTMLInputElement
 import org.w3c.dom.events.KeyboardEvent
+import viewmodel.KeyboardLayout
 import viewmodel.UnsolvableSaveChoice
 
 /** The modal dialog for [dialog], its answers going to [game] (GH-110). [onSaveWarning] gets the
@@ -67,10 +68,23 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                     button("OK") { game.onLabelsAnswered(ok = true) },
                 ),
             )
+            is WebDialog.Controls -> append(
+                radios("Play with", PlayMode.entries.map { mode ->
+                    radio(mode.title, mode == dialog.mode, Focus.ModeOption(mode)) { game.controls.onMode(mode) }
+                }),
+                radios("Keyboard keys", KeyboardLayout.entries.map { layout ->
+                    radio(layout.title, layout == dialog.layout, Focus.LayoutOption(layout)) { game.controls.onLayout(layout) }
+                }),
+                element("div", "key-list").apply { dialog.keyList.forEach { append(text("key-line", it)) } },
+                actions(
+                    button("OK") { game.controls.onAnswered(ok = true) },
+                    button("Cancel", "secondary") { game.controls.onAnswered(ok = false) },
+                ),
+            )
             WebDialog.GiveUp -> append(
                 actions(
-                    button("No", "secondary") { game.onGiveUpAnswered(false) }.focusKey(Focus.No),
-                    button("Yes") { game.onGiveUpAnswered(true) },
+                    button("No", "secondary") { game.solution.onGiveUpAnswered(false) }.focusKey(Focus.No),
+                    button("Yes") { game.solution.onGiveUpAnswered(true) },
                 ),
             )
         }
@@ -89,6 +103,30 @@ private fun labelRow(option: LabelOption, checked: Boolean, game: WebGame) =
             element("span", "mark").apply { textContent = if (checked) "●" else "○" },
             element("span", "name").apply { textContent = option.title },
             element("span", "sample").apply { textContent = option.sample.joinToString(" ") { it.padEnd(2) } },
+        )
+    }
+
+/** A group of radios, one Tab stop: the arrows move its mark (DomKeyboard). */
+private fun radios(title: String, options: List<Element>) = element("div", "radios").apply {
+    val titleId = "radios-${title.lowercase().replace(' ', '-')}"
+    setAttribute("role", "radiogroup")
+    setAttribute("aria-labelledby", titleId)
+    append(text("radios-title", title).apply { id = titleId })
+    append(element("div", "options").apply { options.forEach { append(it) } })
+}
+
+/** Only the [checked] radio is a Tab stop. */
+private fun radio(title: String, checked: Boolean, focus: Focus, onClick: () -> Unit) =
+    button("", if (checked) "checked" else null, onClick).focusKey(focus).apply {
+        setAttribute("role", "radio")
+        setAttribute("aria-checked", checked.toString())
+        setAttribute("tabindex", if (checked) "0" else "-1")
+        append(
+            element("span", "mark").apply {
+                setAttribute("aria-hidden", "true")
+                textContent = if (checked) "●" else "○"
+            },
+            element("span", "name").apply { textContent = title },
         )
     }
 

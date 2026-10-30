@@ -32,41 +32,57 @@ internal fun listenForKeys(root: Element, game: () -> WebGame) {
                 game().onEscape()
             }
             key.key == "Tab" -> wrapTab(dialog, key)
+            else -> moveMark(key)
         }
     })
 }
 
-/** From the dialog's last control Tab goes to its first, Shift+Tab the other way; from outside it, in. */
+/** Tab moves through the dialog's controls, wrapping at its ends, Shift+Tab the other way; from
+ *  outside it, in. Always by hand: Safari's own Tab skips buttons unless the system's Keyboard
+ *  navigation is on, and would leave the dialog for the address bar (GH-171). */
 private fun wrapTab(dialog: Element, key: KeyboardEvent) {
-    val controls = dialog.querySelectorAll("button:not([disabled]), input").asList().filterIsInstance<HTMLElement>()
+    val controls = dialog.querySelectorAll("button:not([disabled]):not([tabindex='-1']), input").asList().filterIsInstance<HTMLElement>()
     if (controls.isEmpty()) return
-    val active = document.activeElement
-    val inside = active != null && dialog.contains(active)
+    val from = controls.indexOf(document.activeElement)
     val target = when {
-        key.shiftKey && (!inside || active == controls.first()) -> controls.last()
-        !key.shiftKey && (!inside || active == controls.last()) -> controls.first()
-        else -> return
+        from < 0 -> if (key.shiftKey) controls.last() else controls.first()
+        key.shiftKey -> controls[(from - 1 + controls.size) % controls.size]
+        else -> controls[(from + 1) % controls.size]
     }
     key.preventDefault()
     target.focus()
+}
+
+/** Inside a group of radios the arrows press the next or previous one, wrapping (GH-171). */
+private fun moveMark(key: KeyboardEvent) {
+    val step = when (key.key) {
+        "ArrowDown", "ArrowRight" -> 1
+        "ArrowUp", "ArrowLeft" -> -1
+        else -> return
+    }
+    val radio = document.activeElement as? HTMLElement ?: return
+    val options = radio.closest(".radios")?.querySelectorAll("[role=radio]")?.asList()?.filterIsInstance<HTMLElement>() ?: return
+    key.preventDefault()
+    options[(options.indexOf(radio) + step + options.size) % options.size].click()
 }
 
 /** The focused control's key, read before [root] is rebuilt. */
 internal fun focusedKey(root: Element): String? =
     document.activeElement?.takeIf { root.contains(it) }?.getAttribute("data-focus")
 
-/** Focuses [state]'s focus in the rebuilt [root]; with none, puts back the control that had
- *  focus, [before], or the one [fallbackFocus] names when it's gone or disabled (GH-164). A
- *  control that isn't on the page leaves focus at the page's start. */
+/** Focuses [state]'s focus in the rebuilt [root]; with none, or [Focus.Restore], puts back the
+ *  control that had focus, [before] or the restored one, or the one [fallbackFocus] names when
+ *  it's gone or disabled (GH-164). A control that isn't on the page leaves focus at the page's start. */
 internal fun applyFocus(root: Element, state: WebState, before: String?) {
-    state.focus?.let { focus ->
+    val focus = state.focus
+    if (focus != null && focus !is Focus.Restore) {
         val control = root.querySelector("[data-focus=\"${focus.key}\"]") as? HTMLElement
         if (control != null) control.focus() else blurFocused()
         return
     }
-    if (before == null) return
+    val key = focus?.key ?: before ?: return
     // Without preventScroll a redraw could scroll the page to the restored control.
-    val control = focusable(root, before) ?: focusable(root, fallbackFocus(before, state).key)
+    val control = focusable(root, key) ?: focusable(root, fallbackFocus(key, state).key)
     if (control != null) control.asDynamic().focus(js("({ preventScroll: true })")) else blurFocused()
 }
 

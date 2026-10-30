@@ -116,6 +116,42 @@
     white-space: pre;
 }
 
+/* The Controls dialog's groups (GH-171). */
+.dialog .radios-title {
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.dialog .radios .options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.dialog .radios button {
+    display: flex;
+    gap: 0.5em;
+    background: transparent;
+    color: var(--ink);
+    box-shadow: inset 0 0 0 2px var(--frame);
+}
+
+.dialog .radios button:hover {
+    background: var(--frame);
+}
+
+.dialog .radios button.checked {
+    box-shadow: inset 0 0 0 2px var(--button);
+}
+
+/* The key list's lines are aligned with spaces, as in the terminal. */
+.dialog .key-list {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+    white-space: pre-wrap;
+}
+
 /* Grey is too faint on a hovered row's background (GH-165). */
 .dialog .choices.labels button:hover .sample {
     color: var(--ink);

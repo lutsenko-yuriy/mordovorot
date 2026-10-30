@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.27.2] — 2026-10-30 (PR #197 merged)
+
+### Changed
+- [wip] (PR #197) GH-171: Web: the Controls dialog and digit toolbar, on localhost only until the ticket's last WU (WU2/4).
+
 ## [0.27.1] — 2026-10-30 (PR #196 merged)
 
 ### Changed

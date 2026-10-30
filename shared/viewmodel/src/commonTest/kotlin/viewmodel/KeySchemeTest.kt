@@ -87,4 +87,12 @@ class KeySchemeTest {
             KeyScheme.boardKeyLines(LEFT_HANDED),
         )
     }
+
+    @Test
+    fun `the solution key lines name its keys`() {
+        assertEquals(
+            listOf("Solution: ← → A D H L Prev/Next ·", "  Space/Enter Next · R Restart ·", "  ↑ ↓ W S K J scroll"),
+            KeyScheme.SOLUTION_KEY_LINES,
+        )
+    }
 }

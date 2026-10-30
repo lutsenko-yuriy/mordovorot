@@ -86,12 +86,12 @@ class WebReadBoardScenarioTest {
         page.mordieSearches.latest.progress = SearchProgress(path.size, found = true, elapsedMs = 0, solution = path)
         repeat(5) { page.game.onArrow(Arrow.UP, 3) }
 
-        page.game.onGiveUp()
-        page.game.onGiveUpAnswered(true)
+        page.game.solution.onGiveUp()
+        page.game.solution.onGiveUpAnswered(true)
         assertTrue(page.state.solution != null)
         assertNull(page.state.boardWords)
 
-        page.game.onReplayNext()
+        page.game.solution.onReplayNext()
         assertNull(page.state.boardWords)
         assertEquals(emptyList(), page.state.home)
     }

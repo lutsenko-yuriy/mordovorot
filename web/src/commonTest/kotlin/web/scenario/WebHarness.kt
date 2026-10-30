@@ -11,8 +11,13 @@ import mordie.Mordie
 import storage.SavedMordie
 import testing.FakeMordieSearchFactory
 import testing.RecordingAnalyticsService
+import viewmodel.KeyboardLayout
+import web.Focus
 import web.Host
+import web.KeyPress
 import web.Layout
+import web.PlayMode
+import web.PressedWith
 import web.WebDialog
 import web.WebGame
 import web.WebRenderer
@@ -35,12 +40,15 @@ internal class WebHarness(
     private val layout: Layout = Layout.WIDE,
     private val appVersion: String = "9.9.9",
     private val host: Host = Host.LOCALHOST,
+    private val touch: Boolean = false,
+    private val keyboardModeEnabled: Boolean = true,
 ) {
     val saves = BrowserSaveRepository(store)
     val preferences = BrowserPreferenceRepository(store)
     val analytics = RecordingAnalyticsService()
     val mordieSearches = FakeMordieSearchFactory()
     val mordie = Mordie(mordieSearches)
+    val pressedWith = PressedWith()
     private val renderer = FakeWebRenderer()
     lateinit var game: WebGame
         private set
@@ -54,7 +62,7 @@ internal class WebHarness(
     val said: MutableList<String> get() = renderer.said
 
     fun start(): WebHarness {
-        game = startWebGame(board, saves, preferences, analytics, mordie, renderer, scope, layout, appVersion, host)
+        game = startWebGame(board, saves, preferences, analytics, mordie, renderer, scope, layout, appVersion, host, touch, keyboardModeEnabled, pressedWith)
         return this
     }
 
@@ -69,6 +77,17 @@ internal class WebHarness(
         said.clear()
         return this
     }
+
+    /** Remembers keyboard mode, and the left-handed layout when asked, as an earlier visit would. */
+    fun remembering(mode: PlayMode = PlayMode.KEYBOARD, keys: KeyboardLayout? = null): WebHarness {
+        preferences.set("input_mode", mode.wireName)
+        keys?.let { preferences.set("keyboard_layout", it.wireName) }
+        return this
+    }
+
+    /** A key pressed outside a dialog with focus on [from]; whether the game took it. */
+    fun press(key: String, from: Focus? = null, modified: Boolean = false, repeat: Boolean = false): Boolean =
+        game.onKey(KeyPress(key, modified, repeat), from?.key)
 
     fun seed(name: String, tiles: IntArray, moves: Int = 0, mordie: SavedMordie? = null): WebHarness {
         saves.save(name, tiles, sideOf(tiles), moves, mordie)

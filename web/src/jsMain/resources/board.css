@@ -114,6 +114,11 @@
         display: none;
     }
 
+    /* Keyboard mode is out of reach on touch screens (GH-171). */
+    .controls-row {
+        display: none;
+    }
+
     /* Out of sight, but still there for screen readers, which take over one-finger drags. */
     .board > .arrows {
         position: absolute;

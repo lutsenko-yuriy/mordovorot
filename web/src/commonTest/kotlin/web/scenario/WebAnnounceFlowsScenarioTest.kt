@@ -149,23 +149,23 @@ class WebAnnounceFlowsScenarioTest {
         repeat(5) { page.game.onArrow(Arrow.UP, 3) }
         page.said.clear()
 
-        page.game.onGiveUp()
-        page.game.onGiveUpAnswered(true)
-        page.game.onReplayNext()
+        page.game.solution.onGiveUp()
+        page.game.solution.onGiveUpAnswered(true)
+        page.game.solution.onReplayNext()
         // Column 2 down 2 is two shifts: each Next re-reads it.
-        page.game.onReplayNext()
-        page.game.onReplayNext()
+        page.game.solution.onReplayNext()
+        page.game.solution.onReplayNext()
         assertEquals(
             listOf("Solution, 2 moves", "Step 1 of 2: Row 1 right 1", "Step 2 of 2: Column 2 down 2", "Step 2 of 2: Column 2 down 2"),
             page.said,
         )
         page.said.clear()
 
-        repeat(3) { page.game.onReplayPrevious() }
+        repeat(3) { page.game.solution.onReplayPrevious() }
         assertEquals("Start, step 0 of 2", page.said.last())
-        page.game.onReplayNext()
+        page.game.solution.onReplayNext()
         page.said.clear()
-        page.game.onReplayRestart()
+        page.game.solution.onReplayRestart()
 
         assertEquals(listOf("Start, step 0 of 2"), page.said)
     }
@@ -178,7 +178,7 @@ class WebAnnounceFlowsScenarioTest {
         repeat(2) { page.game.onArrow(Arrow.DOWN, 1) }
         page.said.clear()
 
-        page.game.onMordiesSolution()
+        page.game.solution.onMordiesSolution()
 
         assertEquals(listOf("Solution, 2 moves"), page.said)
     }

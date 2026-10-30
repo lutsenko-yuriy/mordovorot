@@ -1,19 +1,67 @@
 package web.scenario
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import viewmodel.KeyboardLayout
+import web.Focus
+import web.PlayMode
 
-/** GH-171: analytics in keyboard play (`docs/ANALYTICS_EVENTS.md`). Stubs until WU2 (dialogs and
- *  `input_method`) and WU3 (shifts) make them green. */
+/** GH-171: analytics in keyboard play (`docs/ANALYTICS_EVENTS.md`). The shifts' are stubs until
+ *  WU3 makes them green. */
 class WebKeyboardAnalyticsScenarioTest {
 
     @Test
-    fun `input_method follows the press, and the launch and Controls events are sent`() {
-        // TODO: start in keyboard mode - app_launched.mode is keyboard
-        // TODO: press 6 - screen_controls_dialog with shortcut and keyboard
-        // TODO: click `Controls 6` - toolbar and rich_ui
-        // TODO: OK - input_mode_switched with controls_dialog
-        // TODO: press 4 - screen_labels_dialog with shortcut
-        // TODO: Escape in Controls - dialog_cancelled with controls
+    fun `input_method follows the press, and the launch and Controls events are sent`() = webTest {
+        val page = WebHarness(backgroundScope).remembering().start()
+        assertEquals("keyboard", page.props("app_launched").single()["mode"])
+        page.game.onSizeChosen(null)
+        page.analytics.events.clear()
+
+        page.press("6")
+        assertEquals(
+            mapOf("opened_from" to "shortcut", "screen" to "play", "platform" to "web", "input_method" to "keyboard"),
+            page.props("screen_controls_dialog").last(),
+        )
+        page.pressedWith.key()
+        page.game.onEscape()
+        assertEquals(mapOf("dialog" to "controls", "via" to "escape"), page.ownProps("dialog_cancelled").single())
+        assertEquals("keyboard", page.props("dialog_cancelled").single()["input_method"])
+
+        page.pressedWith.pointer()
+        page.game.controls.open()
+        assertEquals("toolbar", page.props("screen_controls_dialog").last()["opened_from"])
+        assertEquals("rich_ui", page.props("screen_controls_dialog").last()["input_method"])
+
+        page.game.controls.onMode(PlayMode.MOUSE)
+        page.game.controls.onAnswered(ok = true)
+        assertEquals(
+            mapOf("from_mode" to "keyboard", "to_mode" to "mouse", "trigger" to "controls_dialog", "result" to "success"),
+            page.ownProps("input_mode_switched").single(),
+        )
+    }
+
+    @Test
+    fun `OK with nothing changed sends no switch, and a layout change sends nothing at all`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.press("6")
+        page.game.controls.onLayout(KeyboardLayout.LEFT_HANDED)
+        page.analytics.events.clear()
+
+        page.game.controls.onAnswered(ok = true)
+
+        assertEquals(emptyList(), page.analytics.events)
+    }
+
+    @Test
+    fun `4 opens the Labels dialog as a shortcut, and its button as the toolbar`() = webTest {
+        val page = WebHarness(backgroundScope).remembering().startOn()
+
+        page.press("4")
+        assertEquals("shortcut", page.props("screen_labels_dialog").last()["opened_from"])
+        page.game.onEscape()
+
+        page.game.onLabels()
+        assertEquals("toolbar", page.props("screen_labels_dialog").last()["opened_from"])
     }
 
     @Test
@@ -24,10 +72,14 @@ class WebKeyboardAnalyticsScenarioTest {
     }
 
     @Test
-    fun `selection moves, 0 and mouse-mode keys send nothing`() {
-        // TODO: clear events
-        // TODO: press W, then 0
-        // TODO: in mouse mode press 1
-        // TODO: no events
+    fun `selection moves, 0 and mouse-mode keys send nothing`() = webTest {
+        val keyboard = WebHarness(backgroundScope).remembering().startOn()
+        keyboard.press("w", from = Focus.Board)
+        keyboard.press("0", from = Focus.Board)
+        assertEquals(emptyList(), keyboard.analytics.events)
+
+        val mouse = WebHarness(backgroundScope).startOn()
+        mouse.press("1")
+        assertEquals(emptyList(), mouse.analytics.events)
     }
 }

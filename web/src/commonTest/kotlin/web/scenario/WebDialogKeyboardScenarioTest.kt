@@ -91,7 +91,7 @@ class WebDialogKeyboardScenarioTest {
         val page = WebHarness(backgroundScope).startOn(original)
         page.reveal()
 
-        page.game.onGiveUp()
+        page.game.solution.onGiveUp()
 
         assertEquals(Focus.No, page.state.focus)
     }
@@ -125,7 +125,7 @@ class WebDialogKeyboardScenarioTest {
         assertEquals(TileLabels.NUMBERS, page.state.labels)
 
         page.reveal()
-        page.game.onGiveUp()
+        page.game.solution.onGiveUp()
         page.game.onEscape()
         assertNull(page.state.dialog)
         assertNull(page.state.solution)
@@ -145,8 +145,8 @@ class WebDialogKeyboardScenarioTest {
         page.game.onLabels()
         page.game.onLabelsAnswered(ok = false)
         page.reveal()
-        page.game.onGiveUp()
-        page.game.onGiveUpAnswered(false)
+        page.game.solution.onGiveUp()
+        page.game.solution.onGiveUpAnswered(false)
 
         assertEquals(
             listOf("size", "labels", "give_up").map { mapOf("dialog" to it, "via" to "button") },
@@ -210,12 +210,12 @@ class WebDialogKeyboardScenarioTest {
         val page = WebHarness(backgroundScope).startOn(original)
         page.reveal()
 
-        page.game.onGiveUp()
-        page.game.onGiveUpAnswered(false)
+        page.game.solution.onGiveUp()
+        page.game.solution.onGiveUpAnswered(false)
         assertEquals(Focus.GiveUpRow, page.state.focus)
 
-        page.game.onGiveUp()
-        page.game.onGiveUpAnswered(true)
+        page.game.solution.onGiveUp()
+        page.game.solution.onGiveUpAnswered(true)
         assertNotNull(page.state.solution)
         assertEquals(Focus.ReplayNext, page.state.focus)
     }
