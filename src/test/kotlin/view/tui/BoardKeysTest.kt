@@ -4,6 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import viewmodel.BoardKey
 import viewmodel.KeyboardLayout
 import viewmodel.KeyboardLayout.LEFT_HANDED
 import viewmodel.KeyboardLayout.RIGHT_HANDED
