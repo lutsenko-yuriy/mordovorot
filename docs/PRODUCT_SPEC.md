@@ -303,7 +303,7 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   reached, whatever is stored.
   - **Controls dialog** (`[ Controls 6 ]`, on its own row under the toolbar in both modes, or 6):
     `Play with ○ Mouse ○ Keyboard`, `Keyboard keys ○ Right-handed ○ Left-handed`, the marked layout's
-    key list, `[ OK ] [ Cancel ]`. It opens on `Play with`'s marked option; Tab moves between the two
+    key list, ending with `Letter keys need a Latin keyboard layout`, `[ OK ] [ Cancel ]`. It opens on `Play with`'s marked option; Tab moves between the two
     groups, OK and Cancel, and the arrows move a group's mark. OK applies both; Cancel or Escape
     changes nothing.
   - **Toolbar:** every button shows its digit: `[ New 1 ][ Save 2 ][ Load 3 ][ Labels 4 ]`,

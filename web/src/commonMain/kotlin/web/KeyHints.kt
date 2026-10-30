@@ -19,7 +19,10 @@ internal object KeyHints {
     val SOLUTION = listOf(KeyHint("← → A D H L", "prev/next"), KeyHint("Space Enter", "next"), KeyHint("R", "restart"), KeyHint("↑ ↓ W S K J", "scroll"))
 
     /** The Controls dialog's key list. */
-    fun keyList(layout: KeyboardLayout) = KeyScheme.boardKeyLines(layout) + TOOLBAR_KEYS + KeyScheme.SOLUTION_KEY_LINES
+    fun keyList(layout: KeyboardLayout) = KeyScheme.boardKeyLines(layout) + TOOLBAR_KEYS + KeyScheme.SOLUTION_KEY_LINES + LATIN_ONLY
+
+    /** Keys are read as the characters they type (D12), so `ц` isn't W. */
+    private const val LATIN_ONLY = "Letter keys need a Latin keyboard layout"
 
     private val TOOLBAR_KEYS = listOf("New 1 · Save 2 · Load 3 · Labels 4", "Give Up 5 · Controls 6", "0 Read board (screen reader)")
 }
