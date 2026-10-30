@@ -6,7 +6,7 @@ import org.w3c.dom.Element
 import org.w3c.dom.HTMLElement
 import web.drag.LineOffset
 
-/** Draws each [WebState] into [root] and turns clicks and drags into [game] intents (GH-110).
+/** Draws each [WebState] into [root] and turns its clicks into [game] intents, the board's and drags to [DomBoard] (GH-110).
  *  Plain DOM, rebuilt every frame, with the look in the sheets `index.html` links. */
 class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnouncer?) : WebRenderer {
 

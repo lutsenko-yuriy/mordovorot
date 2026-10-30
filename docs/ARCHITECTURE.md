@@ -227,14 +227,14 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # applySystemTextSize first (GH-168)
 ├── src/jsMain/kotlin/web/DomGestures.kt # stopPinchZoom: on touch screens, cancels WebKit's pinch
 │                                       # events, which iOS fires whatever touch-action says (GH-149)
-├── src/jsMain/kotlin/web/DomRenderer.kt # WebState -> DOM, clicks and pointer drags -> WebGame
+├── src/jsMain/kotlin/web/DomRenderer.kt # WebState -> DOM, clicks -> WebGame
 │                                       # intents; the page root holds a drag's pointer capture;
 │                                       # runs Slides and MessageFeed on animation frames, redrawing
 │                                       # only the tiles and Mordie's line; keeps the step list's
 │                                       # scroll across frames, the current step in view (GH-126);
 │                                       # the board sits in `.stage`, the box the tall layout's
 │                                       # tiles are sized from (GH-147)
-├── src/jsMain/kotlin/web/DomBoard.kt   # The board: tiles, arrows and drags, split from DomRenderer (GH-171)
+├── src/jsMain/kotlin/web/DomBoard.kt   # The board: tiles, arrows and pointer drags -> WebGame, split from DomRenderer (GH-171)
 ├── src/jsMain/kotlin/web/DomBoardGrid.kt # GH-167: during play, the tiles as a table for screen
 │                                       # readers - a row element per board row, each cell heard as
 │                                       # said (`delta, in place`), a wrapped copy aria-hidden - and the hidden Read board

@@ -15,6 +15,11 @@
     position: relative;
 }
 
+/* Tall, the stage is a grid (fit.css): the board and the hints stay together in its middle. */
+.app.keyboard-mode .stage {
+    align-content: center;
+}
+
 /* Over the tiles, in the board's middle cell: an absolute child takes its grid area as its box. */
 .selection {
     position: absolute;
