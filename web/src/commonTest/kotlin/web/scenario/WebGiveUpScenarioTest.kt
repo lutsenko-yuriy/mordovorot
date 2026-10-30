@@ -41,8 +41,8 @@ class WebGiveUpScenarioTest {
 
     private fun WebHarness.givenUp(): WebHarness {
         reveal()
-        game.onGiveUp()
-        game.onGiveUpAnswered(true)
+        game.solution.onGiveUp()
+        game.solution.onGiveUpAnswered(true)
         return this
     }
 
@@ -57,7 +57,7 @@ class WebGiveUpScenarioTest {
         val page = WebHarness(backgroundScope).startOn(original)
         assertEquals(GiveUpButton.DIMMED, page.state.giveUp)
 
-        page.game.onGiveUp()
+        page.game.solution.onGiveUp()
         assertNull(page.state.dialog)
         assertTrue(page.props("screen_give_up_dialog").isEmpty())
 
@@ -72,14 +72,14 @@ class WebGiveUpScenarioTest {
         page.game.onArrow(Arrow.LEFT, 2)
         val before = page.state
 
-        page.game.onGiveUp()
+        page.game.solution.onGiveUp()
         assertEquals(WebDialog.GiveUp, page.state.dialog)
-        page.game.onGiveUpAnswered(false)
+        page.game.solution.onGiveUpAnswered(false)
         assertEquals(before.unfocused(), page.state.unfocused())
         assertEquals(listOf("give_up"), page.props("dialog_cancelled").map { it["dialog"] })
 
-        page.game.onGiveUp()
-        page.game.onGiveUpAnswered(true)
+        page.game.solution.onGiveUp()
+        page.game.solution.onGiveUpAnswered(true)
         assertNull(page.state.dialog)
         assertEquals(shown(original), page.state.tiles)
         assertFalse(page.state.movesShown)
@@ -106,39 +106,39 @@ class WebGiveUpScenarioTest {
     fun `Next and Prev step the replay one shift at a time, with a slide, and Restart goes back to the start`() = webTest {
         val page = WebHarness(backgroundScope).startOn(original).givenUp()
 
-        page.game.onReplayPrevious()
-        page.game.onReplayRestart()
+        page.game.solution.onReplayPrevious()
+        page.game.solution.onReplayRestart()
         assertEquals(shown(original), page.state.tiles)
 
-        page.game.onReplayNext()
+        page.game.solution.onReplayNext()
         assertEquals(shown(afterFirstStep), page.state.tiles)
         assertEquals(LineOffset(Axis.ROW, line = 0, tiles = -1.0), page.state.slide)
         assertEquals(SolutionState(steps, current = 0, atStart = false, atEnd = false, moves = moves), page.state.solution)
         assertEquals(false, page.props("solution_replay_started").single()["restart"])
 
-        page.game.onReplayNext()
+        page.game.solution.onReplayNext()
         assertEquals(shown(afterOneColumnShift), page.state.tiles)
         assertEquals(LineOffset(Axis.COLUMN, line = 1, tiles = -1.0), page.state.slide)
         assertEquals(1, page.state.solution?.current)
 
-        page.game.onReplayPrevious()
+        page.game.solution.onReplayPrevious()
         assertEquals(shown(afterFirstStep), page.state.tiles)
         assertEquals(LineOffset(Axis.COLUMN, line = 1, tiles = 1.0), page.state.slide)
-        repeat(2) { page.game.onReplayNext() }
+        repeat(2) { page.game.solution.onReplayNext() }
         assertEquals(shown(solved(4)), page.state.tiles)
         assertEquals(true, page.state.solution?.atEnd)
         val atEnd = page.state
-        page.game.onReplayNext()
+        page.game.solution.onReplayNext()
         assertEquals(atEnd.tiles, page.state.tiles)
         assertEquals(true, page.props("solution_replay_finished").single()["stepped_back"])
 
-        page.game.onReplayRestart()
+        page.game.solution.onReplayRestart()
         assertEquals(shown(original), page.state.tiles)
         assertNull(page.state.slide)
         assertEquals(SolutionState(steps, current = null, atStart = true, atEnd = false, moves = moves), page.state.solution)
 
-        page.game.onReplayNext()
-        page.game.onReplayPrevious()
+        page.game.solution.onReplayNext()
+        page.game.solution.onReplayPrevious()
         assertEquals(shown(original), page.state.tiles)
         assertEquals(SolutionState(steps, current = null, atStart = true, atEnd = false, moves = moves), page.state.solution)
         assertFalse(page.game.hasUnsavedProgress())
@@ -152,7 +152,7 @@ class WebGiveUpScenarioTest {
         page.solve()
         assertEquals(GiveUpButton.MORDIES_SOLUTION, page.state.giveUp)
 
-        page.game.onMordiesSolution()
+        page.game.solution.onMordiesSolution()
         assertNull(page.state.dialog)
         assertEquals(shown(original), page.state.tiles)
         assertEquals(solutionLine, page.state.mordie)
@@ -162,7 +162,7 @@ class WebGiveUpScenarioTest {
         val beaten = WebHarness(backgroundScope).startOn(original)
         beaten.solve()
         assertEquals(GiveUpButton.HIDDEN, beaten.state.giveUp)
-        beaten.game.onMordiesSolution()
+        beaten.game.solution.onMordiesSolution()
         assertNull(beaten.state.solution)
         assertTrue(beaten.props("screen_solution").isEmpty())
     }
@@ -170,7 +170,7 @@ class WebGiveUpScenarioTest {
     @Test
     fun `a solution-screen save reopens the screen, and New and Load leave it`() = webTest {
         val page = WebHarness(backgroundScope).startOn(original).givenUp()
-        repeat(2) { page.game.onReplayNext() }
+        repeat(2) { page.game.solution.onReplayNext() }
         page.game.onSave()
         page.game.onSaveAnswered("s")
 

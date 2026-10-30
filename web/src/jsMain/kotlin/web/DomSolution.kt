@@ -20,9 +20,9 @@ internal fun stepList(solution: SolutionState): Element = element("div", "steps"
  *  click: the first frame is drawn before the renderer has its game. */
 internal fun replayButtons(solution: SolutionState, game: () -> WebGame, dialogOpen: Boolean): Element = element("div", "replay").apply {
     append(
-        button("◀ Prev") { game().onReplayPrevious() }.focusKey(Focus.ReplayPrev).also { it.disabled = dialogOpen || solution.atStart },
-        button("Next ▶") { game().onReplayNext() }.focusKey(Focus.ReplayNext).also { it.disabled = dialogOpen || solution.atEnd },
-        button("↻ Restart") { game().onReplayRestart() }.focusKey(Focus.ReplayRestart).also { it.disabled = dialogOpen || solution.atStart },
+        button("◀ Prev") { game().solution.onReplayPrevious() }.focusKey(Focus.ReplayPrev).also { it.disabled = dialogOpen || solution.atStart },
+        button("Next ▶") { game().solution.onReplayNext() }.focusKey(Focus.ReplayNext).also { it.disabled = dialogOpen || solution.atEnd },
+        button("↻ Restart") { game().solution.onReplayRestart() }.focusKey(Focus.ReplayRestart).also { it.disabled = dialogOpen || solution.atStart },
     )
 }
 
@@ -31,8 +31,8 @@ internal fun replayButtons(solution: SolutionState, game: () -> WebGame, dialogO
 internal fun giveUpRow(giveUp: GiveUpButton, game: () -> WebGame, dialogOpen: Boolean): Element? {
     val button = when (giveUp) {
         GiveUpButton.HIDDEN -> return null
-        GiveUpButton.MORDIES_SOLUTION -> button("Mordie's solution") { game().onMordiesSolution() }
-        GiveUpButton.GIVE_UP, GiveUpButton.DIMMED -> button("Give Up") { game().onGiveUp() }
+        GiveUpButton.MORDIES_SOLUTION -> button("Mordie's solution") { game().solution.onMordiesSolution() }
+        GiveUpButton.GIVE_UP, GiveUpButton.DIMMED -> button("Give Up") { game().solution.onGiveUp() }
     }
     button.disabled = dialogOpen || giveUp == GiveUpButton.DIMMED
     button.focusKey(Focus.GiveUpRow)

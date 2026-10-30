@@ -69,8 +69,8 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
             )
             WebDialog.GiveUp -> append(
                 actions(
-                    button("No", "secondary") { game.onGiveUpAnswered(false) }.focusKey(Focus.No),
-                    button("Yes") { game.onGiveUpAnswered(true) },
+                    button("No", "secondary") { game.solution.onGiveUpAnswered(false) }.focusKey(Focus.No),
+                    button("Yes") { game.solution.onGiveUpAnswered(true) },
                 ),
             )
         }

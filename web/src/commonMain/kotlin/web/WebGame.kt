@@ -6,10 +6,8 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import viewmodel.GameViewModel
-import viewmodel.GiveUpButton
 import viewmodel.PointerShift
 import viewmodel.SaveInfo
-import viewmodel.SolutionStep
 import viewmodel.TileLabels
 import viewmodel.UnsolvableSaveChoice
 import viewmodel.displayWithSize
@@ -34,18 +32,19 @@ class WebGame internal constructor(
     private val modal = WebModal { render(focus = it) }
     internal val labelsDialog = WebLabelsDialog(viewModel, ::cancelled) { modal.ask(it) }
     internal val dialogs = WebDialogFlows(viewModel, analytics, modal, ::cancelled)
+    internal val solution = WebSolutionFlows(this, viewModel, analytics, modal)
     private val requests = WebRequestRouter(this)
-    private var status: String? = null
+    internal var status: String? = null
     /** The toolbar action or startup restore under way, if any. */
     private var flow: Job? = null
     /** Where focus goes once [flow] ends: back to the button that started it, unless it moves on. */
-    private var closing: Focus = Focus.PageStart
+    internal var closing: Focus = Focus.PageStart
     private var drag: LineDrag? = null
     /** What the next frame says (GH-166); [render] hands it on once. */
-    private var saying: String? = null
+    internal var saying: String? = null
     /** The viewModel asked for a size during [flow], which so ends in a new game. */
     private var sizeAsked = false
-    private val idle get() = modal.shown == null && flow?.isActive != true && drag == null
+    internal val idle get() = modal.shown == null && flow?.isActive != true && drag == null
     /** Mordie's solution screen (GH-126): the board is the replay's, not the player's. */
     private val playable get() = idle && !viewModel.isSolved() && viewModel.solution() == null
 
@@ -105,41 +104,6 @@ class WebGame internal constructor(
         val moved = drag?.offset != null
         drag = null
         if (moved) render()
-    }
-
-    /** `[ Give Up ]`: the confirmation, then Mordie's solution screen on Yes. */
-    fun onGiveUp() {
-        if (viewModel.giveUpButton() != GiveUpButton.GIVE_UP) return
-        runFlow(Focus.GiveUpRow) {
-            analytics.track("screen_give_up_dialog", mapOf("board_size" to viewModel.squareSide(), "move_count" to viewModel.moveCount()))
-            if (modal.ask(WebDialog.GiveUp)) {
-                viewModel.giveUp()
-                saying = solutionScreen()
-                // The solution screen has no Give Up.
-                closing = Focus.ReplayNext
-            } else cancelled("give_up")
-        }
-    }
-
-    /** The give-up confirmation's answer: Yes or No. */
-    fun onGiveUpAnswered(yes: Boolean) = modal.answer<WebDialog.GiveUp, Boolean>(yes)
-
-    /** `[ Mordie's solution ]` after a win: the screen, with no confirmation. */
-    fun onMordiesSolution() {
-        if (!idle) return
-        status = null
-        viewModel.showSolution()
-        saying = solutionScreen()
-        render()
-    }
-
-    fun onReplayNext() = replay { viewModel.replayNext() }
-
-    fun onReplayPrevious() = replay { viewModel.replayPrevious() }
-
-    fun onReplayRestart() = replay(restart = true) {
-        viewModel.replayRestart()
-        null
     }
 
     /** `[ Labels ]` (GH-139): the picker, live on play, after a win and on the solution screen. */
@@ -226,7 +190,7 @@ class WebGame internal constructor(
     }
 
     /** `dialog_cancelled` for the dialog just closed, with how it was cancelled. */
-    private fun cancelled(dialog: String) =
+    internal fun cancelled(dialog: String) =
         analytics.track("dialog_cancelled", mapOf("dialog" to dialog, "via" to modal.closedVia.wire))
 
     /** Runs a shift on the unsolved board and renders, saying it in [words] (given the move count
@@ -244,18 +208,6 @@ class WebGame internal constructor(
         render()
     }
 
-    /** Steps the replay and renders, sliding the shift [action] made and saying the step it's on,
-     *  as a [restart] always does. */
-    private fun replay(restart: Boolean = false, action: () -> SolutionStep?) {
-        if (!idle || viewModel.solution() == null) return
-        status = null
-        val shifted = action()
-        if (shifted != null || restart) saying = viewModel.solution()?.let { Announcements.step(it.moves, it.current) }
-        render(shifted?.let(Slides::ofStep))
-    }
-
-    private fun solutionScreen() = viewModel.solution()?.let { Announcements.solution(it.moves.size) }
-
     /** A new game once a flow in which the viewModel asked for its size ends. */
     private fun sayAskedNewGame() {
         if (!sizeAsked) return
@@ -265,7 +217,7 @@ class WebGame internal constructor(
 
     /** Runs a toolbar action, unless another action or a dialog is under way, then renders with
      *  focus back on its [opener]. */
-    private fun runFlow(opener: Focus, action: suspend () -> Unit) {
+    internal fun runFlow(opener: Focus, action: suspend () -> Unit) {
         if (!idle) return
         status = null
         closing = opener
@@ -277,7 +229,7 @@ class WebGame internal constructor(
         }
     }
 
-    private fun render(slide: LineOffset? = null, focus: Focus? = null) {
+    internal fun render(slide: LineOffset? = null, focus: Focus? = null) {
         val solved = viewModel.isSolved()
         renderer.render(
             WebState(
