@@ -113,12 +113,20 @@ async function run(size, board) {
     await wait(400);
     // With no saves, startup asks for a size.
     const pick = `${board}x${board}`;
-    if (!clickText(win.document, pick)) {
+    let picked = clickText(win.document, pick);
+    if (!picked) {
         clickText(win.document, "New");
         await wait(200);
-        clickText(win.document, pick);
+        picked = clickText(win.document, pick);
     }
     await wait(400);
+    // GH-186: where Mordie sits out, the game draws no Give Up row (GH-116 may change which boards), so
+    // there is no solution screen to reach. Not when the pick failed: that shows no row either.
+    if (mode === "solution" && picked && !win.document.querySelector(".give-up")) {
+        results.push(`SKIP ${variant} solution ${w}x${h} ${board}x${board} (no Mordie)`);
+        f.remove();
+        return;
+    }
     if (mode === "solution") {
         // Mordie reveals its solution at a check every 5 shifts, so keep shifting until Give Up lights up.
         for (let i = 0; i < 80 && win.document.querySelector(".give-up button")?.disabled !== false; i++) {
