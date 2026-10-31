@@ -5,7 +5,7 @@ Core game: the board, its moves, Mordie and saves — what every client shares. 
 | Term | Definition | Code symbol |
 |---|---|---|
 | Board | The square side × square side grid of tiles holding the puzzle state | `BoardModel`, `BoardImpl` |
-| Board size | The valid range of square sides a game can use: 3–6, default 4 (6x6 since GH-160; Mordie sits 6x6 out until GH-116). Chosen via `--size=N`, the startup size prompt, or `[ New ]` | `BoardSize` |
+| Board size | The valid range of square sides a game can use: 3–6, default 4 (6x6 since GH-160; Mordie sits 6x6 out until GH-116); the web client also offers 7–9, see Very large (GH-207). Chosen via `--size=N`, the startup size prompt, or `[ New ]` | `BoardSize` |
 | Current save name | The name of the save the current game was most recently loaded from or saved to; prefills the Save dialog. Cleared by a new game, not kept across launches (GH-99) | `CurrentSaveName`, `ViewModel.currentSaveName()` |
 | Give up | Ending a game by accepting Mordie's solution: `[ Give Up ]` (own row above the toolbar, enabled once Mordie has found its solution) asks for confirmation, then opens the solution screen. The player's moves are discarded (GH-126) | — |
 | Mordie | The computer opponent: searches in the background for the shortest solution of the game's original arrangement (in moves), reports its progress under `Moves:`, and its result against the player's move count becomes the solved title | `Mordie`, `MordieHooks`, `MordieText` |

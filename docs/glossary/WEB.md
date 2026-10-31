@@ -9,4 +9,4 @@ Web client only: the page, its footer, drag, large boards and the public site. P
 | Public site | The web client published on GitHub Pages at `https://lutsenko-yuriy.github.io/mordovorot/`, updated on every merge to `master` whose build and tests pass (GH-111) | — |
 | Unsaved progress | At least one shift since the last New game, successful save or successful load. The web client asks before the tab is closed or reloaded with it (GH-110) | — |
 | Very large | Web client only: board sizes 7x7 to 9x9, offered in their own section of the New game dialog under the 3x3 to 6x6 row, with a warning that they are harder to solve and their tiles may be too small to use comfortably. Mordie sits them out like 6x6 | — |
-| Web client | The browser version of the game, mouse only and built on the shared modules, with its saves kept in the browser (GH-110) | — |
+| Web client | The browser version of the game, played with the mouse or, since GH-171, the keyboard, built on the shared modules, with its saves kept in the browser (GH-110) | — |

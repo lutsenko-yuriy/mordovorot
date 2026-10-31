@@ -22,3 +22,4 @@ A term that fits no file: ask the user, then either add a new domain file with a
 | grid, matrix | board |
 | rotate | shift |
 | win, correct state | solved |
+| line selection | selected tile |
