@@ -202,7 +202,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── WebModal.kt      # WebGame's dialog machinery: open/answer a WebDialog, the button that
 │   │                    # opened it, the cancel's `via` (GH-163)
 │   ├── DialogFocus.kt   # GH-163: Focus (a FocusTarget: the game's controls by data-focus key), each
-│   │                    # dialog's default focus and title (in web.a11y until GH-201)
+│   │                    # dialog's default focus and title
 │   ├── PageFocus.kt     # GH-164: fallbackFocus - where focus goes when its control is gone or disabled
 │   ├── Arrow.kt         # Which arrow was clicked, with its viewmodel Direction (GH-201)
 │   ├── Layout.kt        # layoutOf(width, height): WIDE (wider than tall) or TALL
@@ -219,7 +219,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── a11y/            # GH-179: web.a11y, screen readers and focus (also in jsMain below). web
 │   │   │                # depends on it, not it on web: it imports only the standard library, the DOM
 │   │   │                # and a few :shared:viewmodel types, pinned by A11yBoundaryTest (GH-201). The
-│   │   │                # game's ARIA moving in, and a Gradle module, are GH-201's later steps
+│   │   │                # game's ARIA moving in is GH-201's next step; a Gradle module is future work
 │   │   ├── Announcements.kt # GH-166: what a screen reader hears - shifts, the win, new game, load,
 │   │   │                # solution steps - and the arrows' accessible names; Read board's
 │   │   │                # row-by-row words, letters in the phonetic alphabet (GH-167)
