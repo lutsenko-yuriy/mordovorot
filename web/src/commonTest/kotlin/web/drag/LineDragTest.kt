@@ -3,6 +3,7 @@ package web.drag
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import viewmodel.Direction
 
 /** A press on the tile at row 1, column 2 of a 4x4 at (100, 100), with tiles 40 px apart. */
 private fun drag() = LineDrag(row = 1, col = 2, x = 100.0, y = 100.0, pitch = 40.0, side = 4)
@@ -75,5 +76,13 @@ class LineDragTest {
         assertEquals(DragShift(Axis.ROW, line = 1, steps = 1), drag().apply { move(300.0, 100.0) }.release())
         assertEquals(DragShift(Axis.ROW, line = 1, steps = -1), drag().apply { move(-100.0, 100.0) }.release())
         assertNull(drag().apply { move(260.0, 100.0) }.release())
+    }
+
+    @Test
+    fun `a shift moves right or down when positive, left or up when negative`() {
+        assertEquals(Direction.RIGHT, DragShift(Axis.ROW, line = 0, steps = 2).direction)
+        assertEquals(Direction.LEFT, DragShift(Axis.ROW, line = 0, steps = -2).direction)
+        assertEquals(Direction.DOWN, DragShift(Axis.COLUMN, line = 0, steps = 1).direction)
+        assertEquals(Direction.UP, DragShift(Axis.COLUMN, line = 0, steps = -1).direction)
     }
 }

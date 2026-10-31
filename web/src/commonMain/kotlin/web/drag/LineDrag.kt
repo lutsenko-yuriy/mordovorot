@@ -2,6 +2,7 @@ package web.drag
 
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import viewmodel.Direction
 
 enum class Axis { ROW, COLUMN }
 
@@ -10,6 +11,12 @@ data class LineOffset(val axis: Axis, val line: Int, val tiles: Double)
 
 /** What a released drag does: [steps] shifts of [line] on [axis] (positive is right or down). */
 data class DragShift(val axis: Axis, val line: Int, val steps: Int)
+
+/** The way the line moves: a row right or left, a column down or up, by the sign of [DragShift.steps]. */
+val DragShift.direction: Direction get() = when (axis) {
+    Axis.ROW -> if (steps > 0) Direction.RIGHT else Direction.LEFT
+    Axis.COLUMN -> if (steps > 0) Direction.DOWN else Direction.UP
+}
 
 /** One drag from a press on the tile at [row], [col] at ([x], [y]), on a board of [side] with tiles
  *  [pitch] apart, all in pixels (GH-110). The first move past [THRESHOLD] locks the axis. */

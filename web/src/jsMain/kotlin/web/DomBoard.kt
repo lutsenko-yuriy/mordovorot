@@ -44,7 +44,7 @@ internal class DomBoard(private val root: HTMLElement, private val game: () -> W
         fun arrow(label: String, arrow: Arrow, line: Int) =
             button(label, "arrow") { game().onArrow(arrow, line) }.focusKey(Focus.ArrowButton(arrow, line)).also {
                 it.disabled = disabled
-                it.setAttribute("aria-label", Announcements.line(arrow, line))
+                it.setAttribute("aria-label", Announcements.line(arrow.direction, line))
             }
         fun arrows(arrow: Arrow, label: String, axis: String) =
             element("div", "arrows $axis").apply { repeat(side) { append(arrow(label, arrow, it)) } }

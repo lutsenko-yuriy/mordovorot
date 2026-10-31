@@ -1,6 +1,7 @@
 package web
 
 import analytics.AnalyticsService
+import kotlin.math.abs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
@@ -18,9 +19,7 @@ import web.a11y.Focus
 import web.drag.Axis
 import web.drag.LineDrag
 import web.drag.LineOffset
-
-/** Which arrow was clicked: [LEFT]/[RIGHT] shift a row, [UP]/[DOWN] a column. */
-enum class Arrow { LEFT, RIGHT, UP, DOWN }
+import web.drag.direction
 
 /** The browser's View (GH-110): takes the page's intents, runs them on [viewModel] and renders a
  *  [WebState] after every change. A dialog is modal: while one is open, or a toolbar action or the
@@ -79,7 +78,7 @@ class WebGame internal constructor(
 
     /** One step of the line [arrow] and [line] name, by [source], sliding it into place. */
     internal fun shiftLine(arrow: Arrow, line: Int, source: ShiftSource) =
-        shift({ Announcements.shift(arrow, line, it) }, Slides.ofArrow(arrow, line)) {
+        shift({ Announcements.shift(arrow.direction, line, it) }, Slides.ofArrow(arrow, line)) {
             when (arrow) {
                 Arrow.LEFT -> viewModel.shiftLeft(line, source)
                 Arrow.RIGHT -> viewModel.shiftRight(line, source)
@@ -105,7 +104,7 @@ class WebGame internal constructor(
     fun onDragEnd() {
         val released = drag?.release() ?: return onDragCancel()
         drag = null
-        shift({ Announcements.drag(released, it) }) {
+        shift({ Announcements.drag(released.direction, released.line, abs(released.steps), it) }) {
             when (released.axis) {
                 Axis.ROW -> viewModel.shiftRow(released.line, released.steps, PointerShift.DRAG)
                 Axis.COLUMN -> viewModel.shiftColumn(released.line, released.steps, PointerShift.DRAG)
