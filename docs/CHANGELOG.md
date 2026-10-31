@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.28.1] — 2026-10-31 (PR #203 merged)
+
+### Changed
+- [app] (PR #203) GH-179: the screen-reader announcer, focus-ring styles and dialog focus code move from the web keyboard code into a new `web.a11y` package. No behaviour change.
+
 ## [0.28.0] — 2026-10-30 (PR #199 merged)
 
 ### Added
