@@ -11,9 +11,9 @@ import mordie.SearchProgress
 import mordie.SolutionMove
 import viewmodel.GiveUpButton
 import web.Arrow
+import web.Focus
 import web.ToolbarButton
 import web.WebDialog
-import web.a11y.Focus
 
 /** GH-171: the digit toolbar in keyboard mode. The board's keys are in [WebKeyboardBoardScenarioTest]. */
 class WebKeyboardPlayScenarioTest {

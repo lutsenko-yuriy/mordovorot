@@ -2,34 +2,32 @@ package web.a11y
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import viewmodel.Direction
 import viewmodel.SolutionStep
-import web.Arrow
-import web.drag.Axis
-import web.drag.DragShift
 
 class AnnouncementsTest {
 
     @Test
     fun `a line is named from 1, with its direction`() {
-        assertEquals("Row 2 left", Announcements.line(Arrow.LEFT, 1))
-        assertEquals("Row 1 right", Announcements.line(Arrow.RIGHT, 0))
-        assertEquals("Column 4 up", Announcements.line(Arrow.UP, 3))
-        assertEquals("Column 3 down", Announcements.line(Arrow.DOWN, 2))
+        assertEquals("Row 2 left", Announcements.line(Direction.LEFT, 1))
+        assertEquals("Row 1 right", Announcements.line(Direction.RIGHT, 0))
+        assertEquals("Column 4 up", Announcements.line(Direction.UP, 3))
+        assertEquals("Column 3 down", Announcements.line(Direction.DOWN, 2))
     }
 
     @Test
     fun `an arrow shift adds the move count only when it starts a move`() {
-        assertEquals("Row 2 left", Announcements.shift(Arrow.LEFT, 1, newMove = null))
-        assertEquals("Row 2 left, 1 move", Announcements.shift(Arrow.LEFT, 1, newMove = 1))
-        assertEquals("Column 4 up, 5 moves", Announcements.shift(Arrow.UP, 3, newMove = 5))
+        assertEquals("Row 2 left", Announcements.shift(Direction.LEFT, 1, newMove = null))
+        assertEquals("Row 2 left, 1 move", Announcements.shift(Direction.LEFT, 1, newMove = 1))
+        assertEquals("Column 4 up, 5 moves", Announcements.shift(Direction.UP, 3, newMove = 5))
     }
 
     @Test
     fun `a drag says how far, either way`() {
-        assertEquals("Row 1 left 2", Announcements.drag(DragShift(Axis.ROW, 0, -2), newMove = null))
-        assertEquals("Row 3 right 1, 2 moves", Announcements.drag(DragShift(Axis.ROW, 2, 1), newMove = 2))
-        assertEquals("Column 2 up 3", Announcements.drag(DragShift(Axis.COLUMN, 1, -3), newMove = null))
-        assertEquals("Column 1 down 2", Announcements.drag(DragShift(Axis.COLUMN, 0, 2), newMove = null))
+        assertEquals("Row 1 left 2", Announcements.drag(Direction.LEFT, 0, 2, newMove = null))
+        assertEquals("Row 3 right 1, 2 moves", Announcements.drag(Direction.RIGHT, 2, 1, newMove = 2))
+        assertEquals("Column 2 up 3", Announcements.drag(Direction.UP, 1, 3, newMove = null))
+        assertEquals("Column 1 down 2", Announcements.drag(Direction.DOWN, 0, 2, newMove = null))
     }
 
     @Test

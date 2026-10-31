@@ -8,7 +8,7 @@ import kotlin.test.assertTrue
 import mordie.SearchProgress
 import mordie.SolutionMove
 import web.Arrow
-import web.a11y.Focus
+import web.Focus
 
 /** GH-171: what a screen reader hears in keyboard mode. The reader says the selected cell itself, on
  *  a selection move and on the board taking focus (`docs/knowledge/notes/GH-171.md`). */

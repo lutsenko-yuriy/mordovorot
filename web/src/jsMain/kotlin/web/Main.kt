@@ -39,7 +39,8 @@ fun main() {
         pressedWith,
     )
     renderer.game = game
-    listenForKeys(root) { game }
+    listenForKeys(root)
+    listenForEscape(root) { game }
     listenForPlayKeys(root, pressedWith) { game }
     // The browser's own "Leave site?" prompt, only while some progress isn't in a save.
     window.addEventListener("beforeunload", { event ->

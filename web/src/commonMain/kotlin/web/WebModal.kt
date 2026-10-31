@@ -1,8 +1,6 @@
 package web
 
 import kotlinx.coroutines.CompletableDeferred
-import web.a11y.Focus
-import web.a11y.defaultFocus
 
 /** How a dialog was cancelled, as `dialog_cancelled.via` (GH-163). */
 internal enum class CancelVia(val wire: String) { BUTTON("button"), ESCAPE("escape") }

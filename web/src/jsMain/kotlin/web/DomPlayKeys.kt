@@ -3,7 +3,6 @@ package web
 import kotlinx.browser.document
 import org.w3c.dom.Element
 import org.w3c.dom.events.KeyboardEvent
-import web.a11y.composing
 import web.a11y.focusedKey
 
 /** The keys outside dialogs (GH-171): [game] says whether it took each, and a key it took does

@@ -1,8 +1,6 @@
-package web.a11y
+package web
 
 import viewmodel.GiveUpButton
-import web.PlayMode
-import web.WebState
 
 private const val ARROW_PREFIX = "arrow-"
 

@@ -3,6 +3,7 @@ package web
 import kotlinx.browser.document
 import org.w3c.dom.Element
 import org.w3c.dom.HTMLButtonElement
+import org.w3c.dom.events.KeyboardEvent
 
 // The page's building blocks (GH-110), shared by DomRenderer and the dialogs.
 
@@ -26,3 +27,6 @@ internal fun <E : Element> E.withDigit(digit: Int?): E = apply {
         textContent = " $digit"
     })
 }
+
+/** Part of an IME composition: Safari ends it before the key's keydown, which then has only keyCode 229. */
+internal val KeyboardEvent.composing: Boolean get() = isComposing || keyCode == 229

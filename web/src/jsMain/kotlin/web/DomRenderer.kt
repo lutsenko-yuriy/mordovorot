@@ -5,7 +5,6 @@ import kotlinx.dom.clear
 import org.w3c.dom.Element
 import org.w3c.dom.HTMLElement
 import web.a11y.DomAnnouncer
-import web.a11y.Focus
 import web.a11y.applyFocus
 import web.a11y.focusKey
 import web.a11y.focusedKey
@@ -97,7 +96,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         dialog?.let { root.append(element("div", if (reopened) "overlay shown" else "overlay").apply { append(dialogElement(it, game) { warning -> saveWarning = warning }) }) }
         drawMordie(now)
         setBehindDialog(root, dialog != null)
-        applyFocus(root, state, focused)
+        applyFocus(root, state.focus, focused) { fallbackFocus(it, state) }
     }
 
     /** A frame around the kept board (GH-171): the tiles updated, the rest redrawn, focus left or put back. */
@@ -110,7 +109,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         root.querySelector(".panel")?.replaceWith(panel(state))
         placeSteps(state, stepsScroll)
         drawMordie(now)
-        applyFocus(root, state, focused)
+        applyFocus(root, state.focus, focused) { fallbackFocus(it, state) }
     }
 
     /** Beside the board when the window is wide; when tall, its items stack around it (styles.css). */

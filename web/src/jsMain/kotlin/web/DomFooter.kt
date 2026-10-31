@@ -3,7 +3,6 @@ package web
 import kotlinx.browser.document
 import org.w3c.dom.Element
 import org.w3c.dom.Node
-import web.a11y.Focus
 import web.a11y.focusKey
 
 /** The footer line (GH-111) as `<footer>`: its links open in a new tab, keeping the game in this one.
