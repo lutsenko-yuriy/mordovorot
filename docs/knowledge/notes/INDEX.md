@@ -73,6 +73,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-174: Web harness: a keyboard and accessibility mode](GH-174.md)
 - [GH-179: Web: gather screen-reader and focus code into its own package](GH-179.md)
 - [GH-186: Web harness: skip the solution screen where Mordie sits out](GH-186.md)
+- [GH-187: Split docs/GLOSSARY.md by domain](GH-187.md)
 - [GH-189: Keyboard controls: a Controls dialog and a left-handed layout](GH-189.md)
 - [GH-200: Keyboard play on non-Latin keyboard layouts](GH-200.md)
 - [GH-201: Web: untangle screen-reader and focus code from the game code](GH-201.md)

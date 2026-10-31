@@ -13,6 +13,7 @@ Full product specifications: docs/PRODUCT_SPEC.md
 | File | Purpose |
 |---|---|
 | docs/PRODUCT_SPEC.md | What the app does — feature requirements |
+| docs/GLOSSARY.md | Canonical domain terms — an index of the per-domain glossaries in `docs/glossary/`, plus known aliases to avoid |
 | docs/ARCHITECTURE.md | How the code is organised — layers, directory structure, dependencies |
 | docs/TECH_STACK.md | Languages, frameworks, platforms and tooling the project uses |
 | docs/CODE_STYLE.md | Code style rules — base standard per language, formatting, linting, comment hygiene |
@@ -43,7 +44,7 @@ Full product specifications: docs/PRODUCT_SPEC.md
 | skills/manage/note/SKILL.md | Capture a quick observation mid-session into `docs/knowledge/notes/` |
 | skills/manage/checkup/SKILL.md | Two-tier periodic code-quality checkup (light monthly / heavy quarterly) — walks 9 non-mechanical dimensions, fixes inline or defers findings to a ledger with deadlines |
 | skills/design/analyze/SKILL.md | Analytics planning: identify events and screen views for a feature |
-| skills/design/brief/SKILL.md | Feature intake: clarifying dialog → scoped PM ticket + glossary update. When called with an existing ticket ID, checks if the description is still current and offers to revise it. |
+| skills/design/brief/SKILL.md | Feature intake: clarifying dialog → scoped PM ticket + glossary update (into the term's domain file). When called with an existing ticket ID, checks if the description is still current and offers to revise it. |
 | skills/design/plan/SKILL.md | Implementation planning: structured plan from a PM issue |
 | skills/design/research/SKILL.md | Literature research: thesis/antithesis/synthesis for a claim, or a scoping map for a bare topic — cited evidence, single synthesis pass |
 | skills/build/implement/SKILL.md | TDD implementation and PR/MR |

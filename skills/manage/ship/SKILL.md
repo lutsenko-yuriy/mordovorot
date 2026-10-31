@@ -3,7 +3,7 @@ name: ship
 effort: RAPID
 reasoning: TACTICAL
 output_style: CONCISE
-description: Post-merge housekeeping after a PR/MR is approved. Closes the linked PM issues, adds a CHANGELOG entry, regenerates BACKLOG.md, bumps the version, proposes PRODUCT_SPEC.md and GLOSSARY.md updates for approval, commits everything onto the feature branch, pushes, and merges. Invoke when the user approves a PR/MR, before merging.
+description: Post-merge housekeeping after a PR/MR is approved. Closes the linked PM issues, adds a CHANGELOG entry, regenerates BACKLOG.md, bumps the version, proposes PRODUCT_SPEC.md and glossary updates for approval, commits everything onto the feature branch, pushes, and merges. Invoke when the user approves a PR/MR, before merging.
 ---
 
 The project management tool is **GitHub Issues**. The issue identifier prefix is **GH**.
@@ -58,7 +58,7 @@ Find the project's version file (check `CLAUDE.md` → "Common Commands" for the
 
 Do not touch the build number — CI manages it.
 
-### 5. Update PRODUCT_SPEC.md and GLOSSARY.md
+### 5. Update PRODUCT_SPEC.md and the glossary
 
 Skip this step if the new CHANGELOG entry (added in step 2) contains only `[meta]`, `[ci]`, or `[app]` tags — those PRs introduce no observable user-facing behaviour change. For all other PRs (`[user]` entries), proceed as follows:
 
@@ -66,7 +66,7 @@ Skip this step if the new CHANGELOG entry (added in step 2) contains only `[meta
 2. Re-read the ticket description (already fetched in step 1).
 3. Determine what changed or was added:
    - **Product spec** (`docs/PRODUCT_SPEC.md`) — identify any new or modified user-facing behaviour. Propose a minimal, precise addition or edit to the relevant section (append a new bullet or update an existing one; never rewrite unrelated content).
-   - **Glossary** (`docs/GLOSSARY.md`) — identify any new canonical domain terms introduced by the feature. For each, propose a new entry with a definition.
+   - **Glossary** (the index `docs/GLOSSARY.md` and the domain files it links to) — identify any new canonical domain terms introduced by the feature. For each, propose a new entry with a definition, and the domain file it goes in (per the index).
 4. Present the proposed changes to the user **before writing anything**. Show the exact text to be added or replaced. Wait for explicit approval or revision instructions.
 5. Apply only the approved changes.
 
@@ -79,7 +79,7 @@ Stage only the files changed above and commit onto the feature branch:
 ```bash
 git add docs/CHANGELOG.md docs/BACKLOG.md <version-file>
 # add only if modified in step 5:
-git add docs/PRODUCT_SPEC.md docs/GLOSSARY.md
+git add docs/PRODUCT_SPEC.md docs/GLOSSARY.md docs/glossary/
 git commit -m "chore: release GH-XX, bump version to X.Y.Z"
 git push
 ```
