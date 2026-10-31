@@ -3,7 +3,9 @@ package web
 import analytics.AnalyticsService
 import analytics.InputMethodAnalyticsService
 import analytics.PlatformAnalyticsService
+import board_model.BoardImpl
 import board_model.BoardModel
+import board_model.BoardSize
 import kotlinx.coroutines.CoroutineScope
 import mordie.Mordie
 import storage.PreferenceRepository
@@ -19,6 +21,9 @@ import viewmodel.UiRequestChannel
 import viewmodel.UnsavedProgress
 import viewmodel.UnsolvableSaveExit
 import viewmodel.buildGameViewModel
+
+/** The page's board: the web client alone offers [BoardSize.VERY_LARGE] (GH-207). */
+fun webBoard(): BoardImpl = BoardImpl(maxSide = BoardSize.VERY_LARGE.last)
 
 /** The page's wiring (GH-110), shared by the page's `main` and the scenario tests: tracks
  *  `app_launched` (with [appVersion] and [host], GH-111, and the tile labels kept in

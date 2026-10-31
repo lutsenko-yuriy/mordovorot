@@ -91,7 +91,7 @@ class ColourContrastStylesTest {
     fun `every tile's label meets 4_5 to 1 on every board`() {
         val failures = themes.flatMap { (name, theme) ->
             val ink = Wcag.hex(theme.getValue("tile-ink"))
-            (3..6).flatMap { side ->
+            (3..9).flatMap { side ->
                 (0 until side).flatMap { row ->
                     (0 until side).mapNotNull { col ->
                         val lightness = percent(theme, "tile-light") - col * percent(theme, "tile-ramp") / (side - 1)

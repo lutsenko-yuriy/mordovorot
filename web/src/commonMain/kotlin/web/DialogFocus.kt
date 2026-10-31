@@ -56,6 +56,10 @@ fun defaultFocus(dialog: WebDialog): Focus = when (dialog) {
     is WebDialog.Controls -> Focus.ModeOption(dialog.mode)
 }
 
+/** The Very large section's title and warning line in the size picker (GH-207). */
+const val VERY_LARGE_TITLE = "Very large"
+const val VERY_LARGE_WARNING = "Harder to solve, and the tiles may be too small to use comfortably."
+
 /** The dialog's title, which also names it for screen readers. */
 val WebDialog.title: String get() = when (this) {
     is WebDialog.Size -> "New game size"

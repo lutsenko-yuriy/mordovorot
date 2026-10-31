@@ -19,7 +19,7 @@ internal class WebDialogFlows(
     /** [openedFrom] is `toolbar` or a `ChooseBoardSize.origin`, as `screen_size_dialog.opened_from`. */
     suspend fun chooseSize(openedFrom: String): Int? {
         analytics.track("screen_size_dialog", mapOf("opened_from" to openedFrom))
-        val size = modal.ask<Int?>(WebDialog.Size((BoardSize.MIN..BoardSize.MAX).toList(), viewModel.squareSide()))
+        val size = modal.ask<Int?>(WebDialog.Size((BoardSize.MIN..BoardSize.MAX).toList(), viewModel.squareSide(), BoardSize.VERY_LARGE.toList()))
         if (size == null) cancelled("size")
         return size
     }

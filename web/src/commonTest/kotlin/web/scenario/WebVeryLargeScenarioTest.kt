@@ -1,92 +1,211 @@
 package web.scenario
 
+import board_model.Solvability
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import viewmodel.GiveUpButton
+import viewmodel.TileLabels
+import viewmodel.TileSelection
+import viewmodel.UnsolvableSaveChoice
+import web.Arrow
+import web.Focus
+import web.LabelOption
+import web.SaveEntry
+import web.VERY_LARGE_TITLE
+import web.VERY_LARGE_WARNING
+import web.WebDialog
 
 /** GH-207 scenarios: very large boards (7x7 to 9x9) in the web client, through [WebHarness]. */
 class WebVeryLargeScenarioTest {
 
+    private val sizePicker = WebDialog.Size(listOf(3, 4, 5, 6), current = 4, veryLarge = listOf(7, 8, 9))
+
+    private fun oneShiftFromSolved(side: Int) = intArrayOf(side - 1) + IntArray(side - 1) { it } + IntArray(side * side - side) { it + side }
+
+    /** Solved, with the first two tiles swapped: [side] odd makes it unsolvable. */
+    private fun swapped(side: Int) = solved(side).also { it[0] = 1; it[1] = 0 }
+
     @Test
     fun `New offers a Very large section and starts 7x7, 8x8 and 9x9 boards`() = webTest {
-        // TODO: 1. Start the page on 4x4, then press New.
-        // TODO: 2. The dialog is WebDialog.Size with 3-6, veryLarge 7-9, current 4, the title "Very large"
-        //          and the line "Harder to solve, and the tiles may be too small to use comfortably."
-        // TODO: 3. Choose 7, then 8, then 9, each time through New.
-        // TODO: 4. The side and the tile count are right (49, 64 and 81 tiles, labelled 1..N²).
-        // TODO: 5. new_game_size_selected carries size 7, 8 and 9 with trigger toolbar.
+        val page = WebHarness(backgroundScope).startOn()
+
+        page.game.onNew()
+        assertEquals(sizePicker, page.state.dialog)
+        assertEquals("Very large", VERY_LARGE_TITLE)
+        assertEquals("Harder to solve, and the tiles may be too small to use comfortably.", VERY_LARGE_WARNING)
+        page.game.onSizeChosen(7)
+        page.game.onNew()
+        page.game.onSizeChosen(8)
+        page.game.onNew()
+        page.game.onSizeChosen(9)
+
+        assertEquals(9, page.state.side)
+        assertEquals((1..81).map { "$it" }, page.state.tileTexts.sortedBy { it.toInt() })
+        assertEquals(
+            listOf(7, 8, 9).map { mapOf("size" to it, "trigger" to "toolbar") },
+            page.ownProps("new_game_size_selected"),
+        )
     }
 
     @Test
     fun `the startup picker shows the Very large section too`() = webTest {
-        // TODO: 1. Start the page with no saves.
-        // TODO: 2. The size picker is open with the Very large section.
-        // TODO: 3. Cancel keeps the board already shown, and dialog_cancelled fires for size.
+        val page = WebHarness(backgroundScope).start()
+        assertEquals(sizePicker, page.state.dialog)
+
+        page.game.onSizeChosen(null)
+
+        assertNull(page.state.dialog)
+        assertEquals(listOf("size"), page.props("dialog_cancelled").map { it["dialog"] })
     }
 
     @Test
     fun `the Very large section follows the unsolvable-save New game too`() = webTest {
-        // TODO: 1. Seed an unsolvable save.
-        // TODO: 2. Load it, then choose New game.
-        // TODO: 3. The size picker has the Very large section, with opened_from unsolvable_save.
+        val page = WebHarness(backgroundScope).seed("odd", UNSOLVABLE_3X3).startOn()
+
+        page.game.onLoad()
+        page.game.onLoadChosen("odd")
+        page.game.onUnsolvableChoice(UnsolvableSaveChoice.NEW_GAME)
+
+        assertEquals(sizePicker, page.state.dialog)
+        assertEquals(listOf("unsolvable_save"), page.props("screen_size_dialog").map { it["opened_from"] })
     }
 
     @Test
     fun `Mordie sits 9x9 out, and a win is Congratulations`() = webTest {
-        // TODO: 1. Start a 9x9 game.
-        // TODO: 2. Mordie's line is "9x9 is too much for me, you're on your own!"
-        // TODO: 3. No Mordie search starts for it, and Give Up is hidden.
-        // TODO: 4. After 5 shifts the line is empty.
-        // TODO: 5. A 9x9 board one shift from solved is won with one shift.
-        // TODO: 6. The title is "Congratulations ✓", there is no [ Mordie's solution ], and board_solved has
-        //          board_size 9 with no mordie_result or mordie_moves.
+        val sitsOut = "9x9 is too much for me, you're on your own!"
+        val page = WebHarness(backgroundScope).startOn()
+        page.game.onNew()
+        page.game.onSizeChosen(9)
+
+        assertEquals(sitsOut, page.state.mordie)
+        assertEquals(listOf(16), page.mordieSearches.started.map { it.original.size }, "only the 4x4 game's search")
+        assertEquals(GiveUpButton.HIDDEN, page.state.giveUp)
+        repeat(5) { page.game.onArrow(Arrow.UP, 0) }
+        assertNull(page.state.mordie)
+
+        val won = WebHarness(backgroundScope).startOn(oneShiftFromSolved(9))
+        assertEquals(sitsOut, won.state.mordie)
+        won.game.onArrow(Arrow.LEFT, 0)
+
+        assertTrue(won.state.solved)
+        assertEquals("Congratulations ✓", won.state.mordie)
+        assertEquals(GiveUpButton.HIDDEN, won.state.giveUp)
+        val solved = won.ownProps("board_solved").single()
+        assertEquals(9, solved["board_size"])
+        assertTrue("mordie_result" !in solved && "mordie_moves" !in solved, "$solved")
     }
 
     @Test
     fun `Letters shows Numbers on 7x7, and is unavailable in the Tile labels dialog`() = webTest {
-        // TODO: 1. Set a Letters preference on a 4x4 board.
-        // TODO: 2. Start a 7x7 game, which shows Numbers.
-        // TODO: 3. In the Tile labels dialog the Letters row is unavailable with "up to 5x5",
-        //          and Pairs and Letter pairs are available.
-        // TODO: 4. The preference is still Letters after OK.
-        // TODO: 5. A reloaded page on a smaller board shows Letters again.
+        val page = WebHarness(backgroundScope).startOn()
+        page.game.onLabels()
+        page.game.onLabelsSelected(TileLabels.LETTERS)
+        page.game.onLabelsAnswered(ok = true)
+
+        page.game.onNew()
+        page.game.onSizeChosen(7)
+        assertEquals(TileLabels.NUMBERS, page.state.labels)
+
+        page.game.onLabels()
+        val dialog = page.state.dialog as WebDialog.Labels
+        assertEquals(LabelOption(TileLabels.LETTERS, "Letters", listOf("up to 5x5"), available = false), dialog.options[4])
+        assertTrue(dialog.options.filter { it.labels != TileLabels.LETTERS }.all { it.available })
+        page.game.onLabelsAnswered(ok = true)
+        assertEquals("letters", page.preferences.get("tile_labels"))
+
+        val reloaded = WebHarness(backgroundScope, store = page.store).startOn()
+        assertEquals(TileLabels.LETTERS, reloaded.state.labels)
     }
 
     @Test
     fun `7x7 and 9x9 new games can always be solved, 8x8 never needs a fix`() = webTest {
-        // TODO: 1. Start many 7x7, 8x8 and 9x9 games.
-        // TODO: 2. Each shuffled arrangement can be solved (checked with Solvability).
+        val page = WebHarness(backgroundScope).startOn()
+
+        for (side in 7..9) repeat(100) {
+            page.game.onNew()
+            page.game.onSizeChosen(side)
+            assertTrue(Solvability.isSolvable(page.board.boardArray), "side $side: ${page.board.boardArray.toList()}")
+        }
     }
 
     @Test
     fun `an 8x8 game saves, loads and is listed with its size`() = webTest {
-        // TODO: 1. Start 8x8 and make a shift.
-        // TODO: 2. Save as "big".
-        // TODO: 3. Load from a 4x4 board.
-        // TODO: 4. The list shows "big (8x8)", and loading resizes the board to 8x8 with its tiles and move count.
+        val page = WebHarness(backgroundScope).startOn()
+        page.game.onNew()
+        page.game.onSizeChosen(8)
+        page.game.onArrow(Arrow.LEFT, 0)
+        val tiles = page.state.tiles
+        page.game.onSave()
+        page.game.onSaveAnswered("big")
+
+        val other = WebHarness(backgroundScope, store = page.store).startOn()
+        other.game.onLoad()
+        assertEquals(WebDialog.Load(restore = false, listOf(SaveEntry("big", "big (8x8)"))), other.state.dialog)
+        other.game.onLoadChosen("big")
+
+        assertEquals(8, other.state.side)
+        assertEquals(tiles, other.state.tiles)
     }
 
     @Test
     fun `an unsolvable 7x7 save is marked and can be repaired`() = webTest {
-        // TODO: 1. Seed an unsolvable 7x7 save.
-        // TODO: 2. The Load list shows "foo (7x7) unsolvable".
-        // TODO: 3. Loading it opens "Can't be solved".
-        // TODO: 4. Repair & load swaps two tiles, the board loads solvable, and unsolvable_save_resolved
-        //          carries board_size 7.
+        val page = WebHarness(backgroundScope).seed("foo", swapped(7)).startOn()
+
+        page.game.onLoad()
+        assertEquals(WebDialog.Load(restore = false, listOf(SaveEntry("foo", "foo (7x7) unsolvable"))), page.state.dialog)
+        page.game.onLoadChosen("foo")
+        assertTrue(page.state.dialog is WebDialog.Unsolvable, "${page.state.dialog}")
+        page.game.onUnsolvableChoice(UnsolvableSaveChoice.REPAIR)
+
+        assertEquals(7, page.state.side)
+        assertTrue(Solvability.isSolvable(page.board.boardArray))
+        assertEquals(listOf(7), page.props("unsolvable_save_resolved").map { it["board_size"] })
     }
 
     @Test
     fun `arrows, drag and keyboard shifts work on a 9x9 board`() = webTest {
-        // TODO: 1. Start 9x9.
-        // TODO: 2. An arrow shifts a row once.
-        // TODO: 3. A drag of 3 tiles is 3 shifts and one move.
-        // TODO: 4. In keyboard mode, a selection moves and wraps at the 9th row and column,
-        //          then a row shift works.
+        val page = WebHarness(backgroundScope).startOn(swapped(9))
+        page.game.onNew()
+        page.game.onSizeChosen(9)
+        val before = page.state.tiles.subList(0, 9)
+
+        page.game.onArrow(Arrow.LEFT, 0)
+        assertEquals(before.drop(1) + before.first(), page.state.tiles.subList(0, 9))
+        assertEquals(1, page.state.moves)
+
+        page.game.onDragStart(3, 0, 100.0, 100.0, 40.0)
+        page.game.onDragMove(220.0, 100.0)
+        page.game.onDragEnd()
+        assertEquals(2, page.state.moves)
+        assertEquals(3, page.mordie.shifts - 1)
+
+        val keys = WebHarness(backgroundScope).remembering().startOn(swapped(9))
+        repeat(8) { keys.press("s", from = Focus.Board) }
+        assertEquals(TileSelection(8, 0), keys.state.selection)
+        keys.press("s", from = Focus.Board)
+        assertEquals(TileSelection(0, 0), keys.state.selection)
+        repeat(8) { keys.press("d", from = Focus.Board) }
+        keys.press("d", from = Focus.Board)
+        assertEquals(TileSelection(0, 0), keys.state.selection)
+        val row = keys.state.tiles.subList(0, 9)
+        keys.press("ArrowLeft", from = Focus.Board)
+        assertEquals(row.drop(1) + row.first(), keys.state.tiles.subList(0, 9))
     }
 
     @Test
     fun `the size picker opens focused on the current big size`() = webTest {
-        // TODO: 1. Start a 9x9 game and press New.
-        // TODO: 2. Focus is on the 9x9 button (Focus.SizeChoice(9)).
-        // TODO: 3. Tab and Shift+Tab cycle through all the size buttons and Cancel only.
-        // TODO: 4. Escape cancels, as Cancel does.
+        val page = WebHarness(backgroundScope).startOn()
+        page.game.onNew()
+        page.game.onSizeChosen(9)
+
+        page.game.onNew()
+        assertEquals(Focus.SizeChoice(9), page.state.focus)
+        assertEquals(sizePicker.copy(current = 9), page.state.dialog)
+
+        page.game.onEscape()
+        assertNull(page.state.dialog)
+        assertEquals(9, page.state.side)
     }
 }

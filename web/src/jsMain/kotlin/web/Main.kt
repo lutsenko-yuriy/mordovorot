@@ -1,7 +1,6 @@
 package web
 
 import analytics.NoopAnalyticsService
-import board_model.BoardImpl
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
@@ -25,7 +24,7 @@ fun main() {
     val renderer = DomRenderer(root, document.getElementById("announcer")?.let(::DomAnnouncer))
     val pressedWith = PressedWith()
     val game = startWebGame(
-        BoardImpl(),
+        webBoard(),
         BrowserSaveRepository(LocalStorageStore()),
         BrowserPreferenceRepository(LocalStorageStore()),
         NoopAnalyticsService(),
