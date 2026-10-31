@@ -3,6 +3,7 @@ package web
 import org.w3c.dom.Element
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.pointerevents.PointerEvent
+import web.a11y.Announcements
 import web.drag.Axis
 import web.drag.LineOffset
 import web.drag.WrapPositions

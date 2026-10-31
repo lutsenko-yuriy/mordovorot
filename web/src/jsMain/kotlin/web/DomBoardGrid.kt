@@ -2,6 +2,8 @@ package web
 
 import org.w3c.dom.Element
 import viewmodel.TileSelection
+import web.a11y.Announcements
+import web.a11y.DomAnnouncer
 
 // GH-167: during play, the tiles as a table a screen reader reads - a row element per board row,
 // each tile its cell - and the hidden Read board button that says the whole board.

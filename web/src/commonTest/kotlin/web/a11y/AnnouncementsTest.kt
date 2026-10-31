@@ -1,8 +1,9 @@
-package web
+package web.a11y
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import viewmodel.SolutionStep
+import web.Arrow
 import web.drag.Axis
 import web.drag.DragShift
 

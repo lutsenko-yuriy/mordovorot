@@ -8,6 +8,7 @@ import kotlinx.coroutines.MainScope
 import mordie.BackgroundMordieSearch
 import mordie.Mordie
 import org.w3c.dom.HTMLElement
+import web.a11y.DomAnnouncer
 import web.storage.BrowserPreferenceRepository
 import web.storage.BrowserSaveRepository
 import web.storage.LocalStorageStore

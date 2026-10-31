@@ -1,4 +1,4 @@
-package web
+package web.a11y
 
 import kotlinx.browser.window
 import org.w3c.dom.Element
