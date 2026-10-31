@@ -10,8 +10,8 @@ import mordie.SolutionMove
 import viewmodel.TileLabels
 import viewmodel.UnsolvableSaveChoice
 import web.Arrow
-import web.Focus
 import web.WebDialog
+import web.a11y.Focus
 
 /** GH-163 scenarios: the web's dialogs from the keyboard - focus on open, Escape, focus on close -
  *  through [WebHarness], reading the frame's `focus`. Same setup as [WebStartupScenarioTest]. */

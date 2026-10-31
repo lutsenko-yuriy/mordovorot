@@ -1,7 +1,10 @@
-package web
+package web.a11y
 
 import viewmodel.KeyboardLayout
 import viewmodel.TileLabels
+import web.Arrow
+import web.PlayMode
+import web.WebDialog
 
 /** A control the page focuses once a frame is drawn (GH-163), or keeps focused across one (GH-164);
  *  [key] is its `data-focus`. */

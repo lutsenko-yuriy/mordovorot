@@ -6,6 +6,7 @@ import viewmodel.SolutionState
 import viewmodel.TileLabels
 import viewmodel.TileSelection
 import web.a11y.Announcements
+import web.a11y.Focus
 import web.drag.LineOffset
 
 /** One frame of the page (GH-110): what [WebRenderer] draws. [tiles] are 1-based, row by row. */

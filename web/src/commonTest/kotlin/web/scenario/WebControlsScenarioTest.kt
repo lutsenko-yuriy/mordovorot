@@ -9,10 +9,10 @@ import kotlin.test.assertTrue
 import viewmodel.KeyScheme
 import viewmodel.KeyboardLayout
 import web.Arrow
-import web.Focus
 import web.PlayMode
 import web.ToolbarButton
 import web.WebDialog
+import web.a11y.Focus
 import web.storage.InMemoryKeyValueStore
 
 /** GH-171: the web's Controls dialog (`[ Controls 6 ]` / 6, both modes) picks the input mode and the

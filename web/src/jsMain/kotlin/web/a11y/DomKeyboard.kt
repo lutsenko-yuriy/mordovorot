@@ -1,4 +1,4 @@
-package web
+package web.a11y
 
 import kotlinx.browser.document
 import org.w3c.dom.Element
@@ -6,13 +6,15 @@ import org.w3c.dom.HTMLButtonElement
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.asList
 import org.w3c.dom.events.KeyboardEvent
+import web.WebGame
+import web.WebState
 
 // GH-163: the dialogs from the keyboard. WebGame decides where focus goes; this applies it.
 // GH-164: across every other redraw, the focused control keeps focus or passes it on.
 
 /** Escape cancels the open dialog, Tab and Shift+Tab cycle inside it, and a held Enter presses
- *  once. The first key shows focus rings from then on (styles.css). [game] is read only on a key,
- *  as in [replayButtons]. */
+ *  once. The first key shows focus rings from then on (buttons.css). [game] is read only on a key,
+ *  as in [web.replayButtons]. */
 internal fun listenForKeys(root: Element, game: () -> WebGame) {
     document.addEventListener("keydown", { event ->
         val key = event as KeyboardEvent

@@ -1,10 +1,13 @@
-package web
+package web.a11y
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import viewmodel.GiveUpButton
 import viewmodel.SolutionState
 import viewmodel.TileSelection
+import web.Arrow
+import web.PlayMode
+import web.WebState
 
 /** GH-164: where focus goes when the control that had it is gone or disabled after a redraw. */
 class PageFocusTest {

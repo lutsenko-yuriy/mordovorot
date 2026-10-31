@@ -5,6 +5,11 @@ import kotlinx.dom.clear
 import org.w3c.dom.Element
 import org.w3c.dom.HTMLElement
 import web.a11y.DomAnnouncer
+import web.a11y.Focus
+import web.a11y.applyFocus
+import web.a11y.focusKey
+import web.a11y.focusedKey
+import web.a11y.setBehindDialog
 import web.drag.LineOffset
 
 /** Draws each [WebState] into [root] and turns its clicks into [game] intents, the board's and drags to [DomBoard] (GH-110).

@@ -5,6 +5,7 @@ import viewmodel.GameViewModel
 import viewmodel.GiveUpButton
 import viewmodel.SolutionStep
 import web.a11y.Announcements
+import web.a11y.Focus
 
 /** [WebGame]'s Give Up and Mordie's solution screen (GH-126): the confirmation and the replay. */
 internal class WebSolutionFlows(

@@ -10,9 +10,9 @@ import mordie.SolutionMove
 import viewmodel.GiveUpButton
 import viewmodel.KeyboardLayout
 import web.Arrow
-import web.Focus
 import web.KeyHints
-import web.fallbackFocus
+import web.a11y.Focus
+import web.a11y.fallbackFocus
 
 /** GH-171: the solution screen from the keyboard, and where focus goes on the way there. */
 class WebKeyboardSolutionScenarioTest {

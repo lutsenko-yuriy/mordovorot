@@ -4,6 +4,7 @@ import analytics.AnalyticsService
 import viewmodel.GameViewModel
 import viewmodel.KeyboardLayout
 import viewmodel.SessionKeyboardLayout
+import web.a11y.Focus
 
 /** The Controls dialog's flow (GH-171), like the terminal's `ControlsDialogController`, and the
  *  session's [mode]. */

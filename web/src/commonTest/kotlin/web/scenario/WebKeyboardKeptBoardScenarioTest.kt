@@ -4,7 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import web.Arrow
-import web.Focus
+import web.a11y.Focus
 
 /** GH-171: which frames keep keyboard mode's board in place. */
 class WebKeyboardKeptBoardScenarioTest {

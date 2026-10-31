@@ -14,6 +14,7 @@ import viewmodel.TileLabels
 import viewmodel.UnsolvableSaveChoice
 import viewmodel.displayWithSize
 import web.a11y.Announcements
+import web.a11y.Focus
 import web.drag.Axis
 import web.drag.LineDrag
 import web.drag.LineOffset
