@@ -6,17 +6,21 @@ import org.w3c.dom.HTMLInputElement
 import org.w3c.dom.events.KeyboardEvent
 import viewmodel.KeyboardLayout
 import viewmodel.UnsolvableSaveChoice
+import web.a11y.asDialog
+import web.a11y.asRadio
+import web.a11y.asRadioGroup
+import web.a11y.asRadioGroupLabelledBy
 import web.a11y.focusKey
+import web.a11y.hiddenFromReaders
+import web.a11y.named
 
 /** The modal dialog for [dialog], its answers going to [game] (GH-110). [onSaveWarning] gets the
  *  Save dialog's warning line, which [DomRenderer] updates in place while the player types. */
 internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Element) -> Unit): Element =
     element("div", "dialog").apply {
-        setAttribute("role", "dialog")
-        setAttribute("aria-modal", "true")
-        // Named by its title (GH-163).
-        setAttribute("aria-labelledby", TITLE_ID)
-        append(text("title", dialog.title).apply { id = TITLE_ID })
+        val title = text("title", dialog.title)
+        asDialog(this, title)
+        append(title)
         when (dialog) {
             is WebDialog.Size -> append(
                 choices(dialog.sizes.map { size -> button("${size}x$size") { game.onSizeChosen(size) }.focusKey(Focus.SizeChoice(size)) }),
@@ -25,7 +29,7 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
             is WebDialog.Save -> {
                 val name = (element("input") as HTMLInputElement).apply {
                     value = dialog.name
-                    setAttribute("aria-label", "Save name")
+                    named(this, "Save name")
                     focusKey(Focus.SaveName)
                     addEventListener("input", { game.onSaveNameTyped(value) })
                     addEventListener("keydown", {
@@ -61,10 +65,7 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
             )
             is WebDialog.Labels -> append(
                 *listOfNotNull(dialog.message?.let { text("message", it) }).toTypedArray(),
-                choices(dialog.options.map { labelRow(it, it.labels == dialog.selected, game) }, "list labels").apply {
-                    setAttribute("role", "radiogroup")
-                    setAttribute("aria-label", "Tile labels")
-                },
+                choices(dialog.options.map { labelRow(it, it.labels == dialog.selected, game) }, "list labels").also { asRadioGroup(it, "Tile labels") },
                 actions(
                     button("Cancel", "secondary") { game.onLabelsAnswered(ok = false) },
                     button("OK") { game.onLabelsAnswered(ok = true) },
@@ -95,12 +96,7 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
 /** A radio-role button, since the page is rebuilt every frame and a native radio would lose its state. */
 private fun labelRow(option: LabelOption, checked: Boolean, game: WebGame) =
     button("", if (checked) "checked" else null) { game.onLabelsSelected(option.labels) }.focusKey(Focus.Label(option.labels)).apply {
-        setAttribute("role", "radio")
-        setAttribute("aria-checked", checked.toString())
-        if (!option.available) {
-            setAttribute("disabled", "")
-            setAttribute("aria-disabled", "true")
-        }
+        asRadio(this, checked, unavailable = !option.available)
         append(
             element("span", "mark").apply { textContent = if (checked) "●" else "○" },
             element("span", "name").apply { textContent = option.title },
@@ -111,8 +107,7 @@ private fun labelRow(option: LabelOption, checked: Boolean, game: WebGame) =
 /** A group of radios, one Tab stop: the arrows move its mark (DomKeyboard). */
 private fun radios(title: String, options: List<Element>) = element("div", "radios").apply {
     val titleId = "radios-${title.lowercase().replace(' ', '-')}"
-    setAttribute("role", "radiogroup")
-    setAttribute("aria-labelledby", titleId)
+    asRadioGroupLabelledBy(this, titleId)
     append(text("radios-title", title).apply { id = titleId })
     append(element("div", "options").apply { options.forEach { append(it) } })
 }
@@ -120,14 +115,9 @@ private fun radios(title: String, options: List<Element>) = element("div", "radi
 /** Only the [checked] radio is a Tab stop. */
 private fun radio(title: String, checked: Boolean, focus: Focus, onClick: () -> Unit) =
     button("", if (checked) "checked" else null, onClick).focusKey(focus).apply {
-        setAttribute("role", "radio")
-        setAttribute("aria-checked", checked.toString())
-        setAttribute("tabindex", if (checked) "0" else "-1")
+        asRadio(this, checked, rovingTabStop = true)
         append(
-            element("span", "mark").apply {
-                setAttribute("aria-hidden", "true")
-                textContent = if (checked) "●" else "○"
-            },
+            hiddenFromReaders(element("span", "mark").apply { textContent = if (checked) "●" else "○" }),
             element("span", "name").apply { textContent = title },
         )
     }
@@ -144,8 +134,6 @@ internal fun listenForEscape(root: Element, game: () -> WebGame) {
         }
     })
 }
-
-private const val TITLE_ID = "dialog-title"
 
 private fun choices(buttons: List<Element>, kind: String? = null) =
     element("div", listOfNotNull("choices", kind).joinToString(" ")).apply { buttons.forEach { append(it) } }
