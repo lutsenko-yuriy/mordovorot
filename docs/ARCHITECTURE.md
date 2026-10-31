@@ -189,9 +189,6 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── WebKeyPlay.kt    # WebGame's keys outside dialogs, tile presses and the TileSelection (GH-171)
 │   ├── KeyHints.kt      # The web's Controls key list and the hints under the board, in play and on
 │   │                    # the solution screen (GH-171)
-│   ├── Announcements.kt # GH-166: what a screen reader hears - shifts, the win, new game, load,
-│   │                    # solution steps - and the arrows' accessible names; Read board's
-│   │                    # row-by-row words, letters in the phonetic alphabet (GH-167)
 │   ├── WebState.kt      # One frame: tiles (1-based), Moves, Mordie's spot, solved, status, WebDialog,
 │   │                    # the dragged line's live offset; the Give Up row, the solution screen and
 │   │                    # the replay shift to slide (GH-126); the tile labels and tileTexts (GH-139);
@@ -203,8 +200,6 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │                    # the terminal's LabelsDialogController
 │   ├── WebModal.kt      # WebGame's dialog machinery: open/answer a WebDialog, the button that
 │   │                    # opened it, the cancel's `via` (GH-163)
-│   ├── DialogFocus.kt   # GH-163: Focus (a data-focus key), each dialog's default focus and title
-│   ├── PageFocus.kt     # GH-164: fallbackFocus - where focus goes when its control is gone or disabled
 │   ├── Layout.kt        # layoutOf(width, height): WIDE (wider than tall) or TALL
 │   ├── Slides.kt        # The eased slide after an arrow shift, a drag release or a replay shift
 │   │                    # (GH-126), drawn by WrapPositions
@@ -216,6 +211,14 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │                    # rootFontPx: the root's size for it, null when the default already is
 │   ├── Host.kt          # hostOf(hostname): PUBLIC_SITE, LOCALHOST or OTHER - only the bucket is sent (GH-111)
 │   ├── Footer.kt        # footer(version): the footer line as Text/Link parts, worded as the README's Credits (GH-111)
+│   ├── a11y/            # GH-179: web.a11y, screen readers and focus (also in jsMain below). It and
+│   │   │                # web depend on each other, and nothing enforces the boundary; code mixed
+│   │   │                # into the game's files and a Gradle module are GH-201's
+│   │   ├── Announcements.kt # GH-166: what a screen reader hears - shifts, the win, new game, load,
+│   │   │                # solution steps - and the arrows' accessible names; Read board's
+│   │   │                # row-by-row words, letters in the phonetic alphabet (GH-167)
+│   │   ├── DialogFocus.kt # GH-163: Focus (a data-focus key), each dialog's default focus and title
+│   │   └── PageFocus.kt # GH-164: fallbackFocus - where focus goes when its control is gone or disabled
 │   ├── drag/            # LineDrag: one drag in pixels - axis lock past a threshold, live offset,
 │   │                    # snap to whole tiles mod the side; WrapPositions: a part-shifted line's tiles
 │   └── storage/         # BrowserSaveRepository: one KeyValueStore entry per save under
@@ -252,14 +255,14 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/jsMain/kotlin/web/DomFooter.kt  # footerElement: <footer>, its links in a new tab (GH-111);
 │                                       # wide-only parts in `.wide-only` (GH-147)
 ├── src/jsMain/kotlin/web/DomDialogs.kt  # The modal dialogs; DomElements.kt: element/text/button helpers
-├── src/jsMain/kotlin/web/DomKeyboard.kt # GH-163: Escape -> WebGame.onEscape, Tab wraps inside the
+├── src/jsMain/kotlin/web/a11y/DomKeyboard.kt # GH-163: Escape -> WebGame.onEscape, Tab wraps inside the
 │                                       # open dialog, the page behind it `inert`, applies WebState.focus;
                                        # keeps the focused control across redraws, else fallbackFocus,
                                        # and drops held Enter repeats (GH-164)
 ├── src/jsMain/kotlin/web/DomPlayKeys.kt # GH-171: keys outside dialogs -> WebGame.onKey, and PressedWith from
 │                                       # every keydown and pointerdown, in the capture phase
 ├── src/jsMain/kotlin/web/DomSolution.kt # The step list, Prev/Next/Restart and the Give Up row (GH-126)
-├── src/jsMain/kotlin/web/DomAnnouncer.kt # GH-166: says WebState.announcement through #announcer,
+├── src/jsMain/kotlin/web/a11y/DomAnnouncer.kt # GH-166: says WebState.announcement through #announcer,
 │                                       # emptied then refilled after 100 ms so a repeat is re-read
 ├── src/jsMain/kotlin/web/storage/LocalStorageStore.kt # KeyValueStore over window.localStorage
 ├── src/jsMain/resources/index.html     # The page: `<title>Mordovorot</title>`, links the seven
@@ -294,7 +297,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # GH-139 tile labels; GH-166 announcements, as WebHarness.said)
 ├── src/commonTest/kotlin/web/FooterTest.kt # GH-111: the footer's wording and links
 ├── src/commonTest/kotlin/web/HostTest.kt # GH-111: hostOf's buckets
-├── src/commonTest/kotlin/web/LayoutTest.kt, SlidesTest.kt, MessageFeedTest.kt, AnnouncementsTest.kt
+├── src/commonTest/kotlin/web/LayoutTest.kt, SlidesTest.kt, MessageFeedTest.kt
+├── src/commonTest/kotlin/web/a11y/      # AnnouncementsTest, DialogFocusTest, PageFocusTest (GH-179)
 ├── src/commonTest/kotlin/web/TextScaleTest.kt # GH-168: textScaleOf's ratios, floor and bad readings;
 │                                       # when rootFontPx leaves the default alone
 ├── src/commonTest/kotlin/web/drag/     # LineDragTest, WrapPositionsTest
@@ -304,7 +308,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # and relative asset URLs (GH-111: the public site's sub-path);
 │                                       # every sheet linked, in order (GH-153); #announcer (GH-166);
 │                                       # the `text-scale` meta (GH-168)
-├── src/jvmTest/kotlin/web/AnnouncerStylesTest.kt # GH-166: .visually-hidden clips, never hides from
+├── src/jvmTest/kotlin/web/a11y/AnnouncerStylesTest.kt, KeyboardFocusStylesTest.kt # GH-166: .visually-hidden clips, never hides from
 │                                       # screen readers (no display: none or visibility: hidden)
 ├── src/jvmTest/kotlin/web/BuildInfoTest.kt, CreditsTest.kt # GH-111: the stamped version is the
 │                                       # build's; the footer's credit matches the README's
