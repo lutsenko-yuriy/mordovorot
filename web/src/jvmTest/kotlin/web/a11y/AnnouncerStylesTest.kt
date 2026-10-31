@@ -1,4 +1,4 @@
-package web
+package web.a11y
 
 import java.io.File
 import kotlin.test.Test
