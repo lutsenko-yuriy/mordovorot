@@ -308,8 +308,9 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # and relative asset URLs (GH-111: the public site's sub-path);
 │                                       # every sheet linked, in order (GH-153); #announcer (GH-166);
 │                                       # the `text-scale` meta (GH-168)
-├── src/jvmTest/kotlin/web/a11y/AnnouncerStylesTest.kt, KeyboardFocusStylesTest.kt # GH-166: .visually-hidden clips, never hides from
+├── src/jvmTest/kotlin/web/a11y/AnnouncerStylesTest.kt # GH-166: .visually-hidden clips, never hides from
 │                                       # screen readers (no display: none or visibility: hidden)
+├── src/jvmTest/kotlin/web/a11y/KeyboardFocusStylesTest.kt # GH-163: the focus ring waits for the first key
 ├── src/jvmTest/kotlin/web/BuildInfoTest.kt, CreditsTest.kt # GH-111: the stamped version is the
 │                                       # build's; the footer's credit matches the README's
 ├── src/jvmTest/kotlin/web/PhoneFitStylesTest.kt # GH-147, GH-148: pins the tall and wide fit rules
