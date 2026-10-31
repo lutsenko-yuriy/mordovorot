@@ -5,10 +5,8 @@ import org.w3c.dom.HTMLInputElement
 import org.w3c.dom.events.KeyboardEvent
 import viewmodel.KeyboardLayout
 import viewmodel.UnsolvableSaveChoice
-import web.a11y.Focus
 import web.a11y.composing
 import web.a11y.focusKey
-import web.a11y.title
 
 /** The modal dialog for [dialog], its answers going to [game] (GH-110). [onSaveWarning] gets the
  *  Save dialog's warning line, which [DomRenderer] updates in place while the player types. */

@@ -4,8 +4,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import viewmodel.KeyboardLayout
 import web.Arrow
+import web.Focus
 import web.PlayMode
-import web.a11y.Focus
 
 /** GH-171: analytics in keyboard play (`docs/ANALYTICS_EVENTS.md`). */
 class WebKeyboardAnalyticsScenarioTest {

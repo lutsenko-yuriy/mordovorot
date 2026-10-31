@@ -4,7 +4,6 @@ import org.w3c.dom.Element
 import viewmodel.TileSelection
 import web.a11y.Announcements
 import web.a11y.DomAnnouncer
-import web.a11y.Focus
 import web.a11y.focusKey
 
 // GH-167: during play, the tiles as a table a screen reader reads - a row element per board row,

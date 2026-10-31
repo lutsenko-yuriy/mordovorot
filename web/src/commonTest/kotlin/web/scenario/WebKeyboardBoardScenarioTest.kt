@@ -10,11 +10,11 @@ import kotlin.test.assertTrue
 import viewmodel.KeyboardLayout
 import viewmodel.TileSelection
 import web.Arrow
+import web.Focus
 import web.KeyHints
 import web.PlayMode
 import web.Slides
 import web.WebDialog
-import web.a11y.Focus
 
 /** GH-171: the board from the keyboard - the selected tile, its shifts in both layouts, tile presses,
  *  focus and the key hints. The grid's markup is checked by the harness (`keys_check.sh`). */

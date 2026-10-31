@@ -7,7 +7,6 @@ import org.w3c.dom.HTMLElement
 import org.w3c.dom.asList
 import org.w3c.dom.events.KeyboardEvent
 import web.WebGame
-import web.WebState
 
 // GH-163: the dialogs from the keyboard. WebGame decides where focus goes; this applies it.
 // GH-164: across every other redraw, the focused control keeps focus or passes it on.
@@ -71,20 +70,19 @@ private fun moveMark(key: KeyboardEvent) {
 /** The focused control's key, read before the page is rebuilt. */
 internal fun focusedKey(): String? = document.activeElement?.getAttribute("data-focus")
 
-/** Focuses [state]'s focus in the rebuilt [root]; with none, [Focus.Restore] or [Focus.Board], which
- *  may be gone (GH-171), puts back the control that had focus, [before] or the one asked for, or the
- *  one [fallbackFocus] names when it's gone or disabled (GH-164). A control that isn't on the page
+/** Focuses [focus] in the rebuilt [root]; with none, or one that [FocusTarget.fallsBack], which may
+ *  be gone (GH-171), puts back the control that had focus, [before] or the one asked for, or the
+ *  one [fallback] names when it's gone or disabled (GH-164). A control that isn't on the page
  *  leaves focus at the page's start. */
-internal fun applyFocus(root: Element, state: WebState, before: String?) {
-    val focus = state.focus
-    if (focus != null && focus !is Focus.Restore && focus != Focus.Board) {
+internal fun applyFocus(root: Element, focus: FocusTarget?, before: String?, fallback: (String) -> FocusTarget) {
+    if (focus != null && !focus.fallsBack) {
         val control = root.querySelector("[data-focus=\"${focus.key}\"]") as? HTMLElement
         if (control != null) control.focus() else blurFocused()
         return
     }
     val key = focus?.key ?: before ?: return
     // Without preventScroll a redraw could scroll the page to the restored control.
-    val control = focusable(key) ?: focusable(fallbackFocus(key, state).key)
+    val control = focusable(key) ?: focusable(fallback(key).key)
     if (control != null) control.asDynamic().focus(js("({ preventScroll: true })")) else blurFocused()
 }
 
@@ -103,4 +101,4 @@ internal fun setBehindDialog(root: Element, dialogOpen: Boolean) {
 /** Part of an IME composition: Safari ends it before the key's keydown, which then has only keyCode 229. */
 internal val KeyboardEvent.composing: Boolean get() = isComposing || keyCode == 229
 
-internal fun <E : Element> E.focusKey(focus: Focus): E = apply { setAttribute("data-focus", focus.key) }
+internal fun <E : Element> E.focusKey(focus: FocusTarget): E = apply { setAttribute("data-focus", focus.key) }

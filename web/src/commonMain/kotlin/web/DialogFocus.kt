@@ -1,14 +1,12 @@
-package web.a11y
+package web
 
 import viewmodel.KeyboardLayout
 import viewmodel.TileLabels
-import web.Arrow
-import web.PlayMode
-import web.WebDialog
+import web.a11y.FocusTarget
 
 /** A control the page focuses once a frame is drawn (GH-163), or keeps focused across one (GH-164);
  *  [key] is its `data-focus`. */
-sealed class Focus(val key: String) {
+sealed class Focus(override val key: String) : FocusTarget {
     /** The [arrow] shifting [line], 0-based. */
     data class ArrowButton(val arrow: Arrow, val line: Int) : Focus("arrow-${arrow.name.lowercase()}-$line")
     /** The hidden Read board button (GH-167). */
@@ -27,11 +25,15 @@ sealed class Focus(val key: String) {
     data object LabelsButton : Focus("labels")
     data object ControlsButton : Focus("controls")
     /** The board, one Tab stop in keyboard mode (GH-171). */
-    data object Board : Focus("board")
+    data object Board : Focus("board") {
+        override val fallsBack get() = true
+    }
     data class ModeOption(val mode: PlayMode) : Focus("mode-${mode.wireName}")
     data class LayoutOption(val layout: KeyboardLayout) : Focus("layout-${layout.wireName}")
     /** Back on the control a digit was pressed on, whichever it was (GH-171), or what [fallbackFocus] names. */
-    data class Restore(val control: String) : Focus(control)
+    data class Restore(val control: String) : Focus(control) {
+        override val fallsBack get() = true
+    }
     /** The footer's link at [index], outside `#app`. */
     data class FooterLink(val index: Int) : Focus("footer-$index")
     /** Give Up, or Mordie's solution after a win. */
