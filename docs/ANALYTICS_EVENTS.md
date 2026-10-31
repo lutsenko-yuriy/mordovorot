@@ -342,6 +342,11 @@ settled it: no accessibility usage signal is acceptable, on any terms.
 - Not tracked: selection moves (too granular), Read board's key 0 (a screen-reader signal, GH-167,
   GH-180), the keyboard layout (GH-170), and keys that do nothing in mouse mode.
 
+*GH-200:* nothing new tracked. A non-Latin key counts as its Latin twin, so `р`, `о`, `л` and `д`
+report as `hjkl` in `board_solved.shift_keys`. The system keyboard layout, whether non-Latin keys
+were used, and letters the terminal doesn't know are not tracked: each would point to a player's
+language, and possibly their nationality or location.
+
 <!-- All events above are sent through `analytics.AnalyticsService`, currently backed by
      `analytics.NoopAnalyticsService` (no real SDK wired up yet). -->
 

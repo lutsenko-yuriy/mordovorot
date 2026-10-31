@@ -94,4 +94,16 @@ class WebKeyboardAnalyticsScenarioTest {
         mouse.press("1")
         assertEquals(emptyList(), mouse.analytics.events)
     }
+
+    @Test
+    fun `a non-Latin shift counts as hjkl`() = webTest {
+        val page = WebHarness(backgroundScope).remembering().startOn()
+
+        page.pressedWith.key()
+        page.press("р", from = Focus.Board, code = "KeyH")
+
+        val solved = page.props("board_solved").single()
+        assertEquals("hjkl", solved["shift_keys"])
+        assertEquals("keyboard", solved["input_method"])
+    }
 }

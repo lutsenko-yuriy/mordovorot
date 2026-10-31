@@ -49,6 +49,8 @@ queries=(
   "report=keys&input=keyboard&keys=focus:footer-0,2,Escape"
   # 0 reads the board wherever focus is, once per press; not under a dialog.
   "report=keys&grid=1&input=keyboard&keys=0,R-0,focus:new,0,2,0,Escape"
+  # GH-200: on a non-Latin layout a letter key acts by its position; a Latin one by what it types.
+  "report=keys&grid=1&input=keyboard&keys=в@KeyD,р@KeyH,ц@KeyW,z@KeyW"
   # The solution screen: the board takes focus and the keys, in place; off the board the keys are nothing.
   "report=keys&grid=1&input=keyboard&mode=solution&keys=l,Space,R-Space,Enter,h,r,ArrowDown,w,Tab,l,S-Tab,0"
   "report=keys&input=keyboard&layout=left&mode=solution&keys=ArrowRight,d,a,R"

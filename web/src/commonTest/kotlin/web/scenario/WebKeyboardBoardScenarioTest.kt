@@ -282,4 +282,27 @@ class WebKeyboardBoardScenarioTest {
         assertEquals(KeyHints.board(KeyboardLayout.LEFT_HANDED), left.state.hints)
         assertNotEquals(right.state.hints, left.state.hints)
     }
+
+    @Test
+    fun `any non-Latin key acts by position, in both layouts`() = webTest {
+        val page = WebHarness(backgroundScope).remembering().startOn(mixedUp)
+        assertTrue(page.press("в", Focus.Board, code = "KeyD"))
+        assertEquals(TileSelection(0, 1), page.state.selection)
+        val row = page.row(0)
+        assertTrue(page.press("р", Focus.Board, code = "KeyH"))
+        assertEquals(left(row), page.row(0))
+        assertTrue(page.press("ω", Focus.Board, code = "KeyW"))
+        assertEquals(TileSelection(3, 1), page.state.selection)
+        val tiles = page.state.tiles
+        assertFalse(page.press("р", Focus.Board, modified = true, code = "KeyH"))
+        assertEquals(tiles, page.state.tiles)
+
+        val lefty = WebHarness(backgroundScope).remembering(keys = KeyboardLayout.LEFT_HANDED).startOn(mixedUp)
+        val column = lefty.column(0)
+        assertTrue(lefty.press("ц", Focus.Board, code = "KeyW"))
+        assertEquals(left(column), lefty.column(0))
+        val shifted = lefty.state
+        assertFalse(lefty.press(",", Focus.Board, code = "KeyW"))
+        assertEquals(shifted, lefty.state)
+    }
 }

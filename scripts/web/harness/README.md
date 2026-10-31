@@ -122,7 +122,7 @@ mouse play 1200x800 4x4 | S-Tab page -> focus BUTTON "OK" role button name "OK" 
 
 A step is `click:<button text>` (a mouse click), `focus:<data-focus key>`, or a key: `Tab`,
 `S-Tab` (Shift+Tab), `Escape`, `Enter`, `Space`, `ArrowUp` and the like, sent as a `keydown` to
-the focused control; `R-` before a key is its auto-repeat while held (`R-Enter`, GH-164). A synthetic key gets no default action, so when the page doesn't take it
+the focused control; `R-` before a key is its auto-repeat while held (`R-Enter`, GH-164), and `@` after one names its position (`ц@KeyW`, GH-200). A synthetic key gets no default action, so when the page doesn't take it
 (`preventDefault`), the harness does what the browser would: Tab moves to the next control in
 DOM order (the page sets no positive `tabindex`) that isn't disabled, hidden or `inert`, and
 leaves the page past either end; Enter and Space click a button. The step's mark says which:

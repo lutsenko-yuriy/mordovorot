@@ -121,4 +121,42 @@ class WebKeysTest {
         assertNull(WebKeys.pageKey(KeyPress("r"), PlayMode.KEYBOARD, true))
         assertNull(WebKeys.pageKey(KeyPress("r"), PlayMode.MOUSE, true, onSolution = true))
     }
+
+    private fun boardKey(key: String, code: String, layout: KeyboardLayout = KeyboardLayout.RIGHT_HANDED, modified: Boolean = false) =
+        (WebKeys.pageKey(KeyPress(key, modified, code = code), PlayMode.KEYBOARD, true, layout, onBoard = true) as? PageKey.Board)?.key
+
+    @Test
+    fun `a non-Latin key acts by its position, in either case and layout (GH-200)`() {
+        assertEquals(BoardKey.Select(Direction.UP), boardKey("ц", "KeyW"))
+        assertEquals(BoardKey.Select(Direction.UP), boardKey("Ц", "KeyW"))
+        assertEquals(BoardKey.Shift(Direction.UP, null), boardKey("ц", "KeyW", KeyboardLayout.LEFT_HANDED))
+        assertEquals(BoardKey.Select(Direction.UP), boardKey("ω", "KeyW"))
+        assertEquals(SolutionKey.RESTART, (WebKeys.pageKey(KeyPress("к", code = "KeyR"), PlayMode.KEYBOARD, true, onSolution = true) as? PageKey.Solution)?.key)
+    }
+
+    @Test
+    fun `a combining mark counts as non-Latin, as Thai's H key types one`() {
+        assertEquals(BoardKey.Shift(Direction.LEFT, ShiftKey.HJKL), boardKey("้", "KeyH"))
+    }
+
+    @Test
+    fun `Latin layouts still act by the letter they type`() {
+        // AZERTY.
+        assertEquals(BoardKey.Select(Direction.LEFT), boardKey("a", "KeyQ"))
+        assertNull(boardKey("z", "KeyW"))
+        // Dvorak.
+        assertNull(boardKey(",", "KeyW"))
+        assertEquals(BoardKey.Shift(Direction.LEFT, ShiftKey.HJKL), boardKey("h", "KeyJ"))
+        // Latin letters with marks: Turkish F, Bépo, Vietnamese.
+        for ((key, code) in listOf("ğ" to "KeyE", "é" to "KeyW", "ạ" to "KeyW")) assertNull(boardKey(key, code), key)
+    }
+
+    @Test
+    fun `a non-Latin key needs a letter position and no modifier`() {
+        assertNull(boardKey("ц", "KeyW", modified = true))
+        assertNull(boardKey("ц", ""))
+        assertNull(boardKey("ё", "Backquote"))
+        assertNull(boardKey("ц", "Key"))
+        assertEquals(PageKey.Digit(ToolbarButton.SAVE), WebKeys.pageKey(KeyPress("2", code = "Digit2"), PlayMode.KEYBOARD, true, onBoard = true))
+    }
 }

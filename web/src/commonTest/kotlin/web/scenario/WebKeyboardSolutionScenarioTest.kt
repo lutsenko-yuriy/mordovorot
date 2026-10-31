@@ -147,4 +147,17 @@ class WebKeyboardSolutionScenarioTest {
         assertEquals(GiveUpButton.MORDIES_SOLUTION, revealed.state.giveUp)
         assertEquals(Focus.GiveUpRow, fallbackFocus(Focus.Board.key, revealed.state))
     }
+
+    @Test
+    fun `non-Latin keys step through the solution screen`() = webTest {
+        val page = WebHarness(backgroundScope).remembering().startOn(original).givenUp()
+
+        assertTrue(page.press("в", Focus.Board, code = "KeyD"))
+        assertEquals(0, page.step)
+        assertTrue(page.press("ф", Focus.Board, code = "KeyA"))
+        assertNull(page.step)
+        page.press("в", Focus.Board, code = "KeyD")
+        assertTrue(page.press("к", Focus.Board, code = "KeyR"))
+        assertNull(page.step)
+    }
 }

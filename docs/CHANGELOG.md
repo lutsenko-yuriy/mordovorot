@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.29.0] — 2026-10-31 (PR #204 merged)
+
+### Added
+- [user] (PR #204) GH-200: Keyboard play on non-Latin keyboard layouts. On the web any non-Latin layout plays by key position; the terminal knows Ukrainian and Russian, and its Save names accept Cyrillic.
+
 ## [0.28.1] — 2026-10-31 (PR #203 merged)
 
 ### Changed

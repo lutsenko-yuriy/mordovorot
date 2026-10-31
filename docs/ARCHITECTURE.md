@@ -185,7 +185,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── PlayMode.kt / PlayModePreference.kt # Mouse or keyboard, kept under `input_mode` (GH-171)
 │   ├── PressedWith.kt   # The session's last input, read per event as input_method (GH-171)
 │   ├── WebKeys.kt       # A key outside a dialog to a PageKey: ToolbarButton's digits, 0, or a shared
-│   │                    # BoardKey or SolutionKey while the board has focus (GH-171)
+│   │                    # BoardKey or SolutionKey while the board has focus (GH-171); a non-Latin
+│   │                    # key counts as the Latin letter at its position (GH-200)
 │   ├── WebKeyPlay.kt    # WebGame's keys outside dialogs, tile presses and the TileSelection (GH-171)
 │   ├── KeyHints.kt      # The web's Controls key list and the hints under the board, in play and on
 │   │                    # the solution screen (GH-171)
@@ -382,7 +383,8 @@ src/main/kotlin/                # the terminal app (the root project)
         │                                               # arrow/Tab/BackTab decoding for
         │                                               # keyboard mode (GH-18), wheel notches
         │                                               # (GH-126); function keys are swallowed
-        │                                               # whole (GH-170)
+        │                                               # whole (GH-170); UTF-8 Cyrillic is one key,
+        │                                               # other non-ASCII swallowed (GH-200)
         ├── BoardLayout.kt / HitTarget.kt   # Pure board geometry + click hit-testing, incl. the
         │                                     # second row's Labels and Controls
         │                                     # (HitTarget.ToolbarControls, GH-170), the reserved
@@ -396,7 +398,8 @@ src/main/kotlin/                # the terminal app (the root project)
         │                      # and shiftTarget(direction) for its row/column (GH-170, GH-171)
         ├── BoardKeys.kt     # The terminal's side of the shared KeyScheme: TerminalEvent to its
         │                      # keys, every hint text and the Controls dialog's key list
-        │                      # (GH-170, GH-171)
+        │                      # (GH-170, GH-171); Ukrainian and Russian letters count as their
+        │                      # Latin twins (GH-200)
         ├── Dialog.kt / DialogLayout.kt     # One model + one geometry class for all four
         │                                     # modal dialogs (Save/Load/Exit/Size (GH-44, a
         │                                     # buttons-only kind, so DialogLayout/DialogFocus
