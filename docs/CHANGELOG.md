@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.30.1] — 2026-10-31 (PR #209 merged)
+
+### Changed
+- [test] (PR #209) GH-186: the web harness skips the solution screen where Mordie sits out (6x6 today) with a `SKIP … (no Mordie)` line instead of shifting for 32 s.
+
 ## [0.30.0] — 2026-10-31 (PR #208 merged)
 
 ### Added

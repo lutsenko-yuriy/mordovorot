@@ -62,6 +62,11 @@ class LoadCasesTest(unittest.TestCase):
         self.assertEqual(cases, {("mouse", "play 390x844 4x4"): [("HTML", {"color": "red"}),
                                                                 ("DIV.app", {"color": "blue"})]})
 
+    def test_ignores_skip_lines(self):
+        cases = styles_diff.load_cases(["SKIP touch solution 390x844 6x6 (no Mordie)",
+                                        line("mouse", "play 390x844 4x4", [["HTML", {}]])])
+        self.assertEqual(cases, {("mouse", "play 390x844 4x4"): [("HTML", {})]})
+
     def test_keeps_variants_apart(self):
         cases = styles_diff.load_cases([line("mouse", "play 390x844 4x4", []),
                                         line("master", "play 390x844 4x4", [["HTML", {}]])])

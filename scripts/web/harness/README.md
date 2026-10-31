@@ -45,7 +45,7 @@ Query options (harness.html):
 | `v` | `mouse` | `mouse`, `touch` (the `pointer: coarse` rules always on); `master`, `master-touch` with `--baseline` |
 | `sizes` | `portrait` | comma-separated `WxH`, or a preset: `portrait` (SE through Pro Max), `landscape` (the same turned, plus 750x390 and 814x430: the 14 and Pro Max less Safari's notch insets, GH-148) |
 | `boards` | `3,4,5` | board sides |
-| `mode` | `play` | `play`, `dialog` (Tile labels open) or `solution` (shifts until Give Up lights, then gives up) |
+| `mode` | `play` | `play`, `dialog` (Tile labels open) or `solution` (shifts until Give Up lights, then gives up; boards Mordie sits out, 6×6 today, print `SKIP … (no Mordie)`) |
 | `shorter` | `0` | px taken off each height, standing in for the browser's own toolbars (try `100`) |
 | `rows` | `1` | toolbar rows allowed (`2` under 300px wide) |
 | `fit` | `window` | `window` (the page is the window's size) or `scroll` (larger text: may be taller, see above, GH-168) |
@@ -59,7 +59,9 @@ To compare against master, build master's bundle into another directory and pass
 `--baseline <dir>`; positions in the `master` lines should match the `mouse` ones where nothing
 was meant to change. Keep each query to a few cases on the solution screen: Mordie needs a few
 seconds each, and a query gives up after 10 minutes (`TIMEOUT`). The 5×5 solution screen can't be reached: Mordie
-doesn't reveal its solution within the harness's 80 shifts, so use 3×3 and 4×4 there.
+doesn't reveal its solution within the harness's 80 shifts, so use 3×3 and 4×4 there. 6×6 has no Mordie and no Give Up row
+(GH-116), so a `solution` case on it prints `SKIP … (no Mordie)` without shifting (GH-186); the harness reads that off
+the page, so GH-116 needs no change here. `styles_diff.sh` prints those lines and compares nothing for them.
 
 ## Computed-style diff
 
