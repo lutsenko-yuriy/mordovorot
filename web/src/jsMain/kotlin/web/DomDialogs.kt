@@ -1,11 +1,11 @@
 package web
 
+import kotlinx.browser.document
 import org.w3c.dom.Element
 import org.w3c.dom.HTMLInputElement
 import org.w3c.dom.events.KeyboardEvent
 import viewmodel.KeyboardLayout
 import viewmodel.UnsolvableSaveChoice
-import web.a11y.composing
 import web.a11y.focusKey
 
 /** The modal dialog for [dialog], its answers going to [game] (GH-110). [onSaveWarning] gets the
@@ -131,6 +131,19 @@ private fun radio(title: String, checked: Boolean, focus: Focus, onClick: () -> 
             element("span", "name").apply { textContent = title },
         )
     }
+
+/** Escape cancels the open dialog. An Escape that drops an IME composition isn't the player's, and
+ *  a held one would cancel the next dialog too (Restore -> the size picker). [game] is read only
+ *  on a key, as in [web.replayButtons]. */
+internal fun listenForEscape(root: Element, game: () -> WebGame) {
+    document.addEventListener("keydown", { event ->
+        val key = event as KeyboardEvent
+        if (key.key == "Escape" && !key.composing && !key.repeat && root.querySelector(".dialog") != null) {
+            key.preventDefault()
+            game().onEscape()
+        }
+    })
+}
 
 private const val TITLE_ID = "dialog-title"
 

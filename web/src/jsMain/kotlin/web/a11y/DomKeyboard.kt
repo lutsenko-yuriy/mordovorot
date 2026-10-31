@@ -6,15 +6,13 @@ import org.w3c.dom.HTMLButtonElement
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.asList
 import org.w3c.dom.events.KeyboardEvent
-import web.WebGame
 
 // GH-163: the dialogs from the keyboard. WebGame decides where focus goes; this applies it.
 // GH-164: across every other redraw, the focused control keeps focus or passes it on.
 
-/** Escape cancels the open dialog, Tab and Shift+Tab cycle inside it, and a held Enter presses
- *  once. The first key shows focus rings from then on (buttons.css). [game] is read only on a key,
- *  as in [web.replayButtons]. */
-internal fun listenForKeys(root: Element, game: () -> WebGame) {
+/** Tab and Shift+Tab cycle inside the open dialog, and a held Enter presses once. The first key
+ *  shows focus rings from then on (buttons.css). */
+internal fun listenForKeys(root: Element) {
     document.addEventListener("keydown", { event ->
         val key = event as KeyboardEvent
         root.classList.add("keyboard")
@@ -25,16 +23,7 @@ internal fun listenForKeys(root: Element, game: () -> WebGame) {
             return@addEventListener
         }
         val dialog = root.querySelector(".dialog") ?: return@addEventListener
-        when {
-            // An Escape that drops an IME composition isn't the player's, and a held one would
-            // cancel the next dialog too (Restore -> the size picker).
-            key.key == "Escape" && !key.composing && !key.repeat -> {
-                key.preventDefault()
-                game().onEscape()
-            }
-            key.key == "Tab" -> wrapTab(dialog, key)
-            else -> moveMark(key)
-        }
+        if (key.key == "Tab") wrapTab(dialog, key) else moveMark(key)
     })
 }
 
@@ -97,8 +86,5 @@ internal fun setBehindDialog(root: Element, dialogOpen: Boolean) {
     val behind = root.children.asList().filter { !it.classList.contains("overlay") } + listOfNotNull(document.querySelector("footer"))
     behind.forEach { if (dialogOpen) it.setAttribute("inert", "") else it.removeAttribute("inert") }
 }
-
-/** Part of an IME composition: Safari ends it before the key's keydown, which then has only keyCode 229. */
-internal val KeyboardEvent.composing: Boolean get() = isComposing || keyCode == 229
 
 internal fun <E : Element> E.focusKey(focus: FocusTarget): E = apply { setAttribute("data-focus", focus.key) }
