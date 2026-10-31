@@ -1,9 +1,14 @@
-package web
+package web.a11y
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import viewmodel.KeyboardLayout
 import viewmodel.TileLabels
+import web.Arrow
+import web.LabelOption
+import web.PlayMode
+import web.SaveEntry
+import web.WebDialog
 
 /** GH-163: each dialog's control focused on open, and its title, the dialog's accessible name. */
 class DialogFocusTest {

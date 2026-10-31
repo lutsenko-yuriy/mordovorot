@@ -7,6 +7,8 @@ import viewmodel.GiveUpButton
 import viewmodel.KeyShift
 import viewmodel.SolutionKey
 import viewmodel.TileSelection
+import web.a11y.Announcements
+import web.a11y.Focus
 
 /** The keys outside dialogs and the selected tile (GH-171). */
 internal class WebKeyPlay(

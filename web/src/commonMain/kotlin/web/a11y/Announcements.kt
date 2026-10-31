@@ -1,9 +1,10 @@
-package web
+package web.a11y
 
+import kotlin.math.abs
 import viewmodel.SolutionStep
+import web.Arrow
 import web.drag.Axis
 import web.drag.DragShift
-import kotlin.math.abs
 
 /** What a screen reader hears (GH-166), and the arrows' accessible names. Lines are 0-based here
  *  and counted from 1 in the words. A [newMove] is the move count after a shift that started a

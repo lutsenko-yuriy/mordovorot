@@ -3,6 +3,8 @@ package web
 import org.w3c.dom.Element
 import viewmodel.GiveUpButton
 import viewmodel.SolutionState
+import web.a11y.Focus
+import web.a11y.focusKey
 
 /** The solution screen's numbered steps, the current one marked (GH-126). */
 internal fun stepList(solution: SolutionState): Element = element("div", "steps").apply {

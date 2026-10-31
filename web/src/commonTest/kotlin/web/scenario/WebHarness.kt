@@ -12,7 +12,6 @@ import storage.SavedMordie
 import testing.FakeMordieSearchFactory
 import testing.RecordingAnalyticsService
 import viewmodel.KeyboardLayout
-import web.Focus
 import web.Host
 import web.KeyPress
 import web.Layout
@@ -22,6 +21,7 @@ import web.WebDialog
 import web.WebGame
 import web.WebRenderer
 import web.WebState
+import web.a11y.Focus
 import web.startWebGame
 import web.storage.BrowserPreferenceRepository
 import web.storage.BrowserSaveRepository
