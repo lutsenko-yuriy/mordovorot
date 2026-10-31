@@ -32,9 +32,11 @@ function play(win, step) {
     // GH-164: R- is a held key's auto-repeat.
     const repeat = step.startsWith("R-");
     const name = shift || repeat ? step.slice(2) : step;
-    const key = { Space: " " }[name] || name;
+    // GH-200: ц@KeyW is a key that types ц at W's position.
+    const [typed, code = ""] = name.split("@");
+    const key = { Space: " " }[typed] || typed;
     const target = doc.activeElement || doc.body;
-    const event = new win.KeyboardEvent("keydown", { key, shiftKey: shift, repeat, bubbles: true, cancelable: true });
+    const event = new win.KeyboardEvent("keydown", { key, code, shiftKey: shift, repeat, bubbles: true, cancelable: true });
     if (!target.dispatchEvent(event)) return "page";
     if (key === "Tab") {
         tab(doc, target, shift);

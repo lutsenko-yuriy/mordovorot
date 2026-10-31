@@ -88,8 +88,8 @@ internal class WebHarness(
     }
 
     /** A key pressed outside a dialog with focus on [from]; whether the game took it. */
-    fun press(key: String, from: Focus? = null, modified: Boolean = false, repeat: Boolean = false): Boolean =
-        game.onKey(KeyPress(key, modified, repeat), from?.key)
+    fun press(key: String, from: Focus? = null, modified: Boolean = false, repeat: Boolean = false, code: String = ""): Boolean =
+        game.onKey(KeyPress(key, modified, repeat, code), from?.key)
 
     fun seed(name: String, tiles: IntArray, moves: Int = 0, mordie: SavedMordie? = null): WebHarness {
         saves.save(name, tiles, sideOf(tiles), moves, mordie)

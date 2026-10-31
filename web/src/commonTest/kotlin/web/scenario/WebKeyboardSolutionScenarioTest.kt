@@ -150,9 +150,14 @@ class WebKeyboardSolutionScenarioTest {
 
     @Test
     fun `non-Latin keys step through the solution screen`() = webTest {
-        // TODO: 1. Open the solution screen with its board focused.
-        // TODO: 2. Press в at KeyD: Next.
-        // TODO: 3. Press ф at KeyA: Prev.
-        // TODO: 4. Press к at KeyR: Restart.
+        val page = WebHarness(backgroundScope).remembering().startOn(original).givenUp()
+
+        assertTrue(page.press("в", Focus.Board, code = "KeyD"))
+        assertEquals(0, page.step)
+        assertTrue(page.press("ф", Focus.Board, code = "KeyA"))
+        assertNull(page.step)
+        page.press("в", Focus.Board, code = "KeyD")
+        assertTrue(page.press("к", Focus.Board, code = "KeyR"))
+        assertNull(page.step)
     }
 }
