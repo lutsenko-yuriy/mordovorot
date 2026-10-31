@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.30.2] — 2026-10-31 (PR #210 merged)
+
+### Changed
+- [meta] (PR #210) GH-187: the glossary is split into per-domain files under `docs/glossary/`, with `docs/GLOSSARY.md` as the index; brief, ship, checkup, onboard and AGENTS.md point at the split files; six stale definitions are brought in line with the spec; the GH-187 debrief note.
+
 ## [0.30.1] — 2026-10-31 (PR #209 merged)
 
 ### Changed
