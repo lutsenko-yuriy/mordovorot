@@ -4,6 +4,8 @@ import kotlinx.browser.document
 import org.w3c.dom.Element
 import org.w3c.dom.HTMLButtonElement
 import org.w3c.dom.events.KeyboardEvent
+import web.a11y.hiddenFromReaders
+import web.a11y.keyShortcut
 
 // The page's building blocks (GH-110), shared by DomRenderer and the dialogs.
 
@@ -21,11 +23,8 @@ internal fun button(label: String, cssClass: String? = null, onClick: () -> Unit
 /** Shows [digit], the key that presses this button: heard as the shortcut, not in its name (GH-171). */
 internal fun <E : Element> E.withDigit(digit: Int?): E = apply {
     if (digit == null) return@apply
-    setAttribute("aria-keyshortcuts", digit.toString())
-    append(element("span").apply {
-        setAttribute("aria-hidden", "true")
-        textContent = " $digit"
-    })
+    keyShortcut(this, digit.toString())
+    append(hiddenFromReaders(element("span").apply { textContent = " $digit" }))
 }
 
 /** Part of an IME composition: Safari ends it before the key's keydown, which then has only keyCode 229. */

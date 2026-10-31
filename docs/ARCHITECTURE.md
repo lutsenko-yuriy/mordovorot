@@ -247,13 +247,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # Its cells are kept and rewritten across a slide; in keyboard mode, where
 │                                       # WebState.keepsBoardFrom says, across a frame too, so a screen reader hears
 │                                       # the live region rather than a refocused board
-├── src/jsMain/kotlin/web/DomBoardGrid.kt # GH-167: during play, the tiles as a table for screen
-│                                       # readers - a row element per board row, each cell heard as
-│                                       # said (`delta, in place`), a wrapped copy aria-hidden - and the hidden Read board
-│                                       # button, which says its words through DomAnnouncer. In keyboard
-│                                       # mode a grid, one Tab stop, the selected cell its
-│                                       # aria-activedescendant; on the solution screen a named group, one Tab stop;
-│                                       # the selection's outlines and the key hints (GH-171)
+├── src/jsMain/kotlin/web/DomKeyboardMode.kt # GH-171: the selection's outlines and the key hints, drawn beside the board
 ├── src/jsMain/kotlin/web/DomTextSize.kt # GH-168: at load, reads the browser's font size and (iPhone/iPad)
 │                                       # Dynamic Type from a removed `-apple-system-body` probe; sets
 │                                       # `--text-scale`, and the root font size where the default isn't it
@@ -268,6 +262,14 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/jsMain/kotlin/web/DomPlayKeys.kt # GH-171: keys outside dialogs -> WebGame.onKey, and PressedWith from
 │                                       # every keydown and pointerdown, in the capture phase
 ├── src/jsMain/kotlin/web/DomSolution.kt # The step list, Prev/Next/Restart and the Give Up row (GH-126)
+├── src/jsMain/kotlin/web/a11y/DomBoardGrid.kt # GH-167: during play, the tiles as a table for screen
+│                                       # readers - a row element per board row, each cell heard as
+│                                       # said (`delta, in place`), a wrapped copy aria-hidden - and the hidden Read board
+│                                       # button, which says its words through DomAnnouncer. In keyboard
+│                                       # mode a grid, one Tab stop, the selected cell its
+│                                       # aria-activedescendant; on the solution screen a named group, one Tab stop
+├── src/jsMain/kotlin/web/a11y/DomAria.kt # GH-201: every role and aria- attribute the page sets (dialogs, radios,
+│                                       # lists, hidden, shortcuts); A11yBoundaryTest keeps them out of the rest of web
 ├── src/jsMain/kotlin/web/a11y/DomAnnouncer.kt # GH-166: says WebState.announcement through #announcer,
 │                                       # emptied then refilled after 100 ms so a repeat is re-read
 ├── src/jsMain/kotlin/web/storage/LocalStorageStore.kt # KeyValueStore over window.localStorage

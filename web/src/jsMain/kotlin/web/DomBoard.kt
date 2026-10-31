@@ -4,7 +4,17 @@ import org.w3c.dom.Element
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.pointerevents.PointerEvent
 import web.a11y.Announcements
+import web.a11y.activeCell
+import web.a11y.asCell
+import web.a11y.asCopy
+import web.a11y.asSolutionBoard
+import web.a11y.asTable
+import web.a11y.cellId
 import web.a11y.focusKey
+import web.a11y.gridRow
+import web.a11y.labelCell
+import web.a11y.named
+import web.a11y.nameBoard
 import web.drag.Axis
 import web.drag.LineOffset
 import web.drag.WrapPositions
@@ -43,13 +53,13 @@ internal class DomBoard(private val root: HTMLElement, private val game: () -> W
         fun arrow(label: String, arrow: Arrow, line: Int) =
             button(label, "arrow") { game().onArrow(arrow, line) }.focusKey(Focus.ArrowButton(arrow, line)).also {
                 it.disabled = disabled
-                it.setAttribute("aria-label", Announcements.line(arrow.direction, line))
+                named(it, Announcements.line(arrow.direction, line))
             }
         fun arrows(arrow: Arrow, label: String, axis: String) =
             element("div", "arrows $axis").apply { repeat(side) { append(arrow(label, arrow, it)) } }
 
-        val layer = asTable(element("div", "tiles"), state.arrowsEnabled, state.selection)
-        state.boardName?.let { asSolutionBoard(layer, it) }
+        val layer = asTable(element("div", "tiles"), state.arrowsEnabled, state.selection, Focus.Board)
+        state.boardName?.let { asSolutionBoard(layer, it, Focus.Board) }
         tiles = layer
         buildTiles(layer, state)
         redrawTiles(state, offset)
@@ -71,10 +81,10 @@ internal class DomBoard(private val root: HTMLElement, private val game: () -> W
     fun update(state: WebState, offset: LineOffset?) {
         redrawTiles(state, offset)
         state.selection?.let { selection ->
-            tiles?.setAttribute("aria-activedescendant", cellId(selection.row, selection.col))
+            tiles?.let { activeCell(it, selection) }
             outlines?.let { placeOutlines(it, selection) }
         }
-        state.boardName?.let { tiles?.setAttribute("aria-label", it) }
+        state.boardName?.let { name -> tiles?.let { nameBoard(it, name) } }
     }
 
     /** Fills [layer] with the board's cells, a row element per board row (GH-167). */

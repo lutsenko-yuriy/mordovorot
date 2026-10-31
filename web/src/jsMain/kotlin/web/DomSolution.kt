@@ -3,16 +3,17 @@ package web
 import org.w3c.dom.Element
 import viewmodel.GiveUpButton
 import viewmodel.SolutionState
+import web.a11y.asList
+import web.a11y.asListItem
 import web.a11y.focusKey
 
 /** The solution screen's numbered steps, the current one marked (GH-126). */
 internal fun stepList(solution: SolutionState): Element = element("div", "steps").apply {
     // A list, without the numbers an <ol> would add to the steps' own.
-    setAttribute("role", "list")
+    asList(this)
     solution.steps.forEachIndexed { i, step ->
         append(text(if (i == solution.current) "step current" else "step", step).apply {
-            setAttribute("role", "listitem")
-            if (i == solution.current) setAttribute("aria-current", "step")
+            asListItem(this, current = i == solution.current)
         })
     }
 }

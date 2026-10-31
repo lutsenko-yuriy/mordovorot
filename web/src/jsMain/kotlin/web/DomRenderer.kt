@@ -8,6 +8,7 @@ import web.a11y.DomAnnouncer
 import web.a11y.applyFocus
 import web.a11y.focusKey
 import web.a11y.focusedKey
+import web.a11y.readBoardButton
 import web.a11y.setBehindDialog
 import web.drag.LineOffset
 
@@ -83,7 +84,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         root.append(
             // The box the tall layout sizes the tiles from (GH-147).
             element("div", "stage").apply {
-                if (state.boardWords != null) append(readBoardButton({ shown?.boardWords }, dialog != null, announcer))
+                if (state.boardWords != null) append(readBoardButton({ shown?.boardWords }, dialog != null, announcer, Focus.ReadBoard))
                 append(board.draw(state, justSolved = state.solved && before?.solved == false, state.drag ?: slideOffset()))
                 state.hints?.let { append(keyHints(it)) }
             },
