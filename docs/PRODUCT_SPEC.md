@@ -126,7 +126,8 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 - The **Controls** dialog (GH-170), in both modes: `Play with ● Mouse ○ Keyboard` with the
   current mode marked, `Keyboard keys ● Right-handed ○ Left-handed` with the current layout
   marked (Feature 7), then the keyboard mode's key list for the marked layout (board, toolbar and
-  solution-screen keys; it changes as the mark moves), then `[ OK ] [ Cancel ]`. Clicking an
+  solution-screen keys; it changes as the mark moves), ending with `Letters: Latin, Ukrainian or
+  Russian layout` (GH-200), then `[ OK ] [ Cancel ]`. Clicking an
   option marks it; from the keyboard (it opens focused on `Play with`) the arrows move the mark,
   Tab / Shift+Tab move focus over the groups, OK and Cancel, Enter is OK except on Cancel, and
   Escape cancels. OK applies the marked layout and remembers it in `saves/preferences`
@@ -143,7 +144,9 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   staying in <current> mode.` on its status line (GH-79).
 - **Save/Load/Exit dialogs**, opened from the toolbar:
   - **Save** — a typed name field, prefilled with the current save name (Feature 4, GH-99)
-    with the cursor at the end: typing appends, Backspace deletes one character. An existing
+    with the cursor at the end: typing appends, Backspace deletes one character. Latin and Cyrillic
+    letters can be typed (Cyrillic since GH-200, in a UTF-8 terminal); other non-ASCII characters
+    do nothing. An existing
     name shows an inline "already exists - it will be overwritten" warning before saving over
     it - straight away when the field is prefilled. A name containing spaces is rejected with an
     on-screen message instead of being saved. An empty name (Enter, or clicking Save with
@@ -182,6 +185,10 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
     **W/S** its column. The toolbar digits and the solution screen's keys are the same in both.
   - The selection stays where it is after a shift. Letters work in either case; Enter and
     Space do nothing on the board.
+  - **Ukrainian and Russian keyboards (GH-200):** their letters act as the Latin keys in the same
+    position, on the board and the solution screen: `ц` W, `ф` A, `і`/`ы` S, `в` D, `р` H, `о` J,
+    `л` K, `д` L, `к` R. Other non-Latin layouts' letters do nothing; the terminal gets only
+    characters, so it can't play by key position as the web does (Feature 9).
   - Row 1 / column 1 is selected at launch. A new game, a load or a size change keeps the
     selection, clamped to a smaller board (row 5 / column 2 on 5x5 becomes row 3 / column 2 on
     3x3); switching to mouse mode and back keeps it too.
@@ -303,7 +310,7 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   reached, whatever is stored.
   - **Controls dialog** (`[ Controls 6 ]`, on its own row under the toolbar in both modes, or 6):
     `Play with ○ Mouse ○ Keyboard`, `Keyboard keys ○ Right-handed ○ Left-handed`, the marked layout's
-    key list, ending with `Letter keys need a Latin keyboard layout`, `[ OK ] [ Cancel ]`. It opens on `Play with`'s marked option; Tab moves between the two
+    key list, `[ OK ] [ Cancel ]`. It opens on `Play with`'s marked option; Tab moves between the two
     groups, OK and Cancel, and the arrows move a group's mark. OK applies both; Cancel or Escape
     changes nothing.
   - **Toolbar:** every button shows its digit: `[ New 1 ][ Save 2 ][ Load 3 ][ Labels 4 ]`,
@@ -313,6 +320,11 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
     dialog opened from it closes. While it has focus, right-handed: W/A/S/D move the selected tile,
     wrapping; H/← L/→ shift its row, K/↑ J/↓ its column. Left-handed: H/J/K/L or the arrows move it;
     A/D shift its row, W/S its column. Letters work in either case, and held keys repeat.
+  - **Non-Latin keyboards (GH-200):** on a non-Latin system keyboard layout, a letter key on the board
+    or the solution screen does what the Latin key in its position does: the key typing `ц` is W.
+    Hints and the key list keep naming the Latin letters. Latin layouts still act by the letter they
+    type, so AZERTY and Dvorak work as ever. A known gap: a key that types ASCII punctuation on a
+    non-Latin layout (Hebrew's W types `'`) can't be told from a Latin layout's and does nothing.
   - **Selection:** a rounded rectangle around the selected row and one around its column, crossing at
     the selected tile, which has a thicker ring; the arrows are hidden, their room kept. It stays put
     after a shift, starts on row 1, column 1, survives a new game, a load, a size change (clamped) and
