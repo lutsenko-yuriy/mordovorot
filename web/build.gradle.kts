@@ -54,6 +54,9 @@ kotlin {
     }
 }
 
+// The JVM tests that read the sources and the styles (GH-201's boundary test) must rerun when those change.
+tasks.named("jvmTest") { inputs.dir("src").withPropertyName("sources").withPathSensitivity(PathSensitivity.RELATIVE) }
+
 tasks.register("serve") {
     group = "application"
     description = "Serves the browser game on http://localhost:8080 and rebuilds on change; run with -t."
