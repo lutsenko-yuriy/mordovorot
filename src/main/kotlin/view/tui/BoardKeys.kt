@@ -35,7 +35,14 @@ internal object BoardKeys {
     private val COMMON_KEYS = listOf(
         "New 1 · Save 2 · Load 3 · Labels 4",
         "Give Up 5 · Controls 6 · Exit Esc",
-    ) + KeyScheme.SOLUTION_KEY_LINES
+    ) + KeyScheme.SOLUTION_KEY_LINES + "Letters: Latin, Ukrainian or Russian layout"
+
+    /** The Latin key at each Ukrainian and Russian letter's position (GH-200). The terminal gets only
+     *  characters, so a layout it has no table for can't play by letter. */
+    private val LATIN_TWIN = mapOf(
+        'ц' to 'w', 'ф' to 'a', 'і' to 's', 'ы' to 's', 'в' to 'd',
+        'р' to 'h', 'о' to 'j', 'л' to 'k', 'д' to 'l', 'к' to 'r',
+    )
 
     fun boardKey(event: TerminalEvent, layout: KeyboardLayout): BoardKey? =
         KeyScheme.boardKey(event.letter, event.arrow, layout)
@@ -51,6 +58,6 @@ internal object BoardKeys {
             null -> InputAction.None
         }
 
-    private val TerminalEvent.letter get() = (this as? TerminalEvent.KeyPress)?.char
+    private val TerminalEvent.letter get() = (this as? TerminalEvent.KeyPress)?.char?.let { LATIN_TWIN[it.lowercaseChar()] ?: it }
     private val TerminalEvent.arrow get() = (this as? TerminalEvent.Arrow)?.direction
 }

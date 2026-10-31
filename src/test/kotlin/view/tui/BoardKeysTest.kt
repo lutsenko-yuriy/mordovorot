@@ -63,4 +63,40 @@ class BoardKeysTest {
         assertEquals(BoardKeys.keyList(RIGHT_HANDED).drop(3), BoardKeys.keyList(LEFT_HANDED).drop(3))
         for (layout in KeyboardLayout.entries) assertTrue(BoardKeys.keyList(layout).all { it.length <= 44 })
     }
+
+    /** Each key's Ukrainian and Russian letter: the two differ only at S. Named by code point, as
+     *  Cyrillic а, о, р and с look like Latin letters. */
+    private val cyrillic = mapOf(
+        'w' to "ц", 'a' to "ф", 's' to "іы", 'd' to "в",
+        'h' to "р", 'j' to "о", 'k' to "л", 'l' to "д",
+    )
+
+    @Test
+    fun `a Ukrainian or Russian letter does what its Latin twin does, in either case and layout (GH-200)`() {
+        for (layout in KeyboardLayout.entries) for ((latin, letters) in cyrillic) for (letter in letters) {
+            assertEquals(key(latin, layout), key(letter, layout), "$letter")
+            assertEquals(key(latin, layout), key(letter.uppercaseChar(), layout), "${letter.uppercaseChar()}")
+        }
+    }
+
+    @Test
+    fun `a Cyrillic letter steps the solution screen as its twin, and к restarts`() {
+        for ((latin, letters) in cyrillic) for (letter in letters) {
+            assertEquals(BoardKeys.solutionAction(TerminalEvent.KeyPress(latin)), BoardKeys.solutionAction(TerminalEvent.KeyPress(letter)), "$letter")
+        }
+        assertEquals(InputAction.Activate(HitTarget.ReplayRestart), BoardKeys.solutionAction(TerminalEvent.KeyPress('к')))
+    }
+
+    @Test
+    fun `other letters do nothing`() {
+        for (other in listOf('й', 'ω')) {
+            for (layout in KeyboardLayout.entries) assertNull(key(other, layout))
+            assertEquals(InputAction.None, BoardKeys.solutionAction(TerminalEvent.KeyPress(other)))
+        }
+    }
+
+    @Test
+    fun `the key list ends by naming the layouts it knows`() {
+        for (layout in KeyboardLayout.entries) assertEquals("Letters: Latin, Ukrainian or Russian layout", BoardKeys.keyList(layout).last())
+    }
 }
