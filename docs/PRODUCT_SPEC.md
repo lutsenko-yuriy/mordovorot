@@ -14,7 +14,7 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 ### Feature 1 — Board
 - The game presents a square board of tiles laid out `SQUARE_SIDE × SQUARE_SIDE` (default 4×4), holding a shuffled permutation of the integers `0..SQUARE_SIDE²-1` internally, **displayed to the player as `1..SQUARE_SIDE²`** (GH-10) by default. The player can pick other tile labels (numbers from 0, pairs, letters) in the Tile labels dialog (GH-139, Feature 11); the board, the solved screen and the solution screen all follow the choice, and the step list keeps `Row …`/`Col …`.
 - On starting a new game, the board is reshuffled via a Fisher-Yates shuffle.
-- Board sizes are 3×3 to 6×6 (6×6 since GH-160).
+- Board sizes are 3×3 to 6×6 (6×6 since GH-160). The browser game also offers 7×7 to 9×9 (GH-207, Feature 9).
 - Every new game can be solved (GH-74). On a 4×4 or 6×6 board every arrangement can be solved. On 3×3
   and 5×5 boards, only arrangements an even number of tile swaps away from the solved order can
   be solved. If the shuffle lands on one that can't, two tiles are swapped to fix it. Every board
@@ -229,6 +229,7 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   save shows the same line (and its Mordie lines, if any, are dropped at the next save). The
   solved title is `Congratulations ✓`, the Give Up row stays empty (no `[ Give Up ]`), and no `[ Mordie's solution ]`
   follows a win. In the terminal the line takes one row on 6x6, so the board fits 80x24.
+  The browser's 7x7 to 9x9 (GH-207) are sat out the same way, the line naming the size.
 - **Mordie's line** sits under `Moves: N`: `Mordie:` in magenta, then the text, word-wrapped to
   about the width of the board and toolbar, each row centered. Its rows are always reserved, so
   the board doesn't move as the line comes and goes. Mouse and keyboard mode show the same text,
@@ -276,7 +277,7 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 - **Running it:** the game is published at `https://lutsenko-yuriy.github.io/mordovorot/` (GH-111); for development,
   `./gradlew :web:serve -t` serves it on `http://localhost:8080`. Opening either address starts it. The tab title is `Mordovorot`, and the title appears nowhere else on the page.
   The terminal game is unchanged.
-- **Same game:** the rules, board sizes 3-6, solvable new games, `Moves: N` and its
+- **Same game:** the rules, board sizes 3-6 (and 7-9, below), solvable new games, `Moves: N` and its
   move rule (Feature 2), Save/Load (Feature 4), Mordie (Feature 8) and Give Up with its solution
   screen (Feature 10) work as in the terminal game. It starts with the mouse; keyboard mode is below. There are no command-line flags and no Exit.
 - **Dialogs from the keyboard (GH-163):** every dialog works without the mouse; the toolbar,
@@ -383,6 +384,9 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
     have neither, and read as before.
 - **Toolbar:** `[ New ] [ Save ] [ Load ] [ Labels ]`; the player leaves by closing the tab.
   - **New** opens the size picker (3x3, 4x4, 5x5, 6x6); Cancel leaves the current game untouched.
+    Below that row is a **Very large** section (GH-207): the line `Harder to solve, and the tiles may
+    be too small to use comfortably.` and the buttons 7x7, 8x8, 9x9. There is no confirmation step;
+    the section is the warning. The startup picker has it too. Every new game can be solved.
   - **Save** prefills the current save name and warns before overwriting. A blank name counts as
     Cancel. A rejected name (spaces, a path separator, `..`) saves nothing, and the message
     shows on the status line.
@@ -547,6 +551,7 @@ Applies to terminal mouse mode, terminal keyboard mode and the web client.
   after a win and on the solution screen. Escape cancels it in both clients (on the web since GH-163).
 - **Which labels a game shows:** a loaded save's own labels (Feature 4) win for that game; then
   the remembered preference; then Numbers. A new game goes back to the preference.
+- **Letters on 7x7 to 9x9 (GH-207)** is dimmed and shown as Numbers just as on 6x6, below.
 - **Letters on 6x6 (GH-160):** Letters has 26 labels, too few for 36 tiles. On a 6x6 board its row
   in the dialog is dimmed, reads `up to 5x5` instead of a sample, and can't be picked or focused.
   A Letters preference shows Numbers on 6x6 and stays Letters, so smaller boards keep letters; OK

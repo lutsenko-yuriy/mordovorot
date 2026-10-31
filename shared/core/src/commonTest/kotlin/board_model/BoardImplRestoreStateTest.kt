@@ -97,4 +97,13 @@ class BoardImplRestoreStateTest {
 
         assertEquals(15, board.boardArray[0])
     }
+
+    @Test
+    fun `a board built with maxSide 9 restores an 8x8 state but not a 10x10 one (GH-207)`() {
+        val board = BoardImpl(maxSide = 9)
+
+        board.restoreState(IntArray(64) { it })
+        assertEquals(8, board.squareSide)
+        assertFailsWith<IllegalArgumentException> { board.restoreState(IntArray(100) { it }) }
+    }
 }

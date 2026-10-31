@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.30.0] — 2026-10-31 (PR #208 merged)
+
+### Added
+- [user] (PR #208) GH-207: The browser game offers very large boards, 7x7 to 9x9, in their own section of the New game dialog.
+
 ## [0.29.2] — 2026-10-31 (PR #206 merged)
 
 ### Changed

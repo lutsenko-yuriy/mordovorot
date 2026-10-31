@@ -40,4 +40,18 @@ class BoardSizeTest {
     fun `require throws IllegalArgumentException on an invalid size`() {
         assertFailsWith<IllegalArgumentException> { BoardSize.require(7) }
     }
+
+    @Test
+    fun `VERY_LARGE is 7 to 9 and sits above MAX (GH-207)`() {
+        assertEquals(7..9, BoardSize.VERY_LARGE)
+        assertEquals(BoardSize.MAX + 1, BoardSize.VERY_LARGE.first)
+    }
+
+    @Test
+    fun `isValid and require take a wider max`() {
+        assertTrue(BoardSize.isValid(9, max = 9))
+        assertFalse(BoardSize.isValid(10, max = 9))
+        assertEquals(7, BoardSize.require(7, max = 9))
+        assertFailsWith<IllegalArgumentException> { BoardSize.require(10, max = 9) }
+    }
 }

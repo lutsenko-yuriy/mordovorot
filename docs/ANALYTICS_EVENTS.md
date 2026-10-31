@@ -304,6 +304,13 @@ OK on the current scheme fires nothing. Scheme values everywhere: `numbers`, `nu
 stays 3 or 5, since every 6x6 arrangement can be solved. `tile_labels_changed.from_source` takes a
 new value, `letters_unavailable`: the game showed Numbers because Letters doesn't fit a 6x6 board.
 
+*GH-207:* nothing new tracked. On `web` board sides now run 3-9 (the very large sizes 7x7 to 9x9),
+so `new_game_size_selected.size`, `board_solved.board_size` and `tile_labels_changed.board_size` can
+be `7`, `8` or `9`. Mordie sits 6x6 to 9x9 out, as GH-160 describes for 6x6, and
+`tile_labels_changed.from_source: letters_unavailable` covers them all.
+`unsolvable_save_resolved.board_size` can be 3, 5, 7 or 9 (odd sides). Whether the Very large section was
+seen, and abandoned very large games, are not tracked.
+
 *GH-163:* Escape now cancels web dialogs, firing the same events as their Cancel-like button.
 `dialog_cancelled` gains `via` (`string`, `web` only - absent on `terminal`, where `input_method`
 already tells keyboard from mouse): `button` (Cancel / No clicked or activated) or `escape`.

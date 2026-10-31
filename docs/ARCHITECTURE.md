@@ -22,7 +22,8 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │   └── board_model/
 │       ├── BoardModel.kt    # Board interface (domain contract)
 │       ├── BoardSize.kt     # The valid board side range (MIN 3 / MAX 6 / DEFAULT 4) and its
-│       │                      # validation - the one place the range lives (GH-44, GH-160)
+│       │                      # validation - the one place the range lives (GH-44, GH-160); VERY_LARGE
+│       │                      # 7-9 is only reachable through BoardImpl(maxSide), web only (GH-207)
 │       ├── Solvability.kt   # Which boards shifts can solve (permutation parity on odd sides)
 │       │                      # and the two-tile repair - the one place the rule lives (GH-74)
 │       └── BoardImpl.kt     # IntArray-backed board state + shift/reset/newGame/isCorrect logic + move count.
@@ -211,7 +212,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── MessageFeed.kt   # Chat-like timing for Mordie's lines: the old one rises out, then the new rises in
 │   ├── Launch.kt        # startWebGame: the page's wiring (PlatformAnalyticsService "web" wrapped
 │   │                    # by InputMethodAnalyticsService "rich_ui"), app_launched {mode, layout,
-│   │                    # app_version, host} (GH-111) and tile_labels (GH-139)
+│   │                    # app_version, host} (GH-111) and tile_labels (GH-139); webBoard(): the
+│   │                    # page's BoardImpl(maxSide = 9), shared with WebHarness (GH-207)
 │   ├── TextScale.kt     # GH-168: textScaleOf(root, appleBody): the system text size as a scale, never below 1;
 │   │                    # rootFontPx: the root's size for it, null when the default already is
 │   ├── Host.kt          # hostOf(hostname): PUBLIC_SITE, LOCALHOST or OTHER - only the bucket is sent (GH-111)
@@ -550,6 +552,8 @@ Core game state and rules: board array, shifting, reset, and the win check
 (`isCorrect`). No dependency on `viewmodel` or `view`.
 
 **Board size (GH-44):** the board stays square, with a side of 3–6 (default 4; 6 since GH-160).
+`BoardImpl(maxSide)` widens that limit (default `BoardSize.MAX`); only the web builds it with 9, for
+the very large sizes 7–9 (`BoardSize.VERY_LARGE`, GH-207), so the terminal still rejects them.
 `BoardSize` holds that range and its validation — the single place it lives, per
 this layer's "range validation lives in `board_model`, the view translates but
 does not validate" rule (see the 1-based display dialect note under `view`).

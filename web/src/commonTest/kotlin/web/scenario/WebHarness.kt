@@ -1,6 +1,7 @@
 package web.scenario
 
 import board_model.BoardImpl
+import web.webBoard
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
@@ -35,7 +36,7 @@ internal val ONE_SHIFT_FROM_SOLVED = intArrayOf(3, 0, 1, 2) + IntArray(12) { it 
  *  analytics. A new harness over the same [store] is a reload. */
 internal class WebHarness(
     private val scope: CoroutineScope,
-    val board: BoardImpl = BoardImpl(),
+    val board: BoardImpl = webBoard(),
     val store: InMemoryKeyValueStore = InMemoryKeyValueStore(),
     private val layout: Layout = Layout.WIDE,
     private val appVersion: String = "9.9.9",

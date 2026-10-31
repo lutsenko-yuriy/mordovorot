@@ -2,9 +2,10 @@ package board_model
 
 import kotlin.math.sqrt
 
-public class BoardImpl(initialSide: Int = BoardSize.DEFAULT) : BoardModel {
+/** [maxSide] is the largest side this board accepts; only the web client raises it (GH-207). */
+public class BoardImpl(initialSide: Int = BoardSize.DEFAULT, private val maxSide: Int = BoardSize.MAX) : BoardModel {
 
-    private var side: Int = BoardSize.require(initialSide)
+    private var side: Int = BoardSize.require(initialSide, maxSide)
     override val squareSide: Int get() = side
 
     override var moveCount: Int = 0
@@ -38,7 +39,7 @@ public class BoardImpl(initialSide: Int = BoardSize.DEFAULT) : BoardModel {
     }
 
     override fun newGame(side: Int) {
-        BoardSize.require(side)
+        BoardSize.require(side, maxSide)
         this.side = side
         resetGame()
     }
@@ -54,7 +55,7 @@ public class BoardImpl(initialSide: Int = BoardSize.DEFAULT) : BoardModel {
         // hand-edited/corrupted save with a squareSide outside BoardSize (the file store only
         // rejects <= 0) would resize the live board past what every other size-changing surface
         // enforces, e.g. a 1x1 board that's permanently solved or a board too wide to render.
-        BoardSize.require(restoredSide)
+        BoardSize.require(restoredSide, maxSide)
         require(moveCount >= 0) { "Move count must not be negative, got $moveCount" }
 
         side = restoredSide

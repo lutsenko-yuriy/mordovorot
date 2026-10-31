@@ -72,8 +72,9 @@ data class WebState(
 
 /** The modal dialog open over the board. */
 sealed interface WebDialog {
-    /** The new-game size picker, with Cancel; [current] is the board's side. */
-    data class Size(val sizes: List<Int>, val current: Int) : WebDialog
+    /** The new-game size picker, with Cancel; [current] is the board's side. [veryLarge] are the
+     *  sizes offered in their own warned section (GH-207). */
+    data class Size(val sizes: List<Int>, val current: Int, val veryLarge: List<Int> = emptyList()) : WebDialog
 
     /** The name being typed, with the overwrite warning when a save by that name exists. */
     data class Save(val name: String, val warning: String?) : WebDialog

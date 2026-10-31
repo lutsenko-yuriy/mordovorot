@@ -34,6 +34,22 @@
     font-weight: 700;
 }
 
+/* The size picker's Very large section (GH-207). */
+.dialog .section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dialog .section-title {
+    font-weight: 700;
+}
+
+.dialog .section-note {
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
 .dialog .message {
     color: var(--muted);
 }

@@ -22,10 +22,17 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
         asDialog(this, title)
         append(title)
         when (dialog) {
-            is WebDialog.Size -> append(
-                choices(dialog.sizes.map { size -> button("${size}x$size") { game.onSizeChosen(size) }.focusKey(Focus.SizeChoice(size)) }),
-                actions(button("Cancel", "secondary") { game.onSizeChosen(null) }),
-            )
+            is WebDialog.Size -> {
+                fun sizeButtons(sizes: List<Int>) =
+                    choices(sizes.map { size -> button("${size}x$size") { game.onSizeChosen(size) }.focusKey(Focus.SizeChoice(size)) })
+                append(sizeButtons(dialog.sizes))
+                if (dialog.veryLarge.isNotEmpty()) append(
+                    element("div", "section").apply {
+                        append(text("section-title", VERY_LARGE_TITLE), text("section-note", VERY_LARGE_WARNING), sizeButtons(dialog.veryLarge))
+                    },
+                )
+                append(actions(button("Cancel", "secondary") { game.onSizeChosen(null) }))
+            }
             is WebDialog.Save -> {
                 val name = (element("input") as HTMLInputElement).apply {
                     value = dialog.name
