@@ -7,11 +7,13 @@ private const val ESC = 0x1B
  *  under this. */
 private const val MAX_ESCAPE_SEQUENCE_LENGTH = 32
 
+private val CYRILLIC = 0x0400..0x04FF
+
 /**
  * Pure byte-stream -> [TerminalEvent] decoder for GH-3's mouse TUI and GH-18's keyboard TUI:
- * SGR-1006 mouse reports (primary), the legacy X10 `ESC[M` fallback, single-byte keys for the
- * save-name field, and arrow/Tab/BackTab decoding for keyboard navigation; function keys are
- * swallowed whole (GH-170: the digits replaced them). No
+ * SGR-1006 mouse reports (primary), the legacy X10 `ESC[M` fallback, keys for the save-name field
+ * (ASCII, and UTF-8 Cyrillic, GH-200), and arrow/Tab/BackTab decoding for keyboard navigation;
+ * function keys are swallowed whole (GH-170: the digits replaced them). No
  * terminal I/O here - [AnsiTerminal] feeds it real bytes and tests feed it directly. A sequence
  * split across two [feed] calls is buffered and completed on the next one.
  */
@@ -38,6 +40,7 @@ class TerminalInputParser {
      *  or 0 if [data] doesn't hold a complete sequence yet (more bytes needed). */
     private fun decodeOne(data: ByteArray, from: Int, events: MutableList<TerminalEvent>): Int {
         val b = data[from].toInt() and 0xFF
+        if (b >= 0x80) return decodeUtf8(data, from, events)
         if (b != ESC) {
             events += decodeSingleByte(b)
             return 1
@@ -58,6 +61,28 @@ class TerminalInputParser {
                 1
             }
         }
+    }
+
+    /** A UTF-8 sequence: Cyrillic becomes one [TerminalEvent.KeyPress], any other character is
+     *  swallowed whole (GH-200). A malformed one is dropped up to the byte that broke it, which
+     *  decodes as usual. Returns 0 while the sequence is incomplete. */
+    private fun decodeUtf8(data: ByteArray, from: Int, events: MutableList<TerminalEvent>): Int {
+        val lead = data[from].toInt() and 0xFF
+        val length = when (lead) {
+            in 0xC2..0xDF -> 2
+            in 0xE0..0xEF -> 3
+            in 0xF0..0xF4 -> 4
+            else -> return 1
+        }
+        for (i in 1 until length) {
+            if (from + i >= data.size) return 0
+            if ((data[from + i].toInt() and 0xC0) != 0x80) return i
+        }
+        if (length == 2) {
+            val codePoint = ((lead and 0x1F) shl 6) or (data[from + 1].toInt() and 0x3F)
+            if (codePoint in CYRILLIC) events += TerminalEvent.KeyPress(codePoint.toChar())
+        }
+        return length
     }
 
     private fun decodeCsi(data: ByteArray, from: Int, events: MutableList<TerminalEvent>): Int {

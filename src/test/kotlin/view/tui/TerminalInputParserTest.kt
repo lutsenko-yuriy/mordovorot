@@ -213,4 +213,56 @@ class TerminalInputParserTest {
 
         assertEquals(emptyList(), events)
     }
+
+    private fun bytes(vararg values: Int) = ByteArray(values.size) { values[it].toByte() }
+
+    @Test
+    fun `a Cyrillic letter's UTF-8 bytes are one KeyPress (GH-200)`() {
+        val parser = TerminalInputParser()
+
+        assertEquals(listOf(TerminalEvent.KeyPress('ц')), parser.feed(bytes(0xD1, 0x86)))
+        assertEquals(listOf(TerminalEvent.KeyPress('Ц')), parser.feed("Ц".toByteArray()))
+        assertEquals(listOf(TerminalEvent.KeyPress('і'), TerminalEvent.KeyPress('ы')), parser.feed("іы".toByteArray()))
+    }
+
+    @Test
+    fun `a UTF-8 letter split across two feeds waits for its second byte`() {
+        val parser = TerminalInputParser()
+
+        assertEquals(emptyList(), parser.feed(bytes(0xD1)))
+        assertEquals(listOf(TerminalEvent.KeyPress('ц')), parser.feed(bytes(0x86)))
+    }
+
+    @Test
+    fun `a stray byte is dropped alone and the next key kept`() {
+        val parser = TerminalInputParser()
+
+        assertEquals(listOf(TerminalEvent.KeyPress('x')), parser.feed(bytes(0x86, 'x'.code)))
+        assertEquals(listOf(TerminalEvent.KeyPress('x')), parser.feed(bytes(0xD1, 'x'.code)))
+        assertEquals(listOf(TerminalEvent.KeyPress('x')), parser.feed(bytes(0xFF, 'x'.code)))
+    }
+
+    @Test
+    fun `a lead byte followed by an escape sequence keeps the sequence`() {
+        val parser = TerminalInputParser()
+
+        assertEquals(listOf(TerminalEvent.Arrow(Direction.UP)), parser.feed(bytes(0xD1, 0x1B, '['.code, 'A'.code)))
+    }
+
+    @Test
+    fun `other UTF-8 characters are swallowed whole`() {
+        val parser = TerminalInputParser()
+
+        for (other in listOf("ω", "ש", "ü", "€", "😀")) assertEquals(emptyList(), parser.feed(other.toByteArray()), other)
+        assertEquals(listOf(TerminalEvent.KeyPress('x')), parser.feed("x".toByteArray()))
+    }
+
+    @Test
+    fun `an X10 report with a coordinate byte over 0x7F is still one click`() {
+        val parser = TerminalInputParser()
+
+        val events = parser.feed(byteArrayOf(ESC, '['.code.toByte(), 'M'.code.toByte()) + bytes(32, 0xD1, 33))
+
+        assertEquals(listOf(TerminalEvent.MouseClick(0xD1 - 33, 0)), events)
+    }
 }

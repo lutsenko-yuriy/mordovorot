@@ -39,4 +39,16 @@ class AnsiTerminalReadEventTest {
         assertEquals(TerminalEvent.MouseClick(4, 2), terminal.readEvent())
         assertEquals(TerminalEvent.KeyPress('a'), terminal.readEvent())
     }
+
+    @Test
+    fun `a Cyrillic letter's bytes are one key, in one read or two (GH-200)`() {
+        assertEquals(TerminalEvent.KeyPress('ц'), terminalReading("ц".toByteArray()).readEvent())
+
+        // available() is 0, so the second byte only comes with the next read.
+        val oneByteAtATime = object : ByteArrayInputStream("ц".toByteArray()) {
+            override fun available() = 0
+        }
+        val terminal = AnsiTerminal(oneByteAtATime, PrintStream(ByteArrayOutputStream()))
+        assertEquals(TerminalEvent.KeyPress('ц'), terminal.readEvent())
+    }
 }
