@@ -147,4 +147,12 @@ class WebKeyboardSolutionScenarioTest {
         assertEquals(GiveUpButton.MORDIES_SOLUTION, revealed.state.giveUp)
         assertEquals(Focus.GiveUpRow, fallbackFocus(Focus.Board.key, revealed.state))
     }
+
+    @Test
+    fun `non-Latin keys step through the solution screen`() = webTest {
+        // TODO: 1. Open the solution screen with its board focused.
+        // TODO: 2. Press в at KeyD: Next.
+        // TODO: 3. Press ф at KeyA: Prev.
+        // TODO: 4. Press к at KeyR: Restart.
+    }
 }

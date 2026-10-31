@@ -94,4 +94,11 @@ class WebKeyboardAnalyticsScenarioTest {
         mouse.press("1")
         assertEquals(emptyList(), mouse.analytics.events)
     }
+
+    @Test
+    fun `a non-Latin shift counts as hjkl`() = webTest {
+        // TODO: 1. Start one shift from solved, right-handed.
+        // TODO: 2. Press р at KeyH or л at KeyK, whichever solves it.
+        // TODO: 3. board_solved.shift_keys is hjkl, and input_method is keyboard.
+    }
 }

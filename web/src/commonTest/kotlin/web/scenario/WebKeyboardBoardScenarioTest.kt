@@ -282,4 +282,14 @@ class WebKeyboardBoardScenarioTest {
         assertEquals(KeyHints.board(KeyboardLayout.LEFT_HANDED), left.state.hints)
         assertNotEquals(right.state.hints, left.state.hints)
     }
+
+    @Test
+    fun `any non-Latin key acts by position, in both layouts`() = webTest {
+        // TODO: 1. In keyboard mode with the board focused, press в at KeyD: the selection moves right.
+        // TODO: 2. Press р at KeyH: the row shifts left.
+        // TODO: 3. Press ω at KeyW, for Greek: the selection moves up.
+        // TODO: 4. Press Ctrl+р at KeyH: nothing happens.
+        // TODO: 5. Switch to left-handed and press ц at KeyW: the column shifts up.
+        // TODO: 6. Press , at KeyW, as on Dvorak: nothing happens, so that key stays as it is today.
+    }
 }
