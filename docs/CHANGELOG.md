@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.29.1] — 2026-10-31 (PR #205 merged)
+
+### Changed
+- [wip] (PR #205) GH-201 WU1/2: web.a11y no longer imports the game's types: Focus and the page's fallback focus move to web, Escape-to-cancel moves out of the key listener. No behaviour change.
+
 ## [0.29.0] — 2026-10-31 (PR #204 merged)
 
 ### Added
