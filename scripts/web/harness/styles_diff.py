@@ -33,10 +33,10 @@ def inject_seed(html):
 def load_cases(lines):
     """{(variant, case): [(selector, {property: value})]} from harness.html's report=styles lines.
 
-    LINK elements are dropped: a branch may add or remove stylesheets."""
+    LINK elements are dropped: a branch may add or remove stylesheets. SKIP lines (GH-186) have no case to load."""
     cases = {}
     for text in lines:
-        if not text.strip() or text.startswith("#"):
+        if not text.strip() or text.startswith(("#", "SKIP ")):
             continue
         dump = json.loads(text)
         cases[(dump["v"], dump["case"])] = [(sel, props) for sel, props in dump["elements"]
@@ -131,8 +131,9 @@ def main():
         page = path / "index.html"
         page.write_text(inject_seed(page.read_text(encoding="utf-8")), encoding="utf-8")
     elif command == "compare":
-        lines, count = compare(load_cases(path.read_text(encoding="utf-8").splitlines()))
-        print("\n".join(lines))
+        text = path.read_text(encoding="utf-8").splitlines()
+        lines, count = compare(load_cases(text))
+        print("\n".join([l for l in text if l.startswith("SKIP ")] + lines))
         sys.exit(1 if count else 0)
     else:
         sys.exit(f"Unknown command {command}; see {__file__}")
