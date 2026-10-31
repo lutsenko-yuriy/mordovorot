@@ -325,6 +325,8 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
     Hints and the key list keep naming the Latin letters. Latin layouts still act by the letter they
     type, so AZERTY and Dvorak work as ever. A known gap: a key that types ASCII punctuation on a
     non-Latin layout (Hebrew's W types `'`) can't be told from a Latin layout's and does nothing.
+    Neither do letter keys under an input source that composes (Korean, Japanese kana, Chinese), as
+    a key in composition is left to it.
   - **Selection:** a rounded rectangle around the selected row and one around its column, crossing at
     the selected tile, which has a thicker ring; the arrows are hidden, their room kept. It stays put
     after a shift, starts on row 1, column 1, survives a new game, a load, a size change (clamped) and
