@@ -164,30 +164,43 @@ class WebVeryLargeScenarioTest {
         assertEquals(listOf(7), page.props("unsolvable_save_resolved").map { it["board_size"] })
     }
 
+    private fun WebHarness.startNine(): WebHarness = apply {
+        game.onNew()
+        game.onSizeChosen(9)
+    }
+
     @Test
-    fun `arrows, drag and keyboard shifts work on a 9x9 board`() = webTest {
-        val page = WebHarness(backgroundScope).startOn(swapped(9))
-        page.game.onNew()
-        page.game.onSizeChosen(9)
+    fun `an arrow shifts a row on a 9x9 board`() = webTest {
+        val page = WebHarness(backgroundScope).startOn().startNine()
         val before = page.state.tiles.subList(0, 9)
 
         page.game.onArrow(Arrow.LEFT, 0)
+
         assertEquals(before.drop(1) + before.first(), page.state.tiles.subList(0, 9))
         assertEquals(1, page.state.moves)
+    }
+
+    @Test
+    fun `a drag of 3 tiles on a 9x9 board is 3 shifts and one move`() = webTest {
+        val page = WebHarness(backgroundScope).startOn().startNine()
 
         page.game.onDragStart(3, 0, 100.0, 100.0, 40.0)
         page.game.onDragMove(220.0, 100.0)
         page.game.onDragEnd()
-        assertEquals(2, page.state.moves)
-        assertEquals(3, page.mordie.shifts - 1)
 
+        assertEquals(1, page.state.moves)
+        assertEquals(3, page.mordie.shifts)
+    }
+
+    @Test
+    fun `keyboard selection wraps at the 9th row and column, and a row shifts`() = webTest {
         val keys = WebHarness(backgroundScope).remembering().startOn(swapped(9))
+
         repeat(8) { keys.press("s", from = Focus.Board) }
         assertEquals(TileSelection(8, 0), keys.state.selection)
         keys.press("s", from = Focus.Board)
         assertEquals(TileSelection(0, 0), keys.state.selection)
-        repeat(8) { keys.press("d", from = Focus.Board) }
-        keys.press("d", from = Focus.Board)
+        repeat(9) { keys.press("d", from = Focus.Board) }
         assertEquals(TileSelection(0, 0), keys.state.selection)
         val row = keys.state.tiles.subList(0, 9)
         keys.press("ArrowLeft", from = Focus.Board)
