@@ -19,7 +19,7 @@ This skill produces a ticket, not code.
 If the user invokes this skill with an existing issue ID (e.g. `/brief GH-XX`):
 
 1. Fetch the issue (PM mapping: **Fetch issue**).
-2. Read `docs/PRODUCT_SPEC.md` and `docs/GLOSSARY.md`.
+2. Read `docs/PRODUCT_SPEC.md` and the glossary (`docs/GLOSSARY.md` and the domain files it links to).
 3. Compare the ticket description against the current product context and both repos' actual state (read relevant files if needed).
 4. Present a one-paragraph assessment: is the description still accurate, partially stale, or significantly out of date?
 5. Ask: *"Does this description still reflect what you want to build, or should we revise it?"*
@@ -33,14 +33,14 @@ If the user invokes this skill with an existing issue ID (e.g. `/brief GH-XX`):
 Read the following files in full before asking the user anything:
 
 - **Product spec** (`docs/PRODUCT_SPEC.md`) — what the product currently does
-- **Glossary** (`docs/GLOSSARY.md`) — canonical domain terms and known aliases
+- **Glossary** (`docs/GLOSSARY.md`, the index, and every domain file it links to) — canonical domain terms and known aliases
 
 This context is the reference against which the user's idea will be validated.
 
 ### 1.5 Primer for concepts new to the project
 
 If the idea (or, for an existing ticket, its description) rests on a domain concept that
-`docs/PRODUCT_SPEC.md` and `docs/GLOSSARY.md` don't cover yet (e.g. colour-blind design in
+`docs/PRODUCT_SPEC.md` and the glossary don't cover yet (e.g. colour-blind design in
 GH-165), offer a short primer before any question that decides scope: 4–8 bullets on the main
 techniques and their trade-offs. The user may skip it. GH-165: D5 was approved before the user
 knew the options, and the primer only came after.
@@ -69,7 +69,7 @@ After each user response, do exactly one of the following:
 
 - **Ask one clarifying question** — if anything is ambiguous, undefined, or contradicts the spec or glossary. Do not ask multiple questions at once.
 - **Flag a contradiction** — if the idea conflicts with existing product behaviour, name the conflict and ask how the user wants to resolve it.
-- **Flag an undefined term** — if the user introduces a term not in `docs/GLOSSARY.md`, ask them to define it before continuing.
+- **Flag an undefined term** — if the user introduces a term not in any glossary file, ask them to define it before continuing.
 - **Proceed to step 4** — if the idea is clear, coherent, and non-contradictory.
 
 The dialog is **product-level only**: no architecture, no implementation details, no data models. The goal is clarity on *what* and *why*, not *how*.
@@ -124,16 +124,16 @@ Fill every section. "Out of scope" must always be present — even if short — 
 
 ### 5. Update the glossary (if new terms were introduced)
 
-If the dialog produced any new domain terms not already in `docs/GLOSSARY.md`, add them now.
+If the dialog produced any new domain terms not already in the glossary, add them now.
 
-Open the glossary file, locate the correct alphabetical position, and insert entries following the existing format. Do not remove or reorder existing entries.
+Pick the domain file from the "what belongs there" column of the index (`docs/GLOSSARY.md`), locate the correct alphabetical position in it, and insert entries following the existing format. Do not remove or reorder existing entries. If a term fits no file, follow the index's rule for that case.
 
 ### 6. Report back
 
 Tell the user:
 
 - The ticket ID and URL (new or updated)
-- Any glossary additions (term + definition), or "no glossary changes" if none
+- Any glossary additions (term + definition + the file it went into), or "no glossary changes" if none
 
 If the user abandoned in step 3:
 
