@@ -115,12 +115,29 @@ class BoardImplNewGameTest {
     /** GH-74: covers every new-game surface that goes through newGame (size command, play-again, size dialogs). */
     @Test
     fun `newGame always produces a solvable board on odd sides`() {
-        val board = BoardImpl(4)
-        for (side in listOf(3, 5)) {
+        val board = BoardImpl(4, maxSide = 9)
+        for (side in listOf(3, 5, 7, 9)) {
             repeat(200) {
                 board.newGame(side)
                 assertTrue(Solvability.isSolvable(board.boardArray), "side $side: ${board.boardArray.toList()}")
             }
         }
+    }
+
+    @Test
+    fun `a board built with maxSide 9 grows to 7, 8 and 9, and still rejects 10 (GH-207)`() {
+        val board = BoardImpl(4, maxSide = 9)
+
+        for (side in 7..9) {
+            board.newGame(side)
+            assertEquals(side, board.squareSide)
+            assertEquals((0 until side * side).toList(), board.boardArray.sorted())
+        }
+        assertFailsWith<IllegalArgumentException> { board.newGame(10) }
+    }
+
+    @Test
+    fun `the default board still rejects 7 (GH-207)`() {
+        assertFailsWith<IllegalArgumentException> { BoardImpl(4).newGame(7) }
     }
 }

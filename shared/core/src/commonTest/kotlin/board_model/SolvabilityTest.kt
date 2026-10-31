@@ -15,7 +15,7 @@ class SolvabilityTest {
 
     @Test
     fun `the solved board is solvable on every size`() {
-        for (side in BoardSize.MIN..BoardSize.MAX) assertTrue(Solvability.isSolvable(solved(side)), "side $side")
+        for (side in BoardSize.MIN..BoardSize.VERY_LARGE.last) assertTrue(Solvability.isSolvable(solved(side)), "side $side")
     }
 
     @Test

@@ -36,8 +36,8 @@ class BoardImplResetTest {
     /** GH-74: without the parity fix, 200 odd-side shuffles all landing solvable is ~2^-200. */
     @Test
     fun `resetGame always produces a solvable board on odd sides`() {
-        for (side in listOf(3, 5)) {
-            val board = BoardImpl(side)
+        for (side in listOf(3, 5, 7, 9)) {
+            val board = BoardImpl(side, maxSide = 9)
             repeat(200) {
                 board.resetGame()
                 assertTrue(Solvability.isSolvable(board.boardArray), "side $side: ${board.boardArray.toList()}")
