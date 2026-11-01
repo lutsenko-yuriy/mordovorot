@@ -221,9 +221,14 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 - **Search:** when a game starts (`[ New ]`, the startup size prompt, `--size=N`), Mordie starts
   searching in the background for the shortest solution of the game's original arrangement,
   counted in moves (Feature 2). The player's moves don't affect it, and the board stays fully
-  playable. Mordie's N is the longest solution length it has ruled out so far; once it has found
-  a solution, N is that solution's length, the true minimum. On 5x5 the search may never finish
-  within a game; Mordie then just keeps reporting progress. In the browser the search runs in a
+  playable. Two solvers run together (GH-222): the fast solver answers almost at once on every
+  size Mordie plays, and the exact search looks for the shortest solution and replaces the fast
+  answer when it finds a shorter one. Mordie keeps the best solution so far. Mordie's N is the
+  longest solution length it has ruled out until a solution exists (a brief window), then the
+  length of the best solution, which drops whenever the exact search finds a shorter one. The
+  best solution is *proven shortest* once the exact search has finished or has ruled out every
+  shorter length. On 5x5 the exact search may never finish within a game, so the fast answer
+  stands, longer than the minimum. In the browser the search runs in a
   Web Worker (GH-218), so the page stays smooth while Mordie thinks, and a hidden tab keeps
   searching at whatever rate the browser allows.
 - **Mordie sits 6x6 out (GH-160)**, until a faster search exists (GH-116): no search, and for
@@ -250,15 +255,17 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   - A progress window is skipped (the line stays empty) when N is the same as the last N Mordie
     told the player: its last progress line, 0 for a new game, or the saved N after a load.
   - From the 60th shift on, the progress line starts with `This one is hard! `.
-  - When a check finds that Mordie has its solution, the line switches at once, even in an empty
+  - When a check finds that Mordie has a solution, the line switches at once, even in an empty
     stretch, to `Found it! I had to make N moves to find the solution! Can you beat it?`, and
-    stays until the board is solved.
+    stays until the board is solved. Later checks, every 5 shifts, update N while the answer is
+    not proven shortest. Until the lines are reworded for an answer that may not be the shortest
+    (GH-223), the line and the endings name this N.
 - **Endings:** when the player solves the board in M moves, the title shows one of these instead
   of `Congratulations ✓`, and the line disappears:
-  - Mordie hasn't found its solution: `You beat me! I was still at N moves.`
+  - Mordie has no solution yet: `You beat me! I was still at N moves.`
   - M = N: `Cool, you matched me! N moves each!`
   - M > N: `Sorry, but I win: N moves vs your M.`
-  - M < N (only possible with a hand-edited save):
+  - M < N (with a hand-edited save, or when N is not proven shortest, GH-222):
     `I made N moves and you made M moves! Are you a machine?`
   - A count of 1 reads `1 move`.
 - **Solution screen (GH-126):** Mordie's line reads `Here's how I did it in N moves!` there
@@ -267,6 +274,9 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   solution (two extra lines; older saves still load).
   - Loading a save where Mordie was still searching resumes the search past the saved N, and the
     first line (shifts 0-4) is `Okay, so we stopped when I was at N moves! What was I doing?..`
+    A game saved while Mordie's answer is not yet proven shortest is saved this way too (GH-222),
+    N being the longest length ruled out: both solvers start again on load, and the `Found it!`
+    line returns at the next check. Saves keep the best solution so far in GH-224.
   - Loading a save where Mordie had found its solution shows the `Found it!` line at once.
   - Loading a solved save shows its ending, or `Congratulations ✓` if it has no Mordie data.
   - A save with no Mordie data (made before GH-83), or one fixed by Repair (GH-74): if no moves
@@ -498,9 +508,10 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 ### Feature 10 — Give Up and Mordie's solution (GH-126)
 Applies to terminal mouse mode, terminal keyboard mode and the web client.
 - **Give Up:** `[ Give Up ]` sits on its own row, directly above the toolbar. It is dimmed and
-  inert until Mordie has found its solution (the `Found it!` moment, Feature 8), so on boards
-  where Mordie never finishes (often 5x5) it stays dimmed. On 6x6, which Mordie sits out, it isn't
-  shown at all (GH-160). Keyboard mode: 5. Pressing it asks
+  inert until Mordie has a solution (the `Found it!` moment, Feature 8): at the first 5-shift
+  check on every size Mordie plays, 5x5 included (GH-222). The solution it shows is the best
+  known when the player gives up, which may be longer than the shortest. On 6x6, which Mordie
+  sits out, it isn't shown at all (GH-160). Keyboard mode: 5. Pressing it asks
   `Give up and see Mordie's solution?` `[ Yes ] [ No ]`: No (or Escape) keeps playing; Yes
   discards the player's moves and opens the solution screen.
 - **After a win:** the row shows `[ Mordie's solution ]` instead (keyboard mode: 5) if Mordie

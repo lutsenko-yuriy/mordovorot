@@ -25,6 +25,13 @@ class Mordie(private val factory: MordieSearchFactory) {
     private var checkedMoves = 0
     private var revealedMoves: Int? = null
 
+    /** Whether the revealed answer is proven shortest (GH-222); the checks go on until it is. */
+    var provenShortest = false
+        private set
+
+    /** Set by [giveUp]: the solution screen shows the answer as found, proven or not. */
+    private var givenUp = false
+
     /** The last N Mordie told the player - its opening's, or its last progress line's. */
     private var toldMoves = 0
 
@@ -77,6 +84,7 @@ class Mordie(private val factory: MordieSearchFactory) {
         toldMoves = moves
         if (found) {
             revealedMoves = moves
+            provenShortest = true
         } else {
             opening = MordieLine.Resumed(moves)
             search = factory.start(this.original!!, moves)
@@ -89,6 +97,7 @@ class Mordie(private val factory: MordieSearchFactory) {
         bind(original)
         this.solution = solution
         outcome = MordieOutcome(moves, found)
+        provenShortest = found
     }
 
     /** A game Mordie sits out, e.g. a solved save with no Mordie data. */
@@ -105,12 +114,16 @@ class Mordie(private val factory: MordieSearchFactory) {
     }
 
     /** Counts a shift, the player having made [playerMoves] moves; returns the progress when this
-     *  shift's check reveals the solution. */
+     *  shift's check reveals the solution. Later checks keep the best answer until it is proven. */
     fun onShift(playerMoves: Int): SearchProgress? {
         if (sitsOut) shifts++
         if (original == null || outcome != null) return null
         shifts++
-        if (revealedMoves != null || shifts % CHECK_EVERY != 0) return null
+        if (shifts % CHECK_EVERY != 0) return null
+        if (revealedMoves != null) {
+            if (!provenShortest) takeBest()
+            return null
+        }
         val progress = search!!.progress()
         checkedMoves = progress.moves.coerceAtLeast(0)
         if (shifts % PROGRESS_EVERY == 0) {
@@ -120,6 +133,7 @@ class Mordie(private val factory: MordieSearchFactory) {
         if (!progress.found) return null
         revealedMoves = progress.moves
         solution = progress.solution
+        provenShortest = progress.provenShortest
         shiftsAtReveal = shifts
         playerMovesAtReveal = playerMoves
         return progress
@@ -143,14 +157,23 @@ class Mordie(private val factory: MordieSearchFactory) {
         if (original == null) return null
         outcome?.let { return it }
         val progress = liveProgress()
-        if (solution == null) solution = progress?.solution
+        progress?.takeIf { it.found }?.let { solution = it.solution }
         return live(progress).also {
+            provenShortest = it.provenShortest
             outcome = it
             stop()
         }
     }
 
     fun outcome(): MordieOutcome? = outcome
+
+    /** The player gives up: takes the live best answer and stops the search, so the solution
+     *  screen, its save and the analytics agree (GH-222). */
+    fun giveUp() {
+        givenUp = true
+        if (original != null && outcome == null) takeBest()
+        stop()
+    }
 
     /** The arrangement this game started from; `null` when Mordie sits it out (GH-126). */
     fun original(): IntArray? = original?.copyOf()
@@ -161,7 +184,13 @@ class Mordie(private val factory: MordieSearchFactory) {
         outcome?.let { return MordieSnapshot(original.copyOf(), it.moves, it.found, solution) }
         val progress = liveProgress()
         val state = live(progress)
-        return MordieSnapshot(original.copyOf(), state.moves, state.found, solution ?: progress?.solution)
+        // An answer not proven shortest is saved as searching (until saves keep it, GH-224), so
+        // the loaded game searches again; a solution screen's save keeps what it shows.
+        if (state.found && !state.provenShortest && !givenUp) {
+            return MordieSnapshot(original.copyOf(), progress!!.ruledOut.coerceAtLeast(0), found = false, solution = null)
+        }
+        val best = progress?.takeIf { it.found }?.solution ?: solution
+        return MordieSnapshot(original.copyOf(), state.moves, state.found, best)
     }
 
     /** Cancels the search; everything else is kept. */
@@ -180,6 +209,8 @@ class Mordie(private val factory: MordieSearchFactory) {
         revealedMoves = null
         toldMoves = 0
         progressWindowShown = false
+        provenShortest = false
+        givenUp = false
         outcome = null
         solution = null
         shiftsAtReveal = null
@@ -188,14 +219,23 @@ class Mordie(private val factory: MordieSearchFactory) {
         resumedFromSave = false
     }
 
-    /** The search's progress right now, unless the solution is already revealed or nothing searches. */
-    private fun liveProgress(): SearchProgress? = if (revealedMoves != null) null else search?.progress()
+    /** The search's progress right now, unless the revealed answer is final or nothing searches. */
+    private fun liveProgress(): SearchProgress? = if (revealedMoves != null && provenShortest) null else search?.progress()
+
+    /** Keeps the search's best answer as the revealed one, once it is found. */
+    private fun takeBest() {
+        val progress = search?.progress()?.takeIf { it.found } ?: return
+        revealedMoves = progress.moves
+        solution = progress.solution
+        provenShortest = progress.provenShortest
+    }
 
     /** The search's current state - not just the last check's - from [progress] read by [liveProgress]. */
     private fun live(progress: SearchProgress?): MordieOutcome {
-        revealedMoves?.let { return MordieOutcome(it, found = true) }
+        if (progress?.found == true) return MordieOutcome(progress.moves, found = true, progress.provenShortest)
+        revealedMoves?.let { return MordieOutcome(it, found = true, provenShortest) }
         progress ?: return MordieOutcome(checkedMoves, found = false)
-        return MordieOutcome(progress.moves.coerceAtLeast(0), progress.found)
+        return MordieOutcome(progress.moves.coerceAtLeast(0), found = false)
     }
 
     companion object {

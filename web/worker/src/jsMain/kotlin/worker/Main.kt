@@ -16,8 +16,8 @@ fun main() {
             val start = SearchProtocol.decodeStart(message)
             var last: SearchProgress? = null
             search = BackgroundMordieSearch(start.original, start.ruledOut, onSnapshot = { progress ->
-                // elapsedMs is read only once found, so the page is woken only when N or found changes.
-                if (last?.moves != progress.moves || last?.found != progress.found) {
+                // elapsedMs is read only once found, so the page is woken only when something else changes.
+                if (last?.copy(elapsedMs = 0) != progress.copy(elapsedMs = 0)) {
                     last = progress
                     self.postMessage(SearchProtocol.encodeProgress(progress))
                 }

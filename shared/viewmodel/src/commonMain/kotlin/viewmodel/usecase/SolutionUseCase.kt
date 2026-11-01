@@ -37,10 +37,15 @@ internal class SolutionUseCase(
 
     fun giveUp() {
         if (button() != GiveUpButton.GIVE_UP) return
+        mordieHooks.onGiveUp()
         analytics.track(
             "game_given_up",
-            mapOf("board_size" to board.squareSide, "move_count" to board.moveCount, "solution_length" to mordieHooks.solution()!!.size) +
-                mordieHooks.sinceRevealProps(),
+            mapOf(
+                "board_size" to board.squareSide,
+                "move_count" to board.moveCount,
+                "solution_length" to mordieHooks.solution()!!.size,
+                "solution_proven_shortest" to mordieHooks.provenShortest(),
+            ) + mordieHooks.sinceRevealProps(),
         )
         enter("give_up")
     }

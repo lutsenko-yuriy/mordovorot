@@ -6,6 +6,7 @@ import board_model.Solvability
 import mordie.Mordie
 import mordie.MordieLine
 import mordie.SolutionMove
+import mordie.SolutionSource
 import storage.SavedMordie
 import storage.SavedMove
 
@@ -51,6 +52,8 @@ internal class MordieHooks(
                 "player_shift_count" to mordie.shifts,
                 "search_duration_ms" to found.elapsedMs,
                 "resumed_from_save" to mordie.resumedFromSave,
+                "source" to (found.source ?: SolutionSource.EXACT_SEARCH).analyticsName,
+                "proven_shortest" to found.provenShortest,
             ),
         )
     }
@@ -58,8 +61,18 @@ internal class MordieHooks(
     /** Freezes Mordie's result; returns its `board_solved` props, empty when it sat this game out. */
     fun onSolved(): Map<String, Any> {
         val outcome = mordie.onSolved() ?: return emptyMap()
-        return mapOf("mordie_result" to outcome.result(board.moveCount).name.lowercase(), "mordie_moves" to outcome.moves)
+        return mapOf(
+            "mordie_result" to outcome.result(board.moveCount).name.lowercase(),
+            "mordie_moves" to outcome.moves,
+            "mordie_proven_shortest" to outcome.provenShortest,
+        )
     }
+
+    /** The player gives up: Mordie takes its live best solution and stops (GH-222). */
+    fun onGiveUp() = mordie.giveUp()
+
+    /** Whether the solution Mordie shows is proven shortest. */
+    fun provenShortest(): Boolean = mordie.provenShortest
 
     fun snapshot(): SavedMordie? = mordie.snapshot()?.let { snapshot ->
         val solution = snapshot.solution?.map { SavedMove(it.isRow, it.index, it.amount) }
