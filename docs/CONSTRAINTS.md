@@ -10,7 +10,7 @@
 
 ## Environment
 
-- Local macOS terminal for manual play-testing; GitHub Actions ubuntu runner for build and test
+- Local macOS browser (Firefox or Safari) for manual play-testing; GitHub Actions ubuntu runner for build and test
 - The user's main browser holds their own tabs: never open URLs in it or drive it (GH-110). Open
   PR/MR links in another browser and smoke-test web pages in a headless one with a throwaway
   profile. The commands for this machine are in `CLAUDE.local.md` (`## Browser`); without them,
@@ -19,7 +19,7 @@
 ## Backend
 
 - No backend and no database, and none planned soon: everything runs on the player's device
-  (terminal app or browser). Anything that needs a server (remote solving, a shared store of
+  (in the browser). Anything that needs a server (remote solving, a shared store of
   precomputed solutions) is out; precomputed data has to ship inside the app or bundle.
 
 ## Web hosting
