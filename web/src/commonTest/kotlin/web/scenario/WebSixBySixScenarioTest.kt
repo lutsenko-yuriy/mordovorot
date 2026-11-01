@@ -1,6 +1,7 @@
 package web.scenario
 
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -31,47 +32,96 @@ class WebSixBySixScenarioTest {
 
     @Test
     fun `Mordie plays 6x6, and a win is Mordie's ending`() = webTest {
-        // TODO: 1. Start a 6x6 game from New
-        // TODO: 2. A search starts on the 36-tile original and the opening line shows - no "too much for me" line
-        // TODO: 3. Give Up is dimmed
-        // TODO: 4. After 5 shifts Give Up is lit and the `Found one in N moves, but maybe there's a shorter one!` line shows
-        // TODO: 5. Start a game one shift from solved (oneShiftFromSolved) and make that shift
-        // TODO: 6. The title is Mordie's ending, not `Congratulations ✓`
-        // TODO: 7. board_solved carries board_size 6 and mordie_result, mordie_moves and mordie_proven_shortest
+        val page = WebHarness(backgroundScope).startOn()
+        page.game.onNew()
+        page.game.onSizeChosen(6)
+
+        assertEquals(36, page.mordieSearches.latest.original.size)
+        assertEquals("Alright! Let's sort this one out!", page.state.mordie)
+        assertEquals(GiveUpButton.DIMMED, page.state.giveUp)
+        page.mordieSearches.latest.progress = fastAnswer(40)
+        repeat(5) { page.game.onArrow(Arrow.UP, 0) }
+        assertEquals("Found one in 40 moves, but maybe there's a shorter one! Can you beat it?", page.state.mordie)
+        assertEquals(GiveUpButton.GIVE_UP, page.state.giveUp)
+
+        val won = WebHarness(backgroundScope).startOn(oneShiftFromSolved)
+        won.mordieSearches.latest.progress = fastAnswer(40)
+        won.game.onArrow(Arrow.LEFT, 0)
+
+        assertTrue(won.state.solved)
+        assertEquals("You beat me! 40 moves vs your 1. Mine may not have been the shortest.", won.state.mordie)
+        val solved = won.ownProps("board_solved").single()
+        assertEquals(6, solved["board_size"])
+        assertEquals(40, solved["mordie_moves"])
+        assertEquals("beat_mordie", solved["mordie_result"])
+        assertEquals(false, solved["mordie_proven_shortest"])
     }
 
     @Test
     fun `Give Up on 6x6 opens Mordie's solution`() = webTest {
-        // TODO: 1. Start a 6x6 game and shift 5 times
-        // TODO: 2. Press Give Up - the confirm dialog opens
-        // TODO: 3. Confirm - the solution screen opens on Mordie's solution
-        // TODO: 4. game_given_up and screen_solution fire with board_size 6
-        // TODO: 5. Press Next three times - the step counter advances
+        val page = WebHarness(backgroundScope).startOn(rotatedRow(6))
+        page.mordieSearches.latest.progress = fastAnswer(37)
+        repeat(5) { page.game.onArrow(Arrow.UP, 2) }
+
+        page.game.solution.onGiveUp()
+        assertEquals(WebDialog.GiveUp, page.state.dialog)
+        page.game.solution.onGiveUpAnswered(true)
+
+        assertEquals(37, page.state.solution!!.moves.size)
+        assertEquals(6, page.props("game_given_up").single()["board_size"])
+        assertEquals(6, page.props("screen_solution").single()["board_size"])
+        repeat(3) { page.game.solution.onReplayNext() }
+        assertEquals(2, page.state.solution?.current)
     }
 
     @Test
     fun `a 6x6 save with no Mordie data and no moves starts Mordie fresh`() = webTest {
-        // TODO: 1. Seed a 6x6 save with 0 moves and no Mordie data
-        // TODO: 2. Load it
-        // TODO: 3. A search starts from the loaded board
-        // TODO: 4. After 5 shifts Give Up is lit
+        val page = WebHarness(backgroundScope).seed("foo", rotatedRow(6)).startOn(rotatedRow(6))
+        val searches = page.mordieSearches.started.size
+
+        page.game.onLoad()
+        page.game.onLoadChosen("foo")
+
+        assertEquals(searches + 1, page.mordieSearches.started.size)
+        assertContentEquals(rotatedRow(6), page.mordieSearches.latest.original)
+        page.mordieSearches.latest.progress = fastAnswer(37)
+        repeat(5) { page.game.onArrow(Arrow.UP, 2) }
+        assertEquals(GiveUpButton.GIVE_UP, page.state.giveUp)
     }
 
     @Test
     fun `a 6x6 save with moves made and no Mordie data sits Mordie out`() = webTest {
-        // TODO: 1. Seed a 6x6 save with moves made and no Mordie data
-        // TODO: 2. Load it
-        // TODO: 3. No search starts
-        // TODO: 4. There is no Mordie line and Give Up is dimmed
-        // TODO: 5. Win it - the title is `Congratulations ✓` and board_solved has no mordie_* props
+        val page = WebHarness(backgroundScope).seed("foo", rotatedRow(6), moves = 2).startOn(rotatedRow(6))
+        val searches = page.mordieSearches.started.size
+
+        page.game.onLoad()
+        page.game.onLoadChosen("foo")
+
+        assertEquals(searches, page.mordieSearches.started.size)
+        assertNull(page.state.mordie)
+        assertEquals(GiveUpButton.DIMMED, page.state.giveUp)
+        page.game.onArrow(Arrow.RIGHT, 0)
+
+        assertTrue(page.state.solved)
+        assertEquals("Congratulations ✓", page.state.mordie)
+        val solved = page.ownProps("board_solved").single()
+        assertTrue("mordie_result" !in solved && "mordie_moves" !in solved, "$solved")
     }
 
     @Test
     fun `a 6x6 save with Mordie data resumes from its kept answer`() = webTest {
-        // TODO: 1. Play a 6x6 game until Mordie's answer is found
-        // TODO: 2. Save, then load
-        // TODO: 3. The `Found one in N moves…` line shows at once, with the same N
-        // TODO: 4. Give Up is lit
+        val page = WebHarness(backgroundScope).startOn(rotatedRow(6))
+        page.mordieSearches.latest.progress = fastAnswer(37)
+        repeat(5) { page.game.onArrow(Arrow.UP, 2) }
+        page.game.onSave()
+        page.game.onSaveAnswered("foo")
+        assertEquals(listOf("foo"), page.saves.listSaves())
+
+        page.game.onLoad()
+        page.game.onLoadChosen("foo")
+
+        assertEquals("Found one in 37 moves, but maybe there's a shorter one! Can you beat it?", page.state.mordie)
+        assertEquals(GiveUpButton.GIVE_UP, page.state.giveUp)
     }
 
     @Test
