@@ -435,3 +435,9 @@ true minimum. Nothing new is tracked on screens.
   proven shortest (the `You beat me! … Mine may not have been the shortest.` ending). `machine`
   now means only moves below a proven-shortest N, which only an inconsistent save can produce, so
   it marks a likely cheat.
+
+## GH-228 (the terminal client is dropped)
+
+No new events or screen views. The web client is the only client, and mobile apps are planned, so `platform` stays on every event and screen view (always `web` for now; its `terminal` value is retired, and a mobile app would add its own).
+
+Retired, kept here as history: `app_launch_aborted`, `input_mode_switched` (if the web never fires it; checked in the plan), `screen_exit_dialog`, the terminal-only `opened_from` values (`exit_flow`, and `startup` if the web does not fire it) and the terminal-only properties `console_flag_ignored` and `board_size` on `app_launched`. `implement` marks each entry "Retired — GH-228" and trims the "terminal"/"TUI" wording.
