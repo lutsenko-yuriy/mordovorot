@@ -422,4 +422,5 @@ true minimum. Nothing new is tracked on screens.
   a tie or loss to the best possible play unless this is `true`.
 - `screen_give_up_dialog`, `screen_solution` and `solution_replay_*` are unchanged; their
   `solution_length` means the length of the solution shown.
+- `search_duration_ms` is now the time to the first solution, from either solver.
 - Not tracked: each time the exact search shortens the answer, and search time per solver.
