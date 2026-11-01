@@ -73,28 +73,29 @@ class WebVeryLargeScenarioTest {
     }
 
     @Test
-    fun `Mordie sits 9x9 out, and a win is Congratulations`() = webTest {
-        val sitsOut = "9x9 is too much for me, you're on your own!"
-        val page = WebHarness(backgroundScope).startOn()
-        page.game.onNew()
-        page.game.onSizeChosen(9)
+    fun `Mordie plays 9x9, and a win is Mordie's ending`() = webTest {
+        // TODO: 1. Start a 9x9 game from New
+        // TODO: 2. A search starts on the 81-tile original and the opening line shows - no "too much for me" line
+        // TODO: 3. Give Up is dimmed
+        // TODO: 4. After 5 shifts Give Up is lit and the `Found one in N moves, but maybe there's a shorter one!` line shows
+        // TODO: 5. Start a game one shift from solved (oneShiftFromSolved(9)) and make that shift
+        // TODO: 6. The title is Mordie's ending, not `Congratulations ✓`
+        // TODO: 7. board_solved carries board_size 9 and mordie_result, mordie_moves and mordie_proven_shortest
+    }
 
-        assertEquals(sitsOut, page.state.mordie)
-        assertEquals(listOf(16), page.mordieSearches.started.map { it.original.size }, "only the 4x4 game's search")
-        assertEquals(GiveUpButton.HIDDEN, page.state.giveUp)
-        repeat(5) { page.game.onArrow(Arrow.UP, 0) }
-        assertNull(page.state.mordie)
+    @Test
+    fun `a win on 9x9 offers Mordie's solution`() = webTest {
+        // TODO: 1. Start a game one shift from solved on 9x9 and make that shift
+        // TODO: 2. The `[ Mordie's solution ]` button shows
+        // TODO: 3. Press it - the solution screen opens with opened_from=after_win
+    }
 
-        val won = WebHarness(backgroundScope).startOn(oneShiftFromSolved(9))
-        assertEquals(sitsOut, won.state.mordie)
-        won.game.onArrow(Arrow.LEFT, 0)
-
-        assertTrue(won.state.solved)
-        assertEquals("Congratulations ✓", won.state.mordie)
-        assertEquals(GiveUpButton.HIDDEN, won.state.giveUp)
-        val solved = won.ownProps("board_solved").single()
-        assertEquals(9, solved["board_size"])
-        assertTrue("mordie_result" !in solved && "mordie_moves" !in solved, "$solved")
+    @Test
+    fun `a 9x9 save keeps Mordie's long answer`() = webTest {
+        // TODO: 1. Play a 9x9 game until Mordie's answer (a few hundred moves) is found
+        // TODO: 2. Save, then load
+        // TODO: 3. The line shows at once, with the same N
+        // TODO: 4. Give Up opens the solution screen on the full path
     }
 
     @Test

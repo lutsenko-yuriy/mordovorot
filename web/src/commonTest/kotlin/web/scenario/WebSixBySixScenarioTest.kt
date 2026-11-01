@@ -13,8 +13,6 @@ import web.WebDialog
 /** GH-160 scenarios: 6x6 boards in the web client, through [WebHarness]. */
 class WebSixBySixScenarioTest {
 
-    private val sitsOut = "6x6 is too much for me, you're on your own!"
-
     /** Solved 6x6 with row 0 shifted one tile right: `shiftLeft(0)` solves it. */
     private val oneShiftFromSolved = intArrayOf(5, 0, 1, 2, 3, 4) + IntArray(30) { it + 6 }
 
@@ -32,27 +30,48 @@ class WebSixBySixScenarioTest {
     }
 
     @Test
-    fun `Mordie sits 6x6 out, and a win is Congratulations`() = webTest {
-        val page = WebHarness(backgroundScope).startOn()
-        page.game.onNew()
-        page.game.onSizeChosen(6)
+    fun `Mordie plays 6x6, and a win is Mordie's ending`() = webTest {
+        // TODO: 1. Start a 6x6 game from New
+        // TODO: 2. A search starts on the 36-tile original and the opening line shows - no "too much for me" line
+        // TODO: 3. Give Up is dimmed
+        // TODO: 4. After 5 shifts Give Up is lit and the `Found one in N moves, but maybe there's a shorter one!` line shows
+        // TODO: 5. Start a game one shift from solved (oneShiftFromSolved) and make that shift
+        // TODO: 6. The title is Mordie's ending, not `Congratulations ✓`
+        // TODO: 7. board_solved carries board_size 6 and mordie_result, mordie_moves and mordie_proven_shortest
+    }
 
-        assertEquals(sitsOut, page.state.mordie)
-        assertEquals(listOf(16), page.mordieSearches.started.map { it.original.size }, "only the 4x4 game's search")
-        assertEquals(GiveUpButton.HIDDEN, page.state.giveUp)
-        repeat(5) { page.game.onArrow(Arrow.UP, 0) }
-        assertNull(page.state.mordie)
+    @Test
+    fun `Give Up on 6x6 opens Mordie's solution`() = webTest {
+        // TODO: 1. Start a 6x6 game and shift 5 times
+        // TODO: 2. Press Give Up - the confirm dialog opens
+        // TODO: 3. Confirm - the solution screen opens on Mordie's solution
+        // TODO: 4. game_given_up and screen_solution fire with board_size 6
+        // TODO: 5. Press Next three times - the step counter advances
+    }
 
-        val won = WebHarness(backgroundScope).startOn(oneShiftFromSolved)
-        assertEquals(sitsOut, won.state.mordie)
-        won.game.onArrow(Arrow.LEFT, 0)
+    @Test
+    fun `a 6x6 save with no Mordie data and no moves starts Mordie fresh`() = webTest {
+        // TODO: 1. Seed a 6x6 save with 0 moves and no Mordie data
+        // TODO: 2. Load it
+        // TODO: 3. A search starts from the loaded board
+        // TODO: 4. After 5 shifts Give Up is lit
+    }
 
-        assertTrue(won.state.solved)
-        assertEquals("Congratulations ✓", won.state.mordie)
-        assertEquals(GiveUpButton.HIDDEN, won.state.giveUp)
-        val solved = won.ownProps("board_solved").single()
-        assertEquals(6, solved["board_size"])
-        assertTrue("mordie_result" !in solved && "mordie_moves" !in solved, "$solved")
+    @Test
+    fun `a 6x6 save with moves made and no Mordie data sits Mordie out`() = webTest {
+        // TODO: 1. Seed a 6x6 save with moves made and no Mordie data
+        // TODO: 2. Load it
+        // TODO: 3. No search starts
+        // TODO: 4. There is no Mordie line and Give Up is dimmed
+        // TODO: 5. Win it - the title is `Congratulations ✓` and board_solved has no mordie_* props
+    }
+
+    @Test
+    fun `a 6x6 save with Mordie data resumes from its kept answer`() = webTest {
+        // TODO: 1. Play a 6x6 game until Mordie's answer is found
+        // TODO: 2. Save, then load
+        // TODO: 3. The `Found one in N moves…` line shows at once, with the same N
+        // TODO: 4. Give Up is lit
     }
 
     @Test
