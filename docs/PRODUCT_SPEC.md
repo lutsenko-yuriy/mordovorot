@@ -223,7 +223,9 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   counted in moves (Feature 2). The player's moves don't affect it, and the board stays fully
   playable. Mordie's N is the longest solution length it has ruled out so far; once it has found
   a solution, N is that solution's length, the true minimum. On 5x5 the search may never finish
-  within a game; Mordie then just keeps reporting progress.
+  within a game; Mordie then just keeps reporting progress. In the browser the search runs in a
+  Web Worker (GH-218), so the page stays smooth while Mordie thinks, and a hidden tab keeps
+  searching at whatever rate the browser allows.
 - **Mordie sits 6x6 out (GH-160)**, until a faster search exists (GH-116): no search, and for
   shifts 0-4 its line is `6x6 is too much for me, you're on your own!`, then empty. A loaded 6x6
   save shows the same line (and its Mordie lines, if any, are dropped at the next save). The

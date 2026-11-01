@@ -64,7 +64,10 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       ├── MordieSearch.kt          # MordieSearch / SearchProgress / MordieSearchFactory (+ NONE) -
 │       │                              # the seam tests replace with FakeMordieSearchFactory
 │       ├── BackgroundMordieSearch.kt # The real search: one throttled coroutine on
-│       │                               # Dispatchers.Default, publishing a volatile snapshot
+│       │                               # Dispatchers.Default, publishing a volatile snapshot;
+│       │                               # onSnapshot forwards each one (the browser's worker, GH-218)
+│       ├── SearchProtocol.kt        # GH-218: the page <-> Web Worker messages as plain strings
+│       │                              # (start: arrangement + saved N; progress, with the solution)
 │       ├── Mordie.kt                # Opponent state: shift count, 5-shift checks, opening/resume
 │       │                              # kind, found reveal, frozen outcome, save snapshot;
 │       │                              # MAX_SIDE 5 and sitOut() for larger boards (GH-160)
@@ -235,8 +238,17 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   └── storage/         # BrowserSaveRepository: one KeyValueStore entry per save under
 │                        # `mordovorot.save.<name>`, in SaveFileCodec's format, SaveNames' rules;
 │                        # BrowserPreferenceRepository: `mordovorot.pref.<key>` (GH-139)
+├── worker/                              # :web:worker (GH-218): Kotlin/JS executable, depends only on
+│                                        # :shared:mordie; its Main.kt runs BackgroundMordieSearch in a
+│                                        # Web Worker and posts the changed snapshots. Built into
+│                                        # mordie-worker.js; :web's syncWorker copies it into the
+│                                        # distribution, and checkWorkerShipped fails a build without it
+├── src/commonMain/kotlin/web/WorkerMordieSearch.kt # GH-218: the page's MordieSearch over a SearchPort
+│                                        # (one worker per search; cancel terminates it); DOM-free
+├── src/jsMain/kotlin/web/DomSearchPort.kt # GH-218: SearchPort over Worker("mordie-worker.js")
+├── src/commonTest/kotlin/web/WorkerMordieSearchTest.kt # GH-218: with a fake port
 ├── src/jsMain/kotlin/web/Main.kt       # The page's composition root: BoardImpl, saves and
-│                                       # preferences in localStorage, Mordie with the background search,
+│                                       # preferences in localStorage, Mordie with the worker search,
 │                                       # MainScope, the window's Layout, the beforeunload prompt;
 │                                       # the footer, once, outside #app (GH-111); stopPinchZoom;
 │                                       # applySystemTextSize first (GH-168)
@@ -585,7 +597,10 @@ game's original arrangement for its shortest solution in the GH-62 move metric, 
 `MoveMetricHeuristic` as the admissible bound. It runs in slices, so
 `BackgroundMordieSearch` can throttle it (about half of one core; the constants sit in
 one place for the GH-41 mobile port), and memory stays O(depth). A search started from a
-saved N begins at N + 1, so it never re-reports below it. `Mordie` turns the player's
+saved N begins at N + 1, so it never re-reports below it. In the browser the search runs in a
+Web Worker (GH-218): `SearchProtocol` carries the start and the progress between the page's
+`WorkerMordieSearch` and the worker, so the page's timers aren't delayed and a hidden tab keeps
+searching. `Mordie` turns the player's
 shifts into the line state: a check every 5 shifts, a reveal of "found", and the outcome
 frozen on solve, using Mordie's live state at that shift. Its `MordieSnapshot` mirrors
 `storage.SavedMordie` on purpose, so `mordie` never imports `storage`; `MordieHooks` maps
