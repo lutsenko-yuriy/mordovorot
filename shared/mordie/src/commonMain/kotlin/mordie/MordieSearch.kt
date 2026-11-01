@@ -1,13 +1,25 @@
 package mordie
 
-/** A snapshot of Mordie's search. [moves] is the largest length ruled out so far, or the
- *  solution's length once [found]; [elapsedMs] stops counting at the moment it was found.
- *  [solution] is the solution's moves once [found] (GH-126). */
+/** Where a solution came from (GH-222): the fast solver or the exact search. */
+enum class SolutionSource(val analyticsName: String) {
+    FAST_SOLVER("fast_solver"),
+    EXACT_SEARCH("exact_search"),
+}
+
+/** A snapshot of Mordie's search. [found] means a solution exists (GH-222): [moves] is then the
+ *  length of the best one so far, otherwise the largest length ruled out. [ruledOut] is the
+ *  largest length ruled out either way, [provenShortest] says whether the best solution is the
+ *  minimum, and [source] which solver gave the first one. [elapsedMs] stops counting at the
+ *  first solution. [solution] is the best solution's moves once [found] (GH-126).
+ *  The defaults keep the pre-GH-222 meaning: a found solution was the exact minimum. */
 data class SearchProgress(
     val moves: Int,
     val found: Boolean,
     val elapsedMs: Long,
     val solution: List<SolutionMove>? = null,
+    val ruledOut: Int = if (found) moves - 1 else moves,
+    val provenShortest: Boolean = found,
+    val source: SolutionSource? = if (found) SolutionSource.EXACT_SEARCH else null,
 )
 
 /** One running search for the shortest solution of a game's original arrangement. */
