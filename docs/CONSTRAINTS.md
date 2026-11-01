@@ -16,6 +16,12 @@
   profile. The commands for this machine are in `CLAUDE.local.md` (`## Browser`); without them,
   give the URL and don't open it.
 
+## Backend
+
+- No backend and no database, and none planned soon: everything runs on the player's device
+  (terminal app or browser). Anything that needs a server (remote solving, a shared store of
+  precomputed solutions) is out; precomputed data has to ship inside the app or bundle.
+
 ## Screen readers
 
 - Frozen until volunteers who use a screen reader test it (GH-171): what's shipped stays, untested
