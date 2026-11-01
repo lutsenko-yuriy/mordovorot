@@ -4,7 +4,6 @@ import analytics.NoopAnalyticsService
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
-import mordie.BackgroundMordieSearch
 import mordie.Mordie
 import org.w3c.dom.HTMLElement
 import web.a11y.DomAnnouncer
@@ -28,7 +27,7 @@ fun main() {
         BrowserSaveRepository(LocalStorageStore()),
         BrowserPreferenceRepository(LocalStorageStore()),
         NoopAnalyticsService(),
-        Mordie(BackgroundMordieSearch.Factory()),
+        Mordie(WorkerMordieSearch.Factory(::DomSearchPort)),
         renderer,
         MainScope(),
         layoutOf(window.innerWidth, window.innerHeight),
