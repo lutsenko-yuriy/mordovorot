@@ -60,11 +60,10 @@ Details and directory layout: @docs/ARCHITECTURE.md. Languages and tooling: docs
 
 ## Common Commands
 
-- **Run tests:** `./gradlew check` (`./gradlew test` skips the `shared/` modules' tests)
+- **Run tests:** `./gradlew check`
 - **Lint:** none configured
 - **Build:** `./gradlew build`
-- **Run the game:** `./gradlew installDist && ./build/install/mordovorot/bin/mordovorot` (`./gradlew run` has no terminal, so it only prints the no-terminal message; see `docs/TECH_STACK.md`)
-- **Run the browser game:** `./gradlew :web:serve -t`, then open `http://localhost:8080`. It rebuilds on change, and `./gradlew check`/`build` can run alongside it (its outputs go to `build-serve/`, which `clean` leaves alone)
+- **Run the game:** `./gradlew :web:serve -t`, then open `http://localhost:8080`. It rebuilds on change, and `./gradlew check`/`build` can run alongside it (its outputs go to `build-serve/`, which `clean` leaves alone)
 - **Install dependencies:** none to install manually — Gradle resolves everything (`kotlin("test")` on the JUnit 5 platform) on first run
 
 ## Code style

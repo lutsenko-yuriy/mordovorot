@@ -1,9 +1,9 @@
 # Mordovorot
 
-A version of Loopover, a sliding-row/column puzzle, written in Kotlin. It runs in a terminal
-and in a web browser, at https://lutsenko-yuriy.github.io/mordovorot/.
+A version of Loopover, a sliding-row/column puzzle, written in Kotlin. It runs in a web browser, at
+https://lutsenko-yuriy.github.io/mordovorot/.
 
-The board is a `SQUARE_SIDE × SQUARE_SIDE` grid (3×3 to 6×6, default 4×4; the browser goes up to 9×9) holding a
+The board is a `SQUARE_SIDE × SQUARE_SIDE` grid (3×3 to 9×9, default 4×4) holding a
 shuffled permutation of numbers. Rows shift left/right and columns shift up/down,
 cyclically wrapping around, until the board is back in ascending order.
 
@@ -14,37 +14,12 @@ is on [OpenProcessing](https://openprocessing.org/@carykh/580366), and Cary intr
 [this video](https://www.youtube.com/watch?v=95rtiz-V2zM). The community site,
 [loopover.xyz](https://loopover.xyz), was made by
 [Janis Pritzkau](https://github.com/janispritzkau). Mordovorot is an independent
-reimplementation for the terminal and the browser. It uses the same rules (cyclic row/column
+reimplementation for the browser. It uses the same rules (cyclic row/column
 shifts on a square board), but none of Loopover's code or assets.
 
 ## Running it
 
 **Requires:** JDK 17. Gradle comes with the wrapper, so you don't need to install it.
-
-### In a terminal
-
-The game is a terminal UI (mouse or keyboard) and needs a real terminal, so launch it
-through the `installDist` launcher:
-
-```bash
-./gradlew installDist
-./build/install/mordovorot/bin/mordovorot              # mouse TUI
-./build/install/mordovorot/bin/mordovorot --keyboard   # keyboard-only TUI
-```
-
-`./gradlew run` doesn't pass a terminal through to the game, so it only prints
-`No interactive terminal found - Mordovorot only runs as a terminal UI.` and exits. The
-same happens with piped input or any other launch without a terminal.
-
-Flags:
-
-- `--mouse`: the mouse TUI (the default with a terminal).
-- `--keyboard`: the keyboard-only TUI.
-- `--console`: console mode was removed; the game prints a notice and starts the TUI.
-- `--size=N`: start at board side `N` (3-6). This skips the startup restore/size prompts.
-
-Saves go to `saves/`, relative to the directory you launch from. See
-`docs/PRODUCT_SPEC.md` for the full behaviour.
 
 ### In a browser
 
@@ -57,10 +32,8 @@ To run it locally while working on it:
 ./gradlew :web:serve -t    # then open http://localhost:8080
 ```
 
-The browser game plays with the mouse: click the arrows, or drag a row or column. It has the
-same rules, saves, and Mordie as the terminal game, but no keyboard mode, no flags and no Exit
-(close the tab). Saves are kept in the browser's `localStorage`, per address (the public site and
-`localhost:8080` each have their own), separate from the terminal's `saves/`. With `-t` the server rebuilds when the code changes; reload the tab if it
+Click the arrows, or drag a row or column; the keyboard works too. Saves are kept in the browser's `localStorage`, per address (the public site and
+`localhost:8080` each have their own). With `-t` the server rebuilds when the code changes; reload the tab if it
 doesn't reload by itself.
 
 ## Testing
@@ -79,7 +52,7 @@ The game uses MVVM (Model-View-ViewModel):
 
 - `board_model`: game state and rules.
 - `viewmodel`: mediates between view and model.
-- `view`: the terminal UI; `web/` is the browser client.
+- `web/`: the browser client (the view).
 - `storage` and `analytics`: supporting services.
 
 See `docs/ARCHITECTURE.md` for the full layout and the layer rules.

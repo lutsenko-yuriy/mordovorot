@@ -28,10 +28,10 @@ Languages, frameworks, platforms and tooling: `docs/TECH_STACK.md`.
 
 | Setting | Value |
 |---|---|
-| Integration test directory | `src/test/kotlin/` (unit tests only — no separate integration suite yet) |
-| Test harness file | N/A — no scripted end-to-end harness; fakes of shared-module types (`FakeBoardModel`, `FakeSaveRepository`, ...) live in the `:shared:testing` module (`shared/testing/src/commonMain/kotlin/testing/`), app-only fakes (`FakeTerminal`, `FakeViewModel`, ...) in `src/test/kotlin/testing/` |
+| Integration test directory | `web/src/commonTest/kotlin/web/scenario/` (the web scenario suite) |
+| Test harness file | `web/src/commonTest/kotlin/web/scenario/WebHarness.kt`; fakes of shared-module types (`FakeBoardModel`, `FakeSaveRepository`, ...) live in the `:shared:testing` module (`shared/testing/src/commonMain/kotlin/testing/`) |
 | Harness class / entry point | N/A |
-| Unit / integration test command | `./gradlew check` (or `./gradlew build` to also compile + assemble); `./gradlew test` skips the `shared/` modules' tests |
+| Unit / integration test command | `./gradlew check` (or `./gradlew build` to also compile + assemble) |
 
 ## Version management
 
@@ -45,6 +45,6 @@ Languages, frameworks, platforms and tooling: `docs/TECH_STACK.md`.
 
 A merged PR moves to **In QA** (not Done directly) if it touches any of:
 
-- `src/main/kotlin/view/` — terminal UI behaviour (raw-mode input, rendering, real terminal sizes) is hard to cover with automated tests; a human should play a session before sign-off
+- `web/src/jsMain/` — the DOM, CSS and real devices are hard to cover with headless tests; a human should try the change in a browser before sign-off
 
 Move straight to **Done** if the PR touches only: pure logic with no runtime platform dependency, documentation, CI config, or pure refactors where automated tests fully own correctness. When in doubt, use **In QA**.
