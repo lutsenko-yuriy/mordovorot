@@ -12,7 +12,7 @@ import testing.testViewModel
 
 /**
  * Covers [GameViewModelImpl]'s additive, read-only query methods (`listSaves`, `saveExists`,
- * `isSolved`) that the TUI needs (GH-3). All three degrade to a safe default instead of throwing, mirroring the
+ * `isSolved`) that a client needs (GH-3). All three degrade to a safe default instead of throwing, mirroring the
  * non-throwing discipline [GameViewModelImpl.saveGame]/[GameViewModelImpl.loadGame] already follow.
  */
 class ViewModelQueriesTest {

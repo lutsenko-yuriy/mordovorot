@@ -140,7 +140,7 @@ class ViewModelStartupRestoreTest {
 
     @Test
     fun `two or more saves, an answer matching no save counts as declined`() = runTest {
-        // The TUI only ever answers with a listed name (GH-79 removed the typed console prompt),
+        // A client only ever answers with a listed name (GH-79 removed the typed console prompt),
         // so an unmatched answer is treated like a blank one rather than re-prompted.
         val board = FakeBoardModel()
         val saves = FakeSaveRepository(
