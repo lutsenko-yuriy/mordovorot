@@ -115,6 +115,12 @@ behaviour beyond a literal value, it is not trivial — use the full workflow in
 10. **Review loop** — starts automatically once the PR/MR is open (see step 9), unless the user asked to hold; repeat until the user explicitly approves:
     0. **Before starting:** smoke-test the change on your own initiative — confirm it builds/boots, then exercise the specific flow the PR/MR touches. Report the result, then proceed into the loop. For the web client, follow the browser rule in `docs/CONSTRAINTS.md`: a headless browser with a throwaway profile, never the user's own (GH-110). Start with a cold load on the empty profile (no saves in `localStorage`) and confirm the page renders, before seeding any state for the flow under test (GH-126).
        When the PR/MR changes how a client looks or responds (a new dialog, button, animation), also start that client for the user right after opening the PR/MR: run its dev server or give the command to launch it (see `AGENTS.md` Common Commands), and invite them to try the flow. A headless screenshot can't show clicks or animation, and GH-139's dialog blink and its instant label preview only surfaced when the user tried it.
+       When the PR/MR changes how the web client is built or packaged (a new script, worker or other
+       shipped file, a Gradle task that copies one), smoke-test `:web:serve -t` as well as the
+       distribution: request each new file from `http://localhost:8080` and expect 200. `serve` moves
+       every project's build directory (GH-124), so a copy step can work in `jsBrowserDistribution` and
+       find nothing under `serve`. GH-218: the worker returned 404 there, and Mordie stayed at 0 moves,
+       until the user tried it.
        When the PR/MR changes the web client's keyboard or screen-reader behaviour (focus, keys,
        ARIA, `inert`), check in headless Chrome everything it can show (where focus lands, what a
        key does, accessible names, what is `inert`) with the harness's `report=keys` and report
