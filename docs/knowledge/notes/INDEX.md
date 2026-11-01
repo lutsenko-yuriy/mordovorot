@@ -80,6 +80,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-201: Web: untangle screen-reader and focus code from the game code](GH-201.md)
 - [GH-207: Web: board sizes 7x7 to 9x9 behind a warning section](GH-207.md)
 - [GH-211: Research: where and when Mordie thinks (Web Worker, idle-time search)](GH-211.md)
+- [GH-213: Fast solver for Mordie (3-cycle solver in shared/mordie)](GH-213.md)
 - [GH-23: Split Presenter into console/TUI-specific presenters](GH-23.md)
 - [GH-41: Kotlin Multiplatform shared modules: Core, Analytics, Mordie, Storage, ViewModel](GH-41.md)
 - [GH-6: Save and load game state to/from local files](GH-6.md)
