@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.31.0] — 2026-11-01 (PR #221 merged)
+
+### Changed
+- [user] (PR #221) GH-218: In the browser, Mordie keeps thinking while the tab is in the background, and the page stays smoother while it thinks.
+
 ## [0.30.5] — 2026-11-01 (PR #219 merged)
 
 ### Changed
