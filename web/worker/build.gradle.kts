@@ -27,6 +27,6 @@ kotlin {
 
 // Copies the bundle into :web's resources (see workerResources there).
 tasks.register<Sync>("shipToWeb") {
-    from(tasks.named<KotlinWebpack>("jsBrowserProductionWebpack").flatMap { it.outputDirectory }) { exclude("*.map") }
+    from(tasks.named<KotlinWebpack>("jsBrowserProductionWebpack").flatMap { it.outputDirectory }) { include("mordie-worker.js") }
     into(project(":web").layout.buildDirectory.dir("generated/worker/resources"))
 }
