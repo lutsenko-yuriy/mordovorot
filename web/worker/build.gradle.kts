@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
+
 plugins {
     kotlin("multiplatform")
 }
@@ -21,4 +23,10 @@ kotlin {
             }
         }
     }
+}
+
+// Copies the bundle into :web's resources (see workerResources there).
+tasks.register<Sync>("shipToWeb") {
+    from(tasks.named<KotlinWebpack>("jsBrowserProductionWebpack").flatMap { it.outputDirectory }) { exclude("*.map") }
+    into(project(":web").layout.buildDirectory.dir("generated/worker/resources"))
 }

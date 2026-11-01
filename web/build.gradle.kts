@@ -19,13 +19,9 @@ val generateBuildInfo = tasks.register("generateBuildInfo") {
 }
 
 // GH-218: Mordie's Web Worker script, built by :web:worker, ships next to web.js as a resource.
-val syncWorker = tasks.register<Sync>("syncWorker") {
-    dependsOn(":web:worker:jsBrowserProductionWebpack")
-    from(project(":web:worker").layout.buildDirectory.dir("kotlin-webpack/js/productionExecutable")) {
-        include("mordie-worker.js")
-    }
-    into(layout.buildDirectory.dir("generated/worker/resources"))
-}
+// :web:worker:shipToWeb writes it here; the worker project does the writing because `serve` moves
+// each project's build directory (GH-124), and :web is configured first, so its path is final.
+val workerResources = layout.buildDirectory.dir("generated/worker/resources")
 
 // GH-110: the browser client. DOM-free code goes in commonMain, so its tests run on the JVM and
 // Node.js; the page itself is in jsMain.
@@ -53,7 +49,7 @@ kotlin {
                 implementation(project(":shared:viewmodel"))
             }
         }
-        jsMain { resources.srcDir(syncWorker) }
+        jsMain { resources.srcDir(workerResources) }
         commonTest {
             dependencies {
                 implementation(kotlin("test"))
@@ -63,6 +59,8 @@ kotlin {
         }
     }
 }
+
+tasks.named("jsProcessResources") { dependsOn(":web:worker:shipToWeb") }
 
 // The JVM tests that read the sources and the styles (GH-201's boundary test) must rerun when those change.
 tasks.named("jvmTest") { inputs.dir("src").withPropertyName("sources").withPathSensitivity(PathSensitivity.RELATIVE) }
