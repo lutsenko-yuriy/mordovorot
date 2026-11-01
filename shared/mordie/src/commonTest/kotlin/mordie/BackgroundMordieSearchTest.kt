@@ -25,19 +25,19 @@ class BackgroundMordieSearchTest {
     }
 
     @Test
-    fun `a 3x3 search is found`() = realTime {
+    fun `a 3x3 search ends proven at the minimum`() = realTime {
         val search = BackgroundMordieSearch.Factory().start(twoMoves, ruledOut = -1)
 
-        withTimeout(10_000) { while (!search.progress().found) delay(5) }
+        withTimeout(10_000) { while (!search.progress().provenShortest) delay(5) }
 
         assertEquals(2, search.progress().moves)
         assertEquals(2, search.progress().solution?.size)
     }
 
     @Test
-    fun `elapsed time freezes once found`() = realTime {
+    fun `elapsed time freezes once a solution exists`() = realTime {
         val search = BackgroundMordieSearch.Factory().start(twoMoves, ruledOut = -1)
-        withTimeout(10_000) { while (!search.progress().found) delay(5) }
+        withTimeout(10_000) { while (!search.progress().provenShortest) delay(5) }
         val elapsed = search.progress().elapsedMs
 
         delay(50)
@@ -64,18 +64,32 @@ class BackgroundMordieSearchTest {
         delay(50)
 
         assertEquals(stopped, search.progress())
-        assertFalse(stopped.found)
+        assertFalse(stopped.provenShortest)
     }
 
     @Test
-    fun `the listener sees the found snapshot with its solution`() = realTime {
+    fun `a 5x5 search has the fast answer at once but is never proven`() = realTime {
+        val search = BackgroundMordieSearch(hard, ruledOut = -1)
+
+        withTimeout(10_000) { while (!search.progress().found) delay(5) }
+        val first = search.progress()
+        delay(50)
+
+        assertEquals(SolutionSource.FAST_SOLVER, first.source)
+        assertFalse(first.provenShortest)
+        assertEquals(first.elapsedMs, search.progress().elapsedMs)
+        search.cancel()
+    }
+
+    @Test
+    fun `the listener sees the proven snapshot with its solution`() = realTime {
         val seen = mutableListOf<SearchProgress>()
         val search = BackgroundMordieSearch(twoMoves, ruledOut = -1, onSnapshot = { seen += it })
 
         withTimeout(10_000) { search.join() }
 
         val last = seen.last()
-        assertTrue(last.found)
+        assertTrue(last.provenShortest)
         assertEquals(2, last.solution?.size)
         assertEquals(search.progress(), last)
     }

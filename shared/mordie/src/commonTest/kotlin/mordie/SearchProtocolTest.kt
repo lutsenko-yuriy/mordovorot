@@ -45,6 +45,26 @@ class SearchProtocolTest {
     }
 
     @Test
+    fun `an unproven fast solution round-trips with its source and ruled out length`() {
+        val progress = SearchProgress(
+            moves = 40,
+            found = true,
+            elapsedMs = 3,
+            solution = listOf(SolutionMove(isRow = true, index = 1, amount = 2)),
+            ruledOut = 12,
+            provenShortest = false,
+            source = SolutionSource.FAST_SOLVER,
+        )
+
+        assertEquals(progress, SearchProtocol.decodeProgress(SearchProtocol.encodeProgress(progress)))
+    }
+
+    @Test
+    fun `an unknown source letter fails loudly`() {
+        assertFailsWith<IllegalArgumentException> { SearchProtocol.decodeProgress("P|1|1|0|1|x|0|~") }
+    }
+
+    @Test
     fun `an empty solution is not a missing one`() {
         val progress = SearchProgress(moves = 0, found = true, elapsedMs = 0, solution = emptyList())
 
@@ -64,7 +84,7 @@ class SearchProtocolTest {
     fun `a malformed message fails loudly`() {
         assertFailsWith<IllegalArgumentException> { SearchProtocol.decodeStart("P|1|0|0|~") }
         assertFailsWith<IllegalArgumentException> { SearchProtocol.decodeProgress("S|-1|0,1") }
-        assertFailsWith<IllegalArgumentException> { SearchProtocol.decodeProgress("P|x|0|0|~") }
+        assertFailsWith<IllegalArgumentException> { SearchProtocol.decodeProgress("P|x|0|0|0|~|0|~") }
         assertFailsWith<IllegalArgumentException> { SearchProtocol.kindOf("nonsense") }
     }
 }

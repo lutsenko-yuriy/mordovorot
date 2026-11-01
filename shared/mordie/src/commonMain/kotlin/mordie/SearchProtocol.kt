@@ -22,15 +22,35 @@ object SearchProtocol {
 
     fun encodeProgress(progress: SearchProgress): String {
         val solution = progress.solution?.joinToString(",") { "${if (it.isRow) 'r' else 'c'}${it.index}:${it.amount}" } ?: "~"
-        return "P|${progress.moves}|${if (progress.found) 1 else 0}|${progress.elapsedMs}|$solution"
+        val proven = if (progress.provenShortest) 1 else 0
+        val source = when (progress.source) {
+            SolutionSource.FAST_SOLVER -> "f"
+            SolutionSource.EXACT_SEARCH -> "e"
+            null -> "~"
+        }
+        return "P|${progress.moves}|${if (progress.found) 1 else 0}|${progress.ruledOut}|$proven|$source|${progress.elapsedMs}|$solution"
     }
 
     fun decodeProgress(message: String): SearchProgress {
-        val fields = fields(message, Kind.PROGRESS, 5)
-        val solution = fields[4].takeIf { it != "~" }?.let { moves ->
+        val fields = fields(message, Kind.PROGRESS, 8)
+        val solution = fields[7].takeIf { it != "~" }?.let { moves ->
             if (moves.isEmpty()) emptyList() else moves.split(",").map(::decodeMove)
         }
-        return SearchProgress(fields[1].toInt(), fields[2] == "1", fields[3].toLong(), solution)
+        val source = when (fields[5]) {
+            "f" -> SolutionSource.FAST_SOLVER
+            "e" -> SolutionSource.EXACT_SEARCH
+            "~" -> null
+            else -> throw IllegalArgumentException("Malformed message: $message")
+        }
+        return SearchProgress(
+            moves = fields[1].toInt(),
+            found = fields[2] == "1",
+            elapsedMs = fields[6].toLong(),
+            solution = solution,
+            ruledOut = fields[3].toInt(),
+            provenShortest = fields[4] == "1",
+            source = source,
+        )
     }
 
     private fun decodeMove(text: String): SolutionMove {

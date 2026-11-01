@@ -2,6 +2,7 @@ package web
 
 import mordie.SearchProgress
 import mordie.SearchProtocol
+import mordie.SolutionSource
 import mordie.SolutionMove
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -76,7 +77,7 @@ class WorkerMordieSearchTest {
     }
 
     @Test
-    fun `a message after the solution is found is ignored`() {
+    fun `a message after the solution is proven is ignored`() {
         val (port, search) = start()
         port.receive(SearchProgress(moves = 2, found = true, elapsedMs = 5, solution = emptyList()))
 
@@ -87,7 +88,21 @@ class WorkerMordieSearchTest {
     }
 
     @Test
-    fun `a found solution frees the worker`() {
+    fun `an unproven solution keeps the worker running and a shorter one replaces it`() {
+        val (port, search) = start()
+        val fast = SearchProgress(moves = 8, found = true, elapsedMs = 5, solution = emptyList(), ruledOut = 3, provenShortest = false, source = SolutionSource.FAST_SOLVER)
+
+        port.receive(fast)
+        assertFalse(port.terminated)
+        assertEquals(fast, search.progress())
+
+        port.receive(fast.copy(moves = 6, ruledOut = 5, provenShortest = true))
+        assertEquals(6, search.progress().moves)
+        assertTrue(port.terminated)
+    }
+
+    @Test
+    fun `a proven solution frees the worker`() {
         val (port, _) = start()
         port.receive(SearchProgress(moves = 3, found = false, elapsedMs = 5))
         assertFalse(port.terminated)

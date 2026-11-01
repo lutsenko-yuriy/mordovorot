@@ -27,10 +27,10 @@ class WorkerMordieSearch private constructor(private val port: SearchPort, ruled
 
     init {
         port.onMessage = { message ->
-            // Once found the result is final; once cancelled a late message is stale.
-            if (!frozen && !latest.found) {
+            // Once proven shortest the result is final; once cancelled a late message is stale.
+            if (!frozen && !latest.provenShortest) {
                 latest = SearchProtocol.decodeProgress(message)
-                if (latest.found) port.terminate()
+                if (latest.provenShortest) port.terminate()
             }
         }
     }
