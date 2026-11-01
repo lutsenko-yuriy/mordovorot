@@ -20,14 +20,13 @@ internal class MordieHooks(
     private val solutionScreen: SolutionScreen,
 ) {
 
-    fun onNewGame() = if (tooBig()) mordie.sitOut(board.squareSide) else mordie.startFresh(board.boardArray)
+    fun onNewGame() = mordie.startFresh(board.boardArray)
 
     /** Binds Mordie to the board just loaded from a save with [data]. A solution-screen save
      *  (GH-126) resumes found, whatever the board. A searching save with an unsolvable original
      *  can only be hand-edited, so it is treated like a save with no data. */
     fun onLoaded(data: SavedMordie?) {
         when {
-            tooBig() -> if (board.isCorrect()) mordie.clear() else mordie.sitOut(board.squareSide)
             data != null && data.solutionScreen -> mordie.resume(data.original, data.moves, found = true, data.solutionMoves(), data.provenShortest, data.ruledOut, solutionScreen = true)
             board.isCorrect() ->
                 if (data == null) mordie.clear() else mordie.restoreSolved(data.original, data.moves, data.found, data.solutionMoves(), data.provenShortest, data.ruledOut)
@@ -40,7 +39,7 @@ internal class MordieHooks(
     fun onRepaired() = startOnLoadedBoard()
 
     /** Starts Mordie unless it is already bound. */
-    fun onStartup() = if (tooBig()) mordie.ensureSatOut(board.squareSide) else mordie.ensureStarted(board.boardArray)
+    fun onStartup() = mordie.ensureStarted(board.boardArray)
 
     /** Call after every shift; tracks `mordie_solution_found` when this shift's check reveals the
      *  solution, and `mordie_shorter_found` when it announces a shorter one (GH-223). */
@@ -104,9 +103,6 @@ internal class MordieHooks(
 
     fun original(): IntArray? = mordie.original()
 
-    /** Whether Mordie sits games of this board's size out (GH-160), solved or not. */
-    fun sitsOut(): Boolean = tooBig()
-
     /** Whether Mordie's solution has been revealed, whichever line announces it. */
     fun revealed(): Boolean = mordie.revealed
 
@@ -122,13 +118,10 @@ internal class MordieHooks(
 
     fun ending(): String? = mordie.outcome()?.let { MordieText.ending(it, board.moveCount) }
 
-    /** Boards Mordie can't search yet sit out, whatever a save says (GH-160). */
-    private fun tooBig() = board.squareSide > Mordie.MAX_SIDE
-
     private fun SavedMordie.solutionMoves() = solution?.map { SolutionMove(it.isRow, it.index, it.amount) }
 
     /** Mordie's N would cover only the moves from here, so it sits out a board already played on. */
     private fun startOnLoadedBoard() {
-        if (tooBig()) mordie.sitOut(board.squareSide) else if (board.moveCount == 0) mordie.startFresh(board.boardArray) else mordie.clear()
+        if (board.moveCount == 0) mordie.startFresh(board.boardArray) else mordie.clear()
     }
 }

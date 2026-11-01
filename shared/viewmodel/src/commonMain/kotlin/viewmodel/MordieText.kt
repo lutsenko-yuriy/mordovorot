@@ -10,7 +10,6 @@ object MordieText {
 
     fun line(line: MordieLine): String = when (line) {
         MordieLine.Opening -> "Alright! Let's sort this one out!"
-        is MordieLine.SitsOut -> "${line.side}x${line.side} is too much for me, you're on your own!"
         is MordieLine.Resumed -> "Okay, so we stopped when I was at ${moves(line.moves)}! What was I doing?.."
         is MordieLine.Progress ->
             (if (line.hard) "This one is hard! " else "") +
