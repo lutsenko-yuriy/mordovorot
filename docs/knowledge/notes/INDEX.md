@@ -49,6 +49,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-109: Upgrade Kotlin to the latest stable 2.x](GH-109.md)
 - [GH-110: Play Mordovorot in the browser (localhost)](GH-110.md)
 - [GH-111: Publish the browser version on a public website](GH-111.md)
+- [GH-116: Research: Mordie's fast solvers (a good solution quickly, on every board size)](GH-116.md)
 - [GH-12: Exit command](GH-12.md)
 - [GH-124: Web dev server: rebuild on change, and run alongside builds](GH-124.md)
 - [GH-126: Give Up: replay Mordie's solution](GH-126.md)
