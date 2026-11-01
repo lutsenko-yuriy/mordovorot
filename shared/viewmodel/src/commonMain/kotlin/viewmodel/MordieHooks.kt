@@ -39,7 +39,7 @@ internal class MordieHooks(
 
     fun onRepaired() = startOnLoadedBoard()
 
-    /** Starts Mordie unless it is already bound, e.g. after a mode switch. */
+    /** Starts Mordie unless it is already bound. */
     fun onStartup() = if (tooBig()) mordie.ensureSatOut(board.squareSide) else mordie.ensureStarted(board.boardArray)
 
     /** Call after every shift; tracks `mordie_solution_found` when this shift's check reveals the

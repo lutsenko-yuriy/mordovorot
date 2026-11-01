@@ -4,7 +4,6 @@ import analytics.AnalyticsService
 import board_model.BoardModel
 import viewmodel.MordieHooks
 import viewmodel.SaveCatalog
-import viewmodel.SessionTileLabels
 import viewmodel.UiRequest
 import viewmodel.UiRequestChannel
 import viewmodel.catchingNonCancellation
@@ -18,7 +17,6 @@ internal class StartupRestoreUseCase(
     private val loadGame: LoadGameUseCase,
     private val newGame: NewGameUseCase,
     private val mordieHooks: MordieHooks,
-    private val tileLabels: SessionTileLabels,
 ) {
 
     /** Guards [restoreOnStartup] against running twice. */
