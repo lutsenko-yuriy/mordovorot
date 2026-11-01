@@ -1,6 +1,6 @@
 package viewmodel
 
-/** What made a shift (GH-110); `null` for a terminal mouse click. */
+/** What made a shift (GH-110); `null` for a click. */
 sealed interface ShiftSource
 
 /** Which kind of key made a keyboard-mode shift (GH-101). */

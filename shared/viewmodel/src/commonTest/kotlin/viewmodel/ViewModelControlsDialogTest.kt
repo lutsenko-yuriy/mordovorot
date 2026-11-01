@@ -22,7 +22,7 @@ class ViewModelControlsDialogTest {
     /** Row 0 right once solves it. */
     private val board = BoardImpl(3).apply { restoreState(intArrayOf(1, 2, 0, 3, 4, 5, 6, 7, 8)) }
 
-    private val viewModel = testViewModel(board, saves, analytics, startupRestoreDone = true, mordie = Mordie(FakeMordieSearchFactory()))
+    private val viewModel = testViewModel(board, saves, analytics, mordie = Mordie(FakeMordieSearchFactory()))
 
     private fun opened() = analytics.events.filter { it.name == "screen_controls_dialog" }.map { it.properties }
 

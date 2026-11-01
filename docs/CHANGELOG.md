@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.33.3] — 2026-11-01 (PR #231 merged)
+
+### Changed
+- [wip] (PR #231) GH-228 (WU3/4): remove the terminal-only code from the shared modules (Exit hook, Exit prompts, launch-flag parameters, terminal row helpers).
+
 ## [0.33.2] — 2026-11-01 (PR #230 merged)
 
 ### Changed

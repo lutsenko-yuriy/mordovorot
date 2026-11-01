@@ -3,7 +3,7 @@ package web
 import viewmodel.GameViewModel
 import viewmodel.TileLabels
 
-/** The Tile labels dialog's flows (GH-139, GH-160), like the terminal's `LabelsDialogController`.
+/** The Tile labels dialog's flows (GH-139, GH-160).
  *  [ask] is [WebGame]'s modal: it shows the dialog and waits for OK's scheme, or `null`;
  *  [cancelled] tracks a Cancel. */
 internal class WebLabelsDialog(

@@ -25,7 +25,7 @@ internal object WebKeys {
     private val ARROWS = mapOf("ArrowUp" to Direction.UP, "ArrowDown" to Direction.DOWN, "ArrowLeft" to Direction.LEFT, "ArrowRight" to Direction.RIGHT)
 
     /** [onBoard]: the board is in play and has focus; [onSolution]: the solution screen's has. A held
-     *  digit, Space or Enter is one press; a held board or solution direction repeats, as in the terminal. */
+     *  digit, Space or Enter is one press; a held board or solution direction repeats. */
     fun pageKey(press: KeyPress, mode: PlayMode, controlsShown: Boolean, layout: KeyboardLayout = KeyboardLayout.DEFAULT, onBoard: Boolean = false, onSolution: Boolean = false): PageKey? {
         if (press.modified) return null
         val keyboard = mode == PlayMode.KEYBOARD

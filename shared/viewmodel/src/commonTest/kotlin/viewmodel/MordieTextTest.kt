@@ -22,12 +22,6 @@ class MordieTextTest {
     }
 
     @Test
-    fun `the line a layout reserves for a board Mordie sits out, and none below MAX_SIDE (GH-160)`() {
-        assertEquals("6x6 is too much for me, you're on your own!", MordieText.sitsOutLine(6))
-        assertEquals(null, MordieText.sitsOutLine(5))
-    }
-
-    @Test
     fun `the progress line, plain and hard`() {
         assertEquals(
             "I have already made 6 moves and have not solved it yet!",
@@ -131,16 +125,5 @@ class MordieTextTest {
 
         assertEquals("Cool, you matched me! 40 moves each!", MordieText.ending(unproven, 40))
         assertEquals("Sorry, but I win: 40 moves vs your 45.", MordieText.ending(unproven, 45))
-    }
-
-    @Test
-    fun `the longest lines are the hard progress line and the unproven one at 99 moves (GH-223)`() {
-        assertEquals(
-            listOf(
-                "This one is hard! I have already made 99 moves and have not solved it yet!",
-                "Found one in 99 moves, but maybe there's a shorter one! Can you beat it?",
-            ),
-            MordieText.longestLines(),
-        )
     }
 }

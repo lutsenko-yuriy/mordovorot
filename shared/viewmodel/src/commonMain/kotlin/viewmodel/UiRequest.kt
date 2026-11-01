@@ -23,16 +23,14 @@ sealed class UiRequest<R> {
     /** [save] carries its size (GH-44 WU4) so the View can show it alongside the name. */
     class ConfirmRestore(val save: SaveInfo) : UiRequest<Boolean>()
     class ChooseSaveToRestore(val saves: List<SaveInfo>) : UiRequest<String?>()
-    class ConfirmSaveBeforeExit : UiRequest<Boolean>()
-    class PromptSaveName : UiRequest<String?>()
 
     /** "Which size for the fresh game?" (GH-44) - raised by [viewmodel.usecase.StartupRestoreUseCase.restoreOnStartup]
      *  once it's established restore didn't happen. Answered with a chosen side, or `null` to
-     *  keep [current]. [origin] is `startup` or `unsolvable_save` - what the TUI
+     *  keep [current]. [origin] is `startup` or `unsolvable_save` - what the View
      *  reports as `screen_size_dialog.opened_from`. */
     class ChooseBoardSize(val current: Int, val origin: String = "startup") : UiRequest<Int?>()
 
-    /** "Repair, new game or exit?" when a load hits an unsolvable save (GH-74) - raised by
+    /** "Repair or new game?" when a load hits an unsolvable save (GH-74) - raised by
      *  [GameViewModelImpl]'s `loadGame`. [atStartup] is `true` for the startup restore. */
     class ResolveUnsolvableSave(val save: SaveInfo, val atStartup: Boolean) : UiRequest<UnsolvableSaveChoice>()
 
@@ -41,4 +39,4 @@ sealed class UiRequest<R> {
     class ChooseFittingLabels(val message: String) : UiRequest<TileLabels?>()
 }
 
-enum class UnsolvableSaveChoice { REPAIR, NEW_GAME, EXIT }
+enum class UnsolvableSaveChoice { REPAIR, NEW_GAME }

@@ -1,6 +1,6 @@
 package storage
 
-/** The save text format, shared by the terminal's files and the browser's storage (GH-110):
+/** The save text format, kept in the browser's storage (GH-110):
  *  square side, then the values, then the move count, then optional Mordie data, then optional
  *  tile labels on line 8 (GH-139), one per line. */
 object SaveFileCodec {

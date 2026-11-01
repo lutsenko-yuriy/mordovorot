@@ -18,8 +18,6 @@ import viewmodel.display
 class FakeViewModelUi(
     private val confirmRestoreResponses: MutableList<Boolean> = mutableListOf(),
     private val chooseSaveToRestoreResponses: MutableList<String?> = mutableListOf(),
-    private val confirmSaveBeforeExitResponses: MutableList<Boolean> = mutableListOf(),
-    private val promptSaveNameResponses: MutableList<String?> = mutableListOf(),
     private val chooseBoardSizeResponses: MutableList<Int?> = mutableListOf(),
     private val resolveUnsolvableSaveResponses: MutableList<UnsolvableSaveChoice> = mutableListOf(),
     private val chooseFittingLabelsResponses: MutableList<TileLabels?> = mutableListOf(),
@@ -45,14 +43,8 @@ class FakeViewModelUi(
     /** Each [UiRequest.ChooseFittingLabels.message] (GH-160), with the messages shown before it. */
     val chooseFittingLabelsCalls = mutableListOf<Pair<String, List<String>>>()
 
-    var confirmSaveBeforeExitCallCount = 0
-        private set
-
-    var promptSaveNameCallCount = 0
-        private set
-
     /** Runs [block] against [viewModel] while concurrently draining its [GameViewModel.uiRequests] -
-     *  without this, a suspended `ask()` call (e.g. inside `saveGame`/`exitGame`) would hang
+     *  without this, a suspended `ask()` call (e.g. inside `saveGame`) would hang
      *  forever, since [GameViewModel.uiRequests] is a rendezvous channel with no other consumer. Any
      *  exception [block] throws propagates out of [drive] once the handler is cancelled. The
      *  timeout fails a request sent on a channel nobody drains instead of hanging the build. */
@@ -81,14 +73,6 @@ class FakeViewModelUi(
             is UiRequest.ChooseSaveToRestore -> {
                 chooseSaveToRestoreCalls.add(request.saves.map { it.name })
                 request.respond(nextOrThrow(chooseSaveToRestoreResponses, "chooseSaveToRestore"))
-            }
-            is UiRequest.ConfirmSaveBeforeExit -> {
-                confirmSaveBeforeExitCallCount++
-                request.respond(nextOrThrow(confirmSaveBeforeExitResponses, "confirmSaveBeforeExit"))
-            }
-            is UiRequest.PromptSaveName -> {
-                promptSaveNameCallCount++
-                request.respond(nextOrThrow(promptSaveNameResponses, "promptSaveName"))
             }
             is UiRequest.ChooseBoardSize -> {
                 chooseBoardSizeCalls.add(request.current)

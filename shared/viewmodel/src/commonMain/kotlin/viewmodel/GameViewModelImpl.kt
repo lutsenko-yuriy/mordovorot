@@ -6,7 +6,6 @@ import kotlin.math.abs
 import kotlinx.coroutines.channels.ReceiveChannel
 import viewmodel.usecase.ControlsDialogUseCase
 import viewmodel.usecase.LoadGameUseCase
-import viewmodel.usecase.LoadResult
 import viewmodel.usecase.NewGameUseCase
 import viewmodel.usecase.SaveGameUseCase
 import viewmodel.usecase.SolutionUseCase
@@ -14,7 +13,7 @@ import viewmodel.usecase.StartupRestoreUseCase
 import viewmodel.usecase.TileLabelsUseCase
 
 /** The one [GameViewModel] implementation (GH-42 WU3, collapsing GH-23's `BaseViewModel` +
- *  `ConsoleViewModelImpl` + `TuiViewModelImpl` split; Exit split out for GH-41): shifts and the
+ *  `ConsoleViewModelImpl` + `TuiViewModelImpl` split): shifts and the
  *  read-only query surface live here, and each other flow is a use case in `viewmodel.usecase`
  *  (GH-78). Holds no `View` reference; talks to whichever View is driving it through
  *  [uiRequests] instead of a constructor-injected dependency. Built by [buildGameViewModel]. */
@@ -35,7 +34,6 @@ class GameViewModelImpl internal constructor(
     private val gameShiftSources: GameShiftSources,
     private val unsavedProgress: UnsavedProgress,
     private val tileLabels: SessionTileLabels,
-    private val unsolvableExit: UnsolvableSaveExit,
 ) : GameViewModel {
 
     override val uiRequests: ReceiveChannel<UiRequest<*>> = ui.requests
@@ -86,13 +84,10 @@ class GameViewModelImpl internal constructor(
     override suspend fun saveGame(name: String): Boolean = saveGameUseCase.saveGame(name)
 
     override suspend fun loadGame(name: String) {
-        if (loadGameUseCase.loadGame(name) == LoadResult.EXIT_CHOSEN) unsolvableExit.onExit(this, atStartup = false)
+        loadGameUseCase.loadGame(name)
     }
 
-    override suspend fun restoreOnStartup() {
-        val exitChosen = startupRestoreUseCase.restoreOnStartup()
-        if (exitChosen) unsolvableExit.onExit(this, atStartup = true)
-    }
+    override suspend fun restoreOnStartup() = startupRestoreUseCase.restoreOnStartup()
 
     override fun listSaves(): List<SaveInfo> = catalog.listSaves()
 

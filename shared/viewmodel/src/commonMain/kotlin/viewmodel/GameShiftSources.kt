@@ -23,9 +23,9 @@ class GameShiftSources {
         inputs.clear()
     }
 
-    /** `shift_keys` (`arrows`/`hjkl`/`mixed`) when the [solvingSource] was a terminal key, `shift_input`
-     *  (`arrows`/`drag`/`keys`/`mixed`) when it was on the web, with `shift_keys` too for a right-handed
-     *  web key (GH-171), nothing for `null`. */
+    /** `shift_keys` (`arrows`/`hjkl`/`mixed`) when the [solvingSource] was a [ShiftKey], `shift_input`
+     *  (`arrows`/`drag`/`keys`/`mixed`) when it was a pointer or [KeyShift], with `shift_keys` too for a
+     *  right-handed key (GH-171), nothing for `null`. */
     fun propertiesFor(solvingSource: ShiftSource?): Map<String, String> = when (solvingSource) {
         is ShiftKey -> mapOf(SHIFT_KEYS to keysSummary())
         is PointerShift -> mapOf(SHIFT_INPUT to inputSummary())

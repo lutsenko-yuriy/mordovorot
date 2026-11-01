@@ -13,17 +13,13 @@ import viewmodel.SolutionScreen
 import viewmodel.TileLabelsPreference
 import viewmodel.UiRequestChannel
 import viewmodel.UnsavedProgress
-import viewmodel.UnsolvableSaveExit
 import viewmodel.buildGameViewModel
 
-/** The shared module's [testViewModel] (GH-41): the same name and parameters as the terminal
- *  app's, so tests moved here compile unchanged, building a [GameViewModelImpl] with no Exit. */
+/** Builds a [GameViewModelImpl] for tests (GH-41). */
 internal fun testViewModel(
     board: BoardModel = FakeBoardModel(),
     saves: SaveRepository = FakeSaveRepository(),
     analytics: AnalyticsService = RecordingAnalyticsService(),
-    startupRestoreDone: Boolean = false,
-    sizeChosenAtLaunch: Boolean = false,
     mordie: Mordie = Mordie(MordieSearchFactory.NONE),
     currentSaveName: CurrentSaveName = CurrentSaveName(),
     gameShiftSources: GameShiftSources = GameShiftSources(),
@@ -31,6 +27,6 @@ internal fun testViewModel(
     solutionScreen: SolutionScreen = SolutionScreen(),
     tileLabels: SessionTileLabels = SessionTileLabels(TileLabelsPreference(FakePreferenceRepository())),
 ): GameViewModelImpl = buildGameViewModel(
-    board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie, currentSaveName, gameShiftSources,
-    unsavedProgress, solutionScreen, tileLabels, UiRequestChannel(), UnsolvableSaveExit.NONE,
+    board, saves, analytics, mordie, currentSaveName, gameShiftSources,
+    unsavedProgress, solutionScreen, tileLabels, UiRequestChannel(),
 )

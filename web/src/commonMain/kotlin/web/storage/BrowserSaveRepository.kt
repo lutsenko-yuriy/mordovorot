@@ -6,8 +6,8 @@ import storage.SaveRepository
 import storage.SavedBoard
 import storage.SavedMordie
 
-/** The page's saves (GH-110): one [store] entry per save under `mordovorot.save.<name>`, in the
- *  terminal's text format, with the terminal's name rules. */
+/** The page's saves (GH-110): one [store] entry per save under `mordovorot.save.<name>`, in
+ *  [storage.SaveFileCodec]'s text format, under [storage.SaveNames]'s rules. */
 class BrowserSaveRepository(private val store: KeyValueStore) : SaveRepository {
 
     override fun listSaves(): List<String> =

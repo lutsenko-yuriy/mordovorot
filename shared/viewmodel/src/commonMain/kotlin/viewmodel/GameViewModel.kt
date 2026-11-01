@@ -5,8 +5,7 @@ import kotlinx.coroutines.channels.ReceiveChannel
 /** The platform-independent viewModel surface (GH-41, split out of GH-42's `ViewModel`) -
  *  shift (one step, or several with `shiftRow`/`shiftColumn`)/new game/save/load plus the
  *  read-only query surface (`listSaves`/`saveExists`/`currentSaveName`/`hasUnsavedProgress`/
- *  `isSolved`/`boardState`/`squareSide`) a View needs to render/re-render.
- *  Exit is not here: it is terminal-only, on the terminal's `ViewModel`. */
+ *  `isSolved`/`boardState`/`squareSide`) a View needs to render/re-render. */
 interface GameViewModel {
 
     /** The UI interactions this viewModel is waiting on, in emission order (GH-42 WU2). Exactly
@@ -14,7 +13,7 @@ interface GameViewModel {
      *  alongside its own event loop. See [UiRequestChannel.ask]. */
     val uiRequests: ReceiveChannel<UiRequest<*>>
 
-    /** [source] is what made the shift (GH-101, GH-110), `null` for a terminal mouse click. */
+    /** [source] is what made the shift (GH-101, GH-110), `null` for a click. */
     fun shiftLeft(row: Int, source: ShiftSource? = null)
     fun shiftRight(row: Int, source: ShiftSource? = null)
 
@@ -34,12 +33,9 @@ interface GameViewModel {
      *  (`[ New ]` -> size-picker dialog), or `"unsolvable_save"` - see docs/ANALYTICS_EVENTS.md. */
     fun newGame(size: Int, trigger: String)
 
-    /** Returns whether the save actually succeeded - the terminal's Exit flow needs the real
-     *  outcome rather than assuming success. `suspend` (GH-42): asks the
+    /** Returns whether the save actually succeeded. `suspend` (GH-42): asks the
      *  View for confirmation/messages instead of returning synchronously. */
     suspend fun saveGame(name: String): Boolean
-    /** Exit chosen for an unsolvable save (GH-74) runs the [UnsolvableSaveExit] hook after the
-     *  load has finished (GH-41) - whatever it throws propagates from here. */
     suspend fun loadGame(name: String)
 
     /** Saves with their board size (GH-44 WU4), sorted by name; empty when nothing has been
@@ -61,14 +57,12 @@ interface GameViewModel {
      *  prompt; see [UnsavedProgress]. */
     fun hasUnsavedProgress(): Boolean
 
-    /** Whether the board is currently solved - lets the mouse-driven TUI (GH-3) show the
+    /** Whether the board is currently solved - lets a View show the
      *  Congratulations screen and disable the shift arrows. */
     fun isSolved(): Boolean
 
     /** Offers to restore a previous save at startup (0/1/2+ saves) before play begins. Public so
-     *  each View can run it ahead of its own event loop (GH-3). Exit chosen for an unsolvable
-     *  save (GH-74) runs the [UnsolvableSaveExit] hook last (GH-41) - whatever it throws
-     *  propagates from here. */
+     *  the View can run it before play starts (GH-3). */
     suspend fun restoreOnStartup()
 
     /** Current board tile values (0-based, GH-10 dialect) - lets a View render/re-render after

@@ -40,10 +40,8 @@ class ViewModelMordieTest {
     private fun viewModel(
         saves: FakeSaveRepository = FakeSaveRepository(),
         board: BoardImpl = BoardImpl(3).apply { restoreState(nearlySolved) },
-        sizeChosenAtLaunch: Boolean = false,
-        startupRestoreDone: Boolean = false,
         mordie: Mordie = Mordie(factory),
-    ) = testViewModel(board, saves, analytics, startupRestoreDone, sizeChosenAtLaunch, mordie)
+    ) = testViewModel(board, saves, analytics, mordie)
 
     private fun savesWith(state: IntArray, moveCount: Int = 0, mordie: SavedMordie? = null) =
         FakeSaveRepository(mutableMapOf("m" to SavedBoard(3, state.copyOf(), moveCount, mordie)))
@@ -241,10 +239,10 @@ class ViewModelMordieTest {
     }
 
     @Test
-    fun `restoreOnStartup with --size=6 sits Mordie out`() = runTest {
-        val viewModel = viewModel(board = BoardImpl(6), sizeChosenAtLaunch = true)
+    fun `restoreOnStartup on a 6x6 kept at the prompt sits Mordie out`() = runTest {
+        val viewModel = viewModel(board = BoardImpl(6))
 
-        FakeViewModelUi().drive(viewModel) { viewModel.restoreOnStartup() }
+        FakeViewModelUi(chooseBoardSizeResponses = mutableListOf(null)).drive(viewModel) { viewModel.restoreOnStartup() }
 
         assertEquals(0, factory.started.size)
         assertEquals(sitsOut, viewModel.mordieLine())
@@ -258,21 +256,6 @@ class ViewModelMordieTest {
 
         assertEquals(0, factory.started.size)
         assertEquals(sitsOut, viewModel.mordieLine())
-    }
-
-    @Test
-    fun `a rebuild after a mode switch keeps a 6x6 game's shift count`() = runTest {
-        val mordie = Mordie(factory)
-        val board = BoardImpl(6)
-        val first = viewModel(board = board, sizeChosenAtLaunch = true, mordie = mordie)
-        FakeViewModelUi().drive(first) { first.restoreOnStartup() }
-        repeat(5) { first.shiftUp(0) }
-
-        val rebuilt = viewModel(board = board, startupRestoreDone = true, mordie = mordie)
-        FakeViewModelUi().drive(rebuilt) { rebuilt.restoreOnStartup() }
-
-        assertEquals(5, mordie.shifts)
-        assertNull(rebuilt.mordieLine())
     }
 
     @Test
@@ -370,15 +353,6 @@ class ViewModelMordieTest {
     // --- startup ---
 
     @Test
-    fun `restoreOnStartup with --size starts Mordie on the board as constructed`() = runTest {
-        val viewModel = viewModel(sizeChosenAtLaunch = true)
-
-        FakeViewModelUi().drive(viewModel) { viewModel.restoreOnStartup() }
-
-        assertContentEquals(nearlySolved, factory.latest.original)
-    }
-
-    @Test
     fun `restoreOnStartup with a cancelled size prompt starts Mordie on the current board`() = runTest {
         val viewModel = viewModel()
 
@@ -406,20 +380,6 @@ class ViewModelMordieTest {
 
         assertEquals(1, factory.started.size)
         assertEquals(8, factory.latest.ruledOut)
-    }
-
-    @Test
-    fun `a rebuild after a mode switch keeps the already bound Mordie`() = runTest {
-        val mordie = Mordie(factory)
-        val first = viewModel(sizeChosenAtLaunch = true, mordie = mordie)
-        FakeViewModelUi().drive(first) { first.restoreOnStartup() }
-        first.shiftUp(0)
-
-        val rebuilt = viewModel(startupRestoreDone = true, mordie = mordie)
-        FakeViewModelUi().drive(rebuilt) { rebuilt.restoreOnStartup() }
-
-        assertEquals(1, factory.started.size)
-        assertEquals(1, mordie.shifts)
     }
 
     // --- analytics ---
