@@ -84,6 +84,16 @@ class WorkerMordieSearchTest {
 
         assertTrue(search.progress().found)
         assertEquals(2, search.progress().moves)
+    }
+
+    @Test
+    fun `a found solution frees the worker`() {
+        val (port, _) = start()
+        port.receive(SearchProgress(moves = 3, found = false, elapsedMs = 5))
         assertFalse(port.terminated)
+
+        port.receive(SearchProgress(moves = 4, found = true, elapsedMs = 9, solution = emptyList()))
+
+        assertTrue(port.terminated)
     }
 }
