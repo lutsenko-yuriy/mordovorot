@@ -22,6 +22,12 @@
   (terminal app or browser). Anything that needs a server (remote solving, a shared store of
   precomputed solutions) is out; precomputed data has to ship inside the app or bundle.
 
+## Web hosting
+
+- The web client is hosted on GitHub Pages: static files with no custom response headers (GH-211),
+  so no cross-origin isolation, hence no shared memory between page and worker and no Wasm threads.
+  A plain Web Worker needs no headers.
+
 ## Screen readers
 
 - Frozen until volunteers who use a screen reader test it (GH-171): what's shipped stays, untested

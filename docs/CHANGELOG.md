@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.30.4] — 2026-11-01 (PR #217 merged)
+
+### Changed
+- [meta] (PR #217) GH-211: research on where and when Mordie thinks. Recommends running the browser's search in a Web Worker at today's 10 ms / 10 ms duty cycle: it keeps about 100% of its speed in a hidden tab in Firefox (the page's loop falls to about 2%) and about 20% in Safari (the page's loop falls to 1% or less). Kotlin/Wasm and shared-memory threads are not recommended. Adds the Web hosting section to CONSTRAINTS, the RESEARCH.md countdown rule for checks that need the user's browser, and the GH-211 note.
+
 ## [0.30.3] — 2026-11-01 (PR #212 merged)
 
 ### Changed

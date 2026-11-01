@@ -5,7 +5,7 @@ plugins {
     application
 }
 
-version = "0.30.3"
+version = "0.30.4"
 
 kotlin {
     jvmToolchain(17)
