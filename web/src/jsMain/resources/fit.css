@@ -72,14 +72,14 @@
 }
 
 /* Very short (the SE, or any phone with its browser's bars showing): the panel starts level with
-   the arrows, and Mordie keeps two lines, as its longest line takes in the narrow panel. */
+   the arrows, and Mordie keeps three lines, as its longest line takes in the narrow panel (GH-223). */
 @media (orientation: landscape) and (max-height: 340px) {
     .panel {
         margin-top: 0;
     }
 
     .panel > .mordie {
-        min-height: calc(2em * 1.4);
+        min-height: calc(3em * 1.4);
         font-size: 0.9rem;
     }
 

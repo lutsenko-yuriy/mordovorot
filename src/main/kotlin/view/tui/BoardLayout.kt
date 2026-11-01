@@ -1,6 +1,5 @@
 package view.tui
 
-import mordie.MordieLine
 import viewmodel.GiveUpButton
 import viewmodel.MordieText
 import viewmodel.SolutionState
@@ -56,7 +55,8 @@ class BoardLayout(
     /** On a board Mordie sits out (GH-160), its one line: it runs to its own width, so it takes a
      *  single row and 6x6 fits 24 rows. */
     private val sitsOutLine = MordieText.sitsOutLine(squareSide)?.let { "Mordie: $it" }
-    private val longestMordieLines = sitsOutLine?.let(::listOf) ?: LONGEST_MORDIE_LINES
+    private val longestMordieLinesPlayed = MordieText.longestLines().map { "Mordie: $it" }
+    private val longestMordieLines = sitsOutLine?.let(::listOf) ?: longestMordieLinesPlayed
 
     /** The Mordie line's wrap width (GH-83): about as wide as the board and toolbar, never the
      *  full terminal. */
@@ -228,12 +228,6 @@ class BoardLayout(
 
         /** Title row, moves row, a blank row, the up-arrows row - plus [mordieRows]. */
         const val TOP_EXTRA = 4
-
-        /** The lines that can wrap tallest, at a 2-digit move count (GH-83): which one does depends
-         *  on the wrap width, the progress line being longer but the unproven one wrapping worse
-         *  at some widths (GH-223). */
-        private val LONGEST_MORDIE_LINES = listOf(MordieLine.Progress(99, hard = true), MordieLine.FoundUnproven(99))
-            .map { "Mordie: ${MordieText.line(it)}" }
 
         /** The down-arrows row, the Give Up row, the toolbar row. */
         const val BOTTOM_EXTRA = 3

@@ -428,7 +428,7 @@ true minimum. Nothing new is tracked on screens.
 *GH-223 (Mordie's lines for an answer that may not be the shortest):* no new screens.
 - New event `mordie_shorter_found`: fired when a 5-shift check sees that the exact search
   shortened Mordie's best solution, so the `Wait, I found a shorter one…` line shows. Once per
-  announcement; not fired when a save loads. Properties: `solution_length` (`number`): the new N;
+  announcement; not fired when a save loads. Properties: `board_size` (`number`); `solution_length` (`number`): the new N;
   `previous_length` (`number`): the N before it; `proven_shortest` (`boolean`): whether the new
   best is proven shortest.
 - `board_solved.mordie_result` gains `beat_mordie`: the player's moves are below an N that is not

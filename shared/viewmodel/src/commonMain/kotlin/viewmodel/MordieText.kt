@@ -24,6 +24,12 @@ object MordieText {
      *  to reserve rows for; `null` on a board it plays. */
     fun sitsOutLine(side: Int): String? = if (side > Mordie.MAX_SIDE) line(MordieLine.SitsOut(side)) else null
 
+    /** The lines that can wrap tallest on a board Mordie plays, at a 2-digit move count, for the
+     *  terminal to reserve rows for (GH-83): which one is tallest depends on the wrap width, the
+     *  progress line being longer but the unproven one wrapping worse at some widths (GH-223). */
+    fun longestLines(): List<String> =
+        listOf(MordieLine.Progress(99, hard = true), MordieLine.FoundUnproven(99)).map(::line)
+
     /** The solved title, given the player's [playerMoves]. */
     fun ending(outcome: MordieOutcome, playerMoves: Int): String {
         val mine = moves(outcome.moves)
