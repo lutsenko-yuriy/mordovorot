@@ -83,15 +83,12 @@ class WebStartupScenarioTest {
     }
 
     @Test
-    fun `unsolvable save at startup - Repair & load or New game, no Exit`() = webTest {
+    fun `unsolvable save at startup - Repair & load or New game`() = webTest {
         val page = WebHarness(backgroundScope).seed("odd", UNSOLVABLE_3X3, moves = 5).start()
         page.game.onLoadChosen("odd")
         val unsolvable = WebDialog.Unsolvable("'odd (3x3)' can't be solved - no sequence of shifts reaches the solved board.")
         assertEquals(unsolvable, page.state.dialog)
         assertNull(page.state.status)
-
-        page.game.onUnsolvableChoice(UnsolvableSaveChoice.EXIT)
-        assertEquals(unsolvable, page.state.dialog)
 
         page.game.onUnsolvableChoice(UnsolvableSaveChoice.REPAIR)
 

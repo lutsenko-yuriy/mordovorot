@@ -6,7 +6,7 @@ import kotlin.test.assertNull
 import viewmodel.KeyboardLayout.LEFT_HANDED
 import viewmodel.KeyboardLayout.RIGHT_HANDED
 
-/** ADR-0003's key scheme, shared by the terminal and the web (GH-171). */
+/** ADR-0003's key scheme, (GH-171). */
 class KeySchemeTest {
 
     private fun letter(char: Char, layout: KeyboardLayout) = KeyScheme.boardKey(char, null, layout)

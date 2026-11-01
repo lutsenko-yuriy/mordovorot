@@ -37,10 +37,10 @@ class ViewModelTileLabelsTest {
     private val saves = FakeSaveRepository()
     private val board = BoardImpl(3).apply { restoreState(oneShiftAway) }
 
-    private fun viewModel(preference: String? = null, startupRestoreDone: Boolean = true): GameViewModelImpl {
+    private fun viewModel(preference: String? = null): GameViewModelImpl {
         preference?.let { store.values["tile_labels"] = it }
         return testViewModel(
-            board, saves, analytics, startupRestoreDone, mordie = Mordie(FakeMordieSearchFactory()),
+            board, saves, analytics, mordie = Mordie(FakeMordieSearchFactory()),
             tileLabels = SessionTileLabels(TileLabelsPreference(store)),
         )
     }
@@ -180,7 +180,7 @@ class ViewModelTileLabelsTest {
     @Test
     fun `the startup restore keeps the save's labels`() = runTest {
         saves.save("l", oneShiftAway, 3, labels = "letter_pairs")
-        val viewModel = viewModel("pairs", startupRestoreDone = false)
+        val viewModel = viewModel("pairs")
 
         FakeViewModelUi(confirmRestoreResponses = mutableListOf(true)).drive(viewModel) { viewModel.restoreOnStartup() }
 
@@ -229,19 +229,6 @@ class ViewModelTileLabelsTest {
         viewModel.newGame(4, trigger = "toolbar")
         assertEquals(TileLabels.LETTERS, viewModel.tileLabels())
         assertEquals("letters", store.values["tile_labels"])
-    }
-
-    @Test
-    fun `--size=6 with a Letters preference starts on numbers`() = runTest {
-        store.values["tile_labels"] = "letters"
-        val viewModel = testViewModel(
-            BoardImpl(6), saves, analytics, sizeChosenAtLaunch = true, mordie = Mordie(FakeMordieSearchFactory()),
-            tileLabels = SessionTileLabels(TileLabelsPreference(store)),
-        )
-
-        FakeViewModelUi().drive(viewModel) { viewModel.restoreOnStartup() }
-
-        assertEquals(TileLabels.NUMBERS, viewModel.tileLabels())
     }
 
     @Test

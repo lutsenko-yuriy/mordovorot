@@ -17,7 +17,7 @@ class BrowserSaveRepositoryTest {
     private val repo = BrowserSaveRepository(store)
 
     @Test
-    fun `a save is one entry in the terminal's text format`() {
+    fun `a save is one entry in the text format`() {
         repo.save("foo", intArrayOf(1, 0, 2, 3), 2, moveCount = 4)
 
         assertEquals(mapOf("mordovorot.save.foo" to "2\n1 0 2 3\n4\n"), store.entries)
@@ -79,7 +79,7 @@ class BrowserSaveRepositoryTest {
     }
 
     @Test
-    fun `unsafe names are rejected as on the terminal`() {
+    fun `unsafe names are rejected`() {
         for (name in listOf("", " ", "a/b", "a\\b", "..")) {
             assertFalse(repo.isValidName(name), name)
             assertFailsWith<IllegalArgumentException>(name) { repo.save(name, intArrayOf(0, 1, 2, 3), 2) }

@@ -17,7 +17,7 @@ import testing.testViewModel
  * before a prompt is always observed by the UI before the prompt request arrives, not just
  * "eventually, in some order". Asserted as one interleaved list rather than two separate ones
  * (a message list and a prompt-call list can each be individually correct while their relative
- * order has drifted). Moved from the terminal app's tests in GH-228, over an unsolvable load.
+ * order has drifted). Checked over an unsolvable load.
  */
 class ViewModelOrderingTest {
 

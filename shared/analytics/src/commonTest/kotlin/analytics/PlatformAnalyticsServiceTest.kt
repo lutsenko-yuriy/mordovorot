@@ -24,17 +24,17 @@ class PlatformAnalyticsServiceTest {
     @Test
     fun `adds platform to an event with no properties`() {
         val recording = RecordingAnalyticsService()
-        val analytics = PlatformAnalyticsService(recording, platform = "terminal")
+        val analytics = PlatformAnalyticsService(recording, platform = "android")
 
         analytics.track("screen_congratulations")
 
-        assertEquals(listOf(Event("screen_congratulations", mapOf("platform" to "terminal"))), recording.events)
+        assertEquals(listOf(Event("screen_congratulations", mapOf("platform" to "android"))), recording.events)
     }
 
     @Test
     fun `does not overwrite a platform the caller already supplied explicitly`() {
         val recording = RecordingAnalyticsService()
-        val analytics = PlatformAnalyticsService(recording, platform = "terminal")
+        val analytics = PlatformAnalyticsService(recording, platform = "android")
 
         analytics.track("some_event", mapOf("platform" to "web"))
 

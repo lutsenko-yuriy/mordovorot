@@ -1,6 +1,6 @@
 package analytics
 
-/** Decorates another [AnalyticsService], adding `platform` (`terminal`/`web`, GH-110) to every
+/** Decorates another [AnalyticsService], adding `platform` (`web`, GH-110) to every
  *  forwarded event, the way [InputMethodAnalyticsService] adds `input_method`. */
 class PlatformAnalyticsService(
     private val delegate: AnalyticsService,

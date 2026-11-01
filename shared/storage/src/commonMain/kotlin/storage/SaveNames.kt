@@ -1,7 +1,7 @@
 package storage
 
-/** Which save names every [SaveRepository] accepts. On the terminal a name goes straight into a
- *  path, so this is a real traversal guard; the browser rejects the same names (GH-110). */
+/** Which save names every [SaveRepository] accepts. A name must not look like a path
+ *  (a traversal guard) (GH-110). */
 object SaveNames {
 
     fun isSafe(name: String): Boolean =

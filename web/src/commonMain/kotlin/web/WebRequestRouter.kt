@@ -2,8 +2,7 @@ package web
 
 import viewmodel.UiRequest
 
-/** Answers each [UiRequest] the viewModel raises (GH-110). The `when` is exhaustive, like the
- *  terminal's `UiRequestRouter`. */
+/** Answers each [UiRequest] the viewModel raises (GH-110). The `when` is exhaustive. */
 internal class WebRequestRouter(private val game: WebGame) {
 
     suspend fun handle(request: UiRequest<*>) {
@@ -18,9 +17,6 @@ internal class WebRequestRouter(private val game: WebGame) {
             is UiRequest.ResolveUnsolvableSave ->
                 request.respond(game.resolveUnsolvable(request.save, if (request.atStartup) "startup" else "toolbar"))
             is UiRequest.ChooseFittingLabels -> request.respond(game.labelsDialog.chooseFitting(request.message))
-            // Only the terminal's Exit raises these.
-            is UiRequest.PromptSaveName -> request.respond(null)
-            is UiRequest.ConfirmSaveBeforeExit -> request.respond(false)
         }
     }
 }

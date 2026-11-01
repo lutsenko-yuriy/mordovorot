@@ -8,7 +8,7 @@ import kotlin.test.assertEquals
 /**
  * Covers [InputMethodAnalyticsService], the decorator that adds `input_method` to every
  * event it forwards (GH-3) - so `save_command_used`, `load_command_used`,
- * `startup_restore_prompt_shown`, `startup_restore_decision`, and `exit_command_used` all
+ * `startup_restore_prompt_shown`, and `startup_restore_decision` all
  * gain the property with zero changes to `ViewModelImpl`'s own `track(...)` call sites.
  */
 class InputMethodAnalyticsServiceTest {

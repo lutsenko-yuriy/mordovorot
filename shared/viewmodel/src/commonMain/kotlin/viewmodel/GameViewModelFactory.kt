@@ -15,15 +15,12 @@ import viewmodel.usecase.TileLabelsUseCase
 
 /** Builds a [GameViewModelImpl] and its use cases (GH-41) - the only way a platform gets one.
  *  [MordieHooks] is built here, per call, so it tracks through this [analytics]. [ui] is shared
- *  by the viewModel and every use case, and with any platform flow (the terminal's Exit) that
- *  raises requests to the same View. [solutionScreen] (GH-126) and [tileLabels] (GH-139) are the
+ *  by the viewModel and every use case, and with the View that answers its requests. [solutionScreen] (GH-126) and [tileLabels] (GH-139) are the
  *  session's. */
 fun buildGameViewModel(
     board: BoardModel,
     saves: SaveRepository,
     analytics: AnalyticsService,
-    startupRestoreDone: Boolean,
-    sizeChosenAtLaunch: Boolean,
     mordie: Mordie,
     currentSaveName: CurrentSaveName,
     gameShiftSources: GameShiftSources,
@@ -31,7 +28,6 @@ fun buildGameViewModel(
     solutionScreen: SolutionScreen,
     tileLabels: SessionTileLabels,
     ui: UiRequestChannel,
-    unsolvableExit: UnsolvableSaveExit,
 ): GameViewModelImpl {
     val mordieHooks = MordieHooks(mordie, board, analytics, solutionScreen)
     val solution = SolutionUseCase(board, mordieHooks, analytics, solutionScreen, unsavedProgress)
@@ -47,10 +43,10 @@ fun buildGameViewModel(
         solution, tileLabels, tileLabelsUseCase,
     )
     val startupRestore = StartupRestoreUseCase(
-        board, catalog, analytics, ui, loadGame, newGame, mordieHooks, tileLabels, startupRestoreDone, sizeChosenAtLaunch,
+        board, catalog, analytics, ui, loadGame, newGame, mordieHooks, tileLabels,
     )
     return GameViewModelImpl(
         board, analytics, mordieHooks, ui, catalog, newGame, saveGame, loadGame, startupRestore, solution, tileLabelsUseCase,
-        ControlsDialogUseCase(board, analytics, solution), currentSaveName, gameShiftSources, unsavedProgress, tileLabels, unsolvableExit,
+        ControlsDialogUseCase(board, analytics, solution), currentSaveName, gameShiftSources, unsavedProgress, tileLabels,
     )
 }

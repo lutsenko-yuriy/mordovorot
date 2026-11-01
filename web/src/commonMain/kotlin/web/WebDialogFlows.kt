@@ -41,7 +41,7 @@ internal class WebDialogFlows(
         analytics.track("screen_save_dialog", mapOf("opened_from" to "toolbar", "prefilled" to prefill.isNotEmpty()))
         val name = modal.ask<String?>(saveDialog(prefill))
         if (name == null) cancelled("save")
-        // A blank name is Cancel, untracked like the terminal's empty Save.
+        // A blank name is Cancel, untracked.
         return name?.takeUnless { it.isBlank() }
     }
 

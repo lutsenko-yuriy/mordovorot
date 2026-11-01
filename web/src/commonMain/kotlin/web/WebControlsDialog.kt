@@ -5,8 +5,7 @@ import viewmodel.GameViewModel
 import viewmodel.KeyboardLayout
 import viewmodel.SessionKeyboardLayout
 
-/** The Controls dialog's flow (GH-171), like the terminal's `ControlsDialogController`, and the
- *  session's [mode]. */
+/** The Controls dialog's flow (GH-171) and the session's [mode]. */
 internal class WebControlsDialog(
     private val game: WebGame,
     private val viewModel: GameViewModel,

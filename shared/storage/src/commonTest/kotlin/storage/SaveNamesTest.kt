@@ -19,7 +19,7 @@ class SaveNamesTest {
     }
 
     @Test
-    fun `requireSafe throws IllegalArgumentException with the terminal's message`() {
+    fun `requireSafe throws IllegalArgumentException with its message`() {
         val e = assertFailsWith<IllegalArgumentException> { SaveNames.requireSafe("a/b") }
 
         assertEquals("Save name must not be blank, contain a path separator, or contain '..'", e.message)

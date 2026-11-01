@@ -35,8 +35,8 @@ class ViewModelSolutionSaveLoadTest {
     private val solutionScreen = SolutionScreen()
     private val saves = FakeSaveRepository()
 
-    private fun viewModel(startupRestoreDone: Boolean = true) =
-        testViewModel(board, saves, analytics, startupRestoreDone, mordie = mordie, solutionScreen = solutionScreen)
+    private fun viewModel() =
+        testViewModel(board, saves, analytics, mordie = mordie, solutionScreen = solutionScreen)
 
     private fun event(name: String) = analytics.events.single { it.name == name }.properties
 
@@ -79,7 +79,7 @@ class ViewModelSolutionSaveLoadTest {
     @Test
     fun `restoring a solution-screen save at startup reopens the screen`() = runTest {
         saves.save("s", original, 3, 0, screenSave)
-        val viewModel = viewModel(startupRestoreDone = false)
+        val viewModel = viewModel()
 
         FakeViewModelUi(confirmRestoreResponses = mutableListOf(true)).drive(viewModel) { viewModel.restoreOnStartup() }
 

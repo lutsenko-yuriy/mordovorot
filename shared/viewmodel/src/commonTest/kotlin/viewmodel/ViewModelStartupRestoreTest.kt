@@ -14,8 +14,7 @@ import testing.testViewModel
 
 /**
  * Covers [GameViewModelImpl.restoreOnStartup]'s branch matrix (0/1/2+ save files), driven directly -
- * `restoreOnStartup` is public since GH-3 so each View can run it ahead of its own event loop
- * ([view.tui.TuiView]). See the plan comment on GH-6
+ * `restoreOnStartup` is public since GH-3 so the View can run it before play starts. See the plan comment on GH-6
  * for the full branch matrix.
  *
  * Driven via [FakeViewModelUi.drive] (GH-42 WU2) - `restoreOnStartup` suspends on

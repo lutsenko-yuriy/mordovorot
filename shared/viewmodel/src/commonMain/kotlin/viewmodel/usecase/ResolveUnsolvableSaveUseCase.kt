@@ -17,7 +17,7 @@ import viewmodel.UnsavedProgress
 import viewmodel.UnsolvableSaveChoice
 import viewmodel.displayWithSize
 
-/** What happens to a save no sequence of shifts can solve (GH-74): repair, new game or exit. */
+/** What happens to a save no sequence of shifts can solve (GH-74): repair or new game. */
 internal class ResolveUnsolvableSaveUseCase(
     private val board: BoardModel,
     private val saves: SaveRepository,
@@ -32,9 +32,8 @@ internal class ResolveUnsolvableSaveUseCase(
     private val tileLabels: SessionTileLabels,
 ) {
 
-    /** The repair / new game / exit choice for an unsolvable save (GH-74). At startup, New game
-     *  returns [LoadResult.NOT_LOADED] so `restoreOnStartup`'s own size prompt runs. Exit only
-     *  reports [LoadResult.EXIT_CHOSEN] (GH-41): the platform runs it once the load returns. */
+    /** The repair / new game choice for an unsolvable save (GH-74). At startup, New game
+     *  returns [LoadResult.NOT_LOADED] so `restoreOnStartup`'s own size prompt runs. */
     suspend fun resolve(name: String, saved: SavedBoard, trigger: String): LoadResult {
         val atStartup = trigger == "startup_prompt"
         val info = SaveInfo(name, saved.squareSide, solvable = false)
@@ -76,10 +75,6 @@ internal class ResolveUnsolvableSaveUseCase(
                     newGame.newGame(size ?: board.squareSide, trigger = "unsolvable_save")
                 }
                 return LoadResult.NOT_LOADED
-            }
-            UnsolvableSaveChoice.EXIT -> {
-                track()
-                return LoadResult.EXIT_CHOSEN
             }
         }
     }

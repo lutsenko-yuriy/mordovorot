@@ -66,9 +66,8 @@ class FakeSaveRepository(
         return saves[name]
     }
 
-    /** Mirrors [storage.FileSaveRepository]'s real safety rule, so tests exercising name
-     *  validation (e.g. [viewmodel.usecase.ExitGameUseCase.exitGame]'s re-prompt loop) don't need the
-     *  real filesystem-backed repository. */
+    /** Mirrors [storage.SaveNames]' safety rule, so tests exercising name validation
+     *  don't need the real repository. */
     override fun isValidName(name: String): Boolean =
         name.isNotBlank() &&
             !name.contains('/') && !name.contains('\\') &&

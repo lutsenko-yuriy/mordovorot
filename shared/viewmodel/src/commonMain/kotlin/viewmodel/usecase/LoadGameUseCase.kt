@@ -37,8 +37,7 @@ internal class LoadGameUseCase(
      *  when called from `restoreOnStartup` - see `load_command_used` in docs/ANALYTICS_EVENTS.md.
      *  Returns whether the board was actually restored, so `restoreOnStartup` can report an
      *  accurate `startup_restore_decision` instead of assuming success (audit on PR #14: a
-     *  corrupted/mismatched save offered at startup was being recorded as "restored") - or that
-     *  Exit was chosen for an unsolvable save (GH-41). */
+     *  corrupted/mismatched save offered at startup was being recorded as "restored"). */
     suspend fun loadGame(name: String, trigger: String = "command"): LoadResult {
         // The whole body is guarded, not just saves.load - catalog.availableSavesMessage() (itself
         // saves.listSaves()) and board.restoreState can also throw, and the startup restore

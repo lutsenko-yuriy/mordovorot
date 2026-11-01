@@ -23,7 +23,7 @@ import web.drag.direction
 /** The browser's View (GH-110): takes the page's intents, runs them on [viewModel] and renders a
  *  [WebState] after every change. A dialog is modal: while one is open, or a toolbar action or the
  *  startup restore is under way, only a dialog's answer counts; while a drag is, only the drag.
- *  Tracks the view-layer analytics, like the terminal's dialog controllers. */
+ *  Tracks the view-layer analytics. */
 class WebGame internal constructor(
     private val viewModel: GameViewModel,
     private val analytics: AnalyticsService,
@@ -152,7 +152,7 @@ class WebGame internal constructor(
         val name = dialogs.askSaveName()
         when {
             name == null -> {}
-            // The terminal's rule too: the name check alone allows spaces.
+            // The name check alone allows spaces.
             name.any { it.isWhitespace() } -> showStatus("'$name' isn't a usable save name (no spaces) - not saved.")
             else -> viewModel.saveGame(name)
         }
@@ -174,10 +174,8 @@ class WebGame internal constructor(
     /** The Load dialog's answer, a listed save's name; `null` is Cancel. */
     fun onLoadChosen(name: String?) = modal.answer<WebDialog.Load, String?>(name)
 
-    /** The unsolvable-save dialog's answer. The page has no Exit, so [UnsolvableSaveChoice.EXIT] is ignored. */
-    fun onUnsolvableChoice(choice: UnsolvableSaveChoice) {
-        if (choice != UnsolvableSaveChoice.EXIT) modal.answer<WebDialog.Unsolvable, UnsolvableSaveChoice>(choice)
-    }
+    /** The unsolvable-save dialog's answer. */
+    fun onUnsolvableChoice(choice: UnsolvableSaveChoice) = modal.answer<WebDialog.Unsolvable, UnsolvableSaveChoice>(choice)
 
     /** The size picker's answer; `null` is Cancel. */
     fun onSizeChosen(size: Int?) = modal.answer<WebDialog.Size, Int?>(size)

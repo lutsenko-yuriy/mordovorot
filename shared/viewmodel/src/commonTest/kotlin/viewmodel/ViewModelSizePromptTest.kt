@@ -12,8 +12,7 @@ import testing.testViewModel
 
 /**
  * Covers GH-44's startup size prompt - the interactive size choice [ViewModelImpl.restoreOnStartup]
- * raises when nothing was actually restored (no saves, declined, blank/EOF) and
- * `sizeChosenAtLaunch` wasn't set. See [ViewModelStartupRestoreTest] for the restore-matrix
+ * raises when nothing was actually restored (no saves, declined, blank/EOF). See [ViewModelStartupRestoreTest] for the restore-matrix
  * itself, which this file assumes and doesn't re-cover.
  */
 class ViewModelSizePromptTest {
@@ -66,22 +65,6 @@ class ViewModelSizePromptTest {
 
         assertEquals(emptyList(), ui.chooseBoardSizeCalls)
         assertEquals(false, analytics.events.any { it.name == "new_game_size_selected" })
-    }
-
-    @Test
-    fun `--size given at launch - restore and the size prompt never run`() = runTest {
-        val board = FakeBoardModel()
-        val saves = FakeSaveRepository(mutableMapOf("foo" to storage.SavedBoard(4, IntArray(16) { it })))
-        val analytics = RecordingAnalyticsService()
-        val viewModel = testViewModel(board, saves, analytics, sizeChosenAtLaunch = true)
-        val ui = FakeViewModelUi()
-
-        ui.drive(viewModel) { viewModel.restoreOnStartup() }
-
-        assertEquals(emptyList(), ui.confirmRestoreCalls)
-        assertEquals(emptyList(), ui.chooseBoardSizeCalls)
-        assertEquals(emptyList(), board.calls)
-        assertEquals(emptyList(), analytics.events)
     }
 
     @Test

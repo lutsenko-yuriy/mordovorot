@@ -4,8 +4,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 
 /** The viewmodel side of [GameViewModel.uiRequests] (GH-78): one per rebuild, shared by
- *  [GameViewModelImpl], every use case and any platform flow (the terminal's Exit, GH-41) so
- *  their requests reach the one View draining it. */
+ *  [GameViewModelImpl] and every use case, so their requests reach the one View draining it. */
 class UiRequestChannel {
 
     /** Rendezvous - `ask` doesn't return until the View has actually finished handling the

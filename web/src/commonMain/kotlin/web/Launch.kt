@@ -19,7 +19,6 @@ import viewmodel.TileLabelsPreference
 import viewmodel.SolutionScreen
 import viewmodel.UiRequestChannel
 import viewmodel.UnsavedProgress
-import viewmodel.UnsolvableSaveExit
 import viewmodel.buildGameViewModel
 
 /** The page's board: the web client alone offers [BoardSize.VERY_LARGE] (GH-207). */
@@ -54,8 +53,6 @@ fun startWebGame(
     val pressed = InputMethodAnalyticsService(platform) { pressedWith.inputMethod }
     val viewModel = buildGameViewModel(
         board, saves, pressed,
-        startupRestoreDone = false,
-        sizeChosenAtLaunch = false,
         mordie = mordie,
         currentSaveName = CurrentSaveName(),
         gameShiftSources = GameShiftSources(),
@@ -63,8 +60,6 @@ fun startWebGame(
         solutionScreen = SolutionScreen(),
         tileLabels = tileLabels,
         ui = UiRequestChannel(),
-        // The page has no Exit, so it never offers one.
-        unsolvableExit = UnsolvableSaveExit.NONE,
     )
     val keyboardLayout = SessionKeyboardLayout(KeyboardLayoutPreference(preferences))
     return WebGame(viewModel, pressed, renderer, scope, pressedWith, keyboardLayout, modePreference, startMode, controlsShown).also { it.start() }
