@@ -44,6 +44,8 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   untouched and shows a message instead of crashing. Loading a save whose board size differs
   from the current board resizes the board to match and restores its tiles - it is never
   rejected for a size mismatch (GH-44).
+- A save written by a later build may carry lines this build doesn't know (GH-224's line 9 is
+  one): an older build ignores them, so it reads Mordie's answer as proven shortest.
 - Every place a save's name is listed - the startup restore dialog and the Load dialog - also
   shows that save's board size, e.g. `foo (5x5)`, so a player can tell up front what size
   loading it will resize the board to (GH-44). A save whose size can't be read (corrupted)
@@ -156,8 +158,12 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
     first line (shifts 0-4) is `Okay, so we stopped when I was at N moves! What was I doing?..`
     A game saved while Mordie's answer is not yet proven shortest is saved this way too (GH-222),
     N being the longest length ruled out: both solvers start again on load, and a found line
-    (`Found it!` or the unproven one) returns at the next check. Saves keep the best solution so far in GH-224.
+    (`Found it!` or the unproven one) returns at the next check.  Keeping that unsolved answer across a load follows in GH-224.
   - Loading a save where Mordie had found its solution shows the `Found it!` line at once.
+  - A save also keeps whether that solution is proven shortest (GH-224): a solution-screen save of an
+    unproven answer reopens it unproven, and a solved save of one reloads with the `You beat me!`
+    ending when the player won below it, not `Are you a machine?`. A save with no such flag (made
+    before GH-224) reads as proven.
   - Loading a solved save shows its ending, or `Congratulations ✓` if it has no Mordie data.
   - A save with no Mordie data (made before GH-83), or one fixed by Repair (GH-74): if no moves
     have been made on it, Mordie starts fresh from the loaded board. If moves have been made,

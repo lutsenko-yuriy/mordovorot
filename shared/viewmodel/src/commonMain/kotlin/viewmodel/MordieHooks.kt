@@ -28,11 +28,11 @@ internal class MordieHooks(
     fun onLoaded(data: SavedMordie?) {
         when {
             tooBig() -> if (board.isCorrect()) mordie.clear() else mordie.sitOut(board.squareSide)
-            data != null && data.solutionScreen -> mordie.resume(data.original, data.moves, found = true, data.solutionMoves())
+            data != null && data.solutionScreen -> mordie.resume(data.original, data.moves, found = true, data.solutionMoves(), data.provenShortest, data.ruledOut)
             board.isCorrect() ->
-                if (data == null) mordie.clear() else mordie.restoreSolved(data.original, data.moves, data.found, data.solutionMoves())
+                if (data == null) mordie.clear() else mordie.restoreSolved(data.original, data.moves, data.found, data.solutionMoves(), data.provenShortest, data.ruledOut)
             data != null && (data.found || Solvability.isSolvable(data.original)) ->
-                mordie.resume(data.original, data.moves, data.found, data.solutionMoves())
+                mordie.resume(data.original, data.moves, data.found, data.solutionMoves(), data.provenShortest, data.ruledOut)
             else -> startOnLoadedBoard()
         }
     }
@@ -91,7 +91,10 @@ internal class MordieHooks(
 
     fun snapshot(): SavedMordie? = mordie.snapshot()?.let { snapshot ->
         val solution = snapshot.solution?.map { SavedMove(it.isRow, it.index, it.amount) }
-        SavedMordie(snapshot.original, snapshot.moves, snapshot.found, solution, solutionScreen = solutionScreen.replay != null)
+        SavedMordie(
+            snapshot.original, snapshot.moves, snapshot.found, solution, solutionScreen = solutionScreen.replay != null,
+            provenShortest = snapshot.provenShortest, ruledOut = snapshot.ruledOut,
+        )
     }
 
     fun line(): String? = mordie.line()?.let(MordieText::line)

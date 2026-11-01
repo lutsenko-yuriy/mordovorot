@@ -184,7 +184,7 @@ class MordieBestSolutionTest {
     }
 
     @Test
-    fun `a resumed found save counts as proven`() {
+    fun `a resumed found save with no unproven flag counts as proven`() {
         mordie.resume(board, moves = 4, found = true, solution = List(4) { move(1) })
 
         assertTrue(mordie.provenShortest)
