@@ -156,9 +156,10 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   solution (two extra lines; older saves still load).
   - Loading a save where Mordie was still searching resumes the search past the saved N, and the
     first line (shifts 0-4) is `Okay, so we stopped when I was at N moves! What was I doing?..`
-    A game saved while Mordie's answer is not yet proven shortest is saved this way too (GH-222),
-    N being the longest length ruled out: both solvers start again on load, and a found line
-    (`Found it!` or the unproven one) returns at the next check.  Keeping that unsolved answer across a load follows in GH-224.
+  - A game saved while Mordie's answer is not yet proven shortest keeps that answer (GH-224):
+    loading it shows the unproven found line at once, with Give Up lit, and only the exact search
+    restarts, above the longest length it had ruled out and starting from the kept solution. A
+    shorter answer it later finds is announced as usual.
   - Loading a save where Mordie had found its solution shows the `Found it!` line at once.
   - A save also keeps whether that solution is proven shortest (GH-224): a solution-screen save of an
     unproven answer reopens it unproven, and a solved save of one reloads with the `You beat me!`
