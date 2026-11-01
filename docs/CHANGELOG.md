@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.33.2] — 2026-11-01 (PR #230 merged)
+
+### Changed
+- [wip] (PR #230) GH-228 (WU2/4): the terminal app is deleted (src/, the TUI, GameSession, file repositories and their tests); the root project now only aggregates shared/ and web, and the run commands, README and skill config point at the browser. Terminal code in shared/* goes in WU3, the docs in WU4.
+
 ## [0.33.1] — 2026-11-01 (PR #229 merged)
 
 ### Changed

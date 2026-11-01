@@ -13,7 +13,7 @@ vcs = "github"
 # Answers that used to be {{PLACEHOLDER}} values; `scripts/onboard/onboard.py apply` substitutes them into
 # tracked files. Empty values are left as placeholders so `onboard.py check` still reports them.
 name = "Mordovorot"
-description = "A terminal version of Loopover, a sliding-row/column puzzle"
+description = "A browser version of Loopover, a sliding-row/column puzzle"
 architecture_summary = "MVVM (Model-View-ViewModel): board_model + viewmodel + view packages"
 issue_prefix = "GH"
 git_host = "github.com"
@@ -25,12 +25,12 @@ available_models = "claude-opus-5-5, claude-sonnet-5-5, claude-haiku-4-5-2025100
 ai_commit_trailer = "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ai_tool_credit = "🤖 Generated with [Claude Code](https://claude.com/claude-code)"
 test_command = "./gradlew check"
-integration_test_dir = "src/test/kotlin/ (unit tests only — no separate integration suite yet)"
-test_harness_file = "none (no scripted end-to-end harness; fakes of shared-module types live in shared/testing/src/main/kotlin/testing/, app-only fakes in src/test/kotlin/testing/)"
-test_harness_class = "none (no integration test harness)"
+integration_test_dir = "web/src/commonTest/kotlin/web/scenario/"
+test_harness_file = "web/src/commonTest/kotlin/web/scenario/WebHarness.kt"
+test_harness_class = "WebHarness (entered through webTest { })"
 version_file = "build.gradle.kts"
 version_field = "version"
-in_qa_paths = "src/main/kotlin/view/"
+in_qa_paths = "web/src/jsMain/"
 # false: apply deletes LICENSE (the project is not MIT-licensed like the template).
 keep_licence = true
 

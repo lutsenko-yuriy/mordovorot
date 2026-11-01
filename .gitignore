@@ -16,9 +16,6 @@ build-serve/
 # Kotlin 2.x per-project data (compiler error logs, session files)
 .kotlin/
 
-# Local save files (GH-6)
-saves/
-
 # Commit .claude/commands/ — that's the point of this template.
 # If you want commands to be local-only after setup, add:
 #   .claude/*
