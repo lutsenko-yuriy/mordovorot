@@ -38,9 +38,6 @@ class Mordie(private val factory: MordieSearchFactory) {
     /** The largest length the exact search had ruled out when the answer was last read (GH-224). */
     private var ruledOut = 0
 
-    /** Set by [giveUp]: the solution screen shows the answer as found, proven or not. */
-    private var givenUp = false
-
     /** The last N Mordie told the player - its opening's, or its last progress line's. */
     private var toldMoves = 0
 
@@ -84,7 +81,9 @@ class Mordie(private val factory: MordieSearchFactory) {
     }
 
     /** A save made while unsolved: Mordie had ruled out [moves], or found a [solution] that long,
-     *  [provenShortest] unless the save says it may not be (then [ruledOut] is what was ruled out, GH-224). */
+     *  [provenShortest] unless the save says it may not be (then [ruledOut] is what was ruled out,
+     *  GH-224). An unproven answer shows at once and the exact search goes on above [ruledOut] from
+     *  it, unless the save is a [solutionScreen]'s, which only shows it. */
     fun resume(
         original: IntArray,
         moves: Int,
@@ -92,6 +91,7 @@ class Mordie(private val factory: MordieSearchFactory) {
         solution: List<SolutionMove>? = null,
         provenShortest: Boolean = true,
         ruledOut: Int = 0,
+        solutionScreen: Boolean = false,
     ) {
         require(moves >= 0) { "Mordie's moves must not be negative" }
         bind(original)
@@ -99,14 +99,20 @@ class Mordie(private val factory: MordieSearchFactory) {
         resumedFromSave = true
         checkedMoves = moves
         toldMoves = moves
-        if (found) {
+        // An unproven answer with no path (a damaged save) can't be shown or searched from: it only
+        // tells how far the exact search had got, so it is treated as still searching.
+        if (found && (provenShortest || solution != null)) {
             revealedMoves = moves
             this.provenShortest = provenShortest
             this.ruledOut = ruledOut
             announced = if (provenShortest) MordieLine.Found(moves) else MordieLine.FoundUnproven(moves)
+            if (!provenShortest && !solutionScreen) search = factory.start(this.original!!, ruledOut, solution)
         } else {
-            opening = MordieLine.Resumed(moves)
-            search = factory.start(this.original!!, moves)
+            val searched = if (found) ruledOut else moves
+            opening = MordieLine.Resumed(searched)
+            checkedMoves = searched
+            toldMoves = searched
+            search = factory.start(this.original!!, searched)
         }
     }
 
@@ -208,7 +214,6 @@ class Mordie(private val factory: MordieSearchFactory) {
     /** The player gives up: takes the live best answer and stops the search, so the solution
      *  screen, its save and the analytics agree (GH-222). */
     fun giveUp() {
-        givenUp = true
         if (original != null && outcome == null) takeBest()
         stop()
     }
@@ -222,11 +227,6 @@ class Mordie(private val factory: MordieSearchFactory) {
         outcome?.let { return snapshotOf(original, it, solution, ruledOut) }
         val progress = liveProgress()
         val state = live(progress)
-        // An answer not proven shortest is saved as searching (until saves keep it, GH-224), so
-        // the loaded game searches again; a solution screen's save keeps what it shows.
-        if (state.found && !state.provenShortest && !givenUp && search != null) {
-            return MordieSnapshot(original.copyOf(), progress!!.ruledOut.coerceAtLeast(0), found = false, solution = null)
-        }
         val best = progress?.takeIf { it.found }?.solution ?: solution
         return snapshotOf(original, state, best, maxOf(ruledOut, progress?.ruledOut ?: 0))
     }
@@ -257,7 +257,6 @@ class Mordie(private val factory: MordieSearchFactory) {
         progressWindowShown = false
         provenShortest = false
         ruledOut = 0
-        givenUp = false
         outcome = null
         solution = null
         shiftsAtReveal = null

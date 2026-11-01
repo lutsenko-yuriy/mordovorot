@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.35.0] — 2026-11-02 (PR #235 merged)
+
+### Changed
+- [user] (PR #235) GH-224: Saved games keep Mordie's best answer so far: loading one picks up where Mordie left off, and a won game reloads with the right ending.
+- [non-user] (PR #235) GH-224 (WU2/2): loading an unproven save starts only the exact search, above R and from the kept solution (the fast solver is skipped); the search factory, the worker protocol and BestSolutionSolver carry the kept solution, and the GH-222 downgrade-to-searching is gone.
+
 ## [0.34.1] — 2026-11-01 (PR #234 merged)
 
 ### Changed

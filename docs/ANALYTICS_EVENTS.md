@@ -448,4 +448,4 @@ No new events, screen views or properties. Two existing events become more accur
 - `board_solved.mordie_proven_shortest` and `mordie_result`: a solved save now keeps whether Mordie's answer was proven shortest, so reloading a game won below an unproven N reports `beat_mordie` again instead of `machine`.
 - `game_given_up.solution_length` and `solution_proven_shortest`: Give Up right after loading a save reports the solution the save kept, not a fresh search's.
 
-`mordie_solution_found` still never fires for a loaded game, which found its solution in an earlier session.
+`mordie_solution_found` still never fires for a loaded game, which found its solution in an earlier session. The gap is wider now: the fast solver answers within moments, so a game saved before its first check is stored as an unproven found answer, and loading it shows that answer at once.

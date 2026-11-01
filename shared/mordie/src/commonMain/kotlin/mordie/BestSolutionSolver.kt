@@ -6,18 +6,19 @@ package mordie
  * solution so far - the exact search replaces the fast answer when it finds a shorter one - and
  * says whether that answer is [provenShortest].
  *
- * [ruledOut] (a saved N) only resumes the exact search: the fast solver always starts over.
+ * [ruledOut] (a saved N) resumes the exact search. A kept [best] (GH-224) is the answer from the
+ * start, so the fast solver is skipped; without one it always starts over.
  */
-class BestSolutionSolver(original: IntArray, ruledOut: Int = -1) {
+class BestSolutionSolver(original: IntArray, ruledOut: Int = -1, best: List<SolutionMove>? = null) {
 
     private val fast = ThreeCycleSolver(original)
     private val exact = IdaStarSolver(original, ruledOut)
 
     /** The best solution's length, once any solver has one. */
-    var bestLength: Int? = null
+    var bestLength: Int? = best?.size
         private set
 
-    var solution: List<SolutionMove>? = null
+    var solution: List<SolutionMove>? = best
         private set
 
     /** Which solver gave the first solution; stays put when the exact search later improves it. */

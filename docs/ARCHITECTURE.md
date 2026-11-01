@@ -64,14 +64,16 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       ├── ThreeCycleSolver.kt      # Fast, non-minimal solver (GH-213): places tiles one per step
 │       │                              # with row/column commutator 3-cycles; run by BestSolutionSolver (GH-222)
 │       ├── BestSolutionSolver.kt    # GH-222: steps ThreeCycleSolver, then IdaStarSolver; keeps the
-│       │                              # best solution so far, its source and whether it is proven shortest
+│       │                              # best solution so far, its source and whether it is proven shortest;
+│       │                              # a kept best (GH-224) is the answer from the start and skips the fast solver
 │       ├── MordieSearch.kt          # MordieSearch / SearchProgress / MordieSearchFactory (+ NONE) -
-│       │                              # the seam tests replace with FakeMordieSearchFactory
+│       │                              # the seam tests replace with FakeMordieSearchFactory;
+│       │                              # start(original, ruledOut, best) - best is the kept solution (GH-224)
 │       ├── BackgroundMordieSearch.kt # The real search: one throttled coroutine on
 │       │                               # Dispatchers.Default stepping a BestSolutionSolver until proven (GH-222), publishing a volatile snapshot;
 │       │                               # onSnapshot forwards each one (the browser's worker, GH-218)
 │       ├── SearchProtocol.kt        # GH-218: the page <-> Web Worker messages as plain strings
-│       │                              # (start: arrangement + saved N; progress, with the solution)
+│       │                              # (start: arrangement + saved N + kept solution; progress, with the solution)
 │       ├── Mordie.kt                # Opponent state: shift count, 5-shift checks, opening/resume
 │       │                              # kind, found reveal, a shorter solution announced at a check
 │       │                              # (MordieCheck, GH-223), frozen outcome, save snapshot;
@@ -397,7 +399,8 @@ one place for the GH-41 mobile port), and memory stays O(depth). A search starte
 saved N begins at N + 1, so it never re-reports below it. In the browser the search runs in a
 Web Worker (GH-218): `SearchProtocol` carries the start and the progress between the page's
 `WorkerMordieSearch` and the worker, so the page's timers aren't delayed and a hidden tab keeps
-searching. `Mordie` turns the player's
+searching. Loading an unproven save (GH-224) starts the search with the kept solution, so the
+`BestSolutionSolver` skips the fast solver and goes on from the saved N. `Mordie` turns the player's
 shifts into the line state: a check every 5 shifts, a reveal of "found", and the outcome
 frozen on solve, using Mordie's live state at that shift. Its `MordieSnapshot` (with the proven flag and R, GH-224) mirrors
 `storage.SavedMordie` on purpose, so `mordie` never imports `storage`; `MordieHooks` maps

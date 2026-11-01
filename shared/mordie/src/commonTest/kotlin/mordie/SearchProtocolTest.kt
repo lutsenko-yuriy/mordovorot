@@ -4,6 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 
 class SearchProtocolTest {
 
@@ -86,5 +87,37 @@ class SearchProtocolTest {
         assertFailsWith<IllegalArgumentException> { SearchProtocol.decodeProgress("S|-1|0,1") }
         assertFailsWith<IllegalArgumentException> { SearchProtocol.decodeProgress("P|x|0|0|0|~|0|~") }
         assertFailsWith<IllegalArgumentException> { SearchProtocol.kindOf("nonsense") }
+    }
+
+    @Test
+    fun `a start without a kept solution decodes with none`() {
+        val start = SearchProtocol.decodeStart(SearchProtocol.encodeStart(intArrayOf(1, 0), ruledOut = -1))
+
+        assertNull(start.best)
+    }
+
+    @Test
+    fun `a three-field start from an older page decodes with no kept solution`() {
+        val start = SearchProtocol.decodeStart("S|9|1,0,2")
+
+        assertEquals(9, start.ruledOut)
+        assertNull(start.best)
+    }
+
+    @Test
+    fun `a start carries the kept solution`() {
+        val best = listOf(SolutionMove(isRow = true, index = 2, amount = -1), SolutionMove(isRow = false, index = 0, amount = 3))
+
+        val start = SearchProtocol.decodeStart(SearchProtocol.encodeStart(IntArray(25) { 24 - it }, ruledOut = 9, best = best))
+
+        assertEquals(best, start.best)
+        assertEquals(9, start.ruledOut)
+    }
+
+    @Test
+    fun `a start carries an empty kept solution`() {
+        val start = SearchProtocol.decodeStart(SearchProtocol.encodeStart(intArrayOf(0, 1), ruledOut = -1, best = emptyList()))
+
+        assertEquals(emptyList(), start.best)
     }
 }

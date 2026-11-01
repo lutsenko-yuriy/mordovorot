@@ -33,12 +33,13 @@ interface MordieSearch {
 
 /** Starts a [MordieSearch] - the seam tests replace so no real search runs. */
 fun interface MordieSearchFactory {
-    /** [ruledOut] is a saved N to resume above, or -1 for a fresh search. */
-    fun start(original: IntArray, ruledOut: Int): MordieSearch
+    /** [ruledOut] is a saved N to resume above, or -1 for a fresh search; [best] is the saved
+     *  solution to start from, if any (GH-224). */
+    fun start(original: IntArray, ruledOut: Int, best: List<SolutionMove>?): MordieSearch
 
     companion object {
         /** Never searches: progress stays at the given [ruledOut], never found. */
-        val NONE = MordieSearchFactory { _, ruledOut ->
+        val NONE = MordieSearchFactory { _, ruledOut, _ ->
             object : MordieSearch {
                 private val progress = SearchProgress(moves = ruledOut, found = false, elapsedMs = 0)
                 override fun progress() = progress
@@ -47,3 +48,6 @@ fun interface MordieSearchFactory {
         }
     }
 }
+
+/** Starts a search with no kept solution. */
+fun MordieSearchFactory.start(original: IntArray, ruledOut: Int): MordieSearch = start(original, ruledOut, null)

@@ -4,10 +4,13 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import mordie.SearchProgress
 import mordie.SolutionMove
 import mordie.SolutionSource
 import storage.SavedMordie
+import storage.SavedMove
+import viewmodel.GiveUpButton
 import web.Arrow
 
 /** GH-224 scenarios: saves keep Mordie's best solution so far and whether it is proven shortest,
@@ -47,29 +50,65 @@ class WebKeptSolutionScenarioTest {
         assertEquals("I made 12 moves and you made 1 move! Are you a machine?", page.state.mordie)
     }
 
+    /** Row 0 one cell left of solved: 41 steps of "row 0 right once" solve it (41 mod 5 = 1). */
+    private val rotated = IntArray(25) { if (it < 5) (it + 1) % 5 else it }
+
+    private fun savedPath(length: Int) = List(length) { SavedMove(isRow = true, index = 0, amount = 1) }
+
+    /** A save `foo` of the rotated board with Mordie's unproven [n]-move answer, R = 3. */
+    private fun WebHarness.seedUnproven(n: Int = 41) =
+        seed("foo", rotated, moves = 2, mordie = SavedMordie(rotated, n, found = true, solution = savedPath(n), provenShortest = false, ruledOut = 3))
+
+    private fun WebHarness.loadFoo() {
+        game.onLoad()
+        game.onLoadChosen("foo")
+    }
+
     @Test
     fun `WU2 a save with an unproven answer shows it at once after loading`() = webTest {
-        // TODO: 1. Start a 5x5 game and script the fast answer (40 moves, not proven).
-        // TODO: 2. Make five shifts so a check reveals the answer, then save as `foo`.
-        // TODO: 3. Load `foo`.
-        // TODO: 4. The unproven found line shows at once and Give Up is lit, with no wait for a check.
-        // TODO: 5. Give Up: the solution screen shows the kept 40 moves; game_given_up has solution_length=40 and solution_proven_shortest=false.
+        val page = WebHarness(backgroundScope).seedUnproven().startOn(rotated)
+
+        page.loadFoo()
+
+        assertEquals("Found one in 41 moves, but maybe there's a shorter one! Can you beat it?", page.state.mordie)
+        assertEquals(GiveUpButton.GIVE_UP, page.state.giveUp)
+
+        page.game.solution.onGiveUp()
+        page.game.solution.onGiveUpAnswered(true)
+
+        assertEquals(41, page.state.solution!!.moves.size)
+        val givenUp = page.props("game_given_up").single()
+        assertEquals(41, givenUp["solution_length"])
+        assertEquals(false, givenUp["solution_proven_shortest"])
     }
 
     @Test
     fun `WU2 after that load only the exact search restarts and a shorter answer is announced`() = webTest {
-        // TODO: 1. Do steps 1-3 of the previous scenario.
-        // TODO: 2. The newest search was started above R with the kept solution; the fast solver did not run.
-        // TODO: 3. Script a shorter exact answer (31 moves) and make five shifts.
-        // TODO: 4. The `Wait, I found a shorter one` line shows and mordie_shorter_found has previous_length=40.
+        val page = WebHarness(backgroundScope).seedUnproven().startOn(rotated)
+        page.loadFoo()
+
+        val search = page.mordieSearches.latest
+        assertEquals(3, search.ruledOut)
+        assertEquals(savedPath(41).size, search.best!!.size)
+
+        search.progress = SearchProgress(31, found = true, elapsedMs = 4, solution = path(31), ruledOut = 5, provenShortest = false)
+        repeat(5) { page.game.onArrow(Arrow.UP, 2) }
+
+        assertEquals("Wait, I found a shorter one: 31 moves now! Can you beat it?", page.state.mordie)
+        assertEquals(41, page.props("mordie_shorter_found").single()["previous_length"])
     }
 
     @Test
     fun `a save written before this ticket still resumes with the stopped-at line`() = webTest {
-        // TODO: 1. Seed an old-style save: `<R> searching`, no line 9.
-        // TODO: 2. Load it.
-        // TODO: 3. The first line is `Okay, so we stopped when I was at R moves!...`.
-        // TODO: 4. A search starts above R with no kept solution.
+        val page = WebHarness(backgroundScope)
+            .seed("foo", rotated, moves = 2, mordie = SavedMordie(rotated, 7, found = false))
+            .startOn(rotated)
+
+        page.loadFoo()
+
+        assertEquals("Okay, so we stopped when I was at 7 moves! What was I doing?..", page.state.mordie)
+        assertEquals(7, page.mordieSearches.latest.ruledOut)
+        assertNull(page.mordieSearches.latest.best)
     }
 
     @Test
