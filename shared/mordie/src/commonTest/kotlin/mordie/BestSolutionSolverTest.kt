@@ -188,4 +188,30 @@ class BestSolutionSolverTest {
         assertTrue(solver.step(1))
         assertTrue(solver.progress(elapsedMs = 0).provenShortest)
     }
+
+    @Test
+    fun `a 9x9 gets an unproven fast answer on the first step, and it solves the board (GH-225)`() {
+        val side = 9
+        // Row 0 and column 4 each shifted, so the answer isn't a single rotation.
+        val board = IntArray(side * side) { it }
+        board.rotate(isRow = true, index = 0, amount = 3, side)
+        board.rotate(isRow = false, index = 4, amount = 2, side)
+        val solver = BestSolutionSolver(board.copyOf())
+
+        assertFalse(solver.step(10))
+
+        val moves = solver.solution!!
+        assertTrue(moves.isNotEmpty())
+        assertFalse(solver.provenShortest)
+        assertEquals(SolutionSource.FAST_SOLVER, solver.source)
+        moves.forEach { board.rotate(it.isRow, it.index, it.amount, side) }
+        assertEquals(IntArray(side * side) { it }.toList(), board.toList())
+    }
+
+    /** Rotates a row right, or a column down, by [amount] cells. */
+    private fun IntArray.rotate(isRow: Boolean, index: Int, amount: Int, side: Int) {
+        val cells = IntArray(side) { if (isRow) index * side + it else it * side + index }
+        val values = cells.map { this[it] }
+        for (k in 0 until side) this[cells[(k + amount) % side]] = values[k]
+    }
 }
