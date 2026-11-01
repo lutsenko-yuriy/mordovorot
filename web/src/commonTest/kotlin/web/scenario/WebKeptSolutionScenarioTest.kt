@@ -1,26 +1,50 @@
 package web.scenario
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import mordie.SearchProgress
+import mordie.SolutionMove
+import mordie.SolutionSource
+import storage.SavedMordie
+import web.Arrow
 
 /** GH-224 scenarios: saves keep Mordie's best solution so far and whether it is proven shortest,
  *  in the browser, through [WebHarness]. Each name notes the work unit that turns it green. */
 class WebKeptSolutionScenarioTest {
 
+    private val five = IntArray(25) { 24 - it }
+    private fun path(length: Int) = List(length) { SolutionMove(isRow = true, index = 0, amount = 1) }
+    private fun fast(moves: Int) = SearchProgress(
+        moves, found = true, elapsedMs = 4, solution = path(moves),
+        ruledOut = 3, provenShortest = false, source = SolutionSource.FAST_SOLVER,
+    )
+
+    /** A solved 5x5 save with Mordie's [n]-move answer, and the player's one move. */
+    private fun WebHarness.seedSolved(n: Int, provenShortest: Boolean) =
+        seed("won", solved(5), moves = 1, mordie = SavedMordie(five, n, found = true, provenShortest = provenShortest, ruledOut = if (provenShortest) 0 else 3))
+
+    private fun WebHarness.loadWon() {
+        game.onLoad()
+        game.onLoadChosen("won")
+    }
+
     @Test
     fun `WU1 a solved save won below an unproven answer reloads with the beat-Mordie ending`() = webTest {
-        // TODO: 1. Seed a solved 5x5 save with Mordie data: found, N = 40, not proven shortest, the player's moves below 40.
-        // TODO: 2. Load it from the Load dialog.
-        // TODO: 3. The title is the beat_mordie ending, not `Are you a machine?`.
-        // TODO: 4. Shift off the board and solve it again.
-        // TODO: 5. board_solved has mordie_result=beat_mordie and mordie_proven_shortest=false.
+        val page = WebHarness(backgroundScope).seedSolved(40, provenShortest = false).startOn(five)
+
+        page.loadWon()
+        assertEquals("You beat me! 40 moves vs your 1. Mine may not have been the shortest.", page.state.mordie)
+        assertEquals(emptyList(), page.props("board_solved"))
     }
 
     @Test
     fun `WU1 a solved save with a proven answer still ends with Are you a machine`() = webTest {
-        // TODO: 1. Seed a solved 5x5 save with a proven N and the player's moves below it.
-        // TODO: 2. Load it.
-        // TODO: 3. The title is `Are you a machine?`.
-        // TODO: 4. After solving it again, board_solved has mordie_result=machine and mordie_proven_shortest=true.
+        val page = WebHarness(backgroundScope).seedSolved(12, provenShortest = true).startOn(five)
+
+        page.loadWon()
+        assertEquals("I made 12 moves and you made 1 move! Are you a machine?", page.state.mordie)
     }
 
     @Test
@@ -50,11 +74,25 @@ class WebKeptSolutionScenarioTest {
 
     @Test
     fun `WU1 and WU2 a solution-screen save of an unproven answer reopens the screen and starts no search`() = webTest {
-        // TODO: 1. Start a 5x5 game with an unproven answer, give up, and save on the solution screen.
-        // TODO: 2. Load that save.
-        // TODO: 3. The solution screen opens at the start of the replay.
-        // TODO: 4. Its Mordie line says how many moves Mordie made.
-        // TODO: 5. No new search is started.
-        // TODO: 6. Loading it and then solving it keeps mordie_proven_shortest=false.
+        // Row 0 one cell left of solved: 41 steps of "row 0 right once" solve it (41 mod 5 = 1).
+        val page = WebHarness(backgroundScope).startOn(IntArray(25) { if (it < 5) (it + 1) % 5 else it })
+        page.mordieSearches.latest.progress = fast(41)
+        repeat(5) { page.game.onArrow(Arrow.UP, 2) }
+        page.game.solution.onGiveUp()
+        page.game.solution.onGiveUpAnswered(true)
+        page.game.onSave()
+        page.game.onSaveAnswered("foo")
+        assertEquals(listOf("foo"), page.saves.listSaves())
+        val searches = page.mordieSearches.started.size
+
+        page.game.onLoad()
+        page.game.onLoadChosen("foo")
+
+        assertNotNull(page.state.solution)
+        assertEquals(searches, page.mordieSearches.started.size)
+        assertFalse(page.saves.load("foo")!!.mordie!!.provenShortest)
+        page.game.onSave()
+        page.game.onSaveAnswered("bar")
+        assertFalse(page.saves.load("bar")!!.mordie!!.provenShortest)
     }
 }

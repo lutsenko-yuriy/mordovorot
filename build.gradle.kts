@@ -4,7 +4,7 @@ plugins {
 }
 
 // GH-228: the root project only aggregates shared/ and web; it holds no code.
-version = "0.34.0"
+version = "0.34.1"
 
 // GH-137: the Kotlin/JS test runner's mocha 11 still locks serialize-javascript 6 and diff 7,
 // both with open advisories. Pin the patched majors until a Kotlin release bundles a mocha that

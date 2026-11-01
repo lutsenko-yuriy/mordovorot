@@ -41,6 +41,15 @@ class BrowserSaveRepositoryTest {
     }
 
     @Test
+    fun `load returns the unproven flag and R, GH-224`() {
+        val path = listOf(SavedMove(isRow = false, index = 0, amount = 1), SavedMove(isRow = false, index = 1, amount = 1))
+        val mordie = SavedMordie(intArrayOf(2, 3, 0, 1), moves = 2, found = true, solution = path, provenShortest = false, ruledOut = 0)
+        repo.save("u", intArrayOf(2, 3, 0, 1), 2, moveCount = 0, mordie = mordie)
+
+        assertEquals(SavedBoard(2, intArrayOf(2, 3, 0, 1), 0, mordie), repo.load("u"))
+    }
+
+    @Test
     fun `load returns the tile labels, GH-139`() {
         repo.save("l", intArrayOf(3, 0, 2, 1), 2, moveCount = 7, labels = "letter_pairs")
 

@@ -35,6 +35,9 @@ class Mordie(private val factory: MordieSearchFactory) {
     var provenShortest = false
         private set
 
+    /** The largest length the exact search had ruled out when the answer was last read (GH-224). */
+    private var ruledOut = 0
+
     /** Set by [giveUp]: the solution screen shows the answer as found, proven or not. */
     private var givenUp = false
 
@@ -80,8 +83,16 @@ class Mordie(private val factory: MordieSearchFactory) {
         if (!bound) sitOut(side)
     }
 
-    /** A save made while unsolved: Mordie had ruled out [moves], or found a [solution] that long. */
-    fun resume(original: IntArray, moves: Int, found: Boolean, solution: List<SolutionMove>? = null) {
+    /** A save made while unsolved: Mordie had ruled out [moves], or found a [solution] that long,
+     *  [provenShortest] unless the save says it may not be (then [ruledOut] is what was ruled out, GH-224). */
+    fun resume(
+        original: IntArray,
+        moves: Int,
+        found: Boolean,
+        solution: List<SolutionMove>? = null,
+        provenShortest: Boolean = true,
+        ruledOut: Int = 0,
+    ) {
         require(moves >= 0) { "Mordie's moves must not be negative" }
         bind(original)
         this.solution = solution
@@ -90,8 +101,9 @@ class Mordie(private val factory: MordieSearchFactory) {
         toldMoves = moves
         if (found) {
             revealedMoves = moves
-            announced = MordieLine.Found(moves)
-            provenShortest = true
+            this.provenShortest = provenShortest
+            this.ruledOut = ruledOut
+            announced = if (provenShortest) MordieLine.Found(moves) else MordieLine.FoundUnproven(moves)
         } else {
             opening = MordieLine.Resumed(moves)
             search = factory.start(this.original!!, moves)
@@ -99,12 +111,20 @@ class Mordie(private val factory: MordieSearchFactory) {
     }
 
     /** A save made after solving: the result is already decided, so nothing searches. */
-    fun restoreSolved(original: IntArray, moves: Int, found: Boolean, solution: List<SolutionMove>? = null) {
+    fun restoreSolved(
+        original: IntArray,
+        moves: Int,
+        found: Boolean,
+        solution: List<SolutionMove>? = null,
+        provenShortest: Boolean = true,
+        ruledOut: Int = 0,
+    ) {
         require(moves >= 0) { "Mordie's moves must not be negative" }
         bind(original)
         this.solution = solution
-        outcome = MordieOutcome(moves, found)
-        provenShortest = found
+        this.provenShortest = found && provenShortest
+        this.ruledOut = ruledOut
+        outcome = MordieOutcome(moves, found, this.provenShortest)
     }
 
     /** A game Mordie sits out, e.g. a solved save with no Mordie data. */
@@ -147,6 +167,7 @@ class Mordie(private val factory: MordieSearchFactory) {
         revealedMoves = progress.moves
         solution = progress.solution
         provenShortest = progress.provenShortest
+        ruledOut = progress.ruledOut
         announced = if (provenShortest) MordieLine.Found(progress.moves) else MordieLine.FoundUnproven(progress.moves)
         shiftsAtReveal = shifts
         playerMovesAtReveal = playerMoves
@@ -171,7 +192,10 @@ class Mordie(private val factory: MordieSearchFactory) {
         if (original == null) return null
         outcome?.let { return it }
         val progress = liveProgress()
-        progress?.takeIf { it.found }?.let { solution = it.solution }
+        progress?.takeIf { it.found }?.let {
+            solution = it.solution
+            ruledOut = it.ruledOut
+        }
         return live(progress).also {
             provenShortest = it.provenShortest
             outcome = it
@@ -195,16 +219,23 @@ class Mordie(private val factory: MordieSearchFactory) {
     /** What a save should store; `null` when Mordie sits this game out. */
     fun snapshot(): MordieSnapshot? {
         val original = original ?: return null
-        outcome?.let { return MordieSnapshot(original.copyOf(), it.moves, it.found, solution) }
+        outcome?.let { return snapshotOf(original, it, solution, ruledOut) }
         val progress = liveProgress()
         val state = live(progress)
         // An answer not proven shortest is saved as searching (until saves keep it, GH-224), so
         // the loaded game searches again; a solution screen's save keeps what it shows.
-        if (state.found && !state.provenShortest && !givenUp) {
+        if (state.found && !state.provenShortest && !givenUp && search != null) {
             return MordieSnapshot(original.copyOf(), progress!!.ruledOut.coerceAtLeast(0), found = false, solution = null)
         }
         val best = progress?.takeIf { it.found }?.solution ?: solution
-        return MordieSnapshot(original.copyOf(), state.moves, state.found, best)
+        return snapshotOf(original, state, best, maxOf(ruledOut, progress?.ruledOut ?: 0))
+    }
+
+    private fun snapshotOf(original: IntArray, state: MordieOutcome, solution: List<SolutionMove>?, ruledOut: Int): MordieSnapshot {
+        // One move is always the shortest, and the save format has no R below 0 for it (GH-224).
+        val unproven = state.found && !state.provenShortest && state.moves >= 2
+        val kept = if (unproven) ruledOut.coerceIn(0, state.moves - 2) else 0
+        return MordieSnapshot(original.copyOf(), state.moves, state.found, solution, provenShortest = !unproven, ruledOut = kept)
     }
 
     /** Cancels the search; everything else is kept. */
@@ -225,6 +256,7 @@ class Mordie(private val factory: MordieSearchFactory) {
         toldMoves = 0
         progressWindowShown = false
         provenShortest = false
+        ruledOut = 0
         givenUp = false
         outcome = null
         solution = null
@@ -243,6 +275,7 @@ class Mordie(private val factory: MordieSearchFactory) {
         revealedMoves = progress.moves
         solution = progress.solution
         provenShortest = progress.provenShortest
+        ruledOut = progress.ruledOut
     }
 
     /** The search's current state - not just the last check's - from [progress] read by [liveProgress]. */

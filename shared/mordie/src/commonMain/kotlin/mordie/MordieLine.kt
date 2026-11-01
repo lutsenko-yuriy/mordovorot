@@ -51,5 +51,13 @@ data class MordieOutcome(val moves: Int, val found: Boolean, val provenShortest:
 
 enum class MordieResult { PLAYER_WON, MATCHED, MORDIE_WON, BEAT_MORDIE, MACHINE }
 
-/** What a save stores about Mordie; [solution] is its path when known (GH-126). */
-class MordieSnapshot(val original: IntArray, val moves: Int, val found: Boolean, val solution: List<SolutionMove>?)
+/** What a save stores about Mordie; [solution] is its path when known (GH-126). A found answer that
+ *  is not [provenShortest] also has [ruledOut], the largest length the exact search had ruled out (GH-224). */
+class MordieSnapshot(
+    val original: IntArray,
+    val moves: Int,
+    val found: Boolean,
+    val solution: List<SolutionMove>?,
+    val provenShortest: Boolean = true,
+    val ruledOut: Int = 0,
+)

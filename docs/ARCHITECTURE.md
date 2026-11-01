@@ -49,7 +49,8 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       ├── SavedBoard.kt              # Data carrier: square side + tile arrangement (+ optional
 │       │                                # SavedMordie, GH-83, and the labels' wire name, GH-139)
 │       ├── SavedMordie.kt             # Original arrangement + Mordie's N + found flag (GH-83);
-│       │                                # Mordie's solution and the solution-screen flag (GH-126)
+│       │                                # Mordie's solution and the solution-screen flag (GH-126),
+│       │                                # whether the answer is proven shortest and R (GH-224)
 │       └── SavedMove.kt               # One step of that solution; mirrors mordie.SolutionMove (GH-126)
 ├── mordie/              # :shared:mordie (depends on kotlinx-coroutines-core)
 │   └── mordie/              # GH-83: the computer opponent - pure domain, no project imports
@@ -398,7 +399,7 @@ Web Worker (GH-218): `SearchProtocol` carries the start and the progress between
 `WorkerMordieSearch` and the worker, so the page's timers aren't delayed and a hidden tab keeps
 searching. `Mordie` turns the player's
 shifts into the line state: a check every 5 shifts, a reveal of "found", and the outcome
-frozen on solve, using Mordie's live state at that shift. Its `MordieSnapshot` mirrors
+frozen on solve, using Mordie's live state at that shift. Its `MordieSnapshot` (with the proven flag and R, GH-224) mirrors
 `storage.SavedMordie` on purpose, so `mordie` never imports `storage`; `MordieHooks` maps
 between the two. The page builds one `Mordie` per session. `GameViewModelImpl` reaches it through `MordieHooks`, which
 `buildGameViewModel` builds so it tracks through the decorated analytics.
@@ -501,6 +502,10 @@ GH-139 adds line 8, the tile labels' wire name, which every new save writes; lin
 where they don't apply, which older builds already read as "nothing there". A missing or blank
 line 8 means no labels, and any other word is kept, so a name this build doesn't know loads with
 the preference rather than as a corrupted save.
+GH-224 adds line 9, `unproven <R>`, written only for a found answer not proven shortest, R being the
+largest length the exact search had ruled out (0 to N-2). A missing line, or a first word this build
+doesn't know, reads as proven; `unproven` on a searching save or with R out of range is a
+`SaveFileFormatException`. Old builds stop at line 8 and read such a save as proven.
 
 ### analytics
 Cross-cutting: `AnalyticsService` is injected into `viewmodel` (and any layer

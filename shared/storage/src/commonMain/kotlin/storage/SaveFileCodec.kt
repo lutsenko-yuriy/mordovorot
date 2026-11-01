@@ -2,13 +2,13 @@ package storage
 
 /** The save text format, kept in the browser's storage (GH-110):
  *  square side, then the values, then the move count, then optional Mordie data, then optional
- *  tile labels on line 8 (GH-139), one per line. */
+ *  tile labels on line 8 (GH-139), then `unproven <R>` on line 9 (GH-224), one per line. */
 object SaveFileCodec {
 
     private const val FOUND = "found"
     private const val SEARCHING = "searching"
     private const val SOLUTION_SCREEN = "solution"
-    private const val MORDIE_LINES = 4
+    private const val UNPROVEN = "unproven"
     private val MOVE_TOKEN = Regex("([rc])(\\d+):(\\d+)")
 
     /** Throws [IllegalArgumentException] for a state, move count, Mordie data or labels [SaveRepository.save] rejects. */
@@ -22,24 +22,37 @@ object SaveFileCodec {
             require(mordie.moves >= 0) { "Mordie's moves must not be negative" }
             mordie.solution?.let { solution -> solutionProblem(solution, mordie, squareSide)?.let { throw IllegalArgumentException(it) } }
             require(!mordie.solutionScreen || !mordie.solution.isNullOrEmpty()) { "A solution-screen save needs Mordie's solution" }
+            require(mordie.provenShortest || ruledOutProblem(mordie.found, mordie.moves, mordie.ruledOut) == null) {
+                "An unproven answer needs a found save and a ruled out length of 0 to N-2"
+            }
         }
         require(labels == null || (labels.isNotEmpty() && labels.none { it.isWhitespace() })) { "Labels must be one word" }
-        val optional = mordie?.let(::mordieLines).orEmpty()
-        // Lines 4-7 are blank where they don't apply, so the labels always land on line 8.
-        val tail = if (labels == null) optional else optional + List(MORDIE_LINES - optional.size) { "" } + labels
-        return (listOf("$squareSide", state.joinToString(" "), "$moveCount") + tail).joinToString("") { "$it\n" }
+        // Lines 4-7 are blank where they don't apply, so the labels always land on line 8 and line 9 after it.
+        val lines = (mordie?.let(::mordieLines) ?: List(4) { "" }) + listOf(labels.orEmpty(), unprovenLine(mordie))
+        return (listOf("$squareSide", state.joinToString(" "), "$moveCount") + lines.dropLastWhile { it.isEmpty() })
+            .joinToString("") { "$it\n" }
     }
 
     /** Lines 4-7; an empty solution is written as none, so line 6 is never blank before line 7. */
     private fun mordieLines(mordie: SavedMordie): List<String> {
         val solution = mordie.solution?.takeIf { it.isNotEmpty() }
             ?.joinToString(" ") { "${if (it.isRow) 'r' else 'c'}${it.index}:${it.amount}" }
-        return listOfNotNull(
+        return listOf(
             mordie.original.joinToString(" "),
             "${mordie.moves} ${if (mordie.found) FOUND else SEARCHING}",
-            solution,
-            SOLUTION_SCREEN.takeIf { mordie.solutionScreen },
+            solution.orEmpty(),
+            SOLUTION_SCREEN.takeIf { mordie.solutionScreen }.orEmpty(),
         )
+    }
+
+    private fun unprovenLine(mordie: SavedMordie?) =
+        if (mordie != null && mordie.found && !mordie.provenShortest) "$UNPROVEN ${mordie.ruledOut}" else ""
+
+    /** Why [ruledOut] can't go with an unproven answer of [moves], or `null` when it can. */
+    private fun ruledOutProblem(found: Boolean, moves: Int, ruledOut: Int): String? = when {
+        !found -> "Mordie's unproven answer on a save where it is still searching"
+        ruledOut !in 0..moves - 2 -> "Mordie's ruled out length must be 0 to ${moves - 2}"
+        else -> null
     }
 
     /** Throws [SaveFileFormatException], naming the save [name], when [text] isn't a valid save. */
@@ -91,7 +104,18 @@ object SaveFileCodec {
         if (screenLine != null && (solution == null || screenLine.trim() != SOLUTION_SCREEN)) {
             throw SaveFileFormatException(name, "line 7 must be '$SOLUTION_SCREEN', after Mordie's solution")
         }
-        return SavedMordie(original, moves, found, solution, solutionScreen = screenLine != null)
+        val ruledOut = parseUnproven(name, lines.getOrNull(8), found, moves)
+        return SavedMordie(original, moves, found, solution, solutionScreen = screenLine != null, provenShortest = ruledOut == null, ruledOut = ruledOut ?: 0)
+    }
+
+    /** Line 9 (GH-224): `unproven <R>`, R the largest length ruled out; `null` when the answer is proven.
+     *  Another first word is ignored, so a later build's data loads with a proven answer. */
+    private fun parseUnproven(name: String, line: String?, found: Boolean, moves: Int): Int? {
+        val words = line?.trim()?.split(Regex("\\s+"))?.takeIf { it.first() == UNPROVEN } ?: return null
+        val ruledOut = words.getOrNull(1)?.toIntOrNull()
+        if (words.size != 2 || ruledOut == null) throw SaveFileFormatException(name, "line 9 must be '$UNPROVEN <N>'")
+        ruledOutProblem(found, moves, ruledOut)?.let { throw SaveFileFormatException(name, it) }
+        return ruledOut
     }
 
     /** Line 6: space-separated `r<i>:<k>` / `c<i>:<k>` - rotate row i right, or column i down, k cells. */
