@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.32.0] — 2026-11-01 (PR #226 merged)
+
+### Changed
+- [user] (PR #226) GH-222: Mordie now runs a fast search alongside the exact search and keeps the best solution found so far. Give Up is available from the first check on every board size, 5x5 included. Mordie lowers its move count when the exact search finds a shorter solution. A solution not yet proven shortest is saved as still searching. Until GH-223, some wording may name a fast, longer move count.
+- [non-user] (PR #226) GH-222: BestSolutionSolver keeps the best of the fast solver and the exact search; `giveUp` freezes the best answer; analytics events carry a proven flag (see the GH-222 note in `docs/ANALYTICS_EVENTS.md`).
+
 ## [0.31.0] — 2026-11-01 (PR #221 merged)
 
 ### Changed
