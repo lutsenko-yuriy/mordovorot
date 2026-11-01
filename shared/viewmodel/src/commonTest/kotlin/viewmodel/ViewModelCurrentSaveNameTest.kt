@@ -1,11 +1,10 @@
 package viewmodel
 
 import board_model.BoardImpl
-import java.io.IOException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import storage.SaveFileFormatException
 import storage.SavedBoard
 import testing.FakeSaveRepository
@@ -35,7 +34,7 @@ class ViewModelCurrentSaveNameTest {
     }
 
     @Test
-    fun `a successful load sets the current save name`(): Unit = runBlocking {
+    fun `a successful load sets the current save name`() = runTest {
         val viewModel = testViewModel(BoardImpl(3), saves())
 
         FakeViewModelUi().drive(viewModel) { viewModel.loadGame("foo") }
@@ -44,7 +43,7 @@ class ViewModelCurrentSaveNameTest {
     }
 
     @Test
-    fun `a startup restore sets the current save name`(): Unit = runBlocking {
+    fun `a startup restore sets the current save name`() = runTest {
         val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(3, intArrayOf(1, 2, 0, 3, 4, 5, 6, 7, 8), 0)))
         val viewModel = testViewModel(BoardImpl(3), saves)
 
@@ -54,7 +53,7 @@ class ViewModelCurrentSaveNameTest {
     }
 
     @Test
-    fun `a missing or corrupted load leaves the current save name`(): Unit = runBlocking {
+    fun `a missing or corrupted load leaves the current save name`() = runTest {
         val saves = saves()
         val viewModel = testViewModel(BoardImpl(3), saves)
         val ui = FakeViewModelUi()
@@ -70,7 +69,7 @@ class ViewModelCurrentSaveNameTest {
     }
 
     @Test
-    fun `a successful save sets the current save name`(): Unit = runBlocking {
+    fun `a successful save sets the current save name`() = runTest {
         val viewModel = testViewModel(BoardImpl(3), saves())
 
         FakeViewModelUi().drive(viewModel) {
@@ -82,13 +81,13 @@ class ViewModelCurrentSaveNameTest {
     }
 
     @Test
-    fun `a failed save leaves the current save name`(): Unit = runBlocking {
+    fun `a failed save leaves the current save name`() = runTest {
         val saves = saves()
         val viewModel = testViewModel(BoardImpl(3), saves)
 
         FakeViewModelUi().drive(viewModel) {
             viewModel.loadGame("foo")
-            saves.saveException = IOException("read-only")
+            saves.saveException = Exception("read-only")
             viewModel.saveGame("bar")
         }
 
@@ -96,7 +95,7 @@ class ViewModelCurrentSaveNameTest {
     }
 
     @Test
-    fun `a new game clears the current save name`(): Unit = runBlocking {
+    fun `a new game clears the current save name`() = runTest {
         val viewModel = testViewModel(BoardImpl(3), saves())
 
         FakeViewModelUi().drive(viewModel) { viewModel.loadGame("foo") }
@@ -106,7 +105,7 @@ class ViewModelCurrentSaveNameTest {
     }
 
     @Test
-    fun `an out-of-range new game leaves the current save name`(): Unit = runBlocking {
+    fun `an out-of-range new game leaves the current save name`() = runTest {
         val viewModel = testViewModel(BoardImpl(3), saves())
 
         FakeViewModelUi().drive(viewModel) { viewModel.loadGame("foo") }
@@ -116,8 +115,8 @@ class ViewModelCurrentSaveNameTest {
     }
 
     @Test
-    fun `repair and load sets the current save name, even when the overwrite fails`(): Unit = runBlocking {
-        val saves = saves().apply { saveException = IOException("read-only") }
+    fun `repair and load sets the current save name, even when the overwrite fails`() = runTest {
+        val saves = saves().apply { saveException = Exception("read-only") }
         val viewModel = testViewModel(BoardImpl(4), saves)
 
         FakeViewModelUi(resolveUnsolvableSaveResponses = mutableListOf(UnsolvableSaveChoice.REPAIR))
@@ -127,7 +126,7 @@ class ViewModelCurrentSaveNameTest {
     }
 
     @Test
-    fun `new game from the unsolvable dialog clears the current save name`(): Unit = runBlocking {
+    fun `new game from the unsolvable dialog clears the current save name`() = runTest {
         val viewModel = testViewModel(BoardImpl(4), saves())
 
         FakeViewModelUi(
@@ -142,7 +141,7 @@ class ViewModelCurrentSaveNameTest {
     }
 
     @Test
-    fun `name_source is typed with no current save name`(): Unit = runBlocking {
+    fun `name_source is typed with no current save name`() = runTest {
         val analytics = RecordingAnalyticsService()
         val viewModel = testViewModel(BoardImpl(3), saves(), analytics)
 
@@ -152,7 +151,7 @@ class ViewModelCurrentSaveNameTest {
     }
 
     @Test
-    fun `name_source is prefill for the current name and edited for another one`(): Unit = runBlocking {
+    fun `name_source is prefill for the current name and edited for another one`() = runTest {
         val analytics = RecordingAnalyticsService()
         val viewModel = testViewModel(BoardImpl(3), saves(), analytics)
 
@@ -166,14 +165,14 @@ class ViewModelCurrentSaveNameTest {
     }
 
     @Test
-    fun `name_source is sent on a failed save too`(): Unit = runBlocking {
+    fun `name_source is sent on a failed save too`() = runTest {
         val saves = saves()
         val analytics = RecordingAnalyticsService()
         val viewModel = testViewModel(BoardImpl(3), saves, analytics)
 
         FakeViewModelUi().drive(viewModel) {
             viewModel.loadGame("foo")
-            saves.saveException = IOException("read-only")
+            saves.saveException = Exception("read-only")
             viewModel.saveGame("foo")
         }
 
