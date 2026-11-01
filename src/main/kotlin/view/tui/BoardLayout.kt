@@ -1,5 +1,6 @@
 package view.tui
 
+import mordie.MordieLine
 import viewmodel.GiveUpButton
 import viewmodel.MordieText
 import viewmodel.SolutionState
@@ -55,7 +56,7 @@ class BoardLayout(
     /** On a board Mordie sits out (GH-160), its one line: it runs to its own width, so it takes a
      *  single row and 6x6 fits 24 rows. */
     private val sitsOutLine = MordieText.sitsOutLine(squareSide)?.let { "Mordie: $it" }
-    private val longestMordieLine = sitsOutLine ?: LONGEST_MORDIE_LINE
+    private val longestMordieLines = sitsOutLine?.let(::listOf) ?: LONGEST_MORDIE_LINES
 
     /** The Mordie line's wrap width (GH-83): about as wide as the board and toolbar, never the
      *  full terminal. */
@@ -65,9 +66,9 @@ class BoardLayout(
             terminalSize.columns - 2,
         ).coerceAtLeast(1)
 
-    /** Rows reserved for the Mordie line: the wrapped height of the longest line it can say. Fixed
+    /** Rows reserved for the Mordie line: the wrapped height of the tallest line it can say. Fixed
      *  per layout, not per text, so the board doesn't jump as the line comes and goes. */
-    internal val mordieRows = wordWrap(longestMordieLine, mordieWrapWidth).size
+    internal val mordieRows = longestMordieLines.maxOf { wordWrap(it, mordieWrapWidth).size }
 
     private val topExtra = TOP_EXTRA + mordieRows
     private val fullHeight = topExtra + innerRows + BOTTOM_EXTRA
@@ -228,8 +229,11 @@ class BoardLayout(
         /** Title row, moves row, a blank row, the up-arrows row - plus [mordieRows]. */
         const val TOP_EXTRA = 4
 
-        /** The longest line Mordie says, at a 2-digit move count (GH-83). */
-        const val LONGEST_MORDIE_LINE = "Mordie: This one is hard! I have already made 99 moves and have not solved it yet!"
+        /** The lines that can wrap tallest, at a 2-digit move count (GH-83): which one does depends
+         *  on the wrap width, the progress line being longer but the unproven one wrapping worse
+         *  at some widths (GH-223). */
+        private val LONGEST_MORDIE_LINES = listOf(MordieLine.Progress(99, hard = true), MordieLine.FoundUnproven(99))
+            .map { "Mordie: ${MordieText.line(it)}" }
 
         /** The down-arrows row, the Give Up row, the toolbar row. */
         const val BOTTOM_EXTRA = 3
