@@ -449,3 +449,12 @@ No new events, screen views or properties. Two existing events become more accur
 - `game_given_up.solution_length` and `solution_proven_shortest`: Give Up right after loading a save reports the solution the save kept, not a fresh search's.
 
 `mordie_solution_found` still never fires for a loaded game, which found its solution in an earlier session. The gap is wider now: the fast solver answers within moments, so a game saved before its first check is stored as an unproven found answer, and loading it shows that answer at once.
+
+## GH-225 (Mordie plays 6x6 to 9x9)
+
+No new events, screen views or properties. Mordie no longer sits out 6x6 to 9x9, so the "sits out" statements in the GH-160 and GH-207 notes above no longer hold, and the events below fire on those sizes as on smaller ones:
+- `mordie_solution_found`, `mordie_shorter_found`, `game_given_up` and the `solution_replay_*` events.
+- `screen_give_up_dialog` and `screen_solution`.
+- `board_solved` carries `mordie_result`, `mordie_moves` and `mordie_proven_shortest`.
+
+Their `board_size` now runs 3-9 (the `3-5` in the tables above predates GH-160 and GH-207).
