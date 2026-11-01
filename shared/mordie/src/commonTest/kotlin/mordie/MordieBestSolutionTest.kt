@@ -143,16 +143,18 @@ class MordieBestSolutionTest {
     }
 
     @Test
-    fun `an unproven snapshot is stored as searching at the ruled out length`() {
+    fun `an unproven snapshot is stored as found, unproven, with the ruled out length`() {
         start()
         factory.latest.progress = fast(8, ruledOut = 5)
         shifts(5)
 
         val snapshot = mordie.snapshot()!!
 
-        assertFalse(snapshot.found)
-        assertEquals(5, snapshot.moves)
-        assertNull(snapshot.solution)
+        assertTrue(snapshot.found)
+        assertEquals(8, snapshot.moves)
+        assertFalse(snapshot.provenShortest)
+        assertEquals(5, snapshot.ruledOut)
+        assertEquals(fast(8, ruledOut = 5).solution, snapshot.solution)
     }
 
     @Test

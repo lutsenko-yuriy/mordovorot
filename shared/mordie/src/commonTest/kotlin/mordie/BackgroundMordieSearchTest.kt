@@ -115,4 +115,18 @@ class BackgroundMordieSearchTest {
         assertEquals(SearchProgress(moves = 4, found = false, elapsedMs = 0, solution = null), search.progress())
         search.cancel()
     }
+
+    @Test
+    fun `a seeded search is found from its first snapshot`() {
+        val kept = List(30) { SolutionMove(isRow = true, index = 0, amount = 1) }
+        val search = BackgroundMordieSearch.Factory().start(hard, ruledOut = 9, best = kept)
+
+        val progress = search.progress()
+
+        assertTrue(progress.found)
+        assertEquals(30, progress.moves)
+        assertEquals(kept, progress.solution)
+        assertFalse(progress.provenShortest)
+        search.cancel()
+    }
 }

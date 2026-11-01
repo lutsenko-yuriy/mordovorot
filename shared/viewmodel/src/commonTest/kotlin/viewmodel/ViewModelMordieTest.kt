@@ -306,7 +306,7 @@ class ViewModelMordieTest {
 
     @Test
     fun `a real solver's solution passes the save codec's check, GH-126`() = runTest {
-        val solving = MordieSearchFactory { original, _ ->
+        val solving = MordieSearchFactory { original, _, _ ->
             val solver = IdaStarSolver(original).also { while (!it.step(10_000)) { } }
             val progress = SearchProgress(solver.solutionLength!!, found = true, elapsedMs = 0, solver.solution())
             object : MordieSearch {

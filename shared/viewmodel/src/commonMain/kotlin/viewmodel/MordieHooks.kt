@@ -28,7 +28,7 @@ internal class MordieHooks(
     fun onLoaded(data: SavedMordie?) {
         when {
             tooBig() -> if (board.isCorrect()) mordie.clear() else mordie.sitOut(board.squareSide)
-            data != null && data.solutionScreen -> mordie.resume(data.original, data.moves, found = true, data.solutionMoves(), data.provenShortest, data.ruledOut)
+            data != null && data.solutionScreen -> mordie.resume(data.original, data.moves, found = true, data.solutionMoves(), data.provenShortest, data.ruledOut, solutionScreen = true)
             board.isCorrect() ->
                 if (data == null) mordie.clear() else mordie.restoreSolved(data.original, data.moves, data.found, data.solutionMoves(), data.provenShortest, data.ruledOut)
             data != null && (data.found || Solvability.isSolvable(data.original)) ->

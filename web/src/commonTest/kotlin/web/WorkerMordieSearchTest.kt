@@ -23,9 +23,9 @@ class WorkerMordieSearchTest {
 
     private val original = intArrayOf(2, 0, 8, 3, 4, 1, 6, 7, 5)
 
-    private fun start(ruledOut: Int = -1): Pair<FakePort, WorkerMordieSearch> {
+    private fun start(ruledOut: Int = -1, best: List<SolutionMove>? = null): Pair<FakePort, WorkerMordieSearch> {
         val port = FakePort()
-        return port to WorkerMordieSearch.Factory { port }.start(original, ruledOut) as WorkerMordieSearch
+        return port to WorkerMordieSearch.Factory { port }.start(original, ruledOut, best) as WorkerMordieSearch
     }
 
     @Test
@@ -35,6 +35,22 @@ class WorkerMordieSearchTest {
         val sent = SearchProtocol.decodeStart(port.sent.single())
         assertContentEquals(original, sent.original)
         assertEquals(5, sent.ruledOut)
+    }
+
+    @Test
+    fun `start sends the kept solution`() {
+        val kept = listOf(SolutionMove(isRow = true, index = 1, amount = 2))
+        val (port, _) = start(ruledOut = 0, best = kept)
+
+        assertEquals(kept, SearchProtocol.decodeStart(port.sent.single()).best)
+    }
+
+    @Test
+    fun `a search started with a kept solution is found until the worker reports`() {
+        val kept = listOf(SolutionMove(isRow = true, index = 1, amount = 2))
+        val (_, search) = start(ruledOut = 0, best = kept)
+
+        assertEquals(SearchProgress(1, found = true, elapsedMs = 0, solution = kept, ruledOut = 0, provenShortest = false), search.progress())
     }
 
     @Test

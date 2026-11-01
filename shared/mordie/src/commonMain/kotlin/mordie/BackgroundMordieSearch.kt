@@ -19,12 +19,13 @@ import kotlin.time.TimeSource
 class BackgroundMordieSearch(
     original: IntArray,
     ruledOut: Int,
+    best: List<SolutionMove>? = null,
     /** Called with each published snapshot, from the search's thread: the Web Worker forwards them (GH-218). */
     private val onSnapshot: (SearchProgress) -> Unit = {},
 ) : MordieSearch {
 
     private val started = TimeSource.Monotonic.markNow()
-    private val solver = BestSolutionSolver(original, ruledOut)
+    private val solver = BestSolutionSolver(original, ruledOut, best)
 
     /** The time of the first solution, which the elapsed time then stops at. */
     private var firstSolutionMs: Long? = null
@@ -65,7 +66,8 @@ class BackgroundMordieSearch(
 
     /** The production [MordieSearchFactory]. */
     class Factory : MordieSearchFactory {
-        override fun start(original: IntArray, ruledOut: Int): MordieSearch = BackgroundMordieSearch(original, ruledOut)
+        override fun start(original: IntArray, ruledOut: Int, best: List<SolutionMove>?): MordieSearch =
+            BackgroundMordieSearch(original, ruledOut, best)
     }
 
     private companion object {
