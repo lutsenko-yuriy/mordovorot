@@ -441,3 +441,11 @@ true minimum. Nothing new is tracked on screens.
 No new events or screen views. The web client is the only client, and mobile apps are planned, so `platform` stays on every event and screen view (always `web` for now; its `terminal` value is retired, and a mobile app would add its own).
 
 Retired — GH-228, each marked where it is catalogued above and kept as history: the events `app_launch_aborted` and `exit_command_used`, the screen view `screen_exit_dialog`, the values `screen_save_dialog.opened_from=exit_flow`, `startup_restore_decision.decision=quit`, `unsolvable_save_resolved.choice=exit`, `dialog_cancelled.dialog=exit` and `platform=terminal`, and the `app_launched` properties `board_size` and `console_flag_ignored`. `dialog_cancelled.via` and `board_solved.shift_input` were absent on `terminal`; they are always sent now. The web still fires `input_mode_switched` and the `opened_from=startup` values, so those stay.
+
+## GH-224 (saves keep Mordie's best solution)
+
+No new events, screen views or properties. Two existing events become more accurate after a load:
+- `board_solved.mordie_proven_shortest` and `mordie_result`: a solved save now keeps whether Mordie's answer was proven shortest, so reloading a game won below an unproven N reports `beat_mordie` again instead of `machine`.
+- `game_given_up.solution_length` and `solution_proven_shortest`: Give Up right after loading a save reports the solution the save kept, not a fresh search's.
+
+`mordie_solution_found` still never fires for a loaded game, which found its solution in an earlier session.

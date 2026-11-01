@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.34.0] — 2026-11-01 (PR #233 merged)
+
+### Changed
+- [test] (PR #233) GH-224 (WU0): scenario stubs for saves keeping Mordie's best solution, plus the analytics notes for the ticket.
+
 ## [0.34.0] — 2026-11-01 (PR #232 merged)
 
 ### Changed
