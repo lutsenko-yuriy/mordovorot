@@ -55,8 +55,12 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       ├── MoveMetricHeuristic.kt   # Admissible lower bound in the GH-62 move metric:
 │       │                              # ceil(wrong-row tiles/n) + ceil(wrong-column tiles/n)
 │       ├── IdaStarSolver.kt         # Steppable IDA* (explicit stack, O(depth) memory): ruledOut,
-│       │                              # solutionLength and its SolutionMoves (GH-126); can resume
+│       │                              # solutionLength and its solution (GH-126); can resume
 │       │                              # above a saved N
+│       ├── SolutionMove.kt          # One move of a solution (row/column, index, amount), shared by
+│       │                              # both solvers (GH-213)
+│       ├── ThreeCycleSolver.kt      # Fast, non-minimal solver (GH-213): places tiles one per step
+│       │                              # with row/column commutator 3-cycles; not yet used by Mordie
 │       ├── MordieSearch.kt          # MordieSearch / SearchProgress / MordieSearchFactory (+ NONE) -
 │       │                              # the seam tests replace with FakeMordieSearchFactory
 │       ├── BackgroundMordieSearch.kt # The real search: one throttled coroutine on
