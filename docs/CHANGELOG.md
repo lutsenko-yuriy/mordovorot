@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.33.1] — 2026-11-01 (PR #229 merged)
+
+### Changed
+- [wip] (PR #229) GH-228 (WU1/4): the shared viewModel tests (save/load, startup restore, current save name, queries, unsolvable load, message ordering) move from the terminal app's tests into shared/viewmodel, so the terminal can be removed in WU2 without losing coverage. No app change.
+
 ## [0.33.0] — 2026-11-01 (PR #227 merged)
 
 ### Changed

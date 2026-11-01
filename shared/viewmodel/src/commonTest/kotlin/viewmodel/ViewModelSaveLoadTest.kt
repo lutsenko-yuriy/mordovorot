@@ -4,14 +4,14 @@ import board_model.BoardImpl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import storage.SaveFileFormatException
 import testing.FakeSaveRepository
 import testing.FakeViewModelUi
 import testing.RecordingAnalyticsService
 import testing.testViewModel
 
-/** Covers [ViewModelImpl.saveGame]/[ViewModelImpl.loadGame] (originally GH-6's `save`/`load`
+/** Covers [GameViewModelImpl.saveGame]/[GameViewModelImpl.loadGame] (originally GH-6's `save`/`load`
  *  commands, WU3), shared identically by both UIs (split GH-23). Driven via [FakeViewModelUi.drive]
  *  (GH-42 WU2) - both methods always call `showMessage`, which suspends on [UiRequestChannel.ask],
  *  so every test here needs something draining [ViewModel.uiRequests] concurrently, not just the
@@ -19,7 +19,7 @@ import testing.testViewModel
 class ViewModelSaveLoadTest {
 
     @Test
-    fun `saveGame creates a new file when none exists`(): Unit = runBlocking {
+    fun `saveGame creates a new file when none exists`() = runTest {
         val saves = FakeSaveRepository()
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(3).apply { restoreState(intArrayOf(1, 0, 2, 3, 4, 5, 6, 7, 8)) }
@@ -45,7 +45,7 @@ class ViewModelSaveLoadTest {
     }
 
     @Test
-    fun `saveGame overwrites an existing file`(): Unit = runBlocking {
+    fun `saveGame overwrites an existing file`() = runTest {
         val saves = FakeSaveRepository()
         saves.save("foo", intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8), 3)
         val analytics = RecordingAnalyticsService()
@@ -68,7 +68,7 @@ class ViewModelSaveLoadTest {
     }
 
     @Test
-    fun `saveGame surfaces a message and tracks result=error instead of crashing when the repository throws`(): Unit = runBlocking {
+    fun `saveGame surfaces a message and tracks result=error instead of crashing when the repository throws`() = runTest {
         val saves = FakeSaveRepository().apply { saveException = IllegalArgumentException("Save name must not be blank") }
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }
@@ -85,7 +85,7 @@ class ViewModelSaveLoadTest {
     }
 
     @Test
-    fun `loadGame restores the board on a known save name`(): Unit = runBlocking {
+    fun `loadGame restores the board on a known save name`() = runTest {
         val saves = FakeSaveRepository()
         saves.save("foo", intArrayOf(8, 7, 6, 5, 4, 3, 2, 1, 0), 3)
         val analytics = RecordingAnalyticsService()
@@ -105,7 +105,7 @@ class ViewModelSaveLoadTest {
     }
 
     @Test
-    fun `loadGame leaves the board unchanged on an unknown save name`(): Unit = runBlocking {
+    fun `loadGame leaves the board unchanged on an unknown save name`() = runTest {
         val saves = FakeSaveRepository()
         saves.save("bar", intArrayOf(8, 7, 6, 5, 4, 3, 2, 1, 0), 3)
         val analytics = RecordingAnalyticsService()
@@ -125,7 +125,7 @@ class ViewModelSaveLoadTest {
     }
 
     @Test
-    fun `loadGame with no saves at all still messages cleanly`(): Unit = runBlocking {
+    fun `loadGame with no saves at all still messages cleanly`() = runTest {
         val saves = FakeSaveRepository()
         val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }
         val viewModel = testViewModel(board, saves, RecordingAnalyticsService())
@@ -137,7 +137,7 @@ class ViewModelSaveLoadTest {
     }
 
     @Test
-    fun `loadGame resizes the board to match a save whose size differs, instead of rejecting it`(): Unit = runBlocking {
+    fun `loadGame resizes the board to match a save whose size differs, instead of rejecting it`() = runTest {
         val saves = FakeSaveRepository()
         saves.save("small", intArrayOf(3, 2, 1, 0, 7, 6, 5, 4, 8), 3)
         val analytics = RecordingAnalyticsService()
@@ -157,13 +157,13 @@ class ViewModelSaveLoadTest {
     }
 
     @Test
-    fun `loadGame still reports not_found, with a degraded message, when listing available saves fails`(): Unit = runBlocking {
+    fun `loadGame still reports not_found, with a degraded message, when listing available saves fails`() = runTest {
         // Regression guard: the not_found branch's availableSavesMessage() call can throw
         // (e.g. an unreadable saves/ directory) independently of saves.load() itself - that
         // shouldn't turn an actual not_found result into a spurious second "error" event
         // (audit on PR #13).
         val saves = FakeSaveRepository().apply {
-            listSavesException = java.io.IOException("permission denied")
+            listSavesException = Exception("permission denied")
         }
         val analytics = RecordingAnalyticsService()
         val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }
@@ -181,7 +181,7 @@ class ViewModelSaveLoadTest {
     }
 
     @Test
-    fun `loadGame surfaces a message and tracks result=error instead of crashing on a corrupted save file`(): Unit = runBlocking {
+    fun `loadGame surfaces a message and tracks result=error instead of crashing on a corrupted save file`() = runTest {
         val saves = FakeSaveRepository().apply {
             loadException = SaveFileFormatException("corrupt", "missing board values")
         }

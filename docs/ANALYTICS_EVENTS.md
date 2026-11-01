@@ -435,3 +435,9 @@ true minimum. Nothing new is tracked on screens.
   proven shortest (the `You beat me! … Mine may not have been the shortest.` ending). `machine`
   now means only moves below a proven-shortest N, which only an inconsistent save can produce, so
   it marks a likely cheat.
+
+## GH-228 (the terminal client is dropped)
+
+No new events or screen views. The web client is the only client, and mobile apps are planned, so `platform` stays on every event and screen view (always `web` for now; its `terminal` value is retired, and a mobile app would add its own).
+
+Retired, kept here as history: `app_launch_aborted`, `screen_exit_dialog`, `exit_command_used`, the terminal-only values `opened_from=exit_flow`, `decision=quit`, `choice=exit`, `dialog_cancelled.dialog=exit` and `platform=terminal`, and the terminal-only `app_launched` properties `board_size` and `console_flag_ignored`. The web still fires `input_mode_switched` and the `opened_from=startup` values, so those stay. WU4 marks each retired entry "Retired — GH-228" and trims the "terminal"/"TUI" wording.
