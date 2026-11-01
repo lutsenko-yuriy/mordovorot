@@ -77,7 +77,7 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       ├── Mordie.kt                # Opponent state: shift count, 5-shift checks, opening/resume
 │       │                              # kind, found reveal, a shorter solution announced at a check
 │       │                              # (MordieCheck, GH-223), frozen outcome, save snapshot;
-│       │                              # MAX_SIDE 5 and sitOut() for larger boards (GH-160)
+│       │                              # plays every board size, 3x3 to 9x9 (GH-225)
 │       └── MordieLine.kt            # MordieLine (sealed, incl. FoundUnproven / Shorter) /
 │                                      # MordieCheck / MordieOutcome / MordieResult (incl.
 │                                      # BEAT_MORDIE) / MordieSnapshot (what a save stores)
@@ -122,8 +122,7 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       ├── CatchingNonCancellation.kt # catchingNonCancellation — the use cases' catch-all: rethrows
 │       │                                 # only CancellationException (GH-41)
 │       ├── MordieHooks.kt         # GameViewModelImpl's Mordie part: binds it on new game/load/repair/
-│       │                             # startup (sits out a loaded board already played on, and any side
-│       │                             # above Mordie.MAX_SIDE, GH-160), tracks
+│       │                             # startup (sits out a loaded board already played on, GH-83), tracks
 │       │                             # its analytics, words its line and ending (GH-83)
 │       ├── MordieText.kt          # Every Mordie string (line bodies + the four endings), singular
 │       │                             # `1 move` included (GH-83)
@@ -406,9 +405,8 @@ frozen on solve, using Mordie's live state at that shift. Its `MordieSnapshot` (
 `storage.SavedMordie` on purpose, so `mordie` never imports `storage`; `MordieHooks` maps
 between the two. The page builds one `Mordie` per session. `GameViewModelImpl` reaches it through `MordieHooks`, which
 `buildGameViewModel` builds so it tracks through the decorated analytics.
-Boards above `Mordie.MAX_SIDE` (6x6, GH-160) get `Mordie.sitOut()`: no search and no
-snapshot, only the opening `SitsOut` line; `MordieHooks` decides by board side before every
-binding. Lifting it is GH-116's follow-up.
+Mordie plays every board size, 3x3 to 9x9 (GH-225); only a loaded board already played on, with no
+Mordie data, is sat out through `Mordie.clear()` (GH-83).
 Test builders default to an inert `Mordie(MordieSearchFactory.NONE)`, so unit tests never
 leave real searches running.
 
