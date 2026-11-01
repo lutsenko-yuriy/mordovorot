@@ -18,6 +18,11 @@ val generateBuildInfo = tasks.register("generateBuildInfo") {
     }
 }
 
+// GH-218: Mordie's Web Worker script, built by :web:worker, ships next to web.js as a resource.
+// :web:worker:shipToWeb writes it here; the worker project does the writing because `serve` moves
+// each project's build directory (GH-124), and :web is configured first, so its path is final.
+val workerResources = layout.buildDirectory.dir("generated/worker/resources")
+
 // GH-110: the browser client. DOM-free code goes in commonMain, so its tests run on the JVM and
 // Node.js; the page itself is in jsMain.
 kotlin {
@@ -44,6 +49,7 @@ kotlin {
                 implementation(project(":shared:viewmodel"))
             }
         }
+        jsMain { resources.srcDir(workerResources) }
         commonTest {
             dependencies {
                 implementation(kotlin("test"))
@@ -54,8 +60,17 @@ kotlin {
     }
 }
 
+tasks.named("jsProcessResources") { dependsOn(":web:worker:shipToWeb") }
+
 // The JVM tests that read the sources and the styles (GH-201's boundary test) must rerun when those change.
 tasks.named("jvmTest") { inputs.dir("src").withPropertyName("sources").withPathSensitivity(PathSensitivity.RELATIVE) }
+
+// GH-218: with no runtime fallback, a distribution without the worker would play without Mordie.
+val checkWorkerShipped = tasks.register("checkWorkerShipped") {
+    val worker = layout.buildDirectory.file("dist/js/productionExecutable/mordie-worker.js")
+    doLast { check(worker.get().asFile.exists()) { "mordie-worker.js is missing from the distribution" } }
+}
+tasks.named("jsBrowserDistribution") { finalizedBy(checkWorkerShipped) }
 
 tasks.register("serve") {
     group = "application"

@@ -17,7 +17,7 @@
 ## Platforms
 
 - JVM 17 desktop terminal app: an ANSI mouse/keyboard TUI that needs a real terminal (`installDist` launcher, not `./gradlew run`)
-- Web browser (GH-110): the `:web` Kotlin/JS client (plain DOM and CSS, no UI framework), published on GitHub Pages at https://lutsenko-yuriy.github.io/mordovorot/ (GH-111), and served on `http://localhost:8080` by `./gradlew :web:serve -t` (the Kotlin plugin's webpack dev server under continuous build, so it rebuilds on change, GH-124; the port is pinned because browser saves are per origin)
+- Web browser (GH-110): the `:web` Kotlin/JS client (plain DOM and CSS, no UI framework), published on GitHub Pages at https://lutsenko-yuriy.github.io/mordovorot/ (GH-111), and served on `http://localhost:8080` by `./gradlew :web:serve -t` (the Kotlin plugin's webpack dev server under continuous build, so it rebuilds on change, GH-124; the port is pinned because browser saves are per origin). Mordie's search runs in a Web Worker (GH-218): the `:web:worker` module builds `mordie-worker.js`, which `:web` ships next to `web.js`
 
 ## Tooling
 

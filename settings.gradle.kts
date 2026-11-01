@@ -5,7 +5,7 @@ rootProject.name = "mordovorot"
 include(
     ":shared:core", ":shared:analytics", ":shared:storage", ":shared:mordie", ":shared:viewmodel", ":shared:testing",
     // GH-110: the browser client.
-    ":web",
+    ":web", ":web:worker",
 )
 
 dependencyResolutionManagement {

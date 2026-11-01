@@ -15,7 +15,12 @@ import kotlin.time.TimeSource
  * one core, so the device isn't hogged (GH-41). The snapshot is the only shared state; the
  * game's event loop just reads it.
  */
-class BackgroundMordieSearch(original: IntArray, ruledOut: Int) : MordieSearch {
+class BackgroundMordieSearch(
+    original: IntArray,
+    ruledOut: Int,
+    /** Called with each published snapshot, from the search's thread: the Web Worker forwards them (GH-218). */
+    private val onSnapshot: (SearchProgress) -> Unit = {},
+) : MordieSearch {
 
     private val started = TimeSource.Monotonic.markNow()
     private val solver = IdaStarSolver(original, ruledOut)
@@ -30,6 +35,7 @@ class BackgroundMordieSearch(original: IntArray, ruledOut: Int) : MordieSearch {
                 if (solver.step(NODES_PER_CHECK)) break
             }
             snapshot = snapshotOf(solver)
+            onSnapshot(snapshot)
             delay(REST_MS)
         }
     }
