@@ -97,6 +97,14 @@ class SearchProtocolTest {
     }
 
     @Test
+    fun `a three-field start from an older page decodes with no kept solution`() {
+        val start = SearchProtocol.decodeStart("S|9|1,0,2")
+
+        assertEquals(9, start.ruledOut)
+        assertNull(start.best)
+    }
+
+    @Test
     fun `a start carries the kept solution`() {
         val best = listOf(SolutionMove(isRow = true, index = 2, amount = -1), SolutionMove(isRow = false, index = 0, amount = 3))
 

@@ -152,9 +152,11 @@ class MordieKeptSolutionTest {
     }
 
     @Test
-    fun `an unproven save without a solution searches from R alone`() {
+    fun `an unproven save without a solution is treated as still searching from R`() {
         mordie.resume(board, moves = 8, found = true, solution = null, provenShortest = false, ruledOut = 3)
 
+        assertFalse(mordie.revealed)
+        assertEquals(MordieLine.Resumed(3), mordie.line())
         assertEquals(3, factory.latest.ruledOut)
         assertNull(factory.latest.best)
     }

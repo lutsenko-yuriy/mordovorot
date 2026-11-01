@@ -17,8 +17,9 @@ object SearchProtocol {
         "S|$ruledOut|${original.joinToString(",")}|${encodeMoves(best)}"
 
     fun decodeStart(message: String): Start {
-        val fields = fields(message, Kind.START, 4)
-        return Start(fields[2].split(",").map { it.toInt() }.toIntArray(), fields[1].toInt(), decodeMoves(fields[3]))
+        // A page and a worker from different deploys may send three fields, with no kept solution.
+        val fields = fields(message, Kind.START, 3..4)
+        return Start(fields[2].split(",").map { it.toInt() }.toIntArray(), fields[1].toInt(), fields.getOrNull(3)?.let(::decodeMoves))
     }
 
     fun encodeProgress(progress: SearchProgress): String {
@@ -62,8 +63,10 @@ object SearchProtocol {
         return SolutionMove(isRow = text.first() == 'r', index, amount)
     }
 
-    private fun fields(message: String, kind: Kind, count: Int): List<String> {
+    private fun fields(message: String, kind: Kind, count: Int): List<String> = fields(message, kind, count..count)
+
+    private fun fields(message: String, kind: Kind, counts: IntRange): List<String> {
         require(message.startsWith("${kind.tag}|")) { "Not a ${kind.name.lowercase()} message: $message" }
-        return message.split("|").also { require(it.size == count) { "Malformed message: $message" } }
+        return message.split("|").also { require(it.size in counts) { "Malformed message: $message" } }
     }
 }

@@ -99,15 +99,20 @@ class Mordie(private val factory: MordieSearchFactory) {
         resumedFromSave = true
         checkedMoves = moves
         toldMoves = moves
-        if (found) {
+        // An unproven answer with no path (a damaged save) can't be shown or searched from: it only
+        // tells how far the exact search had got, so it is treated as still searching.
+        if (found && (provenShortest || solution != null)) {
             revealedMoves = moves
             this.provenShortest = provenShortest
             this.ruledOut = ruledOut
             announced = if (provenShortest) MordieLine.Found(moves) else MordieLine.FoundUnproven(moves)
             if (!provenShortest && !solutionScreen) search = factory.start(this.original!!, ruledOut, solution)
         } else {
-            opening = MordieLine.Resumed(moves)
-            search = factory.start(this.original!!, moves)
+            val searched = if (found) ruledOut else moves
+            opening = MordieLine.Resumed(searched)
+            checkedMoves = searched
+            toldMoves = searched
+            search = factory.start(this.original!!, searched)
         }
     }
 
