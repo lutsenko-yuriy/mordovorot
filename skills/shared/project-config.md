@@ -30,7 +30,7 @@ Languages, frameworks, platforms and tooling: `docs/TECH_STACK.md`.
 |---|---|
 | Integration test directory | `web/src/commonTest/kotlin/web/scenario/` (the web scenario suite) |
 | Test harness file | `web/src/commonTest/kotlin/web/scenario/WebHarness.kt`; fakes of shared-module types (`FakeBoardModel`, `FakeSaveRepository`, ...) live in the `:shared:testing` module (`shared/testing/src/commonMain/kotlin/testing/`) |
-| Harness class / entry point | N/A |
+| Harness class / entry point | `WebHarness`, entered through `webTest { }` |
 | Unit / integration test command | `./gradlew check` (or `./gradlew build` to also compile + assemble) |
 
 ## Version management
