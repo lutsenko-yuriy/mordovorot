@@ -407,3 +407,19 @@ with `dialog: labels`, as usual.
 
 *GH-171:* `screen_controls_dialog` now fires on `web` too, with `input_method` `keyboard` or
 `rich_ui`; `screen_labels_dialog.opened_from` takes `shortcut` there (4 in keyboard mode).
+
+*GH-222 (Mordie keeps a best solution so far):* Mordie now holds the best solution from the fast
+solver and the exact search, so "Mordie's N" is the length of that best solution, not always the
+true minimum. Nothing new is tracked on screens.
+- `mordie_solution_found` fires when the first solution exists, from either solver, so it can fire
+  on any size Mordie plays, 3x3 and 4x4 included. `solution_length` is the best solution's length.
+  New properties: `source` (`string`): `fast_solver` or `exact_search`, whichever gave the first
+  solution; `proven_shortest` (`boolean`): `true` when the exact search had finished.
+- `game_given_up` gains `solution_proven_shortest` (`boolean`): whether
+  the exact search had finished when the player gave up.
+- `board_solved` gains `mordie_proven_shortest` (`boolean`, absent when `mordie_moves` is).
+  Since N may be a longer answer, `mordie_result` values `matched` and `mordie_won` no longer mean
+  a tie or loss to the best possible play unless this is `true`.
+- `screen_give_up_dialog`, `screen_solution` and `solution_replay_*` are unchanged; their
+  `solution_length` means the length of the solution shown.
+- Not tracked: each time the exact search shortens the answer, and search time per solver.
