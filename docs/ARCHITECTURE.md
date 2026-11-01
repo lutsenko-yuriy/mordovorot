@@ -241,8 +241,10 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── worker/                              # :web:worker (GH-218): Kotlin/JS executable, depends only on
 │                                        # :shared:mordie; its Main.kt runs BackgroundMordieSearch in a
 │                                        # Web Worker and posts the changed snapshots. Built into
-│                                        # mordie-worker.js; :web's syncWorker copies it into the
-│                                        # distribution, and checkWorkerShipped fails a build without it
+│                                        # mordie-worker.js; its shipToWeb task copies that into :web's
+│                                        # generated resources (the worker project writes, because
+│                                        # `serve` moves build directories, GH-124), and
+│                                        # checkWorkerShipped fails a distribution without it
 ├── src/commonMain/kotlin/web/WorkerMordieSearch.kt # GH-218: the page's MordieSearch over a SearchPort
 │                                        # (one worker per search; cancel terminates it); DOM-free
 ├── src/jsMain/kotlin/web/DomSearchPort.kt # GH-218: SearchPort over Worker("mordie-worker.js")
