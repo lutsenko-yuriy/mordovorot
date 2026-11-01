@@ -16,13 +16,11 @@
 
 ## Platforms
 
-- JVM 17 desktop terminal app: an ANSI mouse/keyboard TUI that needs a real terminal (`installDist` launcher, not `./gradlew run`)
 - Web browser (GH-110): the `:web` Kotlin/JS client (plain DOM and CSS, no UI framework), published on GitHub Pages at https://lutsenko-yuriy.github.io/mordovorot/ (GH-111), and served on `http://localhost:8080` by `./gradlew :web:serve -t` (the Kotlin plugin's webpack dev server under continuous build, so it rebuilds on change, GH-124; the port is pinned because browser saves are per origin). Mordie's search runs in a Web Worker (GH-218): the `:web:worker` module builds `mordie-worker.js`, which `:web` ships next to `web.js`
 
 ## Tooling
 
-- **Build / package manager:** Gradle 9.7.1 (wrapper), Kotlin JVM + `application` plugins for the
-  terminal app, Kotlin Multiplatform for the `shared/` modules (GH-41: `jvm()` + `js { nodejs() }`,
+- **Build / package manager:** Gradle 9.7.1 (wrapper), Kotlin Multiplatform for the `shared/` modules (GH-41: `jvm()` + `js { nodejs() }`,
   GH-103; the Kotlin Gradle plugin downloads Node.js and yarn, `kotlin-js-store/yarn.lock` pins
   the npm packages; a Kotlin upgrade that changes them fails the build until
   `./gradlew kotlinUpgradeYarnLock` is run and the new lock committed; GH-137: yarn resolutions in the
@@ -31,8 +29,8 @@
   the same lock. `serve` keeps its outputs in each project's `build-serve/` (outside `build/`, so
   `clean` leaves it), and `gradle.properties` gives the shared Kotlin compile daemon 2 GB (`kotlin.daemon.jvmargs`), so
   `check`/`build` can run alongside it (GH-124)
-- **Test runner:** `./gradlew check` (JUnit Platform) - runs the root `test` and every shared
-  module's common tests on both the JVM (`jvmTest`) and Node.js (`jsNodeTest`, GH-103); plain `./gradlew test` skips the shared modules; Python: `python -m unittest`
+- **Test runner:** `./gradlew check` (JUnit Platform) - runs every shared
+  module's common tests on both the JVM (`jvmTest`) and Node.js (`jsNodeTest`, GH-103); Python: `python -m unittest`
 - **Linter / formatter:** none configured
 - **Agent alert hook (GH-107):** `scripts/alert/alert.sh` runs on Claude Code's `Notification` and `Stop`
   hooks and alerts by macOS notification and `say`. Per-machine toggles go in the gitignored

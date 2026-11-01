@@ -38,8 +38,7 @@ class FakeSaveRepository(
     var existsException: Throwable? = null
 
     /** When set, [listSaves] throws this instead of returning - simulates an unreadable
-     *  saves directory (e.g. permissions), which the app's `FileSaveRepository.listSaves`
-     *  can raise as an `IOException`. */
+     *  store, which a real repository's `listSaves` can raise. */
     var listSavesException: Throwable? = null
 
     override fun listSaves(): List<String> {

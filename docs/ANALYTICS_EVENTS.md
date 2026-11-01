@@ -2,8 +2,8 @@
 
 All events are sent via the analytics service abstraction (a thin wrapper around the underlying analytics SDK).
 
-*GH-110:* every event and screen view also carries `platform` (`string`): `terminal` or `web`
-(`ios` and `android` are reserved for future clients). A decorator adds it, the same way
+*GH-110:* every event and screen view also carries `platform` (`string`): `web` now (`terminal` retired — GH-228;
+`ios` and `android` are reserved for future clients). A decorator adds it, the same way
 `InputMethodAnalyticsService` adds `input_method`. On `web`, `input_method` follows the press that
 fired the event: `keyboard` for a key, `rich_ui` for mouse or touch (GH-171). The web client also
 uses `NoopAnalyticsService`; no SDK is wired up there either.
@@ -26,7 +26,7 @@ Fired when <trigger condition>.
 
 ### `save_command_used`
 
-Fired when the user saves via the Save dialog (toolbar Save / 2) or the exit flow. *(GH-6)* The name dates from the removed console `save` command and is kept for continuity (GH-79).
+Fired when the user saves via the Save dialog (toolbar Save / 2). *(GH-6)* The name dates from the removed console `save` command and is kept for continuity (GH-79).
 
 | Property | Type | Description |
 |---|---|---|
@@ -61,11 +61,13 @@ Fired when the user resolves the startup restore prompt. *(GH-6)*
 
 | Property | Type | Description |
 |---|---|---|
-| `decision` | `string` | `restored`, `new_game`, or `quit` (GH-74 - Exit chosen for an unsolvable save). Repairing an unsolvable save counts as `restored`. |
+| `decision` | `string` | `restored` or `new_game`. *(`quit` retired — GH-228)* Repairing an unsolvable save counts as `restored`. |
 | `save_file_count` | `number` | How many save files were on offer. |
 | `input_method` | `string` | `mouse` or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* *(`console` retired — GH-79)* |
 
 ### `exit_command_used`
+
+**Retired — GH-228:** the terminal's Exit is gone, so this event is no longer fired.
 
 Fired when the user exits via the Exit dialog (toolbar Exit / Escape) **and the session actually ends** - not fired if the
 user asked to save but the save attempt failed, since the session keeps running in that case
@@ -78,16 +80,16 @@ instead of quitting (see Feature 5 in `docs/PRODUCT_SPEC.md`). *(GH-12)*
 
 ### `app_launched`
 
-Fired once at startup, after the launch mode is resolved (default mouse TUI or `--keyboard`), when a game actually starts - a launch with no terminal fires `app_launch_aborted` instead (GH-79). *(GH-3, GH-18)*
+Fired once at startup, when the page loads. *(GH-3, GH-18)*
 
 | Property | Type | Description |
 |---|---|---|
 | `mode` | `string` | `mouse` or `keyboard`. *(`console` retired — GH-79)* |
-| `board_size` | `number` | The resolved board side (3-5) for this launch — from `--size=N` or the default (4). *(GH-44)* |
+| `board_size` | `number` | **Retired — GH-228** (the `--size=N` flag). It was the resolved board side for this launch. *(GH-44)* |
 
-*GH-79:* new property `console_flag_ignored` (`boolean`, always sent) - `true` when `--console` was passed and the `Console mode was removed` notice was shown before the TUI started.
+*GH-79:* property `console_flag_ignored` (`boolean`). **Retired — GH-228** with the terminal launch flags.
 
-*GH-110:* on `web`, it fires on page load. `mode` is `rich_ui`, and `board_size` and `console_flag_ignored` are absent: there are no CLI flags, and `new_game_size_selected` reports the size picked later. New property `layout` (`string`, web only): `wide` (window wider than tall) or `tall` (taller than wide, or square), as of page load.
+*GH-110:* `mode` is `rich_ui`, and `board_size` and `console_flag_ignored` are absent: there are no CLI flags, and `new_game_size_selected` reports the size picked later. New property `layout` (`string`, web only): `wide` (window wider than tall) or `tall` (taller than wide, or square), as of page load.
 
 *GH-111:* two new properties on `web` only: `app_version` (`string`) - the version stamped into
 the build, e.g. `0.18.0`, the same one the footer shows; and `host` (`string`) - `public_site`
@@ -96,13 +98,13 @@ never the raw hostname, URL, query string or referrer. The footer's links aren't
 
 ### `dialog_cancelled`
 
-Fired when the user cancels the Save, Load, Exit, or Size dialog in the mouse-driven or keyboard-driven TUI (mouse click, or Escape/Cancel-control in keyboard mode) without completing the action. *(GH-3, GH-18, GH-44)*
+Fired when the user cancels the Save, Load, Size or another dialog (a click, or Escape or the Cancel control in keyboard mode) without completing the action. *(GH-3, GH-18, GH-44)*
 
 | Property | Type | Description |
 |---|---|---|
-| `dialog` | `string` | `save`, `load`, `exit`, or `size`. |
-| `input_method` | `string` | `mouse` or `keyboard` — which TUI mode the session was running in. *(GH-18)* |
-| `via` | `string` | `web` only: `button` (Cancel / No) or `escape`. Absent on `terminal`. *(GH-163)* |
+| `dialog` | `string` | `save`, `load`, `size`, and later values (`controls`, ...). *(`exit` retired — GH-228)* |
+| `input_method` | `string` | `mouse` or `keyboard` — which UI mode the session was running in. *(GH-18)* |
+| `via` | `string` | `button` (Cancel / No) or `escape`; always sent since the terminal is gone. *(GH-163)* |
 
 ### `input_mode_switched`
 
@@ -137,7 +139,7 @@ never sent. *(GH-74)*
 
 | Property | Type | Description |
 |---|---|---|
-| `choice` | `string` | `repair`, `new_game`, or `exit`. |
+| `choice` | `string` | `repair` or `new_game`. *(`exit` retired — GH-228)* |
 | `trigger` | `string` | `command` (mid-game load: toolbar Load / 3) or `startup_prompt`. |
 | `board_size` | `number` | The save's board side (3 or 5). |
 | `repair_saved` | `boolean` | Only on `repair`: whether the repaired board was written back to the save file (`false` if the overwrite failed; the board is loaded either way). |
@@ -158,7 +160,7 @@ Fired once when a shift solves the board during play, in either input mode. Like
 
 *GH-101:* new property `shift_keys` (`string`, keyboard mode only - absent in mouse mode): which keys made this game's keyboard shifts - `arrows` (only the arrow keys), `hjkl` (only H/J/K/L) or `mixed` (both). Mouse clicks aren't counted, so a game shifted partly by mouse reports only its keys. Sent only when the solving shift is a keyboard one; only solved games report it.
 
-*GH-110:* new property `shift_input` (`string`, `web` only - absent on `terminal`): how this game's shifts were made - `arrows` (only arrow clicks), `drag` (only drags) or `mixed` (both).
+*GH-110:* new property `shift_input` (`string`, always sent since GH-228): how this game's shifts were made - `arrows` (only arrow clicks), `drag` (only drags) or `mixed` (both).
 
 ### `play_again_decision`
 
@@ -200,6 +202,8 @@ whose message is unchanged. *(GH-67)*
 
 ### `app_launch_aborted`
 
+**Retired — GH-228:** there is no terminal launch to abort, so this event is no longer fired.
+
 Fired when a launch finds no interactive terminal, prints the `No interactive terminal found`
 message and exits - instead of `app_launched`, which only fires when a game starts. *(GH-79)*
 
@@ -228,9 +232,7 @@ saved is stored as found; loading that save reveals it at once, and this event n
 that game. Likewise, a board solved before the next check never fires it.
 
 *GH-110 (web):* the web client has no Exit, so `exit_command_used` and `app_launch_aborted` never
-fire there. `startup_restore_decision.decision` never takes `quit`,
-`unsolvable_save_resolved.choice` never takes `exit`, and `dialog_cancelled.dialog` never takes
-`exit`. Closing the tab and the leave-site prompt are not tracked: a page can't reliably send
+fired there. Closing the tab and the leave-site prompt are not tracked: a page can't reliably send
 anything while it unloads.
 
 ### `game_given_up`
@@ -312,8 +314,7 @@ be `7`, `8` or `9`. Mordie sits 6x6 to 9x9 out, as GH-160 describes for 6x6, and
 seen, and abandoned very large games, are not tracked.
 
 *GH-163:* Escape now cancels web dialogs, firing the same events as their Cancel-like button.
-`dialog_cancelled` gains `via` (`string`, `web` only - absent on `terminal`, where `input_method`
-already tells keyboard from mouse): `button` (Cancel / No clicked or activated) or `escape`.
+`dialog_cancelled` gains `via` (`string`; it was absent on `terminal` until GH-228): `button` (Cancel / No clicked or activated) or `escape`.
 `startup_restore_decision` is unchanged: Escape on Restore sends `new_game`, as Cancel does.
 
 *GH-167:* nothing tracked. A press of Read board, the button hidden from sight, would mark a
@@ -326,8 +327,8 @@ settled it: no accessibility usage signal is acceptable, on any terms.
 
 *GH-170:* the Controls dialog (`[ Controls 6 ]` / 6) replaces the terminal's mode switch.
 - `input_mode_switched` fires on OK in the Controls dialog with a different mode marked; `trigger`
-  takes a new value, `controls_dialog`. On `terminal`, `toolbar` and `shortcut` are retired: the
-  dialog is now the only way to switch.
+  takes a new value, `controls_dialog`. `toolbar` and `shortcut` are retired (they were terminal-only): the
+  dialog is the only way to switch.
 - `dialog_cancelled.dialog` takes a new value, `controls` (Cancel or Escape in the Controls dialog).
 - `board_solved.shift_keys` is sent only in the right-handed layout; absent in the left-handed one.
   Left-handed shifts aren't counted at all, so a game that switched layout mid-way reports only its
@@ -371,16 +372,15 @@ language, and possibly their nationality or location.
 
 | Screen name | When tracked |
 |---|---|
-| `screen_save_dialog` | Save dialog opens in the TUI (toolbar click/2, or via the Exit dialog's "Yes"). Property `opened_from`: `toolbar` or `exit_flow`. *(GH-3)* |
-| `screen_load_dialog` | Load dialog opens in the TUI (toolbar click/3, or startup restore when saves exist). Properties `opened_from`: `toolbar` or `startup`; `save_file_count`: number. *(GH-3)* |
-| `screen_exit_dialog` | Exit dialog opens in the TUI (Exit button click, or Escape in keyboard mode). *(GH-3, GH-18)* |
-| `screen_congratulations` | A shift (click or keyboard Enter/Space) solves the board while the TUI is active - fires once on that transition. Does **not** fire when an already-solved save is restored (toolbar Load or startup restore); the Congratulations screen still renders, but nothing was solved *by playing* this session. *(GH-3)* |
-| `screen_size_dialog` | TUI size-picker dialog opens. Property `opened_from`: `toolbar` (via `[ New ]`), `startup` (no `--size` given, restore prompt declined/empty), or `unsolvable_save` (New game chosen for an unsolvable save mid-game, GH-74). *(GH-44)* |
-| `screen_unsolvable_dialog` | TUI `Can't be solved` dialog opens for an unsolvable save. Property `opened_from`: `toolbar` (Load button/3) or `startup` (restore dialog). *(GH-74)* |
+| `screen_save_dialog` | Save dialog opens (toolbar click/2). Property `opened_from`: `toolbar`. *(GH-3; `exit_flow` retired — GH-228)* |
+| `screen_load_dialog` | Load dialog opens (toolbar click/3, or startup restore when saves exist). Properties `opened_from`: `toolbar` or `startup`; `save_file_count`: number. *(GH-3)* |
+| `screen_exit_dialog` | **Retired — GH-228** (the Exit dialog is gone). *(GH-3, GH-18)* |
+| `screen_congratulations` | A shift (click or keyboard Enter/Space) solves the board - fires once on that transition. Does **not** fire when an already-solved save is restored (toolbar Load or startup restore); the Congratulations screen still renders, but nothing was solved *by playing* this session. *(GH-3)* |
+| `screen_size_dialog` | The size-picker dialog opens. Property `opened_from`: `toolbar` (via `[ New ]`), `startup` (restore prompt declined/empty), or `unsolvable_save` (New game chosen for an unsolvable save mid-game, GH-74). *(GH-44)* |
+| `screen_unsolvable_dialog` | The `Can't be solved` dialog opens for an unsolvable save. Property `opened_from`: `toolbar` (Load button/3) or `startup` (restore dialog). *(GH-74)* |
 
 *GH-99:* `screen_save_dialog` takes a new property `prefilled` (`boolean`) - whether the name field opened with the current save name in it.
 
-*GH-110:* on `web`, the screen views fire on the same triggers as in the TUI. `screen_exit_dialog` never fires there, and `screen_save_dialog.opened_from` never takes `exit_flow`.
 
 *GH-126:* new screen views:
 
@@ -440,4 +440,4 @@ true minimum. Nothing new is tracked on screens.
 
 No new events or screen views. The web client is the only client, and mobile apps are planned, so `platform` stays on every event and screen view (always `web` for now; its `terminal` value is retired, and a mobile app would add its own).
 
-Retired, kept here as history: `app_launch_aborted`, `screen_exit_dialog`, `exit_command_used`, the terminal-only values `opened_from=exit_flow`, `decision=quit`, `choice=exit`, `dialog_cancelled.dialog=exit` and `platform=terminal`, and the terminal-only `app_launched` properties `board_size` and `console_flag_ignored`. The web still fires `input_mode_switched` and the `opened_from=startup` values, so those stay. WU4 marks each retired entry "Retired — GH-228" and trims the "terminal"/"TUI" wording.
+Retired — GH-228, each marked where it is catalogued above and kept as history: the events `app_launch_aborted` and `exit_command_used`, the screen view `screen_exit_dialog`, the values `screen_save_dialog.opened_from=exit_flow`, `startup_restore_decision.decision=quit`, `unsolvable_save_resolved.choice=exit`, `dialog_cancelled.dialog=exit` and `platform=terminal`, and the `app_launched` properties `board_size` and `console_flag_ignored`. `dialog_cancelled.via` and `board_solved.shift_input` were absent on `terminal`; they are always sent now. The web still fires `input_mode_switched` and the `opened_from=startup` values, so those stay.

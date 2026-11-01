@@ -4,7 +4,7 @@ This file provides guidance to AI coding agents (Claude Code, Codex, Cursor, Ope
 
 ## Project Overview
 
-Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle, with a browser client, published on GitHub Pages (GH-110, GH-111)
+Mordovorot — A browser version of Loopover, a sliding-row/column puzzle, published on GitHub Pages (GH-110, GH-111); the terminal client was dropped in GH-228
 
 Full product specifications: docs/PRODUCT_SPEC.md
 
@@ -54,7 +54,7 @@ Full product specifications: docs/PRODUCT_SPEC.md
 
 ## Architecture
 
-MVVM (Model-View-ViewModel): board_model + viewmodel + view packages. Everything platform-independent (board, analytics, the save contract, Mordie, and the viewmodel minus Exit and session control) is in Kotlin Multiplatform modules under `shared/`; the terminal app is the root project (GH-41)
+MVVM (Model-View-ViewModel): board_model + viewmodel + view packages. Everything platform-independent (board, analytics, the save contract, Mordie and the viewmodel) is in Kotlin Multiplatform modules under `shared/`; the browser client is the `web` module (GH-41, GH-228)
 
 Details and directory layout: @docs/ARCHITECTURE.md. Languages and tooling: docs/TECH_STACK.md.
 

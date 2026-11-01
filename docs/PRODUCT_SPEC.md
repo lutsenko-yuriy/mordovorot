@@ -6,8 +6,8 @@
 
 ## Overview
 
-Mordovorot — A terminal version of Loopover, a sliding-row/column puzzle. A browser client,
-published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game with the mouse (Feature 9).
+Mordovorot — A browser version of Loopover, a sliding-row/column puzzle, published at
+https://lutsenko-yuriy.github.io/mordovorot/ (Feature 9). It was a terminal game first; that client was dropped in GH-228.
 
 ## Features
 
@@ -34,21 +34,11 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
     save made before GH-62 loads as `Moves: 0`.
 
 ### Feature 3 — Launch (GH-79)
-- The terminal game only runs as a terminal UI (Features 6 and 7); the browser client
-  (Feature 9) is launched separately. The line-based console mode was
-  removed in GH-79.
-- Launching without an interactive terminal (e.g. `./gradlew run`, piped or scripted input), with
-  any flags, prints `No interactive terminal found - Mordovorot only runs as a terminal UI.` to
-  stderr and exits normally (status 0) without starting a game.
-- `--console` in a terminal prints `Console mode was removed - starting the terminal UI.` and
-  then starts the TUI as if the flag weren't there (`--console --keyboard` starts keyboard mode).
-- `--size=N` starts at board side `N` (3-6) and skips the startup restore and size prompts
-  (Feature 4). An unusable value warns and falls back to 4. Unrecognized arguments are reported
-  and ignored.
+Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is the only client.
 
 ### Feature 4 — Save and load (GH-6)
-- The Save dialog stores the board's current tile arrangement to a local file, creating it or
-  overwriting an existing file of that name. The Load dialog restores the board from an existing
+- The Save dialog stores the board's current tile arrangement to the browser's storage, creating it or
+  overwriting an existing save of that name. The Load dialog restores the board from an existing
   save. Both work at any point in a game.
 - A save that can't be loaded (deleted or corrupted since it was listed) leaves the board
   untouched and shows a message instead of crashing. Loading a save whose board size differs
@@ -61,14 +51,12 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 - A save that no sequence of shifts can solve (only possible on 3×3/5×5, e.g. a hand-edited or
   pre-GH-74 save) is marked in every listing: `foo (3x3) unsolvable` (GH-74).
 - Loading an unsolvable save (mid-game or at startup) doesn't restore it. Instead it opens a
-  `Can't be solved` dialog with three choices (GH-74, see Feature 6):
+  `Can't be solved` dialog with two choices (GH-74):
   - **Repair** swaps two tiles, which makes the board solvable, and overwrites the save file with
     the result, keeping its move count, then loads it: `Repaired 'foo' (two tiles swapped) and
     loaded it.` If the file can't be rewritten, the repaired board is still loaded with a warning,
     and the save stays marked.
   - **New game** opens the board-size picker.
-  - **Exit** at startup quits right away, since there's no game to save. Mid-game, it runs the
-    `Save before quitting?` flow (Feature 5); a failed save keeps the current game going.
 - **Current save name (GH-99):** the Save dialog opens with the name of the save the game was
   last loaded from or saved to already typed in, so saving back to it is just Enter.
   - A successful load sets it (Load dialog, startup restore, Repair & load), and so does a
@@ -78,17 +66,12 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
     `Can't be solved` dialog), as does a fresh launch - it isn't stored anywhere.
   - A failed save or load, or a cancelled dialog, leaves it unchanged. Switching input mode
     keeps it.
-- Saves are stored as `.save` files in a `saves/` directory relative to wherever the app is
-  launched from (the process's current working directory) — running from a different directory
-  will not see saves made from another one. The save file format is unchanged by GH-79, so older
-  saves still load.
+- Saves are kept in the browser's `localStorage` (Feature 9). The format is the one the terminal client used.
 - **Startup restore prompt:** on launch, before the first move, the app checks for existing
   saves:
   - No saves — skips straight to the board-size prompt (GH-44).
-  - One or more saves — opens the Load-shaped "Restore a saved game?" dialog (Feature 6).
+  - One or more saves — opens the Load-shaped "Restore a saved game?" dialog (Feature 9).
     Cancelling it falls through to the board-size prompt.
-  - This entire prompt - restore included - is skipped outright when `--size=N` was given at
-    launch (GH-44): the flag is the answer, no matter what saves exist.
 - **Solution screen saves (GH-126):** a save also stores Mordie's solution once it has found
   one, and whether it was made on the solution screen (Feature 10). Loading a solution-screen
   save, by Load or the startup restore prompt, opens the solution screen again at the start of
@@ -100,125 +83,16 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   its labels.
 
 ### Feature 5 — Exit (GH-12)
-- The toolbar Exit (Escape in keyboard mode) ends the current session on demand after asking
-  `Save before quitting?`:
-  - **Yes** opens the Save dialog (prefilled with the current save name, GH-99) and saves under
-    the typed name, then quits. An empty name quits without saving.
-  - A name that isn't usable as a save identifier - containing spaces, a path separator, or
-    `..` - is rejected with a message and asked for again, rather than silently discarding the
-    save request. The message stays above any overwrite warning while the name is retyped
-    (GH-99).
-  - If the save itself fails (e.g. a read-only `saves/` directory), the session **does not
-    quit** — the error is shown and play continues, so an explicit save request never costs the
-    player their game.
-  - **No** quits without saving; **Cancel** closes the dialog and keeps playing.
+Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is the only client.
 
 ### Feature 6 — Mouse-driven TUI (GH-3)
-- On launch, the app runs a mouse-clickable terminal UI by default: a centered board with
-  `◀`/`▶`/`▲`/`▼` arrows at the ends of each row/column, the `[ Give Up ]` row (Feature 10)
-  below the down arrows, a toolbar (`[ New ] [ Save ] [ Load ] [ Exit ]`) below that, and a second row below that with
-  `[ Labels ]` (GH-139) and `[ Controls 6 ]` (GH-170), which opens the **Controls** dialog;
-  6 on the keyboard does the same, the one key mouse mode's board answers to, and the only button
-  that shows its key.
-  Clicking an arrow shifts that row/column; every click repaints the whole screen. `[ New ]`
-  (GH-44) opens the same size-picker dialog as the startup prompt and starts a fresh game at
-  whichever size is chosen; Cancel leaves the current game untouched.
-- The **Controls** dialog (GH-170), in both modes: `Play with ● Mouse ○ Keyboard` with the
-  current mode marked, `Keyboard keys ● Right-handed ○ Left-handed` with the current layout
-  marked (Feature 7), then the keyboard mode's key list for the marked layout (board, toolbar and
-  solution-screen keys; it changes as the mark moves), ending with `Letters: Latin, Ukrainian or
-  Russian layout` (GH-200), then `[ OK ] [ Cancel ]`. Clicking an
-  option marks it; from the keyboard (it opens focused on `Play with`) the arrows move the mark,
-  Tab / Shift+Tab move focus over the groups, OK and Cancel, Enter is OK except on Cancel, and
-  Escape cancels. OK applies the marked layout and remembers it in `saves/preferences`
-  (`keyboard_layout=left_handed`); with the other mode marked it then switches to it without
-  losing the current game, the keyboard selection included (GH-30). Cancel changes nothing. If the switch fails (e.g. no `stty`), the game stays in the current
-  mode with `Could not switch to <mode> mode (<reason>) - staying in <current> mode.` (GH-79).
-- `[ Labels ]` (GH-139) opens the **Tile labels** dialog: one row per scheme (Numbers, Numbers
-  from 0, Pairs, Pairs from 0, Letters, Letter pairs), each with the solved board's first row as
-  a sample, the current scheme marked `●` and the rest `○`. Clicking a row marks it; OK relabels
-  the board at once and remembers the choice in `saves/preferences`; Cancel (or Escape) changes
-  nothing. It works while playing, after a win and on the solution screen.
-- If switching modes fails (e.g. the terminal can't be set up), the game carries on in the
-  current mode with the same game and shows `Could not switch to <mode> mode (<reason>) -
-  staying in <current> mode.` on its status line (GH-79).
-- **Save/Load/Exit dialogs**, opened from the toolbar:
-  - **Save** — a typed name field, prefilled with the current save name (Feature 4, GH-99)
-    with the cursor at the end: typing appends, Backspace deletes one character. Latin and Cyrillic
-    letters can be typed (Cyrillic since GH-200, in a UTF-8 terminal); other non-ASCII characters
-    do nothing. An existing
-    name shows an inline "already exists - it will be overwritten" warning before saving over
-    it - straight away when the field is prefilled. A name containing spaces is rejected with an
-    on-screen message instead of being saved. An empty name (Enter, or clicking Save with
-    nothing typed) cancels without saving.
-  - **Load** — a clickable list of save names and sizes (e.g. `foo (5x5)`, GH-44 - `No saves
-    found.` when there are none, with the Load button inert); selecting one and confirming
-    restores it.
-  - **Exit** — `[ Yes ] [ No ] [ Cancel ]`, behaving as Feature 5 describes.
-  - Any dialog can also be dismissed with Escape, same effect as its Cancel button - except the
-    two below.
-- **Unsolvable save** (GH-74): loading one (Load dialog or startup restore) opens a `Can't be
-  solved` dialog with `[ Repair & load ] [ New game ] [ Exit ]` (Feature 4). It has no Cancel,
-  and Escape does nothing. New game opens the size picker. Exit at startup quits; mid-game it
-  opens a `Save before quitting?` dialog with Yes/No only (no Cancel, Escape does nothing),
-  which then behaves like the Exit dialog's Yes/No.
-- **Startup restore**, when saves exist, is the same Load-shaped dialog (titled "Restore a saved
-  game?") regardless of how many saves there are; Cancel starts a new game.
-- **Solved state:** once the board is solved, the title switches to Mordie's ending (Feature 8),
-  or to `Congratulations ✓` when Mordie sat the game out, the
-  shift arrows are shown dimmed and stop responding to clicks, and the toolbar (New/Save/Load/Exit)
-  stays fully clickable. Loading a different, unsolved save from the Congratulations screen
-  brings the arrows and title straight back — the screen doesn't need a fresh launch or a
-  separate "keep playing" action.
+Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is the only client.
 
 ### Feature 7 — Keyboard-only TUI (GH-18)
-- `--keyboard` runs the same TUI screens as Feature 6 (board, toolbar, dialogs, Congratulations
-  screen), but driven entirely from the keyboard instead of the mouse. Launch rules are the same
-  as mouse mode (Feature 3).
-- **Tile selection (GH-170, the keyboard scheme of ADR-0003):** keyboard mode doesn't draw the
-  `◀`/`▶`/`▲`/`▼` arrows. One tile is selected: it is drawn in reverse video, the rest of its
-  row on a pale yellow background and the rest of its column on light grey, with black text.
-  The keys depend on the layout picked in the Controls dialog (right-handed by default):
-  - Right-handed: **W/A/S/D** move the selected tile up/left/down/right, wrapping at the edges;
-    **H/L** or **←/→** shift its row left/right; **K/J** or **↑/↓** shift its column up/down.
-  - Left-handed: **H/J/K/L** or the arrows move the selected tile; **A/D** shift its row,
-    **W/S** its column. The toolbar digits and the solution screen's keys are the same in both.
-  - The selection stays where it is after a shift. Letters work in either case; Enter and
-    Space do nothing on the board.
-  - **Ukrainian and Russian keyboards (GH-200):** their letters act as the Latin keys in the same
-    position, on the board and the solution screen: `ц` W, `ф` A, `і`/`ы` S, `в` D, `р` H, `о` J,
-    `л` K, `д` L, `к` R. Other non-Latin layouts' letters do nothing; the terminal gets only
-    characters, so it can't play by key position as the web does (Feature 9).
-  - Row 1 / column 1 is selected at launch. A new game, a load or a size change keeps the
-    selection, clamped to a smaller board (row 5 / column 2 on 5x5 becomes row 3 / column 2 on
-    3x3); switching to mouse mode and back keeps it too.
-  - The board stays centred, each hand's keys on its side: right-handed `W/A/S/D select` to its
-    left and `←/→ H/L row` / `↑/↓ K/J column` to its right; left-handed `A/D row` / `W/S column`
-    to its left and `←↑↓→ H/J/K/L select` to its right.
-  - The layout is remembered between sessions in `saves/preferences` and kept across mode
-    switches; a storage error just means it isn't remembered.
-  - Once solved, the highlight disappears and the selection and shift keys go inert, matching
-    mouse mode's dimmed arrows; the hints stay.
-- **Toolbar digits (GH-170)**, shown in light blue on the toolbar buttons
-  (`[New 1] [Save 2] [Load 3] [Exit Esc]`, then `[Labels 4] [Controls 6]`, mirroring mouse mode's
-  `[ Labels ] [ Controls 6 ]` row) and always live regardless of the selection or solved state,
-  on the solution screen too: **1** opens the New-game size picker (GH-44), **2** Save, **3**
-  Load, **4** Tile labels (GH-139), **5** is the Give Up row's button (`[Give Up 5]` or
-  `[Mordie's solution 5]`, GH-126), **6** opens the Controls dialog (Feature 6), and **Escape** opens the Exit
-  dialog. Inside a dialog the digits are the dialog's own (they type into the Save name field).
-  The function keys do nothing. A controls-hint line below the toolbar spells these out:
-  `1 New · 2 Save · 3 Load · 4 Labels · 5 Give Up · 6 Controls · Esc Exit`.
-- **Dialog navigation:** Tab/Shift+Tab (or the arrow keys) cycle focus between a dialog's
-  controls (text field, list rows, buttons); Enter activates whatever has focus; Escape cancels
-  the dialog, same as clicking Cancel. Typing and Backspace work on the focused text field as in
-  the mouse mode's Save dialog. The Tile labels dialog (GH-139) opens focused on the marked
-  scheme; the arrows move the mark, and Enter on a row confirms it, same as OK.
-- All other dialog and startup-restore behavior (validation, re-prompting) is identical to
-  Feature 6 — only the input method differs, which shows up in analytics as an `input_method`
-  property of `keyboard` instead of `mouse`.
+Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is the only client.
 
 ### Feature 8 — Mordie, the computer opponent (GH-83)
-- **Search:** when a game starts (`[ New ]`, the startup size prompt, `--size=N`), Mordie starts
+- **Search:** when a game starts (`[ New ]`, the startup size prompt), Mordie starts
   searching in the background for the shortest solution of the game's original arrangement,
   counted in moves (Feature 2). The player's moves don't affect it, and the board stays fully
   playable. Two solvers run together (GH-222): the fast solver answers almost at once on every
@@ -235,7 +109,7 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   shifts 0-4 its line is `6x6 is too much for me, you're on your own!`, then empty. A loaded 6x6
   save shows the same line (and its Mordie lines, if any, are dropped at the next save). The
   solved title is `Congratulations ✓`, the Give Up row stays empty (no `[ Give Up ]`), and no `[ Mordie's solution ]`
-  follows a win. In the terminal the line takes one row on 6x6, so the board fits 80x24.
+  follows a win.
   The browser's 7x7 to 9x9 (GH-207) are sat out the same way, the line naming the size.
 - **Mordie's line** sits under `Moves: N`: `Mordie:` in magenta, then the text, word-wrapped to
   about the width of the board and toolbar, each row centered. Its rows are always reserved, so
@@ -294,10 +168,9 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 ### Feature 9 — Browser client (GH-110)
 - **Running it:** the game is published at `https://lutsenko-yuriy.github.io/mordovorot/` (GH-111); for development,
   `./gradlew :web:serve -t` serves it on `http://localhost:8080`. Opening either address starts it. The tab title is `Mordovorot`, and the title appears nowhere else on the page.
-  The terminal game is unchanged.
 - **Same game:** the rules, board sizes 3-6 (and 7-9, below), solvable new games, `Moves: N` and its
   move rule (Feature 2), Save/Load (Feature 4), Mordie (Feature 8) and Give Up with its solution
-  screen (Feature 10) work as in the terminal game. It starts with the mouse; keyboard mode is below. There are no command-line flags and no Exit.
+  screen (Feature 10) work as described in their features. It starts with the mouse; keyboard mode is below. There are no command-line flags and no Exit.
 - **Dialogs from the keyboard (GH-163):** every dialog works without the mouse; the toolbar,
   the arrows and the solution screen's buttons are reached with Tab and pressed with Enter or
   Space, in either mode.
@@ -414,10 +287,8 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   - **Labels** opens the Tile labels dialog (GH-139, Feature 11).
 - **Status line** under the toolbar: messages such as `Saved as 'x'.` and load errors. The next
   action clears it.
-- **Saves** are kept in the browser's `localStorage`, one entry per save in the terminal's save
-  format. Each address has its own: saves on the public site and on `localhost:8080` don't see
-  each other (GH-111). They survive reloads and browser restarts, and are separate from
-  the terminal game's `saves/`.
+- **Saves** are kept in the browser's `localStorage`, one entry per save. Each address has its own: saves on the public site and on `localhost:8080` don't see
+  each other (GH-111). They survive reloads and browser restarts.
 - **Startup:** with saves, the page opens with `Restore a saved game?` (Cancel opens the size
   picker); without, it opens the size picker, whose Cancel keeps the board already shown.
 - **Leave-site prompt:** with unsaved progress (at least one shift since the last New game,
@@ -512,7 +383,6 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   in either mode: `keyboard` for key presses, `rich_ui` for mouse and touch; see `docs/ANALYTICS_EVENTS.md`.
 
 ### Feature 10 — Give Up and Mordie's solution (GH-126)
-Applies to terminal mouse mode, terminal keyboard mode and the web client.
 - **Give Up:** `[ Give Up ]` sits on its own row, directly above the toolbar. It is dimmed and
   inert until Mordie has a solution (the moment a found line appears, Feature 8): at the first 5-shift
   check on every size Mordie plays, 5x5 included (GH-222). The solution it shows is the best
@@ -530,26 +400,22 @@ Applies to terminal mouse mode, terminal keyboard mode and the web client.
   - **Step list:** one numbered step per Mordie move, `<n>. Row <i> <→|←> ×<k>` or
     `<n>. Col <i> <↑|↓> ×<k>`, each the shortest way round its line (a tie goes → or ↓). Numbers
     are zero-padded to the total's width (`01.` to `12.`). It sits right of the board (the
-    terminal, the wide web) or below it (the tall web), scrolls when it doesn't fit (the mouse
-    wheel in mouse mode and on the web; ↑/↓, W/S or K/J in keyboard mode), and keeps the current step
+    wide web) or below it (the tall web), scrolls when it doesn't fit (the mouse
+    wheel in mouse mode; ↑/↓, W/S or K/J in keyboard mode), and keeps the current step
     in view.
   - **Stepping, by hand:** `[ ◀ Prev ] [ Next ▶ ] [ ↻ Restart ]`. Next applies one shift of the
     current step, Prev undoes one, Restart goes back to the original arrangement. Prev and
     Restart are dimmed at the start, Next on the solved board. The step of the last shift made
-    is highlighted: reverse video in the terminal, a coloured background on the web. On the web
-    each shift slides one tile, as a player's shift does.
+    is highlighted with a coloured background. Each shift slides one tile, as a player's shift does.
   - **Keyboard mode:** ←/→, A/D or H/L are Prev/Next, Space and Enter are Next too, R is
-    Restart, and ↑/↓, W/S or K/J scroll the steps, in both layouts; side hints (terminal, GH-170) or
-    hints under the board (web, while the board has focus, GH-171) spell these out.
-  - **Toolbar:** New, Save, Load (and Exit in the terminal) work as before. New and Load leave
-    the screen. Saving there saves the solution screen (Feature 4). Switching input mode in the
-    terminal keeps the screen and the replay's place.
+    Restart, and ↑/↓, W/S or K/J scroll the steps, in both layouts; hints under the board (while the board has focus, GH-171) spell these out.
+  - **Toolbar:** New, Save, Load work as before. New and Load leave
+    the screen. Saving there saves the solution screen (Feature 4).
   - The replay never counts moves, feeds Mordie, solves the game or sets unsaved progress.
 - **Older saves:** a save from before GH-126 that has Mordie's found N but not its solution
   can't show the solution: Give Up stays dimmed, and the after-win row stays empty.
 
 ### Feature 11 — Tile labels (GH-139)
-Applies to terminal mouse mode, terminal keyboard mode and the web client.
 - **Schemes**, shown for the 0-based tile N on a side-S board:
 
   | Scheme | Label | 4x4 solved first row |
@@ -565,9 +431,8 @@ Applies to terminal mouse mode, terminal keyboard mode and the web client.
 - **The dialog:** `Tile labels`, one row per scheme with the current board size's first solved
   row as a sample, the current scheme marked `●` and the rest `○`. Picking a row marks it; OK
   relabels the board at once, Cancel changes nothing. On the web the board already shows the
-  marked scheme while the dialog is open, and Cancel puts the old labels back. It opens from `[ Labels ]` in both clients
-  (terminal keyboard mode: `[Labels 4]` and 4; details in Features 6, 7 and 9), during play,
-  after a win and on the solution screen. Escape cancels it in both clients (on the web since GH-163).
+  marked scheme while the dialog is open, and Cancel puts the old labels back. It opens from `[ Labels ]` (or 4 in keyboard mode, Feature 9), during play,
+  after a win and on the solution screen. Escape cancels it (since GH-163).
 - **Which labels a game shows:** a loaded save's own labels (Feature 4) win for that game; then
   the remembered preference; then Numbers. A new game goes back to the preference.
 - **Letters on 7x7 to 9x9 (GH-207)** is dimmed and shown as Numbers just as on 6x6, below.
@@ -580,7 +445,6 @@ Applies to terminal mouse mode, terminal keyboard mode and the web client.
   preference), Cancel keeps Numbers. Either way the next save stores the labels shown. The
   `Loaded '<name>'.` message follows once the dialog closes.
 - **The preference:** OK on a different scheme makes it the preference too. OK on the scheme
-  already shown changes nothing, so it doesn't adopt a loaded save's labels. The terminal keeps
-  it in `saves/preferences` (`tile_labels=pairs`); the browser in `localStorage`, per address
-  like its saves. If it can't be written the board still relabels, silently; it just isn't
+  already shown changes nothing, so it doesn't adopt a loaded save's labels. It is kept in `localStorage`, per address
+  like the saves. If it can't be written the board still relabels, silently; it just isn't
   remembered. Changing the labels isn't unsaved progress.

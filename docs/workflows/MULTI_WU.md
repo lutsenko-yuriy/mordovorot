@@ -16,6 +16,8 @@ a WU0 scenario-stub commit.
 
 3. **Longer-term: a dedicated designer (human or agent) could reduce this volatility at the source**, since the churn traces back to UI decisions not being settled before implementation starts, not to the WU-splitting process itself. Not staffed yet — flagged here as a direction, not a commitment.
 
+4. **A WU that deletes code also fixes the docs that name it.** Search the living docs, skills and scripts for the deleted symbols and file names, not only for the feature's name, and update what they say in that WU. GH-228: a grep for "terminal" missed `InputMode`, `FileSaveRepository` and `TITLE_SOLVED`, and the audit found them in the last PR.
+
 ## Pre-implementation WUs
 
 **Research-WU (optional) — then Scenario-WU or Checklist-WU**

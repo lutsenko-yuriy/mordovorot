@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.34.0] — 2026-11-01 (PR #232 merged)
+
+### Changed
+- [user] (PR #232) GH-228: The terminal version is gone: Mordovorot is played in the browser.
+- [non-user] (PR #232) GH-228 (WU4/4): the docs, the product spec and the analytics catalogue describe a browser-only project; Features 3, 5, 6 and 7 are retired, the dead analytics events and values are marked "Retired — GH-228", and docs/glossary/TERMINAL.md is deleted.
+- [non-user] (PR #229–#231) GH-228: the terminal app, its tests and the terminal-only code in the shared modules (Exit, launch flags, mode switching) are removed.
+
 ## [0.33.3] — 2026-11-01 (PR #231 merged)
 
 ### Changed

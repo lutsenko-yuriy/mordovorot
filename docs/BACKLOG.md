@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-- GH-228: Drop the terminal client (WU3/4 merged; WU4 pending)
+_(nothing in progress)_
 
 ---
 

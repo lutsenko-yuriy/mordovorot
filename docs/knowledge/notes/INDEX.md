@@ -84,6 +84,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-218: Run Mordie's search in a Web Worker in the browser client](GH-218.md)
 - [GH-222: Mordie keeps a best solution so far, from the fast solver and the exact search](GH-222.md)
 - [GH-223: Mordie's lines and endings for an answer that may not be the shortest](GH-223.md)
+- [GH-228: Drop the terminal client](GH-228.md)
 - [GH-23: Split Presenter into console/TUI-specific presenters](GH-23.md)
 - [GH-41: Kotlin Multiplatform shared modules: Core, Analytics, Mordie, Storage, ViewModel](GH-41.md)
 - [GH-6: Save and load game state to/from local files](GH-6.md)
