@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.30.5] — 2026-11-01 (PR #219 merged)
+
+### Changed
+- [app] (PR #219) GH-213: ThreeCycleSolver, a fast steppable solver for Mordie in `shared/mordie`, runs alongside the exact search (see GH-116 research). Adds the ARCHITECTURE entry, the glossary rows and the measurements note.
+
 ## [0.30.4] — 2026-11-01 (PR #217 merged)
 
 ### Changed
