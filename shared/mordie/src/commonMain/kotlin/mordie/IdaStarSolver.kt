@@ -1,8 +1,5 @@
 package mordie
 
-/** One move of a solution: rotate a row right (or a column down) by [amount] cells. */
-data class SolutionMove(val isRow: Boolean, val index: Int, val amount: Int)
-
 /**
  * IDA* search for the shortest solution of [original] in the GH-62 move metric, guided by
  * [MoveMetricHeuristic]. The depth-first search runs on an explicit stack, so [step] can stop
