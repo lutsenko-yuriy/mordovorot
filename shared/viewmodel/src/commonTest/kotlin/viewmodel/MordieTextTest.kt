@@ -90,4 +90,57 @@ class MordieTextTest {
         assertEquals("Here's how I did it in 7 moves!", MordieText.solution(7))
         assertEquals("Here's how I did it in 1 move!", MordieText.solution(1))
     }
+
+    @Test
+    fun `the lines for an answer that may not be the shortest (GH-223)`() {
+        assertEquals(
+            "Found one in 40 moves, but maybe there's a shorter one! Can you beat it?",
+            MordieText.line(MordieLine.FoundUnproven(40)),
+        )
+        assertEquals(
+            "Wait, I found a shorter one: 31 moves now! Can you beat it?",
+            MordieText.line(MordieLine.Shorter(31)),
+        )
+        assertEquals(
+            "Found one in 1 move, but maybe there's a shorter one! Can you beat it?",
+            MordieText.line(MordieLine.FoundUnproven(1)),
+        )
+        assertEquals(
+            "Wait, I found a shorter one: 1 move now! Can you beat it?",
+            MordieText.line(MordieLine.Shorter(1)),
+        )
+    }
+
+    @Test
+    fun `beating an answer not proven shortest has its own ending (GH-223)`() {
+        val unproven = MordieOutcome(40, found = true, provenShortest = false)
+
+        assertEquals(
+            "You beat me! 40 moves vs your 31. Mine may not have been the shortest.",
+            MordieText.ending(unproven, 31),
+        )
+        assertEquals(
+            "You beat me! 1 move vs your 0. Mine may not have been the shortest.",
+            MordieText.ending(MordieOutcome(1, found = true, provenShortest = false), 0),
+        )
+    }
+
+    @Test
+    fun `matching or losing to an unproven answer reads as before (GH-223)`() {
+        val unproven = MordieOutcome(40, found = true, provenShortest = false)
+
+        assertEquals("Cool, you matched me! 40 moves each!", MordieText.ending(unproven, 40))
+        assertEquals("Sorry, but I win: 40 moves vs your 45.", MordieText.ending(unproven, 45))
+    }
+
+    @Test
+    fun `the longest lines are the hard progress line and the unproven one at 99 moves (GH-223)`() {
+        assertEquals(
+            listOf(
+                "This one is hard! I have already made 99 moves and have not solved it yet!",
+                "Found one in 99 moves, but maybe there's a shorter one! Can you beat it?",
+            ),
+            MordieText.longestLines(),
+        )
+    }
 }

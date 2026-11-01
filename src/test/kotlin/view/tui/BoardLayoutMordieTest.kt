@@ -1,6 +1,7 @@
 package view.tui
 
 import mordie.MordieLine
+import mordie.MordieOutcome
 import viewmodel.MordieText
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -43,10 +44,25 @@ class BoardLayoutMordieTest {
             MordieLine.Resumed(99),
             MordieLine.Progress(99, hard = true),
             MordieLine.Found(99),
+            MordieLine.FoundUnproven(99),
+            MordieLine.Shorter(99),
         ).map { "Mordie: ${MordieText.line(it)}" }
-        for (columns in listOf(80, 40, 20)) {
+        for (columns in listOf(80, 40, 30, 20)) {
             val layout = BoardLayout(TerminalSize(columns, rows = 40), 4)
             for (line in lines) assertTrue(wordWrap(line, layout.mordieWrapWidth).size <= layout.mordieRows, "$line at $columns")
+        }
+    }
+
+    @Test
+    fun `every ending fits an 80-column title row (GH-223)`() {
+        val outcomes = listOf(
+            MordieOutcome(99, found = false),
+            MordieOutcome(99, found = true),
+            MordieOutcome(99, found = true, provenShortest = false),
+        )
+        for (outcome in outcomes) for (playerMoves in listOf(0, 98, 99, 100)) {
+            val ending = MordieText.ending(outcome, playerMoves)
+            assertTrue(ending.length <= 80, "$ending is ${ending.length} wide")
         }
     }
 

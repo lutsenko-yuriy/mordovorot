@@ -35,7 +35,7 @@ class WebBestSolutionScenarioTest {
 
         page.shifts(1)
         assertEquals(GiveUpButton.GIVE_UP, page.state.giveUp)
-        assertEquals("Found it! I had to make 40 moves to find the solution! Can you beat it?", page.state.mordie)
+        assertEquals("Found one in 40 moves, but maybe there's a shorter one! Can you beat it?", page.state.mordie)
 
         page.game.solution.onGiveUp()
         page.game.solution.onGiveUpAnswered(true)
@@ -62,5 +62,36 @@ class WebBestSolutionScenarioTest {
         page.shifts(5)
         assertTrue(page.state.mordie!!.contains("6 moves"))
         assertNull(page.props("board_solved").firstOrNull())
+    }
+
+    // --- GH-223: lines and endings for an answer that may not be the shortest ---
+
+    @Test
+    fun `the browser shows the honest line, then the shorter one`() = webTest {
+        val page = WebHarness(backgroundScope).startOn(IntArray(25) { 24 - it })
+        page.mordieSearches.latest.progress = fast(40)
+        page.shifts(5)
+        assertEquals("Found one in 40 moves, but maybe there's a shorter one! Can you beat it?", page.state.mordie)
+
+        page.mordieSearches.latest.progress = fast(31)
+        page.shifts(5)
+
+        assertEquals("Wait, I found a shorter one: 31 moves now! Can you beat it?", page.state.mordie)
+        assertEquals(GiveUpButton.GIVE_UP, page.state.giveUp)
+        assertEquals(31, page.props("mordie_shorter_found").single()["solution_length"])
+    }
+
+    @Test
+    fun `the browser ends a win over an unproven answer`() = webTest {
+        val page = WebHarness(backgroundScope).startOn(IntArray(25) { 24 - it })
+        page.mordieSearches.latest.progress = fast(40)
+        page.shifts(5)
+
+        // Column 0 shifted down once from solved: one up-shift wins.
+        page.board.restoreState(IntArray(25) { if (it % 5 == 0) ((it / 5 + 4) % 5) * 5 else it }, 0)
+        page.game.onArrow(Arrow.UP, 0)
+
+        assertEquals("You beat me! 40 moves vs your 1. Mine may not have been the shortest.", page.state.mordie)
+        assertEquals("beat_mordie", page.props("board_solved").single()["mordie_result"])
     }
 }

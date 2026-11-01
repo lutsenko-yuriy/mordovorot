@@ -71,10 +71,12 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       ├── SearchProtocol.kt        # GH-218: the page <-> Web Worker messages as plain strings
 │       │                              # (start: arrangement + saved N; progress, with the solution)
 │       ├── Mordie.kt                # Opponent state: shift count, 5-shift checks, opening/resume
-│       │                              # kind, found reveal, frozen outcome, save snapshot;
+│       │                              # kind, found reveal, a shorter solution announced at a check
+│       │                              # (MordieCheck, GH-223), frozen outcome, save snapshot;
 │       │                              # MAX_SIDE 5 and sitOut() for larger boards (GH-160)
-│       └── MordieLine.kt            # MordieLine (sealed) / MordieOutcome / MordieResult /
-│                                      # MordieSnapshot (what a save stores)
+│       └── MordieLine.kt            # MordieLine (sealed, incl. FoundUnproven / Shorter) /
+│                                      # MordieCheck / MordieOutcome / MordieResult (incl.
+│                                      # BEAT_MORDIE) / MordieSnapshot (what a save stores)
 ├── viewmodel/           # :shared:viewmodel - everything but Exit and session control (api
 │   │                      # dependency on the four modules above + coroutines)
 │   └── viewmodel/

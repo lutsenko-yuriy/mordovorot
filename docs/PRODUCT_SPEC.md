@@ -256,16 +256,22 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
     told the player: its last progress line, 0 for a new game, or the saved N after a load.
   - From the 60th shift on, the progress line starts with `This one is hard! `.
   - When a check finds that Mordie has a solution, the line switches at once, even in an empty
-    stretch, to `Found it! I had to make N moves to find the solution! Can you beat it?`, and
-    stays until the board is solved. Later checks, every 5 shifts, update N while the answer is
-    not proven shortest. Until the lines are reworded for an answer that may not be the shortest
-    (GH-223), the line and the endings name this N.
+    stretch, and stays until the board is solved or the line below replaces it. If the answer is
+    proven shortest (always on 3x3 and 4x4) it is `Found it! I had to make N moves to find the
+    solution! Can you beat it?`; if not, it is `Found one in N moves, but maybe there's a shorter
+    one! Can you beat it?` (GH-223).
+  - Later checks, every 5 shifts, look at the best solution while it is not proven shortest.
+    When the exact search has found a shorter one, the line switches at once to `Wait, I found a
+    shorter one: N moves now! Can you beat it?`, N being the new length, and stays until the next
+    drop (the same text with the new N) or the solve. Becoming proven shortest announces nothing.
 - **Endings:** when the player solves the board in M moves, the title shows one of these instead
   of `Congratulations ✓`, and the line disappears:
   - Mordie has no solution yet: `You beat me! I was still at N moves.`
   - M = N: `Cool, you matched me! N moves each!`
   - M > N: `Sorry, but I win: N moves vs your M.`
-  - M < N (with a hand-edited save, or when N is not proven shortest, GH-222):
+  - M < N, N not proven shortest (GH-222, GH-223): `You beat me! N moves vs your M. Mine may not have
+    been the shortest.`
+  - M < N, N proven shortest (with a hand-edited save only, so a likely cheat):
     `I made N moves and you made M moves! Are you a machine?`
   - A count of 1 reads `1 move`.
 - **Solution screen (GH-126):** Mordie's line reads `Here's how I did it in N moves!` there
@@ -275,8 +281,8 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
   - Loading a save where Mordie was still searching resumes the search past the saved N, and the
     first line (shifts 0-4) is `Okay, so we stopped when I was at N moves! What was I doing?..`
     A game saved while Mordie's answer is not yet proven shortest is saved this way too (GH-222),
-    N being the longest length ruled out: both solvers start again on load, and the `Found it!`
-    line returns at the next check. Saves keep the best solution so far in GH-224.
+    N being the longest length ruled out: both solvers start again on load, and a found line
+    (`Found it!` or the unproven one) returns at the next check. Saves keep the best solution so far in GH-224.
   - Loading a save where Mordie had found its solution shows the `Found it!` line at once.
   - Loading a solved save shows its ending, or `Congratulations ✓` if it has no Mordie data.
   - A save with no Mordie data (made before GH-83), or one fixed by Repair (GH-74): if no moves
@@ -508,7 +514,7 @@ published at https://lutsenko-yuriy.github.io/mordovorot/, plays the same game w
 ### Feature 10 — Give Up and Mordie's solution (GH-126)
 Applies to terminal mouse mode, terminal keyboard mode and the web client.
 - **Give Up:** `[ Give Up ]` sits on its own row, directly above the toolbar. It is dimmed and
-  inert until Mordie has a solution (the `Found it!` moment, Feature 8): at the first 5-shift
+  inert until Mordie has a solution (the moment a found line appears, Feature 8): at the first 5-shift
   check on every size Mordie plays, 5x5 included (GH-222). The solution it shows is the best
   known when the player gives up, which may be longer than the shortest. On 6x6, which Mordie
   sits out, it isn't shown at all (GH-160). Keyboard mode: 5. Pressing it asks

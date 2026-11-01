@@ -138,7 +138,7 @@ class PhoneFitStylesTest {
         val veryShort = block("@media (orientation: landscape) and (max-height: 340px)")
 
         assertTrue("margin-top: 0;" in rule(veryShort, ".panel"), veryShort)
-        assertTrue("min-height: calc(2em * 1.4);" in rule(veryShort, ".panel > .mordie"), veryShort)
+        assertTrue("min-height: calc(3em * 1.4);" in rule(veryShort, ".panel > .mordie"), veryShort)
         assertTrue("font-size: 1.25rem;" in rule(veryShort, ".moves"), veryShort)
     }
 

@@ -4,7 +4,8 @@ import analytics.AnalyticsService
 import board_model.BoardModel
 import board_model.Solvability
 import mordie.Mordie
-import mordie.MordieLine
+import mordie.MordieCheck
+import mordie.SearchProgress
 import mordie.SolutionMove
 import mordie.SolutionSource
 import storage.SavedMordie
@@ -41,22 +42,36 @@ internal class MordieHooks(
     /** Starts Mordie unless it is already bound, e.g. after a mode switch. */
     fun onStartup() = if (tooBig()) mordie.ensureSatOut(board.squareSide) else mordie.ensureStarted(board.boardArray)
 
-    /** Call after every shift; tracks `mordie_solution_found` when this shift's check reveals it. */
+    /** Call after every shift; tracks `mordie_solution_found` when this shift's check reveals the
+     *  solution, and `mordie_shorter_found` when it announces a shorter one (GH-223). */
     fun onShift() {
-        val found = mordie.onShift(board.moveCount) ?: return
-        analytics.track(
-            "mordie_solution_found",
-            mapOf(
-                "board_size" to board.squareSide,
-                "solution_length" to found.moves,
-                "player_shift_count" to mordie.shifts,
-                "search_duration_ms" to found.elapsedMs,
-                "resumed_from_save" to mordie.resumedFromSave,
-                "source" to (found.source ?: SolutionSource.EXACT_SEARCH).analyticsName,
-                "proven_shortest" to found.provenShortest,
-            ),
-        )
+        when (val check = mordie.onShift(board.moveCount)) {
+            null -> {}
+            is MordieCheck.Revealed -> trackRevealed(check.progress)
+            is MordieCheck.Shortened -> analytics.track(
+                "mordie_shorter_found",
+                mapOf(
+                    "board_size" to board.squareSide,
+                    "solution_length" to check.moves,
+                    "previous_length" to check.previous,
+                    "proven_shortest" to check.provenShortest,
+                ),
+            )
+        }
     }
+
+    private fun trackRevealed(found: SearchProgress) = analytics.track(
+        "mordie_solution_found",
+        mapOf(
+            "board_size" to board.squareSide,
+            "solution_length" to found.moves,
+            "player_shift_count" to mordie.shifts,
+            "search_duration_ms" to found.elapsedMs,
+            "resumed_from_save" to mordie.resumedFromSave,
+            "source" to (found.source ?: SolutionSource.EXACT_SEARCH).analyticsName,
+            "proven_shortest" to found.provenShortest,
+        ),
+    )
 
     /** Freezes Mordie's result; returns its `board_solved` props, empty when it sat this game out. */
     fun onSolved(): Map<String, Any> {
@@ -89,8 +104,8 @@ internal class MordieHooks(
     /** Whether Mordie sits games of this board's size out (GH-160), solved or not. */
     fun sitsOut(): Boolean = tooBig()
 
-    /** Whether `Found it!` is showing. */
-    fun revealed(): Boolean = mordie.line() is MordieLine.Found
+    /** Whether Mordie's solution has been revealed, whichever line announces it. */
+    fun revealed(): Boolean = mordie.revealed
 
     /** Whether Mordie's frozen result, after a win, is a found solution. */
     fun foundBeforeWin(): Boolean = mordie.outcome()?.found == true

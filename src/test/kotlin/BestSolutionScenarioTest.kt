@@ -138,6 +138,10 @@ class BestSolutionScenarioTest {
 
     private fun found(moves: Int) = "Mordie: Found it! I had to make $moves moves to find the solution! Can you beat it?"
 
+    private fun unproven(moves: Int) = "Mordie: Found one in $moves moves, but maybe there's a shorter one! Can you beat it?"
+
+    private fun shorter(moves: Int) = "Mordie: Wait, I found a shorter one: $moves moves now! Can you beat it?"
+
     // --- scenarios ---
 
     @Test
@@ -145,7 +149,7 @@ class BestSolutionScenarioTest {
         val run = session(5, listOf(script(fast(40))) + snappedShifts(5, 4) + snappedShifts(5, 1))
 
         assertTrue(giveUpDimmed(snaps[3]))
-        assertEquals(found(40), mordieShown(snaps[4], 5))
+        assertEquals(unproven(40), mordieShown(snaps[4], 5))
         assertFalse(giveUpDimmed(snaps[4]))
         val event = run.event("mordie_solution_found")
         assertEquals("fast_solver", event["source"])
@@ -161,8 +165,8 @@ class BestSolutionScenarioTest {
                 giveUpButton(3) + clickButton(confirm, "yes"),
         )
 
-        assertEquals(found(8), mordieShown(snaps[4], 3))
-        assertEquals(found(6), mordieShown(snaps[9], 3))
+        assertEquals(unproven(8), mordieShown(snaps[4], 3))
+        assertEquals(shorter(6), mordieShown(snaps[9], 3))
         val given = run.event("game_given_up")
         assertEquals(6, given["solution_length"])
         assertEquals(true, given["solution_proven_shortest"])
@@ -204,7 +208,7 @@ class BestSolutionScenarioTest {
         run.event("load_command_used")
         assertEquals("Mordie: Okay, so we stopped when I was at 7 moves! What was I doing?..", mordieShown(snaps[0], 4))
         assertTrue(giveUpDimmed(snaps[0]))
-        assertEquals(found(12), mordieShown(snaps.last(), 4))
+        assertEquals(unproven(12), mordieShown(snaps.last(), 4))
     }
 
     @Test

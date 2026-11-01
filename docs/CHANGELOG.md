@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.33.0] — 2026-11-01 (PR #227 merged)
+
+### Changed
+- [user] (PR #227) GH-223: Mordie now says when its answer may not be the shortest: `Found one in N moves, but maybe there's a shorter one! Can you beat it?`. When the exact search finds a shorter solution, it announces `Wait, I found a shorter one: N moves now! Can you beat it?`. Beating an answer that was not proven shortest has its own ending, `You beat me! N moves vs your M. Mine may not have been the shortest.`; `Are you a machine?` stays for a proven answer.
+- [non-user] (PR #227) GH-223: `Mordie.onShift` returns a `MordieCheck` (`Revealed` / `Shortened`); new `MordieLine.FoundUnproven` / `Shorter` and `MordieResult.BEAT_MORDIE`; new analytics event `mordie_shorter_found` and `board_solved.mordie_result` value `beat_mordie` (see `docs/ANALYTICS_EVENTS.md`); the terminal reserves Mordie's rows for the unproven line, and the web's very short landscape panel keeps three lines for Mordie.
+
 ## [0.32.0] — 2026-11-01 (PR #226 merged)
 
 ### Changed

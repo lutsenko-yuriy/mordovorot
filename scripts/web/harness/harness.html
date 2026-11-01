@@ -28,7 +28,7 @@ const toolbarRows = Number(q.get("rows") || 1);
 // GH-168: `scroll` lets larger text make the page taller than the window; see measure().
 const fit = q.get("fit") || "window"; // window | scroll
 // Mordie's longest line, so its spot is as tall as it gets.
-const LONG = "Found it! I had to make 12 moves to find the solution! Can you beat it?";
+const LONG = "Found one in 99 moves, but maybe there's a shorter one! Can you beat it?";
 const wait = ms => new Promise(r => setTimeout(r, ms));
 const round = r => r && `${Math.round(r.left)},${Math.round(r.top)}`;
 const results = [];
