@@ -4,8 +4,8 @@ Input and display settings of the web client: input mode, keyboard layouts, sele
 
 | Term | Definition | Code symbol |
 |---|---|---|
-| Controls dialog | The dialog `[ Controls ]` / 6 opens in both clients and modes: picks the input mode (Mouse or Keyboard) and the keyboard layout, and lists the keys of the marked layout. Replaces the mode-switch button (GH-189; built in GH-170, GH-171) | — |
-| Input mode | Whether the player drives the game with the Mouse or the Keyboard. Chosen in the Controls dialog; switchable mid-session without losing the game | `InputMode` |
+| Controls dialog | The dialog `[ Controls ]` / 6 opens in both input modes: picks the input mode (Mouse or Keyboard) and the keyboard layout, and lists the keys of the marked layout. Replaces the mode-switch button (GH-189; built in GH-170, GH-171) | — |
+| Input mode | Whether the player drives the game with the Mouse or the Keyboard. Chosen in the Controls dialog; switchable mid-session without losing the game | `PlayMode` |
 | Key hints | Keyboard mode's on-page reminder of the board keys for the active layout, ordered by hand: two lines under the board, the keys above what they do (GH-170, GH-171) | — |
 | Keyboard layout | Which hand does which job in keyboard mode: Right-handed (default; WASD select, HJKL/arrows shift) or Left-handed (HJKL/arrows select, WASD shift). Chosen in the Controls dialog, remembered as a preference (GH-189) | — |
 | Line selection | Keyboard mode's selected row and selected column, one of them active; WASD selects, HJKL/arrows shift the active line. Its tiles are highlighted (GH-101). Replaced by Selected tile (GH-169; built in GH-170, GH-171) and no longer in the game | — |

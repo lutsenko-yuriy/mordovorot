@@ -354,8 +354,8 @@ and `web` use KMP's source sets (`src/commonMain/kotlin`, `src/commonTest/kotlin
 
 ## Layers
 
-Classic MVVM. `board_model` and `view` are each an interface + one implementation
-(`view`'s is the browser's `web.WebGame`).
+Classic MVVM. `board_model` is an interface + one implementation; the `view` is the browser's
+`web.WebGame` (no interface: it is the only client).
 `viewmodel` (GH-42) is the shared `GameViewModel` interface + one `GameViewModelImpl`
 (`:shared:viewmodel`, GH-41),
 holding no reference to any `View` — it communicates with whichever `View` is driving it
@@ -368,7 +368,7 @@ Core game state and rules: board array, shifting, reset, and the win check
 
 **Board size (GH-44):** the board stays square, with a side of 3–6 (default 4; 6 since GH-160).
 `BoardImpl(maxSide)` widens that limit (default `BoardSize.MAX`); only the web builds it with 9, for
-the very large sizes 7–9 (`BoardSize.VERY_LARGE`, GH-207), so the other clients' boards stop at 6.
+the very large sizes 7–9 (`BoardSize.VERY_LARGE`, GH-207), so a board stops at 6 elsewhere.
 `BoardSize` holds that range and its validation — the single place it lives, per
 this layer's "range validation lives in `board_model`, the view translates but
 does not validate" rule (see the 1-based display dialect note under `view`).
@@ -444,7 +444,7 @@ outcome, a solved save without it clears Mordie, a found save resumes found, a s
 save with a solvable original resumes at its N, and anything else (and a Repair) starts
 fresh from the loaded board if it has no moves yet, or clears Mordie if it has. All of this
 lives in `MordieHooks`. In the web, `WebState` carries the line and the solved title
-(`mordieEnding() ?: TITLE_SOLVED`). Every `restoreOnStartup` path ends with
+(`mordieEnding() ?: WebGame.SOLVED_TITLE`). Every `restoreOnStartup` path ends with
 `mordie.ensureStarted`, which does nothing once Mordie is bound.
 
 **Give Up and the solution screen (GH-126).** Mordie's search keeps its solution's moves
@@ -510,7 +510,7 @@ adding an `input_method` (`mouse`/`keyboard`, GH-18) property to
 every forwarded event — the decorator pattern lets the page distinguish events
 by input mode without `GameViewModelImpl` itself knowing which UI mode is
 running. `PlatformAnalyticsService` (GH-110) adds `platform` the same way; it is the
-innermost decorator, wrapping the outermost service in `Main`, so
+innermost decorator, wrapping the outermost service in `startWebGame`, so
 `app_launched` and `input_mode_switched` carry it too. Its value is always `web` now; the property
 stays for the mobile clients.
 

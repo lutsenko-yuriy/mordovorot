@@ -37,8 +37,8 @@ https://lutsenko-yuriy.github.io/mordovorot/ (Feature 9). It was a terminal game
 Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is the only client.
 
 ### Feature 4 — Save and load (GH-6)
-- The Save dialog stores the board's current tile arrangement to a local file, creating it or
-  overwriting an existing file of that name. The Load dialog restores the board from an existing
+- The Save dialog stores the board's current tile arrangement to the browser's storage, creating it or
+  overwriting an existing save of that name. The Load dialog restores the board from an existing
   save. Both work at any point in a game.
 - A save that can't be loaded (deleted or corrupted since it was listed) leaves the board
   untouched and shows a message instead of crashing. Loading a save whose board size differs
