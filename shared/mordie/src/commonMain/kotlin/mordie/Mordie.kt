@@ -25,6 +25,12 @@ class Mordie(private val factory: MordieSearchFactory) {
     private var checkedMoves = 0
     private var revealedMoves: Int? = null
 
+    /** The line from the reveal on, fixed when set: it changes only at a drop (GH-223). */
+    private var announced: MordieLine? = null
+
+    /** Whether the solution has been revealed, whichever line says so. */
+    val revealed: Boolean get() = revealedMoves != null
+
     /** Whether the revealed answer is proven shortest (GH-222); the checks go on until it is. */
     var provenShortest = false
         private set
@@ -84,6 +90,7 @@ class Mordie(private val factory: MordieSearchFactory) {
         toldMoves = moves
         if (found) {
             revealedMoves = moves
+            announced = MordieLine.Found(moves)
             provenShortest = true
         } else {
             opening = MordieLine.Resumed(moves)
@@ -113,16 +120,22 @@ class Mordie(private val factory: MordieSearchFactory) {
         satOutSide = side
     }
 
-    /** Counts a shift, the player having made [playerMoves] moves; returns the progress when this
-     *  shift's check reveals the solution. Later checks keep the best answer until it is proven. */
-    fun onShift(playerMoves: Int): SearchProgress? {
+    /** Counts a shift, the player having made [playerMoves] moves; returns what this shift's check
+     *  found worth telling: the solution revealed, or a shorter one. Later checks keep the best
+     *  answer until it is proven. */
+    fun onShift(playerMoves: Int): MordieCheck? {
         if (sitsOut) shifts++
         if (original == null || outcome != null) return null
         shifts++
         if (shifts % CHECK_EVERY != 0) return null
         if (revealedMoves != null) {
-            if (!provenShortest) takeBest()
-            return null
+            if (provenShortest) return null
+            val previous = revealedMoves!!
+            takeBest()
+            val moves = revealedMoves!!
+            if (moves >= previous) return null
+            announced = MordieLine.Shorter(moves)
+            return MordieCheck.Shortened(moves, previous, provenShortest)
         }
         val progress = search!!.progress()
         checkedMoves = progress.moves.coerceAtLeast(0)
@@ -134,15 +147,16 @@ class Mordie(private val factory: MordieSearchFactory) {
         revealedMoves = progress.moves
         solution = progress.solution
         provenShortest = progress.provenShortest
+        announced = if (provenShortest) MordieLine.Found(progress.moves) else MordieLine.FoundUnproven(progress.moves)
         shiftsAtReveal = shifts
         playerMovesAtReveal = playerMoves
-        return progress
+        return MordieCheck.Revealed(progress)
     }
 
     fun line(): MordieLine? {
         if (sitsOut) return MordieLine.SitsOut(satOutSide).takeIf { shifts < CHECK_EVERY }
         if (original == null || outcome != null) return null
-        revealedMoves?.let { return MordieLine.Found(it) }
+        if (revealedMoves != null) return announced
         return when {
             shifts < CHECK_EVERY -> opening
             shifts % PROGRESS_EVERY < CHECK_EVERY && progressWindowShown ->
@@ -207,6 +221,7 @@ class Mordie(private val factory: MordieSearchFactory) {
         opening = MordieLine.Opening
         checkedMoves = 0
         revealedMoves = null
+        announced = null
         toldMoves = 0
         progressWindowShown = false
         provenShortest = false

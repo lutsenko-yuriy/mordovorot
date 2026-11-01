@@ -36,8 +36,8 @@ class MordieBestSolutionTest {
         shifts(4)
         val revealed = mordie.onShift(0)
 
-        assertEquals(fast(8), revealed)
-        assertEquals(MordieLine.Found(8), mordie.line())
+        assertEquals(MordieCheck.Revealed(fast(8)), revealed)
+        assertEquals(MordieLine.FoundUnproven(8), mordie.line())
         assertFalse(mordie.provenShortest)
     }
 
@@ -50,7 +50,7 @@ class MordieBestSolutionTest {
         factory.latest.progress = exact(6)
         shifts(5)
 
-        assertEquals(MordieLine.Found(6), mordie.line())
+        assertEquals(MordieLine.Shorter(6), mordie.line())
         assertEquals(6, mordie.solution?.size)
         assertTrue(mordie.provenShortest)
     }
@@ -61,13 +61,13 @@ class MordieBestSolutionTest {
         factory.latest.progress = fast(8)
         shifts(10)
 
-        assertEquals(MordieLine.Found(8), mordie.line())
+        assertEquals(MordieLine.FoundUnproven(8), mordie.line())
         assertEquals(8, mordie.solution?.size)
         assertFalse(mordie.provenShortest)
     }
 
     @Test
-    fun `a later reveal returns nothing, so mordie_solution_found fires once`() {
+    fun `a later check never reveals again, so mordie_solution_found fires once`() {
         start()
         factory.latest.progress = fast(8)
         shifts(5)
@@ -75,7 +75,7 @@ class MordieBestSolutionTest {
         factory.latest.progress = exact(6)
         shifts(4)
 
-        assertNull(mordie.onShift(0))
+        assertEquals(MordieCheck.Shortened(moves = 6, previous = 8, provenShortest = true), mordie.onShift(0))
     }
 
     @Test

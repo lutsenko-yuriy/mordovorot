@@ -16,6 +16,8 @@ object MordieText {
             (if (line.hard) "This one is hard! " else "") +
                 "I have already made ${moves(line.moves)} and have not solved it yet!"
         is MordieLine.Found -> "Found it! I had to make ${moves(line.moves)} to find the solution! Can you beat it?"
+        is MordieLine.FoundUnproven -> "Found one in ${moves(line.moves)}, but maybe there's a shorter one! Can you beat it?"
+        is MordieLine.Shorter -> "Wait, I found a shorter one: ${moves(line.moves)} now! Can you beat it?"
     }
 
     /** The only line Mordie says on a [side]x[side] board it sits out (GH-160), for the terminal
@@ -29,6 +31,8 @@ object MordieText {
             MordieResult.PLAYER_WON -> "You beat me! I was still at $mine."
             MordieResult.MATCHED -> "Cool, you matched me! $mine each!"
             MordieResult.MORDIE_WON -> "Sorry, but I win: $mine vs your $playerMoves."
+            MordieResult.BEAT_MORDIE ->
+                "You beat me! $mine vs your $playerMoves. Mine may not have been the shortest."
             MordieResult.MACHINE -> "I made $mine and you made ${moves(playerMoves)}! Are you a machine?"
         }
     }

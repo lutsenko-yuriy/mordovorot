@@ -288,7 +288,7 @@ class MordieTest {
         assertNull(mordie.onShift(0))
         assertNull(mordie.line())
 
-        assertEquals(found(11), mordie.onShift(0))
+        assertEquals(MordieCheck.Revealed(found(11)), mordie.onShift(0))
         assertEquals(MordieLine.Found(11), mordie.line())
         repeat(20) { assertNull(mordie.onShift(0)) }
         assertEquals(MordieLine.Found(11), mordie.line())
