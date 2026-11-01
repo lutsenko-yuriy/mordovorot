@@ -13,14 +13,15 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
-## [0.34.0] — 2026-11-01 (PR #233 merged)
+## [0.34.1] — 2026-11-01 (PR #234 merged)
+
+### Changed
+- [wip] (PR #234) GH-224 (WU1/2): saves keep whether Mordie's answer is proven shortest (line 9, `unproven <R>`); a solved save reloads with the right ending.
+
+## [0.34.0] — 2026-11-01 (PRs #232, #233 merged)
 
 ### Changed
 - [test] (PR #233) GH-224 (WU0): scenario stubs for saves keeping Mordie's best solution, plus the analytics notes for the ticket.
-
-## [0.34.0] — 2026-11-01 (PR #232 merged)
-
-### Changed
 - [user] (PR #232) GH-228: The terminal version is gone: Mordovorot is played in the browser.
 - [non-user] (PR #232) GH-228 (WU4/4): the docs, the product spec and the analytics catalogue describe a browser-only project; Features 3, 5, 6 and 7 are retired, the dead analytics events and values are marked "Retired — GH-228", and docs/glossary/TERMINAL.md is deleted.
 - [non-user] (PR #229–#231) GH-228: the terminal app, its tests and the terminal-only code in the shared modules (Exit, launch flags, mode switching) are removed.

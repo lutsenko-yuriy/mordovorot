@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-- GH-224: Saves keep Mordie's best solution so far (Scenario-WU merged; WU1 and WU2 pending)
+- GH-224: Saves keep Mordie's best solution so far (Scenario-WU and WU1 merged; WU2 pending)
 
 ---
 
