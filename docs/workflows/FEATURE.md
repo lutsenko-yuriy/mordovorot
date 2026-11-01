@@ -148,7 +148,7 @@ behaviour beyond a literal value, it is not trivial — use the full workflow in
     5. Minor fixes (typos, cosmetic, comment wording) do not require a re-review pass.
     6. If this repo has a slower CI suite (integration/E2E) separate from unit tests, dispatch it and confirm it passes before the loop can close, in addition to any local run. A failure in a scenario this PR/MR's own scope must keep green: keep fixing and re-dispatching until it passes. A failure in a scenario **outside** this PR/MR's scope: re-dispatch up to 3 times; if still red on the 3rd attempt, stop and flag it to the user as flakiness to track separately.
     7. The loop ends only when the user explicitly approves ("LGTM", "looks good", "approved", etc.) and any required CI dispatch (step 10.6, when applicable) has passed.
-11. Remind the user to compact context after each commit to keep the conversation lean.
+11. Remind the user to compact context at real boundaries: a merged WU, a shipped ticket, or when the context is clearly large. Not after every planning skill (`brief`, `analyze`, `plan`, `draft-scenarios`) or every commit (GH-222: asked too often).
 12. When the user approves the PR/MR, invoke `debrief` on the current feature branch to capture the retrospective before merging:
     ```
     Invoke the debrief skill for GH-XX
