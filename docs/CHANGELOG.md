@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.30.3] — 2026-11-01 (PR #212 merged)
+
+### Changed
+- [meta] (PR #212) GH-116: research on Mordie's fast solvers. Recommends an Amano-style 3-cycle solver in `shared/mordie`, run alongside the exact search; the Shell-sort and table-based IDA* options are not recommended. Adds the Backend section to CONSTRAINTS, the Exact search and Fast solver glossary rows, the one-question-per-ticket rule in RESEARCH.md, and the GH-116 debrief note.
+
 ## [0.30.2] — 2026-10-31 (PR #210 merged)
 
 ### Changed
