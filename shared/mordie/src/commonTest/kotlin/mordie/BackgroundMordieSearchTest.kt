@@ -68,6 +68,33 @@ class BackgroundMordieSearchTest {
     }
 
     @Test
+    fun `the listener sees the found snapshot with its solution`() = realTime {
+        val seen = mutableListOf<SearchProgress>()
+        val search = BackgroundMordieSearch(twoMoves, ruledOut = -1, onSnapshot = { seen += it })
+
+        withTimeout(10_000) { search.join() }
+
+        val last = seen.last()
+        assertTrue(last.found)
+        assertEquals(2, last.solution?.size)
+        assertEquals(search.progress(), last)
+    }
+
+    @Test
+    fun `the listener is not called after cancel settles`() = realTime {
+        var calls = 0
+        val search = BackgroundMordieSearch(hard, ruledOut = -1, onSnapshot = { calls++ })
+        delay(50)
+
+        search.cancel()
+        withTimeout(5_000) { search.join() }
+        val settled = calls
+        delay(50)
+
+        assertEquals(settled, calls)
+    }
+
+    @Test
     fun `the NONE factory never searches`() {
         val search = MordieSearchFactory.NONE.start(twoMoves, ruledOut = 4)
 
