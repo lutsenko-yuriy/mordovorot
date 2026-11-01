@@ -232,8 +232,9 @@ class Mordie(private val factory: MordieSearchFactory) {
     }
 
     private fun snapshotOf(original: IntArray, state: MordieOutcome, solution: List<SolutionMove>?, ruledOut: Int): MordieSnapshot {
-        val unproven = state.found && !state.provenShortest
-        val kept = if (unproven) ruledOut.coerceIn(0, maxOf(0, state.moves - 2)) else 0
+        // One move is always the shortest, and the save format has no R below 0 for it (GH-224).
+        val unproven = state.found && !state.provenShortest && state.moves >= 2
+        val kept = if (unproven) ruledOut.coerceIn(0, state.moves - 2) else 0
         return MordieSnapshot(original.copyOf(), state.moves, state.found, solution, provenShortest = !unproven, ruledOut = kept)
     }
 

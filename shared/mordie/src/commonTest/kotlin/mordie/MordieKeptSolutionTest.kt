@@ -112,4 +112,19 @@ class MordieKeptSolutionTest {
 
         assertTrue(mordie.snapshot()!!.provenShortest)
     }
+
+    @Test
+    fun `a one-move answer the search has not confirmed yet is saved as proven`() {
+        mordie.startFresh(board)
+        factory.latest.progress = SearchProgress(
+            1, found = true, elapsedMs = 1, solution = path(1), ruledOut = -1, provenShortest = false, source = SolutionSource.FAST_SOLVER,
+        )
+        shifts(5)
+        mordie.giveUp()
+
+        val snapshot = mordie.snapshot()!!
+
+        assertTrue(snapshot.provenShortest)
+        assertEquals(0, snapshot.ruledOut)
+    }
 }
