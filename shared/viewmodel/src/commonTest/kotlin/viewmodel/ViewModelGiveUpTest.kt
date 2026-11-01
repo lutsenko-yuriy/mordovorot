@@ -152,7 +152,7 @@ class ViewModelGiveUpTest {
 
         assertEquals(
             mapOf(
-                "board_size" to 3, "move_count" to 2, "solution_length" to 2,
+                "board_size" to 3, "move_count" to 2, "solution_length" to 2, "solution_proven_shortest" to true,
                 "moves_since_solution_found" to 1, "shifts_since_solution_found" to 1,
             ),
             event("game_given_up"),
@@ -171,7 +171,7 @@ class ViewModelGiveUpTest {
 
         loaded.giveUp()
 
-        assertEquals(mapOf("board_size" to 3, "move_count" to 1, "solution_length" to 2), event("game_given_up"))
+        assertEquals(mapOf("board_size" to 3, "move_count" to 1, "solution_length" to 2, "solution_proven_shortest" to true), event("game_given_up"))
     }
 
     @Test

@@ -19,8 +19,9 @@ sealed interface MordieLine {
 }
 
 /** Mordie's state when the board was solved: [moves] is its solution's length if [found],
- *  else the largest length it had ruled out. */
-data class MordieOutcome(val moves: Int, val found: Boolean) {
+ *  else the largest length it had ruled out. [provenShortest] says whether a found solution is
+ *  the minimum - it may be the fast solver's longer one (GH-222). */
+data class MordieOutcome(val moves: Int, val found: Boolean, val provenShortest: Boolean = found) {
 
     /** Fewer moves than [moves] can only come from an inconsistent (e.g. hand-edited) save. */
     fun result(playerMoves: Int): MordieResult = when {

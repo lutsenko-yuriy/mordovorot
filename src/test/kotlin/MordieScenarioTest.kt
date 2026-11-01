@@ -223,6 +223,8 @@ class MordieScenarioTest {
                 "solution_length" to 11,
                 "player_shift_count" to 10,
                 "search_duration_ms" to 1234L,
+                "source" to "exact_search",
+                "proven_shortest" to true,
                 "resumed_from_save" to false,
                 "input_method" to "mouse",
             ),

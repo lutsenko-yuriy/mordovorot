@@ -440,6 +440,8 @@ class ViewModelMordieTest {
                 "player_shift_count" to 5,
                 "search_duration_ms" to 1234L,
                 "resumed_from_save" to false,
+                "source" to "exact_search",
+                "proven_shortest" to true,
             ),
             event("mordie_solution_found"),
         )

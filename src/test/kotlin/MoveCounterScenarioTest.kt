@@ -164,6 +164,7 @@ class MoveCounterScenarioTest {
                     "tile_labels" to "numbers",
                     "mordie_result" to "player_won",
                     "mordie_moves" to 0,
+                    "mordie_proven_shortest" to false,
                     "input_method" to "mouse",
                 ),
             ),
