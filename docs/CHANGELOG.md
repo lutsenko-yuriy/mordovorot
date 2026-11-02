@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.37.0] — 2026-11-02 (PR #240 merged)
+
+### Changed
+
+- [user] (PR #240) GH-237: Saves are written in a compact packed format: a short run of characters instead of readable text, so even a 9x9 game with Mordie's whole solution fits in under 1 KB. Saves in the old text format still load; an older build can't read a newer save.
+- [non-user] (PR #240) GH-237 (WU2/2): SaveFileCodec.encode writes the packed format only; the text format is read-only (TextSaveFormat), and the browser save repository, the save scenarios and the fuzz tests cover the new format.
+
 ## [0.36.2] — 2026-11-02 (PR #239 merged)
 
 ### Changed
