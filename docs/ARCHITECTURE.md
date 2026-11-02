@@ -194,6 +194,11 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── WebControlsDialog.kt # The Controls dialog's flow over WebGame's modal and the session's mode (GH-171)
 │   ├── PlayMode.kt / PlayModePreference.kt # Mouse or keyboard, kept under `input_mode` (GH-171)
 │   ├── PressedWith.kt   # The session's last input, read per event as input_method (GH-171)
+│   ├── ShareLink.kt     # GH-243 (planned, WU1/WU2): `<page address>#b=<board>` built and read; playable, or rejected
+│   │                      # as invalid / unsupported_size / unsolvable. storage.BoardLinkFormat (ADR-0005) holds the board's bits
+│   ├── qr/              # GH-243 (planned, WU1): a DOM-free QR encoder (byte mode, ECC M, versions 1-10) and its SVG path;
+│   │                      # imports only the standard library, a boundary test checks it (as web.a11y)
+│   ├── WebShareFlows.kt # GH-243 (planned, WU2/WU3): opening a link, the Share dialog, Copy link (the WebControlsDialog pattern)
 │   ├── WebKeys.kt       # A key outside a dialog to a PageKey: ToolbarButton's digits, 0, or a shared
 │   │                    # BoardKey or SolutionKey while the board has focus (GH-171); a non-Latin
 │   │                    # key counts as the Latin letter at its position (GH-200)
