@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-_(nothing in progress)_
+- GH-243: Share a board with a link (Scenario-WU merged; WU1, WU2 and WU3 pending)
 
 ---
 
