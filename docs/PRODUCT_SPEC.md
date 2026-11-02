@@ -104,15 +104,14 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   length of the best solution, which drops whenever the exact search finds a shorter one. The
   best solution is *proven shortest* once the exact search has finished or has ruled out every
   shorter length. On 5x5 the exact search may never finish within a game, so the fast answer
-  stands, longer than the minimum. In the browser the search runs in a
+  stands, longer than the minimum, which in practice it does on 6x6 and larger. In the browser the search runs in a
   Web Worker (GH-218), so the page stays smooth while Mordie thinks, and a hidden tab keeps
   searching at whatever rate the browser allows.
-- **Mordie sits 6x6 out (GH-160)**, until a faster search exists (GH-116): no search, and for
-  shifts 0-4 its line is `6x6 is too much for me, you're on your own!`, then empty. A loaded 6x6
-  save shows the same line (and its Mordie lines, if any, are dropped at the next save). The
-  solved title is `Congratulations ✓`, the Give Up row stays empty (no `[ Give Up ]`), and no `[ Mordie's solution ]`
-  follows a win.
-  The browser's 7x7 to 9x9 (GH-207) are sat out the same way, the line naming the size.
+- **Mordie plays every board size, 3x3 to 9x9 (GH-225).** Before that it sat 6x6 and the
+  browser's 7x7 to 9x9 out (GH-160, GH-207). On 6x6 and larger the fast answer is 130 to 340
+  moves long and the exact search won't shorten it within a game, so it stays unproven and
+  the line is `Found one in N moves, but maybe there's a shorter one!` The only game Mordie
+  still sits out is a loaded one already played on that has no Mordie data (below).
 - **Mordie's line** sits under `Moves: N`: `Mordie:` in magenta, then the text, word-wrapped to
   about the width of the board and toolbar, each row centered. Its rows are always reserved, so
   the board doesn't move as the line comes and goes. Mouse and keyboard mode show the same text,
@@ -393,8 +392,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
 - **Give Up:** `[ Give Up ]` sits on its own row, directly above the toolbar. It is dimmed and
   inert until Mordie has a solution (the moment a found line appears, Feature 8): at the first 5-shift
   check on every size Mordie plays, 5x5 included (GH-222). The solution it shows is the best
-  known when the player gives up, which may be longer than the shortest. On 6x6, which Mordie
-  sits out, it isn't shown at all (GH-160). Keyboard mode: 5. Pressing it asks
+  known when the player gives up, which may be longer than the shortest. Keyboard mode: 5. Pressing it asks
   `Give up and see Mordie's solution?` `[ Yes ] [ No ]`: No (or Escape) keeps playing; Yes
   discards the player's moves and opens the solution screen.
 - **After a win:** the row shows `[ Mordie's solution ]` instead (keyboard mode: 5) if Mordie
