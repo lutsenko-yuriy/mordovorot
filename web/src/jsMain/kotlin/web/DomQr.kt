@@ -8,7 +8,7 @@ import web.qr.QrSvg
 
 private const val SVG_NS = "http://www.w3.org/2000/svg"
 
-/** [code] as an inline SVG (GH-243): black modules in one path, on white, with the quiet zone. Hidden from
+/** [code] as an inline SVG (GH-243): dark modules in one path, on the light ground, with the quiet zone. Hidden from
  *  readers: the link field beside it says the same. */
 internal fun qrElement(code: QrCode): Element {
     val svg = document.createElementNS(SVG_NS, "svg").apply {

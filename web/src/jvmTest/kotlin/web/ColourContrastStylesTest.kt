@@ -116,10 +116,10 @@ class ColourContrastStylesTest {
     }
 
     @Test
-    fun `the QR code is black on white in both themes`() {
-        for ((name, theme) in themes) {
-            assertEquals("#000", theme["qr-dark"], name)
-            assertEquals("#fff", theme["qr-light"], name)
-        }
+    fun `the QR code is dark on light, strongly, and the same in both themes`() {
+        assertEquals(light["qr-dark"], dark["qr-dark"])
+        assertEquals(light["qr-light"], dark["qr-light"])
+        val ratio = Wcag.contrast(Wcag.hex(light.getValue("qr-dark")), Wcag.hex(light.getValue("qr-light")))
+        assertTrue(ratio >= 7.0, "QR contrast is %.2f".format(Locale.ROOT, ratio))
     }
 }

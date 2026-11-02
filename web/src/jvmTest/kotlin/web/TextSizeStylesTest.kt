@@ -34,7 +34,7 @@ class TextSizeStylesTest {
     fun `tall, the toolbar's rows are centred`() {
         val tall = block("@media (orientation: portrait)")
 
-        assertTrue("justify-content: center;" in rule(tall, ".toolbar"), tall)
+        assertTrue("justify-content: center;" in rule(tall, ".toolbar,\n    .controls-row"), tall)
     }
 
     @Test

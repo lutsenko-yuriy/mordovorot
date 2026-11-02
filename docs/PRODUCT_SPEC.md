@@ -467,7 +467,7 @@ Web client only.
   moves and no labels travel in it. A 9x9 link is about 120 characters on the public site.
 - **The dialog:** a line saying anyone who opens the link starts from the same NxN board (`from this NxN
   board as it is now` when the start is unknown); the link in a read-only field (named `Share link`,
-  selected when focused); a QR code of the same link, black on white in both themes; `[ Copy link ]`
+  selected when focused); a QR code of the same link, dark brown on the page's light colour in both themes (scanners want dark modules on light); `[ Copy link ]`
   and `[ Close ]`. It opens focused on Copy link, and Tab stays inside it.
 - **Copy link** puts the link on the clipboard. The button then reads `Copied!` and the status line
   says `Link copied.`; the dialog stays open. Where the browser refuses (a page served over plain http
