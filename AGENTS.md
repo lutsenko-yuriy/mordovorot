@@ -89,6 +89,10 @@ At the beginning of every new session, before doing anything else:
 5. The skill will summarise what has been done and what is remaining, then ask *"What goes into the next release? Pick an existing ticket or describe something new."*
 6. Wait for the user's answer before proceeding. If the user wants to describe something new, invoke the `brief` skill before any planning begins.
 
+## Working-hours curfew
+
+`scripts/curfew/curfew.sh` (a `UserPromptSubmit` hook) blocks every new prompt from 23:00 to 07:59. Change the window with `CURFEW_START` / `CURFEW_END` and the clock with `CURFEW_TZ` (cloud containers run in UTC); switch it off with `CURFEW=off` in `.claude/curfew.env` (gitignored). There is no per-message override (GH-237).
+
 ## Workflow
 
 @docs/workflows/FEATURE.md
