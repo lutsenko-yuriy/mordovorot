@@ -462,3 +462,35 @@ Their `board_size` now runs 3-9 (the `3-5` in the tables above predates GH-160 a
 ## GH-237 (saves use a compact bit-packed format)
 
 No new events, screen views or properties. Saving and loading report as before: `save_command_used` with `success` or `error`, and `load_command_used` with `success`, `not_found`, `error` or `unsolvable`. A save that fails to decode in the new format is `load_command_used` with `result=error`, the same as a corrupted text save. The Mordie properties on `board_solved` and `game_given_up` keep their values through a save and a load, whichever format the save was read in.
+
+## GH-243 (share a board with a link)
+
+New screen view:
+
+| Screen name | When tracked |
+|---|---|
+| `screen_share_dialog` | The Share dialog opens (toolbar Share, or its key in keyboard mode). Properties `board_size`: number; `start_known`: boolean - false when the link shares the current board because the game's start is unknown. *(GH-243)* |
+
+`dialog_cancelled.dialog` takes a new value, `share` (Close or Escape in the Share dialog).
+
+### `board_share_link_copied`
+
+Fired when Copy link in the Share dialog succeeds. A blocked clipboard fires nothing. *(GH-243)*
+
+| Property | Type | Description |
+|---|---|---|
+| `board_size` | `number` | The shared board's side. |
+| `start_known` | `boolean` | False when the link shares the current board because the start is unknown. |
+| `via` | `string` | `button` (click) or `enter_key`. |
+
+### `shared_board_opened`
+
+Fired when the page loads with a share link in the address bar and the link has been checked. A link visit shows up as `app_launched` followed by this event, with no `startup_restore_prompt_shown` (the prompt is skipped). A link met while unsaved progress is asked about and cancelled fires nothing. *(GH-243)*
+
+| Property | Type | Description |
+|---|---|---|
+| `result` | `string` | `started` or `rejected`. |
+| `board_size` | `number` | The board's side. Only when `started`. |
+| `reason` | `string` | `invalid`, `unsupported_size` or `unsolvable`. Only when `rejected`. |
+
+The link and the board are never sent: the arrangement is the shared content. Which of these a QR scan was can't be told from a typed link.
