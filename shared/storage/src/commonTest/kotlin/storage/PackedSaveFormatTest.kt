@@ -204,4 +204,30 @@ class PackedSaveFormatTest {
         assertCorrupted("the label must be one word", packed { header(labels = 7); putVarint(3); "a b".encodeToByteArray().forEach { put(it.toInt() and 0xFF, 8) }; putVarint(0); putPermutation(board2) })
         assertCorrupted("the label must be one word", packed { header(labels = 7); putVarint(0); putVarint(0); putPermutation(board2) })
     }
+
+    @Test
+    fun `random and damaged bytes decode or fail as a corrupted save, nothing else`() {
+        val random = Random(2370)
+        val valid = shapes(6, random).map { (_, mordie) -> PackedSaveFormat.encode(6, IntArray(36) { it }, 3, mordie, "pairs") }
+        fun check(text: String) {
+            try {
+                PackedSaveFormat.decode("f", text)
+            } catch (e: SaveFileFormatException) {
+                // a corrupted save is the expected outcome
+            }
+        }
+        repeat(3000) {
+            val bytes = ByteArray(random.nextInt(1, 60)).also { random.nextBytes(it) }
+            check("~" + Base64.UrlSafe.withPadding(Base64.PaddingOption.ABSENT).encode(bytes))
+        }
+        for (text in valid) {
+            val bytes = Base64.UrlSafe.withPadding(Base64.PaddingOption.ABSENT).decode(text.substring(1))
+            repeat(300) {
+                val damaged = bytes.copyOf().also { it[random.nextInt(it.size)] = random.nextInt(256).toByte() }
+                check("~" + Base64.UrlSafe.withPadding(Base64.PaddingOption.ABSENT).encode(damaged))
+            }
+        }
+        // A huge move count with a solution flag must not allocate for it.
+        check(packed { header(status = 2, solution = 1); putVarint(0); putPermutation(board2); putPermutation(board2); putVarint(Int.MAX_VALUE) })
+    }
 }
