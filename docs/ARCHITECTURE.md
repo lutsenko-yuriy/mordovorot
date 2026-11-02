@@ -494,17 +494,17 @@ depends on; the web's `BrowserSaveRepository` is the only class that touches the
 live in `:shared:storage` so every platform reads and writes the same saves (GH-110). No dependency on `board_model`, `viewmodel`, or `view` — it
 deals in plain data (`SavedBoard`), not domain objects.
 
-Save format (the `.save` text of the terminal days, kept as is; GH-228 has no import): line 1 is the square side, line 2 the space-separated tile
+Text save format (the `.save` text of the terminal days, read-only since GH-237; GH-228 has no import): line 1 is the square side, line 2 the space-separated tile
 values, line 3 the move count (GH-62). A missing or blank line 3 (a save from
 before GH-62) loads as 0; a non-integer or negative one is a
 `SaveFileFormatException`. GH-83 adds two optional lines: line 4 is the original
 arrangement and line 5 is `<N> found` or `<N> searching`. A missing or blank line 4 (an
-older save, or a GH-74 Repair write) means no Mordie data. Once line 4 is present, a bad
+older save, or a GH-74 Repair save) means no Mordie data. Once line 4 is present, a bad
 line 4 or 5 is a `SaveFileFormatException`. GH-126 adds two more: line 6 is Mordie's solution on
 a found save, space-separated `r<i>:<k>`/`c<i>:<k>` (rotate row i right, or column i down, by k),
 and line 7 is `solution` on a save made on the solution screen. A missing or blank line means
 neither; a solution that doesn't solve the original in N moves is a `SaveFileFormatException`.
-GH-139 adds line 8, the tile labels' wire name, which every new save writes; lines 4-7 are blank
+GH-139 adds line 8, the tile labels' wire name, which every save of that era wrote; lines 4-7 are blank
 where they don't apply, which older builds already read as "nothing there". A missing or blank
 line 8 means no labels, and any other word is kept, so a name this build doesn't know loads with
 the preference rather than as a corrupted save.
