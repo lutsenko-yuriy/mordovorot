@@ -43,7 +43,12 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │   └── storage/
 │       ├── SaveRepository.kt          # Persistence contract: list/exists/save/load
 │       ├── PreferenceRepository.kt    # Player preferences as plain strings: get/set (GH-139)
-│       ├── SaveFileCodec.kt           # The save text format: encode/decode with all its validation (GH-110)
+│       ├── SaveFileCodec.kt           # The save codec, the one public seam: encode writes the packed format, decode
+│       │                                # reads it and the old text format, dispatching on the first character (GH-237)
+│       ├── PackedSaveFormat.kt        # The packed format: `~` + base64url of a bit stream (GH-237, ADR-0004)
+│       ├── SaveBits.kt                # BitWriter / BitReader, varints and the Lehmer code of a permutation (GH-237)
+│       ├── TextSaveFormat.kt          # The old nine-line text format, read-only from GH-237 on (GH-110)
+│       ├── SaveRules.kt               # The checks both formats share: arrangement, solution, ruled-out length (GH-237)
 │       ├── SaveNames.kt               # Which save names are accepted, on every platform (GH-110)
 │       ├── SaveFileFormatException.kt # Thrown on a malformed save (from the app, GH-110)
 │       ├── SavedBoard.kt              # Data carrier: square side + tile arrangement (+ optional
@@ -485,7 +490,7 @@ Persistence for save games and preferences. `SaveRepository` is the contract `vi
 depends on; the web's `BrowserSaveRepository` is the only class that touches the saves, one
 `localStorage` entry each, and `BrowserPreferenceRepository` (GH-139) the preferences.
 `PreferenceRepository` is a plain string store, so `storage` still knows no viewmodel types;
-`viewmodel.TileLabelsPreference` gives it a type. The text format (`SaveFileCodec`) and the accepted names (`SaveNames`)
+`viewmodel.TileLabelsPreference` gives it a type. The save format (`SaveFileCodec`) and the accepted names (`SaveNames`)
 live in `:shared:storage` so every platform reads and writes the same saves (GH-110). No dependency on `board_model`, `viewmodel`, or `view` — it
 deals in plain data (`SavedBoard`), not domain objects.
 
@@ -507,6 +512,15 @@ GH-224 adds line 9, `unproven <R>`, written only for a found answer not proven s
 largest length the exact search had ruled out (0 to N-2). A missing line, or a first word this build
 doesn't know, reads as proven; `unproven` on a searching save or with R out of range is a
 `SaveFileFormatException`. Old builds stop at line 8 and read such a save as proven.
+
+Packed format (GH-237, ADR-0004; the text format above is read-only from then on): a save that starts with `~`
+is base64url, no padding, of a bit stream: a header (the side in 4 bits, the labels in 3 bits, the status in 2 bits,
+the solution-screen and has-solution flags), the labels' name when it is not one of the known ones, the move count
+as a varint, the current board and Mordie's original as Lehmer codes (a permutation as digits of shrinking range),
+N and, when unproven, R as varints, and last Mordie's solution, one joint number (axis, index, shift) per move.
+Every width that depends on the side is read after the side. `SaveFileCodec.decode` sends a save starting with `~`
+to the packed reader and anything else to the text reader, so old saves keep loading; a save that fails either is a
+`SaveFileFormatException`. A 9x9 save with a 340-move solution is about 600 characters (2.1 KB as text).
 
 ### analytics
 Cross-cutting: `AnalyticsService` is injected into `viewmodel` (and any layer
