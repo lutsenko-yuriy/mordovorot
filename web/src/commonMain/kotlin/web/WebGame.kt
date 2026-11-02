@@ -11,7 +11,6 @@ import viewmodel.PointerShift
 import viewmodel.SaveInfo
 import viewmodel.SessionKeyboardLayout
 import viewmodel.ShiftSource
-import viewmodel.TileLabels
 import viewmodel.UnsolvableSaveChoice
 import viewmodel.displayWithSize
 import web.a11y.Announcements
@@ -34,13 +33,15 @@ class WebGame internal constructor(
     modePreference: PlayModePreference,
     startMode: PlayMode,
     private val controlsShown: Boolean,
+    address: PageAddress,
 ) {
 
     private val modal = WebModal { render(focus = it) }
-    internal val labelsDialog = WebLabelsDialog(viewModel, ::cancelled) { modal.ask(it) }
+    internal val labels = WebLabelsDialog(this, viewModel, modal)
     internal val dialogs = WebDialogFlows(viewModel, analytics, modal, ::cancelled)
     internal val solution = WebSolutionFlows(this, viewModel, analytics, modal)
     internal val controls = WebControlsDialog(this, viewModel, analytics, modal, keyboardLayout, modePreference, startMode)
+    internal val share = WebShareFlows(this, viewModel, analytics, modal, address)
     private val keys = WebKeyPlay(this, viewModel, pressedWith, controlsShown)
     private val requests = WebRequestRouter(this)
     internal var status: String? = null
@@ -62,7 +63,9 @@ class WebGame internal constructor(
         render()
         scope.launch { for (request in viewModel.uiRequests) requests.handle(request) }
         flow = scope.launch {
-            viewModel.restoreOnStartup()
+            // A share link's board replaces the restore offer.
+            if (!share.openAtStartup()) viewModel.restoreOnStartup()
+            share.openPending()
             sayAskedNewGame()
             render(focus = if (controls.mode == PlayMode.KEYBOARD) Focus.Board else Focus.PageStart)
         }
@@ -109,6 +112,7 @@ class WebGame internal constructor(
                 Axis.COLUMN -> viewModel.shiftColumn(released.line, released.steps, PointerShift.DRAG)
             }
         }
+        share.openWaiting()
     }
 
     /** Drops the drag, leaving the board as it was. */
@@ -116,6 +120,7 @@ class WebGame internal constructor(
         val moved = drag?.offset != null
         drag = null
         if (moved) render()
+        share.openWaiting()
     }
 
     /** A key outside a dialog, with focus on the control keyed [from] (GH-171); whether the game
@@ -124,22 +129,6 @@ class WebGame internal constructor(
 
     /** A press on a tile (GH-171): in keyboard mode it selects the tile and gives the board focus. */
     fun onTilePressed(row: Int, col: Int) = keys.onTilePressed(row, col)
-
-    /** `[ Labels ]` (GH-139): the picker, live on play, after a win and on the solution screen. */
-    fun onLabels(openedFrom: String = "toolbar", opener: Focus = Focus.LabelsButton) = runFlow(opener) { labelsDialog.fromToolbar(openedFrom) }
-
-    /** A Labels row pressed: it becomes the marked one, and the board previews it. */
-    fun onLabelsSelected(labels: TileLabels) {
-        val shown = modal.shown as? WebDialog.Labels ?: return
-        modal.update(labelsDialog.select(shown, labels) ?: return)
-        render(focus = Focus.Label(labels))
-    }
-
-    /** The Labels dialog's answer: OK with the marked scheme, or Cancel. */
-    fun onLabelsAnswered(ok: Boolean) {
-        val shown = modal.shown as? WebDialog.Labels ?: return
-        modal.answer<WebDialog.Labels, TileLabels?>(if (ok) shown.selected else null)
-    }
 
     fun onNew(opener: Focus = Focus.NewButton) = runFlow(opener) {
         dialogs.chooseSize("toolbar")?.let {
@@ -241,6 +230,7 @@ class WebGame internal constructor(
         // Undispatched, so the action is under way before this returns and a second click sees it.
         flow = scope.launch(start = CoroutineStart.UNDISPATCHED) {
             action()
+            share.openPending()
             sayAskedNewGame()
             render(focus = closing)
         }

@@ -17,16 +17,16 @@ import web.WebDialog
 class WebTileLabelsScenarioTest {
 
     private fun WebHarness.choose(labels: TileLabels) {
-        game.onLabels()
-        game.onLabelsSelected(labels)
-        game.onLabelsAnswered(ok = true)
+        game.labels.open()
+        game.labels.onSelected(labels)
+        game.labels.onAnswered(ok = true)
     }
 
     @Test
     fun `labels button after load opens the dialog`() = webTest {
         val page = WebHarness(backgroundScope).startOn()
 
-        page.game.onLabels()
+        page.game.labels.open()
 
         val dialog = page.state.dialog
         assertTrue(dialog is WebDialog.Labels, "$dialog")
@@ -59,14 +59,14 @@ class WebTileLabelsScenarioTest {
     fun `a marked row previews its labels, and OK keeps them`() = webTest {
         val page = WebHarness(backgroundScope).startOn()
 
-        page.game.onLabels()
-        page.game.onLabelsSelected(TileLabels.LETTERS)
+        page.game.labels.open()
+        page.game.labels.onSelected(TileLabels.LETTERS)
 
         assertEquals("G", page.state.tileTexts[6])
         assertTrue(page.props("tile_labels_changed").isEmpty())
         assertNull(page.preferences.get("tile_labels"))
 
-        page.game.onLabelsAnswered(ok = true)
+        page.game.labels.onAnswered(ok = true)
         assertEquals("G", page.state.tileTexts[6])
         assertEquals("letters", page.preferences.get("tile_labels"))
     }
@@ -75,10 +75,10 @@ class WebTileLabelsScenarioTest {
     fun `cancel changes nothing`() = webTest {
         val page = WebHarness(backgroundScope).startOn()
 
-        page.game.onLabels()
-        page.game.onLabelsSelected(TileLabels.LETTERS)
+        page.game.labels.open()
+        page.game.labels.onSelected(TileLabels.LETTERS)
         assertEquals(TileLabels.LETTERS, (page.state.dialog as WebDialog.Labels).selected)
-        page.game.onLabelsAnswered(ok = false)
+        page.game.labels.onAnswered(ok = false)
 
         assertNull(page.state.dialog)
         assertEquals(TileLabels.NUMBERS, page.state.labels)

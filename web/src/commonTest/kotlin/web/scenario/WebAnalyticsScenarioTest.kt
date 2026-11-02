@@ -74,8 +74,8 @@ class WebAnalyticsScenarioTest {
         page.game.onSaveAnswered(null)
         page.game.onLoad()
         page.game.onLoadChosen(null)
-        page.game.onLabels()
-        page.game.onLabelsAnswered(ok = false)
+        page.game.labels.open()
+        page.game.labels.onAnswered(ok = false)
 
         val cancelled = page.props("dialog_cancelled")
         assertEquals(listOf("size", "save", "load", "labels"), cancelled.map { it["dialog"] })

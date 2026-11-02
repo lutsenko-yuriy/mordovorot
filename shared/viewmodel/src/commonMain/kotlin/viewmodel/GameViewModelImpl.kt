@@ -81,6 +81,8 @@ class GameViewModelImpl internal constructor(
 
     override fun newGame(size: Int, trigger: String) = newGameUseCase.newGame(size, trigger)
 
+    override fun newGameFrom(arrangement: IntArray) = newGameUseCase.newGameFrom(arrangement)
+
     override suspend fun saveGame(name: String): Boolean = saveGameUseCase.saveGame(name)
 
     override suspend fun loadGame(name: String) {

@@ -33,6 +33,10 @@ interface GameViewModel {
      *  (`[ New ]` -> size-picker dialog), or `"unsolvable_save"` - see docs/ANALYTICS_EVENTS.md. */
     fun newGame(size: Int, trigger: String)
 
+    /** Starts a fresh game on [arrangement] (GH-243, a share link's board): 0 moves, a new Mordie
+     *  race, and tracks nothing. Throws, changing nothing, unless it is a valid, solvable board. */
+    fun newGameFrom(arrangement: IntArray)
+
     /** Returns whether the save actually succeeded. `suspend` (GH-42): asks the
      *  View for confirmation/messages instead of returning synchronously. */
     suspend fun saveGame(name: String): Boolean

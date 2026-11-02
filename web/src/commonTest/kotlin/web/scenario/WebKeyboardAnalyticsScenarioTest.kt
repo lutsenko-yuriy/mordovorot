@@ -60,7 +60,7 @@ class WebKeyboardAnalyticsScenarioTest {
         assertEquals("shortcut", page.props("screen_labels_dialog").last()["opened_from"])
         page.game.onEscape()
 
-        page.game.onLabels()
+        page.game.labels.open()
         assertEquals("toolbar", page.props("screen_labels_dialog").last()["opened_from"])
     }
 

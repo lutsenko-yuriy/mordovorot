@@ -74,8 +74,8 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                 *listOfNotNull(dialog.message?.let { text("message", it) }).toTypedArray(),
                 choices(dialog.options.map { labelRow(it, it.labels == dialog.selected, game) }, "list labels").also { asRadioGroup(it, "Tile labels") },
                 actions(
-                    button("Cancel", "secondary") { game.onLabelsAnswered(ok = false) },
-                    button("OK") { game.onLabelsAnswered(ok = true) },
+                    button("Cancel", "secondary") { game.labels.onAnswered(ok = false) },
+                    button("OK") { game.labels.onAnswered(ok = true) },
                 ),
             )
             is WebDialog.Controls -> append(
@@ -91,6 +91,17 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                     button("Cancel", "secondary") { game.controls.onAnswered(ok = false) },
                 ),
             )
+            is WebDialog.LinkRejected -> append(
+                text("message", dialog.message),
+                actions(button("OK") { game.share.onNoticeAnswered() }.focusKey(Focus.LinkRejectedOk)),
+            )
+            is WebDialog.OpenShared -> append(
+                text("message", "Your moves since the last save will be lost."),
+                actions(
+                    button("Cancel", "secondary") { game.share.onOpenAnswered(false) }.focusKey(Focus.OpenSharedCancel),
+                    button("Open") { game.share.onOpenAnswered(true) },
+                ),
+            )
             WebDialog.GiveUp -> append(
                 actions(
                     button("No", "secondary") { game.solution.onGiveUpAnswered(false) }.focusKey(Focus.No),
@@ -102,7 +113,7 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
 
 /** A radio-role button, since the page is rebuilt every frame and a native radio would lose its state. */
 private fun labelRow(option: LabelOption, checked: Boolean, game: WebGame) =
-    button("", if (checked) "checked" else null) { game.onLabelsSelected(option.labels) }.focusKey(Focus.Label(option.labels)).apply {
+    button("", if (checked) "checked" else null) { game.labels.onSelected(option.labels) }.focusKey(Focus.Label(option.labels)).apply {
         asRadio(this, checked, unavailable = !option.available)
         append(
             element("span", "mark").apply { textContent = if (checked) "●" else "○" },

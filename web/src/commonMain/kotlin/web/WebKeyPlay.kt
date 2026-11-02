@@ -69,7 +69,7 @@ internal class WebKeyPlay(
             ToolbarButton.NEW -> game.onNew(opener)
             ToolbarButton.SAVE -> game.onSave(opener)
             ToolbarButton.LOAD -> game.onLoad(opener)
-            ToolbarButton.LABELS -> game.onLabels("shortcut", opener)
+            ToolbarButton.LABELS -> game.labels.open("shortcut", opener)
             ToolbarButton.GIVE_UP_ROW -> when (viewModel.giveUpButton()) {
                 GiveUpButton.GIVE_UP -> game.solution.onGiveUp(opener)
                 GiveUpButton.MORDIES_SOLUTION -> game.solution.onMordiesSolution()

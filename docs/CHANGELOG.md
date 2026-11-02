@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.37.3] — 2026-11-02
+
+### Changed
+
+- [wip] (PR #246) GH-243 WU2: opening a share link. A #b= link at startup starts that board at once (no restore prompt or size picker, a fresh Mordie race, the player's own labels, status "Started a shared 5x5 board."), and a link pasted into an open tab starts at once or, over unsaved moves, asks "Open the shared board?" first; a bad link shows "Can't open this board". Adds GameViewModel.newGameFrom, PageAddress, WebShareFlows, the shared_board_opened event and ADR-0005; the Labels intents moved into WebLabelsDialog. No Share button yet (WU3).
+
 ## [0.37.2] — 2026-11-02 (PR #245 merged)
 
 ### Changed

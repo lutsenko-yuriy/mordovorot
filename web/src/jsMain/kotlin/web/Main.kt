@@ -35,11 +35,14 @@ fun main() {
         hostOf(window.location.hostname),
         touch = window.matchMedia("(pointer: coarse)").matches,
         pressedWith,
+        DomPageAddress,
     )
     renderer.game = game
     listenForKeys(root)
     listenForEscape(root) { game }
     listenForPlayKeys(root, pressedWith) { game }
+    // A share link pasted into this open tab.
+    window.addEventListener("hashchange", { game.share.onLinkChanged() })
     // The browser's own "Leave site?" prompt, only while some progress isn't in a save.
     window.addEventListener("beforeunload", { event ->
         if (game.hasUnsavedProgress()) {

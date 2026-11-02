@@ -79,10 +79,10 @@ class WebDialogKeyboardScenarioTest {
     fun `Tile labels opens focused on the marked scheme and follows a pick`() = webTest {
         val page = WebHarness(backgroundScope).startOn()
 
-        page.game.onLabels()
+        page.game.labels.open()
         assertEquals(Focus.Label(TileLabels.NUMBERS), page.state.focus)
 
-        page.game.onLabelsSelected(TileLabels.LETTERS)
+        page.game.labels.onSelected(TileLabels.LETTERS)
         assertEquals(Focus.Label(TileLabels.LETTERS), page.state.focus)
     }
 
@@ -118,8 +118,8 @@ class WebDialogKeyboardScenarioTest {
         assertNull(page.state.dialog)
         assertEquals(board, page.state.tiles)
 
-        page.game.onLabels()
-        page.game.onLabelsSelected(TileLabels.LETTERS)
+        page.game.labels.open()
+        page.game.labels.onSelected(TileLabels.LETTERS)
         page.game.onEscape()
         assertNull(page.state.dialog)
         assertEquals(TileLabels.NUMBERS, page.state.labels)
@@ -142,8 +142,8 @@ class WebDialogKeyboardScenarioTest {
 
         page.game.onNew()
         page.game.onSizeChosen(null)
-        page.game.onLabels()
-        page.game.onLabelsAnswered(ok = false)
+        page.game.labels.open()
+        page.game.labels.onAnswered(ok = false)
         page.reveal()
         page.game.solution.onGiveUp()
         page.game.solution.onGiveUpAnswered(false)
@@ -200,8 +200,8 @@ class WebDialogKeyboardScenarioTest {
         page.game.onLoadChosen(null)
         assertEquals(Focus.LoadButton, page.state.focus)
 
-        page.game.onLabels()
-        page.game.onLabelsAnswered(ok = true)
+        page.game.labels.open()
+        page.game.labels.onAnswered(ok = true)
         assertEquals(Focus.LabelsButton, page.state.focus)
     }
 

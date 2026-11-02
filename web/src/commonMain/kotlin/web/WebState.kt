@@ -95,6 +95,12 @@ sealed interface WebDialog {
     /** The Controls dialog (GH-171): [mode] and [layout] are marked until Cancel or OK; [keyList]
      *  names the marked layout's keys. */
     data class Controls(val mode: PlayMode, val layout: KeyboardLayout, val keyList: List<String>) : WebDialog
+
+    /** A share link's board can't be opened (GH-243): [message] says why; OK. */
+    data class LinkRejected(val message: String) : WebDialog
+
+    /** A share link's [side] x [side] board would replace a game with unsaved moves (GH-243): Cancel or Open. */
+    data class OpenShared(val side: Int) : WebDialog
 }
 
 /** A save as a Load row: its [label] is `name (NxN)`, with the unsolvable mark when it applies. */

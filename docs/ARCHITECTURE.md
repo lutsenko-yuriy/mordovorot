@@ -93,6 +93,7 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       ├── GameViewModel.kt      # The shared viewmodel interface (GH-42 WU3) — shift/newGame/save/load plus the read-only query
 │       │                           # surface (listSaves/saveExists/currentSaveName/isSolved/
 │       │                           # boardState/squareSide/moveCount) and restoreOnStartup
+│                           # and newGameFrom(arrangement), a fresh game on a given solvable board (GH-243)
 │       ├── GameViewModelImpl.kt  # Its one implementation (GH-42 WU3, collapsing the earlier
 │       │                           # per-client viewmodels). Keeps shifts and the
 │       │                           # queries; delegates every other flow to a usecase/ class. All
@@ -199,7 +200,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │                      # as invalid / unsupported_size / unsolvable. storage.BoardLinkFormat (ADR-0005) holds the board's bits
 │   ├── qr/              # GH-243 (WU1): a DOM-free QR encoder (byte mode, ECC M, versions 1-10: QrCode, ReedSolomon, QrTables, QrMasks) and its SVG path (QrSvg);
 │   │                      # imports only the standard library, a boundary test checks it (as web.a11y)
-│   ├── WebShareFlows.kt # GH-243 (planned, WU2/WU3): opening a link, the Share dialog, Copy link (the WebControlsDialog pattern)
+│   ├── PageAddress.kt   # GH-243 (WU2): the address bar's base, fragment and clearFragment (DomPageAddress in jsMain; a fake in the harness)
+│   ├── WebShareFlows.kt # GH-243 (WU2): opening a link at startup and on hashchange, the Can't open and Open the shared board dialogs; WU3 adds the Share dialog and Copy link
 │   ├── WebKeys.kt       # A key outside a dialog to a PageKey: ToolbarButton's digits, 0, or a shared
 │   │                    # BoardKey or SolutionKey while the board has focus (GH-171); a non-Latin
 │   │                    # key counts as the Latin letter at its position (GH-200)
@@ -213,7 +215,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │                    # and announcement (GH-166); which tiles are home and Read board's words (GH-167)
 │   ├── WebRenderer.kt   # fun interface render(WebState), and scrollSteps (GH-171) - the DOM on the page, a recorder in tests
 │   ├── WebRequestRouter.kt # Answers each UiRequest (exhaustive `when`)
-│   ├── WebLabelsDialog.kt # The Tile labels dialog's flows over WebGame's modal (GH-160)
+│   ├── WebLabelsDialog.kt # The Tile labels dialog's intents and flows over WebGame's modal (GH-160; the intents moved here in GH-243)
 │   ├── WebModal.kt      # WebGame's dialog machinery: open/answer a WebDialog, the button that
 │   │                    # opened it, the cancel's `via` (GH-163)
 │   ├── DialogFocus.kt   # GH-163: Focus (a FocusTarget: the game's controls by data-focus key), each

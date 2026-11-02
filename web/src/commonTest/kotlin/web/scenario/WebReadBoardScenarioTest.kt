@@ -54,15 +54,15 @@ class WebReadBoardScenarioTest {
     fun `the board read-out uses the tile labels shown, previewed ones too`() = webTest {
         val page = WebHarness(backgroundScope).startOn()
 
-        page.game.onLabels()
-        page.game.onLabelsSelected(TileLabels.LETTERS)
+        page.game.labels.open()
+        page.game.labels.onSelected(TileLabels.LETTERS)
         assertTrue(page.state.boardWords!!.startsWith("Row 1: delta, alpha, bravo, charlie."), page.state.boardWords)
-        page.game.onLabelsAnswered(ok = false)
+        page.game.labels.onAnswered(ok = false)
         assertTrue(page.state.boardWords!!.startsWith("Row 1: 4, 1, 2, 3."), page.state.boardWords)
 
-        page.game.onLabels()
-        page.game.onLabelsSelected(TileLabels.LETTERS)
-        page.game.onLabelsAnswered(ok = true)
+        page.game.labels.open()
+        page.game.labels.onSelected(TileLabels.LETTERS)
+        page.game.labels.onAnswered(ok = true)
         assertTrue(page.state.boardWords!!.startsWith("Row 1: delta, alpha, bravo, charlie."), page.state.boardWords)
     }
 

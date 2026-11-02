@@ -2,6 +2,7 @@ package viewmodel.usecase
 
 import analytics.AnalyticsService
 import board_model.BoardModel
+import board_model.Solvability
 import viewmodel.CurrentSaveName
 import viewmodel.GameShiftSources
 import viewmodel.MordieHooks
@@ -22,12 +23,23 @@ internal class NewGameUseCase(
 
     fun newGame(size: Int, trigger: String) {
         board.newGame(size)
+        begin()
+        analytics.track("new_game_size_selected", mapOf("size" to size, "trigger" to trigger))
+    }
+
+    /** A fresh game on [arrangement] (GH-243, a share link's): throws, changing nothing, unless it is a solvable board. */
+    fun newGameFrom(arrangement: IntArray) {
+        require(Solvability.isSolvable(arrangement)) { "No sequence of shifts solves this board" }
+        board.restoreState(arrangement, 0)
+        begin()
+    }
+
+    private fun begin() {
         solution.leave()
         mordieHooks.onNewGame()
         currentSaveName.name = null
         tileLabels.resetToPreference(board.squareSide)
         gameShiftSources.reset()
         unsavedProgress.unsaved = false
-        analytics.track("new_game_size_selected", mapOf("size" to size, "trigger" to trigger))
     }
 }

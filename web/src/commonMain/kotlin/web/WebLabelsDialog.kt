@@ -3,31 +3,43 @@ package web
 import viewmodel.GameViewModel
 import viewmodel.TileLabels
 
-/** The Tile labels dialog's flows (GH-139, GH-160).
- *  [ask] is [WebGame]'s modal: it shows the dialog and waits for OK's scheme, or `null`;
- *  [cancelled] tracks a Cancel. */
+/** The Tile labels dialog's flows (GH-139, GH-160), as [WebControlsDialog] does Controls. */
 internal class WebLabelsDialog(
+    private val game: WebGame,
     private val viewModel: GameViewModel,
-    private val cancelled: (dialog: String) -> Unit,
-    private val ask: suspend (WebDialog.Labels) -> TileLabels?,
+    private val modal: WebModal,
 ) {
 
-    /** `[ Labels ]`, or 4 with [openedFrom] `shortcut`: OK hands the marked scheme to the viewModel. */
-    suspend fun fromToolbar(openedFrom: String) {
+    /** `[ Labels ]` (GH-139): the picker, live on play, after a win and on the solution screen;
+     *  [openedFrom] is `toolbar`, or `shortcut` for 4. OK hands the marked scheme to the viewModel. */
+    fun open(openedFrom: String = "toolbar", opener: Focus = Focus.LabelsButton) = game.runFlow(opener) {
         viewModel.tileLabelsDialogOpened(openedFrom)
         choose()?.let(viewModel::changeTileLabels)
+    }
+
+    /** A Labels row pressed: it becomes the marked one, and the board previews it. */
+    fun onSelected(labels: TileLabels) {
+        val shown = modal.shown as? WebDialog.Labels ?: return
+        modal.update(select(shown, labels) ?: return)
+        game.render(focus = Focus.Label(labels))
+    }
+
+    /** The dialog's answer: OK with the marked scheme, or Cancel. */
+    fun onAnswered(ok: Boolean) {
+        val shown = modal.shown as? WebDialog.Labels ?: return
+        modal.answer<WebDialog.Labels, TileLabels?>(if (ok) shown.selected else null)
     }
 
     /** A loaded save's labels don't fit its board (GH-160): the picker with [message] above it. */
     suspend fun chooseFitting(message: String): TileLabels? = choose(message)
 
     /** [open] with [labels] marked, or `null` when [labels] doesn't fit the board. */
-    fun select(open: WebDialog.Labels, labels: TileLabels): WebDialog.Labels? =
+    private fun select(open: WebDialog.Labels, labels: TileLabels): WebDialog.Labels? =
         if (labels.fits(viewModel.squareSide())) dialog(labels, open.message) else null
 
     private suspend fun choose(message: String? = null): TileLabels? {
-        val chosen = ask(dialog(viewModel.tileLabels(), message))
-        if (chosen == null) cancelled("labels")
+        val chosen = modal.ask<TileLabels?>(dialog(viewModel.tileLabels(), message))
+        if (chosen == null) game.cancelled("labels")
         return chosen
     }
 

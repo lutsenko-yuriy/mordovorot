@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-- GH-243: Share a board with a link (Scenario-WU and WU1/3 merged; WU2 and WU3 pending)
+- GH-243: Share a board with a link (Scenario-WU, WU1 and WU2 merged; WU3 pending)
 
 ---
 

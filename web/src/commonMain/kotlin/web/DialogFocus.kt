@@ -17,6 +17,8 @@ sealed class Focus(override val key: String) : FocusTarget {
     /** A dialog's Cancel: Load's, when it has no saves to focus. */
     data object DialogCancel : Focus("dialog-cancel")
     data object Repair : Focus("repair")
+    data object LinkRejectedOk : Focus("link-rejected-ok")
+    data object OpenSharedCancel : Focus("open-shared-cancel")
     data class Label(val labels: TileLabels) : Focus("label-${labels.name.lowercase()}")
     data object No : Focus("no")
     data object NewButton : Focus("new")
@@ -54,6 +56,8 @@ fun defaultFocus(dialog: WebDialog): Focus = when (dialog) {
     is WebDialog.Labels -> Focus.Label(dialog.selected)
     WebDialog.GiveUp -> Focus.No
     is WebDialog.Controls -> Focus.ModeOption(dialog.mode)
+    is WebDialog.LinkRejected -> Focus.LinkRejectedOk
+    is WebDialog.OpenShared -> Focus.OpenSharedCancel
 }
 
 /** The Very large section's title and warning line in the size picker (GH-207). */
@@ -69,4 +73,6 @@ val WebDialog.title: String get() = when (this) {
     is WebDialog.Labels -> "Tile labels"
     WebDialog.GiveUp -> "Give up and see Mordie's solution?"
     is WebDialog.Controls -> "Controls"
+    is WebDialog.LinkRejected -> "Can't open this board"
+    is WebDialog.OpenShared -> "Open the shared board?"
 }
