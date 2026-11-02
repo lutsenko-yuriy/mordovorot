@@ -181,6 +181,14 @@ class PackedSaveFormatTest {
     }
 
     @Test
+    fun `the solution flag with no steps is rejected, the encoder never writes it`() {
+        assertCorrupted(
+            "the has-solution flag needs at least one step",
+            packed { header(status = 2, screen = 1, solution = 1); putVarint(0); putPermutation(board2); putPermutation(board2); putVarint(0) },
+        )
+    }
+
+    @Test
     fun `a solution step out of range is rejected`() {
         // A 3x3 has 2*3*2 = 12 joint codes in 4 bits, so 15 is out of range.
         val three = IntArray(9) { it }

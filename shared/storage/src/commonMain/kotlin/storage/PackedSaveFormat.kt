@@ -127,6 +127,7 @@ internal object PackedSaveFormat {
         val provenShortest = status != UNPROVEN
         val ruledOut = if (provenShortest) 0 else reader.getVarint()
         if (!provenShortest) SaveRules.ruledOutProblem(found, moves, ruledOut)?.let { throw SaveFileFormatException(name, it) }
+        if (hasSolution && moves == 0) throw SaveFileFormatException(name, "the has-solution flag needs at least one step")
         // Each step is at least 2 bits, so a count the data cannot hold is cut off before a list is made for it.
         if (hasSolution && moves > reader.bitsLeft() / bitsFor(stepCodes(side))) throw BitFormatException("the packed data ends early")
         val solution = if (hasSolution) List(moves) { readStep(name, reader, side) } else null
