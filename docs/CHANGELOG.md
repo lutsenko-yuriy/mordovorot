@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.38.0] — 2026-11-02 (PR #247 merged)
+
+### Added
+
+- [user] (PR #247) GH-243: sharing a board with a link is done. A Share button (key 7 in keyboard mode) opens "Share this board" with the link to the board Mordie started from (or the current board when the start is unknown), a QR code in the app's colours, and Copy link ("Copied!", with a selected-field fallback when the browser refuses the clipboard). Opening such a link starts that board as a fresh game; bad links show a notice.
+
 ## [0.37.3] — 2026-11-02
 
 ### Changed

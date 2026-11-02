@@ -3,22 +3,24 @@ package web
 import analytics.AnalyticsService
 import board_model.BoardSize
 import viewmodel.GameViewModel
+import web.qr.QrCode
 
-/** Opening a share link (GH-243, ADR-0005), at startup and when the address changes. [modal] shows
- *  the notice and the confirmation. */
+/** Sharing a board (GH-243, ADR-0005): opening a share link, at startup and when the address changes, and the
+ *  Share dialog with Copy link. [modal] shows the dialogs. */
 internal class WebShareFlows(
     private val game: WebGame,
     private val viewModel: GameViewModel,
     private val analytics: AnalyticsService,
     private val modal: WebModal,
     private val address: PageAddress,
+    private val clipboard: Clipboard,
 ) {
 
     /** The latest link that arrived while a dialog or action was under way. */
     private var pending: String? = null
 
     /** The link in the address at startup; whether it started a board. */
-    suspend fun openAtStartup(): Boolean = open(address.fragment())
+    suspend fun openAtStartup(): Boolean = openLink(address.fragment())
 
     /** The address changed (`hashchange`): opens a share link now, or once the dialog or action ends. */
     fun onLinkChanged() {
@@ -38,9 +40,45 @@ internal class WebShareFlows(
         while (true) {
             val fragment = pending ?: return
             pending = null
-            open(fragment)
+            openLink(fragment)
         }
     }
+
+    /** `[ Share ]`, or 7: the dialog with the link to the board Mordie started from, else to the board as it is. */
+    fun open(opener: Focus = Focus.ShareButton) = game.runFlow(opener) {
+        val start = viewModel.startingBoard()
+        val side = viewModel.squareSide()
+        val link = ShareLink.of(address.base(), side, start ?: viewModel.boardState())
+        val props = mapOf("board_size" to side, "start_known" to (start != null))
+        analytics.track("screen_share_dialog", props)
+        // Too long for the largest code (a fork's long address): the link alone.
+        val qr = try { QrCode.encode(link) } catch (e: IllegalArgumentException) { null }
+        modal.ask<Unit>(WebDialog.Share(link, side, start != null, qr))
+        game.cancelled("share")
+    }
+
+    /** Copy link, from the keyboard when [fromKeyboard] (a click with no pointer): the button reads
+     *  Copied!; a refusal selects the link for the player to copy. */
+    fun onCopyLink(fromKeyboard: Boolean) {
+        val shown = modal.shown as? WebDialog.Share ?: return
+        clipboard.copy(shown.link) { copied ->
+            val open = modal.shown as? WebDialog.Share ?: return@copy
+            if (copied) {
+                modal.update(open.copy(copied = true))
+                analytics.track(
+                    "board_share_link_copied",
+                    mapOf("board_size" to open.side, "start_known" to open.startKnown, "via" to if (fromKeyboard) "enter_key" else "button"),
+                )
+                game.showStatus("Link copied.")
+            } else {
+                game.showStatus("Couldn't copy the link - it's selected, so copy it yourself.")
+                game.render(focus = Focus.ShareLinkField)
+            }
+        }
+    }
+
+    /** The Share dialog's Close. */
+    fun onClosed() = modal.answer<WebDialog.Share, Unit>(Unit)
 
     /** The notice's OK. */
     fun onNoticeAnswered() = modal.answer<WebDialog.LinkRejected, Unit>(Unit)
@@ -48,7 +86,7 @@ internal class WebShareFlows(
     /** The confirmation's answer: Open, or Cancel. */
     fun onOpenAnswered(open: Boolean) = modal.answer<WebDialog.OpenShared, Boolean>(open)
 
-    private suspend fun open(fragment: String): Boolean {
+    private suspend fun openLink(fragment: String): Boolean {
         val link = ShareLink.read(fragment) ?: return false
         // The link is spent whatever happens next, so a reload doesn't meet it again.
         address.clearFragment()

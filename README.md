@@ -32,7 +32,7 @@ To run it locally while working on it:
 ./gradlew :web:serve -t    # then open http://localhost:8080
 ```
 
-Click the arrows, or drag a row or column; the keyboard works too. Saves are kept in the browser's `localStorage`, per address (the public site and
+Click the arrows, or drag a row or column; the keyboard works too. Share sends a board to someone as a link or a QR code. Saves are kept in the browser's `localStorage`, per address (the public site and
 `localhost:8080` each have their own). With `-t` the server rebuilds when the code changes; reload the tab if it
 doesn't reload by itself.
 

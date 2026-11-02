@@ -35,7 +35,7 @@ internal class WebModal(private val render: (focus: Focus?) -> Unit) {
         val cancel = when (dialog.shown) {
             is WebDialog.Unsolvable -> return
             WebDialog.GiveUp, is WebDialog.OpenShared -> false
-            is WebDialog.LinkRejected -> Unit
+            is WebDialog.LinkRejected, is WebDialog.Share -> Unit
             is WebDialog.Size, is WebDialog.Save, is WebDialog.Load, is WebDialog.Labels, is WebDialog.Controls -> null
         }
         dialog.via = CancelVia.ESCAPE

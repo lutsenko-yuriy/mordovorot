@@ -32,10 +32,12 @@ queries=(
   "report=keys&keys=6,ArrowRight,Tab,ArrowDown,ArrowDown,Tab,Tab,Tab,Escape"
   "report=keys&keys=focus:controls,Enter,ArrowLeft,Enter"
   "report=keys&keys=focus:labels,6,Escape,1,Escape"
+  # GH-243: Share opens on Copy link; Tab stays inside it; Escape puts focus back on Share.
+  "report=keys&keys=click:Share,Tab,Tab,Tab,Escape"
   # OK into keyboard mode: focus on the board, where the digits then work.
   "report=keys&keys=6,ArrowRight,click:OK,1,Escape"
   # Digits only work in keyboard mode, where each button shows and names its shortcut.
-  "report=keys&input=keyboard&keys=focus:new,1,Escape,2,3,Escape,focus:load,3,Escape,focus:save,4,Escape,5,Escape,6,Escape"
+  "report=keys&input=keyboard&keys=focus:new,1,Escape,2,3,Escape,focus:load,3,Escape,focus:save,4,Escape,5,Escape,6,Escape,7,Escape"
   "report=keys&input=keyboard&layout=left&keys=6,Tab,Escape"
   # A held 2 opens Save once and isn't typed into its name field.
   "report=keys&input=keyboard&keys=2,R-2,3"

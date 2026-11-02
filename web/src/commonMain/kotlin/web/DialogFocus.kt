@@ -19,6 +19,8 @@ sealed class Focus(override val key: String) : FocusTarget {
     data object Repair : Focus("repair")
     data object LinkRejectedOk : Focus("link-rejected-ok")
     data object OpenSharedCancel : Focus("open-shared-cancel")
+    data object CopyLink : Focus("copy-link")
+    data object ShareLinkField : Focus("share-link")
     data class Label(val labels: TileLabels) : Focus("label-${labels.name.lowercase()}")
     data object No : Focus("no")
     data object NewButton : Focus("new")
@@ -26,6 +28,7 @@ sealed class Focus(override val key: String) : FocusTarget {
     data object LoadButton : Focus("load")
     data object LabelsButton : Focus("labels")
     data object ControlsButton : Focus("controls")
+    data object ShareButton : Focus("share")
     /** The board, one Tab stop in keyboard mode (GH-171). */
     data object Board : Focus("board") {
         override val fallsBack get() = true
@@ -58,6 +61,7 @@ fun defaultFocus(dialog: WebDialog): Focus = when (dialog) {
     is WebDialog.Controls -> Focus.ModeOption(dialog.mode)
     is WebDialog.LinkRejected -> Focus.LinkRejectedOk
     is WebDialog.OpenShared -> Focus.OpenSharedCancel
+    is WebDialog.Share -> Focus.CopyLink
 }
 
 /** The Very large section's title and warning line in the size picker (GH-207). */
@@ -75,4 +79,5 @@ val WebDialog.title: String get() = when (this) {
     is WebDialog.Controls -> "Controls"
     is WebDialog.LinkRejected -> "Can't open this board"
     is WebDialog.OpenShared -> "Open the shared board?"
+    is WebDialog.Share -> "Share this board"
 }

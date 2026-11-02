@@ -7,7 +7,7 @@ import viewmodel.KeyboardLayout
 import viewmodel.SolutionKey
 
 /** The toolbar's buttons and their digits (ADR-0003). */
-enum class ToolbarButton(val digit: Int) { NEW(1), SAVE(2), LOAD(3), LABELS(4), GIVE_UP_ROW(5), CONTROLS(6) }
+enum class ToolbarButton(val digit: Int) { NEW(1), SAVE(2), LOAD(3), LABELS(4), GIVE_UP_ROW(5), CONTROLS(6), SHARE(7) }
 
 /** A key pressed outside a dialog. [modified] is with Ctrl, Alt or Meta, or part of an IME composition. */
 data class KeyPress(val key: String, val modified: Boolean = false, val repeat: Boolean = false, val code: String = "")

@@ -102,8 +102,8 @@ body {
         --pad-x: 16px;
         /* The most the columns beside the board take: all but the smallest board and a scrollbar (GH-168). */
         --room: calc(100vw - 20px - var(--board-min) - 2 * var(--pad-x));
-        /* The panel's column is wide enough for the four toolbar buttons (GH-139). */
-        --panel-max: 21rem;
+        /* The panel's column is wide enough for the five toolbar buttons (GH-139, GH-243). */
+        --panel-max: 26rem;
         --panel: min(var(--panel-max), var(--room) - var(--column-gap));
         --pad-y: 20px;
         --beside: calc(var(--panel) + var(--column-gap) + 2 * var(--pad-x));
@@ -139,7 +139,8 @@ body {
         display: contents;
     }
 
-    .toolbar {
+    .toolbar,
+    .controls-row {
         justify-content: center;
     }
 }
@@ -179,6 +180,10 @@ body {
     font-weight: 700;
 }
 
+.toolbar button {
+    padding-inline: 0.8em;
+}
+
 .toolbar {
     grid-area: toolbar;
     /* Above Mordie's line as it rises in from underneath. */
@@ -191,27 +196,38 @@ body {
     gap: 10px;
 }
 
-/* Narrow phones, tall or wide (GH-148): the four buttons in less room. */
-@media (max-width: 380px), (orientation: landscape) and (max-width: 760px) {
+/* Phones, tall or wide (GH-148): the five buttons (Share, GH-243) in less room. */
+@media (max-width: 480px), (orientation: landscape) and (max-width: 760px) {
     .toolbar {
         gap: 6px;
     }
 
     .toolbar button {
-        padding: 0.55em 0.8em;
+        padding: 0.55em 0.65em;
     }
 }
 
-/* `[ Controls 6 ]` on a row of its own under the four buttons (GH-171). */
+@media (max-width: 380px), (orientation: landscape) and (max-width: 760px) {
+    .toolbar {
+        gap: 4px;
+    }
+
+    .toolbar button {
+        padding: 0.55em 0.35em;
+        font-size: 0.95em;
+    }
+}
+
+/* `[ Controls 6 ]` on a row of its own under the five buttons (GH-171). */
 .controls-row {
     flex-basis: 100%;
     display: flex;
-    justify-content: center;
+    /* Starts at the buttons' left edge; centred with them when tall (above). */
 }
 
-/* The four buttons' digits need a wider panel to stay on one row. */
+/* The five buttons' digits need a wider panel to stay on one row. */
 .app.keyboard-mode {
-    --panel-max: 25rem;
+    --panel-max: 30rem;
 }
 
 .give-up {

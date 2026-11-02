@@ -125,6 +125,10 @@ interface GameViewModel {
      *  `tile_labels_changed`. Does nothing when [labels] is already shown. */
     fun changeTileLabels(labels: TileLabels)
 
+    /** The board Mordie started from, which a share link names (GH-243); `null` when Mordie sits the game out
+     *  (an old save, a repaired board). */
+    fun startingBoard(): IntArray?
+
     /** Tracks `screen_controls_dialog` as the Controls dialog opens (GH-170); [openedFrom] is
      *  `toolbar` or `shortcut`. */
     fun controlsDialogOpened(openedFrom: String)

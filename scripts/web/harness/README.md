@@ -45,11 +45,11 @@ Query options (harness.html):
 | `v` | `mouse` | `mouse`, `touch` (the `pointer: coarse` rules always on); `master`, `master-touch` with `--baseline` |
 | `sizes` | `portrait` | comma-separated `WxH`, or a preset: `portrait` (SE through Pro Max), `landscape` (the same turned, plus 750x390 and 814x430: the 14 and Pro Max less Safari's notch insets, GH-148) |
 | `boards` | `3,4,5` | board sides |
-| `mode` | `play` | `play`, `dialog` (Tile labels open) or `solution` (shifts until Give Up lights, then gives up) |
+| `mode` | `play` | `play`, `dialog` (Tile labels open), `share` (the Share dialog, GH-243) or `solution` (shifts until Give Up lights, then gives up) |
 | `shorter` | `0` | px taken off each height, standing in for the browser's own toolbars (try `100`) |
 | `rows` | `1` | toolbar rows allowed (`2` under 300px wide) |
 | `fit` | `window` | `window` (the page is the window's size) or `scroll` (larger text: may be taller, see above, GH-168) |
-| `report` | `fit` | `fit` (one line per case, above), `styles` (every element's computed styles, for `styles_diff.sh`) or `keys` (below; `sizes` then defaults to `1200x800` and `boards` to `4`) |
+| `report` | `fit` | `fit` (one line per case, above), `styles` (every element's computed styles, for `styles_diff.sh`), `qr` (with `mode=share`: the Share dialog's QR code read back by Chrome's `BarcodeDetector`, GH-243; the line says `NO-DETECTOR` where Chrome has none) or `keys` (below; `sizes` then defaults to `1200x800` and `boards` to `4`) |
 | `keys` | | with `report=keys`, the steps to play, comma-separated (below) |
 | `input` | | `keyboard` starts in keyboard mode, as a remembered Controls choice would (GH-171) |
 | `layout` | | `left` starts with the left-handed keys (GH-171) |

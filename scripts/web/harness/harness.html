@@ -11,7 +11,7 @@
 <script>
 const q = new URLSearchParams(location.search);
 const variant = q.get("v") || "mouse";
-const report = q.get("report") || "fit"; // fit | styles | keys
+const report = q.get("report") || "fit"; // fit | styles | keys | qr
 // The keys report is about focus, not fit, so one case is enough.
 const keys = report === "keys";
 const PRESETS = {
@@ -22,7 +22,7 @@ const PRESETS = {
 const sizeList = q.get("sizes") || (keys ? "1200x800" : "portrait");
 const sizes = (PRESETS[sizeList] || sizeList).split(",");
 const boards = (q.get("boards") || (keys ? "4" : "3,4,5")).split(",").map(Number);
-const mode = q.get("mode") || "play"; // play | dialog | solution
+const mode = q.get("mode") || "play"; // play | dialog | share | solution
 const shorter = Number(q.get("shorter") || 0);
 const toolbarRows = Number(q.get("rows") || 1);
 // GH-168: `scroll` lets larger text make the page taller than the window; see measure().
@@ -84,6 +84,27 @@ function measure(win, label) {
         + `${fit === "scroll" ? `labels out ${labelsOut} ${scrolled ? `scrolled ${Math.round(scrolled)} ` : ""}` : ""}overflow ${Math.round(overflow)} ${culprit}`;
 }
 
+/** GH-243: draws the open Share dialog's QR code to a canvas, in the colours the page paints it, and
+ *  has Chrome's BarcodeDetector read it back: `OK` when the text is the link field's. */
+async function qrReadback(win, label) {
+    if (!("BarcodeDetector" in window)) return `NO-DETECTOR ${label}`;
+    const doc = win.document;
+    const svg = doc.querySelector("svg.qr"), link = doc.querySelector("input[readonly]")?.value;
+    if (!svg || !link) return `BAD ${label} no QR code in the dialog`;
+    const markup = new XMLSerializer().serializeToString(svg)
+        .replace("<svg", '<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg"')
+        .replace('class="qr-light"', `fill="${win.getComputedStyle(doc.querySelector(".qr-light")).fill}"`)
+        .replace('class="qr-dark"', `fill="${win.getComputedStyle(doc.querySelector(".qr-dark")).fill}"`);
+    const img = new Image();
+    img.src = "data:image/svg+xml;base64," + btoa(markup);
+    await img.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 400;
+    canvas.getContext("2d").drawImage(img, 0, 0, 400, 400);
+    const read = (await new BarcodeDetector({ formats: ["qr_code"] }).detect(canvas)).map(b => b.rawValue);
+    return `${read.length === 1 && read[0] === link ? "OK  " : "BAD "}${label} link ${link.length} chars, read ${JSON.stringify(read)}`;
+}
+
 /** Every element's computed styles, once the animations have finished: a dialog's fade caught partway
  *  differed between runs (GH-153). */
 async function styles(win) {
@@ -138,6 +159,10 @@ async function run(size, board) {
         clickText(win.document, "Labels");
         await wait(300);
     }
+    if (mode === "share") {
+        clickText(win.document, "Share");
+        await wait(300);
+    }
     await wait(100);
     const solution = win.document.querySelector(".app.solution") ? " [solution]" : "";
     // GH-168: the root's font size, when --text-size or the page made it other than the standard 16px.
@@ -146,7 +171,9 @@ async function run(size, board) {
     const rootPx = parseFloat(win.getComputedStyle(win.document.documentElement).fontSize);
     const text = rootPx === 16 || report === "styles" ? "" : ` text ${rootPx}px`;
     const label = `${mode} ${w}x${h} ${board}x${board}${solution}${text}`;
-    if (keys) {
+    if (report === "qr") {
+        results.push(await qrReadback(win, `${variant} ${label}`));
+    } else if (keys) {
         results.push(...await runKeys(win, (q.get("keys") || "").split(",").filter(Boolean), `${variant} ${label}`));
     } else if (report === "styles") {
         // One case per post keeps each body to about a megabyte.

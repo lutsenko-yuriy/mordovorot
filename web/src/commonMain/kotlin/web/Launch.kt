@@ -44,6 +44,7 @@ fun startWebGame(
     touch: Boolean,
     pressedWith: PressedWith,
     address: PageAddress,
+    clipboard: Clipboard,
 ): WebGame {
     val platform = PlatformAnalyticsService(analytics, "web")
     val tileLabels = SessionTileLabels(TileLabelsPreference(preferences))
@@ -63,7 +64,7 @@ fun startWebGame(
         ui = UiRequestChannel(),
     )
     val keyboardLayout = SessionKeyboardLayout(KeyboardLayoutPreference(preferences))
-    return WebGame(viewModel, pressed, renderer, scope, pressedWith, keyboardLayout, modePreference, startMode, controlsShown, address).also { it.start() }
+    return WebGame(viewModel, pressed, renderer, scope, pressedWith, keyboardLayout, modePreference, startMode, controlsShown, address, clipboard).also { it.start() }
 }
 
 fun trackAppLaunched(analytics: AnalyticsService, layout: Layout, appVersion: String, host: Host, tileLabels: String, mode: PlayMode) {

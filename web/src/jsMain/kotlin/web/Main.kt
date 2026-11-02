@@ -36,6 +36,7 @@ fun main() {
         touch = window.matchMedia("(pointer: coarse)").matches,
         pressedWith,
         DomPageAddress,
+        DomClipboard,
     )
     renderer.game = game
     listenForKeys(root)

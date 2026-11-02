@@ -4,6 +4,10 @@
 :root {
     --page: #f5f1ea;
     --ink: #4a4239;
+    /* The QR code (GH-243): dark brown on the light page colour in both themes, as scanners want dark
+       modules on a light ground. */
+    --qr-dark: #2a231c;
+    --qr-light: #f5f1ea;
     --muted: #6f655a;
     --frame: #ddd4c7;
     --button: #7c6957;

@@ -91,6 +91,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-23: Split Presenter into console/TUI-specific presenters](GH-23.md)
 - [GH-237: Saves are written in the packed format](GH-237.md)
 - [GH-241: Mark the old text save format as deprecated](GH-241.md)
+- [GH-243: Share a board with a link](GH-243.md)
 - [GH-41: Kotlin Multiplatform shared modules: Core, Analytics, Mordie, Storage, ViewModel](GH-41.md)
 - [GH-6: Save and load game state to/from local files](GH-6.md)
 - [GH-62: Move counter](GH-62.md)

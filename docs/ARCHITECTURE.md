@@ -93,7 +93,8 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       ├── GameViewModel.kt      # The shared viewmodel interface (GH-42 WU3) — shift/newGame/save/load plus the read-only query
 │       │                           # surface (listSaves/saveExists/currentSaveName/isSolved/
 │       │                           # boardState/squareSide/moveCount) and restoreOnStartup
-│                           # and newGameFrom(arrangement), a fresh game on a given solvable board (GH-243)
+│                           # and newGameFrom(arrangement), a fresh game on a given solvable board, and
+│                           # startingBoard(), the board Mordie started from, null when it sits out (GH-243)
 │       ├── GameViewModelImpl.kt  # Its one implementation (GH-42 WU3, collapsing the earlier
 │       │                           # per-client viewmodels). Keeps shifts and the
 │       │                           # queries; delegates every other flow to a usecase/ class. All
@@ -200,8 +201,9 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │                      # as invalid / unsupported_size / unsolvable. storage.BoardLinkFormat (ADR-0005) holds the board's bits
 │   ├── qr/              # GH-243 (WU1): a DOM-free QR encoder (byte mode, ECC M, versions 1-10: QrCode, ReedSolomon, QrTables, QrMasks) and its SVG path (QrSvg);
 │   │                      # imports only the standard library, a boundary test checks it (as web.a11y)
+│   ├── Clipboard.kt     # GH-243 (WU3): copy(text, done), which may be refused; DomClipboard (jsMain) tries the async API, then the old copy command on the selected link field
 │   ├── PageAddress.kt   # GH-243 (WU2): the address bar's base, fragment and clearFragment (DomPageAddress in jsMain; a fake in the harness)
-│   ├── WebShareFlows.kt # GH-243 (WU2): opening a link at startup and on hashchange, the Can't open and Open the shared board dialogs; WU3 adds the Share dialog and Copy link
+│   ├── WebShareFlows.kt # GH-243 (WU2): opening a link at startup and on hashchange, the Can't open and Open the shared board dialogs; (WU3) the Share dialog and Copy link, and a Clipboard seam (DomClipboard in jsMain; a fake in the harness)
 │   ├── WebKeys.kt       # A key outside a dialog to a PageKey: ToolbarButton's digits, 0, or a shared
 │   │                    # BoardKey or SolutionKey while the board has focus (GH-171); a non-Latin
 │   │                    # key counts as the Latin letter at its position (GH-200)
@@ -282,6 +284,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # `--text-scale`, and the root font size where the default isn't it
 ├── src/jsMain/kotlin/web/DomFooter.kt  # footerElement: <footer>, its links in a new tab (GH-111);
 │                                       # wide-only parts in `.wide-only` (GH-147)
+├── src/jsMain/kotlin/web/DomQr.kt      # GH-243: the Share dialog's QR code as an inline SVG from QrSvg, hidden from readers
 ├── src/jsMain/kotlin/web/DomDialogs.kt  # The modal dialogs, and Escape -> WebGame.onEscape (GH-163, listenForEscape);
 │                                       # DomElements.kt: element/text/button helpers, and KeyboardEvent.composing
 ├── src/jsMain/kotlin/web/a11y/DomKeyboard.kt # GH-163: Tab wraps inside the open dialog, the page

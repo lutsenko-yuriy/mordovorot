@@ -28,7 +28,7 @@ class WebKeyboardPlayScenarioTest {
     fun `keyboard mode shows the digit toolbar and the Controls row`() = webTest {
         val page = WebHarness(backgroundScope).remembering().startOn()
 
-        assertEquals(listOf(1, 2, 3, 4, 5, 6), ToolbarButton.entries.map { page.state.digitOf(it) })
+        assertEquals(listOf(1, 2, 3, 4, 5, 6, 7), ToolbarButton.entries.map { page.state.digitOf(it) })
         assertTrue(page.state.controlsShown)
     }
 
@@ -43,6 +43,7 @@ class WebKeyboardPlayScenarioTest {
             "4" to { it is WebDialog.Labels },
             "5" to { it == WebDialog.GiveUp },
             "6" to { it is WebDialog.Controls },
+            "7" to { it is WebDialog.Share },
         )
         for ((digit, opened) in dialogs) {
             assertTrue(page.press(digit, from = Focus.LoadButton), digit)
