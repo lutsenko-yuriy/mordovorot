@@ -215,7 +215,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
     groups, OK and Cancel, and the arrows move a group's mark. OK applies both; Cancel or Escape
     changes nothing.
   - **Toolbar:** every button shows its digit: `[ New 1 ][ Save 2 ][ Load 3 ][ Labels 4 ]`,
-    `[ Give Up 5 ]` or `[ Mordie's solution 5 ]`, `[ Controls 6 ]`. The digits work wherever focus
+    `[ Share 7 ]`, `[ Give Up 5 ]` or `[ Mordie's solution 5 ]`, `[ Controls 6 ]`. The digits work wherever focus
     is, outside dialogs. In mouse mode only 6 works, and only its button shows its digit.
   - **Board:** one Tab stop, focused at page load in keyboard mode, on entering the mode and when a
     dialog opened from it closes. While it has focus, right-handed: W/A/S/D move the selected tile,
@@ -294,6 +294,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
     there are none.
   - The `Can't be solved` dialog offers `[ Repair & load ] [ New game ]`, with no Exit.
   - **Labels** opens the Tile labels dialog (GH-139, Feature 11).
+  - **Share** opens the Share dialog (GH-243, Feature 12), last in the row.
 - **Status line** under the toolbar: messages such as `Saved as 'x'.` and load errors. The next
   action clears it.
 - **Saves** are kept in the browser's `localStorage`, one entry per save. Each address has its own: saves on the public site and on `localhost:8080` don't see
@@ -456,3 +457,27 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   already shown changes nothing, so it doesn't adopt a loaded save's labels. It is kept in `localStorage`, per address
   like the saves. If it can't be written the board still relabels, silently; it just isn't
   remembered. Changing the labels isn't unsaved progress.
+
+### Feature 12 — Share a board (GH-243)
+Web client only.
+- **`[ Share ]`** is the toolbar's fifth button, after Labels; 7 in keyboard mode (ADR-0003). It opens
+  **Share this board** during play, after a win and on the solution screen. Escape and Close cancel it.
+- **The link** is the page's own address plus `#b=` and the board (ADR-0005): the board Mordie started
+  from, or the board as it is when the start is unknown (an old save with moves, a repaired board). No
+  moves and no labels travel in it. A 9x9 link is about 120 characters on the public site.
+- **The dialog:** a line saying anyone who opens the link starts from the same NxN board (`from this NxN
+  board as it is now` when the start is unknown); the link in a read-only field (named `Share link`,
+  selected when focused); a QR code of the same link, black on white in both themes; `[ Copy link ]`
+  and `[ Close ]`. It opens focused on Copy link, and Tab stays inside it.
+- **Copy link** puts the link on the clipboard. The button then reads `Copied!` and the status line
+  says `Link copied.`; the dialog stays open. Where the browser refuses (a page served over plain http
+  on a network address has no clipboard), the field is focused with the link selected, and the status
+  line says `Couldn't copy the link - it's selected, so copy it yourself.`
+- **Opening a link** starts that board at once as a fresh game (Moves 0, its own Mordie race, the
+  player's own labels), skipping the restore prompt and size picker; the status line says `Started a
+  shared NxN board.` and the address bar is cleaned. In a tab with unsaved moves, `Open the shared
+  board?` asks first. A bad link (not a board, a side outside 3 to 9, or no sequence of shifts solves it)
+  shows `Can't open this board`, then the usual startup. Analytics: `shared_board_opened`,
+  `screen_share_dialog`, `board_share_link_copied` (`docs/ANALYTICS_EVENTS.md`).
+- Not shared: moves, Mordie's solution, labels. A pasted code or file, the native share sheet and
+  saving the QR as an image are out of scope.
