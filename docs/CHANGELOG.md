@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.36.1] — 2026-11-02 (PR #238 merged)
+
+### Changed
+
+- [meta] (PR #238) GH-220: research on a smaller save format. A 9x9 save is about 2.1 KB as text, 72% of it Mordie's solution; a marker character plus base64url of a bit-packed stream (boards as Lehmer codes, moves as one number each, the solution last) brings every size under about 610 characters, while deflate and entropy coding gain nothing worth their code. Adds ADR-0004 (proposed) and the follow-up ticket GH-237.
+
 ## [0.36.0] — 2026-11-02 (PR #236 merged)
 
 ### Changed
