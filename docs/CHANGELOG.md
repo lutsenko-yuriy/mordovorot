@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.37.1] — 2026-11-02 (PR #242 merged)
+
+### Changed
+
+- [non-user] (PR #242) GH-241: the text save format is marked deprecated (`TextSaveFormat`, `@Deprecated`); it is still read, so saves in the old text format keep loading and nothing a player sees changes. ARCHITECTURE, PRODUCT_SPEC (Feature 4) and ADR-0004 describe the deprecation.
+
 ## [0.37.0] — 2026-11-02 (PR #240 merged)
 
 ### Changed
