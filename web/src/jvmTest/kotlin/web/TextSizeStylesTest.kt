@@ -56,7 +56,7 @@ class TextSizeStylesTest {
 
         assertTrue("--board-min: calc(16px * (var(--side) * 1.1 + var(--band)));" in rule(styles, ".app"), rule(styles, ".app"))
         assertTrue("--room: calc(100vw - 20px - var(--board-min) - 2 * var(--pad-x));" in wide, wide)
-        assertTrue("--panel-max: 21rem;" in wide && "--panel-max: 18rem;" in narrowWide, wide + narrowWide)
+        assertTrue("--panel-max: 26rem;" in wide && "--panel-max: 18rem;" in narrowWide, wide + narrowWide)
         assertTrue("--panel: min(var(--panel-max), var(--room) - var(--column-gap));" in wide, wide)
         assertTrue("--panel: min(var(--panel-max), var(--room) - 2 * var(--column-gap) - var(--steps));" in steps, steps)
         assertTrue("--steps: min(11rem, (var(--room) - 2 * var(--column-gap)) / 2);" in steps, steps)

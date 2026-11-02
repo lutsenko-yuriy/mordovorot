@@ -7,6 +7,7 @@ import viewmodel.TileLabels
 import viewmodel.TileSelection
 import web.a11y.Announcements
 import web.drag.LineOffset
+import web.qr.QrCode
 
 /** One frame of the page (GH-110): what [WebRenderer] draws. [tiles] are 1-based, row by row. */
 data class WebState(
@@ -95,6 +96,14 @@ sealed interface WebDialog {
     /** The Controls dialog (GH-171): [mode] and [layout] are marked until Cancel or OK; [keyList]
      *  names the marked layout's keys. */
     data class Controls(val mode: PlayMode, val layout: KeyboardLayout, val keyList: List<String>) : WebDialog
+
+    /** The Share dialog (GH-243): the [link] to the [side] x [side] board, which the player's [startKnown] says is where
+     *  Mordie started or else the board as it is; [qr] is the link as a code, `null` when it is too long for one. */
+    data class Share(val link: String, val side: Int, val startKnown: Boolean, val qr: QrCode?, val copied: Boolean = false) : WebDialog {
+        val note: String get() =
+            if (startKnown) "Anyone who opens this link starts from the same ${side}x$side board."
+            else "Anyone who opens this link starts from this ${side}x$side board as it is now."
+    }
 
     /** A share link's board can't be opened (GH-243): [message] says why; OK. */
     data class LinkRejected(val message: String) : WebDialog

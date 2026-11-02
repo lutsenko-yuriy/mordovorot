@@ -114,4 +114,12 @@ class ColourContrastStylesTest {
 
         assertTrue(failures.isEmpty(), failures.joinToString("\n"))
     }
+
+    @Test
+    fun `the QR code is black on white in both themes`() {
+        for ((name, theme) in themes) {
+            assertEquals("#000", theme["qr-dark"], name)
+            assertEquals("#fff", theme["qr-light"], name)
+        }
+    }
 }

@@ -4,6 +4,7 @@ import kotlinx.browser.document
 import org.w3c.dom.Element
 import org.w3c.dom.HTMLInputElement
 import org.w3c.dom.events.KeyboardEvent
+import org.w3c.dom.events.MouseEvent
 import viewmodel.KeyboardLayout
 import viewmodel.UnsolvableSaveChoice
 import web.a11y.asDialog
@@ -91,6 +92,27 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                     button("Cancel", "secondary") { game.controls.onAnswered(ok = false) },
                 ),
             )
+            is WebDialog.Share -> {
+                val field = (element("input") as HTMLInputElement).apply {
+                    value = dialog.link
+                    readOnly = true
+                    named(this, "Share link")
+                    focusKey(Focus.ShareLinkField)
+                    addEventListener("focus", { select() })
+                }
+                append(
+                    text("message", dialog.note),
+                    field,
+                    *listOfNotNull(dialog.qr?.let(::qrElement)).toTypedArray(),
+                    actions(
+                        // A click with no pointer is the keyboard's Enter or Space.
+                        (button(if (dialog.copied) "Copied!" else "Copy link") {}).apply {
+                            addEventListener("click", { game.share.onCopyLink(fromKeyboard = (it as MouseEvent).detail == 0) })
+                        }.focusKey(Focus.CopyLink),
+                        button("Close", "secondary") { game.share.onClosed() },
+                    ),
+                )
+            }
             is WebDialog.LinkRejected -> append(
                 text("message", dialog.message),
                 actions(button("OK") { game.share.onNoticeAnswered() }.focusKey(Focus.LinkRejectedOk)),

@@ -194,3 +194,24 @@
     from { opacity: 0; }
     to { opacity: 1; }
 }
+
+/* The Share dialog's link field and QR code (GH-243). */
+.dialog input[readonly] {
+    text-overflow: ellipsis;
+}
+
+/* Fixed colours in both themes: many scanners don't read light modules on a dark ground. */
+.dialog .qr {
+    align-self: center;
+    width: min(100%, 14rem);
+    height: auto;
+    border-radius: 6px;
+}
+
+.dialog .qr-light {
+    fill: var(--qr-light);
+}
+
+.dialog .qr-dark {
+    fill: var(--qr-dark);
+}

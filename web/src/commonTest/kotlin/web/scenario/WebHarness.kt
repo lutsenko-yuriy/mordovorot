@@ -20,6 +20,7 @@ import viewmodel.KeyboardLayout
 import web.Focus
 import web.Host
 import web.KeyPress
+import web.Clipboard
 import web.Layout
 import web.PageAddress
 import web.PlayMode
@@ -48,6 +49,7 @@ internal class WebHarness(
     private val appVersion: String = "9.9.9",
     private val host: Host = Host.LOCALHOST,
     private val touch: Boolean = false,
+    val address: FakePageAddress = FakePageAddress(),
 ) {
     val saves = BrowserSaveRepository(store)
     val preferences = BrowserPreferenceRepository(store)
@@ -55,7 +57,7 @@ internal class WebHarness(
     val mordieSearches = FakeMordieSearchFactory()
     val mordie = Mordie(mordieSearches)
     val pressedWith = PressedWith()
-    val address = FakePageAddress()
+    val clipboard = FakeClipboard()
     private val renderer = FakeWebRenderer()
     lateinit var game: WebGame
         private set
@@ -72,7 +74,7 @@ internal class WebHarness(
     val scrolled: List<Int> get() = renderer.scrolled
 
     fun start(): WebHarness {
-        game = startWebGame(board, saves, preferences, analytics, mordie, renderer, scope, layout, appVersion, host, touch, pressedWith, address)
+        game = startWebGame(board, saves, preferences, analytics, mordie, renderer, scope, layout, appVersion, host, touch, pressedWith, address, clipboard)
         return this
     }
 
@@ -137,6 +139,18 @@ internal class FakePageAddress(var fragment: String = "", private val base: Stri
     override fun clearFragment() {
         fragment = ""
         cleared++
+    }
+}
+
+/** A clipboard that takes the text, or refuses it when not [allowed]. */
+internal class FakeClipboard(var allowed: Boolean = true) : Clipboard {
+    val copied = mutableListOf<String>()
+    var refused = 0
+        private set
+
+    override fun copy(text: String, done: (Boolean) -> Unit) {
+        if (allowed) copied += text else refused++
+        done(allowed)
     }
 }
 

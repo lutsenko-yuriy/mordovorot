@@ -76,6 +76,7 @@ internal class WebKeyPlay(
                 GiveUpButton.DIMMED, GiveUpButton.HIDDEN -> {}
             }
             ToolbarButton.CONTROLS -> game.controls.open("shortcut", opener)
+            ToolbarButton.SHARE -> game.share.open(opener)
         }
     }
 

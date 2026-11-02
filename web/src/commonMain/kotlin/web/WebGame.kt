@@ -34,6 +34,7 @@ class WebGame internal constructor(
     startMode: PlayMode,
     private val controlsShown: Boolean,
     address: PageAddress,
+    clipboard: Clipboard,
 ) {
 
     private val modal = WebModal { render(focus = it) }
@@ -41,7 +42,7 @@ class WebGame internal constructor(
     internal val dialogs = WebDialogFlows(viewModel, analytics, modal, ::cancelled)
     internal val solution = WebSolutionFlows(this, viewModel, analytics, modal)
     internal val controls = WebControlsDialog(this, viewModel, analytics, modal, keyboardLayout, modePreference, startMode)
-    internal val share = WebShareFlows(this, viewModel, analytics, modal, address)
+    internal val share = WebShareFlows(this, viewModel, analytics, modal, address, clipboard)
     private val keys = WebKeyPlay(this, viewModel, pressedWith, controlsShown)
     private val requests = WebRequestRouter(this)
     internal var status: String? = null
