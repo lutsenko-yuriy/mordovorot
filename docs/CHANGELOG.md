@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.36.0] — 2026-11-02 (PR #236 merged)
+
+### Changed
+
+- [user] (PR #236) GH-225: Mordie now plays 6x6 and the very large 7x7 to 9x9 boards too: Give Up, its lines and endings, and Mordie's solution work on every size, and saves of those sizes keep Mordie's answer.
+- [non-user] (PR #236) GH-225: the sit-out is gone (Mordie.MAX_SIDE, sitOut, SitsOut, MordieHooks.tooBig); a loaded board already played on with no Mordie data is still sat out through clear(); the solution screen's CSS gives the board more room on a 320x568 portrait phone and fits a landscape SE (568x320) with a 5x5 or bigger board; the harness no longer skips solution cases.
+
 ## [0.35.0] — 2026-11-02 (PR #235 merged)
 
 ### Changed
