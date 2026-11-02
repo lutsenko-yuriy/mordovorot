@@ -125,7 +125,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
                     toolbarButton("New", ToolbarButton.NEW, Focus.NewButton, state) { game.onNew() },
                     toolbarButton("Save", ToolbarButton.SAVE, Focus.SaveButton, state) { game.onSave() },
                     toolbarButton("Load", ToolbarButton.LOAD, Focus.LoadButton, state) { game.onLoad() },
-                    toolbarButton("Labels", ToolbarButton.LABELS, Focus.LabelsButton, state) { game.onLabels() },
+                    toolbarButton("Labels", ToolbarButton.LABELS, Focus.LabelsButton, state) { game.labels.open() },
                 )
                 // A row of its own under the four (GH-171).
                 if (state.controlsShown) append(element("div", "controls-row").apply {

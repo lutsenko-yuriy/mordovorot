@@ -11,7 +11,6 @@ import viewmodel.PointerShift
 import viewmodel.SaveInfo
 import viewmodel.SessionKeyboardLayout
 import viewmodel.ShiftSource
-import viewmodel.TileLabels
 import viewmodel.UnsolvableSaveChoice
 import viewmodel.displayWithSize
 import web.a11y.Announcements
@@ -37,7 +36,7 @@ class WebGame internal constructor(
 ) {
 
     private val modal = WebModal { render(focus = it) }
-    internal val labelsDialog = WebLabelsDialog(viewModel, ::cancelled) { modal.ask(it) }
+    internal val labels = WebLabelsDialog(this, viewModel, modal)
     internal val dialogs = WebDialogFlows(viewModel, analytics, modal, ::cancelled)
     internal val solution = WebSolutionFlows(this, viewModel, analytics, modal)
     internal val controls = WebControlsDialog(this, viewModel, analytics, modal, keyboardLayout, modePreference, startMode)
@@ -124,22 +123,6 @@ class WebGame internal constructor(
 
     /** A press on a tile (GH-171): in keyboard mode it selects the tile and gives the board focus. */
     fun onTilePressed(row: Int, col: Int) = keys.onTilePressed(row, col)
-
-    /** `[ Labels ]` (GH-139): the picker, live on play, after a win and on the solution screen. */
-    fun onLabels(openedFrom: String = "toolbar", opener: Focus = Focus.LabelsButton) = runFlow(opener) { labelsDialog.fromToolbar(openedFrom) }
-
-    /** A Labels row pressed: it becomes the marked one, and the board previews it. */
-    fun onLabelsSelected(labels: TileLabels) {
-        val shown = modal.shown as? WebDialog.Labels ?: return
-        modal.update(labelsDialog.select(shown, labels) ?: return)
-        render(focus = Focus.Label(labels))
-    }
-
-    /** The Labels dialog's answer: OK with the marked scheme, or Cancel. */
-    fun onLabelsAnswered(ok: Boolean) {
-        val shown = modal.shown as? WebDialog.Labels ?: return
-        modal.answer<WebDialog.Labels, TileLabels?>(if (ok) shown.selected else null)
-    }
 
     fun onNew(opener: Focus = Focus.NewButton) = runFlow(opener) {
         dialogs.chooseSize("toolbar")?.let {

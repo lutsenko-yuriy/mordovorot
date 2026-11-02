@@ -127,22 +127,22 @@ class WebSixBySixScenarioTest {
     @Test
     fun `a Letters preference shows Numbers on 6x6, with Letters unavailable in the dialog`() = webTest {
         val page = WebHarness(backgroundScope).startOn()
-        page.game.onLabels()
-        page.game.onLabelsSelected(TileLabels.LETTERS)
-        page.game.onLabelsAnswered(ok = true)
+        page.game.labels.open()
+        page.game.labels.onSelected(TileLabels.LETTERS)
+        page.game.labels.onAnswered(ok = true)
 
         page.game.onNew()
         page.game.onSizeChosen(6)
         assertEquals(TileLabels.NUMBERS, page.state.labels)
 
-        page.game.onLabels()
+        page.game.labels.open()
         val dialog = page.state.dialog as WebDialog.Labels
         assertEquals(LabelOption(TileLabels.LETTERS, "Letters", listOf("up to 5x5"), available = false), dialog.options[4])
         assertEquals(listOf("AA", "AB", "AC", "AD", "AE", "AF"), dialog.options[5].sample)
         assertTrue(dialog.options.filter { it.labels != TileLabels.LETTERS }.all { it.available })
-        page.game.onLabelsSelected(TileLabels.LETTERS)
+        page.game.labels.onSelected(TileLabels.LETTERS)
         assertEquals(TileLabels.NUMBERS, (page.state.dialog as WebDialog.Labels).selected)
-        page.game.onLabelsAnswered(ok = true)
+        page.game.labels.onAnswered(ok = true)
         assertEquals("letters", page.preferences.get("tile_labels"))
         assertEquals(1, page.props("tile_labels_changed").size, "only the first change")
 
@@ -166,9 +166,9 @@ class WebSixBySixScenarioTest {
             listOf(mapOf("opened_from" to "letters_save", "screen" to "play", "current_labels" to "numbers")),
             page.ownProps("screen_labels_dialog"),
         )
-        page.game.onLabelsSelected(TileLabels.PAIRS)
+        page.game.labels.onSelected(TileLabels.PAIRS)
         assertEquals(dialog.message, (page.state.dialog as WebDialog.Labels).message)
-        page.game.onLabelsAnswered(ok = true)
+        page.game.labels.onAnswered(ok = true)
         assertEquals(TileLabels.PAIRS, page.state.labels)
         assertEquals("Loaded 'six'.", page.state.status)
         assertEquals(listOf<Any?>("letters_unavailable"), page.props("tile_labels_changed").map { it["from_source"] })
@@ -176,7 +176,7 @@ class WebSixBySixScenarioTest {
         val reloaded = WebHarness(backgroundScope, store = page.store).startOn()
         reloaded.game.onLoad()
         reloaded.game.onLoadChosen("six")
-        reloaded.game.onLabelsAnswered(ok = false)
+        reloaded.game.labels.onAnswered(ok = false)
 
         assertNull(reloaded.state.dialog)
         assertEquals(TileLabels.NUMBERS, reloaded.state.labels)

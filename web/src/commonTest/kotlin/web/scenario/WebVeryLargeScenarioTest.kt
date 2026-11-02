@@ -133,19 +133,19 @@ class WebVeryLargeScenarioTest {
     @Test
     fun `Letters shows Numbers on 7x7, and is unavailable in the Tile labels dialog`() = webTest {
         val page = WebHarness(backgroundScope).startOn()
-        page.game.onLabels()
-        page.game.onLabelsSelected(TileLabels.LETTERS)
-        page.game.onLabelsAnswered(ok = true)
+        page.game.labels.open()
+        page.game.labels.onSelected(TileLabels.LETTERS)
+        page.game.labels.onAnswered(ok = true)
 
         page.game.onNew()
         page.game.onSizeChosen(7)
         assertEquals(TileLabels.NUMBERS, page.state.labels)
 
-        page.game.onLabels()
+        page.game.labels.open()
         val dialog = page.state.dialog as WebDialog.Labels
         assertEquals(LabelOption(TileLabels.LETTERS, "Letters", listOf("up to 5x5"), available = false), dialog.options[4])
         assertTrue(dialog.options.filter { it.labels != TileLabels.LETTERS }.all { it.available })
-        page.game.onLabelsAnswered(ok = true)
+        page.game.labels.onAnswered(ok = true)
         assertEquals("letters", page.preferences.get("tile_labels"))
 
         val reloaded = WebHarness(backgroundScope, store = page.store).startOn()
