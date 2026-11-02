@@ -28,6 +28,7 @@ object SaveFileCodec {
 
     /** Throws [SaveFileFormatException], naming the save [name], when [text] isn't a valid save. Anything
      *  that doesn't start with [PackedSaveFormat.MARKER], an empty save included, is read as text. */
+    @Suppress("DEPRECATION") // The deprecated text reader stays so saves from before GH-237 still load (GH-241).
     fun decode(name: String, text: String): SavedBoard =
         if (text.startsWith(PackedSaveFormat.MARKER)) PackedSaveFormat.decode(name, text) else TextSaveFormat.decode(name, text)
 }

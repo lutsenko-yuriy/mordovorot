@@ -2,7 +2,10 @@ package storage
 
 /** The save text format of the terminal days and GH-110 to GH-224, kept in the browser's storage
  *  (GH-110). Read only since GH-237, which writes [PackedSaveFormat] instead: square side, then the values, then the move count, then optional Mordie data, then
- *  optional tile labels on line 8 (GH-139), then `unproven <R>` on line 9 (GH-224), one per line. */
+ *  optional tile labels on line 8 (GH-139), then `unproven <R>` on line 9 (GH-224), one per line.
+ *
+ *  Deprecated (GH-241): old saves must keep loading, so the reader stays, with no removal date yet. */
+@Deprecated("Read only since GH-237; saves are written in PackedSaveFormat. Kept so old saves still load (GH-241).")
 internal object TextSaveFormat {
 
     private const val FOUND = "found"

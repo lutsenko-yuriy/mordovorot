@@ -47,7 +47,7 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                                # format, dispatching on the first character; encode writes the packed one only (GH-237)
 │       ├── PackedSaveFormat.kt        # The packed format: `~` + base64url of a bit stream (GH-237, ADR-0004)
 │       ├── SaveBits.kt                # BitWriter / BitReader, varints and the Lehmer code of a permutation (GH-237)
-│       ├── TextSaveFormat.kt          # The old nine-line text format, read-only from GH-237 on (GH-110)
+│       ├── TextSaveFormat.kt          # The old nine-line text format, read-only from GH-237 on and deprecated (GH-241; `@Deprecated`, no removal date) (GH-110)
 │       ├── SaveRules.kt               # The checks both formats share: arrangement, solution, ruled-out length (GH-237)
 │       ├── SaveNames.kt               # Which save names are accepted, on every platform (GH-110)
 │       ├── SaveFileFormatException.kt # Thrown on a malformed save (from the app, GH-110)
@@ -494,7 +494,7 @@ depends on; the web's `BrowserSaveRepository` is the only class that touches the
 live in `:shared:storage` so every platform reads and writes the same saves (GH-110). No dependency on `board_model`, `viewmodel`, or `view` — it
 deals in plain data (`SavedBoard`), not domain objects.
 
-Text save format (the `.save` text of the terminal days, read-only since GH-237; GH-228 has no import): line 1 is the square side, line 2 the space-separated tile
+Text save format (the `.save` text of the terminal days, read-only since GH-237 and deprecated since GH-241: `TextSaveFormat` is `@Deprecated`, and `SaveFileCodec.decode` suppresses the warning because old saves must keep loading; no removal date; GH-228 has no import): line 1 is the square side, line 2 the space-separated tile
 values, line 3 the move count (GH-62). A missing or blank line 3 (a save from
 before GH-62) loads as 0; a non-integer or negative one is a
 `SaveFileFormatException`. GH-83 adds two optional lines: line 4 is the original

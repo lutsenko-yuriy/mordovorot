@@ -46,7 +46,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   rejected for a size mismatch (GH-44).
 - A save is stored as a short run of characters, not readable text (GH-237): even a 9x9 game with
   Mordie's whole solution fits in under 1 KB. Saves from before that, in the old text format,
-  still load.
+  still load. That format is deprecated (GH-241) but not going away yet.
 - An older build can't read a newer save (it reports it as corrupted); within the old text
   format, lines an older build doesn't know (GH-224's line 9 was one) were ignored.
 - Every place a save's name is listed - the startup restore dialog and the Load dialog - also
