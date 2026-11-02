@@ -485,7 +485,7 @@ Fired when Copy link in the Share dialog succeeds. A blocked clipboard fires not
 
 ### `shared_board_opened`
 
-Fired when the page loads with a share link in the address bar and the link has been checked. A link visit shows up as `app_launched` followed by this event, with no `startup_restore_prompt_shown` (the prompt is skipped). A link met while unsaved progress is asked about and cancelled fires nothing. *(GH-243)*
+Fired when a share link has been checked: when the page loads with one in the address bar, or when one arrives in an open tab (`hashchange`). A link visit at load shows up as `app_launched` followed by this event, with no `startup_restore_prompt_shown` (the prompt is skipped); a link in an open tab fires it alone. A link met while unsaved progress is asked about and cancelled fires nothing. *(GH-243)*
 
 | Property | Type | Description |
 |---|---|---|

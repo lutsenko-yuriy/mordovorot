@@ -25,14 +25,21 @@ internal class WebShareFlows(
         val fragment = address.fragment()
         if (ShareLink.read(fragment) == null) return
         pending = fragment
-        if (game.idle) game.runFlow(if (game.controls.mode == PlayMode.KEYBOARD) Focus.Board else Focus.PageStart) { openPending() }
+        openWaiting()
     }
 
-    /** Opens the link that waited, if any. */
+    /** Opens the link that waited, if nothing is under way now (a drag ended). */
+    fun openWaiting() {
+        if (pending != null && game.idle) game.runFlow(if (game.controls.mode == PlayMode.KEYBOARD) Focus.Board else Focus.PageStart) { openPending() }
+    }
+
+    /** Opens the links that waited, if any: one that arrives while another is asked about waits for that answer. */
     suspend fun openPending() {
-        val fragment = pending ?: return
-        pending = null
-        open(fragment)
+        while (true) {
+            val fragment = pending ?: return
+            pending = null
+            open(fragment)
+        }
     }
 
     /** The notice's OK. */

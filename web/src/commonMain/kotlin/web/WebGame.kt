@@ -112,6 +112,7 @@ class WebGame internal constructor(
                 Axis.COLUMN -> viewModel.shiftColumn(released.line, released.steps, PointerShift.DRAG)
             }
         }
+        share.openWaiting()
     }
 
     /** Drops the drag, leaving the board as it was. */
@@ -119,6 +120,7 @@ class WebGame internal constructor(
         val moved = drag?.offset != null
         drag = null
         if (moved) render()
+        share.openWaiting()
     }
 
     /** A key outside a dialog, with focus on the control keyed [from] (GH-171); whether the game

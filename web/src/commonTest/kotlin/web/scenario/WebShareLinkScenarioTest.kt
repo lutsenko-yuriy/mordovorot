@@ -170,4 +170,35 @@ class WebShareLinkScenarioTest {
         assertNull(page.state.dialog)
         assertEquals(1, page.state.moves)
     }
+
+    @Test
+    fun `a second link that arrives while the first is being asked about is asked about next`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.game.onArrow(Arrow.LEFT, 0)
+        page.game.onSave()
+        page.changeLink(5, SHARED_5X5)
+        page.game.onSaveAnswered(null)
+        assertEquals(WebDialog.OpenShared(5), page.state.dialog)
+
+        page.changeLink(4, SHARED_4X4)
+        page.game.share.onOpenAnswered(false)
+
+        assertEquals(WebDialog.OpenShared(4), page.state.dialog)
+        page.game.share.onOpenAnswered(true)
+        assertEquals(shown(SHARED_4X4), page.state.tiles)
+        assertEquals(1, page.props("shared_board_opened").size)
+    }
+
+    @Test
+    fun `a link that arrives during a drag opens when the drag ends`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.game.onDragStart(0, 0, 10.0, 10.0, 50.0)
+
+        page.changeLink(4, SHARED_4X4)
+        assertEquals(shown(ONE_SHIFT_FROM_SOLVED), page.state.tiles)
+        page.game.onDragCancel()
+
+        assertEquals(shown(SHARED_4X4), page.state.tiles)
+        assertEquals(1, page.props("shared_board_opened").size)
+    }
 }
