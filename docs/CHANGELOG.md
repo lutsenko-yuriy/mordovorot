@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.36.2] — 2026-11-02 (PR #239 merged)
+
+### Changed
+
+- [wip] (PR #239) GH-237 (WU1/2): the packed save format (a marker, then base64url of a bit stream; boards as Lehmer codes, the solution last) is added and read by SaveFileCodec.decode, beside the old text format; nothing writes it yet, so no save changes.
+- [non-user] (PR #239) GH-237 (WU1/2): SaveFileCodec splits into TextSaveFormat, PackedSaveFormat, SaveRules and SaveBits in shared/storage; the new tests include a fuzz test over damaged saves.
+
 ## [0.36.1] — 2026-11-02 (PR #238 merged)
 
 ### Changed
