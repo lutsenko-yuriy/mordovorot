@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-_(nothing in progress)_
+- GH-237: Saves use a compact bit-packed format (WU1/2 merged; WU2 pending)
 
 ---
 

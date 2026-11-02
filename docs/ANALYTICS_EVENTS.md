@@ -458,3 +458,7 @@ No new events, screen views or properties. Mordie no longer sits out 6x6 to 9x9,
 - `board_solved` carries `mordie_result`, `mordie_moves` and `mordie_proven_shortest`.
 
 Their `board_size` now runs 3-9 (the `3-5` in the tables above predates GH-160 and GH-207).
+
+## GH-237 (saves use a compact bit-packed format)
+
+No new events, screen views or properties. Saving and loading report as before: `save_command_used` with `success` or `error`, and `load_command_used` with `success`, `not_found`, `error` or `unsolvable`. A save that fails to decode in the new format is `load_command_used` with `result=error`, the same as a corrupted text save. The Mordie properties on `board_solved` and `game_given_up` keep their values through a save and a load, whichever format the save was read in.
