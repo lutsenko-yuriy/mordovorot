@@ -5,10 +5,10 @@ package storage
  *  optional tile labels on line 8 (GH-139), then `unproven <R>` on line 9 (GH-224), one per line. */
 internal object TextSaveFormat {
 
-    const val FOUND = "found"
-    const val SEARCHING = "searching"
-    const val SOLUTION_SCREEN = "solution"
-    const val UNPROVEN = "unproven"
+    private const val FOUND = "found"
+    private const val SEARCHING = "searching"
+    private const val SOLUTION_SCREEN = "solution"
+    private const val UNPROVEN = "unproven"
     private val MOVE_TOKEN = Regex("([rc])(\\d+):(\\d+)")
 
     /** Lines 4-7 are blank where they don't apply, so the labels always land on line 8 and line 9 after it. */
