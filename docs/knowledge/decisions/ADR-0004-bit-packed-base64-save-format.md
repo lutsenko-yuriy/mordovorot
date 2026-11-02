@@ -1,7 +1,7 @@
 # ADR-0004 — store a save as a marker character plus base64url of a bit-packed stream, with Mordie's solution last
 
 ## Status
-`proposed`
+`accepted`
 
 ## Context
 A save is plain text: nine lines, with the board as numbers and Mordie's solution as `r0:1 c2:3 …` tokens (`SaveFileCodec`). Since Mordie plays every size (GH-225), a 9x9 save is about 2.1 KB, 72% of it the solution. The user wants saves small, with under 1 KB as a Should, and accepts that a save may stop being human-readable. The only store is the browser's `localStorage`: text only, 5 MiB per origin ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria)), so bits need a character encoding, and common Kotlin has `kotlin.io.encoding.Base64.UrlSafe` since 2.2 ([Kotlin API](https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.io.encoding/-base64/)). The measurements are in `docs/knowledge/notes/GH-220.md`.

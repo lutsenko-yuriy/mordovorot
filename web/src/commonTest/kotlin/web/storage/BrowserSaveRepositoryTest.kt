@@ -17,10 +17,17 @@ class BrowserSaveRepositoryTest {
     private val repo = BrowserSaveRepository(store)
 
     @Test
-    fun `a save is one entry in the text format`() {
+    fun `a save is one entry in the packed format, GH-237`() {
         repo.save("foo", intArrayOf(1, 0, 2, 3), 2, moveCount = 4)
 
-        assertEquals(mapOf("mordovorot.save.foo" to "2\n1 0 2 3\n4\n"), store.entries)
+        assertEquals(mapOf("mordovorot.save.foo" to "~IACI"), store.entries)
+    }
+
+    @Test
+    fun `an entry saved in the old text format still loads, GH-237`() {
+        store.entries["mordovorot.save.old"] = "2\n1 0 2 3\n4\n1 0 3 2\n8 searching\n"
+
+        assertEquals(SavedBoard(2, intArrayOf(1, 0, 2, 3), 4, SavedMordie(intArrayOf(1, 0, 3, 2), 8, found = false)), repo.load("old"))
     }
 
     @Test

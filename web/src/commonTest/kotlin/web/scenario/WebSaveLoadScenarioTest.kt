@@ -9,6 +9,7 @@ import viewmodel.UnsolvableSaveChoice
 import web.Arrow
 import web.SaveEntry
 import web.WebDialog
+import web.storage.InMemoryKeyValueStore
 
 /** GH-110 scenarios: Save and Load in the browser, kept in the in-memory store. Same setup as
  *  [WebStartupScenarioTest]; a "reload" is a new `WebGame` over the same store. */
@@ -142,5 +143,33 @@ class WebSaveLoadScenarioTest {
 
         assertEquals(saved.tiles, reloaded.state.tiles)
         assertEquals(saved.moves, reloaded.state.moves)
+    }
+
+    @Test
+    fun `a save stored in the old text format loads, GH-237`() = webTest {
+        val store = InMemoryKeyValueStore()
+        store.entries["mordovorot.save.old"] = "4\n3 0 1 2 4 5 6 7 8 9 10 11 12 13 14 15\n7\n"
+        val page = WebHarness(backgroundScope, store = store).start()
+
+        assertEquals(WebDialog.Load(restore = true, listOf(SaveEntry("old", "old (4x4)"))), page.state.dialog)
+        page.game.onLoadChosen("old")
+
+        assertEquals(7, page.state.moves)
+        assertNull(page.state.dialog)
+    }
+
+    @Test
+    fun `a save made in the dialog is stored packed and survives a reload, GH-237`() = webTest {
+        val first = WebHarness(backgroundScope).startOn()
+        first.game.onArrow(Arrow.RIGHT, 1)
+        first.game.onSave()
+        first.game.onSaveAnswered("foo")
+
+        assertTrue(first.store.entries.getValue("mordovorot.save.foo").startsWith("~"))
+        val reloaded = WebHarness(backgroundScope, store = first.store).start()
+        reloaded.game.onLoadChosen("foo")
+
+        assertEquals(first.state.tiles, reloaded.state.tiles)
+        assertEquals(first.state.moves, reloaded.state.moves)
     }
 }

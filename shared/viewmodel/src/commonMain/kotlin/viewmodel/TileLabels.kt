@@ -1,7 +1,7 @@
 package viewmodel
 
-/** How tiles are labelled (GH-139). [wireName] is the one name for analytics, save line 8 and
- *  the stored preference; [maxSide] is the largest board a scheme can label. [NUMBERS] is the
+/** How tiles are labelled (GH-139). [wireName] is the one name for analytics, a save's labels and
+ *  the stored preference; the packed save format keeps a short code for each name (GH-237); [maxSide] is the largest board a scheme can label. [NUMBERS] is the
  *  1-based display dialect of GH-10. */
 enum class TileLabels(val wireName: String, val title: String, val maxSide: Int = Int.MAX_VALUE) {
     NUMBERS("numbers", "Numbers"),

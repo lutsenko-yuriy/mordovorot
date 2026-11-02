@@ -21,13 +21,16 @@ class SaveFileCodecProvenTest {
     private val head = "3\n0 1 2 3 4 5 6 7 8\n4\n2 0 1 5 3 4 6 7 8\n2 found\nr0:2 r1:2\n"
 
     @Test
-    fun `an unproven answer writes line 9 after blank lines 7 and 8`() {
-        assertEquals(head + "\n\nunproven 0\n", encode(unproven))
+    fun `an unproven answer is read from line 9, after blank lines 7 and 8`() {
+        assertEquals(unproven, decode(head + "\n\nunproven 0\n").mordie)
     }
 
     @Test
     fun `line 9 follows the solution-screen flag and the labels`() {
-        assertEquals(head + "solution\nnumbers\nunproven 0\n", encode(unproven.withScreen(), labels = "numbers"))
+        val saved = decode(head + "solution\nnumbers\nunproven 0\n")
+
+        assertEquals(unproven.withScreen(), saved.mordie)
+        assertEquals("numbers", saved.labels)
     }
 
     @Test
@@ -37,11 +40,11 @@ class SaveFileCodecProvenTest {
     }
 
     @Test
-    fun `a proven answer writes no line 9 and reads as proven`() {
+    fun `a proven answer reads as proven, with or without line 9`() {
         val proven = SavedMordie(original, 2, found = true, solution = path)
 
-        assertEquals(head, encode(proven))
-        assertEquals(true, decode(head).mordie!!.provenShortest)
+        assertEquals(proven, decode(head).mordie)
+        assertEquals(proven, decode(encode(proven)).mordie)
     }
 
     @Test
@@ -77,13 +80,6 @@ class SaveFileCodecProvenTest {
         assertFailsWith<IllegalArgumentException> { encode(SavedMordie(original, 3, found = false, provenShortest = false, ruledOut = 1)) }
         assertFailsWith<IllegalArgumentException> { encode(unproven.copyRuledOut(1)) }
         assertFailsWith<IllegalArgumentException> { encode(unproven.copyRuledOut(-1)) }
-    }
-
-    @Test
-    fun `a save written without line 9 reads as proven`() {
-        val old = encode(SavedMordie(original, 2, found = true, solution = path))
-
-        assertEquals(true, decode(old).mordie!!.provenShortest)
     }
 
     @Test

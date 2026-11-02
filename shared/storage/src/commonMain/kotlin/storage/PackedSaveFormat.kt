@@ -25,8 +25,8 @@ internal object PackedSaveFormat {
     private const val SEARCHING = 1
     private const val PROVEN = 2
     private const val UNPROVEN = 3
-    private const val MIN_SIDE = 2
-    private const val MAX_SIDE = 15
+    const val MIN_SIDE = 2
+    const val MAX_SIDE = 15
     private val base64 = Base64.UrlSafe.withPadding(Base64.PaddingOption.ABSENT)
 
     /** Assumes [SaveFileCodec.encode]'s checks have passed. An empty solution is written as none. */

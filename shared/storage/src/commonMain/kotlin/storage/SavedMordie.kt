@@ -3,7 +3,7 @@ package storage
 /** Mordie's part of a save (GH-83): the game's [original] arrangement and Mordie's [moves] -
  *  its solution's length if [found], else the largest length ruled out. [solution] is that
  *  solution's moves, when known, and [solutionScreen] marks a save made on the solution screen
- *  (GH-126). A found answer is [provenShortest] unless line 9 says otherwise, and [ruledOut] is
+ *  (GH-126). A found answer is [provenShortest] unless the save says otherwise (the text format's line 9, the packed format's status), and [ruledOut] is
  *  then the largest length the exact search had ruled out (GH-224). Hand-written equals/hashCode because [original] is an [IntArray]. */
 class SavedMordie(
     val original: IntArray,
