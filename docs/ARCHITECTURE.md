@@ -43,8 +43,8 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │   └── storage/
 │       ├── SaveRepository.kt          # Persistence contract: list/exists/save/load
 │       ├── PreferenceRepository.kt    # Player preferences as plain strings: get/set (GH-139)
-│       ├── SaveFileCodec.kt           # The save codec, the one public seam: encode writes the packed format, decode
-│       │                                # reads it and the old text format, dispatching on the first character (GH-237)
+│       ├── SaveFileCodec.kt           # The save codec, the one public seam: decode reads the packed and the old text
+│       │                                # format, dispatching on the first character; encode writes text until WU2 (GH-237)
 │       ├── PackedSaveFormat.kt        # The packed format: `~` + base64url of a bit stream (GH-237, ADR-0004)
 │       ├── SaveBits.kt                # BitWriter / BitReader, varints and the Lehmer code of a permutation (GH-237)
 │       ├── TextSaveFormat.kt          # The old nine-line text format, read-only from GH-237 on (GH-110)
@@ -513,7 +513,7 @@ largest length the exact search had ruled out (0 to N-2). A missing line, or a f
 doesn't know, reads as proven; `unproven` on a searching save or with R out of range is a
 `SaveFileFormatException`. Old builds stop at line 8 and read such a save as proven.
 
-Packed format (GH-237, ADR-0004; the text format above is read-only from then on): a save that starts with `~`
+Packed format (GH-237, ADR-0004; written from WU2 on, after which the text format above is read-only): a save that starts with `~`
 is base64url, no padding, of a bit stream: a header (the side in 4 bits, the labels in 3 bits, the status in 2 bits,
 the solution-screen and has-solution flags), the labels' name when it is not one of the known ones, the move count
 as a varint, the current board and Mordie's original as Lehmer codes (a permutation as digits of shrinking range),

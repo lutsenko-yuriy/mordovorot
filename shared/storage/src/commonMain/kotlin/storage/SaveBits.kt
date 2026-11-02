@@ -77,19 +77,21 @@ internal class BitReader(private val bytes: ByteArray) {
         throw BitFormatException("a number in the packed data is too big")
     }
 
-    /** A permutation of 0 until [n]; a digit above its range is [BitFormatException]. */
-    fun getPermutation(n: Int): IntArray {
+    /** A permutation of 0 until [n]; a digit above its range is a [BitFormatException] saying [what] is not valid. */
+    fun getPermutation(n: Int, what: String = "the arrangement"): IntArray {
         val free = MutableList(n) { it }
         return IntArray(n) { i ->
             val digit = get(bitsFor(n - i))
-            if (digit >= n - i) throw BitFormatException("an arrangement in the packed data is not valid")
+            if (digit >= n - i) throw BitFormatException("$what is not a valid arrangement")
             free.removeAt(digit)
         }
     }
 
+    fun bitsLeft(): Int = bytes.size * 8 - position
+
     /** Whether all that is left is under a byte of zero padding. */
     fun atEnd(): Boolean {
-        val left = bytes.size * 8 - position
+        val left = bitsLeft()
         if (left >= 8) return false
         return left == 0 || (bytes.last().toInt() and ((1 shl left) - 1)) == 0
     }

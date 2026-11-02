@@ -1,7 +1,8 @@
 package storage
 
 /** The save codec, the one public seam over the save formats (GH-237): [encode] checks and writes
- *  a save, [decode] reads any format (today the text format, see [TextSaveFormat]). */
+ *  a save (still as text, see [TextSaveFormat]), [decode] reads the text format and the packed one
+ *  ([PackedSaveFormat], told apart by its first character). */
 object SaveFileCodec {
 
     /** Throws [IllegalArgumentException] for a state, move count, Mordie data or labels [SaveRepository.save] rejects. */
@@ -23,6 +24,8 @@ object SaveFileCodec {
         return TextSaveFormat.encode(squareSide, state, moveCount, mordie, labels)
     }
 
-    /** Throws [SaveFileFormatException], naming the save [name], when [text] isn't a valid save. */
-    fun decode(name: String, text: String): SavedBoard = TextSaveFormat.decode(name, text)
+    /** Throws [SaveFileFormatException], naming the save [name], when [text] isn't a valid save. Anything
+     *  that doesn't start with [PackedSaveFormat.MARKER], an empty save included, is read as text. */
+    fun decode(name: String, text: String): SavedBoard =
+        if (text.startsWith(PackedSaveFormat.MARKER)) PackedSaveFormat.decode(name, text) else TextSaveFormat.decode(name, text)
 }
