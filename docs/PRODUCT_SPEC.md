@@ -44,8 +44,11 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   untouched and shows a message instead of crashing. Loading a save whose board size differs
   from the current board resizes the board to match and restores its tiles - it is never
   rejected for a size mismatch (GH-44).
-- A save written by a later build may carry lines this build doesn't know (GH-224's line 9 is
-  one): an older build ignores them, so it reads Mordie's answer as proven shortest.
+- A save is stored as a short run of characters, not readable text (GH-237): even a 9x9 game with
+  Mordie's whole solution fits in under 1 KB. Saves from before that, in the old text format,
+  still load.
+- An older build can't read a newer save (it reports it as corrupted); within the old text
+  format, lines an older build doesn't know (GH-224's line 9 was one) were ignored.
 - Every place a save's name is listed - the startup restore dialog and the Load dialog - also
   shows that save's board size, e.g. `foo (5x5)`, so a player can tell up front what size
   loading it will resize the board to (GH-44). A save whose size can't be read (corrupted)
@@ -152,7 +155,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
 - **Solution screen (GH-126):** Mordie's line reads `Here's how I did it in N moves!` there
   (Feature 10).
 - **Saves** also store the original arrangement, Mordie's N and whether it had found its
-  solution (two extra lines; older saves still load).
+  solution (older saves still load).
   - Loading a save where Mordie was still searching resumes the search past the saved N, and the
     first line (shifts 0-4) is `Okay, so we stopped when I was at N moves! What was I doing?..`
   - A game saved while Mordie's answer is not yet proven shortest keeps that answer (GH-224):

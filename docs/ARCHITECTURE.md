@@ -39,12 +39,12 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                                     # event, without touching the viewmodel's call sites (GH-3)
 │       └── PlatformAnalyticsService.kt     # Decorator adding `platform` (always `web` now)
 │                                             # the same way (GH-110)
-├── storage/             # :shared:storage - the save contract and text format; the browser client does the I/O
+├── storage/             # :shared:storage - the save contract and the save formats; the browser client does the I/O
 │   └── storage/
 │       ├── SaveRepository.kt          # Persistence contract: list/exists/save/load
 │       ├── PreferenceRepository.kt    # Player preferences as plain strings: get/set (GH-139)
 │       ├── SaveFileCodec.kt           # The save codec, the one public seam: decode reads the packed and the old text
-│       │                                # format, dispatching on the first character; encode writes text until WU2 (GH-237)
+│       │                                # format, dispatching on the first character; encode writes the packed one only (GH-237)
 │       ├── PackedSaveFormat.kt        # The packed format: `~` + base64url of a bit stream (GH-237, ADR-0004)
 │       ├── SaveBits.kt                # BitWriter / BitReader, varints and the Lehmer code of a permutation (GH-237)
 │       ├── TextSaveFormat.kt          # The old nine-line text format, read-only from GH-237 on (GH-110)
@@ -133,7 +133,7 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                             # `1 move` included (GH-83)
 │       ├── SolutionScreen.kt      # The session's solution screen: its SolutionReplay, null off it.
 │       │                             # One per session (GH-126)
-│       ├── TileLabels.kt          # The six label schemes: wireName (analytics, save line 8, the
+│       ├── TileLabels.kt          # The six label schemes: wireName (analytics, saves, the
 │       │                             # preference), title, maxSide, fits(side), label(tile, side), sampleRow.
 │       │                             # NUMBERS is the default (GH-139)
 │       ├── TileLabelsPreference.kt # TileLabels over a PreferenceRepository under `tile_labels`;
@@ -513,13 +513,13 @@ largest length the exact search had ruled out (0 to N-2). A missing line, or a f
 doesn't know, reads as proven; `unproven` on a searching save or with R out of range is a
 `SaveFileFormatException`. Old builds stop at line 8 and read such a save as proven.
 
-Packed format (GH-237, ADR-0004; written from WU2 on, after which the text format above is read-only): a save that starts with `~`
+Packed format (GH-237, ADR-0004; the only format written; the text format above is read-only): a save that starts with `~`
 is base64url, no padding, of a bit stream: a header (the side in 4 bits, the labels in 3 bits, the status in 2 bits,
 the solution-screen and has-solution flags), the labels' name when it is not one of the known ones, the move count
 as a varint, the current board and Mordie's original as Lehmer codes (a permutation as digits of shrinking range),
 N and, when unproven, R as varints, and last Mordie's solution, one joint number (axis, index, shift) per move.
 Every width that depends on the side is read after the side. `SaveFileCodec.decode` sends a save starting with `~`
-to the packed reader and anything else to the text reader, so old saves keep loading; a save that fails either is a
+to the packed reader and anything else to the text reader, so old saves keep loading, and `encode` accepts a side of 2 to 15 only; a save that fails either is a
 `SaveFileFormatException`. A 9x9 save with a 340-move solution is about 600 characters (2.1 KB as text).
 
 ### analytics
