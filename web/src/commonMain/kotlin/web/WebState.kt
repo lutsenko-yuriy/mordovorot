@@ -97,8 +97,8 @@ sealed interface WebDialog {
      *  names the marked layout's keys. */
     data class Controls(val mode: PlayMode, val layout: KeyboardLayout, val keyList: List<String>) : WebDialog
 
-    /** The Share dialog (GH-243): the [link] to the [side] x [side] board, which the player's [startKnown] says is where
-     *  Mordie started or else the board as it is; [qr] is the link as a code, `null` when it is too long for one. */
+    /** The Share dialog (GH-243): the [link] to a [side] x [side] board - the one Mordie started from when
+     *  [startKnown], else the board as it is; [qr] is the link as a code, `null` when too long for one. */
     data class Share(val link: String, val side: Int, val startKnown: Boolean, val qr: QrCode?, val copied: Boolean = false) : WebDialog {
         val note: String get() =
             if (startKnown) "Anyone who opens this link starts from the same ${side}x$side board."

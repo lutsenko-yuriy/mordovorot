@@ -481,7 +481,7 @@ Fired when Copy link in the Share dialog succeeds. A blocked clipboard fires not
 |---|---|---|
 | `board_size` | `number` | The shared board's side. |
 | `start_known` | `boolean` | False when the link shares the current board because the start is unknown. |
-| `via` | `string` | `button` (click) or `enter_key`. |
+| `via` | `string` | `button` (a pointer click) or `enter_key` (a click with no pointer: Enter, Space or a screen reader activating the button). |
 
 ### `shared_board_opened`
 
