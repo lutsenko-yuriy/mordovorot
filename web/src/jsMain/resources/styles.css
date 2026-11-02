@@ -139,7 +139,8 @@ body {
         display: contents;
     }
 
-    .toolbar {
+    .toolbar,
+    .controls-row {
         justify-content: center;
     }
 }
@@ -221,7 +222,7 @@ body {
 .controls-row {
     flex-basis: 100%;
     display: flex;
-    justify-content: center;
+    /* Starts at the buttons' left edge; centred with them when tall (above). */
 }
 
 /* The five buttons' digits need a wider panel to stay on one row. */
