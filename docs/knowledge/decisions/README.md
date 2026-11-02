@@ -35,3 +35,4 @@ Write one when a ticket's research or implementation concludes in a decision tha
 | ADR-0002 | build a single-pass dialectical (thesis/antithesis/synthesis) research skill, steelman-bounded, over six other candidate methodologies | `accepted` | 2026-09-09 | GH-XX |
 | ADR-0003 | drive both clients with one keyboard scheme: WASD select a tile, HJKL/arrows shift, digits for the toolbar | `accepted` | 2026-10-29 | GH-169 |
 | ADR-0004 | store a save as a marker character plus base64url of a bit-packed stream, with Mordie's solution last | `accepted` | 2026-11-02 | GH-220 |
+| ADR-0005 | a share link is the page's address plus a `#b=` fragment holding the starting board | `accepted` | 2026-11-02 | GH-243 |

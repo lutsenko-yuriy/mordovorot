@@ -91,6 +91,17 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                     button("Cancel", "secondary") { game.controls.onAnswered(ok = false) },
                 ),
             )
+            is WebDialog.LinkRejected -> append(
+                text("message", dialog.message),
+                actions(button("OK") { game.share.onNoticeAnswered() }.focusKey(Focus.LinkRejectedOk)),
+            )
+            is WebDialog.OpenShared -> append(
+                text("message", "Your moves since the last save will be lost."),
+                actions(
+                    button("Cancel", "secondary") { game.share.onOpenAnswered(false) }.focusKey(Focus.OpenSharedCancel),
+                    button("Open") { game.share.onOpenAnswered(true) },
+                ),
+            )
             WebDialog.GiveUp -> append(
                 actions(
                     button("No", "secondary") { game.solution.onGiveUpAnswered(false) }.focusKey(Focus.No),

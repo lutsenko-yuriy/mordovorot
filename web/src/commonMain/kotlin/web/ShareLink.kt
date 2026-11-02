@@ -9,10 +9,13 @@ import storage.BoardLinkFormatException
 /** A board named by a share link's fragment (GH-243). */
 sealed interface LinkBoard {
     /** A board the page can start. */
-    class Playable(val tiles: IntArray) : LinkBoard
+    class Playable(val tiles: IntArray) : LinkBoard {
+        val side: Int get() = sqrt(tiles.size.toDouble()).toInt()
+    }
 
-    /** A board it can't, for [reason]: `invalid`, `unsupported_size` or `unsolvable` (the `shared_board_opened` values). */
-    data class Rejected(val reason: String) : LinkBoard
+    /** A board it can't, for [reason]: `invalid`, `unsupported_size` or `unsolvable` (the `shared_board_opened`
+     *  values); [side] is the board's, for `unsupported_size`. */
+    data class Rejected(val reason: String, val side: Int? = null) : LinkBoard
 }
 
 /** The share link (GH-243, ADR-0005): the page's address and `#b=` and the board; the fragment, so the server
@@ -33,7 +36,7 @@ object ShareLink {
         }
         val side = sqrt(tiles.size.toDouble()).toInt()
         return when {
-            side !in BoardSize.MIN..BoardSize.VERY_LARGE.last -> LinkBoard.Rejected("unsupported_size")
+            side !in BoardSize.MIN..BoardSize.VERY_LARGE.last -> LinkBoard.Rejected("unsupported_size", side)
             !Solvability.isSolvable(tiles) -> LinkBoard.Rejected("unsolvable")
             else -> LinkBoard.Playable(tiles)
         }

@@ -1,0 +1,25 @@
+# ADR-0005 — a share link is the page's address plus a `#b=` fragment holding the starting board
+
+## Status
+`accepted`
+
+## Context
+GH-243 lets a player send a board to someone else. A link lives in chats and printed QR codes, so once one is out its format is a promise: a later build has to keep opening it. Only the board travels (no moves, no labels). The page is static on GitHub Pages, so there is no server to look a board up on. The save format (ADR-0004) already packs a board as a Lehmer code in base64url, and a QR code in byte mode at error-correction level M holds 213 bytes at version 10, far more than a 9x9 board needs.
+
+## Decision
+The link is `<origin><path>#b=<board>`. The fragment is never sent to the server, so GitHub's logs never see a board. `<board>` is base64url without padding of a bit stream: the side in 4 bits, then the arrangement as a Lehmer code (`storage.BoardLinkFormat`, built on `SaveBits`). A 9x9 board is 75 characters. The decoder rejects bad base64, a side below 2, a digit out of range, trailing data and non-canonical text (re-encoding must give the input back), and `ShareLink` then rejects a side outside 3..9 and an unsolvable board. Other `&key=value` parts of the fragment are ignored, which leaves room for more later (a Mordie solution, labels) without breaking links already out. Links in the wild are never broken: a change to the board's layout takes a new key, and `b=` keeps decoding as it does now. A link opened in a tab that is already playing arrives as `hashchange`, and the page handles it.
+
+## Alternatives considered
+| Option | Why not chosen |
+|---|---|
+| A query `?b=` | The board would go to the server and its logs, and `replaceState` would still have to clean it. A link opened in a tab would reload the page, which does at least get the browser's Leave site? prompt for free. |
+| The text save format, or a whole save, in the link | A 9x9 save is far longer than a board, and a QR code of it would need a version past 10. |
+| A short link through a service | Needs a server or a third party; out of scope. |
+| Plain fixed-width tiles instead of a Lehmer code | Longer by about 6% on 9x9; the Lehmer code is already written for saves. |
+| A checksum | Every bit pattern that decodes is a valid permutation, and the canonical-text check catches stray bits; a mistyped link that still decodes names some other valid board, which is harmless. |
+
+## Related ticket
+GH-243
+
+## Date
+2026-11-02

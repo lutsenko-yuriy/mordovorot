@@ -21,7 +21,9 @@ import web.Focus
 import web.Host
 import web.KeyPress
 import web.Layout
+import web.PageAddress
 import web.PlayMode
+import web.ShareLink
 import web.PressedWith
 import web.WebDialog
 import web.WebGame
@@ -53,6 +55,7 @@ internal class WebHarness(
     val mordieSearches = FakeMordieSearchFactory()
     val mordie = Mordie(mordieSearches)
     val pressedWith = PressedWith()
+    val address = FakePageAddress()
     private val renderer = FakeWebRenderer()
     lateinit var game: WebGame
         private set
@@ -69,8 +72,25 @@ internal class WebHarness(
     val scrolled: List<Int> get() = renderer.scrolled
 
     fun start(): WebHarness {
-        game = startWebGame(board, saves, preferences, analytics, mordie, renderer, scope, layout, appVersion, host, touch, pressedWith)
+        game = startWebGame(board, saves, preferences, analytics, mordie, renderer, scope, layout, appVersion, host, touch, pressedWith, address)
         return this
+    }
+
+    /** Starts as a visit to the share link to [tiles] (a [side] x [side] board), restore prompt and all. */
+    fun startWithLink(side: Int, tiles: IntArray): WebHarness = startWithFragment(ShareLink.of("", side, tiles))
+
+    /** Starts with [fragment] in the address bar. */
+    fun startWithFragment(fragment: String): WebHarness {
+        address.fragment = fragment
+        return start()
+    }
+
+    /** The address changes to the share link to [tiles]: the page's `hashchange`. */
+    fun changeLink(side: Int, tiles: IntArray) = changeFragment(ShareLink.of("", side, tiles))
+
+    fun changeFragment(fragment: String) {
+        address.fragment = fragment
+        game.share.onLinkChanged()
     }
 
     /** Starts on [tiles] with the startup restore and size picker cancelled and the events and
@@ -105,6 +125,19 @@ internal class WebHarness(
     fun ownProps(event: String) = props(event).map { it - "platform" - "input_method" }
 
     fun props(event: String) = analytics.events.filter { it.name == event }.map { it.properties }
+}
+
+/** An address bar that counts its cleanings. */
+internal class FakePageAddress(var fragment: String = "", private val base: String = "https://mordovorot.test/play/") : PageAddress {
+    var cleared = 0
+        private set
+
+    override fun base() = base
+    override fun fragment() = fragment
+    override fun clearFragment() {
+        fragment = ""
+        cleared++
+    }
 }
 
 private class FakeWebRenderer : WebRenderer {

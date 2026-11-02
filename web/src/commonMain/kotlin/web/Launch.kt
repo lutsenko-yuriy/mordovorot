@@ -28,7 +28,7 @@ fun webBoard(): BoardImpl = BoardImpl(maxSide = BoardSize.VERY_LARGE.last)
  *  `app_launched` (with [appVersion] and [host], GH-111, and the tile labels kept in
  *  [preferences], GH-139), then starts a [WebGame] on [scope].
  *  Every event gets `platform: web`, and all but `app_launched` get `input_method` from
- *  [pressedWith] (GH-171). Keyboard mode is out of reach on a [touch] screen, whatever is
+ *  [pressedWith] (GH-171). A share link in [address] starts its board (GH-243). Keyboard mode is out of reach on a [touch] screen, whatever is
  *  stored. */
 fun startWebGame(
     board: BoardModel,
@@ -43,6 +43,7 @@ fun startWebGame(
     host: Host,
     touch: Boolean,
     pressedWith: PressedWith,
+    address: PageAddress,
 ): WebGame {
     val platform = PlatformAnalyticsService(analytics, "web")
     val tileLabels = SessionTileLabels(TileLabelsPreference(preferences))
@@ -62,7 +63,7 @@ fun startWebGame(
         ui = UiRequestChannel(),
     )
     val keyboardLayout = SessionKeyboardLayout(KeyboardLayoutPreference(preferences))
-    return WebGame(viewModel, pressed, renderer, scope, pressedWith, keyboardLayout, modePreference, startMode, controlsShown).also { it.start() }
+    return WebGame(viewModel, pressed, renderer, scope, pressedWith, keyboardLayout, modePreference, startMode, controlsShown, address).also { it.start() }
 }
 
 fun trackAppLaunched(analytics: AnalyticsService, layout: Layout, appVersion: String, host: Host, tileLabels: String, mode: PlayMode) {

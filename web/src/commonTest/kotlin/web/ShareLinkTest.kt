@@ -57,8 +57,8 @@ class ShareLinkTest {
 
     @Test
     fun `a side the page does not play is unsupported`() {
-        assertEquals(LinkBoard.Rejected("unsupported_size"), ShareLink.read("#b=" + BoardLinkFormat.encode(2, intArrayOf(0, 1, 2, 3))))
-        assertEquals(LinkBoard.Rejected("unsupported_size"), ShareLink.read("#b=" + BoardLinkFormat.encode(10, IntArray(100) { it })))
+        assertEquals(LinkBoard.Rejected("unsupported_size", side = 2), ShareLink.read("#b=" + BoardLinkFormat.encode(2, intArrayOf(0, 1, 2, 3))))
+        assertEquals(LinkBoard.Rejected("unsupported_size", side = 10), ShareLink.read("#b=" + BoardLinkFormat.encode(10, IntArray(100) { it })))
     }
 
     @Test

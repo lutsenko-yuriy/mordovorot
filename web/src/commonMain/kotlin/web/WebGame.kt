@@ -33,6 +33,7 @@ class WebGame internal constructor(
     modePreference: PlayModePreference,
     startMode: PlayMode,
     private val controlsShown: Boolean,
+    address: PageAddress,
 ) {
 
     private val modal = WebModal { render(focus = it) }
@@ -40,6 +41,7 @@ class WebGame internal constructor(
     internal val dialogs = WebDialogFlows(viewModel, analytics, modal, ::cancelled)
     internal val solution = WebSolutionFlows(this, viewModel, analytics, modal)
     internal val controls = WebControlsDialog(this, viewModel, analytics, modal, keyboardLayout, modePreference, startMode)
+    internal val share = WebShareFlows(this, viewModel, analytics, modal, address)
     private val keys = WebKeyPlay(this, viewModel, pressedWith, controlsShown)
     private val requests = WebRequestRouter(this)
     internal var status: String? = null
@@ -61,7 +63,9 @@ class WebGame internal constructor(
         render()
         scope.launch { for (request in viewModel.uiRequests) requests.handle(request) }
         flow = scope.launch {
-            viewModel.restoreOnStartup()
+            // A share link's board replaces the restore offer.
+            if (!share.openAtStartup()) viewModel.restoreOnStartup()
+            share.openPending()
             sayAskedNewGame()
             render(focus = if (controls.mode == PlayMode.KEYBOARD) Focus.Board else Focus.PageStart)
         }
@@ -224,6 +228,7 @@ class WebGame internal constructor(
         // Undispatched, so the action is under way before this returns and a second click sees it.
         flow = scope.launch(start = CoroutineStart.UNDISPATCHED) {
             action()
+            share.openPending()
             sayAskedNewGame()
             render(focus = closing)
         }
