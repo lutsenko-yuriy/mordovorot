@@ -73,28 +73,61 @@ class WebVeryLargeScenarioTest {
     }
 
     @Test
-    fun `Mordie sits 9x9 out, and a win is Congratulations`() = webTest {
-        val sitsOut = "9x9 is too much for me, you're on your own!"
+    fun `Mordie plays 9x9, and a win is Mordie's ending`() = webTest {
         val page = WebHarness(backgroundScope).startOn()
         page.game.onNew()
         page.game.onSizeChosen(9)
 
-        assertEquals(sitsOut, page.state.mordie)
-        assertEquals(listOf(16), page.mordieSearches.started.map { it.original.size }, "only the 4x4 game's search")
-        assertEquals(GiveUpButton.HIDDEN, page.state.giveUp)
+        assertEquals(81, page.mordieSearches.latest.original.size)
+        assertEquals("Alright! Let's sort this one out!", page.state.mordie)
+        assertEquals(GiveUpButton.DIMMED, page.state.giveUp)
+        page.mordieSearches.latest.progress = fastAnswer(334)
         repeat(5) { page.game.onArrow(Arrow.UP, 0) }
-        assertNull(page.state.mordie)
+        assertEquals("Found one in 334 moves, but maybe there's a shorter one! Can you beat it?", page.state.mordie)
+        assertEquals(GiveUpButton.GIVE_UP, page.state.giveUp)
 
         val won = WebHarness(backgroundScope).startOn(oneShiftFromSolved(9))
-        assertEquals(sitsOut, won.state.mordie)
+        won.mordieSearches.latest.progress = fastAnswer(334)
         won.game.onArrow(Arrow.LEFT, 0)
 
         assertTrue(won.state.solved)
-        assertEquals("Congratulations ✓", won.state.mordie)
-        assertEquals(GiveUpButton.HIDDEN, won.state.giveUp)
+        assertEquals("You beat me! 334 moves vs your 1. Mine may not have been the shortest.", won.state.mordie)
         val solved = won.ownProps("board_solved").single()
         assertEquals(9, solved["board_size"])
-        assertTrue("mordie_result" !in solved && "mordie_moves" !in solved, "$solved")
+        assertEquals(334, solved["mordie_moves"])
+        assertEquals("beat_mordie", solved["mordie_result"])
+        assertEquals(false, solved["mordie_proven_shortest"])
+    }
+
+    @Test
+    fun `a win on 9x9 offers Mordie's solution`() = webTest {
+        val page = WebHarness(backgroundScope).startOn(oneShiftFromSolved(9))
+        page.mordieSearches.latest.progress = fastAnswer(334)
+        page.game.onArrow(Arrow.LEFT, 0)
+
+        assertEquals(GiveUpButton.MORDIES_SOLUTION, page.state.giveUp)
+        page.game.solution.onMordiesSolution()
+
+        assertEquals(334, page.state.solution!!.moves.size)
+        assertEquals("after_win", page.props("screen_solution").single()["opened_from"])
+    }
+
+    @Test
+    fun `a 9x9 save keeps Mordie's long answer`() = webTest {
+        val page = WebHarness(backgroundScope).startOn(rotatedRow(9))
+        page.mordieSearches.latest.progress = fastAnswer(334)
+        repeat(5) { page.game.onArrow(Arrow.UP, 2) }
+        page.game.onSave()
+        page.game.onSaveAnswered("foo")
+        assertEquals(334, page.saves.load("foo")!!.mordie!!.solution!!.size)
+
+        page.game.onLoad()
+        page.game.onLoadChosen("foo")
+
+        assertEquals("Found one in 334 moves, but maybe there's a shorter one! Can you beat it?", page.state.mordie)
+        page.game.solution.onGiveUp()
+        page.game.solution.onGiveUpAnswered(true)
+        assertEquals(334, page.state.solution!!.moves.size)
     }
 
     @Test

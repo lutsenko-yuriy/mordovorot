@@ -14,12 +14,6 @@ class Mordie(private val factory: MordieSearchFactory) {
     private var bound = false
     private var original: IntArray? = null
 
-    /** A game too big to search, until it's solved: only shifts are counted, for the
-     *  [MordieLine.SitsOut] line. */
-    private var sitsOut = false
-
-    /** The side of the game being sat out, for its line. */
-    private var satOutSide = 0
     private var search: MordieSearch? = null
     private var opening: MordieLine = MordieLine.Opening
     private var checkedMoves = 0
@@ -73,11 +67,6 @@ class Mordie(private val factory: MordieSearchFactory) {
     /** Starts fresh unless a game is already bound - e.g. after a mode-switch rebuild. */
     fun ensureStarted(arrangement: IntArray) {
         if (!bound) startFresh(arrangement)
-    }
-
-    /** [sitOut] unless a game is already bound - e.g. after a mode-switch rebuild. */
-    fun ensureSatOut(side: Int) {
-        if (!bound) sitOut(side)
     }
 
     /** A save made while unsolved: Mordie had ruled out [moves], or found a [solution] that long,
@@ -138,19 +127,10 @@ class Mordie(private val factory: MordieSearchFactory) {
         bind(null)
     }
 
-    /** A game too big for the search (side above [MAX_SIDE], GH-160): no search or snapshot, only
-     *  the [MordieLine.SitsOut] line for its first shifts. */
-    fun sitOut(side: Int) {
-        bind(null)
-        sitsOut = true
-        satOutSide = side
-    }
-
     /** Counts a shift, the player having made [playerMoves] moves; returns what this shift's check
      *  found worth telling: the solution revealed, or a shorter one. Later checks keep the best
      *  answer until it is proven. */
     fun onShift(playerMoves: Int): MordieCheck? {
-        if (sitsOut) shifts++
         if (original == null || outcome != null) return null
         shifts++
         if (shifts % CHECK_EVERY != 0) return null
@@ -181,7 +161,6 @@ class Mordie(private val factory: MordieSearchFactory) {
     }
 
     fun line(): MordieLine? {
-        if (sitsOut) return MordieLine.SitsOut(satOutSide).takeIf { shifts < CHECK_EVERY }
         if (original == null || outcome != null) return null
         if (revealedMoves != null) return announced
         return when {
@@ -194,7 +173,6 @@ class Mordie(private val factory: MordieSearchFactory) {
 
     /** Freezes Mordie's live state as the result; `null` when Mordie sits this game out. */
     fun onSolved(): MordieOutcome? {
-        sitsOut = false
         if (original == null) return null
         outcome?.let { return it }
         val progress = liveProgress()
@@ -246,7 +224,6 @@ class Mordie(private val factory: MordieSearchFactory) {
     private fun bind(arrangement: IntArray?) {
         stop()
         bound = true
-        sitsOut = false
         original = arrangement?.copyOf()
         search = null
         opening = MordieLine.Opening
@@ -286,9 +263,6 @@ class Mordie(private val factory: MordieSearchFactory) {
     }
 
     companion object {
-        /** The largest board side Mordie searches; bigger boards it sits out (GH-160, until GH-116). */
-        const val MAX_SIDE = 5
-
         private const val CHECK_EVERY = 5
         private const val PROGRESS_EVERY = 20
         private const val HARD_FROM = 60

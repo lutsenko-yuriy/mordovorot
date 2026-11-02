@@ -9,7 +9,11 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import mordie.Mordie
+import mordie.SearchProgress
+import mordie.SolutionMove
+import mordie.SolutionSource
 import storage.SavedMordie
+import storage.SavedMove
 import testing.FakeMordieSearchFactory
 import testing.RecordingAnalyticsService
 import viewmodel.KeyboardLayout
@@ -136,3 +140,15 @@ internal fun shown(tiles: IntArray) = tiles.map { it + 1 }
 /** The frame without its one-time focus (GH-163), announcement (GH-166) and slide, for comparing what
  *  two frames show. */
 internal fun WebState.unfocused() = copy(focus = null, announcement = null, slide = null)
+
+/** The fast solver's answer of [n] moves, not proven shortest (GH-225: the only kind on 6x6 and up). */
+internal fun fastAnswer(n: Int) = SearchProgress(
+    n, found = true, elapsedMs = 4, solution = List(n) { SolutionMove(isRow = true, index = 0, amount = 1) },
+    ruledOut = 3, provenShortest = false, source = SolutionSource.FAST_SOLVER,
+)
+
+/** [n] steps of "row 0 right once", as a save stores them. */
+internal fun savedSteps(n: Int) = List(n) { SavedMove(isRow = true, index = 0, amount = 1) }
+
+/** [side] x [side] solved but for row 0 one cell left: n steps of "row 0 right once" solve it when n mod side = 1. */
+internal fun rotatedRow(side: Int) = IntArray(side * side) { if (it < side) (it + 1) % side else it }

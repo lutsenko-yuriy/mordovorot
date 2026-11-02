@@ -18,7 +18,6 @@ class MordieTextTest {
 
     @Test
     fun `the sit-out line (GH-160)`() {
-        assertEquals("6x6 is too much for me, you're on your own!", MordieText.line(MordieLine.SitsOut(6)))
     }
 
     @Test

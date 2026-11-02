@@ -40,6 +40,11 @@
         --column-gap: 8px;
         --pad-x: 8px;
     }
+
+    /* The panel's toolbar wraps beside a big board here, and its rows must still fit the window's height. */
+    .app.solution .panel {
+        gap: 4px;
+    }
 }
 
 .steps {
@@ -91,7 +96,7 @@
 
         /* Fewer steps in sight on short phones, rather than the controls pushed off-screen. */
         .steps {
-            max-height: clamp(calc(3 * 1.9em), calc(var(--vh) * 0.2), calc(6 * 1.9em));
+            max-height: clamp(calc(3 * 1.9em), calc(var(--vh) * 0.16), calc(6 * 1.9em));
         }
     }
 }
