@@ -13,6 +13,11 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.37.1] — 2026-11-02 (PR #244 merged)
+
+### Changed
+- [test] (PR #244) GH-243 (WU0): scenario stubs for sharing a board with a link (opening a link, the Share dialog), plus the analytics plan and the Share link glossary term.
+
 ## [0.37.1] — 2026-11-02 (PR #242 merged)
 
 ### Changed
