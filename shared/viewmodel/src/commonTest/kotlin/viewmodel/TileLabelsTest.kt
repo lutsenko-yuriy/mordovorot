@@ -6,10 +6,24 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import storage.SaveFileCodec
 
 class TileLabelsTest {
 
     private fun labels(tile: Int, side: Int) = TileLabels.entries.map { it.label(tile, side) }
+
+    /** GH-237: the packed save format knows these names by position; an unknown name is written out in full, which is longer. */
+    @Test
+    fun `no current scheme falls into the packed format's escape`() {
+        val board = intArrayOf(1, 0, 2, 3)
+        val plain = SaveFileCodec.encode(2, board, 0, null).length
+
+        for (scheme in TileLabels.entries) {
+            val text = SaveFileCodec.encode(2, board, 0, null, scheme.wireName)
+            assertEquals(plain, text.length, scheme.wireName)
+            assertEquals(scheme.wireName, SaveFileCodec.decode("t", text).labels)
+        }
+    }
 
     @Test
     fun `tile 6 on 4x4 reads 7, 6, 23, 12, G and BC`() {

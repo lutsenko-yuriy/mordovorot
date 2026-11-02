@@ -1,7 +1,7 @@
 package storage
 
 /** The save text format of the terminal days and GH-110 to GH-224, kept in the browser's storage
- *  (GH-110): square side, then the values, then the move count, then optional Mordie data, then
+ *  (GH-110). Read only since GH-237, which writes [PackedSaveFormat] instead: square side, then the values, then the move count, then optional Mordie data, then
  *  optional tile labels on line 8 (GH-139), then `unproven <R>` on line 9 (GH-224), one per line. */
 internal object TextSaveFormat {
 
@@ -10,28 +10,6 @@ internal object TextSaveFormat {
     private const val SOLUTION_SCREEN = "solution"
     private const val UNPROVEN = "unproven"
     private val MOVE_TOKEN = Regex("([rc])(\\d+):(\\d+)")
-
-    /** Lines 4-7 are blank where they don't apply, so the labels always land on line 8 and line 9 after it. */
-    fun encode(squareSide: Int, state: IntArray, moveCount: Int, mordie: SavedMordie?, labels: String?): String {
-        val lines = (mordie?.let(::mordieLines) ?: List(4) { "" }) + listOf(labels.orEmpty(), unprovenLine(mordie))
-        return (listOf("$squareSide", state.joinToString(" "), "$moveCount") + lines.dropLastWhile { it.isEmpty() })
-            .joinToString("") { "$it\n" }
-    }
-
-    /** Lines 4-7; an empty solution is written as none, so line 6 is never blank before line 7. */
-    private fun mordieLines(mordie: SavedMordie): List<String> {
-        val solution = mordie.solution?.takeIf { it.isNotEmpty() }
-            ?.joinToString(" ") { "${if (it.isRow) 'r' else 'c'}${it.index}:${it.amount}" }
-        return listOf(
-            mordie.original.joinToString(" "),
-            "${mordie.moves} ${if (mordie.found) FOUND else SEARCHING}",
-            solution.orEmpty(),
-            SOLUTION_SCREEN.takeIf { mordie.solutionScreen }.orEmpty(),
-        )
-    }
-
-    private fun unprovenLine(mordie: SavedMordie?) =
-        if (mordie != null && mordie.found && !mordie.provenShortest) "$UNPROVEN ${mordie.ruledOut}" else ""
 
     /** Throws [SaveFileFormatException], naming the save [name], when [text] isn't a valid save. */
     fun decode(name: String, text: String): SavedBoard {

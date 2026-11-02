@@ -15,30 +15,43 @@ class SaveFileCodecTest {
     private val found = SavedMordie(swapped, 2, found = true, solution = path)
 
     @Test
-    fun `encode writes square side, values and move count, one per line`() {
-        assertEquals("2\n3 0 2 1\n7\n", SaveFileCodec.encode(2, state, 7, null))
+    fun `decode reads square side, values and move count, one per line`() {
+        assertEquals(SavedBoard(2, state, 7), SaveFileCodec.decode("foo", "2\n3 0 2 1\n7\n"))
     }
 
     @Test
-    fun `encode puts Mordie data on lines 4-5, GH-83`() {
+    fun `encode writes the packed format, GH-237`() {
+        assertEquals("~IAAA", SaveFileCodec.encode(2, intArrayOf(0, 1, 2, 3), 0, null))
+        assertEquals('~', SaveFileCodec.encode(2, state, 7, found).first())
+    }
+
+    @Test
+    fun `decode reads Mordie data on lines 4-5, GH-83`() {
         assertEquals(
-            "2\n3 0 2 1\n7\n1 0 3 2\n8 searching\n",
-            SaveFileCodec.encode(2, state, 7, SavedMordie(intArrayOf(1, 0, 3, 2), 8, found = false)),
+            SavedBoard(2, state, 7, SavedMordie(intArrayOf(1, 0, 3, 2), 8, found = false)),
+            SaveFileCodec.decode("foo", "2\n3 0 2 1\n7\n1 0 3 2\n8 searching\n"),
         )
         assertEquals(
-            "2\n3 0 2 1\n7\n1 0 3 2\n1 found\n",
-            SaveFileCodec.encode(2, state, 7, SavedMordie(intArrayOf(1, 0, 3, 2), 1, found = true)),
+            SavedBoard(2, state, 7, SavedMordie(intArrayOf(1, 0, 3, 2), 1, found = true)),
+            SaveFileCodec.decode("foo", "2\n3 0 2 1\n7\n1 0 3 2\n1 found\n"),
         )
     }
 
     @Test
     fun `encode rejects an invalid board, move count or Mordie data`() {
         assertFailsWith<IllegalArgumentException> { SaveFileCodec.encode(0, intArrayOf(), 0, null) }
+        assertFailsWith<IllegalArgumentException> { SaveFileCodec.encode(1, intArrayOf(0), 0, null) }
         assertFailsWith<IllegalArgumentException> { SaveFileCodec.encode(2, intArrayOf(0, 1, 2), 0, null) }
         assertFailsWith<IllegalArgumentException> { SaveFileCodec.encode(2, intArrayOf(0, 1, 1, 2), 0, null) }
         assertFailsWith<IllegalArgumentException> { SaveFileCodec.encode(2, state, -1, null) }
         assertFailsWith<IllegalArgumentException> { SaveFileCodec.encode(2, state, 0, SavedMordie(intArrayOf(0, 1, 2), 1, found = true)) }
         assertFailsWith<IllegalArgumentException> { SaveFileCodec.encode(2, state, 0, SavedMordie(intArrayOf(1, 0, 3, 2), -1, found = true)) }
+    }
+
+    @Test
+    fun `encode accepts sides 2 to 15 and rejects 16, which the packed header cannot hold`() {
+        for (side in listOf(2, 15)) SaveFileCodec.encode(side, IntArray(side * side) { it }, 0, null)
+        assertFailsWith<IllegalArgumentException> { SaveFileCodec.encode(16, IntArray(256) { it }, 0, null) }
     }
 
     @Test
@@ -111,29 +124,36 @@ class SaveFileCodecTest {
     // --- Mordie's solution, lines 6-7 (GH-126) ---
 
     @Test
-    fun `encode puts Mordie's solution on line 6 of a found save`() {
-        assertEquals("2\n3 0 2 1\n7\n1 0 3 2\n2 found\nr0:1 r1:1\n", SaveFileCodec.encode(2, state, 7, found))
+    fun `decode reads Mordie's solution on line 6 of a found save`() {
+        assertEquals(SavedBoard(2, state, 7, found), SaveFileCodec.decode("foo", "2\n3 0 2 1\n7\n1 0 3 2\n2 found\nr0:1 r1:1\n"))
     }
 
     @Test
-    fun `encode marks a solution-screen save on line 7`() {
+    fun `decode reads a solution-screen save marked on line 7`() {
         assertEquals(
-            "2\n1 0 3 2\n0\n1 0 3 2\n2 found\nr0:1 r1:1\nsolution\n",
-            SaveFileCodec.encode(2, swapped, 0, SavedMordie(swapped, 2, found = true, solution = path, solutionScreen = true)),
+            SavedBoard(2, swapped, 0, SavedMordie(swapped, 2, found = true, solution = path, solutionScreen = true)),
+            SaveFileCodec.decode("foo", "2\n1 0 3 2\n0\n1 0 3 2\n2 found\nr0:1 r1:1\nsolution\n"),
         )
     }
 
     @Test
-    fun `encode writes columns as c and an empty path as no line 6`() {
+    fun `decode reads columns as c, and an empty path as none`() {
         val columns = listOf(SavedMove(isRow = false, index = 0, amount = 1), SavedMove(isRow = false, index = 1, amount = 1))
         assertEquals(
-            "2\n3 0 2 1\n7\n2 3 0 1\n2 found\nc0:1 c1:1\n",
-            SaveFileCodec.encode(2, state, 7, SavedMordie(intArrayOf(2, 3, 0, 1), 2, found = true, solution = columns)),
+            SavedBoard(2, state, 7, SavedMordie(intArrayOf(2, 3, 0, 1), 2, found = true, solution = columns)),
+            SaveFileCodec.decode("foo", "2\n3 0 2 1\n7\n2 3 0 1\n2 found\nc0:1 c1:1\n"),
         )
         assertEquals(
-            "2\n0 1 2 3\n0\n0 1 2 3\n0 found\n",
-            SaveFileCodec.encode(2, intArrayOf(0, 1, 2, 3), 0, SavedMordie(intArrayOf(0, 1, 2, 3), 0, found = true, solution = emptyList())),
+            SavedBoard(2, intArrayOf(0, 1, 2, 3), 0, SavedMordie(intArrayOf(0, 1, 2, 3), 0, found = true)),
+            SaveFileCodec.decode("foo", "2\n0 1 2 3\n0\n0 1 2 3\n0 found\n"),
         )
+    }
+
+    @Test
+    fun `an empty path is written as none and reads back as null`() {
+        val none = SavedMordie(intArrayOf(0, 1, 2, 3), 0, found = true, solution = emptyList())
+
+        assertNull(SaveFileCodec.decode("foo", SaveFileCodec.encode(2, intArrayOf(0, 1, 2, 3), 0, none)).mordie!!.solution)
     }
 
     @Test
@@ -184,17 +204,17 @@ class SaveFileCodecTest {
     }
 
     @Test
-    fun `encode puts the labels on line 8, padding lines 4-7 with blanks, GH-139`() {
+    fun `decode reads the labels on line 8, after blank lines 4-7, GH-139`() {
         val screen = SavedMordie(swapped, 2, found = true, solution = path, solutionScreen = true)
-        assertEquals("2\n3 0 2 1\n7\n\n\n\n\npairs\n", SaveFileCodec.encode(2, state, 7, null, "pairs"))
+        assertEquals(SavedBoard(2, state, 7, null, "pairs"), SaveFileCodec.decode("foo", "2\n3 0 2 1\n7\n\n\n\n\npairs\n"))
         assertEquals(
-            "2\n3 0 2 1\n7\n1 0 3 2\n8 searching\n\n\nletters\n",
-            SaveFileCodec.encode(2, state, 7, SavedMordie(swapped, 8, found = false), "letters"),
+            SavedBoard(2, state, 7, SavedMordie(swapped, 8, found = false), "letters"),
+            SaveFileCodec.decode("foo", "2\n3 0 2 1\n7\n1 0 3 2\n8 searching\n\n\nletters\n"),
         )
-        assertEquals("2\n3 0 2 1\n7\n1 0 3 2\n2 found\nr0:1 r1:1\n\nnumbers\n", SaveFileCodec.encode(2, state, 7, found, "numbers"))
+        assertEquals(SavedBoard(2, state, 7, found, "numbers"), SaveFileCodec.decode("foo", "2\n3 0 2 1\n7\n1 0 3 2\n2 found\nr0:1 r1:1\n\nnumbers\n"))
         assertEquals(
-            "2\n1 0 3 2\n0\n1 0 3 2\n2 found\nr0:1 r1:1\nsolution\nletter_pairs\n",
-            SaveFileCodec.encode(2, swapped, 0, screen, "letter_pairs"),
+            SavedBoard(2, swapped, 0, screen, "letter_pairs"),
+            SaveFileCodec.decode("foo", "2\n1 0 3 2\n0\n1 0 3 2\n2 found\nr0:1 r1:1\nsolution\nletter_pairs\n"),
         )
     }
 

@@ -1,13 +1,15 @@
 package storage
 
 /** The save codec, the one public seam over the save formats (GH-237): [encode] checks and writes
- *  a save (still as text, see [TextSaveFormat]), [decode] reads the text format and the packed one
- *  ([PackedSaveFormat], told apart by its first character). */
+ *  a save in the packed format ([PackedSaveFormat]), [decode] reads that and the older text format
+ *  ([TextSaveFormat], told apart by the first character). */
 object SaveFileCodec {
 
     /** Throws [IllegalArgumentException] for a state, move count, Mordie data or labels [SaveRepository.save] rejects. */
     fun encode(squareSide: Int, state: IntArray, moveCount: Int, mordie: SavedMordie?, labels: String? = null): String {
-        require(squareSide > 0) { "Square side must be positive" }
+        require(squareSide in PackedSaveFormat.MIN_SIDE..PackedSaveFormat.MAX_SIDE) {
+            "Square side must be ${PackedSaveFormat.MIN_SIDE}-${PackedSaveFormat.MAX_SIDE}, not $squareSide"
+        }
         require(state.size == squareSide * squareSide) { "Expected ${squareSide * squareSide} values, got ${state.size}" }
         require(SaveRules.isArrangement(state, state.size)) { "State must contain each of ${state.size} tile values exactly once" }
         require(moveCount >= 0) { "Move count must not be negative" }
@@ -21,7 +23,7 @@ object SaveFileCodec {
             }
         }
         require(labels == null || (labels.isNotEmpty() && labels.none { it.isWhitespace() })) { "Labels must be one word" }
-        return TextSaveFormat.encode(squareSide, state, moveCount, mordie, labels)
+        return PackedSaveFormat.encode(squareSide, state, moveCount, mordie, labels)
     }
 
     /** Throws [SaveFileFormatException], naming the save [name], when [text] isn't a valid save. Anything
