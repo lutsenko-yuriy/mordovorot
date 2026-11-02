@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.37.2] — 2026-11-02 (PR #245 merged)
+
+### Changed
+
+- [wip] (PR #245) GH-243 (WU1/3): the encoders behind sharing a board with a link are added: a board as a short code (`storage.BoardLinkFormat`), a QR code encoder with its SVG path (`web.qr`), and share links built and read (`web.ShareLink`). Nothing in the page uses them yet, so nothing a player sees changes.
+
 ## [0.37.1] — 2026-11-02 (PR #244 merged)
 
 ### Changed

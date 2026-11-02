@@ -47,6 +47,7 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                                # format, dispatching on the first character; encode writes the packed one only (GH-237)
 │       ├── PackedSaveFormat.kt        # The packed format: `~` + base64url of a bit stream (GH-237, ADR-0004)
 │       ├── SaveBits.kt                # BitWriter / BitReader, varints and the Lehmer code of a permutation (GH-237)
+│       ├── BoardLinkFormat.kt         # A board in a share link: side in 4 bits + Lehmer code, base64url (GH-243, ADR-0005)
 │       ├── TextSaveFormat.kt          # The old nine-line text format, read-only from GH-237 on and deprecated (GH-241; `@Deprecated`, no removal date) (GH-110)
 │       ├── SaveRules.kt               # The checks both formats share: arrangement, solution, ruled-out length (GH-237)
 │       ├── SaveNames.kt               # Which save names are accepted, on every platform (GH-110)
@@ -194,9 +195,9 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── WebControlsDialog.kt # The Controls dialog's flow over WebGame's modal and the session's mode (GH-171)
 │   ├── PlayMode.kt / PlayModePreference.kt # Mouse or keyboard, kept under `input_mode` (GH-171)
 │   ├── PressedWith.kt   # The session's last input, read per event as input_method (GH-171)
-│   ├── ShareLink.kt     # GH-243 (planned, WU1/WU2): `<page address>#b=<board>` built and read; playable, or rejected
+│   ├── ShareLink.kt     # GH-243 (WU1): `<page address>#b=<board>` built and read; playable, or rejected
 │   │                      # as invalid / unsupported_size / unsolvable. storage.BoardLinkFormat (ADR-0005) holds the board's bits
-│   ├── qr/              # GH-243 (planned, WU1): a DOM-free QR encoder (byte mode, ECC M, versions 1-10) and its SVG path;
+│   ├── qr/              # GH-243 (WU1): a DOM-free QR encoder (byte mode, ECC M, versions 1-10: QrCode, ReedSolomon, QrTables, QrMasks) and its SVG path (QrSvg);
 │   │                      # imports only the standard library, a boundary test checks it (as web.a11y)
 │   ├── WebShareFlows.kt # GH-243 (planned, WU2/WU3): opening a link, the Share dialog, Copy link (the WebControlsDialog pattern)
 │   ├── WebKeys.kt       # A key outside a dialog to a PageKey: ToolbarButton's digits, 0, or a shared
