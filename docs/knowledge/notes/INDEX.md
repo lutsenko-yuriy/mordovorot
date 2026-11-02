@@ -82,6 +82,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-211: Research: where and when Mordie thinks (Web Worker, idle-time search)](GH-211.md)
 - [GH-213: Fast solver for Mordie (3-cycle solver in shared/mordie)](GH-213.md)
 - [GH-218: Run Mordie's search in a Web Worker in the browser client](GH-218.md)
+- [GH-220: Research: smaller saves (a compact save format, maybe obfuscated)](GH-220.md)
 - [GH-222: Mordie keeps a best solution so far, from the fast solver and the exact search](GH-222.md)
 - [GH-223: Mordie's lines and endings for an answer that may not be the shortest](GH-223.md)
 - [GH-224: Saves keep Mordie's best solution so far](GH-224.md)
