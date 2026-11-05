@@ -11,6 +11,7 @@
 # Configuration (environment variables):
 #   CURFEW_START  first blocked hour, 0-23 (default 23)
 #   CURFEW_END    first allowed hour again, 0-23 (default 8)
+#                 (either one not an hour switches both curfews off)
 #   CURFEW_TZ     time zone for the clock, e.g. Europe/Berlin (default: the
 #                 machine's; cloud containers run in UTC, so set this there)
 #
@@ -18,8 +19,6 @@
 # per machine). Soft marks already shown are kept in .claude/curfew.state.
 # Test hooks, not settings: CURFEW_ENV_FILE, CURFEW_STATE_FILE and
 # CURFEW_NOW_OVERRIDE="YYYY-MM-DD HH:MM".
-#
-# A start or end that is not an hour (0-23) switches both curfews off.
 #
 # Exit 2 = block the prompt; stderr is shown to the user. Exit 0 = allow; stdout
 # JSON carries the soft warning.

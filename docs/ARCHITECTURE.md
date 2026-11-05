@@ -628,7 +628,7 @@ bash hooks are wired in the committed `.claude/settings.json` through `${CLAUDE_
 has run) and `scripts/alert/alert.sh` (GH-107: Notification/Stop, a macOS notification and spoken
 alert when a session waits on the user, toggled per machine in the gitignored `.claude/alert.env`) and `scripts/curfew/curfew.sh` (GH-237,
 GH-248: UserPromptSubmit; a hard curfew blocks prompts 23:00-07:59, a soft one warns the user and Claude
-at :00/:15/:30/:45 of the hour before, once per mark per day, kept in the gitignored `.claude/curfew.state`).
+at :00/:15/:30/:45 of the hour before, once per mark per day, kept in the gitignored `.claude/curfew.state`; a non-hour start/end fails open).
 `scripts/web/harness/` (GH-147; `phone_fit/` until GH-156) measures the built web game at phone sizes in headless Chrome
 (`measure.sh`, see its README; a `landscape` preset and checks on all four edges, GH-148) and serves it to a real phone on the local network (`serve_lan.sh`). `styles_diff.sh` (GH-156)
 compares every element's computed styles against a master bundle, so a CSS refactor can show the

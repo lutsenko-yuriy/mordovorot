@@ -113,7 +113,7 @@ class CurfewTests(unittest.TestCase):
         self.assertFalse(self.state.exists())
 
     def test_a_crlf_in_the_env_file_allows_instead_of_blocking(self):
-        self.assertSilent(self.run_curfew("2026-11-05 23:30", toggles="CURFEW=on\r\nCURFEW_START=22\r\n"))
+        self.assertSilent(self.run_curfew("2026-11-05 23:30", toggles="CURFEW_START=22\r\n"))
 
     # soft curfew: marks
 
