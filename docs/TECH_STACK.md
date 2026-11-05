@@ -6,7 +6,7 @@
 |---|---|---|
 | Kotlin | 2.4.21 (`gradle/libs.versions.toml`), JVM toolchain 17 | Game application code and tests |
 | Python | 3.11+ (3.9 for `probe`; CI runs 3.9 and 3.12 in `.github/workflows/tests.yml`) | Agent workflow tooling under `scripts/` |
-| Shell | bash | Claude Code hooks: onboarding gate (`scripts/onboard/gate.sh`), session-waiting alert (`scripts/alert/alert.sh`, GH-107) |
+| Shell | bash | Claude Code hooks: onboarding gate (`scripts/onboard/gate.sh`), session-waiting alert (`scripts/alert/alert.sh`, GH-107), working-hours curfew (`scripts/curfew/curfew.sh`, GH-237, GH-248) |
 
 ## Frameworks and libraries
 
@@ -37,4 +37,4 @@
   `.claude/alert.env` (`YAB_ALERT_NOTIFY`, `YAB_ALERT_SPEAK`, `YAB_ALERT_SUPPRESS_FOCUSED`, all `on` by
   default; set both channels `off` to opt out). The file is per checkout, so an opt-out does not
   carry over to worktrees or fresh clones. Needs `jq`; does nothing off macOS
-- **CI:** GitHub Actions: `build.yml` (`./gradlew build :web:jsBrowserDistribution`; on a green `master` push its `deploy` job publishes the web bundle to GitHub Pages, GH-111), `tests.yml` (onboard and alert Python tests)
+- **CI:** GitHub Actions: `build.yml` (`./gradlew build :web:jsBrowserDistribution`; on a green `master` push its `deploy` job publishes the web bundle to GitHub Pages, GH-111), `tests.yml` (onboard, alert and curfew Python tests)

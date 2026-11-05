@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.38.1] — 2026-11-05 (PR #249 merged)
+
+### Added
+
+- [meta] (PR #249) GH-248: a soft curfew warns, in the terminal and to Claude, at :00, :15, :30 and :45 in the hour before the hard curfew, once per mark a day and firmer each time; at the last mark Claude steers toward wrapping up and the warning says when the block ends. A `CURFEW_START` or `CURFEW_END` that is not an hour now switches both curfews off instead of blocking every prompt.
+
 ## [0.38.0] — 2026-11-02 (PR #247 merged)
 
 ### Added

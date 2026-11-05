@@ -3,6 +3,7 @@ CLAUDE.local.md
 .claude/settings.local.json
 .claude/alert.env
 .claude/curfew.env
+.claude/curfew.state
 .claude/worktrees/
 
 # Python
