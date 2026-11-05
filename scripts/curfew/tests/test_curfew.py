@@ -104,6 +104,17 @@ class CurfewTests(unittest.TestCase):
         self.assertSilent(self.run_curfew("2026-11-05 22:30"))
         self.assertFalse(self.state.exists())
 
+    def test_a_bad_start_or_end_allows_instead_of_blocking(self):
+        for name, value in (("CURFEW_START", "22\r"), ("CURFEW_START", "10pm"), ("CURFEW_START", "24"),
+                            ("CURFEW_END", "8\r"), ("CURFEW_END", "x"), ("CURFEW_END", "99")):
+            with self.subTest(name=name, value=value):
+                for now in ("2026-11-05 21:30", "2026-11-05 22:30", "2026-11-05 23:30", "2026-11-06 03:00"):
+                    self.assertSilent(self.run_curfew(now, **{name: value}))
+        self.assertFalse(self.state.exists())
+
+    def test_a_crlf_in_the_env_file_allows_instead_of_blocking(self):
+        self.assertSilent(self.run_curfew("2026-11-05 23:30", toggles="CURFEW=on\r\nCURFEW_START=22\r\n"))
+
     # soft curfew: marks
 
     def test_marks_follow_the_quarter_hours(self):
@@ -129,6 +140,11 @@ class CurfewTests(unittest.TestCase):
         for t in texts:
             self.assertIn("23:00", t["systemMessage"])
             self.assertIn("23:00", t["hookSpecificOutput"]["additionalContext"])
+
+    def test_the_last_warning_says_how_long_the_block_lasts(self):
+        out = self.warning(self.run_curfew("2026-11-05 22:45", CURFEW_END="7"))
+        self.assertIn("until 7:00", out["systemMessage"])
+        self.assertIn("until 7:00", out["hookSpecificOutput"]["additionalContext"])
 
     def test_claude_only_steers_at_the_last_mark(self):
         contexts = []

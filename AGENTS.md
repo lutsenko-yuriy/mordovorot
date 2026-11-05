@@ -93,7 +93,7 @@ At the beginning of every new session, before doing anything else:
 
 `scripts/curfew/curfew.sh` (a `UserPromptSubmit` hook) blocks every new prompt from 23:00 to 07:59. Change the window with `CURFEW_START` / `CURFEW_END` and the clock with `CURFEW_TZ` (cloud containers run in UTC); switch it off with `CURFEW=off` in `.claude/curfew.env` (gitignored). There is no per-message override (GH-237).
 
-A soft curfew (GH-248) warns, without blocking, in the hour before `CURFEW_START`: at :00, :15, :30 and :45, once per mark per day on the first prompt at or after it, firmer each time. The user sees the warning, and Claude gets it as context: it mentions the first three, and at :45 steers toward wrapping up. Marks already shown are kept in the gitignored `.claude/curfew.state`. `CURFEW=off` turns off both curfews; the soft hour follows `CURFEW_START`.
+A soft curfew (GH-248) warns, without blocking, in the hour before `CURFEW_START`: at :00, :15, :30 and :45, once per mark per day on the first prompt at or after it, firmer each time. The user sees the warning, and Claude gets it as context: it mentions the first three, and at :45 steers toward wrapping up. Marks already shown are kept in the gitignored `.claude/curfew.state`. The last warning also says when the block ends. `CURFEW=off` turns off both curfews, and so does a `CURFEW_START` or `CURFEW_END` that is not an hour from 0 to 23 (it fails open, not closed); the soft hour follows `CURFEW_START`.
 
 ## Workflow
 

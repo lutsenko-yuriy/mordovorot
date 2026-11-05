@@ -19,6 +19,8 @@
 # Test hooks, not settings: CURFEW_ENV_FILE, CURFEW_STATE_FILE and
 # CURFEW_NOW_OVERRIDE="YYYY-MM-DD HH:MM".
 #
+# A start or end that is not an hour (0-23) switches both curfews off.
+#
 # Exit 2 = block the prompt; stderr is shown to the user. Exit 0 = allow; stdout
 # JSON carries the soft warning.
 
@@ -33,8 +35,15 @@ CURFEW=on
 [ -f "$TOGGLE_FILE" ] && source "$TOGGLE_FILE"
 [ "$CURFEW" = "on" ] || exit 0
 
-start=$((10#${CURFEW_START:-23}))
-end=$((10#${CURFEW_END:-8}))
+# A start or end that is not an hour (a CRLF in the env file, a typo) switches
+# both curfews off: failing closed would refuse every prompt until fixed by hand.
+start="${CURFEW_START:-23}"
+end="${CURFEW_END:-8}"
+for hour_setting in "$start" "$end"; do
+  [[ "$hour_setting" =~ ^[0-9]{1,2}$ ]] && [ $((10#$hour_setting)) -le 23 ] || exit 0
+done
+start=$((10#$start))
+end=$((10#$end))
 
 # Read the clock once, so the date, hour and minute come from the same minute.
 # An empty TZ would mean UTC, so TZ is set only when CURFEW_TZ is.
@@ -83,8 +92,8 @@ case "$mark" in
      claude="Soft curfew (2 of 4): 45 minutes until new prompts are blocked at ${start}:00. Mention this in one short line, then carry on." ;;
   2) user="Soft curfew: 30 minutes to the ${start}:00 curfew. Start wrapping up: finish the current step."
      claude="Soft curfew (3 of 4): 30 minutes until new prompts are blocked at ${start}:00. Mention this in one short line, then carry on." ;;
-  3) user="Soft curfew: 15 minutes left. At ${start}:00 this session stops taking new prompts. Wrap up now: commit, push, and write down where you stopped."
-     claude="Soft curfew (4 of 4): new prompts are blocked at ${start}:00, in 15 minutes. Steer the user toward wrapping up: bring the current step to a safe stopping point, commit and push work in progress, say what is left, and don't start new large work." ;;
+  3) user="Soft curfew: 15 minutes left. At ${start}:00 this session stops taking new prompts until ${end}:00. Wrap up now: commit, push, and write down where you stopped."
+     claude="Soft curfew (4 of 4): new prompts are blocked at ${start}:00 until ${end}:00, in 15 minutes. Steer the user toward wrapping up: bring the current step to a safe stopping point, commit and push work in progress, say what is left, and don't start new large work." ;;
 esac
 
 # The texts are fixed and hold no quotes or backslashes, so printf needs no escaping.
