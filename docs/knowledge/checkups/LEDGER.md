@@ -8,7 +8,7 @@ Each tier is tracked as "not yet done this period" — a period label, not an ex
 
 | Tier | Cadence | Last run | Period covered | Next due |
 |---|---|---|---|---|
-| Light | 1st of every calendar month | 2026-10-14 | 2026-10 | 2026-11-01 |
+| Light | 1st of every calendar month | 2026-11-06 | 2026-11 | 2026-12-01 |
 | Heavy | 14th of Jan/Apr/Jul/Oct | 2026-10-14 | 2026-Q4 | 2027-01-14 |
 
 ## Carried in
@@ -17,7 +17,6 @@ Items raised outside a checkup (e.g. a debrief) for the next run to walk, each u
 
 | Raised | From | For | Dimension | Item |
 |---|---|---|---|---|
-| 2026-10-30 | GH-170 debrief | next light (2026-11) | Unused functionality | `docs/ANALYTICS_EVENTS.md`: remove events, properties and values no code emits anymore (console-era events; terminal `input_mode_switched.trigger` `toolbar`/`shortcut`, retired by GH-170) |
 
 ## Open findings
 
@@ -25,7 +24,8 @@ Findings needing human decision or larger effort, each carrying an explicit dead
 
 | ID | Opened | Tier | Dimension | Debt quadrant | Summary | Deadline | Write-up |
 |---|---|---|---|---|---|---|---|
-| CHK-2026-10-14-heavy-4 | 2026-10-14 | heavy | Cross-surface UX consistency | prudent-inadvertent | Console has no `help`/command list; all errors are a bare `Incorrect input` → GH-67 | 2027-01-14 | [CHK-2026-10-14-heavy](CHK-2026-10-14-heavy.md) |
+| CHK-2026-11-06-light-1 | 2026-11-06 | light | Unused functionality | prudent-deliberate | `docs/ANALYTICS_EVENTS.md` keeps retired events/properties/values as history (GH-228's choice), against the GH-170 debrief's ask to remove them: user to decide keep inline, move to an appendix, or delete | 2026-12-01 | [CHK-2026-11-06-light](CHK-2026-11-06-light.md) |
+| CHK-2026-11-06-light-2 | 2026-11-06 | light | Unused functionality | prudent-inadvertent | `MordieSearchFactory.NONE` is a test-only seam in `:shared:mordie` production code — move it to `:shared:testing` | 2027-02-01 | [CHK-2026-11-06-light](CHK-2026-11-06-light.md) |
 
 ## Resolved findings
 
@@ -41,3 +41,4 @@ Archive of findings once fixed or otherwise closed out.
 | CHK-2026-10-14-heavy-1 | 2026-10-14 | 2026-10-14 | heavy | Readability & structural clarity | `TuiView`'s four modal dialog loops duplicate the repaint/readEvent/Cancel-Activate-Quit skeleton — extract a shared loop helper → GH-64 — fixed in GH-64 (PR #71) | [CHK-2026-10-14-heavy](CHK-2026-10-14-heavy.md) |
 | CHK-2026-10-14-heavy-2 | 2026-10-14 | 2026-10-14 | heavy | Readability & structural clarity | Rethrow-SessionControl/rethrow-Cancellation/catch-Exception triplet copied in 5 places — extract one helper → GH-65 — fixed in GH-65 (PR #70) | [CHK-2026-10-14-heavy](CHK-2026-10-14-heavy.md) |
 | CHK-2026-10-14-heavy-3 | 2026-10-14 | 2026-10-15 | heavy | Cross-surface UX consistency | Console mode exits silently on solve (final board never shown) vs TUI's Congratulations screen → GH-66 — fixed in GH-66 | [CHK-2026-10-14-heavy](CHK-2026-10-14-heavy.md) |
+| CHK-2026-10-14-heavy-4 | 2026-10-14 | 2026-10-15 | heavy | Cross-surface UX consistency | Console has no `help`/command list; all errors are a bare `Incorrect input` → GH-67 — fixed in GH-67 (PR #73, 0.11.0); the console itself was removed in GH-79 | [CHK-2026-10-14-heavy](CHK-2026-10-14-heavy.md) |
