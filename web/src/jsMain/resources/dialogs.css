@@ -93,6 +93,31 @@
     text-align: left;
 }
 
+/* A Load row (GH-251): the save, then its trash button. */
+.dialog .save-row {
+    display: flex;
+    gap: 8px;
+}
+
+.dialog .save-row > button:first-child {
+    flex: 1;
+}
+
+.dialog .icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.55em 0.7em;
+}
+
+/* A finger needs a bigger target (GH-251). */
+@media (pointer: coarse) {
+    .dialog .icon-button {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
 /* The Tile labels picker (GH-139): the mark, the name, then the sample row in a fixed-width face. */
 /* A sample too wide to share the row (6x6, GH-160) wraps under the name rather than squeezing it. */
 .dialog .choices.labels button {

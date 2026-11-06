@@ -92,8 +92,9 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
             panel(state),
         )
         placeSteps(state, stepsScroll)
-        // Only a dialog that has just opened fades in, not one redrawn as the player picks in it.
-        val reopened = dialog != null && before?.dialog?.let { it::class == dialog::class } == true
+        // Only a dialog that has just opened fades in, not one redrawn as the player picks in it or one that
+        // takes another's place (Load -> Delete 'foo'?, GH-251).
+        val reopened = dialog != null && before?.dialog != null
         dialog?.let { root.append(element("div", if (reopened) "overlay shown" else "overlay").apply { append(dialogElement(it, game) { warning -> saveWarning = warning }) }) }
         drawMordie(now)
         setBehindDialog(root, dialog != null)

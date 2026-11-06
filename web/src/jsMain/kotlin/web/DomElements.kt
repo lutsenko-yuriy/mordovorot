@@ -20,6 +20,15 @@ internal fun button(label: String, cssClass: String? = null, onClick: () -> Unit
         addEventListener("click", { onClick() })
     }
 
+/** A square button showing the inline [svg] icon, named [label] for readers and as a tooltip (GH-251). */
+internal fun iconButton(label: String, svg: String, onClick: () -> Unit) =
+    (element("button", "icon-button") as HTMLButtonElement).apply {
+        title = label
+        setAttribute("aria-label", label)
+        innerHTML = svg
+        addEventListener("click", { onClick() })
+    }
+
 /** Shows [digit], the key that presses this button: heard as the shortcut, not in its name (GH-171). */
 internal fun <E : Element> E.withDigit(digit: Int?): E = apply {
     if (digit == null) return@apply
