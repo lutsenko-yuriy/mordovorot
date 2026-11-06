@@ -25,6 +25,14 @@ class BrowserSaveRepository(private val store: KeyValueStore) : SaveRepository {
 
     override fun load(name: String): SavedBoard? = store.get(keyFor(name))?.let { SaveFileCodec.decode(name, it) }
 
+    /** Removes the entry as it is, undecoded, so a corrupted save goes the same way (GH-251). */
+    override fun delete(name: String): Boolean {
+        val key = keyFor(name)
+        if (store.get(key) == null) return false
+        store.remove(key)
+        return true
+    }
+
     private fun keyFor(name: String): String {
         SaveNames.requireSafe(name)
         return PREFIX + name

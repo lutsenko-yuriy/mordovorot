@@ -41,6 +41,12 @@ class FakeSaveRepository(
      *  store, which a real repository's `listSaves` can raise. */
     var listSavesException: Throwable? = null
 
+    /** Every name passed to [delete], in order (GH-251). */
+    val deleteCalls = mutableListOf<String>()
+
+    /** When set, [delete] throws this instead of deleting - simulates a storage failure. */
+    var deleteException: Throwable? = null
+
     override fun listSaves(): List<String> {
         listSavesException?.let { throw it }
         return saves.keys.sorted()
@@ -63,6 +69,12 @@ class FakeSaveRepository(
     override fun load(name: String): SavedBoard? {
         loadException?.let { throw it }
         return saves[name]
+    }
+
+    override fun delete(name: String): Boolean {
+        deleteCalls.add(name)
+        deleteException?.let { throw it }
+        return saves.remove(name) != null
     }
 
     /** Mirrors [storage.SaveNames]' safety rule, so tests exercising name validation

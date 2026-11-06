@@ -110,4 +110,61 @@ class BrowserSaveRepositoryTest {
         assertFailsWith<IllegalArgumentException> { repo.save("foo", intArrayOf(0, 0, 2, 3), 2) }
         assertTrue(store.entries.isEmpty())
     }
+
+    @Test
+    fun `delete removes a packed entry and an old-text entry, GH-251`() {
+        repo.save("packed", intArrayOf(1, 0, 2, 3), 2)
+        store.entries["mordovorot.save.old"] = "2\n1 0 2 3\n4\n1 0 3 2\n8 searching\n"
+
+        assertTrue(repo.delete("packed"))
+        assertTrue(repo.delete("old"))
+
+        assertTrue(store.entries.isEmpty())
+    }
+
+    @Test
+    fun `delete removes a corrupted entry without decoding it, GH-251`() {
+        store.entries["mordovorot.save.bad"] = "not a save"
+
+        assertTrue(repo.delete("bad"))
+
+        assertTrue(store.entries.isEmpty())
+    }
+
+    @Test
+    fun `delete leaves the other saves and the preferences alone, GH-251`() {
+        repo.save("foo", intArrayOf(0, 1, 2, 3), 2)
+        repo.save("bar", intArrayOf(0, 1, 2, 3), 2)
+        store.entries["mordovorot.pref.labels"] = "letters"
+
+        repo.delete("foo")
+
+        assertEquals(listOf("bar"), repo.listSaves())
+        assertEquals("letters", store.entries["mordovorot.pref.labels"])
+    }
+
+    @Test
+    fun `delete returns false for a save that is not there, GH-251`() {
+        assertFalse(repo.delete("missing"))
+    }
+
+    @Test
+    fun `delete rejects an unsafe name and removes nothing, GH-251`() {
+        repo.save("foo", intArrayOf(0, 1, 2, 3), 2)
+
+        for (name in listOf("", " ", "a/b", "a\\b", "..")) {
+            assertFailsWith<IllegalArgumentException>(name) { repo.delete(name) }
+        }
+        assertEquals(listOf("foo"), repo.listSaves())
+    }
+
+    @Test
+    fun `delete lets a storage failure through and keeps the save, GH-251`() {
+        repo.save("foo", intArrayOf(0, 1, 2, 3), 2)
+        store.removeException = IllegalStateException("blocked")
+
+        assertFailsWith<IllegalStateException> { repo.delete("foo") }
+
+        assertTrue(repo.exists("foo"))
+    }
 }
