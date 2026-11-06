@@ -56,7 +56,16 @@ internal class StartupRestoreUseCase(
                 fun trackDecision(decision: String) =
                     analytics.track("startup_restore_decision", mapOf("decision" to decision, "save_file_count" to saveInfos.size))
                 val result = nameToRestore?.let { loadGame.loadGame(it, trigger = "startup_prompt") } ?: LoadResult.NOT_LOADED
-                trackDecision(if (result == LoadResult.LOADED) "restored" else "new_game")
+                // Nothing was chosen and nothing is left: every save on offer was deleted from the
+                // prompt (GH-251). A listing failure counts as "saves left", never as all_deleted.
+                val allDeleted = nameToRestore == null && catalogIsEmpty()
+                trackDecision(
+                    when {
+                        result == LoadResult.LOADED -> "restored"
+                        allDeleted -> "all_deleted"
+                        else -> "new_game"
+                    },
+                )
                 result == LoadResult.LOADED
             }
 
@@ -65,4 +74,11 @@ internal class StartupRestoreUseCase(
             }
         }
     }
+
+    private fun catalogIsEmpty(): Boolean =
+        try {
+            catalog.infos().isEmpty()
+        } catch (e: Exception) {
+            false
+        }
 }
