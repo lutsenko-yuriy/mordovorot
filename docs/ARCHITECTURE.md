@@ -537,8 +537,8 @@ to the packed reader and anything else to the text reader, so old saves keep loa
 Cross-cutting: `AnalyticsService` is injected into `viewmodel` (and any layer
 that needs to track an event), currently backed by `NoopAnalyticsService`.
 `InputMethodAnalyticsService` (GH-3) decorates another `AnalyticsService`,
-adding an `input_method` (`mouse`/`keyboard`, GH-18) property to
-every forwarded event — the decorator pattern lets the page distinguish events
+adding an `input_method` property (`keyboard` or `rich_ui`, the press that fired the event,
+GH-171; `mouse` went with the terminal, GH-228) to every forwarded event — the decorator pattern lets the page distinguish events
 by input mode without `GameViewModelImpl` itself knowing which UI mode is
 running. `PlatformAnalyticsService` (GH-110) adds `platform` the same way; it is the
 innermost decorator, wrapping the outermost service in `startWebGame`, so

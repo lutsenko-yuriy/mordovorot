@@ -32,7 +32,7 @@ Fired when the user saves via the Save dialog (toolbar Save / 2). *(GH-6)* The n
 |---|---|---|
 | `result` | `string` | `success` or `error` (e.g. an unsafe name, or a filesystem failure such as a full disk). |
 | `overwrote_existing` | `boolean` | Whether a file with that name already existed. Only present when `result` is `success` - on `error` it may not be known (e.g. the name check itself failed). |
-| `input_method` | `string` | `mouse` or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* *(`console` retired — GH-79)* |
+| `input_method` | `string` | `keyboard` or `rich_ui` - the press that fired the event (GH-171). *(`mouse` retired — GH-228; `console` retired — GH-79)* |
 
 *GH-99:* new property `name_source` (`string`, sent on `success` and `error`): `prefill` - saved under the prefilled current save name unchanged, `edited` - the field opened prefilled and the name was changed, or `typed` - the field opened empty. The name itself is never sent.
 
@@ -44,7 +44,7 @@ Fired when the board is restored from a save file, either via the `load` command
 |---|---|---|
 | `trigger` | `string` | `command` (a mid-game load: toolbar Load / 3 - the value predates GH-79 and is kept) or `startup_prompt`. |
 | `result` | `string` | `success` (also covers a load that resized the board to the save's size, GH-44 WU5), `not_found`, `error` (corrupted save file or a filesystem failure), or `unsolvable` (GH-74 - the save can't be solved; `unsolvable_save_resolved` carries the outcome). |
-| `input_method` | `string` | `mouse` or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* *(`console` retired — GH-79)* |
+| `input_method` | `string` | `keyboard` or `rich_ui` - the press that fired the event (GH-171). *(`mouse` retired — GH-228; `console` retired — GH-79)* |
 
 ### `startup_restore_prompt_shown`
 
@@ -53,7 +53,7 @@ Fired when the app boots and finds one or more save files. *(GH-6)*
 | Property | Type | Description |
 |---|---|---|
 | `save_file_count` | `number` | How many save files were found. |
-| `input_method` | `string` | `mouse` or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* *(`console` retired — GH-79)* |
+| `input_method` | `string` | `keyboard` or `rich_ui` - the press that fired the event (GH-171). *(`mouse` retired — GH-228; `console` retired — GH-79)* |
 
 ### `startup_restore_decision`
 
@@ -63,7 +63,7 @@ Fired when the user resolves the startup restore prompt. *(GH-6)*
 |---|---|---|
 | `decision` | `string` | `restored` or `new_game`. *(`quit` retired — GH-228)* Repairing an unsolvable save counts as `restored`. |
 | `save_file_count` | `number` | How many save files were on offer. |
-| `input_method` | `string` | `mouse` or `keyboard` — which UI mode the session was running in. *(GH-3, GH-18)* *(`console` retired — GH-79)* |
+| `input_method` | `string` | `keyboard` or `rich_ui` - the press that fired the event (GH-171). *(`mouse` retired — GH-228; `console` retired — GH-79)* |
 
 ### `exit_command_used`
 
@@ -103,7 +103,7 @@ Fired when the user cancels the Save, Load, Size or another dialog (a click, or 
 | Property | Type | Description |
 |---|---|---|
 | `dialog` | `string` | `save`, `load`, `size`, and later values (`controls`, ...). *(`exit` retired — GH-228)* |
-| `input_method` | `string` | `mouse` or `keyboard` — which UI mode the session was running in. *(GH-18)* |
+| `input_method` | `string` | `keyboard` or `rich_ui` - the press that fired the event (GH-171). *(`mouse` retired — GH-228)* |
 | `via` | `string` | `button` (Cancel / No) or `escape`; always sent since the terminal is gone. *(GH-163)* |
 
 ### `input_mode_switched`
@@ -119,14 +119,14 @@ Fired when the user requests a switch to a *different* input mode mid-session �
 
 ### `new_game_size_selected`
 
-Fired when a fresh game starts at a chosen board size via one of the post-launch surfaces (the
-`--size` CLI flag is covered by `app_launched.board_size` instead). *(GH-44)*
+Fired when a fresh game starts at a chosen board size via one of the post-launch surfaces. *(GH-44;
+the terminal's `--size` CLI flag, reported as `app_launched.board_size` instead, is retired — GH-228)*
 
 | Property | Type | Description |
 |---|---|---|
 | `size` | `number` | The board side chosen (3-5). |
 | `trigger` | `string` | `startup_prompt` or `toolbar` (`[ New ]` → size-picker dialog). *(`command` retired — GH-79)* |
-| `input_method` | `string` | `mouse` or `keyboard` — which UI mode the session was running in. *(`console` retired — GH-79)* |
+| `input_method` | `string` | `keyboard` or `rich_ui` - the press that fired the event (GH-171). *(`mouse` retired — GH-228; `console` retired — GH-79)* |
 
 *GH-66:* `trigger` also took `play_again` - the console size prompt after accepting `Start a new game?` on a solved board. *(Retired — GH-79)*
 
@@ -143,7 +143,7 @@ never sent. *(GH-74)*
 | `trigger` | `string` | `command` (mid-game load: toolbar Load / 3) or `startup_prompt`. |
 | `board_size` | `number` | The save's board side (3 or 5). |
 | `repair_saved` | `boolean` | Only on `repair`: whether the repaired board was written back to the save file (`false` if the overwrite failed; the board is loaded either way). |
-| `input_method` | `string` | `mouse` or `keyboard`. *(`console` retired — GH-79)* |
+| `input_method` | `string` | `keyboard` or `rich_ui`. *(`mouse` retired — GH-228; `console` retired — GH-79)* |
 
 ### `board_solved`
 
@@ -154,7 +154,7 @@ Fired once when a shift solves the board during play, in either input mode. Like
 |---|---|---|
 | `move_count` | `number` | The final move count shown to the player (a move is a run of consecutive shifts on one row/column). |
 | `board_size` | `number` | The board side (3-5). |
-| `input_method` | `string` | `mouse` or `keyboard` — which UI mode the session was running in. *(`console` retired — GH-79)* |
+| `input_method` | `string` | `keyboard` or `rich_ui` - the press that fired the event (GH-171). *(`mouse` retired — GH-228; `console` retired — GH-79)* |
 
 *GH-83:* new properties `mordie_result` (`string`: `player_won` - Mordie hadn't found its solution, `matched` - the move count equals Mordie's N, `mordie_won` - the move count exceeds N, or `machine` - the move count is below N, found or not, which only an inconsistent save can produce) and `mordie_moves` (`number`: Mordie's N when the board was solved - the true minimum if found, otherwise its progress). Both are absent when Mordie sat the game out - a save from before GH-83, or a repaired one, loaded with moves already made.
 
@@ -225,7 +225,7 @@ loaded. *(GH-83)*
 | `player_shift_count` | `number` | The player's shift count at the revealing check. |
 | `search_duration_ms` | `number` | Wall-clock search time in this session (time from earlier sessions before a save isn't included). |
 | `resumed_from_save` | `boolean` | Whether the search resumed from a saved N. |
-| `input_method` | `string` | `mouse` or `keyboard`. |
+| `input_method` | `string` | `keyboard` or `rich_ui`. *(`mouse` retired — GH-228)* |
 
 *Known gap:* a save stores Mordie's live state, so a solution found between two checks and then
 saved is stored as found; loading that save reveals it at once, and this event never fires for
@@ -247,7 +247,7 @@ Fired when the player confirms **Yes** in the `Give up and see Mordie's solution
 | `solution_length` | `number` | Mordie's N - its solution's length in moves. |
 | `moves_since_solution_found` | `number` | The player's moves since the `Found it!` line appeared. Absent when a save was loaded with Mordie's solution already found. |
 | `shifts_since_solution_found` | `number` | The same, in shifts. Absent in the same case. |
-| `input_method` | `string` | `mouse`, `keyboard` or `rich_ui`. |
+| `input_method` | `string` | `keyboard` or `rich_ui`. *(`mouse` retired — GH-228)* |
 
 ### `solution_replay_started`
 
@@ -259,7 +259,7 @@ first Next, or the first after Restart (or after stepping back to the start). *(
 | `restart` | `boolean` | `true` when an earlier run on this visit to the screen already started. |
 | `board_size` | `number` | The board side (3-5). |
 | `solution_length` | `number` | Mordie's N. |
-| `input_method` | `string` | `mouse`, `keyboard` or `rich_ui`. |
+| `input_method` | `string` | `keyboard` or `rich_ui`. *(`mouse` retired — GH-228)* |
 
 ### `solution_replay_finished`
 
@@ -271,7 +271,7 @@ Fired when Next reaches the solved board, once per run (a run begins at
 | `board_size` | `number` | The board side (3-5). |
 | `solution_length` | `number` | Mordie's N. |
 | `stepped_back` | `boolean` | Whether Prev was used during this run. |
-| `input_method` | `string` | `mouse`, `keyboard` or `rich_ui`. |
+| `input_method` | `string` | `keyboard` or `rich_ui`. *(`mouse` retired — GH-228)* |
 
 *GH-126:* `dialog_cancelled.dialog` takes a new value, `give_up` - **No** or Escape in the
 give-up confirmation.
@@ -289,7 +289,7 @@ OK on the current scheme fires nothing. Scheme values everywhere: `numbers`, `nu
 | `from_source` | `string` | Why the game showed `from`: `default` (no preference set), `preference`, or `save` (a loaded save's labels). |
 | `screen` | `string` | `play`, `solved` or `solution` - where the player was. |
 | `board_size` | `number` | The board side (3-5). |
-| `input_method` | `string` | `mouse`, `keyboard` or `rich_ui`. |
+| `input_method` | `string` | `keyboard` or `rich_ui`. *(`mouse` retired — GH-228)* |
 
 *GH-139:* additions to existing events:
 - `app_launched` gains `tile_labels` (`string`, always sent): the remembered preference at launch,
@@ -403,7 +403,7 @@ with `dialog: labels`, as usual.
 
 | Screen name | When tracked |
 |---|---|
-| `screen_controls_dialog` | The Controls dialog opens. Properties `opened_from`: `toolbar` (`[ Controls 6 ]` click) or `shortcut` (6, in either mode); `screen`: `play`, `solved` or `solution`; `input_method`: `mouse` or `keyboard`. *(GH-170)* |
+| `screen_controls_dialog` | The Controls dialog opens. Properties `opened_from`: `toolbar` (`[ Controls 6 ]` click) or `shortcut` (6, in either mode); `screen`: `play`, `solved` or `solution`; `input_method`: `keyboard` or `rich_ui` (`mouse` retired — GH-228). *(GH-170)* |
 
 *GH-171:* `screen_controls_dialog` now fires on `web` too, with `input_method` `keyboard` or
 `rich_ui`; `screen_labels_dialog.opened_from` takes `shortcut` there (4 in keyboard mode).
