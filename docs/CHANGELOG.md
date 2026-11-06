@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.38.1] — 2026-11-06 (PR #252 merged)
+
+### Changed
+
+- [test] (PR #252) GH-251 (WU0): scenario stubs for deleting saves from the Load and restore dialogs.
+
 ## [0.38.1] — 2026-11-05 (PR #249 merged)
 
 ### Added
