@@ -42,6 +42,13 @@ interface GameViewModel {
     suspend fun saveGame(name: String): Boolean
     suspend fun loadGame(name: String)
 
+    /** Deletes [save] and tracks `save_deleted` (GH-251); [trigger] is `command` or
+     *  `startup_prompt`. Deleting the current save clears [currentSaveName]; the board, moves and
+     *  [hasUnsavedProgress] are untouched. Unlike [saveGame] and [loadGame] it is not `suspend`
+     *  and raises no [UiRequest], so a View may call it while answering `ConfirmRestore` or
+     *  `ChooseSaveToRestore`; the View shows the outcome itself. */
+    fun deleteSave(save: SaveInfo, trigger: String): DeleteResult
+
     /** Saves with their board size (GH-44 WU4), sorted by name; empty when nothing has been
      *  saved yet, or on a storage error - lets the mouse-driven Load dialog (GH-3) show what's
      *  available without exposing storage errors to the UI layer. A save whose size couldn't be

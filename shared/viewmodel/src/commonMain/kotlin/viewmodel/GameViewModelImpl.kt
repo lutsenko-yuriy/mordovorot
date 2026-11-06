@@ -5,6 +5,7 @@ import board_model.BoardModel
 import kotlin.math.abs
 import kotlinx.coroutines.channels.ReceiveChannel
 import viewmodel.usecase.ControlsDialogUseCase
+import viewmodel.usecase.DeleteSaveUseCase
 import viewmodel.usecase.LoadGameUseCase
 import viewmodel.usecase.NewGameUseCase
 import viewmodel.usecase.SaveGameUseCase
@@ -26,6 +27,7 @@ class GameViewModelImpl internal constructor(
     private val newGameUseCase: NewGameUseCase,
     private val saveGameUseCase: SaveGameUseCase,
     private val loadGameUseCase: LoadGameUseCase,
+    private val deleteSaveUseCase: DeleteSaveUseCase,
     private val startupRestoreUseCase: StartupRestoreUseCase,
     private val solutionUseCase: SolutionUseCase,
     private val tileLabelsUseCase: TileLabelsUseCase,
@@ -88,6 +90,8 @@ class GameViewModelImpl internal constructor(
     override suspend fun loadGame(name: String) {
         loadGameUseCase.loadGame(name)
     }
+
+    override fun deleteSave(save: SaveInfo, trigger: String): DeleteResult = deleteSaveUseCase.deleteSave(save, trigger)
 
     override suspend fun restoreOnStartup() = startupRestoreUseCase.restoreOnStartup()
 

@@ -11,6 +11,10 @@ internal class SaveCatalog(private val saves: SaveRepository) {
      *  caller that must tell "no saves" apart from "couldn't list them". */
     fun infos(): List<SaveInfo> = saves.listSaves().map(::infoOf)
 
+    /** How many saves there are, from the listing alone (nothing is decoded). Throws if the
+     *  listing fails (GH-251). */
+    fun count(): Int = saves.listSaves().size
+
     /** [infos], or empty when the listing fails. */
     fun listSaves(): List<SaveInfo> =
         try {

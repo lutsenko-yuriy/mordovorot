@@ -8,6 +8,7 @@ class LocalStorageStore : KeyValueStore {
     override fun keys(): List<String> = guarded { (0 until storage.length).mapNotNull { storage.key(it) } }
     override fun get(key: String): String? = guarded { storage.getItem(key) }
     override fun set(key: String, value: String) = guarded { storage.setItem(key, value) }
+    override fun remove(key: String) = guarded { storage.removeItem(key) }
 
     private val storage get() = window.localStorage
 

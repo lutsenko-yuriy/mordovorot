@@ -494,3 +494,32 @@ Fired when a share link has been checked: when the page loads with one in the ad
 | `reason` | `string` | `invalid`, `unsupported_size` or `unsolvable`. Only when `rejected`. |
 
 The link and the board are never sent: the arrangement is the shared content. Which of these a QR scan was can't be told from a typed link.
+
+## GH-251 (delete saves from the Load and restore dialogs)
+
+New screen view:
+
+| Screen name | When tracked |
+|---|---|
+| `screen_delete_save_dialog` | The `Delete 'foo'?` confirmation opens, from the trash icon in the Load or the startup restore dialog. Properties `opened_from`: `toolbar` (the Load dialog mid-game) or `startup` (the restore dialog), as in `screen_load_dialog`; `save_state`: `ok`, `unsolvable` or `corrupted` - what the list showed for that save; `save_file_count`: number - the saves in the list before the delete. *(GH-251)* |
+
+`dialog_cancelled.dialog` takes a new value, `delete_save` (Cancel or Escape in the confirmation). `via` and `input_method` work as for the other dialogs.
+
+### `save_deleted`
+
+Fired when the player presses Delete in the confirmation, whatever happens next. *(GH-251)*
+
+| Property | Type | Description |
+|---|---|---|
+| `result` | `string` | `success`, `not_found` (the save was already gone) or `error` (storage refused). |
+| `trigger` | `string` | `command` (the Load dialog mid-game) or `startup_prompt` (the restore dialog), the same values as `load_command_used.trigger`. |
+| `save_state` | `string` | `ok`, `unsolvable` or `corrupted`, as in `screen_delete_save_dialog`. |
+| `was_current_save` | `boolean` | Whether the deleted save was the current save name (GH-99), which deleting clears. Only on `success`. |
+| `remaining_save_count` | `number` | The saves left after the delete. Only on `success`. |
+| `input_method` | `string` | `keyboard` or `rich_ui` - the press that fired the event (GH-171). |
+
+`startup_restore_decision.decision` takes a new value, `all_deleted`: the player deleted every save from the restore dialog, which then closed and opened the size picker. Its `save_file_count` is the number on offer when the dialog opened.
+
+Already covered: after the last save is deleted at startup the size picker opens and fires `screen_size_dialog` with `opened_from: startup`; after the last save is deleted mid-game the dialog closes and the game carries on, with nothing to track.
+
+Never sent: the save's name (free text, as for every save event) and its contents. Not tracked: the trash icon press itself (the confirmation's screen view covers it), hovering over its tooltip, and any property that tells an Enter or Space press from a pointer click, since that could hint at screen-reader use (GH-167, GH-180).

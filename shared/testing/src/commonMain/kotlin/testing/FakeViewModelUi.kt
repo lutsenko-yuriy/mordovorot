@@ -21,6 +21,9 @@ class FakeViewModelUi(
     private val chooseBoardSizeResponses: MutableList<Int?> = mutableListOf(),
     private val resolveUnsolvableSaveResponses: MutableList<UnsolvableSaveChoice> = mutableListOf(),
     private val chooseFittingLabelsResponses: MutableList<TileLabels?> = mutableListOf(),
+    /** Runs when a restore prompt is answered, before the answer, so a test can delete saves
+     *  while the prompt is open (GH-251). */
+    private val beforeRestoreAnswer: () -> Unit = {},
 ) {
 
     val shownMessages = mutableListOf<String>()
@@ -68,10 +71,12 @@ class FakeViewModelUi(
             }
             is UiRequest.ConfirmRestore -> {
                 confirmRestoreCalls.add(request.save.name)
+                beforeRestoreAnswer()
                 request.respond(nextOrThrow(confirmRestoreResponses, "confirmRestore"))
             }
             is UiRequest.ChooseSaveToRestore -> {
                 chooseSaveToRestoreCalls.add(request.saves.map { it.name })
+                beforeRestoreAnswer()
                 request.respond(nextOrThrow(chooseSaveToRestoreResponses, "chooseSaveToRestore"))
             }
             is UiRequest.ChooseBoardSize -> {

@@ -5,6 +5,7 @@ import board_model.BoardModel
 import mordie.Mordie
 import storage.SaveRepository
 import viewmodel.usecase.ControlsDialogUseCase
+import viewmodel.usecase.DeleteSaveUseCase
 import viewmodel.usecase.LoadGameUseCase
 import viewmodel.usecase.NewGameUseCase
 import viewmodel.usecase.ResolveUnsolvableSaveUseCase
@@ -42,11 +43,12 @@ fun buildGameViewModel(
         board, saves, mordieHooks, analytics, ui, catalog, resolveUnsolvable, currentSaveName, gameShiftSources, unsavedProgress,
         solution, tileLabels, tileLabelsUseCase,
     )
+    val deleteSave = DeleteSaveUseCase(saves, catalog, analytics, currentSaveName)
     val startupRestore = StartupRestoreUseCase(
         board, catalog, analytics, ui, loadGame, newGame, mordieHooks,
     )
     return GameViewModelImpl(
-        board, analytics, mordieHooks, ui, catalog, newGame, saveGame, loadGame, startupRestore, solution, tileLabelsUseCase,
+        board, analytics, mordieHooks, ui, catalog, newGame, saveGame, loadGame, deleteSave, startupRestore, solution, tileLabelsUseCase,
         ControlsDialogUseCase(board, analytics, solution), currentSaveName, gameShiftSources, unsavedProgress, tileLabels,
     )
 }

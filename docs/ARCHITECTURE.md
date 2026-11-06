@@ -41,7 +41,7 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │                                             # the same way (GH-110)
 ├── storage/             # :shared:storage - the save contract and the save formats; the browser client does the I/O
 │   └── storage/
-│       ├── SaveRepository.kt          # Persistence contract: list/exists/save/load
+│       ├── SaveRepository.kt          # Persistence contract: list/exists/save/load/delete
 │       ├── PreferenceRepository.kt    # Player preferences as plain strings: get/set (GH-139)
 │       ├── SaveFileCodec.kt           # The save codec, the one public seam: decode reads the packed and the old text
 │       │                                # format, dispatching on the first character; encode writes the packed one only (GH-237)
@@ -170,7 +170,9 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       └── usecase/               # One class per viewmodel flow, delegated to by GameViewModelImpl
 │                                     # (GH-78): NewGameUseCase, SaveGameUseCase, LoadGameUseCase ->
 │                                     # ResolveUnsolvableSaveUseCase (repair / new game, GH-74;
-│                                     # both return LoadResult, GH-41), StartupRestoreUseCase (restore or
+│                                     # both return LoadResult, GH-41), DeleteSaveUseCase (deletes a save and
+│                                     # tracks save_deleted; not suspend, raises no request, GH-251),
+│                                     # StartupRestoreUseCase (restore or
 │                                     # size prompt, then Mordie; runs once per session), SolutionUseCase (the Give Up row,
 │                                     # entering the solution screen, the replay and its
 │                                     # analytics, GH-126), TileLabelsUseCase (the labels dialog's
@@ -449,7 +451,8 @@ handled the request) is what keeps message/prompt ordering identical to the old
 blocking-call behavior. The one invariant that keeps this deadlock-free: a View's
 request handler must never call a request-raising `ViewModel` method
 (`saveGame`/`loadGame`/`restoreOnStartup`) from inside
-itself — only the plain query methods are safe there. All of them are `suspend`; a cancelled coroutine resumes them with `CancellationException`, which
+itself — only the plain query methods are safe there, and `deleteSave` (GH-251), which is not
+`suspend` and raises no request. All of them are `suspend`; a cancelled coroutine resumes them with `CancellationException`, which
 each use case's catch-all (`catchingNonCancellation`) rethrows rather than swallows (ordinary
 structured-concurrency hygiene).
 
@@ -499,7 +502,7 @@ next to the 1-based board when shown in a Load dialog message.
 ### storage
 Persistence for save games and preferences. `SaveRepository` is the contract `viewmodel`
 depends on; the web's `BrowserSaveRepository` is the only class that touches the saves, one
-`localStorage` entry each, and `BrowserPreferenceRepository` (GH-139) the preferences.
+`localStorage` entry each (deleted by `KeyValueStore.remove`, without decoding it, so a corrupted save can go too, GH-251), and `BrowserPreferenceRepository` (GH-139) the preferences.
 `PreferenceRepository` is a plain string store, so `storage` still knows no viewmodel types;
 `viewmodel.TileLabelsPreference` gives it a type. The save format (`SaveFileCodec`) and the accepted names (`SaveNames`)
 live in `:shared:storage` so every platform reads and writes the same saves (GH-110). No dependency on `board_model`, `viewmodel`, or `view` — it

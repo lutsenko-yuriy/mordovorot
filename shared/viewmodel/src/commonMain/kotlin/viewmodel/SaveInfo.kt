@@ -21,3 +21,11 @@ const val UNSOLVABLE_MARK = "unsolvable"
 
 /** [displayWithSize] plus the [UNSOLVABLE_MARK] when the save can't be solved (GH-74). */
 fun SaveInfo.display(): String = if (solvable) displayWithSize() else "${displayWithSize()} $UNSOLVABLE_MARK"
+
+/** `corrupted` (no size: the save couldn't be read), `unsolvable` or `ok`: the `save_state` property
+ *  of `screen_delete_save_dialog` and `save_deleted` (GH-251). */
+fun SaveInfo.analyticsState(): String = when {
+    squareSide == null -> "corrupted"
+    !solvable -> "unsolvable"
+    else -> "ok"
+}

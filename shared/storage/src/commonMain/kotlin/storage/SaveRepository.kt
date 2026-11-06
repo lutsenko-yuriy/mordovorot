@@ -35,4 +35,9 @@ interface SaveRepository {
 
     /** `null` when there's no save named [name]. */
     fun load(name: String): SavedBoard?
+
+    /** Deletes the save named [name] (GH-251): `true` when it was deleted, `false` when there
+     *  was no such save. Throws [IllegalArgumentException] for an unsafe name, and a storage
+     *  error propagates as for [save]. The contents are not read, so a corrupted save can go. */
+    fun delete(name: String): Boolean
 }
