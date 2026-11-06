@@ -39,7 +39,7 @@ class WebGame internal constructor(
 
     private val modal = WebModal { render(focus = it) }
     internal val labels = WebLabelsDialog(this, viewModel, modal)
-    internal val dialogs = WebDialogFlows(viewModel, analytics, modal, ::cancelled)
+    internal val dialogs = WebDialogFlows(viewModel, analytics, modal, ::cancelled, ::noteStatus)
     internal val solution = WebSolutionFlows(this, viewModel, analytics, modal)
     internal val controls = WebControlsDialog(this, viewModel, analytics, modal, keyboardLayout, modePreference, startMode)
     internal val share = WebShareFlows(this, viewModel, analytics, modal, address, clipboard)
@@ -162,7 +162,13 @@ class WebGame internal constructor(
     }
 
     /** The Load dialog's answer, a listed save's name; `null` is Cancel. */
-    fun onLoadChosen(name: String?) = modal.answer<WebDialog.Load, String?>(name)
+    fun onLoadChosen(name: String?) = modal.answer<WebDialog.Load, LoadPick>(name?.let { LoadPick.Chosen(it) } ?: LoadPick.Cancel)
+
+    /** The trash button of the Load dialog's row at [index] (GH-251). */
+    fun onDeletePressed(index: Int) = modal.answer<WebDialog.Load, LoadPick>(LoadPick.Delete(index))
+
+    /** The Delete confirmation's answer: `true` is Delete (GH-251). */
+    fun onDeleteAnswered(confirm: Boolean) = modal.answer<WebDialog.DeleteSave, Boolean>(confirm)
 
     /** The unsolvable-save dialog's answer. */
     fun onUnsolvableChoice(choice: UnsolvableSaveChoice) = modal.answer<WebDialog.Unsolvable, UnsolvableSaveChoice>(choice)
@@ -189,11 +195,16 @@ class WebGame internal constructor(
 
     /** A status message, said too; a load's names [loadedSave] and says its size and moves instead. */
     internal fun showStatus(text: String, loadedSave: String? = null) {
+        noteStatus(text, loadedSave)
+        render()
+    }
+
+    /** [showStatus] without drawing: the next frame shows it (GH-251, so a dialog that follows doesn't blink). */
+    internal fun noteStatus(text: String, loadedSave: String? = null) {
         status = text
         saying = loadedSave?.let {
             Announcements.loaded(it, viewModel.squareSide(), viewModel.moveCount(), viewModel.isSolved(), viewModel.solution()?.moves?.size)
         } ?: text
-        render()
     }
 
     /** `dialog_cancelled` for the dialog just closed, with how it was cancelled. */

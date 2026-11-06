@@ -123,6 +123,12 @@ internal class WebHarness(
         return this
     }
 
+    /** An entry under [name] that no save decodes (GH-251): it lists by name alone. */
+    fun seedCorrupted(name: String): WebHarness {
+        store.entries["mordovorot.save.$name"] = "not a save"
+        return this
+    }
+
     /** [props] without the decorators' properties. */
     fun ownProps(event: String) = props(event).map { it - "platform" - "input_method" }
 

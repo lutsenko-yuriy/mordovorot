@@ -61,7 +61,7 @@ class WebDialogKeyboardScenarioTest {
         page.game.onLoadChosen(null)
         page.seed("bar", solved(4)).seed("foo", solved(3))
         page.game.onLoad()
-        assertEquals(Focus.FirstSave, page.state.focus)
+        assertEquals(Focus.SaveChoice(0), page.state.focus)
     }
 
     @Test

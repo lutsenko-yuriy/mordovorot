@@ -80,8 +80,13 @@ sealed interface WebDialog {
     /** The name being typed, with the overwrite warning when a save by that name exists. */
     data class Save(val name: String, val warning: String?) : WebDialog
 
-    /** The toolbar's Load, or with [restore] the startup offer to restore one of [saves]. */
-    data class Load(val restore: Boolean, val saves: List<SaveEntry>) : WebDialog
+    /** The toolbar's Load, or with [restore] the startup offer to restore one of [saves]. [focus] is
+     *  where it opens when not on the first save, and [message] a line above the list: both set when
+     *  it is shown again after a delete (GH-251). */
+    data class Load(val restore: Boolean, val saves: List<SaveEntry>, val focus: Focus? = null, val message: String? = null) : WebDialog
+
+    /** The confirmation before deleting the save [name] (GH-251): Cancel, where focus starts, or Delete. */
+    data class DeleteSave(val name: String) : WebDialog
 
     /** A save no sequence of shifts solves: Repair & load or New game, and no Exit. */
     data class Unsolvable(val message: String) : WebDialog
@@ -113,7 +118,10 @@ sealed interface WebDialog {
 }
 
 /** A save as a Load row: its [label] is `name (NxN)`, with the unsolvable mark when it applies. */
-data class SaveEntry(val name: String, val label: String)
+data class SaveEntry(val name: String, val label: String) {
+    /** What its trash button is called (GH-251). */
+    val deleteName: String get() = "Delete '$name'"
+}
 
 /** A Labels row: a scheme, its [title] and its [sample], the solved board's first row - or, when
  *  not [available] for the board (GH-160), the largest side it labels. */

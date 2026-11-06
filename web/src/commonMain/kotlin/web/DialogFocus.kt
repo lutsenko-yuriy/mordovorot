@@ -13,7 +13,12 @@ sealed class Focus(override val key: String) : FocusTarget {
     data object ReadBoard : Focus("read-board")
     data class SizeChoice(val side: Int) : Focus("size-$side")
     data object SaveName : Focus("save-name")
-    data object FirstSave : Focus("first-save")
+    /** The load button of the Load dialog's row at [index]. */
+    data class SaveChoice(val index: Int) : Focus("save-$index")
+    /** The trash button of the Load dialog's row at [index] (GH-251). */
+    data class DeleteSave(val index: Int) : Focus("delete-save-$index")
+    /** The Delete confirmation's Cancel, where it opens (GH-251). */
+    data object DeleteCancel : Focus("delete-cancel")
     /** A dialog's Cancel: Load's, when it has no saves to focus. */
     data object DialogCancel : Focus("dialog-cancel")
     data object Repair : Focus("repair")
@@ -54,7 +59,8 @@ sealed class Focus(override val key: String) : FocusTarget {
 fun defaultFocus(dialog: WebDialog): Focus = when (dialog) {
     is WebDialog.Size -> Focus.SizeChoice(dialog.current)
     is WebDialog.Save -> Focus.SaveName
-    is WebDialog.Load -> if (dialog.saves.isEmpty()) Focus.DialogCancel else Focus.FirstSave
+    is WebDialog.Load -> dialog.focus ?: if (dialog.saves.isEmpty()) Focus.DialogCancel else Focus.SaveChoice(0)
+    is WebDialog.DeleteSave -> Focus.DeleteCancel
     is WebDialog.Unsolvable -> Focus.Repair
     is WebDialog.Labels -> Focus.Label(dialog.selected)
     WebDialog.GiveUp -> Focus.No
@@ -73,6 +79,7 @@ val WebDialog.title: String get() = when (this) {
     is WebDialog.Size -> "New game size"
     is WebDialog.Save -> "Save game"
     is WebDialog.Load -> if (restore) "Restore a saved game?" else "Load game"
+    is WebDialog.DeleteSave -> "Delete '$name'?"
     is WebDialog.Unsolvable -> "Can't be solved"
     is WebDialog.Labels -> "Tile labels"
     WebDialog.GiveUp -> "Give up and see Mordie's solution?"

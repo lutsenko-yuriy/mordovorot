@@ -2,10 +2,20 @@ package web
 
 import analytics.AnalyticsService
 import board_model.BoardSize
+import viewmodel.DeleteResult
 import viewmodel.GameViewModel
 import viewmodel.SaveInfo
 import viewmodel.UnsolvableSaveChoice
+import viewmodel.analyticsState
 import viewmodel.display
+
+/** What the Load dialog was answered with (GH-251). */
+internal sealed interface LoadPick {
+    data class Chosen(val name: String) : LoadPick
+    /** The trash button of the row at [index]. */
+    data class Delete(val index: Int) : LoadPick
+    data object Cancel : LoadPick
+}
 
 /** [WebGame]'s Save, Load, size and can't-be-solved dialogs, each tracking its screen view and
  *  Cancel. [modal] shows them; [cancelled] tracks a Cancel. */
@@ -14,6 +24,8 @@ internal class WebDialogFlows(
     private val analytics: AnalyticsService,
     private val modal: WebModal,
     private val cancelled: (dialog: String) -> Unit,
+    /** Sets the status message and what is said, for the next frame to show. */
+    private val noteStatus: (String) -> Unit,
 ) {
 
     /** [openedFrom] is `toolbar` or a `ChooseBoardSize.origin`, as `screen_size_dialog.opened_from`. */
@@ -27,12 +39,60 @@ internal class WebDialogFlows(
     /** The startup restore offer, for one save or a pick list; the chosen save's name or `null`. */
     suspend fun chooseRestore(saves: List<SaveInfo>): String? = chooseSave(saves, restore = true)
 
+    /** The Load dialog, shown again after each delete or cancelled delete (GH-251); the chosen
+     *  save's name, or `null` when cancelled or the last save was deleted. */
     suspend fun chooseSave(saves: List<SaveInfo>, restore: Boolean): String? {
         val openedFrom = if (restore) "startup" else "toolbar"
         analytics.track("screen_load_dialog", mapOf("opened_from" to openedFrom, "save_file_count" to saves.size))
-        val name = modal.ask<String?>(WebDialog.Load(restore, saves.map { SaveEntry(it.name, it.display()) }))
-        if (name == null) cancelled("load")
-        return name
+        var listed = saves
+        var focus: Focus? = null
+        var message: String? = null
+        while (true) {
+            val entries = listed.map { SaveEntry(it.name, it.display()) }
+            val pick = modal.ask<LoadPick>(WebDialog.Load(restore, entries, focus, message)) { it is LoadPick.Delete }
+            when (pick) {
+                is LoadPick.Chosen -> return pick.name
+                LoadPick.Cancel -> {
+                    cancelled("load")
+                    return null
+                }
+                is LoadPick.Delete -> {
+                    val save = listed[pick.index]
+                    val trigger = if (restore) "startup_prompt" else "command"
+                    val result = if (confirmDelete(save, listed.size, openedFrom)) viewModel.deleteSave(save, trigger) else null
+                    message = when (result) {
+                        null -> null
+                        DeleteResult.DELETED -> "Deleted '${save.name}'."
+                        DeleteResult.NOT_FOUND -> "No save named '${save.name}' - it was already deleted."
+                        DeleteResult.ERROR -> "Could not delete '${save.name}'."
+                    }
+                    if (result == DeleteResult.DELETED) {
+                        listed = viewModel.listSaves()
+                        if (listed.isEmpty()) {
+                            // Mid-game there is nothing left to load: back to the game. At startup the
+                            // viewModel sees the empty list and opens the size picker.
+                            noteStatus(if (restore) "Deleted '${save.name}'." else "Deleted '${save.name}'. No saves left.")
+                            return null
+                        }
+                        focus = Focus.SaveChoice(pick.index.coerceAtMost(listed.lastIndex))
+                    } else {
+                        focus = Focus.DeleteSave(pick.index)
+                    }
+                    message?.let(noteStatus)
+                }
+            }
+        }
+    }
+
+    /** The `Delete 'foo'?` confirmation for [save], one of [count]; whether it was confirmed. */
+    private suspend fun confirmDelete(save: SaveInfo, count: Int, openedFrom: String): Boolean {
+        analytics.track(
+            "screen_delete_save_dialog",
+            mapOf("opened_from" to openedFrom, "save_state" to save.analyticsState(), "save_file_count" to count),
+        )
+        val confirmed = modal.ask<Boolean>(WebDialog.DeleteSave(save.name)) { true }
+        if (!confirmed) cancelled("delete_save")
+        return confirmed
     }
 
     /** The Save dialog prefilled with the current save's name; the typed name, or `null`. */
