@@ -6,6 +6,7 @@ import org.w3c.dom.HTMLButtonElement
 import org.w3c.dom.events.KeyboardEvent
 import web.a11y.hiddenFromReaders
 import web.a11y.keyShortcut
+import web.a11y.named
 
 // The page's building blocks (GH-110), shared by DomRenderer and the dialogs.
 
@@ -24,8 +25,9 @@ internal fun button(label: String, cssClass: String? = null, onClick: () -> Unit
 internal fun iconButton(label: String, svg: String, onClick: () -> Unit) =
     (element("button", "icon-button") as HTMLButtonElement).apply {
         title = label
-        setAttribute("aria-label", label)
+        named(this, label)
         innerHTML = svg
+        firstElementChild?.let { hiddenFromReaders(it) }
         addEventListener("click", { onClick() })
     }
 

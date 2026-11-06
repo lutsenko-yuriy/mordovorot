@@ -146,10 +146,10 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
         }
     }
 
-/** A trash can, drawn in the button's text colour and hidden from readers: the button carries the name. */
+/** A trash can, drawn in the button's text colour and hidden from readers by iconButton: the button carries the name. */
 private const val TRASH_ICON =
     """<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" """ +
-        """stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">""" +
+        """stroke-linecap="round" stroke-linejoin="round" focusable="false">""" +
         """<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/><path d="M10 10v6"/><path d="M14 10v6"/></svg>"""
 
 /** A radio-role button, since the page is rebuilt every frame and a native radio would lose its state. */
