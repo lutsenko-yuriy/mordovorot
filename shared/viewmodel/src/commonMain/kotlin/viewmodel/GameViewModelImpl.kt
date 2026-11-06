@@ -5,7 +5,6 @@ import board_model.BoardModel
 import kotlin.math.abs
 import kotlinx.coroutines.channels.ReceiveChannel
 import viewmodel.usecase.ControlsDialogUseCase
-import viewmodel.usecase.DeleteResult
 import viewmodel.usecase.DeleteSaveUseCase
 import viewmodel.usecase.LoadGameUseCase
 import viewmodel.usecase.NewGameUseCase

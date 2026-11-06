@@ -3,6 +3,7 @@ package viewmodel.usecase
 import analytics.AnalyticsService
 import storage.SaveRepository
 import viewmodel.CurrentSaveName
+import viewmodel.DeleteResult
 import viewmodel.SaveCatalog
 import viewmodel.SaveInfo
 import viewmodel.analyticsState
@@ -29,13 +30,15 @@ internal class DeleteSaveUseCase(
             return DeleteResult.ERROR
         }
         if (!deleted) {
+            // Gone already (another tab): it can't be the save the Save dialog should prefill.
+            if (currentSaveName.name == save.name) currentSaveName.name = null
             analytics.track("save_deleted", base + ("result" to "not_found"))
             return DeleteResult.NOT_FOUND
         }
         val wasCurrent = currentSaveName.name == save.name
         if (wasCurrent) currentSaveName.name = null
         val remaining = try {
-            catalog.infos().size
+            catalog.count()
         } catch (e: Exception) {
             null
         }

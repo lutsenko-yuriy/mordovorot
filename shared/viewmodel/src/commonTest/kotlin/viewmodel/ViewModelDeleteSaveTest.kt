@@ -13,7 +13,6 @@ import testing.FakeViewModelUi
 import testing.RecordingAnalyticsService
 import testing.RecordingAnalyticsService.Event
 import testing.testViewModel
-import viewmodel.usecase.DeleteResult
 
 /** GH-251: [GameViewModel.deleteSave] - the result, `save_deleted`, the current save name, and
  *  that it asks the View nothing. */
@@ -118,7 +117,6 @@ class ViewModelDeleteSaveTest {
     @Test
     fun `a listing failure after the delete leaves remaining_save_count out`() {
         val saves = saves()
-        saves.deleteException = null
         val analytics = RecordingAnalyticsService()
         val viewModel = testViewModel(BoardImpl(3), saves, analytics)
         saves.listSavesException = IllegalStateException("unreadable")
@@ -149,6 +147,20 @@ class ViewModelDeleteSaveTest {
         viewModel.deleteSave(SaveInfo("bar", 3), trigger = "command")
 
         assertEquals("foo", viewModel.currentSaveName())
+    }
+
+    @Test
+    fun `deleting the current save that is already gone clears the current save name too`() = runTest {
+        val saves = saves()
+        val viewModel = testViewModel(BoardImpl(3), saves)
+        FakeViewModelUi().drive(viewModel) { viewModel.loadGame("foo") }
+        saves.deleteCalls.clear()
+        saves.delete("foo")
+
+        val result = viewModel.deleteSave(SaveInfo("foo", 3), trigger = "command")
+
+        assertEquals(DeleteResult.NOT_FOUND, result)
+        assertNull(viewModel.currentSaveName())
     }
 
     @Test

@@ -77,7 +77,7 @@ internal class StartupRestoreUseCase(
 
     private fun catalogIsEmpty(): Boolean =
         try {
-            catalog.infos().isEmpty()
+            catalog.count() == 0
         } catch (e: Exception) {
             false
         }

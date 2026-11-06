@@ -1,7 +1,6 @@
 package viewmodel
 
 import kotlinx.coroutines.channels.ReceiveChannel
-import viewmodel.usecase.DeleteResult
 
 /** The platform-independent viewModel surface (GH-41, split out of GH-42's `ViewModel`) -
  *  shift (one step, or several with `shiftRow`/`shiftColumn`)/new game/save/load plus the
