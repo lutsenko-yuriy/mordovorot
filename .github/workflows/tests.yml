@@ -68,7 +68,36 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Run skill_router tests
-        run: python -W error -m unittest discover -s scripts/skill_router/tests -t scripts
+        # The whole package, so the agentic/, core/, llm/ and providers/ tests run too.
+        run: python -W error -m unittest discover -s scripts/skill_router -t scripts
+
+  checkup:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run checkup tests
+        run: python -W error -m unittest discover -s scripts/checkup/tests -t scripts
+
+  notes:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run notes index tests
+        run: python -W error -m unittest discover -s scripts/notes/tests -t .
 
   web_harness:
     runs-on: ubuntu-latest
