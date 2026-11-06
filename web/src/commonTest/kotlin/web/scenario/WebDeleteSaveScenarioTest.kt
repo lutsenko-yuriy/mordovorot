@@ -265,4 +265,15 @@ class WebDeleteSaveScenarioTest {
         assertEquals("startup", startup.ownProps("screen_delete_save_dialog").single()["opened_from"])
         assertEquals("startup_prompt", startup.ownProps("save_deleted").single()["trigger"])
     }
+
+    @Test
+    fun `WU2 the restore dialog offers only the saves it opened with, even if another tab saved one meanwhile`() = webTest {
+        val page = WebHarness(backgroundScope).seed("a", solved(4)).seed("b", solved(4)).start()
+        page.seed("c", solved(4))
+
+        page.game.onDeletePressed(0)
+        page.game.onDeleteAnswered(true)
+
+        assertEquals(listOf("b"), (page.state.dialog as WebDialog.Load).saves.map { it.name })
+    }
 }

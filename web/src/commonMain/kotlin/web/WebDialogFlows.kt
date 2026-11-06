@@ -67,7 +67,9 @@ internal class WebDialogFlows(
                         DeleteResult.ERROR -> "Could not delete '${save.name}'."
                     }
                     if (result == DeleteResult.DELETED) {
-                        listed = viewModel.listSaves()
+                        // At startup only the saves on offer when the dialog opened: StartupRestoreUseCase
+                        // knows no others, so one another tab wrote since would be a pick it can't honour.
+                        listed = viewModel.listSaves().filter { now -> !restore || saves.any { it.name == now.name } }
                         if (listed.isEmpty()) {
                             // Mid-game there is nothing left to load: back to the game. At startup the
                             // viewModel sees the empty list and opens the size picker.
