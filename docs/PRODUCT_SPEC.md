@@ -39,7 +39,8 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
 ### Feature 4 — Save and load (GH-6)
 - The Save dialog stores the board's current tile arrangement to the browser's storage, creating it or
   overwriting an existing save of that name. The Load dialog restores the board from an existing
-  save. Both work at any point in a game.
+  save. Both work at any point in a game. Each save in the Load and `Restore a saved game?`
+  lists has a trash icon that deletes it, after a confirmation (GH-251, below).
 - A save that can't be loaded (deleted or corrupted since it was listed) leaves the board
   untouched and shows a message instead of crashing. Loading a save whose board size differs
   from the current board resizes the board to match and restores its tiles - it is never
@@ -184,7 +185,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   the arrows and the solution screen's buttons are reached with Tab and pressed with Enter or
   Space, in either mode.
   - **Focus on open:** the size picker on the current board's size, Save on its name field, Load
-    and `Restore a saved game?` on the first save (Cancel when there are none), `Can't be solved`
+    and `Restore a saved game?` on the first save (Cancel when there are none), `Delete 'foo'?` on Cancel, `Can't be solved`
     on `Repair & load`, Tile labels on the marked scheme (and on each row picked), Give Up on No.
   - **Tab** and Shift+Tab cycle through the open dialog's controls only; the page behind it, the
     footer included, can't be reached, by Tab or by a screen reader. A screen reader names each
@@ -292,6 +293,16 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
     shows on the status line.
   - **Load** lists each save as `foo (5x5)`, marking unsolvable ones; `No saves found.` when
     there are none.
+  - **Delete a save (GH-251):** each row of Load and of `Restore a saved game?` ends in a trash icon
+    (named `Delete 'foo'`). It opens `Delete 'foo'?` / `This can't be undone.` with `[ Delete ]
+    [ Cancel ]`, focus on Cancel; Escape is Cancel. Cancel shows the list again with focus on that
+    row's trash icon. Delete removes the save (a corrupted or unsolvable one too), says `Deleted
+    'foo'.` and shows the list again, focus on the trash icon of the row that took its place (the
+    previous one when the last went), so a stray second Enter only asks again. Deleting the current save clears the Save dialog's prefilled name (GH-99), and
+    never counts as unsaved progress. If it was the last save: mid-game the dialog closes and the
+    game carries on (`Deleted 'foo'. No saves left.`); at startup the new-game size picker opens.
+    A save that is already gone (`No save named 'foo' - it was already deleted.`) or that storage
+    refuses to delete (`Could not delete 'foo'.`) leaves the list as it was.
   - The `Can't be solved` dialog offers `[ Repair & load ] [ New game ]`, with no Exit.
   - **Labels** opens the Tile labels dialog (GH-139, Feature 11).
   - **Share** opens the Share dialog (GH-243, Feature 12), last in the row.

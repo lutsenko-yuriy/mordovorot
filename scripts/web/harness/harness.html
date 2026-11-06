@@ -127,14 +127,25 @@ async function run(size, board) {
     localStorage.clear();
     if (q.get("input")) localStorage.setItem("mordovorot.pref.input_mode", q.get("input"));
     if (q.get("layout") === "left") localStorage.setItem("mordovorot.pref.keyboard_layout", "left_handed");
+    // GH-251: saves= are solved 4x4 saves (the old text format), corrupt= entries nothing decodes.
+    const named = key => (q.get(key) || "").split(",").filter(Boolean);
+    for (const name of named("saves")) localStorage.setItem(`mordovorot.save.${name}`, `4\n${[...Array(16).keys()].join(" ")}\n0\n`);
+    for (const name of named("corrupt")) localStorage.setItem(`mordovorot.save.${name}`, "not a save");
+    const seeded = named("saves").length + named("corrupt").length > 0;
     f.src = `/${variant}/index.html`;
     document.getElementById("frames").append(f);
     await new Promise(r => f.onload = r);
     const win = f.contentWindow;
     await wait(400);
+    // With saves, startup offers to restore one: Cancel it, unless restore=1 keeps that dialog (GH-251).
+    const keepRestore = seeded && q.get("restore") === "1";
+    if (seeded && !keepRestore) {
+        clickText(win.document, "Cancel");
+        await wait(300);
+    }
     // With no saves, startup asks for a size.
     const pick = `${board}x${board}`;
-    let picked = clickText(win.document, pick);
+    let picked = keepRestore || clickText(win.document, pick);
     if (!picked) {
         clickText(win.document, "New");
         await wait(200);

@@ -32,26 +32,30 @@ internal class WebModal(private val render: (focus: Focus?) -> Unit) {
     /** Gives the open dialog's Cancel answer, or No's; Can't be solved has neither. */
     fun escape() {
         val dialog = open ?: return
-        val cancel = when (dialog.shown) {
+        val cancel: Any? = when (dialog.shown) {
             is WebDialog.Unsolvable -> return
-            WebDialog.GiveUp, is WebDialog.OpenShared -> false
+            WebDialog.GiveUp, is WebDialog.OpenShared, is WebDialog.DeleteSave -> false
             is WebDialog.LinkRejected, is WebDialog.Share -> Unit
-            is WebDialog.Size, is WebDialog.Save, is WebDialog.Load, is WebDialog.Labels, is WebDialog.Controls -> null
+            is WebDialog.Load -> LoadPick.Cancel
+            is WebDialog.Size, is WebDialog.Save, is WebDialog.Labels, is WebDialog.Controls -> null
         }
         dialog.via = CancelVia.ESCAPE
         answer(cancel) { true }
     }
 
-    suspend fun <T> ask(shown: WebDialog): T {
+    /** Shows [shown] and waits for its answer. When [leadsOn] says the answer leads straight to
+     *  another dialog (GH-251), the frame without a dialog is skipped, so the page doesn't blink. */
+    suspend fun <T> ask(shown: WebDialog, leadsOn: (T) -> Boolean = { false }): T {
         val dialog = OpenDialog<T>(shown)
         open = dialog
         render(defaultFocus(shown))
+        var chained = false
         try {
-            return dialog.answer.await()
+            return dialog.answer.await().also { chained = leadsOn(it) }
         } finally {
             closedVia = dialog.via
             open = null
-            render(null)
+            if (!chained) render(null)
         }
     }
 

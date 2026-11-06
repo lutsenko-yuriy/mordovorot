@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-- GH-251: Delete saves from the Load and restore dialogs (Scenario-WU merged; WU1 in review; WU2 pending)
+_(nothing in progress)_
 
 ---
 

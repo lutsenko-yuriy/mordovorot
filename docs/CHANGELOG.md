@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.39.0] — 2026-11-06 (PR #254 merged)
+
+### Added
+
+- [user] (PR #254) GH-251: you can delete a save from the Load and Restore lists, after a confirmation. Each save has a trash icon; it opens "Delete 'foo'?" with focus on Cancel (Escape cancels too). After a delete the list shows again with focus on the next save's trash icon. Deleting the last save returns to the game, or at startup opens the new-game size picker. A corrupted or unsolvable save can be deleted too.
+- [non-user] (PR #254) GH-251 (WU2/2): WebDialog.DeleteSave and a Load loop in WebDialogFlows shared by Load and the restore dialogs; WebModal.ask(leadsOn) skips the dialog-less frame between chained dialogs; Focus.SaveChoice/DeleteSave/DeleteCancel replace FirstSave; the harness page takes saves=, corrupt= and restore=1; 13 web scenarios cover the flows. GH-251 is complete (WU0 #252, WU1 #253, WU2 #254).
+
 ## [0.38.1] — 2026-11-06 (PR #253 merged)
 
 ### Changed

@@ -17,6 +17,7 @@ Items raised outside a checkup (e.g. a debrief) for the next run to walk, each u
 
 | Raised | From | For | Dimension | Item |
 |---|---|---|---|---|
+| 2026-11-06 | GH-251 debrief | next checkup | Test coverage | Delete-flow cases for `keys_check.sh`, with their expected lines. The harness already takes `saves=`, `corrupt=` and `restore=1`. Also measure a long save name at phone sizes with `measure.sh`. Neither could run in GH-251, because there was no bundle to open (see GH-255). |
 
 ## Open findings
 

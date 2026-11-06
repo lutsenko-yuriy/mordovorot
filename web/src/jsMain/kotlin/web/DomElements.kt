@@ -6,6 +6,7 @@ import org.w3c.dom.HTMLButtonElement
 import org.w3c.dom.events.KeyboardEvent
 import web.a11y.hiddenFromReaders
 import web.a11y.keyShortcut
+import web.a11y.named
 
 // The page's building blocks (GH-110), shared by DomRenderer and the dialogs.
 
@@ -17,6 +18,16 @@ internal fun text(cssClass: String, content: String) = element("div", cssClass).
 internal fun button(label: String, cssClass: String? = null, onClick: () -> Unit) =
     (element("button", cssClass) as HTMLButtonElement).apply {
         textContent = label
+        addEventListener("click", { onClick() })
+    }
+
+/** A square button showing the inline [svg] icon, named [label] for readers and as a tooltip (GH-251). */
+internal fun iconButton(label: String, svg: String, onClick: () -> Unit) =
+    (element("button", "icon-button") as HTMLButtonElement).apply {
+        title = label
+        named(this, label)
+        innerHTML = svg
+        firstElementChild?.let { hiddenFromReaders(it) }
         addEventListener("click", { onClick() })
     }
 

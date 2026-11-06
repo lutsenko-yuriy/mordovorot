@@ -58,12 +58,25 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                 )
             }
             is WebDialog.Load -> {
+                dialog.message?.let { append(text("message", it)) }
                 if (dialog.saves.isEmpty()) append(text("message", "No saves found."))
                 else append(choices(dialog.saves.mapIndexed { i, save ->
-                    button(save.label) { game.onLoadChosen(save.name) }.apply { if (i == 0) focusKey(Focus.FirstSave) }
+                    element("div", "save-row").apply {
+                        append(
+                            button(save.label) { game.onLoadChosen(save.name) }.focusKey(Focus.SaveChoice(i)),
+                            iconButton(save.deleteName, TRASH_ICON) { game.onDeletePressed(i) }.focusKey(Focus.DeleteSave(i)),
+                        )
+                    }
                 }, "list"))
                 append(actions(button("Cancel", "secondary") { game.onLoadChosen(null) }.focusKey(Focus.DialogCancel)))
             }
+            is WebDialog.DeleteSave -> append(
+                text("message", "This can't be undone."),
+                actions(
+                    button("Delete") { game.onDeleteAnswered(true) },
+                    button("Cancel", "secondary") { game.onDeleteAnswered(false) }.focusKey(Focus.DeleteCancel),
+                ),
+            )
             is WebDialog.Unsolvable -> append(
                 text("message", dialog.message),
                 actions(
@@ -132,6 +145,12 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
             )
         }
     }
+
+/** A trash can, drawn in the button's text colour and hidden from readers by iconButton: the button carries the name. */
+private const val TRASH_ICON =
+    """<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" """ +
+        """stroke-linecap="round" stroke-linejoin="round" focusable="false">""" +
+        """<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/><path d="M10 10v6"/><path d="M14 10v6"/></svg>"""
 
 /** A radio-role button, since the page is rebuilt every frame and a native radio would lose its state. */
 private fun labelRow(option: LabelOption, checked: Boolean, game: WebGame) =

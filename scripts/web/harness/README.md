@@ -53,6 +53,9 @@ Query options (harness.html):
 | `keys` | | with `report=keys`, the steps to play, comma-separated (below) |
 | `input` | | `keyboard` starts in keyboard mode, as a remembered Controls choice would (GH-171) |
 | `layout` | | `left` starts with the left-handed keys (GH-171) |
+| `saves` | | comma-separated names of solved 4x4 saves to put in `localStorage` before the game starts (GH-251); startup's restore dialog is cancelled unless `restore=1` |
+| `corrupt` | | comma-separated names of entries no save decodes, listed by name alone (GH-251) |
+| `restore` | | `1` with `saves` or `corrupt` leaves the startup restore dialog open, for the keys to start in (GH-251) |
 | `grid` | | with `report=keys`, `1` adds the board as a screen reader's table or grid to each line (below, GH-167, GH-171) |
 
 To compare against master, build master's bundle into another directory and pass it with

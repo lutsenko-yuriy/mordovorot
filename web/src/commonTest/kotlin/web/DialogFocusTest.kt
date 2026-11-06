@@ -15,8 +15,11 @@ class DialogFocusTest {
     fun `each dialog focuses its default control`() {
         assertEquals(Focus.SizeChoice(5), defaultFocus(WebDialog.Size(listOf(3, 4, 5, 6), current = 5)))
         assertEquals(Focus.SaveName, defaultFocus(WebDialog.Save("foo", null)))
-        assertEquals(Focus.FirstSave, defaultFocus(WebDialog.Load(restore = false, saves)))
-        assertEquals(Focus.FirstSave, defaultFocus(WebDialog.Load(restore = true, saves)))
+        assertEquals(Focus.SaveChoice(0), defaultFocus(WebDialog.Load(restore = false, saves)))
+        assertEquals(Focus.SaveChoice(0), defaultFocus(WebDialog.Load(restore = true, saves)))
+        assertEquals(Focus.SaveChoice(2), defaultFocus(WebDialog.Load(restore = false, saves, focus = Focus.SaveChoice(2))))
+        assertEquals(Focus.DeleteSave(1), defaultFocus(WebDialog.Load(restore = false, saves, focus = Focus.DeleteSave(1))))
+        assertEquals(Focus.DeleteCancel, defaultFocus(WebDialog.DeleteSave("foo")))
         assertEquals(Focus.DialogCancel, defaultFocus(WebDialog.Load(restore = false, emptyList())))
         assertEquals(Focus.Repair, defaultFocus(WebDialog.Unsolvable("x")))
         assertEquals(Focus.Label(TileLabels.PAIRS), defaultFocus(labels))
@@ -30,6 +33,7 @@ class DialogFocusTest {
         assertEquals("Save game", WebDialog.Save("", null).title)
         assertEquals("Load game", WebDialog.Load(restore = false, saves).title)
         assertEquals("Restore a saved game?", WebDialog.Load(restore = true, saves).title)
+        assertEquals("Delete 'foo'?", WebDialog.DeleteSave("foo").title)
         assertEquals("Can't be solved", WebDialog.Unsolvable("x").title)
         assertEquals("Tile labels", labels.title)
         assertEquals("Give up and see Mordie's solution?", WebDialog.GiveUp.title)
@@ -37,9 +41,14 @@ class DialogFocusTest {
     }
 
     @Test
+    fun `a save entry names its trash button after the save`() {
+        assertEquals("Delete 'foo'", SaveEntry("foo", "foo (4x4)").deleteName)
+    }
+
+    @Test
     fun `focus keys are distinct`() {
         val all = listOf(
-            Focus.SizeChoice(3), Focus.SizeChoice(4), Focus.SaveName, Focus.FirstSave, Focus.DialogCancel, Focus.Repair,
+            Focus.SizeChoice(3), Focus.SizeChoice(4), Focus.SaveName, Focus.SaveChoice(0), Focus.SaveChoice(1), Focus.DeleteSave(0), Focus.DeleteSave(1), Focus.DeleteCancel, Focus.DialogCancel, Focus.Repair,
             Focus.No, Focus.NewButton, Focus.SaveButton, Focus.LoadButton, Focus.LabelsButton, Focus.GiveUpRow,
             Focus.ReplayNext, Focus.ReplayPrev, Focus.ReplayRestart, Focus.PageStart, Focus.ControlsButton, Focus.Board,
         ) + TileLabels.entries.map { Focus.Label(it) } +
