@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.38.1] — 2026-11-06 (PR #253 merged)
+
+### Changed
+
+- [wip] (PR #253) GH-251 (WU1/2): the viewmodel can delete a save and tracks it. SaveRepository.delete and KeyValueStore.remove (a corrupted save goes too), GameViewModel.deleteSave and the save_deleted event, SaveInfo.analyticsState, and startup_restore_decision reports all_deleted when every save on offer was deleted. No dialog offers it yet (WU2), so nothing a player sees changes.
+
 ## [0.38.1] — 2026-11-06 (PR #252 merged)
 
 ### Changed
