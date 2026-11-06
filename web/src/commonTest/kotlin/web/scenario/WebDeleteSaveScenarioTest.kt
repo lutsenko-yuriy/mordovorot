@@ -20,6 +20,8 @@ class WebDeleteSaveScenarioTest {
         // TODO: 2. Press Cancel: the Load list is back with both saves and no status message.
         // TODO: 3. Open the confirmation again and press Escape: same result.
         // TODO: 4. The store is untouched.
+        // TODO: 5. After each, focus is back on that row's trash button.
+        // TODO: 6. screen_load_dialog was reported once for the whole Load session, not again when the list is shown again.
     }
 
     @Test
@@ -51,7 +53,8 @@ class WebDeleteSaveScenarioTest {
         // TODO: 2. Delete it.
         // TODO: 3. The restore dialog closes and the board-size picker opens.
         // TODO: 4. The status reads `Deleted 'foo'.`
-        // TODO: 5. The startup decision reported is `all_deleted`.
+        // TODO: 5. The startup decision reported is `all_deleted`, followed by screen_size_dialog with opened_from=startup.
+        // TODO: 6. Repeat with two saves deleted one after the other: the restore dialog stays after the first, and `all_deleted` is reported only after the second.
     }
 
     @Test
@@ -62,6 +65,7 @@ class WebDeleteSaveScenarioTest {
         // TODO: 4. The board and move count are as before.
         // TODO: 5. The status reads `Deleted 'foo'. No saves left.`
         // TODO: 6. No dialog_cancelled was reported.
+        // TODO: 7. Focus is on the `[ Load ]` button.
     }
 
     @Test
@@ -76,6 +80,7 @@ class WebDeleteSaveScenarioTest {
         // TODO: 1. Seed an unsolvable 3x3 save, and put a corrupted entry straight into the store.
         // TODO: 2. Open Load: both are listed (`odd (3x3) unsolvable`, and the corrupted one by name alone) with a trash icon.
         // TODO: 3. Delete each in turn: both are gone from the store and the list.
+        // TODO: 4. screen_delete_save_dialog and save_deleted report save_state=unsolvable for the first and save_state=corrupted for the second.
     }
 
     @Test
@@ -84,6 +89,7 @@ class WebDeleteSaveScenarioTest {
         // TODO: 2. Press Delete: the status reads `No save named 'foo' - it was already deleted.`
         // TODO: 3. Repeat with a store that refuses the removal: the status reads `Could not delete 'foo'.`
         // TODO: 4. The board is untouched, and save_deleted reports `not_found` and `error`.
+        // TODO: 5. After each, the list is shown again and focus is back on that row's trash button.
     }
 
     @Test
@@ -100,5 +106,7 @@ class WebDeleteSaveScenarioTest {
         // TODO: 3. Delete the save: save_deleted reports result=success, trigger=command, was_current_save and remaining_save_count=1.
         // TODO: 4. No reported property contains the save's name.
         // TODO: 5. Repeat in keyboard mode with Enter on the icon: input_method is keyboard.
+        // TODO: 6. dialog_cancelled carries via=button for Cancel and via=escape for Escape.
+        // TODO: 7. Repeat from the startup restore dialog: save_deleted reports trigger=startup_prompt and screen_delete_save_dialog reports opened_from=startup.
     }
 }
