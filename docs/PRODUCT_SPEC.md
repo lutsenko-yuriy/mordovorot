@@ -12,9 +12,9 @@ https://lutsenko-yuriy.github.io/mordovorot/ (Feature 9). It was a terminal game
 ## Features
 
 ### Feature 1 — Board
-- The game presents a square board of tiles laid out `SQUARE_SIDE × SQUARE_SIDE` (default 4×4), holding a shuffled permutation of the integers `0..SQUARE_SIDE²-1` internally, **displayed to the player as `1..SQUARE_SIDE²`** (GH-10) by default. The player can pick other tile labels (numbers from 0, pairs, letters) in the Tile labels dialog (GH-139, Feature 11); the board, the solved screen and the solution screen all follow the choice, and the step list keeps `Row …`/`Col …`.
+- The game presents a square board of tiles laid out `n × n`, n being the square side (default 4×4), holding a shuffled permutation of the integers `0..n²-1` internally, **displayed to the player as `1..n²`** (GH-10) by default. The player can pick other tile labels (numbers from 0, pairs, letters) in the Tile labels dialog (GH-139, Feature 11); the board, the solved screen and the solution screen all follow the choice, and the step list keeps `Row …`/`Col …`.
 - On starting a new game, the board is reshuffled via a Fisher-Yates shuffle.
-- Board sizes are 3×3 to 6×6 (6×6 since GH-160). The browser game also offers 7×7 to 9×9 (GH-207, Feature 9).
+- Board sizes are 3×3 to 9×9: 3×3 to 6×6 (6×6 since GH-160), and 7×7 to 9×9 in their own Very large section (GH-207, Feature 9).
 - Every new game can be solved (GH-74). On a 4×4 or 6×6 board every arrangement can be solved. On 3×3
   and 5×5 boards, only arrangements an even number of tile swaps away from the solved order can
   be solved. If the shuffle lands on one that can't, two tiles are swapped to fix it. Every board
@@ -71,7 +71,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
     `Can't be solved` dialog), as does a fresh launch - it isn't stored anywhere.
   - A failed save or load, or a cancelled dialog, leaves it unchanged. Switching input mode
     keeps it.
-- Saves are kept in the browser's `localStorage` (Feature 9). The format is the one the terminal client used.
+- Saves are kept in the browser's `localStorage` (Feature 9), in the format above.
 - **Startup restore prompt:** on launch, before the first move, the app checks for existing
   saves:
   - No saves — skips straight to the board-size prompt (GH-44).

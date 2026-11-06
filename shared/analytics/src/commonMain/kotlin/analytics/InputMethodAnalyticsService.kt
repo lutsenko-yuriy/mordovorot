@@ -1,9 +1,9 @@
 package analytics
 
 /**
- * Decorates another [AnalyticsService], adding an `input_method` (`mouse`/`keyboard`)
- * property to every forwarded event - lets the viewModel's existing events be
- * split by launch mode without touching its `track(...)` call sites.
+ * Decorates another [AnalyticsService], adding an `input_method` property to every forwarded
+ * event (on `web`: `keyboard` or `rich_ui`, the press that fired it, GH-171) - lets the viewModel's
+ * existing events be split by input without touching its `track(...)` call sites.
  */
 class InputMethodAnalyticsService(
     private val delegate: AnalyticsService,

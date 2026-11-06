@@ -17,10 +17,6 @@ class MordieTextTest {
     }
 
     @Test
-    fun `the sit-out line (GH-160)`() {
-    }
-
-    @Test
     fun `the progress line, plain and hard`() {
         assertEquals(
             "I have already made 6 moves and have not solved it yet!",
