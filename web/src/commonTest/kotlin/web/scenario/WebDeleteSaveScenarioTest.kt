@@ -63,25 +63,25 @@ class WebDeleteSaveScenarioTest {
         page.game.onDeleteAnswered(true)
 
         assertEquals(listOf("bar"), page.saves.listSaves())
-        assertEquals(WebDialog.Load(restore = false, entries("bar"), Focus.SaveChoice(0), "Deleted 'foo'."), page.state.dialog)
+        assertEquals(WebDialog.Load(restore = false, entries("bar"), Focus.DeleteSave(0), "Deleted 'foo'."), page.state.dialog)
         assertEquals("Deleted 'foo'.", page.state.status)
         assertEquals(board, page.state.tiles)
         assertEquals(0, page.state.moves)
     }
 
     @Test
-    fun `WU2 after a Delete focus moves to the next save, or the previous one when the last went`() = webTest {
+    fun `WU2 after a Delete focus moves to the trash of the next save, or of the previous one when the last went`() = webTest {
         val page = WebHarness(backgroundScope).seed("a", solved(4)).seed("b", solved(4)).seed("c", solved(4)).startOn()
         page.game.onLoad()
 
         page.game.onDeletePressed(1)
         page.game.onDeleteAnswered(true)
-        assertEquals(Focus.SaveChoice(1), page.state.focus)
+        assertEquals(Focus.DeleteSave(1), page.state.focus)
         assertEquals(listOf("a", "c"), (page.state.dialog as WebDialog.Load).saves.map { it.name })
 
         page.game.onDeletePressed(1)
         page.game.onDeleteAnswered(true)
-        assertEquals(Focus.SaveChoice(0), page.state.focus)
+        assertEquals(Focus.DeleteSave(0), page.state.focus)
         assertEquals(listOf("a"), (page.state.dialog as WebDialog.Load).saves.map { it.name })
     }
 
@@ -93,7 +93,7 @@ class WebDeleteSaveScenarioTest {
         page.game.onDeletePressed(1)
         page.game.onDeleteAnswered(true)
 
-        assertEquals(WebDialog.Load(restore = true, entries("bar"), Focus.SaveChoice(0), "Deleted 'foo'."), page.state.dialog)
+        assertEquals(WebDialog.Load(restore = true, entries("bar"), Focus.DeleteSave(0), "Deleted 'foo'."), page.state.dialog)
 
         page.game.onLoadChosen("bar")
         assertNull(page.state.dialog)

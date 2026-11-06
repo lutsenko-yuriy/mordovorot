@@ -297,8 +297,8 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
     (named `Delete 'foo'`). It opens `Delete 'foo'?` / `This can't be undone.` with `[ Delete ]
     [ Cancel ]`, focus on Cancel; Escape is Cancel. Cancel shows the list again with focus on that
     row's trash icon. Delete removes the save (a corrupted or unsolvable one too), says `Deleted
-    'foo'.` and shows the list again, focus on the row that took its place (the previous one when
-    the last went). Deleting the current save clears the Save dialog's prefilled name (GH-99), and
+    'foo'.` and shows the list again, focus on the trash icon of the row that took its place (the
+    previous one when the last went), so a stray second Enter only asks again. Deleting the current save clears the Save dialog's prefilled name (GH-99), and
     never counts as unsaved progress. If it was the last save: mid-game the dialog closes and the
     game carries on (`Deleted 'foo'. No saves left.`); at startup the new-game size picker opens.
     A save that is already gone (`No save named 'foo' - it was already deleted.`) or that storage

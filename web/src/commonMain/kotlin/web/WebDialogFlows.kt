@@ -76,7 +76,9 @@ internal class WebDialogFlows(
                             noteStatus(if (restore) "Deleted '${save.name}'." else "Deleted '${save.name}'. No saves left.")
                             return null
                         }
-                        focus = Focus.SaveChoice(pick.index.coerceAtMost(listed.lastIndex))
+                        // On the trash of the row that took its place: a stray second Enter then only opens another
+                        // confirmation, where loading a save over the game would lose its moves.
+                        focus = Focus.DeleteSave(pick.index.coerceAtMost(listed.lastIndex))
                     } else {
                         focus = Focus.DeleteSave(pick.index)
                     }
