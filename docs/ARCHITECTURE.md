@@ -194,7 +194,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │                    # GameViewModel, a WebState to the WebRenderer after every change; drains
 │   │                    # uiRequests; tracks the view-layer analytics (screen views, dialog_cancelled);
 │   │                    # sets each frame's announcement (GH-166)
-│   ├── WebDialogFlows.kt # WebGame's Save, Load, size and can't-be-solved dialogs over its modal (GH-166)
+│   ├── WebDialogFlows.kt # WebGame's Save, Load, size and can't-be-solved dialogs over its modal (GH-166); Load is a loop that also runs the Delete confirmation (GH-251)
 │   ├── WebSolutionFlows.kt # WebGame's Give Up and the solution screen's replay (GH-126, split out in GH-171)
 │   ├── WebControlsDialog.kt # The Controls dialog's flow over WebGame's modal and the session's mode (GH-171)
 │   ├── PlayMode.kt / PlayModePreference.kt # Mouse or keyboard, kept under `input_mode` (GH-171)
@@ -221,7 +221,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── WebRequestRouter.kt # Answers each UiRequest (exhaustive `when`)
 │   ├── WebLabelsDialog.kt # The Tile labels dialog's intents and flows over WebGame's modal (GH-160; the intents moved here in GH-243)
 │   ├── WebModal.kt      # WebGame's dialog machinery: open/answer a WebDialog, the button that
-│   │                    # opened it, the cancel's `via` (GH-163)
+│   │                    # opened it, the cancel's `via` (GH-163); `ask(leadsOn)` skips the dialog-less frame
+│   │                    # between chained dialogs (Load → Delete 'foo'?, GH-251)
 │   ├── DialogFocus.kt   # GH-163: Focus (a FocusTarget: the game's controls by data-focus key), each
 │   │                    # dialog's default focus and title
 │   ├── PageFocus.kt     # GH-164: fallbackFocus - where focus goes when its control is gone or disabled
