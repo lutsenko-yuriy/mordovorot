@@ -33,6 +33,7 @@ See `docs/knowledge/notes/TEMPLATE.md` for the canonical structure. In brief:
 | Command | Writes to |
 |---|---|
 | `/note [GH-XX:] <text>` | Appends a dated observation to `## Notes` |
+| `/note stop` (or "Okay, we'll stop here") | Replaces `## Where we stopped`: branch, PR, done, open, next, for the next session |
 | `/debrief GH-XX` | Appends a dated block to `## Debrief summary` |
 | `/checkup [light\|heavy\|status]` | Writes a dated `checkups/CHK-YYYY-MM-DD-<tier>.md` and updates `checkups/LEDGER.md` |
 
