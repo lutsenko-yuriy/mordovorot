@@ -130,7 +130,7 @@ async function goOffline() {
 }
 
 /** One line for mode=offline: OK when the game opened from the cache, Mordie searched (his worker script
- *  came from the cache too) and Save/Load and Share opened. The network is switched on again after. */
+ *  came from the cache too) and Save/Load and Share opened. run() switches the network on again after. */
 async function offlineReport(win, label) {
     const doc = win.document;
     const rendered = !!doc.querySelector(".tile");
@@ -152,12 +152,21 @@ async function offlineReport(win, label) {
         return dialog;
     };
     const save = await opened("Save"), share = await opened("Share");
-    await fetch("/online", { method: "POST" });
     const ok = rendered && searched && save && share;
     return `${ok ? "OK  " : "BAD "}${label} offline: board ${rendered ? "rendered" : "MISSING"}, Mordie ${searched ? "searched" : "DID NOT SEARCH"}, Save ${save ? "opened" : "DID NOT OPEN"}, Share ${share ? "opened" : "DID NOT OPEN"}`;
 }
 
+/** GH-262: mode=offline leaves the server answering 503, so whatever happens in the case, it is switched
+ *  on again after; else one failure would time out every later query of the same run and hide itself. */
 async function run(size, board) {
+    try {
+        await runCase(size, board);
+    } finally {
+        if (mode === "offline") await fetch("/online", { method: "POST" });
+    }
+}
+
+async function runCase(size, board) {
     const [w, full] = size.split("x").map(Number);
     const h = full - shorter;
     if (mode === "offline" && !await goOffline()) {
