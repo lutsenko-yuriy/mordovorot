@@ -94,7 +94,8 @@ val checkOfflineManifest = tasks.register("checkOfflineManifest") {
         check(worker.exists()) { "offline-worker.js is missing from the distribution" }
         check(cache in worker.readText()) { "offline-worker.js is not the one built for this distribution ($cache)" }
         val shipped = root.walkTopDown().filter { it.isFile }.map { it.relativeTo(root).invariantSeparatorsPath }
-            .filter { !it.endsWith(".map") && !it.startsWith(".") && it != "offline-worker.js" }.toSet()
+            // The same files :web:offline:generateOfflineManifest leaves out.
+            .filter { !it.endsWith(".map") && !it.startsWith(".") && "/." !in it && it != "offline-worker.js" }.toSet()
         check(listed.keys.none { it.endsWith(".map") }) { "the offline list names a source map" }
         check((shipped - listed.keys).isEmpty()) { "not in the offline list: ${shipped - listed.keys}" }
         check((listed.keys - shipped).isEmpty()) { "in the offline list but not shipped: ${listed.keys - shipped}" }
