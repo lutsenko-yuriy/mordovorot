@@ -8,11 +8,15 @@ package mordie
  *
  * [ruledOut] (a saved N) resumes the exact search. A kept [best] (GH-224) is the answer from the
  * start, so the fast solver is skipped; without one it always starts over.
+ *
+ * The exact search runs only up to [EXACT_SEARCH_MAX_SIDE] (GH-260): it never finishes on bigger
+ * boards and only heats the device. There the fast answer, or a kept one, is final: [done].
  */
 class BestSolutionSolver(original: IntArray, ruledOut: Int = -1, best: List<SolutionMove>? = null) {
 
     private val fast = ThreeCycleSolver(original)
     private val exact = IdaStarSolver(original, ruledOut)
+    private val exactRuns = MoveMetricHeuristic.sideOf(original) <= EXACT_SEARCH_MAX_SIDE
 
     /** The best solution's length, once any solver has one. */
     var bestLength: Int? = best?.size
@@ -29,6 +33,9 @@ class BestSolutionSolver(original: IntArray, ruledOut: Int = -1, best: List<Solu
     var provenShortest = false
         private set
 
+    /** True when no further [step] can change the answer: it is proven, or the exact search doesn't run here. */
+    val done: Boolean get() = provenShortest || (!exactRuns && bestLength != null)
+
     /** The largest solution length proven impossible so far. */
     val ruledOut: Int get() = exact.ruledOut
 
@@ -39,7 +46,7 @@ class BestSolutionSolver(original: IntArray, ruledOut: Int = -1, best: List<Solu
             takeExact()
         } else {
             if (bestLength == null) takeFast()
-            exact.step(maxNodes)
+            if (exactRuns) exact.step(maxNodes)
             if (exact.solutionLength != null) takeExact()
         }
         if (bestLength?.let { exact.ruledOut >= it - 1 } == true) provenShortest = true
@@ -71,5 +78,10 @@ class BestSolutionSolver(original: IntArray, ruledOut: Int = -1, best: List<Solu
         if (source == null) source = from
         bestLength = length
         solution = moves()
+    }
+
+    companion object {
+        /** The largest board side the exact search runs on, 4x4 (GH-260). */
+        const val EXACT_SEARCH_MAX_SIDE = 4
     }
 }

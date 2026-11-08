@@ -11,7 +11,7 @@ class BestSolutionSolverTest {
     /** 3x3, needs 2 moves: row 0 rotated, then column 2 rotated. */
     private val twoMoves = intArrayOf(2, 0, 8, 3, 4, 1, 6, 7, 5)
 
-    /** 5x5 reversed (an even permutation, so solvable) - the exact search never finishes it. */
+    /** 5x5 reversed (an even permutation, so solvable) - the exact search doesn't run on it (GH-260). */
     private val hard = IntArray(25) { 24 - it }
 
     private fun BestSolutionSolver.runToProven() {
@@ -142,6 +142,78 @@ class BestSolutionSolverTest {
         assertNull(progress.solution)
     }
 
+    /** 4x4 reversed: the exact search runs on it but takes far longer than a test steps. */
+    private val hard4 = IntArray(16) { 15 - it }
+
+    @Test
+    fun `a 5x5 never steps the exact search (GH-260)`() {
+        val solver = BestSolutionSolver(hard)
+        val ruledOutAtStart = solver.ruledOut
+
+        repeat(20) { solver.step(100_000) }
+
+        assertEquals(ruledOutAtStart, solver.ruledOut)
+        assertEquals(SolutionSource.FAST_SOLVER, solver.source)
+        assertFalse(solver.provenShortest)
+        assertEquals(solver.solution!!.size, solver.bestLength)
+    }
+
+    @Test
+    fun `a 5x5 is done once the fast answer is in, and not before`() {
+        val solver = BestSolutionSolver(hard)
+
+        assertFalse(solver.done)
+        solver.step(10)
+
+        assertTrue(solver.done)
+    }
+
+    @Test
+    fun `a 5x5 with a kept best is done before any step and keeps the saved N`() {
+        val kept = List(30) { move(1) }
+        val solver = BestSolutionSolver(hard, ruledOut = 9, best = kept)
+
+        assertTrue(solver.done)
+        solver.step(100_000)
+
+        assertEquals(kept, solver.solution)
+        assertEquals(9, solver.ruledOut)
+    }
+
+    @Test
+    fun `a resumed 5x5 with no answer gets the fast one and keeps the saved N`() {
+        val solver = BestSolutionSolver(hard, ruledOut = 9)
+
+        solver.step(100_000)
+
+        assertTrue(solver.bestLength!! > 10)
+        assertEquals(9, solver.ruledOut)
+        assertTrue(solver.done)
+    }
+
+    @Test
+    fun `a solved 5x5 is still proven with no moves`() {
+        val solver = BestSolutionSolver(IntArray(25) { it })
+
+        assertTrue(solver.step(10))
+
+        assertEquals(0, solver.bestLength)
+        assertTrue(solver.provenShortest)
+        assertTrue(solver.done)
+    }
+
+    @Test
+    fun `a 4x4 still runs the exact search`() {
+        val solver = BestSolutionSolver(hard4)
+
+        solver.step(1)
+        val ruledOutAfterFirst = solver.ruledOut
+        repeat(50) { solver.step(1_000) }
+
+        assertTrue(solver.ruledOut > ruledOutAfterFirst)
+        assertFalse(solver.done)
+    }
+
     private fun move(amount: Int) = SolutionMove(isRow = true, index = 0, amount = amount)
 
     @Test
@@ -203,6 +275,7 @@ class BestSolutionSolverTest {
         val moves = solver.solution!!
         assertTrue(moves.isNotEmpty())
         assertFalse(solver.provenShortest)
+        assertTrue(solver.done)
         assertEquals(SolutionSource.FAST_SOLVER, solver.source)
         moves.forEach { board.rotate(it.isRow, it.index, it.amount, side) }
         assertEquals(IntArray(side * side) { it }.toList(), board.toList())
