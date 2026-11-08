@@ -6,9 +6,10 @@ internal const val OFFLINE_WORKER = "offline-worker.js"
 
 /** The page's seam to the offline worker (GH-262), like [PageAddress] and [Clipboard]. */
 interface AppUpdates {
-    /** Registers the worker and calls [onReady] each time a new version is fully cached and waiting, a
-     *  version already waiting included. Does nothing where there are no workers. */
-    fun start(onReady: () -> Unit)
+    /** Registers the worker. [onFound] is called when a new version starts downloading (a version already waiting
+     *  counts as found at once), [onReady] each time one is fully cached and waiting. Does nothing where there
+     *  are no workers. */
+    fun start(onFound: () -> Unit, onReady: () -> Unit)
 
     /** One update check. Offline, or with nothing new, it does nothing. */
     fun check()

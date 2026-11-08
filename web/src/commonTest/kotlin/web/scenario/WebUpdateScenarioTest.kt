@@ -67,6 +67,18 @@ class WebUpdateScenarioTest {
     }
 
     @Test
+    fun `a check during the download does not relabel the version`() = webTest {
+        val page = WebHarness(backgroundScope).start()
+
+        page.game.updates.check(CheckTrigger.GAME_END)
+        page.updates.found()
+        page.game.updates.check(CheckTrigger.TAB_RETURN)
+        page.updates.ready()
+
+        assertEquals("game_end", page.ownProps("update_available").single()["check_trigger"])
+    }
+
+    @Test
     fun `a version reported twice is announced once`() = webTest {
         val page = WebHarness(backgroundScope).start()
 

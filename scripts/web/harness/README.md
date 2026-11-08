@@ -88,7 +88,7 @@ the browser finds a new version of the worker from the same files). `tests/test_
 `update=ready` (GH-262) uses them to show the notice: the page registers `offline-worker.js` itself, the
 harness waits until it is active, posts `/next-version` and reloads the page, which installs the new
 version and shows `New version available. Update`. The case is then measured or keyed like any other,
-e.g. `measure.sh "update=ready&sizes=portrait"` (the footer stays one line) or `keys_check.sh`'s
+`update=uncontrolled` skips the reload, so the page the worker never took control of finds the version by itself; `OK` means Update then reloads it. For `update=ready`, e.g. `measure.sh "update=ready&sizes=portrait"` (the footer stays one line) or `keys_check.sh`'s
 `update=ready` query (Update, the dialog, Escape).
 
 ## Computed-style diff

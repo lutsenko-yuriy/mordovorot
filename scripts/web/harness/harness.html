@@ -24,7 +24,10 @@ const sizes = (PRESETS[sizeList] || sizeList).split(",");
 const boards = (q.get("boards") || (keys ? "4" : "3,4,5")).split(",").map(Number);
 const mode = q.get("mode") || "play"; // play | dialog | share | solution | offline
 // GH-262: update=ready has the page find a new version, which it takes a worker for.
-const update = q.get("update") === "ready";
+// update=uncontrolled (GH-262): the page the worker never took control of (a first visit), where nothing but the worker's
+// own state says an Update is done.
+const uncontrolled = q.get("update") === "uncontrolled";
+const update = q.get("update") === "ready" || uncontrolled;
 // GH-262: only this variant ships offline-worker.js (lib.sh).
 const variant = mode === "offline" || update ? "with-worker" : q.get("v") || "mouse";
 const shorter = Number(q.get("shorter") || 0);
@@ -164,6 +167,12 @@ async function findNewVersion(f) {
     const active = await Promise.race([f.contentWindow.navigator.serviceWorker.ready.then(() => true), wait(20000).then(() => false)]);
     if (!active) return false;
     await fetch("/next-version", { method: "POST" });
+    if (uncontrolled) {
+        // No reload: the page stays uncontrolled, and asks the browser for the new version itself.
+        const reg = await f.contentWindow.navigator.serviceWorker.getRegistration();
+        await reg.update();
+        return true;
+    }
     await new Promise(r => { f.onload = r; f.contentWindow.location.reload(); });
     return true;
 }
@@ -247,6 +256,16 @@ async function runCase(size, board) {
     if (update) {
         for (let i = 0; i < 100 && !win.document.querySelector(".footer .update"); i++) await wait(200);
         await wait(100);
+    }
+    if (uncontrolled) {
+        win.stillHere = true;
+        const noticed = !!win.document.querySelector(".footer .update");
+        clickText(win.document, "Update");
+        for (let i = 0; i < 50 && f.contentWindow.stillHere; i++) await wait(200);
+        const reloaded = !f.contentWindow.stillHere;
+        results.push(`${noticed && reloaded ? "OK  " : "BAD "}${variant} update uncontrolled ${w}x${h}: notice ${noticed ? "shown" : "MISSING"}, Update ${reloaded ? "reloaded the page" : "DID NOT RELOAD"}`);
+        f.remove();
+        return;
     }
     await wait(100);
     const solution = win.document.querySelector(".app.solution") ? " [solution]" : "";

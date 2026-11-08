@@ -52,7 +52,10 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
     /** The `<footer>` outside [root], which this keeps rather than rebuilds: `inert` stays on the same node. */
     private fun drawFooter(parts: List<FooterPart>) {
         val footer = document.querySelector("footer") ?: return
+        // A keyboard user on a credit link that the notice replaces lands on Update, not back at the page's start.
+        val hadFocus = document.activeElement?.let { footer.contains(it) } == true
         fillFooter(footer, parts) { game.updates.onUpdate() }
+        if (hadFocus) (footer.querySelector("[data-focus=\"${Focus.UpdateLink.key}\"]") as? HTMLElement)?.focus()
     }
 
     override fun render(state: WebState) {

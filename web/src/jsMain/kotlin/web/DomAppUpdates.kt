@@ -15,15 +15,18 @@ internal class DomAppUpdates(private val window: Window) : AppUpdates {
             return if (found == null || jsTypeOf(found) == "undefined") null else found
         }
 
-    override fun start(onReady: () -> Unit) {
+    override fun start(onFound: () -> Unit, onReady: () -> Unit) {
         val container = container ?: return
         container.register(OFFLINE_WORKER).then(
             { found: dynamic ->
                 registration = found
                 // A worker that finished installing on an earlier visit and has waited ever since.
+                if (found.waiting != null && found.active != null) onFound()
                 reportIfWaiting(found, onReady)
                 found.addEventListener("updatefound", {
                     val installing = found.installing
+                    // The first install is no new version: there is no worker yet to be newer than.
+                    if (found.active != null) onFound()
                     installing.addEventListener("statechange", {
                         if (installing.state == "installed") reportIfWaiting(found, onReady)
                     })
@@ -49,7 +52,19 @@ internal class DomAppUpdates(private val window: Window) : AppUpdates {
             window.location.reload()
             return
         }
-        container.addEventListener("controllerchange", { window.location.reload() })
+        // Reload once the worker is in charge. A page it doesn't control (a first visit, a hard reload) gets no
+        // controllerchange: the worker never claims clients, so its own state is what says it is done.
+        var reloaded = false
+        val reloadOnce = {
+            if (!reloaded) {
+                reloaded = true
+                window.location.reload()
+            }
+        }
+        container.addEventListener("controllerchange", { reloadOnce() })
+        waiting.addEventListener("statechange", {
+            if (waiting.state == "activated" || waiting.state == "redundant") reloadOnce()
+        })
         waiting.postMessage(SKIP_WAITING)
     }
 

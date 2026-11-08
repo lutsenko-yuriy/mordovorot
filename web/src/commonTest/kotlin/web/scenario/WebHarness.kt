@@ -169,11 +169,16 @@ internal class FakeAppUpdates(var readyAtStart: Boolean = false) : AppUpdates {
         private set
     var applied = 0
         private set
+    private var onFound: (() -> Unit)? = null
     private var onReady: (() -> Unit)? = null
 
-    override fun start(onReady: () -> Unit) {
+    override fun start(onFound: () -> Unit, onReady: () -> Unit) {
+        this.onFound = onFound
         this.onReady = onReady
-        if (readyAtStart) onReady()
+        if (readyAtStart) {
+            onFound()
+            onReady()
+        }
     }
 
     override fun check() {
@@ -184,8 +189,20 @@ internal class FakeAppUpdates(var readyAtStart: Boolean = false) : AppUpdates {
         applied++
     }
 
-    /** A new version finishes caching and waits. */
-    fun ready() = onReady?.invoke()
+    /** A new version starts downloading. */
+    fun found() {
+        downloading = true
+        onFound?.invoke()
+    }
+
+    /** A new version finishes caching and waits; [ready] alone is a download that started and ended at once. */
+    fun ready() {
+        if (!downloading) found()
+        downloading = false
+        onReady?.invoke()
+    }
+
+    private var downloading = false
 }
 
 private class FakeWebRenderer : WebRenderer {

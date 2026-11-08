@@ -22,14 +22,18 @@ internal class WebUpdateFlows(
     var applying = false
         private set
 
-    /** What made the latest check, which `update_available` reports if that check finds a version. */
+    /** What made the latest check. */
     private var trigger = CheckTrigger.LOAD
+
+    /** What made the check that found the version now downloading, which `update_available` reports once it is
+     *  ready: later checks, a tab switch during the download, say, don't relabel it. */
+    private var foundBy = CheckTrigger.LOAD
 
     val footer: List<FooterPart> get() = footer(appVersion, ready)
 
     /** Registers the worker and makes the first check. */
     fun start() {
-        updates.start(::onReady)
+        updates.start({ foundBy = trigger }, ::onReady)
         check(CheckTrigger.LOAD)
     }
 
@@ -52,7 +56,7 @@ internal class WebUpdateFlows(
     private fun onReady() {
         if (ready) return
         ready = true
-        analytics.track("update_available", mapOf("check_trigger" to trigger.wire, "current_version" to appVersion))
+        analytics.track("update_available", mapOf("check_trigger" to foundBy.wire, "current_version" to appVersion))
         game.render()
     }
 
