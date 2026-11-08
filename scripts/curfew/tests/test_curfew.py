@@ -68,6 +68,8 @@ class CurfewTests(unittest.TestCase):
         self.assertEqual(2, proc.returncode)
         self.assertEqual("", proc.stdout)
         self.assertIn("BLOCKED", proc.stderr)
+        # The file is absent by default, so the message must say to create it.
+        self.assertIn("create .claude/curfew.env containing CURFEW=off", proc.stderr)
 
     # hard curfew: unchanged behaviour
 

@@ -65,7 +65,7 @@ else
 fi
 
 if [ "$blocked" -eq 1 ]; then
-  echo "BLOCKED: it's outside your working hours (curfew ${start}:00-${end}:00). This session won't act on new requests until ${end}:00. To disable the guard, set CURFEW=off in .claude/curfew.env." >&2
+  echo "BLOCKED: it's outside your working hours (curfew ${start}:00-${end}:00). This session won't act on new requests until ${end}:00. To disable the guard, create .claude/curfew.env containing CURFEW=off." >&2
   exit 2
 fi
 
