@@ -1,8 +1,7 @@
 package board_model
 
 /** The single home for the valid board-side range (GH-44). `BoardImpl.newGame`/the constructor
- *  validate against this; `Main.kt`'s `--size=N` parsing and every UI-side size prompt report
- *  the same range back to the user. */
+ *  validate against this; every UI-side size prompt reports the same range back to the user. */
 object BoardSize {
     const val MIN: Int = 3
     const val MAX: Int = 6
