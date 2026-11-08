@@ -21,6 +21,7 @@ internal class WebSolutionFlows(
             analytics.track("screen_give_up_dialog", mapOf("board_size" to viewModel.squareSide(), "move_count" to viewModel.moveCount()))
             if (modal.ask(WebDialog.GiveUp)) {
                 viewModel.giveUp()
+                game.updates.check(CheckTrigger.GAME_END)
                 game.saying = solutionScreen()
                 // The solution screen has no Give Up.
                 game.closing = onBoard ?: Focus.ReplayNext

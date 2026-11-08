@@ -25,6 +25,7 @@ class DialogFocusTest {
         assertEquals(Focus.Label(TileLabels.PAIRS), defaultFocus(labels))
         assertEquals(Focus.No, defaultFocus(WebDialog.GiveUp))
         assertEquals(Focus.ModeOption(PlayMode.KEYBOARD), defaultFocus(controls))
+        assertEquals(Focus.UpdateCancel, defaultFocus(WebDialog.Update))
     }
 
     @Test
@@ -38,6 +39,7 @@ class DialogFocusTest {
         assertEquals("Tile labels", labels.title)
         assertEquals("Give up and see Mordie's solution?", WebDialog.GiveUp.title)
         assertEquals("Controls", controls.title)
+        assertEquals("Update to the new version?", WebDialog.Update.title)
     }
 
     @Test
@@ -51,6 +53,7 @@ class DialogFocusTest {
             Focus.SizeChoice(3), Focus.SizeChoice(4), Focus.SaveName, Focus.SaveChoice(0), Focus.SaveChoice(1), Focus.DeleteSave(0), Focus.DeleteSave(1), Focus.DeleteCancel, Focus.DialogCancel, Focus.Repair,
             Focus.No, Focus.NewButton, Focus.SaveButton, Focus.LoadButton, Focus.LabelsButton, Focus.GiveUpRow,
             Focus.ReplayNext, Focus.ReplayPrev, Focus.ReplayRestart, Focus.PageStart, Focus.ControlsButton, Focus.Board,
+            Focus.UpdateLink, Focus.UpdateCancel,
         ) + TileLabels.entries.map { Focus.Label(it) } +
             PlayMode.entries.map { Focus.ModeOption(it) } + KeyboardLayout.entries.map { Focus.LayoutOption(it) } +
             Arrow.entries.flatMap { arrow -> (0 until 6).map { Focus.ArrowButton(arrow, it) } }

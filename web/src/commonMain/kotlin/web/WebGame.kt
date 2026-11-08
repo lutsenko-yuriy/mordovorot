@@ -33,6 +33,8 @@ class WebGame internal constructor(
     private val controlsShown: Boolean,
     address: PageAddress,
     clipboard: Clipboard,
+    updates: AppUpdates,
+    appVersion: String,
 ) {
 
     private val modal = WebModal { render(focus = it) }
@@ -41,6 +43,7 @@ class WebGame internal constructor(
     internal val solution = WebSolutionFlows(this, viewModel, analytics, modal)
     internal val controls = WebControlsDialog(this, viewModel, analytics, modal, keyboardLayout, modePreference, startMode)
     internal val share = WebShareFlows(this, viewModel, analytics, modal, address, clipboard)
+    internal val updates = WebUpdateFlows(this, viewModel, analytics, modal, updates, appVersion)
     private val keys = WebKeyPlay(this, viewModel, pressedWith, controlsShown)
     private val requests = WebRequestRouter(this)
     internal var status: String? = null
@@ -57,6 +60,7 @@ class WebGame internal constructor(
 
     /** Answers the viewModel's requests, then runs the startup restore. */
     internal fun start() {
+        updates.start()
         render()
         scope.launch { for (request in viewModel.uiRequests) requests.handle(request) }
         flow = scope.launch {
@@ -69,7 +73,7 @@ class WebGame internal constructor(
     }
 
     /** Backs the page's leave-site prompt. */
-    fun hasUnsavedProgress(): Boolean = viewModel.hasUnsavedProgress()
+    fun hasUnsavedProgress(): Boolean = !updates.applying && viewModel.hasUnsavedProgress()
 
     fun onArrow(arrow: Arrow, line: Int) {
         if (playable) shiftLine(arrow, line, PointerShift.ARROW)
@@ -206,6 +210,7 @@ class WebGame internal constructor(
         // Unsolved before this shift (the callers check), so this is the transition.
         saying = if (viewModel.isSolved()) {
             analytics.track("screen_congratulations")
+            updates.check(CheckTrigger.GAME_END)
             Announcements.solved(moves)
         } else keys.withTileNow(words(moves.takeIf { it != before }))
         render(slide)
@@ -265,6 +270,7 @@ class WebGame internal constructor(
                 viewModel.solution() != null -> KeyHints.SOLUTION
                 else -> KeyHints.board(controls.layout)
             },
+            footer = updates.footer,
         )
     }
 

@@ -20,6 +20,7 @@ import viewmodel.KeyboardLayout
 import web.Focus
 import web.Host
 import web.KeyPress
+import web.AppUpdates
 import web.Clipboard
 import web.Layout
 import web.PageAddress
@@ -58,6 +59,7 @@ internal class WebHarness(
     val mordie = Mordie(mordieSearches)
     val pressedWith = PressedWith()
     val clipboard = FakeClipboard()
+    val updates = FakeAppUpdates()
     private val renderer = FakeWebRenderer()
     lateinit var game: WebGame
         private set
@@ -74,7 +76,7 @@ internal class WebHarness(
     val scrolled: List<Int> get() = renderer.scrolled
 
     fun start(): WebHarness {
-        game = startWebGame(board, saves, preferences, analytics, mordie, renderer, scope, layout, appVersion, host, touch, pressedWith, address, clipboard)
+        game = startWebGame(board, saves, preferences, analytics, mordie, renderer, scope, layout, appVersion, host, touch, pressedWith, address, clipboard, updates)
         return this
     }
 
@@ -158,6 +160,32 @@ internal class FakeClipboard(var allowed: Boolean = true) : Clipboard {
         if (allowed) copied += text else refused++
         done(allowed)
     }
+}
+
+/** A page where no new version is ready until [ready] says so, or from the start when [readyAtStart]. It counts
+ *  its checks and records the [apply] calls. */
+internal class FakeAppUpdates(var readyAtStart: Boolean = false) : AppUpdates {
+    var checks = 0
+        private set
+    var applied = 0
+        private set
+    private var onReady: (() -> Unit)? = null
+
+    override fun start(onReady: () -> Unit) {
+        this.onReady = onReady
+        if (readyAtStart) onReady()
+    }
+
+    override fun check() {
+        checks++
+    }
+
+    override fun apply() {
+        applied++
+    }
+
+    /** A new version finishes caching and waits. */
+    fun ready() = onReady?.invoke()
 }
 
 private class FakeWebRenderer : WebRenderer {

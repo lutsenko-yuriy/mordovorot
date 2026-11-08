@@ -1,5 +1,6 @@
 package web
 
+import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.dom.clear
 import org.w3c.dom.Element
@@ -48,9 +49,16 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         root.className = "app"
     }
 
+    /** The `<footer>` outside [root], which this keeps rather than rebuilds: `inert` stays on the same node. */
+    private fun drawFooter(parts: List<FooterPart>) {
+        val footer = document.querySelector("footer") ?: return
+        fillFooter(footer, parts) { game.updates.onUpdate() }
+    }
+
     override fun render(state: WebState) {
         state.announcement?.let { announcer?.say(it) }
         val before = shown
+        if (state.footer != before?.footer) drawFooter(state.footer)
         shown = state
         startSlide(before, state)
         val now = window.performance.now()

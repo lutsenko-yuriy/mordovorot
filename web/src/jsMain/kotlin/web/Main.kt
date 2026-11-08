@@ -18,8 +18,8 @@ fun main() {
     applySystemTextSize(document, window)
     val root = document.getElementById("app") as? HTMLElement ?: return
     stopPinchZoom(document, window.navigator)
-    // Outside #app, which DomRenderer rebuilds: the footer never changes.
-    document.body?.append(footerElement(footer(BuildInfo.VERSION)))
+    // Outside #app, which DomRenderer rebuilds: it fills this footer in, and redraws it for the New version available notice.
+    document.body?.append(element("footer", "footer"))
     val renderer = DomRenderer(root, document.getElementById("announcer")?.let(::DomAnnouncer))
     val pressedWith = PressedWith()
     val game = startWebGame(
@@ -37,6 +37,7 @@ fun main() {
         pressedWith,
         DomPageAddress,
         DomClipboard,
+        DomAppUpdates(window),
     )
     renderer.game = game
     listenForKeys(root)
@@ -44,6 +45,9 @@ fun main() {
     listenForPlayKeys(root, pressedWith) { game }
     // A share link pasted into this open tab.
     window.addEventListener("hashchange", { game.share.onLinkChanged() })
+    // Coming back to this tab (or to a page restored from the back-forward cache) may find a new version.
+    document.addEventListener("visibilitychange", { if (document.asDynamic().visibilityState == "visible") game.updates.check(CheckTrigger.TAB_RETURN) })
+    window.addEventListener("pageshow", { event -> if (event.asDynamic().persisted == true) game.updates.check(CheckTrigger.TAB_RETURN) })
     // The browser's own "Leave site?" prompt, only while some progress isn't in a save.
     window.addEventListener("beforeunload", { event ->
         if (game.hasUnsavedProgress()) {
