@@ -14,7 +14,7 @@ Behaviour table (start=23, end=8 unless stated; k = minute // 15 in the hour bef
     on     | 22:mm                 | unwritable                    | warning k, exit 0
     on     | start=0: 23:mm        | as above                      | same rules, soft hour is 23
     on     | start=end             | any                           | never blocks, no warning
-    (none) | toggle file missing  | creates it with CURFEW=on, then behaves as on (unwritable: still on)
+    (none) | toggle file missing  | creates it with the defaults, then behaves as on (unwritable: still on)
     on     | CURFEW_TZ set         | clock read in that zone       | TZ reaches the one date call
 
 Wiring: UserPromptSubmit runs "${CLAUDE_PROJECT_DIR}/scripts/curfew/curfew.sh" exactly once; curfew.sh is
@@ -75,7 +75,15 @@ class CurfewTests(unittest.TestCase):
     def test_missing_toggle_file_is_created_with_curfew_on(self):
         self.assertFalse(self.toggles.exists())
         self.assertBlocked(self.run_curfew("2026-11-05 23:30"))
-        self.assertEqual("CURFEW=on\n", self.toggles.read_text(encoding="utf-8"))
+        text = self.toggles.read_text(encoding="utf-8")
+        for line in ("CURFEW=on", "CURFEW_START=${CURFEW_START:-23}", "CURFEW_END=${CURFEW_END:-8}"):
+            self.assertIn(line, text.splitlines())
+
+    def test_created_toggle_file_keeps_the_defaults_and_environment_overrides(self):
+        self.run_curfew("2026-11-05 12:00")
+        self.assertBlocked(self.run_curfew("2026-11-05 23:30"))
+        self.assertSilent(self.run_curfew("2026-11-05 07:30", CURFEW_END="7"))
+        self.assertBlocked(self.run_curfew("2026-11-05 07:30"))
 
     def test_existing_toggle_file_is_left_alone(self):
         self.assertSilent(self.run_curfew("2026-11-05 23:30", toggles="CURFEW=off\n"))

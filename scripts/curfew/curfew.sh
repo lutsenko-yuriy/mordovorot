@@ -8,7 +8,7 @@
 #         first prompt at or after it, firmer each time. The user sees it
 #         (systemMessage) and so does Claude (additionalContext).
 #
-# Configuration (environment variables):
+# Configuration (variables, set in .claude/curfew.env or the environment):
 #   CURFEW_START  first blocked hour, 0-23 (default 23)
 #   CURFEW_END    first allowed hour again, 0-23 (default 8)
 #                 (either one not an hour switches both curfews off)
@@ -16,7 +16,8 @@
 #                 machine's; cloud containers run in UTC, so set this there)
 #
 # One switch for both curfews: CURFEW=off in .claude/curfew.env (gitignored,
-# per machine; created with CURFEW=on when missing). Soft marks already shown are kept in .claude/curfew.state.
+# per machine; created with the defaults below when missing). Soft marks
+# already shown are kept in .claude/curfew.state.
 # Test hooks, not settings: CURFEW_ENV_FILE, CURFEW_STATE_FILE and
 # CURFEW_NOW_OVERRIDE="YYYY-MM-DD HH:MM".
 #
@@ -36,7 +37,11 @@ CURFEW=on
 if [ -f "$TOGGLE_FILE" ]; then
   source "$TOGGLE_FILE"
 else
-  echo "CURFEW=on" 2>/dev/null >"$TOGGLE_FILE"
+  # Each setting keeps an environment value, so a cloud container's CURFEW_TZ still wins.
+  printf '%s\n' 'CURFEW=on' \
+    'CURFEW_START=${CURFEW_START:-23}' \
+    'CURFEW_END=${CURFEW_END:-8}' \
+    '#CURFEW_TZ=Europe/Berlin' 2>/dev/null >"$TOGGLE_FILE"
 fi
 [ "$CURFEW" = "on" ] || exit 0
 
