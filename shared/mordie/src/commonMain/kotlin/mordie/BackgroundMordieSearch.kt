@@ -13,7 +13,8 @@ import kotlin.time.TimeSource
  * The real [MordieSearch]: one coroutine on [Dispatchers.Default] that steps a
  * [BestSolutionSolver] for [WORK_MS], publishes a snapshot, then rests for [REST_MS] - about half
  * of one core, so the device isn't hogged (GH-41). The fast solver answers in the first slice,
- * and the search goes on until the answer is proven shortest (GH-222). The snapshot is the only
+ * and the search goes on until the answer is proven shortest (GH-222), or, on 5x5 and bigger where
+ * there is no exact search, until the fast answer is in (GH-260). The snapshot is the only
  * shared state; the game's event loop just reads it.
  */
 class BackgroundMordieSearch(
@@ -34,10 +35,11 @@ class BackgroundMordieSearch(
     private var snapshot = snapshotOf()
 
     private val job = CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
-        while (isActive && !solver.provenShortest) {
+        while (isActive && !solver.done) {
             val slice = TimeSource.Monotonic.markNow()
             while (isActive && slice.elapsedNow().inWholeMilliseconds < WORK_MS) {
-                if (solver.step(NODES_PER_CHECK)) break
+                solver.step(NODES_PER_CHECK)
+                if (solver.done) break
             }
             snapshot = snapshotOf()
             onSnapshot(snapshot)

@@ -13,6 +13,14 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.40.0] — 2026-11-08 (PR #261 merged)
+
+### Changed
+
+- [user] (PR #261) GH-260: on 5x5 and bigger boards, Mordie no longer keeps searching for a shorter solution in the background, so a game there stays light on your device. Its answer comes as quickly as before.
+- [app] (PR #261) GH-260: `BestSolutionSolver` skips the exact search on 5x5 and bigger; the exact search runs only on 3x3 and 4x4.
+- [non-user] (PR #261) GH-260: `BestSolutionSolver.done` is set once the solver is done, and the background search ends with it.
+
 ## [0.39.1] — 2026-11-08 (PR #259 merged)
 
 ### Changed

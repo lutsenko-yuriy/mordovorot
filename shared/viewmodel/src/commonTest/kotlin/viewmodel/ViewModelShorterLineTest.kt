@@ -14,7 +14,7 @@ import testing.testViewModel
 /** GH-223: Mordie's lines for an answer that may not be the shortest, through the viewModel. */
 class ViewModelShorterLineTest {
 
-    /** A 5x5 far from solved: the exact search would never finish it. */
+    /** A 5x5 far from solved: no exact search runs on it (GH-260). */
     private val original = IntArray(25) { 24 - it }
     private val factory = FakeMordieSearchFactory()
     private val analytics = RecordingAnalyticsService()

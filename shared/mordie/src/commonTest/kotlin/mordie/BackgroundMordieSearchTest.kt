@@ -16,8 +16,11 @@ class BackgroundMordieSearchTest {
     /** 3x3, needs 2 moves: row 0 rotated, then column 2 rotated. */
     private val twoMoves = intArrayOf(2, 0, 8, 3, 4, 1, 6, 7, 5)
 
-    /** 5x5 reversed (an even permutation, so solvable) - its search never finishes within a test. */
+    /** 5x5 reversed (an even permutation, so solvable) - its search ends after the fast answer (GH-260). */
     private val hard = IntArray(25) { 24 - it }
+
+    /** 4x4 reversed - the exact search runs on it and doesn't finish within a test. */
+    private val hard4 = IntArray(16) { 15 - it }
 
     /** runTest skips delays in virtual time, but the search runs on Dispatchers.Default, so wait in real time. */
     private fun realTime(block: suspend CoroutineScope.() -> Unit) = runTest {
@@ -55,7 +58,7 @@ class BackgroundMordieSearchTest {
 
     @Test
     fun `cancel stops the search`() = realTime {
-        val search = BackgroundMordieSearch(hard, ruledOut = -1)
+        val search = BackgroundMordieSearch(hard4, ruledOut = -1)
         delay(50)
 
         search.cancel()
@@ -82,6 +85,31 @@ class BackgroundMordieSearchTest {
     }
 
     @Test
+    fun `a 5x5 search ends by itself after the fast answer (GH-260)`() = realTime {
+        val seen = mutableListOf<SearchProgress>()
+        val search = BackgroundMordieSearch(hard, ruledOut = -1, onSnapshot = { seen += it })
+
+        withTimeout(10_000) { search.join() }
+
+        val last = seen.last()
+        assertTrue(last.found)
+        assertFalse(last.provenShortest)
+        assertEquals(SolutionSource.FAST_SOLVER, last.source)
+        assertEquals(search.progress(), last)
+    }
+
+    @Test
+    fun `a 5x5 search with a kept answer ends by itself and keeps it (GH-260)`() = realTime {
+        val kept = List(30) { SolutionMove(isRow = true, index = 0, amount = 1) }
+        val search = BackgroundMordieSearch(hard, ruledOut = 9, best = kept)
+
+        withTimeout(10_000) { search.join() }
+
+        assertEquals(kept, search.progress().solution)
+        assertEquals(30, search.progress().moves)
+    }
+
+    @Test
     fun `the listener sees the proven snapshot with its solution`() = realTime {
         val seen = mutableListOf<SearchProgress>()
         val search = BackgroundMordieSearch(twoMoves, ruledOut = -1, onSnapshot = { seen += it })
@@ -97,7 +125,7 @@ class BackgroundMordieSearchTest {
     @Test
     fun `the listener is not called after cancel settles`() = realTime {
         var calls = 0
-        val search = BackgroundMordieSearch(hard, ruledOut = -1, onSnapshot = { calls++ })
+        val search = BackgroundMordieSearch(hard4, ruledOut = -1, onSnapshot = { calls++ })
         delay(50)
 
         search.cancel()

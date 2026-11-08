@@ -101,19 +101,21 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
 - **Search:** when a game starts (`[ New ]`, the startup size prompt), Mordie starts
   searching in the background for the shortest solution of the game's original arrangement,
   counted in moves (Feature 2). The player's moves don't affect it, and the board stays fully
-  playable. Two solvers run together (GH-222): the fast solver answers almost at once on every
-  size Mordie plays, and the exact search looks for the shortest solution and replaces the fast
-  answer when it finds a shorter one. Mordie keeps the best solution so far. Mordie's N is the
+  playable. On 3x3 and 4x4 two solvers run together (GH-222): the fast solver answers almost at
+  once, and the exact search looks for the shortest solution and replaces the fast answer when it
+  finds a shorter one. On 5x5 and bigger only the fast solver runs (GH-260): the exact search
+  never finishes there and only heats the device, so the fast answer stands, and once it is in
+  Mordie stops working. Mordie keeps the best solution so far. Mordie's N is the
   longest solution length it has ruled out until a solution exists (a brief window), then the
   length of the best solution, which drops whenever the exact search finds a shorter one. The
   best solution is *proven shortest* once the exact search has finished or has ruled out every
-  shorter length. On 5x5 the exact search may never finish within a game, so the fast answer
-  stands, longer than the minimum, which in practice it does on 6x6 and larger. In the browser the search runs in a
+  shorter length. On 5x5 and bigger the fast answer is longer than the minimum, in practice, and
+  stays unproven. In the browser the search runs in a
   Web Worker (GH-218), so the page stays smooth while Mordie thinks, and a hidden tab keeps
   searching at whatever rate the browser allows.
 - **Mordie plays every board size, 3x3 to 9x9 (GH-225).** Before that it sat 6x6 and the
   browser's 7x7 to 9x9 out (GH-160, GH-207). On 6x6 and larger the fast answer is 130 to 340
-  moves long and the exact search won't shorten it within a game, so it stays unproven and
+  moves long and no exact search runs there (GH-260), so it stays unproven and
   the line is `Found one in N moves, but maybe there's a shorter one!` The only game Mordie
   still sits out is a loaded one already played on that has no Mordie data (below).
 - **Mordie's line** sits under `Moves: N`: `Mordie:` in magenta, then the text, word-wrapped to
@@ -140,7 +142,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
     solution! Can you beat it?`; if not, it is `Found one in N moves, but maybe there's a shorter
     one! Can you beat it?` (GH-223).
   - Later checks, every 5 shifts, look at the best solution while it is not proven shortest.
-    When the exact search has found a shorter one, the line switches at once to `Wait, I found a
+    When the exact search (3x3 and 4x4 only) has found a shorter one, the line switches at once to `Wait, I found a
     shorter one: N moves now! Can you beat it?`, N being the new length, and stays until the next
     drop (the same text with the new N) or the solve. Becoming proven shortest announces nothing.
 - **Endings:** when the player solves the board in M moves, the title shows one of these instead
@@ -159,9 +161,10 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   solution (older saves still load).
   - Loading a save where Mordie was still searching resumes the search past the saved N, and the
     first line (shifts 0-4) is `Okay, so we stopped when I was at N moves! What was I doing?..`
+    On 5x5 and bigger "resumes" means Mordie finds the fast answer; no exact search follows (GH-260).
   - A game saved while Mordie's answer is not yet proven shortest keeps that answer (GH-224):
-    loading it shows the unproven found line at once, with Give Up lit, and only the exact search
-    restarts, above the longest length it had ruled out and starting from the kept solution. A
+    loading it shows the unproven found line at once, with Give Up lit, and on 3x3 and 4x4 only the
+    exact search restarts (on 5x5 and bigger nothing restarts), above the longest length it had ruled out and starting from the kept solution. A
     shorter answer it later finds is announced as usual.
   - Loading a save where Mordie had found its solution shows the `Found it!` line at once.
   - A save also keeps whether that solution is proven shortest (GH-224): a solution-screen save of an
