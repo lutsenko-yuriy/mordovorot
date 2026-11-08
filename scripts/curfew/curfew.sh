@@ -16,7 +16,7 @@
 #                 machine's; cloud containers run in UTC, so set this there)
 #
 # One switch for both curfews: CURFEW=off in .claude/curfew.env (gitignored,
-# per machine). Soft marks already shown are kept in .claude/curfew.state.
+# per machine; created with CURFEW=on when missing). Soft marks already shown are kept in .claude/curfew.state.
 # Test hooks, not settings: CURFEW_ENV_FILE, CURFEW_STATE_FILE and
 # CURFEW_NOW_OVERRIDE="YYYY-MM-DD HH:MM".
 #
@@ -31,7 +31,13 @@ STATE_FILE="${CURFEW_STATE_FILE:-$PROJECT_DIR/.claude/curfew.state}"
 cat >/dev/null
 
 CURFEW=on
-[ -f "$TOGGLE_FILE" ] && source "$TOGGLE_FILE"
+# A missing toggle file is created, so the switch the block message names exists
+# to edit; a file that can't be written only means the curfew stays on.
+if [ -f "$TOGGLE_FILE" ]; then
+  source "$TOGGLE_FILE"
+else
+  echo "CURFEW=on" 2>/dev/null >"$TOGGLE_FILE"
+fi
 [ "$CURFEW" = "on" ] || exit 0
 
 # A start or end that is not an hour (a CRLF in the env file, a typo) switches
@@ -65,7 +71,7 @@ else
 fi
 
 if [ "$blocked" -eq 1 ]; then
-  echo "BLOCKED: it's outside your working hours (curfew ${start}:00-${end}:00). This session won't act on new requests until ${end}:00. To disable the guard, create .claude/curfew.env containing CURFEW=off." >&2
+  echo "BLOCKED: it's outside your working hours (curfew ${start}:00-${end}:00). This session won't act on new requests until ${end}:00. To disable the guard, set CURFEW=off in .claude/curfew.env." >&2
   exit 2
 fi
 

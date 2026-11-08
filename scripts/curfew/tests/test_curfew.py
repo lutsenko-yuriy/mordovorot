@@ -14,6 +14,7 @@ Behaviour table (start=23, end=8 unless stated; k = minute // 15 in the hour bef
     on     | 22:mm                 | unwritable                    | warning k, exit 0
     on     | start=0: 23:mm        | as above                      | same rules, soft hour is 23
     on     | start=end             | any                           | never blocks, no warning
+    (none) | toggle file missing  | creates it with CURFEW=on, then behaves as on (unwritable: still on)
     on     | CURFEW_TZ set         | clock read in that zone       | TZ reaches the one date call
 
 Wiring: UserPromptSubmit runs "${CLAUDE_PROJECT_DIR}/scripts/curfew/curfew.sh" exactly once; curfew.sh is
@@ -68,8 +69,23 @@ class CurfewTests(unittest.TestCase):
         self.assertEqual(2, proc.returncode)
         self.assertEqual("", proc.stdout)
         self.assertIn("BLOCKED", proc.stderr)
-        # The file is absent by default, so the message must say to create it.
-        self.assertIn("create .claude/curfew.env containing CURFEW=off", proc.stderr)
+
+    # toggle file (GH-258)
+
+    def test_missing_toggle_file_is_created_with_curfew_on(self):
+        self.assertFalse(self.toggles.exists())
+        self.assertBlocked(self.run_curfew("2026-11-05 23:30"))
+        self.assertEqual("CURFEW=on\n", self.toggles.read_text(encoding="utf-8"))
+
+    def test_existing_toggle_file_is_left_alone(self):
+        self.assertSilent(self.run_curfew("2026-11-05 23:30", toggles="CURFEW=off\n"))
+        self.assertEqual("CURFEW=off\n", self.toggles.read_text(encoding="utf-8"))
+
+    def test_unwritable_toggle_file_location_keeps_the_curfew_on(self):
+        self.toggles = self.tmp / "missing-dir" / "curfew.env"
+        proc = self.run_curfew("2026-11-05 23:30")
+        self.assertBlocked(proc)
+        self.assertEqual(1, proc.stderr.count("\n"), proc.stderr)
 
     # hard curfew: unchanged behaviour
 
