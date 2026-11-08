@@ -94,6 +94,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-243: Share a board with a link](GH-243.md)
 - [GH-248: Soft and hard curfew](GH-248.md)
 - [GH-251: Delete saves from the Load and restore dialogs](GH-251.md)
+- [GH-260: Turn off Mordie's exact search on 5x5 and bigger](GH-260.md)
 - [GH-41: Kotlin Multiplatform shared modules: Core, Analytics, Mordie, Storage, ViewModel](GH-41.md)
 - [GH-6: Save and load game state to/from local files](GH-6.md)
 - [GH-62: Move counter](GH-62.md)
