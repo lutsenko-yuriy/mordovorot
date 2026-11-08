@@ -2,7 +2,7 @@
 <!-- GH-147: loads the web game at phone sizes and reports whether it fits the window, or (report=styles,
      GH-156) every element's computed styles, or (report=keys, GH-174, keys.js) focus and the like after each
      of a list of keys, or (mode=offline, GH-262) whether the game opens and plays with no connection once the
-     offline worker has cached it. Served by serve.py and driven by measure.sh or styles_diff.sh; query options are in
+     offline worker has cached it; update=ready (GH-262) first has the page find a new version. Served by serve.py and driven by measure.sh or styles_diff.sh; query options are in
      README.md. Results go to POST /result. -->
 <meta charset="utf-8">
 <style>iframe { border: 0; display: block; margin: 0 0 10px; }</style>
@@ -23,8 +23,13 @@ const sizeList = q.get("sizes") || (keys ? "1200x800" : "portrait");
 const sizes = (PRESETS[sizeList] || sizeList).split(",");
 const boards = (q.get("boards") || (keys ? "4" : "3,4,5")).split(",").map(Number);
 const mode = q.get("mode") || "play"; // play | dialog | share | solution | offline
+// GH-262: update=ready has the page find a new version, which it takes a worker for.
+// update=uncontrolled (GH-262): the page the worker never took control of (a first visit), where nothing but the worker's
+// own state says an Update is done.
+const uncontrolled = q.get("update") === "uncontrolled";
+const update = q.get("update") === "ready" || uncontrolled;
 // GH-262: only this variant ships offline-worker.js (lib.sh).
-const variant = mode === "offline" ? "with-worker" : q.get("v") || "mouse";
+const variant = mode === "offline" || update ? "with-worker" : q.get("v") || "mouse";
 const shorter = Number(q.get("shorter") || 0);
 const toolbarRows = Number(q.get("rows") || 1);
 // GH-168: `scroll` lets larger text make the page taller than the window; see measure().
@@ -156,6 +161,22 @@ async function offlineReport(win, label) {
     return `${ok ? "OK  " : "BAD "}${label} offline: board ${rendered ? "rendered" : "MISSING"}, Mordie ${searched ? "searched" : "DID NOT SEARCH"}, Save ${save ? "opened" : "DID NOT OPEN"}, Share ${share ? "opened" : "DID NOT OPEN"}`;
 }
 
+/** GH-262: update=ready. The page registers the worker itself. Once it is active, the next worker script is a new
+ *  version, and reloading finds it; the notice shows when every file of it is cached. */
+async function findNewVersion(f) {
+    const active = await Promise.race([f.contentWindow.navigator.serviceWorker.ready.then(() => true), wait(20000).then(() => false)]);
+    if (!active) return false;
+    await fetch("/next-version", { method: "POST" });
+    if (uncontrolled) {
+        // No reload: the page stays uncontrolled, and asks the browser for the new version itself.
+        const reg = await f.contentWindow.navigator.serviceWorker.getRegistration();
+        await reg.update();
+        return true;
+    }
+    await new Promise(r => { f.onload = r; f.contentWindow.location.reload(); });
+    return true;
+}
+
 /** GH-262: mode=offline leaves the server answering 503, so whatever happens in the case, it is switched
  *  on again after; else one failure would time out every later query of the same run and hide itself. */
 async function run(size, board) {
@@ -188,6 +209,11 @@ async function runCase(size, board) {
     f.src = `/${variant}/index.html`;
     document.getElementById("frames").append(f);
     await new Promise(r => f.onload = r);
+    if (update && !await findNewVersion(f)) {
+        results.push(`BAD ${variant} update ${w}x${h}: the page never registered a worker`);
+        f.remove();
+        return;
+    }
     const win = f.contentWindow;
     await wait(400);
     // With saves, startup offers to restore one: Cancel it, unless restore=1 keeps that dialog (GH-251).
@@ -227,6 +253,20 @@ async function runCase(size, board) {
         clickText(win.document, "Share");
         await wait(300);
     }
+    if (update) {
+        for (let i = 0; i < 100 && !win.document.querySelector(".footer .update"); i++) await wait(200);
+        await wait(100);
+    }
+    if (uncontrolled) {
+        win.stillHere = true;
+        const noticed = !!win.document.querySelector(".footer .update");
+        clickText(win.document, "Update");
+        for (let i = 0; i < 50 && f.contentWindow.stillHere; i++) await wait(200);
+        const reloaded = !f.contentWindow.stillHere;
+        results.push(`${noticed && reloaded ? "OK  " : "BAD "}${variant} update uncontrolled ${w}x${h}: notice ${noticed ? "shown" : "MISSING"}, Update ${reloaded ? "reloaded the page" : "DID NOT RELOAD"}`);
+        f.remove();
+        return;
+    }
     await wait(100);
     const solution = win.document.querySelector(".app.solution") ? " [solution]" : "";
     // GH-168: the root's font size, when --text-size or the page made it other than the standard 16px.
@@ -234,7 +274,7 @@ async function runCase(size, board) {
     // diff should show that as html's font-size, not as every case on one side only.
     const rootPx = parseFloat(win.getComputedStyle(win.document.documentElement).fontSize);
     const text = rootPx === 16 || report === "styles" ? "" : ` text ${rootPx}px`;
-    const label = `${mode} ${w}x${h} ${board}x${board}${solution}${text}`;
+    const label = `${mode}${update ? " update" : ""} ${w}x${h} ${board}x${board}${solution}${text}`;
     if (mode === "offline") {
         results.push(await offlineReport(win, `${variant} ${label}`));
     } else if (report === "qr") {

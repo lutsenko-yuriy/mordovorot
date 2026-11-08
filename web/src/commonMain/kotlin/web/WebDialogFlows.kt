@@ -8,6 +8,8 @@ import viewmodel.SaveInfo
 import viewmodel.UnsolvableSaveChoice
 import viewmodel.analyticsState
 import viewmodel.display
+import viewmodel.displayWithSize
+import web.a11y.Announcements
 
 /** What the Load dialog was answered with (GH-251). */
 internal sealed interface LoadPick {
@@ -26,7 +28,14 @@ internal class WebDialogFlows(
     private val cancelled: (dialog: String) -> Unit,
     /** Sets the status message and what is said, for the next frame to show. */
     private val noteStatus: (String) -> Unit,
+    /** Takes the status message just shown, so a dialog can show it instead. */
+    private val takeStatus: () -> String?,
+    /** Sets what the next frame says. */
+    private val say: (String) -> Unit,
 ) {
+
+    /** The viewModel asked for a size during a flow, which so ends in a new game. */
+    private var sizeAsked = false
 
     /** [openedFrom] is `toolbar` or a `ChooseBoardSize.origin`, as `screen_size_dialog.opened_from`. */
     suspend fun chooseSize(openedFrom: String): Int? {
@@ -115,8 +124,23 @@ internal class WebDialogFlows(
     )
 
     /** [openedFrom] is `startup` or `toolbar`, as `screen_unsolvable_dialog.opened_from`. */
-    suspend fun resolveUnsolvable(message: String, openedFrom: String): UnsolvableSaveChoice {
+    suspend fun resolveUnsolvable(save: SaveInfo, openedFrom: String): UnsolvableSaveChoice {
+        // The viewModel's can't-be-solved message, just shown, goes in the dialog instead.
+        val message = takeStatus() ?: "'${save.displayWithSize()}' can't be solved by any sequence of shifts."
         analytics.track("screen_unsolvable_dialog", mapOf("opened_from" to openedFrom))
         return modal.ask(WebDialog.Unsolvable(message))
+    }
+
+    /** The size picker the viewModel asks for, at startup or after Can't be solved. */
+    suspend fun chooseNewGameSize(origin: String): Int? {
+        sizeAsked = true
+        return chooseSize(origin)
+    }
+
+    /** A new game once a flow in which the viewModel asked for its size ends. */
+    fun sayAskedNewGame() {
+        if (!sizeAsked) return
+        sizeAsked = false
+        say(Announcements.newGame(viewModel.squareSide()))
     }
 }

@@ -24,7 +24,7 @@ shifts on a square board), but none of Loopover's code or assets.
 ### In a browser
 
 Play it at **https://lutsenko-yuriy.github.io/mordovorot/**. Every green merge to `master` publishes the latest version
-there (GitHub may serve the previous one for up to ~10 minutes).
+there (GitHub may serve the previous one for up to ~10 minutes). Once opened, it also plays with no connection, and tells you in the footer when a new version is ready.
 
 To run it locally while working on it:
 

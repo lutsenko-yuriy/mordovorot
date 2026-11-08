@@ -71,6 +71,16 @@ mouse play 1200x800 4x4 | 6 page -> focus mode-mouse role radio name "Mouse" che
 mouse play 1200x800 4x4 | Escape page -> focus labels role button name "Labels" | dialog - | ring solid | keyboard yes | inert - | said -
 mouse play 1200x800 4x4 | 1 - -> focus labels role button name "Labels" | dialog - | ring solid | keyboard yes | inert - | said -
 mouse play 1200x800 4x4 | Escape - -> focus labels role button name "Labels" | dialog - | ring solid | keyboard yes | inert - | said -
+with-worker play update 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert - | said "New 4x4 game"
+with-worker play update 1200x800 4x4 | click:▶ - -> focus - | dialog - | ring - | keyboard no | inert - | said "Row 1 right, 1 move"
+with-worker play update 1200x800 4x4 | focus:update - -> focus update role button name "Update" | dialog - | ring solid | keyboard no | inert - | said -
+with-worker play update 1200x800 4x4 | Enter native -> focus update-cancel role button name "Cancel" | dialog "Update to the new version?" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+with-worker play update 1200x800 4x4 | Escape page -> focus update role button name "Update" | dialog - | ring solid | keyboard yes | inert - | said -
+with-worker play update 1200x800 4x4 | focus:update - -> focus update role button name "Update" | dialog - | ring solid | keyboard yes | inert - | said -
+with-worker play update 1200x800 4x4 | Enter native -> focus update-cancel role button name "Cancel" | dialog "Update to the new version?" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+with-worker play update 1200x800 4x4 | Tab page -> focus BUTTON "Update" role button name "Update" | dialog "Update to the new version?" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+with-worker play update 1200x800 4x4 | Tab page -> focus update-cancel role button name "Cancel" | dialog "Update to the new version?" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+with-worker play update 1200x800 4x4 | Enter native -> focus update role button name "Update" | dialog - | ring solid | keyboard yes | inert - | said -
 mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert - | said "New 4x4 game"
 mouse play 1200x800 4x4 | click:Share - -> focus copy-link role button name "Copy link" | dialog "Share this board" | ring none | keyboard no | inert DIV.stage DIV.panel FOOTER.footer | said -
 mouse play 1200x800 4x4 | Tab page -> focus BUTTON "Close" role button name "Close" | dialog "Share this board" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -

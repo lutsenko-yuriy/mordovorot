@@ -44,6 +44,10 @@ sealed class Focus(override val key: String) : FocusTarget {
     data class Restore(val control: String) : Focus(control) {
         override val fallsBack get() = true
     }
+    /** The footer's Update button (GH-262), outside `#app`. */
+    data object UpdateLink : Focus("update")
+    /** The update confirmation's Cancel, where it opens (GH-262). */
+    data object UpdateCancel : Focus("update-cancel")
     /** The footer's link at [index], outside `#app`. */
     data class FooterLink(val index: Int) : Focus("footer-$index")
     /** Give Up, or Mordie's solution after a win. */
@@ -68,6 +72,7 @@ fun defaultFocus(dialog: WebDialog): Focus = when (dialog) {
     is WebDialog.LinkRejected -> Focus.LinkRejectedOk
     is WebDialog.OpenShared -> Focus.OpenSharedCancel
     is WebDialog.Share -> Focus.CopyLink
+    WebDialog.Update -> Focus.UpdateCancel
 }
 
 /** The Very large section's title and warning line in the size picker (GH-207). */
@@ -87,4 +92,5 @@ val WebDialog.title: String get() = when (this) {
     is WebDialog.LinkRejected -> "Can't open this board"
     is WebDialog.OpenShared -> "Open the shared board?"
     is WebDialog.Share -> "Share this board"
+    WebDialog.Update -> "Update to the new version?"
 }

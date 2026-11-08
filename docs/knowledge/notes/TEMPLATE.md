@@ -15,6 +15,10 @@ bookmarks: []
 
 <Body — what happened, why it matters, what to do about it.>
 
+## Where we stopped
+
+<!-- Optional. Written by `/note stop` when a session ends mid-ticket, replaced each time, removed by `/debrief`. -->
+
 ## Debrief summary
 
 ### YYYY-MM-DD

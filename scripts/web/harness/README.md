@@ -56,6 +56,7 @@ Query options (harness.html):
 | `saves` | | comma-separated names of solved 4x4 saves to put in `localStorage` before the game starts (GH-251); startup's restore dialog is cancelled unless `restore=1` |
 | `corrupt` | | comma-separated names of entries no save decodes, listed by name alone (GH-251) |
 | `restore` | | `1` with `saves` or `corrupt` leaves the startup restore dialog open, for the keys to start in (GH-251) |
+| `update` | | `ready` (GH-262) loads the `with-worker` variant, has the page register its worker, then has the server serve the next version of it and reloads, so the case starts with the footer's New version available notice up |
 | `grid` | | with `report=keys`, `1` adds the board as a screen reader's table or grid to each line (below, GH-167, GH-171) |
 
 To compare against master, build master's bundle into another directory and pass it with
@@ -83,6 +84,12 @@ The network is switched on again after the case. Deleting the worker's `fetch` h
 `serve.py` takes three POSTs for it: `/offline` (every later GET answers 503), `/online` (served
 again) and `/next-version` (`offline-worker.js` is served with one more comment line each time, so
 the browser finds a new version of the worker from the same files). `tests/test_serve.py` covers them.
+
+`update=ready` (GH-262) uses them to show the notice: the page registers `offline-worker.js` itself, the
+harness waits until it is active, posts `/next-version` and reloads the page, which installs the new
+version and shows `New version available. Update`. The case is then measured or keyed like any other,
+`update=uncontrolled` skips the reload, so the page the worker never took control of finds the version by itself; `OK` means Update then reloads it. For `update=ready`, e.g. `measure.sh "update=ready&sizes=portrait"` (the footer stays one line) or `keys_check.sh`'s
+`update=ready` query (Update, the dialog, Escape).
 
 ## Computed-style diff
 

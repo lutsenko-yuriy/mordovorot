@@ -194,7 +194,9 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │                    # GameViewModel, a WebState to the WebRenderer after every change; drains
 │   │                    # uiRequests; tracks the view-layer analytics (screen views, dialog_cancelled);
 │   │                    # sets each frame's announcement (GH-166)
-│   ├── WebDialogFlows.kt # WebGame's Save, Load, size and can't-be-solved dialogs over its modal (GH-166); Load is a loop that also runs the Delete confirmation (GH-251)
+│   ├── WebDialogFlows.kt # WebGame's Save, Load, size and can't-be-solved dialogs over its modal (GH-166); Load is a loop that also runs the Delete confirmation (GH-251); the viewModel's size and unsolvable requests (GH-262)
+│   ├── AppUpdates.kt    # GH-262: the seam to the offline worker (start/check/apply; DomAppUpdates in jsMain, FakeAppUpdates in the harness), CheckTrigger and OFFLINE_WORKER, the worker's fixed relative URL
+│   ├── WebUpdateFlows.kt # GH-262: the New version available notice (ready, the footer it implies, update_available), Update and its confirmation (update_applied), the checks' triggers
 │   ├── WebSolutionFlows.kt # WebGame's Give Up and the solution screen's replay (GH-126, split out in GH-171)
 │   ├── WebControlsDialog.kt # The Controls dialog's flow over WebGame's modal and the session's mode (GH-171)
 │   ├── PlayMode.kt / PlayModePreference.kt # Mouse or keyboard, kept under `input_mode` (GH-171)
@@ -238,7 +240,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── TextScale.kt     # GH-168: textScaleOf(root, appleBody): the system text size as a scale, never below 1;
 │   │                    # rootFontPx: the root's size for it, null when the default already is
 │   ├── Host.kt          # hostOf(hostname): PUBLIC_SITE, LOCALHOST or OTHER - only the bucket is sent (GH-111)
-│   ├── Footer.kt        # footer(version): the footer line as Text/Link parts, worded as the README's Credits (GH-111)
+│   ├── Footer.kt        # footer(version, updateReady): the footer line as Text/Link parts, worded as the README's Credits (GH-111); with a new version, the notice and its UpdateLink part (GH-262)
 │   ├── a11y/            # GH-179: web.a11y, screen readers and focus (also in jsMain below). web
 │   │   │                # depends on it, not it on web: it imports only the standard library, the DOM
 │   │   │                # and a few :shared:viewmodel types, pinned by A11yBoundaryTest (GH-201). The
@@ -304,8 +306,12 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/jsMain/kotlin/web/DomTextSize.kt # GH-168: at load, reads the browser's font size and (iPhone/iPad)
 │                                       # Dynamic Type from a removed `-apple-system-body` probe; sets
 │                                       # `--text-scale`, and the root font size where the default isn't it
-├── src/jsMain/kotlin/web/DomFooter.kt  # footerElement: <footer>, its links in a new tab (GH-111);
-│                                       # wide-only parts in `.wide-only` (GH-147)
+├── src/jsMain/kotlin/web/DomFooter.kt  # fillFooter: the <footer>'s links in a new tab (GH-111), wide-only parts in
+│                                       # `.wide-only` (GH-147), the Update button (GH-262); Main creates the empty
+│                                       # <footer> and DomRenderer redraws it when WebState.footer changes
+├── src/jsMain/kotlin/web/DomAppUpdates.kt # GH-262: AppUpdates over navigator.serviceWorker: registers offline-worker.js,
+│                                       # ready = a waiting worker beside an active one, apply = skip-waiting message then
+│                                       # reload; every failure (no workers, offline, no worker file) is dropped
 ├── src/jsMain/kotlin/web/DomQr.kt      # GH-243: the Share dialog's QR code as an inline SVG from QrSvg, hidden from readers
 ├── src/jsMain/kotlin/web/DomDialogs.kt  # The modal dialogs, and Escape -> WebGame.onEscape (GH-163, listenForEscape);
 │                                       # DomElements.kt: element/text/button helpers, and KeyboardEvent.composing
@@ -357,7 +363,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # (WebHarness), recording each WebState (startup, play,
 │                                       # save/load, unsaved progress, drag, analytics; GH-126 give up;
 │                                       # GH-139 tile labels; GH-166 announcements, as WebHarness.said)
-├── src/commonTest/kotlin/web/FooterTest.kt # GH-111: the footer's wording and links
+├── src/commonTest/kotlin/web/FooterTest.kt # GH-111: the footer's wording and links; GH-262: the notice, and the worker's relative URL
+├── src/jvmTest/kotlin/web/UpdateNoticeStylesTest.kt # GH-262: the footer's Update looks like a link and keeps a keyboard ring
 ├── src/commonTest/kotlin/web/HostTest.kt # GH-111: hostOf's buckets
 ├── src/commonTest/kotlin/web/LayoutTest.kt, SlidesTest.kt, MessageFeedTest.kt
 ├── src/commonTest/kotlin/web/a11y/      # AnnouncementsTest (GH-179); DialogFocusTest, PageFocusTest are in web/ (GH-201)

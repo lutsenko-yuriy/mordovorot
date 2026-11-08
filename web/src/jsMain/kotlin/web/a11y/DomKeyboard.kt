@@ -65,7 +65,8 @@ internal fun focusedKey(): String? = document.activeElement?.getAttribute("data-
  *  leaves focus at the page's start. */
 internal fun applyFocus(root: Element, focus: FocusTarget?, before: String?, fallback: (String) -> FocusTarget) {
     if (focus != null && !focus.fallsBack) {
-        val control = root.querySelector("[data-focus=\"${focus.key}\"]") as? HTMLElement
+        // Not only in the root: the footer is outside it (GH-262).
+        val control = (root.querySelector("[data-focus=\"${focus.key}\"]") ?: document.querySelector("[data-focus=\"${focus.key}\"]")) as? HTMLElement
         if (control != null) control.focus() else blurFocused()
         return
     }

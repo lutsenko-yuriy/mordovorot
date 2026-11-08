@@ -35,3 +35,20 @@ button:focus-visible {
     outline: 3px solid var(--warning);
     outline-offset: 2px;
 }
+
+/* GH-262: the footer's Update looks like a link and stays a button; the footer is outside .app, so it has its own keyboard ring. */
+.footer .update {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    color: var(--ink);
+    cursor: pointer;
+}
+
+.footer .update:focus-visible {
+    outline: 3px solid var(--warning);
+    outline-offset: 2px;
+}

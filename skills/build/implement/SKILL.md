@@ -33,6 +33,7 @@ Retrieve the issue details and find the implementation plan comment left by the 
 Then read `docs/knowledge/notes/GH-XX.md` if it exists. Amendments recorded there after the plan
 (new WUs, conditions such as "don't start WUn until …") override the plan comment. If one blocks
 the WU about to start, stop and ask the user whether it's cleared (GH-111).
+A `## Where we stopped` section there says where the last session left off (branch, PR, what is open, the next step); start from it.
 
 **If no approved plan comment exists — stop.** Report back:
 

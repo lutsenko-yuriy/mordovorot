@@ -137,6 +137,13 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                     button("Open") { game.share.onOpenAnswered(true) },
                 ),
             )
+            WebDialog.Update -> append(
+                text("message", "The current game will be lost unless you save it first."),
+                actions(
+                    button("Cancel", "secondary") { game.updates.onUpdateAnswered(false) }.focusKey(Focus.UpdateCancel),
+                    button("Update") { game.updates.onUpdateAnswered(true) },
+                ),
+            )
             WebDialog.GiveUp -> append(
                 actions(
                     button("No", "secondary") { game.solution.onGiveUpAnswered(false) }.focusKey(Focus.No),

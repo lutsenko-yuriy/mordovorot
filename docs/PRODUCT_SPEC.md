@@ -399,10 +399,34 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   it is one short line without the links, `v<version> · Based on Loopover by carykh` (GH-147).
   Wider than tall it is one line of fixed height, cut off with `…` if a window is ever too narrow
   for it (GH-148).
+  When a new version of the game is ready (see Offline play and updates below), the credit gives way
+  to `v<version> · New version available. Update`, in the same place and as short on a phone;
+  `Update` is bold and underlined and is a Tab stop like the links (GH-262).
 - **Public site / Updates (GH-111):** every merge to `master` whose build and tests pass
   publishes the new version; a failed build leaves the last good one up. GitHub may serve the
   previous version for up to ~10 minutes after that. An open tab keeps the version it loaded
   until it's reloaded; the footer's version shows which one is running.
+- **Offline play and updates (GH-262):** once the game has been opened online, it opens and plays
+  with no connection, Mordie, Save, Load and Share included: the browser keeps a copy of every file
+  of the version it last installed. This works wherever browsers run service workers (the public
+  site and `localhost`, not a plain-http address on a network; there the game plays online as
+  before), and may not in other browsers on iOS. The browser may clear the copy after about a week
+  without a visit (Safari in a tab), and the next visit then needs a connection once. The page
+  checks for a new version when it loads, when you come back to its tab, and when a game ends
+  (solved, or Give Up -> Yes). When one has been fully downloaded, the footer's notice appears
+  (above). An open page never switches version by itself: a new version opens on the visit after
+  every tab of the game has been closed, or when you click `Update`.
+  - `Update` with no unsaved progress reloads at once. With unsaved progress (the same test as the
+    leave-site prompt) it opens `Update to the new version?`: `The current game will be lost unless
+    you save it first.`, with `Cancel` (where focus starts) and `Update`. Escape is Cancel, which
+    closes the dialog, puts focus back on `Update` and keeps the game and the notice. The browser's
+    own leave-site prompt does not ask a second time.
+  - Saves are never touched by an update.
+  - While another dialog is open, `Update` does nothing (the page behind a dialog is out of reach).
+  - There is no toolbar button, key or key hint for it, and screen readers are not told of the
+    notice (they are frozen, `docs/CONSTRAINTS.md`); the button's own name is `Update`.
+  - With two tabs open, `Update` in one leaves the notice up in the other, where it only reloads.
+    Until it does, that tab runs the old page against the new files (ADR-0006).
 - **Analytics:** every event carries `platform: web` and `input_method`, following the actual input
   in either mode: `keyboard` for key presses, `rich_ui` for mouse and touch; see `docs/ANALYTICS_EVENTS.md`.
 

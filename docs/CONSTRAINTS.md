@@ -26,7 +26,8 @@
 
 - The web client is hosted on GitHub Pages: static files with no custom response headers (GH-211),
   so no cross-origin isolation, hence no shared memory between page and worker and no Wasm threads.
-  A plain Web Worker needs no headers.
+  A plain Web Worker needs no headers, and neither does the service worker (GH-262): it is served
+  from the site's own folder, so its scope is the whole game.
 
 ## Screen readers
 

@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.41.0] — 2026-11-08 (PR #266 merged)
+
+### Added
+
+- [user] (PR #266) GH-262: the game opens and plays without a connection once you've opened it online. The footer tells you when a new version is ready, with a bold underlined Update link. Update reloads at once, or asks first when there is unsaved progress. Saves are untouched, and a new version is never applied by itself.
+- [app] (PR #266) GH-262: the page registers `offline-worker.js` and follows the waiting worker. `AppUpdates`, `WebUpdateFlows` and `DomAppUpdates` carry the update state; `WebGame` is split, and its dialog code moves into `WebDialogFlows`.
+- [non-user] (PR #266) GH-262 (WU2): the harness sets `update=ready`; `serve.py` returns 404 for a variant with no worker. The debrief adds a `/note stop` "Where we stopped" section for handoffs between sessions.
 ## [0.40.1] — 2026-11-08 (PR #264 merged)
 
 ### Added

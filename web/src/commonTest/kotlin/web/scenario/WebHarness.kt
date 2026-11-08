@@ -20,6 +20,7 @@ import viewmodel.KeyboardLayout
 import web.Focus
 import web.Host
 import web.KeyPress
+import web.AppUpdates
 import web.Clipboard
 import web.Layout
 import web.PageAddress
@@ -58,6 +59,7 @@ internal class WebHarness(
     val mordie = Mordie(mordieSearches)
     val pressedWith = PressedWith()
     val clipboard = FakeClipboard()
+    val updates = FakeAppUpdates()
     private val renderer = FakeWebRenderer()
     lateinit var game: WebGame
         private set
@@ -74,7 +76,7 @@ internal class WebHarness(
     val scrolled: List<Int> get() = renderer.scrolled
 
     fun start(): WebHarness {
-        game = startWebGame(board, saves, preferences, analytics, mordie, renderer, scope, layout, appVersion, host, touch, pressedWith, address, clipboard)
+        game = startWebGame(board, saves, preferences, analytics, mordie, renderer, scope, layout, appVersion, host, touch, pressedWith, address, clipboard, updates)
         return this
     }
 
@@ -158,6 +160,49 @@ internal class FakeClipboard(var allowed: Boolean = true) : Clipboard {
         if (allowed) copied += text else refused++
         done(allowed)
     }
+}
+
+/** A page where no new version is ready until [ready] says so, or from the start when [readyAtStart]. It counts
+ *  its checks and records the [apply] calls. */
+internal class FakeAppUpdates(var readyAtStart: Boolean = false) : AppUpdates {
+    var checks = 0
+        private set
+    var applied = 0
+        private set
+    private var onFound: (() -> Unit)? = null
+    private var onReady: (() -> Unit)? = null
+
+    override fun start(onFound: () -> Unit, onReady: () -> Unit) {
+        this.onFound = onFound
+        this.onReady = onReady
+        if (readyAtStart) {
+            onFound()
+            onReady()
+        }
+    }
+
+    override fun check() {
+        checks++
+    }
+
+    override fun apply() {
+        applied++
+    }
+
+    /** A new version starts downloading. */
+    fun found() {
+        downloading = true
+        onFound?.invoke()
+    }
+
+    /** A new version finishes caching and waits; [ready] alone is a download that started and ended at once. */
+    fun ready() {
+        if (!downloading) found()
+        downloading = false
+        onReady?.invoke()
+    }
+
+    private var downloading = false
 }
 
 private class FakeWebRenderer : WebRenderer {

@@ -8,11 +8,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import viewmodel.GameViewModel
 import viewmodel.PointerShift
-import viewmodel.SaveInfo
 import viewmodel.SessionKeyboardLayout
 import viewmodel.ShiftSource
 import viewmodel.UnsolvableSaveChoice
-import viewmodel.displayWithSize
 import web.a11y.Announcements
 import web.drag.Axis
 import web.drag.LineDrag
@@ -35,14 +33,17 @@ class WebGame internal constructor(
     private val controlsShown: Boolean,
     address: PageAddress,
     clipboard: Clipboard,
+    updates: AppUpdates,
+    appVersion: String,
 ) {
 
     private val modal = WebModal { render(focus = it) }
     internal val labels = WebLabelsDialog(this, viewModel, modal)
-    internal val dialogs = WebDialogFlows(viewModel, analytics, modal, ::cancelled, ::noteStatus)
+    internal val dialogs = WebDialogFlows(viewModel, analytics, modal, ::cancelled, ::noteStatus, ::takeStatus) { saying = it }
     internal val solution = WebSolutionFlows(this, viewModel, analytics, modal)
     internal val controls = WebControlsDialog(this, viewModel, analytics, modal, keyboardLayout, modePreference, startMode)
     internal val share = WebShareFlows(this, viewModel, analytics, modal, address, clipboard)
+    internal val updates = WebUpdateFlows(this, viewModel, analytics, modal, updates, appVersion)
     private val keys = WebKeyPlay(this, viewModel, pressedWith, controlsShown)
     private val requests = WebRequestRouter(this)
     internal var status: String? = null
@@ -53,27 +54,26 @@ class WebGame internal constructor(
     private var drag: LineDrag? = null
     /** What the next frame says (GH-166); [render] hands it on once. */
     internal var saying: String? = null
-    /** The viewModel asked for a size during [flow], which so ends in a new game. */
-    private var sizeAsked = false
     internal val idle get() = modal.shown == null && flow?.isActive != true && drag == null
     /** Mordie's solution screen (GH-126): the board is the replay's, not the player's. */
     internal val playable get() = idle && !viewModel.isSolved() && viewModel.solution() == null
 
     /** Answers the viewModel's requests, then runs the startup restore. */
     internal fun start() {
+        updates.start()
         render()
         scope.launch { for (request in viewModel.uiRequests) requests.handle(request) }
         flow = scope.launch {
             // A share link's board replaces the restore offer.
             if (!share.openAtStartup()) viewModel.restoreOnStartup()
             share.openPending()
-            sayAskedNewGame()
+            dialogs.sayAskedNewGame()
             render(focus = if (controls.mode == PlayMode.KEYBOARD) Focus.Board else Focus.PageStart)
         }
     }
 
     /** Backs the page's leave-site prompt. */
-    fun hasUnsavedProgress(): Boolean = viewModel.hasUnsavedProgress()
+    fun hasUnsavedProgress(): Boolean = !updates.applying && viewModel.hasUnsavedProgress()
 
     fun onArrow(arrow: Arrow, line: Int) {
         if (playable) shiftLine(arrow, line, PointerShift.ARROW)
@@ -179,19 +179,8 @@ class WebGame internal constructor(
     /** Escape (GH-163): the open dialog's Cancel, or No. */
     fun onEscape() = modal.escape()
 
-    /** [openedFrom] is `startup` or `toolbar`, as `screen_unsolvable_dialog.opened_from`. */
-    internal suspend fun resolveUnsolvable(save: SaveInfo, openedFrom: String): UnsolvableSaveChoice {
-        // The viewModel's can't-be-solved message, just shown, goes in the dialog instead.
-        val message = status ?: "'${save.displayWithSize()}' can't be solved by any sequence of shifts."
-        status = null
-        return dialogs.resolveUnsolvable(message, openedFrom)
-    }
-
-    /** The size picker the viewModel asks for, at startup or after Can't be solved. */
-    internal suspend fun chooseNewGameSize(origin: String): Int? {
-        sizeAsked = true
-        return dialogs.chooseSize(origin)
-    }
+    /** The status message just shown, taken: a dialog shows it instead. */
+    private fun takeStatus(): String? = status.also { status = null }
 
     /** A status message, said too; a load's names [loadedSave] and says its size and moves instead. */
     internal fun showStatus(text: String, loadedSave: String? = null) {
@@ -221,16 +210,10 @@ class WebGame internal constructor(
         // Unsolved before this shift (the callers check), so this is the transition.
         saying = if (viewModel.isSolved()) {
             analytics.track("screen_congratulations")
+            updates.check(CheckTrigger.GAME_END)
             Announcements.solved(moves)
         } else keys.withTileNow(words(moves.takeIf { it != before }))
         render(slide)
-    }
-
-    /** A new game once a flow in which the viewModel asked for its size ends. */
-    private fun sayAskedNewGame() {
-        if (!sizeAsked) return
-        sizeAsked = false
-        saying = Announcements.newGame(viewModel.squareSide())
     }
 
     /** Runs a toolbar action, unless another action or a dialog is under way, then renders with
@@ -243,7 +226,7 @@ class WebGame internal constructor(
         flow = scope.launch(start = CoroutineStart.UNDISPATCHED) {
             action()
             share.openPending()
-            sayAskedNewGame()
+            dialogs.sayAskedNewGame()
             render(focus = closing)
         }
     }
@@ -287,6 +270,7 @@ class WebGame internal constructor(
                 viewModel.solution() != null -> KeyHints.SOLUTION
                 else -> KeyHints.board(controls.layout)
             },
+            footer = updates.footer,
         )
     }
 

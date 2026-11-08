@@ -95,6 +95,8 @@ Append a dated block to the `## Debrief summary` section of `docs/knowledge/note
 
 Use today's date. Mirror the content from the dialog — do not ask the user for anything at this step.
 
+Then remove the notes file's `## Where we stopped` section, if it has one: the ticket is done, so there is nowhere left to pick up.
+
 ### 7. Commit and open a PR
 
 Create a branch from the latest `origin/main`, stage all changed files (approved workflow/skill files from step 5 + knowledge base entry from step 6), commit, push, and open a PR:

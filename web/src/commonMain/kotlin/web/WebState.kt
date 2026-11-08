@@ -42,6 +42,8 @@ data class WebState(
     val selection: TileSelection? = null,
     /** The key hints under the board, or the solution screen's keys, in keyboard mode (GH-171). */
     val hints: List<KeyHint>? = null,
+    /** The footer line, with the New version available notice once one is ready (GH-262). */
+    val footer: List<FooterPart> = emptyList(),
 ) {
     /** The digit [button] shows, `null` when it shows none (GH-171). */
     fun digitOf(button: ToolbarButton): Int? = button.digit.takeIf { WebKeys.live(button, mode, controlsShown) }
@@ -115,6 +117,9 @@ sealed interface WebDialog {
 
     /** A share link's [side] x [side] board would replace a game with unsaved moves (GH-243): Cancel or Open. */
     data class OpenShared(val side: Int) : WebDialog
+
+    /** The confirmation before updating with unsaved progress (GH-262): Cancel, where focus starts, or Update. */
+    data object Update : WebDialog
 }
 
 /** A save as a Load row: its [label] is `name (NxN)`, with the unsolvable mark when it applies. */
