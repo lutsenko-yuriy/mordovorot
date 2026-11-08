@@ -65,7 +65,11 @@ kotlin {
 tasks.named("jsProcessResources") { dependsOn(":web:worker:shipToWeb") }
 
 // The JVM tests that read the sources and the styles (GH-201's boundary test) must rerun when those change.
-tasks.named("jvmTest") { inputs.dir("src").withPropertyName("sources").withPathSensitivity(PathSensitivity.RELATIVE) }
+tasks.named("jvmTest") {
+    inputs.dir("src").withPropertyName("sources").withPathSensitivity(PathSensitivity.RELATIVE)
+    // GH-262: SkipWaitingMessageTest reads the offline worker's message from its module.
+    inputs.dir("offline/src").withPropertyName("offlineSources").withPathSensitivity(PathSensitivity.RELATIVE)
+}
 
 // GH-218: with no runtime fallback, a distribution without the worker would play without Mordie.
 val checkWorkerShipped = tasks.register("checkWorkerShipped") {

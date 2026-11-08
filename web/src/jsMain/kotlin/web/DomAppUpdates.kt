@@ -23,17 +23,22 @@ internal class DomAppUpdates(private val window: Window) : AppUpdates {
                 // A worker that finished installing on an earlier visit and has waited ever since.
                 if (found.waiting != null && found.active != null) onFound()
                 reportIfWaiting(found, onReady)
-                found.addEventListener("updatefound", {
-                    val installing = found.installing
-                    // The first install is no new version: there is no worker yet to be newer than.
-                    if (found.active != null) onFound()
-                    installing.addEventListener("statechange", {
-                        if (installing.state == "installed") reportIfWaiting(found, onReady)
-                    })
-                })
+                // One the browser's own check on this navigation began installing before this callback ran: its
+                // updatefound came too early to hear.
+                if (found.installing != null && found.active != null) watch(found, found.installing, onFound, onReady)
+                found.addEventListener("updatefound", { watch(found, found.installing, onFound, onReady) })
             },
             { _: dynamic -> },
         )
+    }
+
+    /** Follows [installing] until it is installed, then reports it. The first install is no new version: there is no
+     *  worker yet for it to be newer than. */
+    private fun watch(found: dynamic, installing: dynamic, onFound: () -> Unit, onReady: () -> Unit) {
+        if (found.active != null) onFound()
+        installing.addEventListener("statechange", {
+            if (installing.state == "installed") reportIfWaiting(found, onReady)
+        })
     }
 
     /** Ready is a waiting worker with an active one running the page: on a first visit the worker installs, and nothing is new. */
