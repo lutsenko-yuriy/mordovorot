@@ -8,7 +8,7 @@ Each tier is tracked as "not yet done this period" — a period label, not an ex
 
 | Tier | Cadence | Last run | Period covered | Next due |
 |---|---|---|---|---|
-| Light | 1st of every calendar month | 2026-11-06 | 2026-11 | 2026-12-01 |
+| Light | 1st of every calendar month | 2026-11-08 | 2026-11 | 2026-12-01 |
 | Heavy | 14th of Jan/Apr/Jul/Oct | 2026-10-14 | 2026-Q4 | 2027-01-14 |
 
 ## Carried in
@@ -17,7 +17,6 @@ Items raised outside a checkup (e.g. a debrief) for the next run to walk, each u
 
 | Raised | From | For | Dimension | Item |
 |---|---|---|---|---|
-| 2026-11-06 | GH-251 debrief | next checkup | Test coverage | Delete-flow cases for `keys_check.sh`, with their expected lines. The harness already takes `saves=`, `corrupt=` and `restore=1`. Also measure a long save name at phone sizes with `measure.sh`. Neither could run in GH-251, because there was no bundle to open (see GH-255). |
 
 ## Open findings
 
@@ -26,6 +25,7 @@ Findings needing human decision or larger effort, each carrying an explicit dead
 | ID | Opened | Tier | Dimension | Debt quadrant | Summary | Deadline | Write-up |
 |---|---|---|---|---|---|---|---|
 | CHK-2026-11-06-light-2 | 2026-11-06 | light | Unused functionality | prudent-inadvertent | `MordieSearchFactory.NONE` is a test-only seam in `:shared:mordie` production code — move it to `:shared:testing` | 2027-02-01 | [CHK-2026-11-06-light](CHK-2026-11-06-light.md) |
+| CHK-2026-11-08-light-1 | 2026-11-08 | light | Test coverage | prudent-inadvertent | GH-251's delete flow has no `keys_check.sh` cases and no `measure.sh` run of a long save name at phone sizes; needs a bundle to open (GH-255) | 2026-12-15 | [CHK-2026-11-08-light](CHK-2026-11-08-light.md) |
 
 ## Resolved findings
 
