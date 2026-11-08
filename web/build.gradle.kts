@@ -1,3 +1,5 @@
+import java.security.MessageDigest
+
 plugins {
     kotlin("multiplatform")
 }
@@ -71,6 +73,38 @@ val checkWorkerShipped = tasks.register("checkWorkerShipped") {
     doLast { check(worker.get().asFile.exists()) { "mordie-worker.js is missing from the distribution" } }
 }
 tasks.named("jsBrowserDistribution") { finalizedBy(checkWorkerShipped) }
+
+// GH-262: the offline worker (:web:offline) is part of the distribution itself. It lists this
+// build's files, so it can only be built from them, and it can't sit in jsProcessResources.
+// The dev server has none, so nothing registers there.
+tasks.named<Sync>("jsBrowserDistribution") { from(tasks.getByPath(":web:offline:shipToWeb")) }
+
+// The worker caches the files it lists. A file missing from the list can't be played offline, a
+// listed file the distribution lacks fails every install, and a hash that differs from the
+// shipped file fails them too, so any of these fails the distribution.
+val checkOfflineManifest = tasks.register("checkOfflineManifest") {
+    val dist = layout.buildDirectory.dir("dist/js/productionExecutable")
+    val manifest = provider { project(":web:offline").layout.buildDirectory.file("generated/offlineManifest/manifest.tsv").get().asFile }
+    doLast {
+        val root = dist.get().asFile
+        val lines = manifest.get().readLines().map { it.split('\t') }
+        val cache = lines.first { it[0] == "cache" }[1]
+        val listed = lines.filter { it[0] != "cache" }.associate { it[0] to it[1] }
+        val worker = File(root, "offline-worker.js")
+        check(worker.exists()) { "offline-worker.js is missing from the distribution" }
+        check(cache in worker.readText()) { "offline-worker.js is not the one built for this distribution ($cache)" }
+        val shipped = root.walkTopDown().filter { it.isFile }.map { it.relativeTo(root).invariantSeparatorsPath }
+            .filter { !it.endsWith(".map") && !it.startsWith(".") && it != "offline-worker.js" }.toSet()
+        check(listed.keys.none { it.endsWith(".map") }) { "the offline list names a source map" }
+        check((shipped - listed.keys).isEmpty()) { "not in the offline list: ${shipped - listed.keys}" }
+        check((listed.keys - shipped).isEmpty()) { "in the offline list but not shipped: ${listed.keys - shipped}" }
+        listed.forEach { (path, hash) ->
+            val actual = MessageDigest.getInstance("SHA-256").digest(File(root, path).readBytes()).joinToString("") { "%02x".format(it) }
+            check(actual == hash) { "$path differs from the offline list" }
+        }
+    }
+}
+tasks.named("jsBrowserDistribution") { finalizedBy(checkOfflineManifest) }
 
 tasks.register("serve") {
     group = "application"
