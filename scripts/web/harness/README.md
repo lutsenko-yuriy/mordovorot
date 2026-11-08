@@ -1,4 +1,4 @@
-# Web harness (GH-147, GH-148, GH-156, GH-174, GH-167, GH-168)
+# Web harness (GH-147, GH-148, GH-156, GH-174, GH-167, GH-168, GH-262)
 
 Checks that the web game fits phone screens, headless, compares its computed styles against master,
 checks it from the keyboard and serves it to a real phone.
@@ -45,7 +45,7 @@ Query options (harness.html):
 | `v` | `mouse` | `mouse`, `touch` (the `pointer: coarse` rules always on); `master`, `master-touch` with `--baseline` |
 | `sizes` | `portrait` | comma-separated `WxH`, or a preset: `portrait` (SE through Pro Max), `landscape` (the same turned, plus 750x390 and 814x430: the 14 and Pro Max less Safari's notch insets, GH-148) |
 | `boards` | `3,4,5` | board sides |
-| `mode` | `play` | `play`, `dialog` (Tile labels open), `share` (the Share dialog, GH-243) or `solution` (shifts until Give Up lights, then gives up) |
+| `mode` | `play` | `play`, `dialog` (Tile labels open), `share` (the Share dialog, GH-243), `solution` (shifts until Give Up lights, then gives up) or `offline` (below, GH-262) |
 | `shorter` | `0` | px taken off each height, standing in for the browser's own toolbars (try `100`) |
 | `rows` | `1` | toolbar rows allowed (`2` under 300px wide) |
 | `fit` | `window` | `window` (the page is the window's size) or `scroll` (larger text: may be taller, see above, GH-168) |
@@ -64,6 +64,25 @@ was meant to change. Keep each query to a few cases on the solution screen: Mord
 seconds each, and a query gives up after 10 minutes (`TIMEOUT`). Every board size reaches its solution screen:
 the fast solver's answer (GH-222) lights Give Up at the first check, and on 6×6 to 9×9 (GH-225) the solution list has
 130 to 340 steps.
+
+## Offline play (GH-262)
+
+```
+./gradlew :web:jsBrowserDistribution
+scripts/web/harness/measure.sh "mode=offline&boards=4&sizes=1200x800"
+```
+
+Registers the offline worker from the `with-worker` variant (the only one that has
+`offline-worker.js`; `lib.sh` leaves it out of the others, so no other case changes), waits until it
+is active, which is when every file is cached, then has the server answer 503 to everything and
+opens the game. `OK` means the board rendered from the cache, Mordie searched (Give Up lit after a
+few shifts, so his worker script came from the cache too) and the Save and Share dialogs opened.
+The network is switched on again after the case. Deleting the worker's `fetch` handler turns this
+`BAD`, which is how to see the check can fail.
+
+`serve.py` takes three POSTs for it: `/offline` (every later GET answers 503), `/online` (served
+again) and `/next-version` (`offline-worker.js` is served with one more comment line each time, so
+the browser finds a new version of the worker from the same files). `tests/test_serve.py` covers them.
 
 ## Computed-style diff
 

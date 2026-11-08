@@ -1,7 +1,8 @@
 <!doctype html>
 <!-- GH-147: loads the web game at phone sizes and reports whether it fits the window, or (report=styles,
      GH-156) every element's computed styles, or (report=keys, GH-174, keys.js) focus and the like after each
-     of a list of keys. Served by serve.py and driven by measure.sh or styles_diff.sh; query options are in
+     of a list of keys, or (mode=offline, GH-262) whether the game opens and plays with no connection once the
+     offline worker has cached it. Served by serve.py and driven by measure.sh or styles_diff.sh; query options are in
      README.md. Results go to POST /result. -->
 <meta charset="utf-8">
 <style>iframe { border: 0; display: block; margin: 0 0 10px; }</style>
@@ -10,7 +11,6 @@
 <script src="keys.js"></script>
 <script>
 const q = new URLSearchParams(location.search);
-const variant = q.get("v") || "mouse";
 const report = q.get("report") || "fit"; // fit | styles | keys | qr
 // The keys report is about focus, not fit, so one case is enough.
 const keys = report === "keys";
@@ -22,7 +22,9 @@ const PRESETS = {
 const sizeList = q.get("sizes") || (keys ? "1200x800" : "portrait");
 const sizes = (PRESETS[sizeList] || sizeList).split(",");
 const boards = (q.get("boards") || (keys ? "4" : "3,4,5")).split(",").map(Number);
-const mode = q.get("mode") || "play"; // play | dialog | share | solution
+const mode = q.get("mode") || "play"; // play | dialog | share | solution | offline
+// GH-262: only this variant ships offline-worker.js (lib.sh).
+const variant = mode === "offline" ? "with-worker" : q.get("v") || "mouse";
 const shorter = Number(q.get("shorter") || 0);
 const toolbarRows = Number(q.get("rows") || 1);
 // GH-168: `scroll` lets larger text make the page taller than the window; see measure().
@@ -117,9 +119,51 @@ async function styles(win) {
     });
 }
 
+/** GH-262: registers the offline worker, as the page will, and waits until it is active, which is when
+ *  every file is cached; then the server answers 503 to everything, like a device with no connection. */
+async function goOffline() {
+    const reg = await navigator.serviceWorker.register(`/${variant}/offline-worker.js`, { scope: `/${variant}/` });
+    for (let i = 0; i < 100 && reg.active?.state !== "activated"; i++) await wait(200);
+    if (reg.active?.state !== "activated") return false;
+    await fetch("/offline", { method: "POST" });
+    return true;
+}
+
+/** One line for mode=offline: OK when the game opened from the cache, Mordie searched (his worker script
+ *  came from the cache too) and Save/Load and Share opened. The network is switched on again after. */
+async function offlineReport(win, label) {
+    const doc = win.document;
+    const rendered = !!doc.querySelector(".tile");
+    // Mordie lights Give Up once his search has found a solution, at a check every few shifts (as in
+    // mode=solution); the search is the worker script, fetched from the cache.
+    let searched = false;
+    for (let i = 0; i < 80 && !searched; i++) {
+        const arrows = [...doc.querySelectorAll(".arrow")];
+        arrows[i % 2 ? 0 : arrows.length - 1]?.click();
+        await wait(400);
+        searched = doc.querySelector(".give-up button")?.disabled === false;
+    }
+    const opened = async button => {
+        clickText(doc, button);
+        await wait(300);
+        const dialog = !!doc.querySelector(".dialog");
+        clickText(doc, "Cancel") || clickText(doc, "OK") || doc.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+        await wait(300);
+        return dialog;
+    };
+    const save = await opened("Save"), share = await opened("Share");
+    await fetch("/online", { method: "POST" });
+    const ok = rendered && searched && save && share;
+    return `${ok ? "OK  " : "BAD "}${label} offline: board ${rendered ? "rendered" : "MISSING"}, Mordie ${searched ? "searched" : "DID NOT SEARCH"}, Save ${save ? "opened" : "DID NOT OPEN"}, Share ${share ? "opened" : "DID NOT OPEN"}`;
+}
+
 async function run(size, board) {
     const [w, full] = size.split("x").map(Number);
     const h = full - shorter;
+    if (mode === "offline" && !await goOffline()) {
+        results.push(`BAD ${variant} offline ${w}x${h}: the worker never activated`);
+        return;
+    }
     const f = document.createElement("iframe");
     f.width = w;
     f.height = h;
@@ -165,7 +209,7 @@ async function run(size, board) {
         await wait(500);
     }
     const line = win.document.querySelector(".mordie .line");
-    if (line) line.innerHTML = `<span class="name">Mordie:</span> ${LONG}`;
+    if (line && mode !== "offline") line.innerHTML = `<span class="name">Mordie:</span> ${LONG}`;
     if (mode === "dialog") {
         clickText(win.document, "Labels");
         await wait(300);
@@ -182,7 +226,9 @@ async function run(size, board) {
     const rootPx = parseFloat(win.getComputedStyle(win.document.documentElement).fontSize);
     const text = rootPx === 16 || report === "styles" ? "" : ` text ${rootPx}px`;
     const label = `${mode} ${w}x${h} ${board}x${board}${solution}${text}`;
-    if (report === "qr") {
+    if (mode === "offline") {
+        results.push(await offlineReport(win, `${variant} ${label}`));
+    } else if (report === "qr") {
         results.push(await qrReadback(win, `${variant} ${label}`));
     } else if (keys) {
         results.push(...await runKeys(win, (q.get("keys") || "").split(",").filter(Boolean), `${variant} ${label}`));

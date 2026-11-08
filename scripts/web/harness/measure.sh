@@ -4,8 +4,9 @@
 # Usage: measure.sh [--text-size=<percent>] [--baseline <dist dir>] <query>...
 #   Run `./gradlew :web:jsBrowserDistribution` first. Each <query> is harness.html's query string
 #   (see README.md), e.g. "v=touch&mode=solution&boards=3" or "report=keys&keys=click:Labels,Tab"
-#   (GH-174). Variants: mouse, touch (the `pointer: coarse` rules always on), and with --baseline,
-#   master and master-touch from that bundle. --text-size sets the browser's font size (GH-168).
+#   (GH-174). Variants: mouse, touch (the `pointer: coarse` rules always on), with-worker (mouse, plus
+#   the offline worker, GH-262: mode=offline uses it) and with --baseline, master and master-touch
+#   from that bundle. --text-size sets the browser's font size (GH-168).
 #
 # Chrome runs headless in real time with a throwaway profile; see lib.sh.
 
@@ -35,6 +36,7 @@ fi
 make_work
 add_variant "$dist" mouse mouse
 add_variant "$dist" touch touch
+add_variant "$dist" with-worker mouse worker
 if [[ -n "$baseline" ]]; then
   add_variant "$baseline" master mouse
   add_variant "$baseline" master-touch touch
