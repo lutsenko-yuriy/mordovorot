@@ -523,3 +523,7 @@ Fired when the player presses Delete in the confirmation, whatever happens next.
 Already covered: after the last save is deleted at startup the size picker opens and fires `screen_size_dialog` with `opened_from: startup`; after the last save is deleted mid-game the dialog closes and the game carries on, with nothing to track.
 
 Never sent: the save's name (free text, as for every save event) and its contents. Not tracked: the trash icon press itself (the confirmation's screen view covers it), hovering over its tooltip, and any property that tells an Enter or Space press from a pointer click, since that could hint at screen-reader use (GH-167, GH-180).
+
+## GH-260 (no exact search on 5x5 and bigger)
+
+No new events or properties. On 5x5 and bigger the exact search no longer runs, so `mordie_solution_found.source` is always `fast_solver` there, `proven_shortest`, `solution_proven_shortest` and `mordie_proven_shortest` are `false` (except when the fast answer happens to equal the lower bound, or on a solved board), and `mordie_shorter_found` no longer fires. 3x3 and 4x4 are unchanged.

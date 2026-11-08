@@ -69,14 +69,14 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                              # both solvers (GH-213)
 │       ├── ThreeCycleSolver.kt      # Fast, non-minimal solver (GH-213): places tiles one per step
 │       │                              # with row/column commutator 3-cycles; run by BestSolutionSolver (GH-222)
-│       ├── BestSolutionSolver.kt    # GH-222: steps ThreeCycleSolver, then IdaStarSolver; keeps the
+│       ├── BestSolutionSolver.kt    # GH-222: steps ThreeCycleSolver, then IdaStarSolver (up to 4x4 only, GH-260); keeps the
 │       │                              # best solution so far, its source and whether it is proven shortest;
 │       │                              # a kept best (GH-224) is the answer from the start and skips the fast solver
 │       ├── MordieSearch.kt          # MordieSearch / SearchProgress / MordieSearchFactory (+ NONE) -
 │       │                              # the seam tests replace with FakeMordieSearchFactory;
 │       │                              # start(original, ruledOut, best) - best is the kept solution (GH-224)
 │       ├── BackgroundMordieSearch.kt # The real search: one throttled coroutine on
-│       │                               # Dispatchers.Default stepping a BestSolutionSolver until proven (GH-222), publishing a volatile snapshot;
+│       │                               # Dispatchers.Default stepping a BestSolutionSolver until proven (GH-222), or on 5x5+ until the fast answer is in (GH-260), publishing a volatile snapshot;
 │       │                               # onSnapshot forwards each one (the browser's worker, GH-218)
 │       ├── SearchProtocol.kt        # GH-218: the page <-> Web Worker messages as plain strings
 │       │                              # (start: arrangement + saved N + kept solution; progress, with the solution)
