@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-_(nothing in progress)_
+- GH-262: Offline play and a New version available notice (WU0 merged; WU1-WU2 pending)
 
 ---
 
