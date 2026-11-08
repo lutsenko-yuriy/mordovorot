@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.39.1] — 2026-11-08 (PR #259 merged)
+
+### Changed
+
+- [meta] (PR #259) GH-258: the curfew block message says to create `.claude/curfew.env`, and `curfew.sh` creates that file when it is missing (with the curfew hours in it) instead of only naming it.
+
 ## [0.39.0] — 2026-11-06 (PR #254 merged)
 
 ### Added
