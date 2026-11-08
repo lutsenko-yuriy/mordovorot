@@ -24,7 +24,7 @@ def handler(results: str, site: str = "."):
         def do_GET(self):
             if Handler.offline:
                 self.send_error(503)
-            elif Handler.version and self.path.split("?")[0].endswith("/offline-worker.js"):
+            elif Handler.version and self.path.split("?")[0].endswith("/offline-worker.js") and os.path.isfile(self.translate_path(self.path.split("?")[0])):
                 self.send_next_version()
             else:
                 super().do_GET()

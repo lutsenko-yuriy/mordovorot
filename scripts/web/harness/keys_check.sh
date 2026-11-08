@@ -32,6 +32,8 @@ queries=(
   "report=keys&keys=6,ArrowRight,Tab,ArrowDown,ArrowDown,Tab,Tab,Tab,Escape"
   "report=keys&keys=focus:controls,Enter,ArrowLeft,Enter"
   "report=keys&keys=focus:labels,6,Escape,1,Escape"
+  # GH-262: the New version available notice. Update with no moves reloads, so a shift first; the dialog opens on Cancel, Escape and Cancel return to Update.
+  "report=keys&update=ready&keys=click:▶,focus:update,Enter,Escape,focus:update,Enter,Tab,Tab,Enter"
   # GH-243: Share opens on Copy link; Tab stays inside it; Escape puts focus back on Share.
   "report=keys&keys=click:Share,Tab,Tab,Tab,Escape"
   # OK into keyboard mode: focus on the board, where the digits then work.

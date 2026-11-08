@@ -83,6 +83,14 @@ class ServeTest(unittest.TestCase):
 
         self.assertNotEqual(first, self.get("/offline-worker.js"))
 
+    def test_a_variant_without_the_worker_still_answers_404_after_a_next_version(self):
+        self.post("/next-version")
+
+        with self.assertRaises(urllib.error.HTTPError) as caught:
+            self.get("/other/offline-worker.js")
+
+        self.assertEqual(404, caught.exception.code)
+
     def test_the_worker_with_a_query_gets_the_next_version_too(self):
         self.post("/next-version")
 
