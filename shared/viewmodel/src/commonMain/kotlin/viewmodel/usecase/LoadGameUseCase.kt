@@ -33,7 +33,7 @@ internal class LoadGameUseCase(
     private val tileLabelsUseCase: TileLabelsUseCase,
 ) {
 
-    /** [trigger] is `"command"` for a mid-game load (toolbar Load / F6), or `"startup_prompt"`
+    /** [trigger] is `"command"` for a mid-game load (toolbar Load / 3), or `"startup_prompt"`
      *  when called from `restoreOnStartup` - see `load_command_used` in docs/ANALYTICS_EVENTS.md.
      *  Returns whether the board was actually restored, so `restoreOnStartup` can report an
      *  accurate `startup_restore_decision` instead of assuming success (audit on PR #14: a

@@ -3,7 +3,7 @@
 A version of Loopover, a sliding-row/column puzzle, written in Kotlin. It runs in a web browser, at
 https://lutsenko-yuriy.github.io/mordovorot/.
 
-The board is a `SQUARE_SIDE × SQUARE_SIDE` grid (3×3 to 9×9, default 4×4) holding a
+The board is a square grid (3×3 to 9×9, default 4×4) holding a
 shuffled permutation of numbers. Rows shift left/right and columns shift up/down,
 cyclically wrapping around, until the board is back in ascending order.
 
