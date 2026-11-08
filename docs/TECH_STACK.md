@@ -16,7 +16,7 @@
 
 ## Platforms
 
-- Web browser (GH-110): the `:web` Kotlin/JS client (plain DOM and CSS, no UI framework), published on GitHub Pages at https://lutsenko-yuriy.github.io/mordovorot/ (GH-111), and served on `http://localhost:8080` by `./gradlew :web:serve -t` (the Kotlin plugin's webpack dev server under continuous build, so it rebuilds on change, GH-124; the port is pinned because browser saves are per origin). Mordie's search runs in a Web Worker (GH-218): the `:web:worker` module builds `mordie-worker.js`, which `:web` ships next to `web.js`
+- Web browser (GH-110): the `:web` Kotlin/JS client (plain DOM and CSS, no UI framework), published on GitHub Pages at https://lutsenko-yuriy.github.io/mordovorot/ (GH-111), and served on `http://localhost:8080` by `./gradlew :web:serve -t` (the Kotlin plugin's webpack dev server under continuous build, so it rebuilds on change, GH-124; the port is pinned because browser saves are per origin). Mordie's search runs in a Web Worker (GH-218): the `:web:worker` module builds `mordie-worker.js`, which `:web` ships next to `web.js`. The offline worker (GH-262) is a service worker built the same way by the `:web:offline` module into `offline-worker.js`; it caches the whole game so the page opens with no connection
 
 ## Tooling
 

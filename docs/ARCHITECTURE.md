@@ -259,6 +259,25 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                        # generated resources (the worker project writes, because
 │                                        # `serve` moves build directories, GH-124), and
 │                                        # checkWorkerShipped fails a distribution without it
+├── offline/                             # :web:offline (GH-262): Kotlin/JS service worker, stdlib only. Built
+│   │                                    # into offline-worker.js, a name that never changes: an installed
+│   │                                    # worker only re-checks its own URL. Not registered by the page
+│   │                                    # yet (WU2)
+│   ├── src/commonMain/kotlin/offline/OfflineCache.kt # DOM-free: cacheKeyOf (the root, index.html or a
+│   │                                    # listed file is answered from the cache; anything else, the source
+│   │                                    # map included, goes to the network), staleCaches (older
+│   │                                    # `mordovorot-` caches only), the skip-waiting message
+│   ├── src/jsMain/kotlin/offline/Main.kt # The worker over `self`: install caches every listed file,
+│   │                                    # fetched with `cache: "reload"` and checked against its SHA-256 (a
+│   │                                    # mismatch fails the install); activate deletes stale caches and
+│   │                                    # doesn't claim clients; fetch is cache first; skip-waiting
+│   │                                    # releases a waiting worker
+│   └── build.gradle.kts                 # generateOfflineManifest lists :web's bundle and processed
+│                                        # resources (no maps, dotfiles or the worker) with their hashes,
+│                                        # writes OfflineManifest.kt (cache name `mordovorot-<version>-
+│                                        # <first 12 hex of the files' combined hash>`) and manifest.tsv;
+│                                        # shipToWeb copies the worker into :web's generated dist inputs.
+│                                        # Compiling the worker builds :web's production bundle first
 ├── src/commonMain/kotlin/web/WorkerMordieSearch.kt # GH-218: the page's MordieSearch over a SearchPort
 │                                        # (one worker per search; cancel terminates it); DOM-free
 ├── src/jsMain/kotlin/web/DomSearchPort.kt # GH-218: SearchPort over Worker("mordie-worker.js")
@@ -674,6 +693,13 @@ the preferences.
   (`jsBrowserDistribution`) to GitHub Pages after a green `master` build; the repo's Pages
   source is "GitHub Actions". The site lives under `/mordovorot/`, so `index.html` must load
   its assets by relative URLs (`IndexPageTest` pins this).
+  **Offline worker (GH-262):** `jsBrowserDistribution` takes `offline-worker.js` from
+  `:web:offline:shipToWeb` (the distribution is a `Sync`, so the worker is one of its inputs, not
+  written in afterwards), and `checkOfflineManifest`, its finalizer, fails the build when a
+  shipped file is missing from the worker's list, a listed file is not shipped or differs from
+  its hash, the list names a source map, or the worker is missing or was built for other files.
+  The dev server has no worker. The cache name carries the files' hash, so the worker's bytes
+  change exactly when a shipped file does, which is how the browser notices a new version.
 - **Test framework:** `kotlin("test")` on the JUnit 5 platform (`useJUnitPlatform()`).
   No mocking library — hand-written fakes; doubles of
   shared types are in the `:shared:testing` module.

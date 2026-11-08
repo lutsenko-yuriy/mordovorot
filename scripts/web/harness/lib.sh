@@ -51,9 +51,12 @@ stop_work() {
   rm -rf "$work"
 }
 
-# A variant: a copy of a bundle, with the touch-screen rules forced on when asked.
+# A variant: a copy of a bundle, with the touch-screen rules forced on when asked. GH-262: without
+# offline-worker.js unless a fourth argument says "worker", so a case that doesn't ask for it can't
+# be changed by one; mode=offline uses the one variant that has it.
 add_variant() {
   cp -R "$1" "$work/site/$2"
+  [[ "${4:-}" == "worker" ]] || rm -f "$work/site/$2/offline-worker.js"
   if [[ "$3" == "touch" ]]; then
     sed -i '' 's/@media (pointer: coarse)/@media all/' "$work/site/$2"/*.css
   fi
