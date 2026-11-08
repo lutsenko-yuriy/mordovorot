@@ -527,3 +527,33 @@ Never sent: the save's name (free text, as for every save event) and its content
 ## GH-260 (no exact search on 5x5 and bigger)
 
 No new events or properties. On 5x5 and bigger the exact search no longer runs, so `mordie_solution_found.source` is always `fast_solver` there, `proven_shortest`, `solution_proven_shortest` and `mordie_proven_shortest` are `false` (except when the fast answer happens to equal the lower bound, or on a solved board), and `mordie_shorter_found` no longer fires. 3x3 and 4x4 are unchanged.
+
+## GH-262 (offline play and a New version available notice)
+
+Planned in `/analyze`; the web client uses `NoopAnalyticsService` until an SDK is wired up (GH-256).
+
+### `update_available`
+
+Fired once per version when the footer notice `New version available. Update` appears: the new version is fully cached and ready. *(GH-262)*
+
+| Property | Type | Description |
+|---|---|---|
+| `check_trigger` | `string` | The check that found it: `load` (the page loaded), `tab_return` (the player came back to the tab) or `game_end` (the game was solved or given up). |
+| `current_version` | `string` | The running version, the same one the footer and `app_launched.app_version` show. |
+
+### `update_applied`
+
+Fired just before the page reloads to the new version, after a click on `Update` (and, with unsaved progress, a click on Update in the dialog). *(GH-262)*
+
+| Property | Type | Description |
+|---|---|---|
+| `had_unsaved_progress` | `boolean` | Whether the game had unsaved progress when `Update` was clicked. |
+| `confirmed` | `boolean` | `true` when it went through the confirmation dialog, `false` for a direct reload (no unsaved progress). |
+
+`dialog_cancelled.dialog` takes a new value, `update`: Cancel (or Escape) in the update confirmation.
+
+| Screen name | When tracked |
+|---|---|
+| `screen_update_dialog` | The update confirmation opens (`Update` clicked with unsaved progress). Properties `board_size`: number; `move_count`: number - the shifts at stake. *(GH-262)* |
+
+Not tracked: each version check and a check that finds nothing, a failed or incomplete download, offline launches (they cannot be sent while offline), hovering over the `Update` link, and the new version's number (the page cannot know it before reloading).
