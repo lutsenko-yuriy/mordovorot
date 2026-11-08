@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.40.1] — 2026-11-08 (PR #264 merged)
+
+### Added
+
+- [wip] (PR #264) GH-262 (WU1): the offline worker and its build, not registered by the page yet. The new `:web:offline` module builds `offline-worker.js`; `generateOfflineManifest` lists the shipped files with their hashes and `checkOfflineManifest` fails the build when the list and the distribution disagree; the web harness gets `mode=offline`.
+
 ## [0.40.0] — 2026-11-08 (PR #263 merged)
 
 ### Changed
