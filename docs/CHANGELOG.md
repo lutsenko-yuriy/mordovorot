@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.40.0] — 2026-11-08 (PR #263 merged)
+
+### Changed
+
+- [test] (PR #263) GH-262 (WU0): scenario stubs for offline play and the update notice, plus the analytics plan and the Update notice glossary term.
+
 ## [0.40.0] — 2026-11-08 (PR #261 merged)
 
 ### Changed
