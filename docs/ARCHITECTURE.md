@@ -158,7 +158,9 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                             # beat the preference, which beats NUMBERS. One per session,
 │       │                             # so a mode switch keeps them; reads the preference once (GH-139).
 │       │                             # A scheme that doesn't fit the side shows NUMBERS
-│       │                             # (LETTERS_UNAVAILABLE), the preference kept (GH-160)
+│       │                             # (LETTERS_UNAVAILABLE), the preference kept (GH-160).
+│       │                             # applyShared() shows a share link's labels for this game
+│       │                             # only (SHARED_LINK), the preference untouched (GH-267)
 │       ├── SolutionReplay.kt      # Mordie's steps on their own copy of the original arrangement,
 │       │                             # stepped one shift at a time (next/previous/restart); the
 │       │                             # game's board, moves and Mordie never see it (GH-126)
@@ -202,7 +204,9 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── PlayMode.kt / PlayModePreference.kt # Mouse or keyboard, kept under `input_mode` (GH-171)
 │   ├── PressedWith.kt   # The session's last input, read per event as input_method (GH-171)
 │   ├── ShareLink.kt     # GH-243 (WU1): `<page address>#b=<board>` built and read; playable, or rejected
-│   │                      # as invalid / unsupported_size / unsolvable. storage.BoardLinkFormat (ADR-0005) holds the board's bits
+│   │                      # as invalid / unsupported_size / unsolvable. storage.BoardLinkFormat (ADR-0005) holds the board's bits.
+│   │                      # GH-267: an optional `&l=<TileLabels.wireName>` part, read as LinkLabels (None, Unreadable or Scheme)
+│   ├── ShareLabelsPreference.kt # GH-267: the Share dialog's `Include my tile labels` toggle, on/off under `share_labels`, read once per session
 │   ├── qr/              # GH-243 (WU1): a DOM-free QR encoder (byte mode, ECC M, versions 1-10: QrCode, ReedSolomon, QrTables, QrMasks) and its SVG path (QrSvg);
 │   │                      # imports only the standard library, a boundary test checks it (as web.a11y)
 │   ├── Clipboard.kt     # GH-243 (WU3): copy(text, done), which may be refused; DomClipboard (jsMain) tries the async API, then the old copy command on the selected link field
