@@ -106,7 +106,19 @@ sealed interface WebDialog {
 
     /** The Share dialog (GH-243): the [link] to a [side] x [side] board - the one Mordie started from when
      *  [startKnown], else the board as it is; [qr] is the link as a code, `null` when too long for one. */
-    data class Share(val link: String, val side: Int, val startKnown: Boolean, val qr: QrCode?, val copied: Boolean = false) : WebDialog {
+    data class Share(
+        val link: String,
+        val side: Int,
+        val startKnown: Boolean,
+        val qr: QrCode?,
+        val copied: Boolean = false,
+        /** The scheme shown on the board, which the link carries when [includeLabels] is on (GH-267). */
+        val labels: TileLabels = TileLabels.DEFAULT,
+        val includeLabels: Boolean = false,
+    ) : WebDialog {
+        /** The toggle's text, which also names it for readers. */
+        val labelsToggle: String get() = "Include my tile labels (${labels.title})"
+
         val note: String get() =
             if (startKnown) "Anyone who opens this link starts from the same ${side}x$side board."
             else "Anyone who opens this link starts from this ${side}x$side board as it is now."

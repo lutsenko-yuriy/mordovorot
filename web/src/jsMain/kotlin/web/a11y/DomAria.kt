@@ -40,6 +40,13 @@ internal fun asRadio(button: Element, checked: Boolean, rovingTabStop: Boolean =
     }
 }
 
+/** [button] as a check box, which its text names (GH-267). A button rather than a native check box: the page is rebuilt every
+ *  frame, so a native one would lose its focus and state, as radios would (GH-139). */
+internal fun asCheckbox(button: Element, checked: Boolean) {
+    button.setAttribute("role", "checkbox")
+    button.setAttribute("aria-checked", checked.toString())
+}
+
 /** Seen, not read. */
 internal fun <E : Element> hiddenFromReaders(element: E): E = element.apply { setAttribute("aria-hidden", "true") }
 
