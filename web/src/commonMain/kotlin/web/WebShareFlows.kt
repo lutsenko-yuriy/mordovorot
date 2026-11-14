@@ -114,8 +114,14 @@ internal class WebShareFlows(
                     else -> "differs"
                 }
                 analytics.track("shared_board_opened", mapOf("result" to "started", "board_size" to side, "labels" to labels))
-                game.showStatus("Started a shared ${side}x$side board.")
-                if (labels == "differs") askLabels(carried!!, own, side)
+                val started = "Started a shared ${side}x$side board."
+                if (labels == "differs") {
+                    // Not drawn on its own: the prompt's frame shows it, so a prompt that follows another doesn't blink.
+                    game.noteStatus(started)
+                    askLabels(carried!!, own, side)
+                } else {
+                    game.showStatus(started)
+                }
                 return true
             }
         }

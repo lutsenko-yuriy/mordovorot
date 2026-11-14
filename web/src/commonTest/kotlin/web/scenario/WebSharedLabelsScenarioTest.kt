@@ -138,7 +138,7 @@ class WebSharedLabelsScenarioTest {
         assertEquals(PromptForPairs, page.state.dialog)
         assertEquals(shown(LINKED_4X4), page.state.tiles)
         assertEquals(Focus.SharedLabelsYes, page.state.focus)
-        assertFalse(page.frames.any { it.dialog == null && it.tiles == shown(LINKED_4X4) && it.labels == TileLabels.NUMBERS && it.status == null })
+        assertFalse(page.frames.any { it.dialog == null && it.tiles == shown(LINKED_4X4) && it.labels == TileLabels.NUMBERS })
     }
 
     @Test

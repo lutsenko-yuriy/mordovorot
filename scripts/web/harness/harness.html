@@ -22,7 +22,8 @@ const PRESETS = {
 };
 const sizeList = q.get("sizes") || (keys ? "1200x800" : "portrait");
 const sizes = (PRESETS[sizeList] || sizeList).split(",");
-const boards = (q.get("boards") || (keys ? "4" : "3,4,5")).split(",").map(Number);
+// mode=shared-labels (GH-267) opens a fixed 4x4 link, so it measures 4x4 only.
+const boards = (q.get("boards") || (keys || q.get("mode") === "shared-labels" ? "4" : "3,4,5")).split(",").map(Number);
 const mode = q.get("mode") || "play"; // play | dialog | share | solution | offline | shared-labels
 // GH-262: update=ready has the page find a new version, which it takes a worker for.
 // update=uncontrolled (GH-262): the page the worker never took control of (a first visit), where nothing but the worker's
