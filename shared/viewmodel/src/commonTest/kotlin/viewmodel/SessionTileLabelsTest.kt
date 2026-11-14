@@ -133,4 +133,38 @@ class SessionTileLabelsTest {
         assertEquals(TileLabels.LETTERS, labels.preferred)
         assertEquals("letters", store.values["tile_labels"])
     }
+
+    @Test
+    fun `a share link's labels show for this game only (GH-267)`() {
+        val labels = session("letters")
+
+        labels.applyShared(TileLabels.PAIRS, 4)
+
+        assertEquals(TileLabels.PAIRS, labels.current)
+        assertEquals(TileLabelsSource.SHARED_LINK, labels.source)
+        assertEquals(TileLabels.LETTERS, labels.preferred)
+        assertEquals("letters", store.values["tile_labels"])
+    }
+
+    @Test
+    fun `the next new game goes back to the preference after a share link's labels`() {
+        val labels = session("letters")
+        labels.applyShared(TileLabels.PAIRS, 4)
+
+        labels.resetToPreference(4)
+
+        assertEquals(TileLabels.LETTERS, labels.current)
+        assertEquals(TileLabelsSource.PREFERENCE, labels.source)
+    }
+
+    @Test
+    fun `a share link's labels that don't fit the side show numbers`() {
+        val labels = session()
+
+        labels.applyShared(TileLabels.LETTERS, 6)
+
+        assertEquals(TileLabels.NUMBERS, labels.current)
+        assertEquals(TileLabelsSource.LETTERS_UNAVAILABLE, labels.source)
+        assertNull(labels.preferred)
+    }
 }
