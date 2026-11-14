@@ -137,6 +137,13 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                     button("Open") { game.share.onOpenAnswered(true) },
                 ),
             )
+            is WebDialog.SharedLabels -> append(
+                text("message", dialog.message),
+                actions(
+                    button("No", "secondary") { game.share.onSharedLabelsAnswered(false) }.focusKey(Focus.SharedLabelsNo),
+                    button("Yes") { game.share.onSharedLabelsAnswered(true) }.focusKey(Focus.SharedLabelsYes),
+                ),
+            )
             WebDialog.Update -> append(
                 text("message", "The current game will be lost unless you save it first."),
                 actions(

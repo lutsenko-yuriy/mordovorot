@@ -87,6 +87,12 @@ mouse play 1200x800 4x4 | Tab page -> focus BUTTON "Close" role button name "Clo
 mouse play 1200x800 4x4 | Tab page -> focus share-link role textbox name "Share link" | dialog "Share this board" | ring none | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
 mouse play 1200x800 4x4 | Tab page -> focus copy-link role button name "Copy link" | dialog "Share this board" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
 mouse play 1200x800 4x4 | Escape page -> focus share role button name "Share" | dialog - | ring solid | keyboard yes | inert - | said -
+mouse shared-labels 1200x800 4x4 | start - -> focus shared-labels-yes role button name "Yes" | dialog "Use the sender's labels (Pairs)?" | ring none | keyboard no | inert DIV.stage DIV.panel FOOTER.footer | said "Started a shared 4x4 board."
+mouse shared-labels 1200x800 4x4 | Tab page -> focus shared-labels-no role button name "No" | dialog "Use the sender's labels (Pairs)?" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse shared-labels 1200x800 4x4 | Tab page -> focus shared-labels-yes role button name "Yes" | dialog "Use the sender's labels (Pairs)?" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse shared-labels 1200x800 4x4 | Escape page -> focus - | dialog - | ring - | keyboard yes | inert - | said -
+mouse shared-labels 1200x800 4x4 | start - -> focus shared-labels-yes role button name "Yes" | dialog "Use the sender's labels (Pairs)?" | ring none | keyboard no | inert DIV.stage DIV.panel FOOTER.footer | said "Started a shared 4x4 board."
+mouse shared-labels 1200x800 4x4 | Enter native -> focus - | dialog - | ring - | keyboard yes | inert - | said -
 mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert - | said "New 4x4 game"
 mouse play 1200x800 4x4 | 6 page -> focus mode-mouse role radio name "Mouse" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
 mouse play 1200x800 4x4 | ArrowRight page -> focus mode-keyboard role radio name "Keyboard" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -

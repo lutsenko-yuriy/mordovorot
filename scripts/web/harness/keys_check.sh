@@ -36,6 +36,9 @@ queries=(
   "report=keys&update=ready&keys=click:▶,focus:update,Enter,Escape,focus:update,Enter,Tab,Tab,Enter"
   # GH-243: Share opens on Copy link; Tab stays inside it; Escape puts focus back on Share.
   "report=keys&keys=click:Share,Tab,Tab,Tab,Escape"
+  # GH-267: a link whose labels differ asks first, focus on Yes; Tab cycles inside; Escape is No; Enter on Yes accepts.
+  "report=keys&mode=shared-labels&keys=Tab,Tab,Escape"
+  "report=keys&mode=shared-labels&keys=Enter"
   # OK into keyboard mode: focus on the board, where the digits then work.
   "report=keys&keys=6,ArrowRight,click:OK,1,Escape"
   # Digits only work in keyboard mode, where each button shows and names its shortcut.
