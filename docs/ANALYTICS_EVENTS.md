@@ -557,3 +557,46 @@ Fired just before the page reloads to the new version, after a click on `Update`
 | `screen_update_dialog` | The update confirmation opens (`Update` clicked with unsaved progress). Properties `board_size`: number; `move_count`: number - the shifts at stake. *(GH-262)* |
 
 Not tracked: each version check and a check that finds nothing, a failed or incomplete download, offline launches (they cannot be sent while offline), hovering over the `Update` link, and the new version's number (the page cannot know it before reloading).
+
+## GH-267 (share tile labels in the share link)
+
+Planned in `/analyze`; the web client uses `NoopAnalyticsService` until an SDK is wired up (GH-256). Scheme values are those of `tile_labels_changed` (GH-139).
+
+New screen view:
+
+| Screen name | When tracked |
+|---|---|
+| `screen_shared_labels_dialog` | The receiver's `Use the sender's labels (<scheme>)?` prompt opens. It doesn't open when the link's labels equal the receiver's, or when the link carries none or unreadable ones. Properties `board_size`: number; `sender_labels`: scheme; `receiver_labels`: the scheme the receiver would otherwise see. *(GH-267)* |
+
+`screen_share_dialog` gains `include_labels` (`boolean`): the toggle's state when the dialog opened (the remembered choice).
+
+`dialog_cancelled.dialog` takes a new value, `shared_labels` (No or Escape in the labels prompt). `via` and `input_method` work as for the other dialogs.
+
+### `share_labels_toggled`
+
+Fired when the sender flips the `Include my tile labels` toggle in the Share dialog. *(GH-267)*
+
+| Property | Type | Description |
+|---|---|---|
+| `enabled` | `boolean` | The toggle's new state. |
+| `labels` | `string` | The scheme shown on the board, the one the link would carry. |
+| `board_size` | `number` | The shared board's side. |
+| `input_method` | `string` | `keyboard` or `rich_ui`. |
+
+### `shared_labels_accepted`
+
+Fired when the receiver presses Yes in the labels prompt: the sender's labels show for that game only. No fires `dialog_cancelled` instead. *(GH-267)*
+
+| Property | Type | Description |
+|---|---|---|
+| `sender_labels` | `string` | The scheme the link carried. |
+| `receiver_labels` | `string` | The scheme the receiver would otherwise have seen. |
+| `board_size` | `number` | The board's side. |
+| `input_method` | `string` | `keyboard` or `rich_ui`. |
+
+Additions to existing events:
+- `board_share_link_copied` gains `includes_labels` (`boolean`): whether the copied link carries the sender's labels.
+- `shared_board_opened` gains `labels` (`string`, only when `result` is `started`): `none` (the link has no labels), `same` (they equal the receiver's, so no prompt), `differs` (the prompt followed) or `unreadable` (the labels were ignored).
+- `tile_labels_changed.from_source` takes a new value, `shared_link`: the game showed labels the receiver accepted from a link.
+
+Not tracked: QR scans of a labelled link (indistinguishable from a typed link, as in GH-243), which solved games came from a link (`board_solved.tile_labels` already gives difficulty by labels), the toggle's remembered state at launch (`screen_share_dialog.include_labels` covers it), and hovering over or focusing the toggle. The link and the board are never sent.
