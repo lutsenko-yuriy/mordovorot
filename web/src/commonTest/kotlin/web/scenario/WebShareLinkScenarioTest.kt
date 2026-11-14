@@ -37,7 +37,7 @@ class WebShareLinkScenarioTest {
         assertContentEquals(SHARED_5X5, page.mordieSearches.latest.original)
         assertEquals("Started a shared 5x5 board.", page.state.status)
         assertEquals(listOf("app_launched", "shared_board_opened"), page.analytics.events.map { it.name })
-        assertEquals(listOf(mapOf("result" to "started", "board_size" to 5)), page.ownProps("shared_board_opened"))
+        assertEquals(listOf(mapOf("result" to "started", "board_size" to 5, "labels" to "none")), page.ownProps("shared_board_opened"))
     }
 
     @Test
@@ -97,7 +97,7 @@ class WebShareLinkScenarioTest {
         assertNull(page.state.dialog)
         assertEquals(shown(SHARED_4X4), page.state.tiles)
         assertEquals("Started a shared 4x4 board.", page.state.status)
-        assertEquals(listOf(mapOf("result" to "started", "board_size" to 4)), page.ownProps("shared_board_opened"))
+        assertEquals(listOf(mapOf("result" to "started", "board_size" to 4, "labels" to "none")), page.ownProps("shared_board_opened"))
     }
 
     @Test

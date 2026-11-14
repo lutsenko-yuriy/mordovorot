@@ -9,6 +9,7 @@
 <pre id="out">pending</pre>
 <div id="frames"></div>
 <script src="keys.js"></script>
+<script src="modes.js"></script>
 <script>
 const q = new URLSearchParams(location.search);
 const report = q.get("report") || "fit"; // fit | styles | keys | qr
@@ -21,8 +22,9 @@ const PRESETS = {
 };
 const sizeList = q.get("sizes") || (keys ? "1200x800" : "portrait");
 const sizes = (PRESETS[sizeList] || sizeList).split(",");
-const boards = (q.get("boards") || (keys ? "4" : "3,4,5")).split(",").map(Number);
-const mode = q.get("mode") || "play"; // play | dialog | share | solution | offline
+// mode=shared-labels (GH-267) opens a fixed 4x4 link, so it measures 4x4 only.
+const boards = (q.get("boards") || (keys || q.get("mode") === "shared-labels" ? "4" : "3,4,5")).split(",").map(Number);
+const mode = q.get("mode") || "play"; // play | dialog | share | solution | offline | shared-labels
 // GH-262: update=ready has the page find a new version, which it takes a worker for.
 // update=uncontrolled (GH-262): the page the worker never took control of (a first visit), where nothing but the worker's
 // own state says an Update is done.
@@ -206,7 +208,7 @@ async function runCase(size, board) {
     for (const name of named("saves")) localStorage.setItem(`mordovorot.save.${name}`, `4\n${[...Array(16).keys()].join(" ")}\n0\n`);
     for (const name of named("corrupt")) localStorage.setItem(`mordovorot.save.${name}`, "not a save");
     const seeded = named("saves").length + named("corrupt").length > 0;
-    f.src = `/${variant}/index.html`;
+    f.src = `/${variant}/index.html${modeFragment(mode)}`;
     document.getElementById("frames").append(f);
     await new Promise(r => f.onload = r);
     if (update && !await findNewVersion(f)) {
@@ -224,35 +226,15 @@ async function runCase(size, board) {
     }
     // With no saves, startup asks for a size.
     const pick = `${board}x${board}`;
-    let picked = keepRestore || clickText(win.document, pick);
+    // mode=shared-labels (GH-267) opens on a share link, which starts its board and skips the size picker.
+    let picked = keepRestore || mode === "shared-labels" || clickText(win.document, pick);
     if (!picked) {
         clickText(win.document, "New");
         await wait(200);
         picked = clickText(win.document, pick);
     }
     await wait(400);
-    if (mode === "solution") {
-        // Mordie reveals its solution at a check every 5 shifts, so keep shifting until Give Up lights up.
-        for (let i = 0; i < 80 && win.document.querySelector(".give-up button")?.disabled !== false; i++) {
-            const arrows = [...win.document.querySelectorAll(".arrow")];
-            arrows[i % 2 ? 0 : arrows.length - 1]?.click();
-            await wait(400);
-        }
-        clickText(win.document, "Give Up");
-        await wait(300);
-        clickText(win.document, "Yes");
-        await wait(500);
-    }
-    const line = win.document.querySelector(".mordie .line");
-    if (line && mode !== "offline") line.innerHTML = `<span class="name">Mordie:</span> ${LONG}`;
-    if (mode === "dialog") {
-        clickText(win.document, "Labels");
-        await wait(300);
-    }
-    if (mode === "share") {
-        clickText(win.document, "Share");
-        await wait(300);
-    }
+    await setUpMode(win, mode);
     if (update) {
         for (let i = 0; i < 100 && !win.document.querySelector(".footer .update"); i++) await wait(200);
         await wait(100);

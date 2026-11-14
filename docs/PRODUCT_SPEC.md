@@ -480,7 +480,8 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   relabels the board at once, Cancel changes nothing. On the web the board already shows the
   marked scheme while the dialog is open, and Cancel puts the old labels back. It opens from `[ Labels ]` (or 4 in keyboard mode, Feature 9), during play,
   after a win and on the solution screen. Escape cancels it (since GH-163).
-- **Which labels a game shows:** a loaded save's own labels (Feature 4) win for that game; then
+- **Which labels a game shows:** a loaded save's own labels (Feature 4), or the sender's labels the player
+  said Yes to on opening a share link (Feature 12, GH-267), win for that game; then
   the remembered preference; then Numbers. A new game goes back to the preference.
 - **Letters on 7x7 to 9x9 (GH-207)** is dimmed and shown as Numbers just as on 6x6, below.
 - **Letters on 6x6 (GH-160):** Letters has 26 labels, too few for 36 tiles. On a 6x6 board its row
@@ -502,7 +503,8 @@ Web client only.
   **Share this board** during play, after a win and on the solution screen. Escape and Close cancel it.
 - **The link** is the page's own address plus `#b=` and the board (ADR-0005): the board Mordie started
   from, or the board as it is when the start is unknown (an old save with moves, a repaired board). No
-  moves and no labels travel in it. A 9x9 link is about 120 characters on the public site.
+  moves travel in it. It can carry the sender's tile labels as a further `&l=` part (GH-267, ADR-0005),
+  but only a link made by hand does so for now: the Share dialog's toggle comes with GH-267's last work unit. A 9x9 link is about 120 characters on the public site.
 - **The dialog:** a line saying anyone who opens the link starts from the same NxN board (`from this NxN
   board as it is now` when the start is unknown); the link in a read-only field (named `Share link`,
   selected when focused); a QR code of the same link, dark brown on the page's light colour in both themes (scanners want dark modules on light); `[ Copy link ]`
@@ -514,8 +516,18 @@ Web client only.
 - **Opening a link** starts that board at once as a fresh game (Moves 0, its own Mordie race, the
   player's own labels), skipping the restore prompt and size picker; the status line says `Started a
   shared NxN board.` and the address bar is cleaned. In a tab with unsaved moves, `Open the shared
-  board?` asks first. A bad link (not a board, a side outside 3 to 9, or no sequence of shifts solves it)
+  board?` asks first.
+  - **Tile labels in a link (GH-267):** when a link carries labels that differ from the ones the
+    player would otherwise see, the board starts as above and `Use the sender's labels (Pairs)?` asks,
+    with Yes focused, `For this game only: your next new game uses your own labels.` and `[ No ] [ Yes ]`.
+    The sender's labels show behind it. Yes keeps them for this game, as a loaded save's labels are kept
+    (Feature 11), and never changes the player's preference; No and Escape put the player's own
+    labels back. With unsaved moves `Open the shared board?` comes first, then this prompt. Labels equal
+    to the player's raise no prompt. Labels the page can't read (an unknown or mis-cased name, Letters on
+    6x6 and bigger) are ignored without a word, and a link with none is as before.
+  - A bad link (not a board, a side outside 3 to 9, or no sequence of shifts solves it)
   shows `Can't open this board`, then the usual startup. Analytics: `shared_board_opened`,
-  `screen_share_dialog`, `board_share_link_copied` (`docs/ANALYTICS_EVENTS.md`).
-- Not shared: moves, Mordie's solution, labels. A pasted code or file, the native share sheet and
+  `shared_labels_accepted`, `screen_shared_labels_dialog`, `screen_share_dialog`, `board_share_link_copied`
+  (`docs/ANALYTICS_EVENTS.md`).
+- Not shared: moves and Mordie's solution; labels only in a link made by hand (above). A pasted code or file, the native share sheet and
   saving the QR as an image are out of scope.

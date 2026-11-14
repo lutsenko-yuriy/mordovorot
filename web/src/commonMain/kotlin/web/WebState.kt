@@ -118,6 +118,12 @@ sealed interface WebDialog {
     /** A share link's [side] x [side] board would replace a game with unsaved moves (GH-243): Cancel or Open. */
     data class OpenShared(val side: Int) : WebDialog
 
+    /** A share link's tile labels differ from the player's own (GH-267): Yes shows the sender's [labels] for this
+     *  game only, No keeps the player's. [labels] are previewed behind the dialog. */
+    data class SharedLabels(val labels: TileLabels) : WebDialog {
+        val message: String get() = "For this game only: your next new game uses your own labels."
+    }
+
     /** The confirmation before updating with unsaved progress (GH-262): Cancel, where focus starts, or Update. */
     data object Update : WebDialog
 }

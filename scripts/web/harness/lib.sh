@@ -11,7 +11,7 @@ make_work() {
   server=""
   trap stop_work EXIT
   mkdir -p "$work/site"
-  cp "$here/harness.html" "$here/keys.js" "$work/site/"
+  cp "$here/harness.html" "$here/keys.js" "$here/modes.js" "$work/site/"
   results="$work/results.txt"
   : >"$results"
   text_size_prefs "$text_size" "$work/profile"

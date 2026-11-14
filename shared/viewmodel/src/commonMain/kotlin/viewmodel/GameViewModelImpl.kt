@@ -135,6 +135,8 @@ class GameViewModelImpl internal constructor(
 
     override fun tileLabels(): TileLabels = tileLabels.current
 
+    override fun useSharedLabels(labels: TileLabels) = tileLabels.applyShared(labels, board.squareSide)
+
     override fun tileLabelsDialogOpened(openedFrom: String) = tileLabelsUseCase.dialogOpened(openedFrom)
 
     override fun changeTileLabels(labels: TileLabels) = tileLabelsUseCase.change(labels)

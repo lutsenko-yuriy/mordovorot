@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.41.1] — 2026-11-14 (PR #269 merged)
+
+### Added
+
+- [wip] (PR #269) GH-267 (WU1): a share link can carry the sender's tile labels (`&l=`), and opening one asks whether to use them for this game, with the sender's labels previewed behind the prompt. Nothing builds such a link yet; the Share dialog's toggle is WU2. ADR-0005 is amended; the harness gets modes.js and mode=shared-labels.
+
 ## [0.41.0] — 2026-11-14 (PR #268 merged)
 
 ### Changed

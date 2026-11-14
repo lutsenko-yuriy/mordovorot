@@ -26,6 +26,7 @@ class DialogFocusTest {
         assertEquals(Focus.No, defaultFocus(WebDialog.GiveUp))
         assertEquals(Focus.ModeOption(PlayMode.KEYBOARD), defaultFocus(controls))
         assertEquals(Focus.UpdateCancel, defaultFocus(WebDialog.Update))
+        assertEquals(Focus.SharedLabelsYes, defaultFocus(WebDialog.SharedLabels(TileLabels.PAIRS)))
     }
 
     @Test
@@ -40,6 +41,7 @@ class DialogFocusTest {
         assertEquals("Give up and see Mordie's solution?", WebDialog.GiveUp.title)
         assertEquals("Controls", controls.title)
         assertEquals("Update to the new version?", WebDialog.Update.title)
+        assertEquals("Use the sender's labels (Pairs from 0)?", WebDialog.SharedLabels(TileLabels.PAIRS_FROM_0).title)
     }
 
     @Test

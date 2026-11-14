@@ -23,3 +23,6 @@ GH-243
 
 ## Date
 2026-11-02
+
+## Amendment — 2026-11-14 (GH-267): tile labels in the link
+The link may carry the sender's tile labels as a second part, `<origin><path>#b=<board>&l=<labels>`, `<labels>` being `TileLabels.wireName` (`numbers`, `numbers_from_0`, `pairs`, `pairs_from_0`, `letters`, `letter_pairs`), the name saves, the stored preference and analytics already freeze. `b=` is untouched, and a link without `l=` is exactly what it was. The first `l=` part wins, as the first `b=` does. A value that isn't one of those names exactly (empty, other case, unknown), or a scheme too small for the board (Letters on 6x6 and up), is unreadable: the page ignores it without a word and opens the board as a plain link. A board's rejection is checked first and is never changed by `l=`. Builds from before this amendment, including the copy an offline worker keeps until the player updates, read `b=` only and open a labelled link as a plain board, as the Decision above promised; `ShareLinkTest` pins that. A labelled 9x9 link is at most 17 characters longer, which moves its QR code from version 7 to 8. The page never changes the receiver's preference from a link: the receiver is asked, and Yes shows the labels for that game only.

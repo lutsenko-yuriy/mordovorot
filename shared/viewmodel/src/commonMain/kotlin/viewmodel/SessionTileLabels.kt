@@ -3,8 +3,9 @@ package viewmodel
 import board_model.BoardSize
 
 /** Where the current labels came from (GH-139); lowercased, `tile_labels_changed.from_source`.
- *  [LETTERS_UNAVAILABLE]: numbers stand in for a scheme too small for the board (GH-160). */
-enum class TileLabelsSource { DEFAULT, PREFERENCE, SAVE, LETTERS_UNAVAILABLE }
+ *  [LETTERS_UNAVAILABLE]: numbers stand in for a scheme too small for the board (GH-160).
+ *  [SHARED_LINK]: the labels a share link carried, accepted for this game (GH-267). */
+enum class TileLabelsSource { DEFAULT, PREFERENCE, SAVE, LETTERS_UNAVAILABLE, SHARED_LINK }
 
 /** The session's tile labels (GH-139): a save's labels beat the player's preference, which beats
  *  [TileLabels.DEFAULT]. One per session, like [CurrentSaveName], so a mode switch keeps them.
@@ -36,6 +37,9 @@ class SessionTileLabels(private val preference: TileLabelsPreference) {
         if (fromSave == null) return resetToPreference(side)
         show(fromSave, TileLabelsSource.SAVE, side)
     }
+
+    /** A share link's labels, for this game only: the next new game goes back to the preference (GH-267). */
+    fun applyShared(fromLink: TileLabels, side: Int) = show(fromLink, TileLabelsSource.SHARED_LINK, side)
 
     /** Numbers stand in for a scheme that doesn't fit [side]; the preference is kept. */
     private fun show(labels: TileLabels, from: TileLabelsSource, side: Int) {

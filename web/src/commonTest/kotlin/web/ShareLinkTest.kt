@@ -6,6 +6,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import storage.BoardLinkFormat
+import viewmodel.TileLabels
 
 class ShareLinkTest {
 
@@ -78,5 +79,71 @@ class ShareLinkTest {
         val swapped = intArrayOf(1, 0) + IntArray(14) { it + 2 }
 
         assertIs<LinkBoard.Playable>(ShareLink.read("#b=" + BoardLinkFormat.encode(4, swapped)))
+    }
+
+    private val board = BoardLinkFormat.encode(4, shifted)
+
+    private fun labelsOf(fragment: String) = assertIs<LinkBoard.Playable>(ShareLink.read(fragment)).labels
+
+    @Test
+    fun `a link with labels adds their wire name after the board (GH-267)`() {
+        assertEquals("${base}#b=$board&l=pairs_from_0", ShareLink.of(base, 4, shifted, TileLabels.PAIRS_FROM_0))
+        assertEquals("${base}#b=$board", ShareLink.of(base, 4, shifted, null))
+    }
+
+    @Test
+    fun `every scheme reads back from its link`() {
+        for (scheme in TileLabels.entries) {
+            val side = minOf(4, scheme.maxSide)
+            val link = ShareLink.of(base, side, IntArray(side * side) { it }, scheme)
+
+            assertEquals(LinkLabels.Scheme(scheme), labelsOf(link.substringAfter(base)), scheme.name)
+        }
+    }
+
+    @Test
+    fun `a link without labels reads as none`() {
+        assertEquals(LinkLabels.None, labelsOf("#b=$board"))
+    }
+
+    @Test
+    fun `labels may come before the board, and the first labels part wins`() {
+        assertEquals(LinkLabels.Scheme(TileLabels.PAIRS), labelsOf("#l=pairs&b=$board"))
+        assertEquals(LinkLabels.Scheme(TileLabels.PAIRS), labelsOf("#b=$board&l=pairs&l=letters"))
+    }
+
+    @Test
+    fun `labels that can't be read are unreadable, never an error`() {
+        for (value in listOf("", "colours", "PAIRS", "Pairs", " pairs", "pairs ")) {
+            assertEquals(LinkLabels.Unreadable, labelsOf("#b=$board&l=$value"), "l=$value")
+        }
+    }
+
+    @Test
+    fun `a scheme too small for the board is unreadable`() {
+        val six = "#b=" + BoardLinkFormat.encode(6, IntArray(36) { it })
+
+        assertEquals(LinkLabels.Unreadable, labelsOf("$six&l=letters"))
+        assertEquals(LinkLabels.Scheme(TileLabels.LETTER_PAIRS), labelsOf("$six&l=letter_pairs"))
+    }
+
+    @Test
+    fun `labels never change a board's rejection`() {
+        assertEquals(LinkBoard.Rejected("invalid"), ShareLink.read("#b=!!!&l=pairs"))
+        assertEquals(LinkBoard.Rejected("unsolvable"), ShareLink.read("#b=" + BoardLinkFormat.encode(3, intArrayOf(1, 0) + IntArray(7) { it + 2 }) + "&l=pairs"))
+    }
+
+    @Test
+    fun `a labelled link still names its board to a reader of the board alone`() {
+        // What an older build does with it: it takes the b= part and ignores the rest (ADR-0005).
+        val fragment = ShareLink.of(base, 4, shifted, TileLabels.PAIRS).substringAfter('#')
+        val boardOnly = fragment.split('&').first { it.startsWith("b=") }.removePrefix("b=")
+
+        assertContentEquals(shifted, BoardLinkFormat.decode(boardOnly))
+    }
+
+    @Test
+    fun `a link of labels alone is not a share link`() {
+        assertNull(ShareLink.read("#l=pairs"))
     }
 }

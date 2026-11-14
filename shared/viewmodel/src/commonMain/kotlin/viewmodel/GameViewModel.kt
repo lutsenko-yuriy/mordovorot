@@ -124,6 +124,10 @@ interface GameViewModel {
     /** How the current game's tiles are labelled (GH-139): its save's, else the preference's. */
     fun tileLabels(): TileLabels
 
+    /** Shows [labels] for this game only (a share link's, GH-267): the preference is untouched, the
+     *  next new game goes back to it, and nothing is tracked. */
+    fun useSharedLabels(labels: TileLabels)
+
     /** Tracks `screen_labels_dialog` as the Tile labels dialog opens; [openedFrom] is `toolbar`
      *  or `shortcut`. */
     fun tileLabelsDialogOpened(openedFrom: String)

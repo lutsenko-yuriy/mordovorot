@@ -45,7 +45,7 @@ Query options (harness.html):
 | `v` | `mouse` | `mouse`, `touch` (the `pointer: coarse` rules always on); `master`, `master-touch` with `--baseline` |
 | `sizes` | `portrait` | comma-separated `WxH`, or a preset: `portrait` (SE through Pro Max), `landscape` (the same turned, plus 750x390 and 814x430: the 14 and Pro Max less Safari's notch insets, GH-148) |
 | `boards` | `3,4,5` | board sides |
-| `mode` | `play` | `play`, `dialog` (Tile labels open), `share` (the Share dialog, GH-243), `solution` (shifts until Give Up lights, then gives up) or `offline` (below, GH-262) |
+| `mode` | `play` | `play`, `dialog` (Tile labels open), `share` (the Share dialog, GH-243), `solution` (shifts until Give Up lights, then gives up), `shared-labels` (a visit to a share link that carries Pairs, so the page asks about them, GH-267; the modes' setup is in `modes.js`) or `offline` (below, GH-262) |
 | `shorter` | `0` | px taken off each height, standing in for the browser's own toolbars (try `100`) |
 | `rows` | `1` | toolbar rows allowed (`2` under 300px wide) |
 | `fit` | `window` | `window` (the page is the window's size) or `scroll` (larger text: may be taller, see above, GH-168) |
