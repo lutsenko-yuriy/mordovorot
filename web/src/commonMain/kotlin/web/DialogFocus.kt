@@ -24,6 +24,9 @@ sealed class Focus(override val key: String) : FocusTarget {
     data object Repair : Focus("repair")
     data object LinkRejectedOk : Focus("link-rejected-ok")
     data object OpenSharedCancel : Focus("open-shared-cancel")
+    /** The shared labels prompt's Yes, where it opens, and its No (GH-267). */
+    data object SharedLabelsYes : Focus("shared-labels-yes")
+    data object SharedLabelsNo : Focus("shared-labels-no")
     data object CopyLink : Focus("copy-link")
     data object ShareLinkField : Focus("share-link")
     data class Label(val labels: TileLabels) : Focus("label-${labels.name.lowercase()}")
@@ -71,6 +74,7 @@ fun defaultFocus(dialog: WebDialog): Focus = when (dialog) {
     is WebDialog.Controls -> Focus.ModeOption(dialog.mode)
     is WebDialog.LinkRejected -> Focus.LinkRejectedOk
     is WebDialog.OpenShared -> Focus.OpenSharedCancel
+    is WebDialog.SharedLabels -> Focus.SharedLabelsYes
     is WebDialog.Share -> Focus.CopyLink
     WebDialog.Update -> Focus.UpdateCancel
 }
@@ -91,6 +95,7 @@ val WebDialog.title: String get() = when (this) {
     is WebDialog.Controls -> "Controls"
     is WebDialog.LinkRejected -> "Can't open this board"
     is WebDialog.OpenShared -> "Open the shared board?"
+    is WebDialog.SharedLabels -> "Use the sender's labels (${labels.title})?"
     is WebDialog.Share -> "Share this board"
     WebDialog.Update -> "Update to the new version?"
 }

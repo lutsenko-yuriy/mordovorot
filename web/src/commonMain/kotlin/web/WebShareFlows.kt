@@ -3,6 +3,7 @@ package web
 import analytics.AnalyticsService
 import board_model.BoardSize
 import viewmodel.GameViewModel
+import viewmodel.TileLabels
 import web.qr.QrCode
 
 /** Sharing a board (GH-243, ADR-0005): opening a share link, at startup and when the address changes, and the
@@ -86,6 +87,9 @@ internal class WebShareFlows(
     /** The confirmation's answer: Open, or Cancel. */
     fun onOpenAnswered(open: Boolean) = modal.answer<WebDialog.OpenShared, Boolean>(open)
 
+    /** The labels prompt's answer: Yes, or No (GH-267). */
+    fun onSharedLabelsAnswered(yes: Boolean) = modal.answer<WebDialog.SharedLabels, Boolean>(yes)
+
     private suspend fun openLink(fragment: String): Boolean {
         val link = ShareLink.read(fragment) ?: return false
         // The link is spent whatever happens next, so a reload doesn't meet it again.
@@ -98,12 +102,40 @@ internal class WebShareFlows(
             }
             is LinkBoard.Playable -> {
                 val side = link.side
-                if (viewModel.hasUnsavedProgress() && !modal.ask<Boolean>(WebDialog.OpenShared(side))) return false
+                val carried = (link.labels as? LinkLabels.Scheme)?.labels
+                // The labels prompt may follow, so the page doesn't blink between the two.
+                if (viewModel.hasUnsavedProgress() && !modal.ask<Boolean>(WebDialog.OpenShared(side), leadsOn = { it && carried != null })) return false
                 viewModel.newGameFrom(link.tiles)
-                analytics.track("shared_board_opened", mapOf("result" to "started", "board_size" to side))
+                val own = viewModel.tileLabels()
+                val labels = when {
+                    link.labels is LinkLabels.None -> "none"
+                    carried == null -> "unreadable"
+                    carried == own -> "same"
+                    else -> "differs"
+                }
+                analytics.track("shared_board_opened", mapOf("result" to "started", "board_size" to side, "labels" to labels))
                 game.showStatus("Started a shared ${side}x$side board.")
+                if (labels == "differs") askLabels(carried!!, own, side)
                 return true
             }
+        }
+    }
+
+    /** The sender's [sender] labels, previewed behind the prompt: Yes keeps them for this game, No drops them (GH-267). */
+    private suspend fun askLabels(sender: TileLabels, own: TileLabels, side: Int) {
+        analytics.track(
+            "screen_shared_labels_dialog",
+            mapOf("board_size" to side, "sender_labels" to sender.wireName, "receiver_labels" to own.wireName),
+        )
+        if (modal.ask<Boolean>(WebDialog.SharedLabels(sender), leadsOn = { it })) {
+            viewModel.useSharedLabels(sender)
+            analytics.track(
+                "shared_labels_accepted",
+                mapOf("sender_labels" to sender.wireName, "receiver_labels" to own.wireName, "board_size" to side),
+            )
+            game.render()
+        } else {
+            game.cancelled("shared_labels")
         }
     }
 

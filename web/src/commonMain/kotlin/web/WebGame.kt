@@ -258,8 +258,8 @@ class WebGame internal constructor(
             giveUp = viewModel.giveUpButton(),
             solution = viewModel.solution(),
             slide = slide,
-            // The Labels dialog's marked scheme, previewed until OK keeps it or Cancel drops it.
-            labels = (modal.shown as? WebDialog.Labels)?.selected ?: viewModel.tileLabels(),
+            // The Labels dialog's marked scheme, or a share link's labels, previewed until OK or Yes keeps them or Cancel or No drops them.
+            labels = (modal.shown as? WebDialog.Labels)?.selected ?: (modal.shown as? WebDialog.SharedLabels)?.labels ?: viewModel.tileLabels(),
             focus = focus,
             announcement = saying,
             mode = controls.mode,
