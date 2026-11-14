@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.41.0] — 2026-11-14 (PR #268 merged)
+
+### Changed
+
+- [test] (PR #268) GH-267 (WU0): scenario stubs for sharing tile labels in the share link, plus the analytics plan and the Shared labels glossary term.
+
 ## [0.41.0] — 2026-11-08 (PR #266 merged)
 
 ### Added

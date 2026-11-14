@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-_(nothing in progress)_
+- GH-267: Share tile labels in the share link (WU0/3 merged; WU1-2 pending)
 
 ---
 
