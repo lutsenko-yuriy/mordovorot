@@ -39,7 +39,8 @@ class BackgroundMordieSearch(
             val slice = TimeSource.Monotonic.markNow()
             while (isActive && slice.elapsedNow().inWholeMilliseconds < WORK_MS) {
                 solver.step(NODES_PER_CHECK)
-                if (solver.done) break
+                // The first answer is published at once, not after a slice that also allocates the pattern table (GH-282).
+                if (solver.done || (firstSolutionMs == null && solver.bestLength != null)) break
             }
             snapshot = snapshotOf()
             onSnapshot(snapshot)

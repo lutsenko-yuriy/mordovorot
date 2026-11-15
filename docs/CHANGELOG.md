@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.44.3] — 2026-11-15 (PR #286 merged)
+
+### Changed
+
+- [user] (PR #286) GH-282: on phones, Mordie checks much faster whether its answer is the shortest: the exact search now also cuts by a small table of exact distances for the first row and one more tile, built in the background beside the search. Same answers, about 15 times fewer steps on the ticket's board (desktop: proven at 11 moves in 1.2 s, was 5.6 s).
+- [non-user] (PR #286) GH-282 (WU2): `PatternDatabase` (a 1 MiB table, 32 symmetric lookups, built in slices by `BestSolutionSolver`), `IdaStarSolver.usePatterns`, and the first slice of `BackgroundMordieSearch` ends once the first answer exists, so the table's allocation can't delay it. Debrief: FEATURE.md step 4 says to run CI's own commands locally, and ship polls on a pending check.
+
 ## [0.44.2] — 2026-11-15 (PR #285 merged)
 
 ### Changed

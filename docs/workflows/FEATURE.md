@@ -92,6 +92,7 @@ behaviour beyond a literal value, it is not trivial — use the full workflow in
 
    Each PR/MR accumulates one commit per cycle — reviewable commit-by-commit.
 4. Run the project's test suite and linter — fix **all** test failures and warnings/errors before proceeding. A clean lint run is required before committing; do not leave warnings unresolved on the assumption they are pre-existing.
+   Also run every other command `.github/workflows/build.yml` runs, such as `python3 scripts/notes/index.py --check` after adding or changing a note. CI should not be the first to find a failure you can run locally (GH-282: a hand-written note left `INDEX.md` stale, and `build` went red).
 5. After all TDD micro-cycles are complete, apply formatting in a dedicated commit before opening the PR/MR: run your stack's formatter and, if any files changed, stage and commit them separately with a `style:` prefix. This keeps style changes reviewable in isolation from logic changes.
 6. Update documentation if affected by the changes:
    - `AGENTS.md`/`CLAUDE.md` — architecture, conventions, or workflow changed

@@ -10,6 +10,8 @@ package mordie
  * Pruning: never two moves in a row on the same line (they merge into one), and consecutive
  * row moves - which commute - go in increasing index order, the same for columns.
  *
+ * [usePatterns] adds a [PatternDatabase] bound, at any time: any admissible bound keeps the search exact.
+ *
  * [ruledOut] (a saved N) skips every bound up to it, so a resumed search never redoes or
  * reports lengths below it. It must be a proven lower bound - one past the true minimum (a
  * hand-edited save) can yield a non-minimal length.
@@ -36,6 +38,10 @@ class IdaStarSolver(original: IntArray, ruledOut: Int = -1) {
     private var wrongRow = 0
     private var wrongCol = 0
 
+    /** The cell each tile stands on, for the table bound. */
+    private val pos = IntArray(n * n)
+    private var patterns: PatternDatabase? = null
+
     private var bound: Int
     private var nextBound = Int.MAX_VALUE
     private var depth = 0
@@ -56,6 +62,7 @@ class IdaStarSolver(original: IntArray, ruledOut: Int = -1) {
 
     init {
         for (i in board.indices) {
+            pos[board[i]] = i
             if (homeRow[board[i]] != i / n) wrongRow++
             if (homeCol[board[i]] != i % n) wrongCol++
         }
@@ -72,6 +79,12 @@ class IdaStarSolver(original: IntArray, ruledOut: Int = -1) {
             expand()
         }
         return solutionLength != null
+    }
+
+    /** From now on a child is also cut by [database]'s bound, which must be [PatternDatabase.done]. */
+    fun usePatterns(database: PatternDatabase) {
+        require(database.done) { "The pattern database is not built yet" }
+        patterns = database
     }
 
     /** The found solution, in order. */
@@ -96,6 +109,14 @@ class IdaStarSolver(original: IntArray, ruledOut: Int = -1) {
             return
         }
         apply(move, forward = true)
+        // The table is read only for the few children the cheap bound lets through, and only until one copy cuts.
+        val limit = bound - depth - 1
+        val hTable = patterns?.lowerBound(pos, h, limit) ?: h
+        if (hTable > limit) {
+            if (depth + 1 + hTable < nextBound) nextBound = depth + 1 + hTable
+            apply(move, forward = false)
+            return
+        }
         applied[depth] = move
         if (h == 0) {
             solutionLength = depth + 1
@@ -166,7 +187,11 @@ class IdaStarSolver(original: IntArray, ruledOut: Int = -1) {
         val k = if (forward) amountOf(move) else n - amountOf(move)
         val delta = shiftDelta(move, k)
         for (j in 0 until n) scratch[wrap[j + k]] = board[first + j * stride]
-        for (j in 0 until n) board[first + j * stride] = scratch[j]
+        for (j in 0 until n) {
+            val cell = first + j * stride
+            board[cell] = scratch[j]
+            pos[scratch[j]] = cell
+        }
         if (isRow) wrongCol += delta else wrongRow += delta
     }
 

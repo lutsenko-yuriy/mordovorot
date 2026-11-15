@@ -66,14 +66,17 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                              # ceil(wrong-row tiles/n) + ceil(wrong-column tiles/n)
 │       ├── IdaStarSolver.kt         # Steppable IDA* (explicit stack, O(depth) memory): ruledOut,
 │       │                              # solutionLength and its solution (GH-126); can resume
-│       │                              # above a saved N
+│       │                              # above a saved N; max with a PatternDatabase bound (GH-282)
+│       ├── PatternDatabase.kt       # GH-282: exact distance of row 0 + one more tile, built by BFS in
+│       │                              # slices; read through its 2*n*n symmetric copies as a lower bound
 │       ├── SolutionMove.kt          # One move of a solution (row/column, index, amount), shared by
 │       │                              # both solvers (GH-213)
 │       ├── ThreeCycleSolver.kt      # Fast, non-minimal solver (GH-213): places tiles one per step
 │       │                              # with row/column commutator 3-cycles; run by BestSolutionSolver (GH-222)
 │       ├── BestSolutionSolver.kt    # GH-222: steps ThreeCycleSolver, then IdaStarSolver (up to 4x4 only, GH-260); keeps the
 │       │                              # best solution so far, its source and whether it is proven shortest;
-│       │                              # a kept best (GH-224) is the answer from the start and skips the fast solver
+│       │                              # a kept best (GH-224) is the answer from the start and skips the fast solver;
+│       │                              # builds the PatternDatabase in slices alongside the exact search (GH-282)
 │       ├── MordieSearch.kt          # MordieSearch / SearchProgress / MordieSearchFactory (+ NONE) -
 │       │                              # the seam tests replace with FakeMordieSearchFactory;
 │       │                              # start(original, ruledOut, best) - best is the kept solution (GH-224)
@@ -448,7 +451,8 @@ so the first shift after a load always starts a new move.
 Pure domain: plain `IntArray` arrangements, no dependency on `board_model`,
 `storage`, `viewmodel` or `view` (`viewmodel` → `mordie`). `IdaStarSolver` searches the
 game's original arrangement for its shortest solution in the GH-62 move metric, with
-`MoveMetricHeuristic` as the admissible bound. It runs in slices, so
+`MoveMetricHeuristic` as the admissible bound, and, once `BestSolutionSolver` has built it in
+slices beside the search, the larger bound of a `PatternDatabase` (GH-282). It runs in slices, so
 `BackgroundMordieSearch` can throttle it (about half of one core; the constants sit in
 one place for the GH-41 mobile port), and memory stays O(depth). A search started from a
 saved N begins at N + 1, so it never re-reports below it. In the browser the search runs in a
