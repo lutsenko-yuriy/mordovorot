@@ -69,9 +69,12 @@ class WebGame internal constructor(
             if (!share.openAtStartup()) viewModel.restoreOnStartup()
             share.openPending()
             dialogs.sayAskedNewGame()
-            render(focus = if (controls.mode == PlayMode.KEYBOARD) Focus.Board else Focus.PageStart)
+            render(focus = onBoard ?: Focus.PageStart)
         }
     }
+
+    /** Where keyboard mode's board has focus, the keys working there (GH-171); none in mouse mode. */
+    internal val onBoard get() = Focus.Board.takeIf { controls.mode == PlayMode.KEYBOARD }
 
     /** Backs the page's leave-site prompt. */
     fun hasUnsavedProgress(): Boolean = !updates.applying && viewModel.hasUnsavedProgress()
@@ -136,6 +139,7 @@ class WebGame internal constructor(
         dialogs.chooseSize("toolbar")?.let {
             viewModel.newGame(it, trigger = "toolbar")
             saying = Announcements.newGame(it)
+            closing = onBoard ?: closing
         }
     }
 
@@ -145,7 +149,7 @@ class WebGame internal constructor(
             name == null -> {}
             // The name check alone allows spaces.
             name.any { it.isWhitespace() } -> showStatus("'$name' isn't a usable save name (no spaces) - not saved.")
-            else -> viewModel.saveGame(name)
+            else -> if (viewModel.saveGame(name)) closing = onBoard ?: closing
         }
     }
 
@@ -159,7 +163,10 @@ class WebGame internal constructor(
     fun onSaveAnswered(name: String?) = modal.answer<WebDialog.Save, String?>(name)
 
     fun onLoad(opener: Focus = Focus.LoadButton) = runFlow(opener) {
-        dialogs.chooseSave(viewModel.listSaves(), restore = false)?.let { viewModel.loadGame(it) }
+        dialogs.chooseSave(viewModel.listSaves(), restore = false)?.let {
+            // A repaired or loaded save, or Can't be solved's new game, is a different game: the keys work on the board (GH-277).
+            if (viewModel.loadGame(it) || dialogs.newGameAsked) closing = onBoard ?: closing
+        }
     }
 
     /** The Load dialog's answer, a listed save's name; `null` is Cancel. */

@@ -49,6 +49,8 @@ Before proposing a CHANGELOG tag, read `skills/manage/ship/resources/changelog-t
 
 Check the line count of every source file in "Files touched" against the `docs/CODE_STYLE.md` size guideline (~300 lines). For a file already over it, or one the plan's additions will push over, put the split in the plan: a cycle in this WU, or a follow-up ticket, chosen as a decision. Don't leave it for review to find (GH-160: `WebGame.kt` was at 320 lines when the plan named it, and the split came out of review).
 
+When the ticket changes a rule that applies in many places (focus on close, a shared label, a key's meaning, a default), list every place the rule applies in the plan, and say for each whether it changes (GH-277: the plan covered New and Load, and Save, which had the same trap, turned up when the user tried the branch). Find them by searching for the rule's code, not from memory. Where the ticket leaves one out, say so under out of scope.
+
 ### 4. Post the plan as a PM comment
 
 Post the full plan text as a comment on the primary issue so `implement` can reference it.

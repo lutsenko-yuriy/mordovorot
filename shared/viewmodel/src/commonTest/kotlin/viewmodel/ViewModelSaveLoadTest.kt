@@ -3,6 +3,7 @@ package viewmodel
 import board_model.BoardImpl
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import storage.SaveFileFormatException
@@ -92,9 +93,11 @@ class ViewModelSaveLoadTest {
         val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }
         val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi()
+        var loaded = false
 
-        ui.drive(viewModel) { viewModel.loadGame("foo") }
+        ui.drive(viewModel) { loaded = viewModel.loadGame("foo") }
 
+        assertTrue(loaded)
         assertEquals(listOf(8, 7, 6, 5, 4, 3, 2, 1, 0), board.boardArray.toList())
         assertEquals(listOf("Loaded 'foo'."), ui.shownMessages)
         assertEquals(listOf<String?>("foo"), ui.loadedSaves)
@@ -112,9 +115,11 @@ class ViewModelSaveLoadTest {
         val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }
         val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi()
+        var loaded = true
 
-        ui.drive(viewModel) { viewModel.loadGame("missing") }
+        ui.drive(viewModel) { loaded = viewModel.loadGame("missing") }
 
+        assertFalse(loaded)
         assertEquals(listOf(0, 1, 2, 3, 4, 5, 6, 7, 8), board.boardArray.toList())
         assertTrue(ui.shownMessages.any { it.contains("missing") && it.contains("bar") })
         assertEquals(listOf<String?>(null), ui.loadedSaves)
@@ -189,9 +194,11 @@ class ViewModelSaveLoadTest {
         val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }
         val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi()
+        var loaded = true
 
-        ui.drive(viewModel) { viewModel.loadGame("corrupt") }
+        ui.drive(viewModel) { loaded = viewModel.loadGame("corrupt") }
 
+        assertFalse(loaded)
         assertEquals(listOf(0, 1, 2, 3, 4, 5, 6, 7, 8), board.boardArray.toList())
         assertTrue(ui.shownMessages.any { it.contains("corrupt") })
         assertEquals(listOf<String?>(null), ui.loadedSaves)

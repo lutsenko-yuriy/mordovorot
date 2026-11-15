@@ -37,7 +37,7 @@ internal class WebShareFlows(
 
     /** Opens the link that waited, if nothing is under way now (a drag ended). */
     fun openWaiting() {
-        if (pending != null && game.idle) game.runFlow(if (game.controls.mode == PlayMode.KEYBOARD) Focus.Board else Focus.PageStart) { openPending() }
+        if (pending != null && game.idle) game.runFlow(game.onBoard ?: Focus.PageStart) { openPending() }
     }
 
     /** Opens the links that waited, if any: one that arrives while another is asked about waits for that answer. */

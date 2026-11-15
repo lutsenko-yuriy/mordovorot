@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.43.1] — 2026-11-15 (PR #278 merged)
+
+### Fixed
+
+- [user] (PR #278) GH-277: in keyboard mode the board keys work right after starting a new game, loading one or saving: focus goes to the board instead of staying on New, Load or Save.
+- [ci] (PR #278) GH-277: the Python jobs run on 3.12 only: `ubuntu-latest` is now Ubuntu 26.04, which has no Python 3.9, so every `(3.9)` job failed before running a test.
+
 ## [0.43.0] — 2026-11-15 (PR #276 merged)
 
 ### Added

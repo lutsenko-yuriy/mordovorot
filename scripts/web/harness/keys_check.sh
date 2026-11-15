@@ -56,6 +56,9 @@ queries=(
   # A dialog from the board returns there; to mouse mode, focus on Controls; a digit on a footer link returns there.
   "report=keys&input=keyboard&keys=2,Escape,6,ArrowLeft,click:OK"
   "report=keys&input=keyboard&keys=focus:footer-0,2,Escape"
+  # GH-277: a new game from the New button gives the board focus, so its keys work; Escape still returns to New.
+  "report=keys&grid=1&input=keyboard&keys=focus:board,s,click:New,click:5x5,s,ArrowUp,d,ArrowLeft"
+  "report=keys&input=keyboard&keys=focus:new,Enter,Escape"
   # 0 reads the board wherever focus is, once per press; not under a dialog.
   "report=keys&grid=1&input=keyboard&keys=0,R-0,focus:new,0,2,0,Escape"
   # GH-200: on a non-Latin layout a letter key acts by its position; a Latin one by what it types.

@@ -40,7 +40,8 @@ interface GameViewModel {
     /** Returns whether the save actually succeeded. `suspend` (GH-42): asks the
      *  View for confirmation/messages instead of returning synchronously. */
     suspend fun saveGame(name: String): Boolean
-    suspend fun loadGame(name: String)
+    /** Whether a save was restored, a repaired one included (GH-277). */
+    suspend fun loadGame(name: String): Boolean
 
     /** Deletes [save] and tracks `save_deleted` (GH-251); [trigger] is `command` or
      *  `startup_prompt`. Deleting the current save clears [currentSaveName]; the board, moves and
