@@ -6,7 +6,8 @@
 # Builds the bundle first unless it was built from HEAD with a clean tree (GH-160: the phone got a
 # bundle older than the fix it was meant to show). Then it follows the commits (GH-283): every
 # SERVE_LAN_POLL_S seconds (15) it looks at HEAD, and a new one is built and served in place of the
-# old. A build that fails keeps the old bundle served. Uncommitted edits are built at start-up only.
+# old. A build that fails keeps the old bundle served. Uncommitted edits are built at start-up, and ride
+# along (stamped -dirty) in a build a commit starts; saving a file starts none.
 # Each build is copied to web/build/serve-lan/ and served from there, so the phone never gets a half-built
 # bundle, nor one a harness run left in dist/. SERVE_LAN_DRY_RUN=1 stops before serving (tests);
 # SERVE_LAN_BIND sets the address to serve on (0.0.0.0).
@@ -18,7 +19,6 @@ dist="$project/web/build/dist/js/productionExecutable"
 serve="$project/web/build/serve-lan"
 port="${1:-8766}"
 poll="${SERVE_LAN_POLL_S:-15}"
-copies=0
 
 # The commit a bundle built now would show; uncommitted changes never match a stamp (-dirty).
 stamp() {
@@ -30,17 +30,17 @@ stamp() {
 
 # Builds the bundle and serves it from then on; fails, leaving what is served, if the build does.
 build() {
-  local stamp="$1" copy
-  echo "Building the web bundle for $stamp..."
+  local label="$1" copy
+  echo "Building the web bundle for $label..."
   (cd "$project" && ./gradlew -q :web:jsBrowserDistribution) || return 1
-  echo "$stamp" >"$dist/.commit"
-  copies=$((copies + 1))
-  copy="copy-$$-$copies"
-  mkdir -p "$serve" && cp -R "$dist" "$serve/$copy" || return 1
-  # A rename replaces the link in one step; a request never finds it missing.
+  echo "$label" >"$dist/.commit"
+  mkdir -p "$serve" && copy="$(basename "$(mktemp -d "$serve/copy.XXXXXX")")" && cp -R "$dist/." "$serve/$copy" || return 1
+  # A rename replaces the link in one step; a request never finds it missing. A link an interrupted
+  # swap left is removed first: ln would follow it into its directory.
+  rm -f "$serve/current.new"
   ln -s "$copy" "$serve/current.new" && python3 -c 'import os, sys; os.replace(sys.argv[1], sys.argv[2])' "$serve/current.new" "$serve/current" || return 1
   find "$serve" -mindepth 1 -maxdepth 1 ! -name current ! -name "$copy" -exec rm -rf {} +
-  echo "Serving $stamp"
+  echo "Serving $label"
 }
 
 now="$(stamp)"
@@ -86,3 +86,5 @@ while kill -0 "$server" 2>/dev/null; do
   last="$head"
   build "$(stamp)" || echo "The build failed, still serving $(cat "$serve/current/.commit")."
 done
+# The server ended on its own (the port is taken): its status is ours.
+wait "$server"

@@ -201,7 +201,7 @@ stamps the bundle with its commit (`.commit`), and uncommitted changes always re
 It then follows the commits (GH-283): every 15 seconds (`SERVE_LAN_POLL_S`) it looks at `HEAD`, and
 after a new commit, checkout or amend it builds the bundle again and serves that one, so a fix is
 re-checked on the phone with a reload and no restart. It prints `Serving <commit>` once the new
-bundle is up. Uncommitted edits are not picked up after start-up. A build that fails prints its error
+bundle is up. Saving a file starts no build: uncommitted edits are built at start-up, and ride along (stamped `-dirty`) in a build a commit starts. A build that fails prints its error
 and `still serving <commit>`, keeps the old bundle, and is not tried again until the next commit.
 Each build is copied to `web/build/serve-lan/` and served from there with `Cache-Control:
 no-cache`, so the phone never gets a half-built bundle, nor one that a `measure.sh` run left in

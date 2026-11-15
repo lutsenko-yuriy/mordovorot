@@ -38,7 +38,7 @@ class ServeLanCase(unittest.TestCase):
         gradlew = self.repo / "gradlew"
         gradlew.write_text(FAKE_GRADLEW)
         gradlew.chmod(0o755)
-        (self.repo / ".gitignore").write_text("web/build/\ngradlew.log\nFAIL\n")
+        (self.repo / ".gitignore").write_text("web/build/\ngradlew.log\nFAIL\nserve.log\n")
         self.git("init", "-q")
         self.commit("first")
 
@@ -99,6 +99,14 @@ class ServeLanTest(ServeLanCase):
         serve = self.repo / "web/build/serve-lan"
         self.assertEqual(self.head(), (serve / "current/index.html").read_text().strip())
         self.assertEqual(2, len(list(serve.iterdir())))  # current and its copy
+
+    def test_a_link_left_by_an_interrupted_swap_does_not_break_the_next(self):
+        self.serve()
+        serve = self.repo / "web/build/serve-lan"
+        (serve / "current.new").symlink_to(os.readlink(serve / "current"))
+        self.commit("second")
+        self.serve()
+        self.assertEqual(self.head(), (serve / "current/index.html").read_text().strip())
 
     def test_a_failed_first_build_exits_2(self):
         (self.repo / "FAIL").write_text("")
@@ -167,6 +175,16 @@ class ServeLanFollowTest(ServeLanCase):
     def test_pages_are_not_cached(self):
         with urllib.request.urlopen(f"http://127.0.0.1:{self.port}/", timeout=2) as response:
             self.assertEqual("no-cache", response.headers["Cache-Control"])
+
+    def test_a_port_in_use_ends_the_script_with_an_error(self):
+        with socket.socket() as taken:
+            taken.bind(("127.0.0.1", 0))
+            taken.listen()
+            result = subprocess.run(
+                ["bash", str(self.repo / "scripts/web/harness/serve_lan.sh"), str(taken.getsockname()[1])],
+                env={**os.environ, "SERVE_LAN_BIND": "127.0.0.1"}, capture_output=True, text=True, timeout=20,
+            )
+        self.assertNotEqual(0, result.returncode)
 
     def test_ctrl_c_stops_the_server(self):
         self.process.send_signal(signal.SIGINT)
