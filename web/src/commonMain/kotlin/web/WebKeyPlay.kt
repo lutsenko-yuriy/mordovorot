@@ -14,13 +14,11 @@ internal class WebKeyPlay(
     private val game: WebGame,
     private val viewModel: GameViewModel,
     private val pressedWith: PressedWith,
-    private val controlsShown: Boolean,
+    private val computer: Boolean,
 ) {
 
-    /** Kept across a mode switch, a new game and a load, clamped to a smaller board. */
+    /** Kept across a new game and a load, clamped to a smaller board. */
     private var selection = TileSelection.INITIAL
-
-    private val keyboardMode get() = game.controls.mode == PlayMode.KEYBOARD
 
     /** A dialog a digit opens gives focus back to the control keyed [from]. */
     fun onKey(press: KeyPress, from: String?): Boolean {
@@ -28,7 +26,7 @@ internal class WebKeyPlay(
         if (!game.idle) return false
         val boardFocused = from == Focus.Board.key
         val onSolution = boardFocused && viewModel.solution() != null
-        when (val key = WebKeys.pageKey(press, game.controls.mode, controlsShown, game.controls.layout, boardFocused && game.playable, onSolution)) {
+        when (val key = WebKeys.pageKey(press, computer, game.controls.layout, boardFocused && game.playable, onSolution)) {
             is PageKey.Digit -> onDigit(key.button, from)
             is PageKey.Board -> onBoardKey(key.key)
             is PageKey.Solution -> onSolutionKey(key.key)
@@ -38,21 +36,21 @@ internal class WebKeyPlay(
         return true
     }
 
-    /** In mouse mode a press on a tile only starts a drag; on the solution screen there's no selection to move. */
+    /** On touch a press on a tile only starts a drag; on the solution screen there's no selection to move. */
     fun onTilePressed(row: Int, col: Int) {
         val onSolution = game.idle && viewModel.solution() != null
-        if (!keyboardMode || !(game.playable || onSolution)) return
+        if (!computer || !(game.playable || onSolution)) return
         if (game.playable) selection = TileSelection(row, col)
         game.render(focus = Focus.Board)
     }
 
-    /** The selection this frame shows: in keyboard mode, during play. */
+    /** The selection this frame shows: on a computer, during play. */
     fun shownSelection(): TileSelection? {
         selection = selection.clampedTo(viewModel.squareSide())
-        return selection.takeIf { keyboardMode && !viewModel.isSolved() && viewModel.solution() == null }
+        return selection.takeIf { computer && !viewModel.isSolved() && viewModel.solution() == null }
     }
 
-    /** A shift's [words], with the tile now under the selection in keyboard mode. */
+    /** A shift's [words], with the tile now under the selection on a computer. */
     fun withTileNow(words: String): String {
         val at = shownSelection() ?: return words
         val side = viewModel.squareSide()

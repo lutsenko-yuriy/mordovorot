@@ -1,17 +1,12 @@
-/* GH-171: keyboard mode's board: the selection's outlines, the focus ring and the key hints. The
+/* GH-171: a computer's board: the selection's outlines, the focus ring and the key hints. The
    outlines run in the gaps between tiles, over the frame, and the ring on a tile, so their colours
    are the ones already checked there (ColourContrastStylesTest). */
 
-/* Hidden with their room kept, so the board stays put on switching mode (D9). */
-.app.keyboard-mode .arrows {
-    visibility: hidden;
-}
-
-.app.keyboard-mode {
+.app.computer {
     --hints: 3.5rem;
 }
 
-.app.keyboard-mode .board {
+.app.computer .board {
     position: relative;
 }
 
@@ -64,13 +59,13 @@
     outline-offset: calc(var(--gap) * 1.5);
 }
 
-/* Under the tiles, in the room the hidden arrows leave and --hints adds. */
+/* Under the board, in the room --hints adds. */
 .key-hints {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 0 1.5em;
-    margin-top: calc(var(--gap) - var(--arrow));
+    margin-top: var(--gap);
     font-size: 0.85rem;
     text-align: center;
 }

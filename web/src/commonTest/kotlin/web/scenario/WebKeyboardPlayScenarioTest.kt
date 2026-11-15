@@ -29,7 +29,7 @@ class WebKeyboardPlayScenarioTest {
         val page = WebHarness(backgroundScope).remembering().startOn()
 
         assertEquals(listOf(1, 2, 3, 4, 5, 6, 7), ToolbarButton.entries.map { page.state.digitOf(it) })
-        assertTrue(page.state.controlsShown)
+        assertTrue(page.state.computer)
     }
 
     @Test

@@ -5,15 +5,13 @@ import kotlin.test.assertEquals
 import viewmodel.KeyboardLayout
 import web.Arrow
 import web.Focus
-import web.PlayMode
 
 /** GH-171: analytics in keyboard play (`docs/ANALYTICS_EVENTS.md`). */
 class WebKeyboardAnalyticsScenarioTest {
 
     @Test
-    fun `input_method follows the press, and the launch and Controls events are sent`() = webTest {
+    fun `input_method follows the press, and the Controls events are sent`() = webTest {
         val page = WebHarness(backgroundScope).remembering().start()
-        assertEquals("keyboard", page.props("app_launched").single()["mode"])
         page.game.onSizeChosen(null)
         page.analytics.events.clear()
 
@@ -31,17 +29,10 @@ class WebKeyboardAnalyticsScenarioTest {
         page.game.controls.open()
         assertEquals("toolbar", page.props("screen_controls_dialog").last()["opened_from"])
         assertEquals("rich_ui", page.props("screen_controls_dialog").last()["input_method"])
-
-        page.game.controls.onMode(PlayMode.MOUSE)
-        page.game.controls.onAnswered(ok = true)
-        assertEquals(
-            mapOf("from_mode" to "keyboard", "to_mode" to "mouse", "trigger" to "controls_dialog", "result" to "success"),
-            page.ownProps("input_mode_switched").single(),
-        )
     }
 
     @Test
-    fun `OK with nothing changed sends no switch, and a layout change sends nothing at all`() = webTest {
+    fun `a layout change in Controls sends nothing at all`() = webTest {
         val page = WebHarness(backgroundScope).startOn()
         page.press("6")
         page.game.controls.onLayout(KeyboardLayout.LEFT_HANDED)
@@ -84,15 +75,15 @@ class WebKeyboardAnalyticsScenarioTest {
     private fun WebHarness.solvedProps() = props("board_solved").single().filterKeys { it.startsWith("shift_") }
 
     @Test
-    fun `selection moves, 0 and mouse-mode keys send nothing`() = webTest {
+    fun `selection moves, 0 and touch's keys send nothing`() = webTest {
         val keyboard = WebHarness(backgroundScope).remembering().startOn()
         keyboard.press("w", from = Focus.Board)
         keyboard.press("0", from = Focus.Board)
         assertEquals(emptyList(), keyboard.analytics.events)
 
-        val mouse = WebHarness(backgroundScope).startOn()
-        mouse.press("1")
-        assertEquals(emptyList(), mouse.analytics.events)
+        val touch = WebHarness(backgroundScope, touch = true).startOn()
+        touch.press("1")
+        assertEquals(emptyList(), touch.analytics.events)
     }
 
     @Test

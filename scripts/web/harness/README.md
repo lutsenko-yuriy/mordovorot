@@ -51,7 +51,6 @@ Query options (harness.html):
 | `fit` | `window` | `window` (the page is the window's size) or `scroll` (larger text: may be taller, see above, GH-168) |
 | `report` | `fit` | `fit` (one line per case, above), `styles` (every element's computed styles, for `styles_diff.sh`), `qr` (with `mode=share`: the Share dialog's QR code read back by Chrome's `BarcodeDetector`, GH-243; the line says `NO-DETECTOR` where Chrome has none) or `keys` (below; `sizes` then defaults to `1200x800` and `boards` to `4`) |
 | `keys` | | with `report=keys`, the steps to play, comma-separated (below) |
-| `input` | | `keyboard` starts in keyboard mode, as a remembered Controls choice would (GH-171) |
 | `layout` | | `left` starts with the left-handed keys (GH-171) |
 | `saves` | | comma-separated names of solved 4x4 saves to put in `localStorage` before the game starts (GH-251); startup's restore dialog is cancelled unless `restore=1` |
 | `corrupt` | | comma-separated names of entries no save decodes, listed by name alone (GH-251) |

@@ -19,7 +19,7 @@ import web.drag.Axis
 import web.drag.LineOffset
 import web.drag.WrapPositions
 
-/** The board in the page (GH-110): its tiles and arrows, and in keyboard mode its selection, turning clicks and drags into [game] intents.
+/** The board in the page (GH-110): its tiles and arrows, and on a computer its selection, turning clicks and drags into [game] intents.
  *  Split from [DomRenderer] (GH-171). */
 internal class DomBoard(private val root: HTMLElement, private val game: () -> WebGame) {
 

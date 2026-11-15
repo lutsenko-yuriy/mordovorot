@@ -14,7 +14,7 @@ import web.a11y.setBehindDialog
 import web.drag.LineOffset
 
 /** Draws each [WebState] into [root] and turns its clicks into [game] intents, the board's and drags to [DomBoard] (GH-110).
- *  Plain DOM, rebuilt every frame, but for keyboard mode's board where [WebState.keepsBoardFrom] says so (GH-171), with the look in the sheets `index.html` links. */
+ *  Plain DOM, rebuilt every frame, but for a computer's board where [WebState.keepsBoardFrom] says so (GH-171), with the look in the sheets `index.html` links. */
 class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnouncer?) : WebRenderer {
 
     /** Set once the game is built; only the page's events read it, and none can come before then. */
@@ -91,7 +91,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         root.classList.toggle("solved", state.solved)
         root.classList.toggle("dragging", state.drag != null)
         root.classList.toggle("solution", state.solution != null)
-        root.classList.toggle("keyboard-mode", state.mode == PlayMode.KEYBOARD)
+        root.classList.toggle("computer", state.computer)
         root.append(
             // The box the tall layout sizes the tiles from (GH-147).
             element("div", "stage").apply {
@@ -141,7 +141,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
                     toolbarButton("Share", ToolbarButton.SHARE, Focus.ShareButton, state) { game.share.open() },
                 )
                 // A row of its own under the five (GH-171).
-                if (state.controlsShown) append(element("div", "controls-row").apply {
+                if (state.computer) append(element("div", "controls-row").apply {
                     append(toolbarButton("Controls", ToolbarButton.CONTROLS, Focus.ControlsButton, state) { game.controls.open() })
                 })
             },

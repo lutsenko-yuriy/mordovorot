@@ -149,10 +149,10 @@ class WebShareDialogScenarioTest {
     }
 
     @Test
-    fun `key 7 opens Share in keyboard mode only, including after a win and on the solution screen`() = webTest {
-        val mouse = WebHarness(backgroundScope).startOn()
-        assertFalse(mouse.press("7"))
-        assertNull(mouse.state.dialog)
+    fun `key 7 opens Share on a computer only, including after a win and on the solution screen`() = webTest {
+        val touch = WebHarness(backgroundScope, touch = true).startOn()
+        assertFalse(touch.press("7"))
+        assertNull(touch.state.dialog)
 
         val page = WebHarness(backgroundScope).remembering().startOn()
         assertEquals(7, page.state.digitOf(web.ToolbarButton.SHARE))

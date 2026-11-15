@@ -59,6 +59,8 @@ add_variant() {
   [[ "${4:-}" == "worker" ]] || rm -f "$work/site/$2/offline-worker.js"
   if [[ "$3" == "touch" ]]; then
     sed -i '' 's/@media (pointer: coarse)/@media all/' "$work/site/$2"/*.css
+    # GH-287: the page reads the same query, to tell a computer from a touch screen.
+    sed -i '' 's/(pointer: coarse)/all/' "$work/site/$2"/web.js
   fi
 }
 

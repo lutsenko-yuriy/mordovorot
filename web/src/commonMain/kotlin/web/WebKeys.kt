@@ -26,19 +26,18 @@ internal object WebKeys {
 
     /** [onBoard]: the board is in play and has focus; [onSolution]: the solution screen's has. A held
      *  digit, Space or Enter is one press; a held board or solution direction repeats. */
-    fun pageKey(press: KeyPress, mode: PlayMode, controlsShown: Boolean, layout: KeyboardLayout = KeyboardLayout.DEFAULT, onBoard: Boolean = false, onSolution: Boolean = false): PageKey? {
+    fun pageKey(press: KeyPress, computer: Boolean, layout: KeyboardLayout = KeyboardLayout.DEFAULT, onBoard: Boolean = false, onSolution: Boolean = false): PageKey? {
         if (press.modified) return null
-        val keyboard = mode == PlayMode.KEYBOARD
-        if (onBoard && keyboard) {
+        if (onBoard && computer) {
             KeyScheme.boardKey(letterOf(press), ARROWS[press.key], layout)?.let { return PageKey.Board(it) }
         }
         val enter = press.key == "Enter"
-        if (onSolution && keyboard && !(press.repeat && (enter || press.key == " "))) {
+        if (onSolution && computer && !(press.repeat && (enter || press.key == " "))) {
             KeyScheme.solutionKey(letterOf(press), ARROWS[press.key], enter)?.let { return PageKey.Solution(it) }
         }
         if (press.repeat) return null
-        if (press.key == "0" && keyboard) return PageKey.ReadBoard
-        return ToolbarButton.entries.firstOrNull { it.digit.toString() == press.key && live(it, mode, controlsShown) }?.let { PageKey.Digit(it) }
+        if (press.key == "0" && computer) return PageKey.ReadBoard
+        return ToolbarButton.entries.firstOrNull { it.digit.toString() == press.key && live(it, computer) }?.let { PageKey.Digit(it) }
     }
 
     /** The letter [press] counts as: what it types, or on a non-Latin layout, the Latin letter at its
@@ -49,7 +48,7 @@ internal object WebKeys {
         return if (nonLatin && position != null) position else press.key.singleOrNull()
     }
 
-    /** Whether [button]'s digit works, and so shows: in keyboard mode all do, in mouse mode only Controls'. */
-    fun live(button: ToolbarButton, mode: PlayMode, controlsShown: Boolean): Boolean =
-        if (button == ToolbarButton.CONTROLS) controlsShown else mode == PlayMode.KEYBOARD
+    /** Whether [button]'s digit works, and so shows: every one on a computer, none on touch (GH-287). */
+    @Suppress("UNUSED_PARAMETER")
+    fun live(button: ToolbarButton, computer: Boolean): Boolean = computer
 }

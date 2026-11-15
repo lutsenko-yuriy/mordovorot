@@ -41,11 +41,10 @@ sealed class Focus(override val key: String) : FocusTarget {
     data object LabelsButton : Focus("labels")
     data object ControlsButton : Focus("controls")
     data object ShareButton : Focus("share")
-    /** The board, one Tab stop in keyboard mode (GH-171). */
+    /** The board, one Tab stop on a computer (GH-171). */
     data object Board : Focus("board") {
         override val fallsBack get() = true
     }
-    data class ModeOption(val mode: PlayMode) : Focus("mode-${mode.wireName}")
     data class LayoutOption(val layout: KeyboardLayout) : Focus("layout-${layout.wireName}")
     /** Back on the control a digit was pressed on, whichever it was (GH-171), or what [fallbackFocus] names. */
     data class Restore(val control: String) : Focus(control) {
@@ -75,7 +74,7 @@ fun defaultFocus(dialog: WebDialog): Focus = when (dialog) {
     is WebDialog.Unsolvable -> Focus.Repair
     is WebDialog.Labels -> Focus.Label(dialog.selected)
     WebDialog.GiveUp -> Focus.No
-    is WebDialog.Controls -> Focus.ModeOption(dialog.mode)
+    is WebDialog.Controls -> Focus.LayoutOption(dialog.layout)
     is WebDialog.LinkRejected -> Focus.LinkRejectedOk
     is WebDialog.OpenShared -> Focus.OpenSharedCancel
     is WebDialog.SharedLabels -> Focus.SharedLabelsYes
