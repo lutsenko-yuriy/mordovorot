@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.44.1] — 2026-11-15 (PR #284 merged)
+
+### Changed
+
+- [meta] (PR #284) GH-283: `serve_lan.sh` follows each commit while it runs: every 15 s it compares `HEAD`, rebuilds after a new commit, checkout or amend, and swaps the new bundle in with one rename, so a fix is re-checked on the phone with a reload instead of a restart. A failed build keeps the old bundle and says `still serving <commit>`; the server sends `Cache-Control: no-cache`; `SERVE_LAN_BIND` sets the address to serve on.
+
 ## [0.44.0] — 2026-11-15 (PR #281 merged)
 
 ### Added
