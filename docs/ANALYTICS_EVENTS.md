@@ -387,7 +387,7 @@ language, and possibly their nationality or location.
 | Screen name | When tracked |
 |---|---|
 | `screen_give_up_dialog` | The `Give up and see Mordie's solution?` confirmation opens (`[ Give Up ]` / 5). Properties `board_size`: number; `move_count`: number - the player's moves so far. *(GH-126)* |
-| `screen_solution` | The solution screen opens. Properties `opened_from`: `give_up`, `after_win` (`[ Mordie's solution ]`), `load` (toolbar Load) or `startup_prompt` (restore prompt); `board_size`: number; `solution_length`: number - Mordie's N. *(GH-126)* |
+| `screen_solution` | The solution screen opens. Properties `opened_from`: `give_up`, `after_win` (`[ Mordie's solution ]`), `load` (toolbar Load) or `startup_prompt` (restore prompt); `player_result`: `gave_up`, `solved` or `unknown` (a save from before GH-273); `board_size`: number; `solution_length`: number - Mordie's N. *(GH-126, GH-273)* |
 
 *GH-139:* new screen view:
 
