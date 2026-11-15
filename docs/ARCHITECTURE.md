@@ -207,7 +207,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── WebSolutionFlows.kt # WebGame's Give Up and the solution screen's replay (GH-126, split out in GH-171)
 │   ├── WebControlsDialog.kt # The Controls dialog's flow over WebGame's modal and the session's mode (GH-171)
 │   ├── PlayMode.kt / PlayModePreference.kt # Mouse or keyboard, kept under `input_mode` (GH-171)
-│   ├── ShareLabelsPreference.kt # GH-267: the Share dialog's `Include my tile labels` toggle, on or off under `share_labels`, read once per session
+│   ├── ShareTogglePreference.kt # GH-267, GH-272: a Share dialog toggle (`Include my tile labels` under `share_labels`, `Include my progress` under `share_progress`), on or off, read once per session
 │   ├── PressedWith.kt   # The session's last input, read per event as input_method (GH-171)
 │   ├── ShareLink.kt     # GH-243 (WU1): `<page address>#b=<board>` built and read; playable, or rejected
 │   │                      # as invalid / unsupported_size / unsolvable. storage.BoardLinkFormat (ADR-0005) holds the board's bits.

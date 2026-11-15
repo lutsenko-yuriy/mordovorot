@@ -49,5 +49,6 @@ object MordieText {
         else -> "You gave up after ${moves(result.moves)}. "
     }
 
-    private fun moves(count: Int) = if (count == 1) "1 move" else "$count moves"
+    /** `1 move`, `2 moves`. */
+    fun moves(count: Int) = if (count == 1) "1 move" else "$count moves"
 }

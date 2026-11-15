@@ -142,6 +142,10 @@ interface GameViewModel {
      *  (an old save, a repaired board). */
     fun startingBoard(): IntArray?
 
+    /** What a share link can say about the game now (GH-272): solving, solved or gave up, with its move count;
+     *  `null` at 0 moves, when there is nothing to tell. */
+    fun sharedProgress(): SharedProgress?
+
     /** Tracks `screen_controls_dialog` as the Controls dialog opens (GH-170); [openedFrom] is
      *  `toolbar` or `shortcut`. */
     fun controlsDialogOpened(openedFrom: String)

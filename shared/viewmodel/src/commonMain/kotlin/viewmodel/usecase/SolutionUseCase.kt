@@ -6,6 +6,7 @@ import viewmodel.GiveUpButton
 import viewmodel.MordieHooks
 import viewmodel.MordieText
 import viewmodel.PlayerResult
+import viewmodel.SharedProgress
 import viewmodel.SolutionReplay
 import viewmodel.SolutionScreen
 import viewmodel.SolutionState
@@ -57,6 +58,19 @@ internal class SolutionUseCase(
 
     /** After a load of a solution-screen save, [trigger] being the load's. */
     fun enterLoaded(trigger: String, result: PlayerResult?) = enter(if (trigger == "startup_prompt") "startup_prompt" else "load", result)
+
+    /** What a share link can say about the player's game now (GH-272); `null` at 0 moves. On the solution screen the
+     *  board is put back, so the result holds the count; a save from before GH-273 has none. */
+    fun sharedProgress(): SharedProgress? {
+        val result = solutionScreen.result
+        val progress = when {
+            !onScreen -> null
+            result == null -> SharedProgress.GaveUp(null)
+            result.gaveUp -> SharedProgress.GaveUp(result.moves)
+            else -> SharedProgress.Solved(result.moves)
+        } ?: if (board.isCorrect()) SharedProgress.Solved(board.moveCount) else SharedProgress.Solving(board.moveCount)
+        return progress.takeIf { it.moves != 0 }
+    }
 
     fun leave() {
         solutionScreen.replay = null

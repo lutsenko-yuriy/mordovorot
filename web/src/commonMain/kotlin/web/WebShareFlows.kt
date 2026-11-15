@@ -15,11 +15,15 @@ internal class WebShareFlows(
     private val modal: WebModal,
     private val address: PageAddress,
     private val clipboard: Clipboard,
-    private val shareLabels: ShareLabelsPreference,
+    private val shareLabels: ShareTogglePreference,
+    private val shareProgress: ShareTogglePreference,
 ) {
 
     /** Whether the Share dialog's toggle is on: read once, kept for the session and written on each flip (GH-267). */
     private var includeLabels = shareLabels.load()
+
+    /** The same for `Include my progress` (GH-272). It holds while there is no progress to send; the dialog shows it off then. */
+    private var includeProgress = shareProgress.load()
 
     /** The latest link that arrived while a dialog or action was under way. */
     private var pending: String? = null
@@ -53,7 +57,7 @@ internal class WebShareFlows(
     fun open(opener: Focus = Focus.ShareButton) = game.runFlow(opener) {
         val side = viewModel.squareSide()
         val dialog = shareDialog(copied = false)
-        analytics.track("screen_share_dialog", mapOf("board_size" to side, "start_known" to dialog.startKnown, "include_labels" to dialog.includeLabels))
+        analytics.track("screen_share_dialog", mapOf("board_size" to side, "start_known" to dialog.startKnown, "include_labels" to dialog.includeLabels, "include_progress" to dialog.includeProgress))
         modal.ask<Unit>(dialog)
         game.cancelled("share")
     }
@@ -64,10 +68,12 @@ internal class WebShareFlows(
         val start = viewModel.startingBoard()
         val side = viewModel.squareSide()
         val labels = viewModel.tileLabels()
-        val link = ShareLink.of(address.base(), side, start ?: viewModel.boardState(), labels.takeIf { includeLabels })
+        val progress = viewModel.sharedProgress()?.takeIf(ShareLink::carries)
+        val sent = progress.takeIf { includeProgress }
+        val link = ShareLink.of(address.base(), side, start ?: viewModel.boardState(), labels.takeIf { includeLabels }, sent)
         // Too long for the largest code (a fork's long address): the link alone.
         val qr = try { QrCode.encode(link) } catch (e: IllegalArgumentException) { null }
-        return WebDialog.Share(link, side, start != null, qr, copied, labels, includeLabels)
+        return WebDialog.Share(link, side, start != null, qr, copied, labels, includeLabels, progress, sent != null)
     }
 
     /** The toggle, flipped: the link and its code are rebuilt, and Copied! no longer holds, as the link copied is the
@@ -84,6 +90,20 @@ internal class WebShareFlows(
         game.render(focus = Focus.ShareLabels)
     }
 
+    /** The progress toggle, flipped, as [onLabelsToggled]; nothing happens at 0 moves, when it is dimmed (GH-272). */
+    fun onProgressToggled() {
+        val open = modal.shown as? WebDialog.Share ?: return
+        val progress = open.progress ?: return
+        includeProgress = !includeProgress
+        shareProgress.save(includeProgress)
+        modal.update(shareDialog(copied = false))
+        analytics.track(
+            "share_progress_toggled",
+            mapOf("enabled" to includeProgress, "progress" to progress.analyticsName, "board_size" to open.side),
+        )
+        game.render(focus = Focus.ShareProgress)
+    }
+
     /** Copy link, from the keyboard when [fromKeyboard] (a click with no pointer): the button reads
      *  Copied!; a refusal selects the link for the player to copy. */
     fun onCopyLink(fromKeyboard: Boolean) {
@@ -96,6 +116,7 @@ internal class WebShareFlows(
                     "board_share_link_copied",
                     mapOf(
                         "board_size" to open.side, "start_known" to open.startKnown, "includes_labels" to open.includeLabels,
+                        "includes_progress" to open.includeProgress,
                         "via" to if (fromKeyboard) "enter_key" else "button",
                     ),
                 )

@@ -35,7 +35,8 @@ class WebGame internal constructor(
     clipboard: Clipboard,
     updates: AppUpdates,
     appVersion: String,
-    shareLabels: ShareLabelsPreference,
+    shareLabels: ShareTogglePreference,
+    shareProgress: ShareTogglePreference,
 ) {
 
     private val modal = WebModal { render(focus = it) }
@@ -43,7 +44,7 @@ class WebGame internal constructor(
     internal val dialogs = WebDialogFlows(viewModel, analytics, modal, ::cancelled, ::noteStatus, ::takeStatus) { saying = it }
     internal val solution = WebSolutionFlows(this, viewModel, analytics, modal)
     internal val controls = WebControlsDialog(this, viewModel, analytics, modal, keyboardLayout, modePreference, startMode)
-    internal val share = WebShareFlows(this, viewModel, analytics, modal, address, clipboard, shareLabels)
+    internal val share = WebShareFlows(this, viewModel, analytics, modal, address, clipboard, shareLabels, shareProgress)
     internal val updates = WebUpdateFlows(this, viewModel, analytics, modal, updates, appVersion)
     private val keys = WebKeyPlay(this, viewModel, pressedWith, controlsShown)
     private val requests = WebRequestRouter(this)

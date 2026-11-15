@@ -142,5 +142,7 @@ class GameViewModelImpl internal constructor(
 
     override fun startingBoard(): IntArray? = mordieHooks.original()
 
+    override fun sharedProgress(): SharedProgress? = solutionUseCase.sharedProgress()
+
     override fun controlsDialogOpened(openedFrom: String) = controlsDialogUseCase.dialogOpened(openedFrom)
 }

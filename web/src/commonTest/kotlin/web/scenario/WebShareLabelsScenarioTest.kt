@@ -35,7 +35,7 @@ class WebShareLabelsScenarioTest {
         assertEquals("Include my tile labels (Numbers)", page.share.labelsToggle)
         assertFalse(page.share.includeLabels)
         assertEquals(boardLink(page), page.share.link)
-        assertEquals(listOf(mapOf("board_size" to 4, "start_known" to true, "include_labels" to false)), page.ownProps("screen_share_dialog"))
+        assertEquals(listOf(mapOf("board_size" to 4, "start_known" to true, "include_labels" to false, "include_progress" to false)), page.ownProps("screen_share_dialog"))
     }
 
     @Test
