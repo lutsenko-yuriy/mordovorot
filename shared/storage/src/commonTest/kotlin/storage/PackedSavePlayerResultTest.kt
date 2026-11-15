@@ -2,6 +2,7 @@ package storage
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 
 /** GH-273: a solution-screen save keeps how the player's game ended, in the move-count slot. */
@@ -53,6 +54,15 @@ class PackedSavePlayerResultTest {
 
         assertNull(loaded.mordie?.playerResult)
         assertEquals(true, loaded.mordie?.solutionScreen)
+    }
+
+    @Test
+    fun `a result with more moves than the encoder allows is rejected`() {
+        val text = PackedSaveFormat.encode(3, original, 0, screen(SavedPlayerResult(true, PackedSaveFormat.MAX_RESULT_MOVES)), null)
+        assertEquals(PackedSaveFormat.MAX_RESULT_MOVES, PackedSaveFormat.decode("t", text).mordie?.playerResult?.moves)
+
+        val hugeResult = screen(SavedPlayerResult(true, PackedSaveFormat.MAX_RESULT_MOVES + 1))
+        assertFailsWith<SaveFileFormatException> { PackedSaveFormat.decode("t", PackedSaveFormat.encode(3, original, 0, hugeResult, null)) }
     }
 
     @Test

@@ -88,7 +88,9 @@ internal object PackedSaveFormat {
         val labels = readLabels(name, reader, labelCode)
         val slot = reader.getVarint()
         val state = reader.getPermutation(side * side, "the board")
-        val mordie = if (status == NO_MORDIE) null else readMordie(name, reader, side, status, screen, hasSolution, if (screen) readResult(slot) else null)
+        val result = if (screen) readResult(slot) else null
+        if (result != null && result.moves > MAX_RESULT_MOVES) throw SaveFileFormatException(name, "the player's moves are out of range")
+        val mordie = if (status == NO_MORDIE) null else readMordie(name, reader, side, status, screen, hasSolution, result)
         if (!reader.atEnd()) {
             val reason = if (reader.bitsLeft() >= 8) "the packed data has extra bytes at the end" else "the packed data's padding bits are not zero"
             throw SaveFileFormatException(name, reason)
