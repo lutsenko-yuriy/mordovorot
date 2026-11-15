@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.45.0] — 2026-11-15 (PR #293 merged)
+
+### Changed
+
+- [user] (PR #293) GH-287: Drop the Mouse/Keyboard mode choice: a computer shows and does everything together, and the selection's outlines follow the last input (WU1 #292, WU2 #293).
+
 ## [0.44.4] — 2026-11-15 (PR #292 merged)
 
 ### Changed
