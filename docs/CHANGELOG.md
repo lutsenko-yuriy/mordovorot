@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.44.4] — 2026-11-15 (PR #292 merged)
+
+### Changed
+
+- [wip] [app] (PR #292) GH-287: the Mouse/Keyboard mode choice is dropped: a computer shows and does everything, and in Controls the OK button puts focus on the board (WU1 of 2; the spec and glossary follow in WU2).
+
 ## [0.44.3] — 2026-11-15 (PR #286 merged)
 
 ### Changed
