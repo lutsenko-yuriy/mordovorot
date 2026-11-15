@@ -104,7 +104,7 @@ class ViewModelMordieTest {
         assertEquals(5, viewModel.moveCount())
         assertNull(viewModel.mordieLine())
         assertNull(viewModel.mordieEnding())
-        assertEquals(mapOf("move_count" to 5, "board_size" to 3, "tile_labels" to "numbers"), event("board_solved"))
+        assertEquals(mapOf("move_count" to 5, "board_size" to 3, "tile_labels" to "numbers", "tutorial" to false), event("board_solved"))
     }
 
     @Test
@@ -313,6 +313,7 @@ class ViewModelMordieTest {
                 "resumed_from_save" to false,
                 "source" to "exact_search",
                 "proven_shortest" to true,
+                "tutorial" to false,
             ),
             event("mordie_solution_found"),
         )

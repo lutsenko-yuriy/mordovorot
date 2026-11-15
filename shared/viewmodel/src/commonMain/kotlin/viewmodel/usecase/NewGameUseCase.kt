@@ -29,16 +29,16 @@ internal class NewGameUseCase(
     }
 
     /** A fresh game on [arrangement] (GH-243, a share link's): throws, changing nothing, unless it is a solvable board.
-     *  [sender]'s progress, if the link carries it, opens Mordie's line (GH-272). */
-    fun newGameFrom(arrangement: IntArray, sender: SharedProgress?) {
+     *  [sender]'s progress, if the link carries it, opens Mordie's line (GH-272). [tutorial] marks the tutorial's game (GH-288). */
+    fun newGameFrom(arrangement: IntArray, sender: SharedProgress?, tutorial: Boolean = false) {
         require(Solvability.isSolvable(arrangement)) { "No sequence of shifts solves this board" }
         board.restoreState(arrangement, 0)
-        begin(sender)
+        begin(sender, tutorial)
     }
 
-    private fun begin(sender: SharedProgress? = null) {
+    private fun begin(sender: SharedProgress? = null, tutorial: Boolean = false) {
         solution.leave()
-        mordieHooks.onNewGame(sender)
+        mordieHooks.onNewGame(sender, tutorial)
         currentSaveName.name = null
         tileLabels.resetToPreference(board.squareSide)
         gameShiftSources.reset()
