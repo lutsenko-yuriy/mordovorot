@@ -129,7 +129,10 @@ sealed interface WebDialog {
             null -> "Include my progress"
             is SharedProgress.Solving -> "Include my progress (${MordieText.moves(progress.moves)}, not solved)"
             is SharedProgress.Solved -> "Include my progress (solved in ${MordieText.moves(progress.moves)})"
-            is SharedProgress.GaveUp -> "Include my progress (gave up${progress.moves.let { if (it == null) "" else " after ${MordieText.moves(it)}" }})"
+            is SharedProgress.GaveUp -> {
+                val count = progress.moves
+                "Include my progress (gave up${if (count == null) "" else " after ${MordieText.moves(count)}"})"
+            }
         }
 
         /** The progress toggle can be flipped: there is progress to send. */
