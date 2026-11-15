@@ -538,6 +538,14 @@ Web client only.
     labels back. With unsaved moves `Open the shared board?` comes first, then this prompt. Labels equal
     to the player's raise no prompt. Labels the page can't read (an unknown or mis-cased name, Letters on
     6x6 and bigger) are ignored without a word, and a link with none is as before.
+  - **The sender's progress in a link (GH-272):** a link can carry how the sender's game stands (ADR-0005, `&p=`).
+    Mordie's opening line, for shifts 0-4 of the new game, then says it instead of `Alright! Let's sort this one
+    out!`: `Okay, so your friend made N moves and did not solve the puzzle yet. Maybe we could help?`,
+    `Okay, so your friend solved this one in N moves. Wanna beat this?`, `So after making N moves your friend
+    gave up before finding the solution. Can we find one?`, or, when the count is unknown, `So your friend gave
+    up before finding the solution. Can we find one?` (`1 move` for one). From shift 5 the usual rules apply.
+    A new game, a load or a repair after it shows the usual line, and a save doesn't keep the friend's line.
+    Progress the page can't read is ignored without a word. Analytics: `shared_board_opened.progress`.
   - A bad link (not a board, a side outside 3 to 9, or no sequence of shifts solves it)
   shows `Can't open this board`, then the usual startup. Analytics: `shared_board_opened`,
   `shared_labels_accepted`, `screen_shared_labels_dialog`, `screen_share_dialog`, `board_share_link_copied`

@@ -100,6 +100,9 @@ mouse shared-labels 1200x800 4x4 | Tab page -> focus shared-labels-yes role butt
 mouse shared-labels 1200x800 4x4 | Escape page -> focus - | dialog - | ring - | keyboard yes | inert - | said -
 mouse shared-labels 1200x800 4x4 | start - -> focus shared-labels-yes role button name "Yes" | dialog "Use the sender's labels (Pairs)?" | ring none | keyboard no | inert DIV.stage DIV.panel FOOTER.footer | said "Started a shared 4x4 board."
 mouse shared-labels 1200x800 4x4 | Enter native -> focus - | dialog - | ring - | keyboard yes | inert - | said -
+mouse shared-progress 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert - | said "Started a shared 4x4 board."
+mouse shared-progress 1200x800 4x4 | Tab native -> focus read-board role button name "Read board" | dialog - | ring solid | keyboard yes | inert - | said -
+mouse shared-progress 1200x800 4x4 | Escape - -> focus read-board role button name "Read board" | dialog - | ring solid | keyboard yes | inert - | said -
 mouse play 1200x800 4x4 | start - -> focus - | dialog - | ring - | keyboard no | inert - | said "New 4x4 game"
 mouse play 1200x800 4x4 | 6 page -> focus mode-mouse role radio name "Mouse" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
 mouse play 1200x800 4x4 | ArrowRight page -> focus mode-keyboard role radio name "Keyboard" checked | dialog "Controls" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -

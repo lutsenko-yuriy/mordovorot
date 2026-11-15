@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.43.2] — 2026-11-15 (PR #280 merged)
+
+### Added
+
+- [wip] (PR #280) GH-272 (WU1): a share link can carry the sender's progress (`&p=`: not solved yet, solved or gave up, with the move count), and opening one makes Mordie's opening line say how the friend did, for shifts 0-4. Unreadable progress is ignored without a word, and `shared_board_opened` gets `progress`. Nothing builds such a link yet; the Share dialog's toggle is WU2. ADR-0005 is amended; the harness gets mode=shared-progress.
+
 ## [0.43.1] — 2026-11-15 (PR #278 merged)
 
 ### Fixed
