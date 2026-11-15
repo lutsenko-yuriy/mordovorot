@@ -4,6 +4,7 @@ import board_model.BoardImpl
 import board_model.Solvability
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import storage.SavedBoard
@@ -48,9 +49,11 @@ class ViewModelUnsolvableLoadTest {
         val analytics = RecordingAnalyticsService()
         val viewModel = testViewModel(board, saves, analytics)
         val ui = FakeViewModelUi(resolveUnsolvableSaveResponses = mutableListOf(UnsolvableSaveChoice.REPAIR))
+        var loaded = false
 
-        ui.drive(viewModel) { viewModel.loadGame("odd") }
+        ui.drive(viewModel) { loaded = viewModel.loadGame("odd") }
 
+        assertTrue(loaded)
         assertEquals(repairedState, saves.load("odd")!!.state.toList())
         assertEquals(listOf(5), saves.savedMoveCounts)
         assertEquals(repairedState, board.boardArray.toList())
@@ -116,9 +119,11 @@ class ViewModelUnsolvableLoadTest {
             resolveUnsolvableSaveResponses = mutableListOf(UnsolvableSaveChoice.NEW_GAME),
             chooseBoardSizeResponses = mutableListOf(5),
         )
+        var loaded = true
 
-        ui.drive(viewModel) { viewModel.loadGame("odd") }
+        ui.drive(viewModel) { loaded = viewModel.loadGame("odd") }
 
+        assertFalse(loaded)
         assertEquals(listOf(4), ui.chooseBoardSizeCalls)
         assertEquals(listOf("unsolvable_save"), ui.chooseBoardSizeOrigins)
         assertEquals(5, board.squareSide)

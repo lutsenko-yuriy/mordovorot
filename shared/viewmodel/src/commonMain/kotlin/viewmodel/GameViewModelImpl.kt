@@ -7,6 +7,7 @@ import kotlinx.coroutines.channels.ReceiveChannel
 import viewmodel.usecase.ControlsDialogUseCase
 import viewmodel.usecase.DeleteSaveUseCase
 import viewmodel.usecase.LoadGameUseCase
+import viewmodel.usecase.LoadResult
 import viewmodel.usecase.NewGameUseCase
 import viewmodel.usecase.SaveGameUseCase
 import viewmodel.usecase.SolutionUseCase
@@ -87,9 +88,7 @@ class GameViewModelImpl internal constructor(
 
     override suspend fun saveGame(name: String): Boolean = saveGameUseCase.saveGame(name)
 
-    override suspend fun loadGame(name: String) {
-        loadGameUseCase.loadGame(name)
-    }
+    override suspend fun loadGame(name: String): Boolean = loadGameUseCase.loadGame(name) == LoadResult.LOADED
 
     override fun deleteSave(save: SaveInfo, trigger: String): DeleteResult = deleteSaveUseCase.deleteSave(save, trigger)
 
