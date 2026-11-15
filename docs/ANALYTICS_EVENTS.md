@@ -632,3 +632,13 @@ Additions to existing events:
 - `shared_board_opened` gains `progress` (`string`, only when `result` is `started`): `none` (the link has no progress), `solving`, `solved` or `gave_up` (Mordie's opening line shows that status), or `unreadable` (the progress was ignored).
 
 Not tracked: move counts (`board_solved.move_count` and `game_given_up.move_count` report them, and the link's contents are never sent), whether a receiver goes on to solve a game that came from a link (as in GH-267), the `gave_up` row with an unknown count (folded into `gave_up`), the toggle's remembered state at launch (`screen_share_dialog.include_progress` covers it), QR scans, Mordie's opening line being shown (it follows from `shared_board_opened.progress`), and hovering over or focusing the toggle.
+
+## GH-287 (the Mouse/Keyboard mode choice is dropped)
+
+No new events or screen views. Retired, and kept above as history:
+- the event `input_mode_switched`: there is no mode to switch, so it never fires again;
+- the `app_launched` property `mode`: it would name the same value on every launch.
+
+`board_solved.shift_keys` is no longer "keyboard mode only": every game can report it, and it is still sent only when the solving shift is a keyboard one. `input_method` is unchanged (the press that fired the event), so `screen_controls_dialog.input_method` is the press that opened the dialog, not a mode.
+
+Not tracked: the selection showing or hiding after key or mouse use, how often the digits and key hints are used (`input_method` already shows keyboard use), and the one-time drop of a stored keyboard mode.
