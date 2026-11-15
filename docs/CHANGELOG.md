@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.43.0] — 2026-11-15 (PR #276 merged)
+
+### Added
+
+- [user] (PR #276) GH-273: Mordie's solution screen now starts with how your game went: "You gave up after 14 moves." or "You solved it in 14 moves.", in saves too.
+
 ## [0.42.0] — 2026-11-15 (PR #270 merged)
 
 ### Added
