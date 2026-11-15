@@ -28,9 +28,7 @@ class WebGame internal constructor(
     private val scope: CoroutineScope,
     pressedWith: PressedWith,
     keyboardLayout: SessionKeyboardLayout,
-    modePreference: PlayModePreference,
-    startMode: PlayMode,
-    private val controlsShown: Boolean,
+    private val computer: Boolean,
     address: PageAddress,
     clipboard: Clipboard,
     updates: AppUpdates,
@@ -43,10 +41,10 @@ class WebGame internal constructor(
     internal val labels = WebLabelsDialog(this, viewModel, modal)
     internal val dialogs = WebDialogFlows(viewModel, analytics, modal, ::cancelled, ::noteStatus, ::takeStatus) { saying = it }
     internal val solution = WebSolutionFlows(this, viewModel, analytics, modal)
-    internal val controls = WebControlsDialog(this, viewModel, analytics, modal, keyboardLayout, modePreference, startMode)
+    internal val controls = WebControlsDialog(this, viewModel, modal, keyboardLayout)
     internal val share = WebShareFlows(this, viewModel, analytics, modal, address, clipboard, shareLabels, shareProgress)
     internal val updates = WebUpdateFlows(this, viewModel, analytics, modal, updates, appVersion)
-    private val keys = WebKeyPlay(this, viewModel, pressedWith, controlsShown)
+    private val keys = WebKeyPlay(this, viewModel, pressedWith, computer)
     private val requests = WebRequestRouter(this)
     internal var status: String? = null
     /** The toolbar action or startup restore under way, if any. */
@@ -74,8 +72,8 @@ class WebGame internal constructor(
         }
     }
 
-    /** Where keyboard mode's board has focus, the keys working there (GH-171); none in mouse mode. */
-    internal val onBoard get() = Focus.Board.takeIf { controls.mode == PlayMode.KEYBOARD }
+    /** Where a computer's board has focus, the keys working there (GH-171); none on touch. */
+    internal val onBoard get() = Focus.Board.takeIf { computer }
 
     /** Backs the page's leave-site prompt. */
     fun hasUnsavedProgress(): Boolean = !updates.applying && viewModel.hasUnsavedProgress()
@@ -133,7 +131,7 @@ class WebGame internal constructor(
      *  took it. */
     fun onKey(press: KeyPress, from: String? = null): Boolean = keys.onKey(press, from)
 
-    /** A press on a tile (GH-171): in keyboard mode it selects the tile and gives the board focus. */
+    /** A press on a tile (GH-171): on a computer it selects the tile and gives the board focus. */
     fun onTilePressed(row: Int, col: Int) = keys.onTilePressed(row, col)
 
     fun onNew(opener: Focus = Focus.NewButton) = runFlow(opener) {
@@ -271,11 +269,10 @@ class WebGame internal constructor(
             labels = (modal.shown as? WebDialog.Labels)?.selected ?: (modal.shown as? WebDialog.SharedLabels)?.labels ?: viewModel.tileLabels(),
             focus = focus,
             announcement = saying,
-            mode = controls.mode,
-            controlsShown = controlsShown,
+            computer = computer,
             selection = keys.shownSelection(),
             hints = when {
-                controls.mode == PlayMode.MOUSE -> null
+                !computer -> null
                 viewModel.solution() != null -> KeyHints.SOLUTION
                 else -> KeyHints.board(controls.layout)
             },

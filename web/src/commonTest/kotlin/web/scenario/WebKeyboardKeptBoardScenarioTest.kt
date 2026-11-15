@@ -36,13 +36,13 @@ class WebKeyboardKeptBoardScenarioTest {
     }
 
     @Test
-    fun `a size change doesn't keep the board, nor does a mouse-mode frame`() = webTest {
+    fun `a size change doesn't keep the board, nor does a touch frame`() = webTest {
         val page = WebHarness(backgroundScope).remembering().startOn(mixedUp)
         assertFalse(page.state.copy(side = 5).keepsBoardFrom(page.state))
 
-        val mouse = WebHarness(backgroundScope).startOn(mixedUp)
-        val before = mouse.state
-        mouse.game.onArrow(Arrow.LEFT, 0)
-        assertFalse(mouse.state.keepsBoardFrom(before))
+        val touch = WebHarness(backgroundScope, touch = true).startOn(mixedUp)
+        val before = touch.state
+        touch.game.onArrow(Arrow.LEFT, 0)
+        assertFalse(touch.state.keepsBoardFrom(before))
     }
 }

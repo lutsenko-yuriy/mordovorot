@@ -114,7 +114,7 @@
         display: none;
     }
 
-    /* Keyboard mode is out of reach on touch screens (GH-171). */
+    /* The keys and Controls are out of reach on touch screens (GH-171). */
     .controls-row {
         display: none;
     }

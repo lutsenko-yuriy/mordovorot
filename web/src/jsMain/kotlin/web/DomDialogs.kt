@@ -94,9 +94,6 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                 ),
             )
             is WebDialog.Controls -> append(
-                radios("Play with", PlayMode.entries.map { mode ->
-                    radio(mode.title, mode == dialog.mode, Focus.ModeOption(mode)) { game.controls.onMode(mode) }
-                }),
                 radios("Keyboard keys", KeyboardLayout.entries.map { layout ->
                     radio(layout.title, layout == dialog.layout, Focus.LayoutOption(layout)) { game.controls.onLayout(layout) }
                 }),

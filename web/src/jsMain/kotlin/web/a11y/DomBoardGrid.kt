@@ -7,7 +7,7 @@ import viewmodel.TileSelection
 
 // GH-167: during play, the tiles as a table a screen reader reads - a row element per board row,
 // each tile its cell - and the hidden Read board button that says the whole board.
-// GH-171: with a [TileSelection], keyboard mode's board: a grid that is one Tab stop, the selected
+// GH-171: with a [TileSelection], a computer's board: a grid that is one Tab stop, the selected
 // cell its active descendant, so NVDA and JAWS pass the letter keys on (D4, knowledge note). The
 // solution screen's board is a Tab stop too, named after the current step.
 
@@ -36,7 +36,7 @@ internal fun activeCell(layer: Element, selection: TileSelection) =
 /** Names the solution screen's board [layer] after the current step. */
 internal fun nameBoard(layer: Element, name: String) = layer.setAttribute("aria-label", name)
 
-/** The solution screen's board in keyboard mode, a Tab stop for its keys, saying its [name] on focus. */
+/** The solution screen's board on a computer, a Tab stop for its keys, saying its [name] on focus. */
 internal fun asSolutionBoard(layer: Element, name: String, board: FocusTarget) = layer.apply {
     setAttribute("role", "group")
     setAttribute("aria-label", name)

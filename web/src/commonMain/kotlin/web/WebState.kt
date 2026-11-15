@@ -37,24 +37,23 @@ data class WebState(
     /** What a screen reader says once this frame is drawn (GH-166); `null` says nothing. One-time
      *  like [focus], so the same text on two frames is said twice. */
     val announcement: String? = null,
-    val mode: PlayMode = PlayMode.DEFAULT,
-    /** The `[ Controls 6 ]` row (GH-171), hidden on touch screens. */
-    val controlsShown: Boolean = false,
-    /** The selected tile, in keyboard mode during play (GH-171). */
+    /** The main input isn't touch (GH-287): the keys, digits, hints and `[ Controls 6 ]` show, hidden on touch screens. */
+    val computer: Boolean = false,
+    /** The selected tile, on a computer during play (GH-171). */
     val selection: TileSelection? = null,
-    /** The key hints under the board, or the solution screen's keys, in keyboard mode (GH-171). */
+    /** The key hints under the board, or the solution screen's keys, on a computer (GH-171). */
     val hints: List<KeyHint>? = null,
     /** The footer line, with the New version available notice once one is ready (GH-262). */
     val footer: List<FooterPart> = emptyList(),
 ) {
     /** The digit [button] shows, `null` when it shows none (GH-171). */
-    fun digitOf(button: ToolbarButton): Int? = button.digit.takeIf { WebKeys.live(button, mode, controlsShown) }
+    fun digitOf(button: ToolbarButton): Int? = button.digit.takeIf { WebKeys.live(button, computer) }
 
-    /** Keyboard mode's board is a Tab stop, during play and on the solution screen (GH-171). */
+    /** A computer's board is a Tab stop, during play and on the solution screen (GH-171). */
     val boardFocusable: Boolean get() = selection != null || boardName != null
 
-    /** What a reader calls the solution screen's board on taking focus (GH-171); `null` off it and in mouse mode. */
-    val boardName: String? get() = solution?.takeIf { mode == PlayMode.KEYBOARD }?.let { Announcements.boardStep(it.moves, it.current) }
+    /** What a reader calls the solution screen's board on taking focus (GH-171); `null` off it and on touch. */
+    val boardName: String? get() = solution?.takeIf { computer }?.let { Announcements.boardStep(it.moves, it.current) }
 
     /** Whether the page keeps the board's element and updates it in place: rebuilt and refocused, it
      *  has VoiceOver say the board over the live region, or keep saying the tile just left (GH-171). */
@@ -102,9 +101,9 @@ sealed interface WebDialog {
      *  a load opened it (GH-160). */
     data class Labels(val options: List<LabelOption>, val selected: TileLabels, val message: String? = null) : WebDialog
 
-    /** The Controls dialog (GH-171): [mode] and [layout] are marked until Cancel or OK; [keyList]
+    /** The Controls dialog (GH-171): [layout] is marked until Cancel or OK; [keyList]
      *  names the marked layout's keys. */
-    data class Controls(val mode: PlayMode, val layout: KeyboardLayout, val keyList: List<String>) : WebDialog
+    data class Controls(val layout: KeyboardLayout, val keyList: List<String>) : WebDialog
 
     /** The Share dialog (GH-243): the [link] to a [side] x [side] board - the one Mordie started from when
      *  [startKnown], else the board as it is; [qr] is the link as a code, `null` when too long for one. */

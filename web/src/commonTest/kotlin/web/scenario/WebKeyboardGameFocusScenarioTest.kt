@@ -166,8 +166,8 @@ class WebKeyboardGameFocusScenarioTest {
     }
 
     @Test
-    fun `mouse mode keeps focus on Save after a save`() = webTest {
-        val page = WebHarness(backgroundScope).startOn(mixedUp)
+    fun `touch keeps focus on Save after a save`() = webTest {
+        val page = WebHarness(backgroundScope, touch = true).startOn(mixedUp)
 
         page.game.onSave()
         page.game.onSaveAnswered("s")
@@ -176,8 +176,8 @@ class WebKeyboardGameFocusScenarioTest {
     }
 
     @Test
-    fun `mouse mode keeps focus on New after a new game`() = webTest {
-        val page = WebHarness(backgroundScope).startOn(mixedUp)
+    fun `touch keeps focus on New after a new game`() = webTest {
+        val page = WebHarness(backgroundScope, touch = true).startOn(mixedUp)
 
         page.game.onNew()
         page.game.onSizeChosen(5)

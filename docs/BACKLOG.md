@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-_(nothing in progress)_
+- GH-287: Drop the Mouse/Keyboard mode choice (WU1/2 merged; WU2 pending)
 
 ---
 

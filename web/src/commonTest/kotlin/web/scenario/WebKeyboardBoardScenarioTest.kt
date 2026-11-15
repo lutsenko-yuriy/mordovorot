@@ -12,7 +12,6 @@ import viewmodel.TileSelection
 import web.Arrow
 import web.Focus
 import web.KeyHints
-import web.PlayMode
 import web.Slides
 import web.WebDialog
 
@@ -153,8 +152,8 @@ class WebKeyboardBoardScenarioTest {
     }
 
     @Test
-    fun `mouse mode has no selection, no board keys and no hints`() = webTest {
-        val page = WebHarness(backgroundScope).startOn(mixedUp)
+    fun `touch has no selection, no board keys and no hints`() = webTest {
+        val page = WebHarness(backgroundScope, touch = true).startOn(mixedUp)
 
         assertNull(page.state.selection)
         assertNull(page.state.hints)
@@ -165,31 +164,15 @@ class WebKeyboardBoardScenarioTest {
     }
 
     @Test
-    fun `the board takes focus after the startup dialog in keyboard mode, not in mouse mode`() = webTest {
-        val keyboard = WebHarness(backgroundScope).remembering().seed("kept", mixedUp).start()
+    fun `the board takes focus after the startup dialog on a computer, not on touch`() = webTest {
+        val keyboard = WebHarness(backgroundScope).seed("kept", mixedUp).start()
         assertIs<WebDialog.Load>(keyboard.state.dialog)
         keyboard.game.onLoadChosen("kept")
         assertEquals(Focus.Board, keyboard.state.focus)
 
-        val mouse = WebHarness(backgroundScope).seed("kept", mixedUp).start()
-        mouse.game.onLoadChosen("kept")
-        assertEquals(Focus.PageStart, mouse.state.focus)
-    }
-
-    @Test
-    fun `entering keyboard mode gives the board focus, and leaving it asks for it where it was`() = webTest {
-        val page = WebHarness(backgroundScope).startOn(mixedUp)
-        page.game.controls.open()
-        page.game.controls.onMode(PlayMode.KEYBOARD)
-        page.game.controls.onAnswered(ok = true)
-        assertEquals(Focus.Board, page.state.focus)
-
-        page.press("6", from = Focus.Board)
-        page.game.controls.onMode(PlayMode.MOUSE)
-        page.game.controls.onAnswered(ok = true)
-        // Gone in mouse mode, so the page falls back to Controls (PageFocusTest).
-        assertEquals(Focus.Board, page.state.focus)
-        assertEquals(PlayMode.MOUSE, page.state.mode)
+        val touch = WebHarness(backgroundScope, touch = true).seed("kept", mixedUp).start()
+        touch.game.onLoadChosen("kept")
+        assertEquals(Focus.PageStart, touch.state.focus)
     }
 
     @Test
@@ -242,13 +225,13 @@ class WebKeyboardBoardScenarioTest {
     }
 
     @Test
-    fun `switching mode keeps the selection`() = webTest {
+    fun `changing the layout keeps the selection`() = webTest {
         val page = WebHarness(backgroundScope).remembering().startOn(mixedUp)
         page.game.onTilePressed(1, 2)
 
-        for (mode in listOf(PlayMode.MOUSE, PlayMode.KEYBOARD)) {
+        for (layout in listOf(KeyboardLayout.LEFT_HANDED, KeyboardLayout.RIGHT_HANDED)) {
             page.game.controls.open()
-            page.game.controls.onMode(mode)
+            page.game.controls.onLayout(layout)
             page.game.controls.onAnswered(ok = true)
         }
 

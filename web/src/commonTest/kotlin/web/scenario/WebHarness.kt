@@ -24,7 +24,6 @@ import web.AppUpdates
 import web.Clipboard
 import web.Layout
 import web.PageAddress
-import web.PlayMode
 import web.ShareLink
 import web.PressedWith
 import web.WebDialog
@@ -115,9 +114,8 @@ internal class WebHarness(
         return this
     }
 
-    /** Remembers keyboard mode, and the left-handed layout when asked, as an earlier visit would. */
-    fun remembering(mode: PlayMode = PlayMode.KEYBOARD, keys: KeyboardLayout? = null): WebHarness {
-        preferences.set("input_mode", mode.wireName)
+    /** Remembers the keyboard layout [keys], as an earlier visit would. */
+    fun remembering(keys: KeyboardLayout? = null): WebHarness {
         keys?.let { preferences.set("keyboard_layout", it.wireName) }
         return this
     }

@@ -28,8 +28,8 @@ fun webBoard(): BoardImpl = BoardImpl(maxSide = BoardSize.VERY_LARGE.last)
  *  `app_launched` (with [appVersion] and [host], GH-111, and the tile labels kept in
  *  [preferences], GH-139), then starts a [WebGame] on [scope].
  *  Every event gets `platform: web`, and all but `app_launched` get `input_method` from
- *  [pressedWith] (GH-171). A share link in [address] starts its board (GH-243). Keyboard mode is out of reach on a [touch] screen, whatever is
- *  stored. [updates] checks for a new version of the page (GH-262). */
+ *  [pressedWith] (GH-171). A share link in [address] starts its board (GH-243). On a [touch] screen the keys and Controls are out of reach (GH-287).
+ *  [updates] checks for a new version of the page (GH-262). */
 fun startWebGame(
     board: BoardModel,
     saves: SaveRepository,
@@ -49,10 +49,7 @@ fun startWebGame(
 ): WebGame {
     val platform = PlatformAnalyticsService(analytics, "web")
     val tileLabels = SessionTileLabels(TileLabelsPreference(preferences))
-    val modePreference = PlayModePreference(preferences)
-    val controlsShown = !touch
-    val startMode = if (controlsShown) modePreference.load() ?: PlayMode.DEFAULT else PlayMode.DEFAULT
-    trackAppLaunched(platform, layout, appVersion, host, tileLabels.effectivePreference.wireName, startMode)
+    trackAppLaunched(platform, layout, appVersion, host, tileLabels.effectivePreference.wireName)
     val pressed = InputMethodAnalyticsService(platform) { pressedWith.inputMethod }
     val viewModel = buildGameViewModel(
         board, saves, pressed,
@@ -65,14 +62,13 @@ fun startWebGame(
         ui = UiRequestChannel(),
     )
     val keyboardLayout = SessionKeyboardLayout(KeyboardLayoutPreference(preferences))
-    return WebGame(viewModel, pressed, renderer, scope, pressedWith, keyboardLayout, modePreference, startMode, controlsShown, address, clipboard, updates, appVersion, ShareTogglePreference(preferences, "share_labels"), ShareTogglePreference(preferences, "share_progress")).also { it.start() }
+    return WebGame(viewModel, pressed, renderer, scope, pressedWith, keyboardLayout, !touch, address, clipboard, updates, appVersion, ShareTogglePreference(preferences, "share_labels"), ShareTogglePreference(preferences, "share_progress")).also { it.start() }
 }
 
-fun trackAppLaunched(analytics: AnalyticsService, layout: Layout, appVersion: String, host: Host, tileLabels: String, mode: PlayMode) {
+fun trackAppLaunched(analytics: AnalyticsService, layout: Layout, appVersion: String, host: Host, tileLabels: String) {
     analytics.track(
         "app_launched",
         mapOf(
-            "mode" to mode.wireName,
             "layout" to layout.name.lowercase(),
             "app_version" to appVersion,
             "host" to host.name.lowercase(),

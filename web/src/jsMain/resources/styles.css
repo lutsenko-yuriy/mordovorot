@@ -55,7 +55,7 @@ body {
     /* The height left for the board: the rest of the column, Give Up's row included. Tall, only
        where size queries are missing; `.stage` measures it instead (GH-147). */
     --rest: 330px;
-    /* The key hints' room under the board, in keyboard mode (GH-171). */
+    /* The key hints' room under the board, on a computer (GH-171). */
     --hints: 0px;
     /* The arrows' room around the tiles, in tiles, and the gap above the first row of tiles. */
     --band: 2;
@@ -226,7 +226,7 @@ body {
 }
 
 /* The five buttons' digits need a wider panel to stay on one row. */
-.app.keyboard-mode {
+.app.computer {
     --panel-max: 30rem;
 }
 

@@ -47,31 +47,31 @@ queries=(
   "report=keys&mode=shared-labels&keys=Enter"
   # GH-272: a link that carries progress raises no prompt: the board starts at once, focus stays where it was.
   "report=keys&mode=shared-progress&keys=Tab,Escape"
-  # OK into keyboard mode: focus on the board, where the digits then work.
+  # OK in Controls: focus goes to the board, where the digits then work (GH-287: on a computer, whatever opened it).
   "report=keys&keys=6,ArrowRight,click:OK,1,Escape"
-  # Digits only work in keyboard mode, where each button shows and names its shortcut.
-  "report=keys&input=keyboard&keys=focus:new,1,Escape,2,3,Escape,focus:load,3,Escape,focus:save,4,Escape,5,Escape,6,Escape,7,Escape"
-  "report=keys&input=keyboard&layout=left&keys=6,Tab,Escape"
+  # Each button shows and names its digit, and every digit works (GH-287).
+  "report=keys&keys=focus:new,1,Escape,2,3,Escape,focus:load,3,Escape,focus:save,4,Escape,5,Escape,6,Escape,7,Escape"
+  "report=keys&layout=left&keys=6,Tab,Escape"
   # A held 2 opens Save once and isn't typed into its name field.
-  "report=keys&input=keyboard&keys=2,R-2,3"
+  "report=keys&keys=2,R-2,3"
   # The board: a grid, the selected cell its active descendant. Selects wrap; shifts stay put; a held key repeats.
-  "report=keys&grid=1&input=keyboard&keys=d,s,w,w,R-a,h,ArrowLeft,l,ArrowUp,j"
-  "report=keys&grid=1&input=keyboard&layout=left&keys=l,ArrowDown,a,W"
+  "report=keys&grid=1&keys=d,s,w,w,R-a,h,ArrowLeft,l,ArrowUp,j"
+  "report=keys&grid=1&layout=left&keys=l,ArrowDown,a,W"
   # Board keys only with focus on the board, which is one Tab stop, the arrows out of the order.
-  "report=keys&input=keyboard&keys=Tab,S-Tab,Tab,w,focus:new,h,Tab"
-  # A dialog from the board returns there; to mouse mode, focus on Controls; a digit on a footer link returns there.
-  "report=keys&input=keyboard&keys=2,Escape,6,ArrowLeft,click:OK"
-  "report=keys&input=keyboard&keys=focus:footer-0,2,Escape"
+  "report=keys&keys=Tab,S-Tab,Tab,w,focus:new,h,Tab"
+  # A dialog from the board returns there; a digit on a footer link returns there.
+  "report=keys&keys=2,Escape,6,ArrowLeft,click:OK"
+  "report=keys&keys=focus:footer-0,2,Escape"
   # GH-277: a new game from the New button gives the board focus, so its keys work; Escape still returns to New.
-  "report=keys&grid=1&input=keyboard&keys=focus:board,s,click:New,click:5x5,s,ArrowUp,d,ArrowLeft"
-  "report=keys&input=keyboard&keys=focus:new,Enter,Escape"
+  "report=keys&grid=1&keys=focus:board,s,click:New,click:5x5,s,ArrowUp,d,ArrowLeft"
+  "report=keys&keys=focus:new,Enter,Escape"
   # 0 reads the board wherever focus is, once per press; not under a dialog.
-  "report=keys&grid=1&input=keyboard&keys=0,R-0,focus:new,0,2,0,Escape"
+  "report=keys&grid=1&keys=0,R-0,focus:new,0,2,0,Escape"
   # GH-200: on a non-Latin layout a letter key acts by its position; a Latin one by what it types.
-  "report=keys&grid=1&input=keyboard&keys=в@KeyD,р@KeyH,ц@KeyW,z@KeyW"
+  "report=keys&grid=1&keys=в@KeyD,р@KeyH,ц@KeyW,z@KeyW"
   # The solution screen: the board takes focus and the keys, in place; off the board the keys are nothing.
-  "report=keys&grid=1&input=keyboard&mode=solution&keys=l,Space,R-Space,Enter,h,r,ArrowDown,w,Tab,l,S-Tab,0"
-  "report=keys&input=keyboard&layout=left&mode=solution&keys=ArrowRight,d,a,R"
+  "report=keys&grid=1&mode=solution&keys=l,Space,R-Space,Enter,h,r,ArrowDown,w,Tab,l,S-Tab,0"
+  "report=keys&layout=left&mode=solution&keys=ArrowRight,d,a,R"
 )
 
 log="$(cd "$project" && ./gradlew -q :web:jsBrowserDistribution 2>&1)" || {
@@ -83,6 +83,7 @@ log="$(cd "$project" && ./gradlew -q :web:jsBrowserDistribution 2>&1)" || {
 # on grid lines (GH-167): the numbers and phonetic letters said and counted, and which of the first
 # row's cells are in place.
 actual="$("$here/measure.sh" "${queries[@]}" | perl -pe '
+  s/said "[^"]*\bNow \K\d+/N/;
   s{(?:said|name) "\K[^"]*}{$& =~ s/\d+/N/gr =~ s/\b(?:Row|Column) N (?:left|right|up|down)\b/LINE N DIR/gr}ge if /^\S+ solution /;
   if (/\| grid (?:table|grid) /) { s{(?:said|row1) "\K[^"]*}{$& =~ s/\d+/N/gr =~ s/\b(?:alpha|bravo|charlie|delta|echo|foxtrot|golf|hotel|india|juliet|kilo|lima|mike|november|oscar|papa|quebec|romeo|sierra|tango|uniform|victor|whiskey|x-ray|yankee|zulu)\b/W/gr =~ s/, in place//gr =~ s/\b(tile|move)s?\b/$1s/gr}ge; s/in-place \K\d+/N/ }')"
 if grep -q '^TIMEOUT' <<<"$actual"; then

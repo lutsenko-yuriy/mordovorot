@@ -37,7 +37,7 @@
         }
 
         /* The board and the key hints stay together in the stage's middle (GH-171). */
-        .app.keyboard-mode .stage {
+        .app.computer .stage {
             align-content: center;
         }
 

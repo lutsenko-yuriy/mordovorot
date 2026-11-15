@@ -4,7 +4,7 @@ import org.w3c.dom.Element
 import viewmodel.TileSelection
 import web.a11y.hiddenFromReaders
 
-// GH-171: what keyboard mode draws beside the board, apart from how a screen reader reads it.
+// GH-171: what a computer draws beside the board, apart from how a screen reader reads it.
 
 /** The rounded rectangles around [selection]'s row and column, and the thicker ring on its tile. Seen, not read. */
 internal fun selectionOutlines(selection: TileSelection) = element("div", "selection").apply {

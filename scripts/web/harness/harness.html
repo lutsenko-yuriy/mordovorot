@@ -199,9 +199,8 @@ async function runCase(size, board) {
     const f = document.createElement("iframe");
     f.width = w;
     f.height = h;
-    // Before the game reads them. input= and layout= (GH-171) are what an earlier visit would have left.
+    // Before the game reads it. layout= (GH-171) is what an earlier visit would have left.
     localStorage.clear();
-    if (q.get("input")) localStorage.setItem("mordovorot.pref.input_mode", q.get("input"));
     if (q.get("layout") === "left") localStorage.setItem("mordovorot.pref.keyboard_layout", "left_handed");
     // GH-251: saves= are solved 4x4 saves (the old text format), corrupt= entries nothing decodes.
     const named = key => (q.get(key) || "").split(",").filter(Boolean);

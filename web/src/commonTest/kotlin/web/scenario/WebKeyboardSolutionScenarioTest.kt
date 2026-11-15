@@ -69,8 +69,8 @@ class WebKeyboardSolutionScenarioTest {
     }
 
     @Test
-    fun `mouse mode has no solution keys`() = webTest {
-        val page = WebHarness(backgroundScope).startOn(original).givenUp()
+    fun `touch has no solution keys`() = webTest {
+        val page = WebHarness(backgroundScope, touch = true).startOn(original).givenUp()
 
         assertFalse(page.key("l"))
         assertFalse(page.key("r"))
@@ -96,8 +96,8 @@ class WebKeyboardSolutionScenarioTest {
     }
 
     @Test
-    fun `in mouse mode they keep focus off the board`() = webTest {
-        val page = WebHarness(backgroundScope).startOn(original).givenUp()
+    fun `on touch they keep focus off the board`() = webTest {
+        val page = WebHarness(backgroundScope, touch = true).startOn(original).givenUp()
 
         assertEquals(Focus.ReplayNext, page.state.focus)
         assertFalse(page.state.boardFocusable)

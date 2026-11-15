@@ -9,7 +9,7 @@ import viewmodel.TileLabels
 class DialogFocusTest {
     private val labels = WebDialog.Labels(listOf(LabelOption(TileLabels.PAIRS, "Pairs", listOf("11"))), TileLabels.PAIRS)
     private val saves = listOf(SaveEntry("foo", "foo (4x4)"))
-    private val controls = WebDialog.Controls(PlayMode.KEYBOARD, KeyboardLayout.LEFT_HANDED, emptyList())
+    private val controls = WebDialog.Controls(KeyboardLayout.LEFT_HANDED, emptyList())
 
     @Test
     fun `each dialog focuses its default control`() {
@@ -24,7 +24,7 @@ class DialogFocusTest {
         assertEquals(Focus.Repair, defaultFocus(WebDialog.Unsolvable("x")))
         assertEquals(Focus.Label(TileLabels.PAIRS), defaultFocus(labels))
         assertEquals(Focus.No, defaultFocus(WebDialog.GiveUp))
-        assertEquals(Focus.ModeOption(PlayMode.KEYBOARD), defaultFocus(controls))
+        assertEquals(Focus.LayoutOption(KeyboardLayout.LEFT_HANDED), defaultFocus(controls))
         assertEquals(Focus.UpdateCancel, defaultFocus(WebDialog.Update))
         assertEquals(Focus.SharedLabelsYes, defaultFocus(WebDialog.SharedLabels(TileLabels.PAIRS)))
     }
@@ -57,7 +57,7 @@ class DialogFocusTest {
             Focus.ReplayNext, Focus.ReplayPrev, Focus.ReplayRestart, Focus.PageStart, Focus.ControlsButton, Focus.Board,
             Focus.UpdateLink, Focus.UpdateCancel,
         ) + TileLabels.entries.map { Focus.Label(it) } +
-            PlayMode.entries.map { Focus.ModeOption(it) } + KeyboardLayout.entries.map { Focus.LayoutOption(it) } +
+            KeyboardLayout.entries.map { Focus.LayoutOption(it) } +
             Arrow.entries.flatMap { arrow -> (0 until 6).map { Focus.ArrowButton(arrow, it) } }
         assertEquals(all.size, all.map { it.key }.toSet().size)
     }

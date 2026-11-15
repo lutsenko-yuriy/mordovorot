@@ -12,24 +12,17 @@ import viewmodel.SolutionKey
 /** GH-171: which digit presses which toolbar button, and the board's keys (ADR-0003). */
 class WebKeysTest {
 
-    private fun key(press: KeyPress, mode: PlayMode = PlayMode.KEYBOARD, controlsShown: Boolean = true) =
-        WebKeys.pageKey(press, mode, controlsShown)
+    private fun key(press: KeyPress, computer: Boolean = true) = WebKeys.pageKey(press, computer)
 
     @Test
-    fun `keyboard mode - 1 to 6 press the toolbar`() {
+    fun `on a computer 1 to 7 press the toolbar`() {
         val digits = ToolbarButton.entries.map { key(KeyPress(it.digit.toString())) }
         assertEquals(ToolbarButton.entries.map { PageKey.Digit(it) }, digits)
     }
 
     @Test
-    fun `mouse mode - only 6`() {
-        for (button in ToolbarButton.entries - ToolbarButton.CONTROLS) assertNull(key(KeyPress(button.digit.toString()), PlayMode.MOUSE))
-        assertEquals(PageKey.Digit(ToolbarButton.CONTROLS), key(KeyPress("6"), PlayMode.MOUSE))
-    }
-
-    @Test
-    fun `with Controls hidden 6 is nothing`() {
-        assertNull(key(KeyPress("6"), PlayMode.MOUSE, controlsShown = false))
+    fun `on touch no digit works`() {
+        for (button in ToolbarButton.entries) assertNull(key(KeyPress(button.digit.toString()), computer = false), button.name)
     }
 
     @Test
@@ -45,14 +38,13 @@ class WebKeysTest {
 
     @Test
     fun `a button shows its digit exactly when the digit works`() {
-        fun shown(mode: PlayMode, controlsShown: Boolean) = ToolbarButton.entries.filter { WebKeys.live(it, mode, controlsShown) }
-        assertEquals(ToolbarButton.entries, shown(PlayMode.KEYBOARD, true))
-        assertEquals(listOf(ToolbarButton.CONTROLS), shown(PlayMode.MOUSE, true))
-        assertEquals(emptyList(), shown(PlayMode.MOUSE, false))
+        fun shown(computer: Boolean) = ToolbarButton.entries.filter { WebKeys.live(it, computer) }
+        assertEquals(ToolbarButton.entries, shown(true))
+        assertEquals(emptyList(), shown(false))
     }
 
     private fun boardKey(key: String, layout: KeyboardLayout = KeyboardLayout.RIGHT_HANDED, repeat: Boolean = false, modified: Boolean = false) =
-        (WebKeys.pageKey(KeyPress(key, modified, repeat), PlayMode.KEYBOARD, true, layout, onBoard = true) as? PageKey.Board)?.key
+        (WebKeys.pageKey(KeyPress(key, modified, repeat), true, layout, onBoard = true) as? PageKey.Board)?.key
 
     @Test
     fun `on the board, a right-handed key selects or shifts`() {
@@ -77,26 +69,26 @@ class WebKeysTest {
 
     @Test
     fun `on the board, digits still press the toolbar and other keys are nothing`() {
-        assertEquals(PageKey.Digit(ToolbarButton.SAVE), WebKeys.pageKey(KeyPress("2"), PlayMode.KEYBOARD, true, onBoard = true))
+        assertEquals(PageKey.Digit(ToolbarButton.SAVE), WebKeys.pageKey(KeyPress("2"), true, onBoard = true))
         for (other in listOf("x", "Enter", " ", "Tab", "Escape", "F1")) assertNull(boardKey(other))
     }
 
     @Test
-    fun `board keys need the board and keyboard mode`() {
-        assertNull(WebKeys.pageKey(KeyPress("w"), PlayMode.KEYBOARD, true))
-        assertNull(WebKeys.pageKey(KeyPress("w"), PlayMode.MOUSE, true, onBoard = true))
+    fun `board keys need the board and a computer`() {
+        assertNull(WebKeys.pageKey(KeyPress("w"), true))
+        assertNull(WebKeys.pageKey(KeyPress("w"), false, onBoard = true))
     }
 
     @Test
-    fun `0 reads the board in keyboard mode, wherever focus is, once per press`() {
+    fun `0 reads the board on a computer, wherever focus is, once per press`() {
         assertEquals(PageKey.ReadBoard, key(KeyPress("0")))
-        assertNull(key(KeyPress("0"), PlayMode.MOUSE))
+        assertNull(key(KeyPress("0"), computer = false))
         assertNull(key(KeyPress("0", repeat = true)))
         assertNull(key(KeyPress("0", modified = true)))
     }
 
     private fun solutionKey(key: String, layout: KeyboardLayout = KeyboardLayout.RIGHT_HANDED, repeat: Boolean = false) =
-        (WebKeys.pageKey(KeyPress(key, repeat = repeat), PlayMode.KEYBOARD, true, layout, onSolution = true) as? PageKey.Solution)?.key
+        (WebKeys.pageKey(KeyPress(key, repeat = repeat), true, layout, onSolution = true) as? PageKey.Solution)?.key
 
     @Test
     fun `on the solution's board, the keys are the same in both layouts`() {
@@ -117,13 +109,13 @@ class WebKeysTest {
     }
 
     @Test
-    fun `solution keys need the board and keyboard mode`() {
-        assertNull(WebKeys.pageKey(KeyPress("r"), PlayMode.KEYBOARD, true))
-        assertNull(WebKeys.pageKey(KeyPress("r"), PlayMode.MOUSE, true, onSolution = true))
+    fun `solution keys need the board and a computer`() {
+        assertNull(WebKeys.pageKey(KeyPress("r"), true))
+        assertNull(WebKeys.pageKey(KeyPress("r"), false, onSolution = true))
     }
 
     private fun boardKey(key: String, code: String, layout: KeyboardLayout = KeyboardLayout.RIGHT_HANDED, modified: Boolean = false) =
-        (WebKeys.pageKey(KeyPress(key, modified, code = code), PlayMode.KEYBOARD, true, layout, onBoard = true) as? PageKey.Board)?.key
+        (WebKeys.pageKey(KeyPress(key, modified, code = code), true, layout, onBoard = true) as? PageKey.Board)?.key
 
     @Test
     fun `a non-Latin key acts by its position, in either case and layout (GH-200)`() {
@@ -131,7 +123,7 @@ class WebKeysTest {
         assertEquals(BoardKey.Select(Direction.UP), boardKey("Ц", "KeyW"))
         assertEquals(BoardKey.Shift(Direction.UP, null), boardKey("ц", "KeyW", KeyboardLayout.LEFT_HANDED))
         assertEquals(BoardKey.Select(Direction.UP), boardKey("ω", "KeyW"))
-        assertEquals(SolutionKey.RESTART, (WebKeys.pageKey(KeyPress("к", code = "KeyR"), PlayMode.KEYBOARD, true, onSolution = true) as? PageKey.Solution)?.key)
+        assertEquals(SolutionKey.RESTART, (WebKeys.pageKey(KeyPress("к", code = "KeyR"), true, onSolution = true) as? PageKey.Solution)?.key)
     }
 
     @Test
@@ -157,6 +149,6 @@ class WebKeysTest {
         assertNull(boardKey("ц", ""))
         assertNull(boardKey("ё", "Backquote"))
         assertNull(boardKey("ц", "Key"))
-        assertEquals(PageKey.Digit(ToolbarButton.SAVE), WebKeys.pageKey(KeyPress("2", code = "Digit2"), PlayMode.KEYBOARD, true, onBoard = true))
+        assertEquals(PageKey.Digit(ToolbarButton.SAVE), WebKeys.pageKey(KeyPress("2", code = "Digit2"), true, onBoard = true))
     }
 }

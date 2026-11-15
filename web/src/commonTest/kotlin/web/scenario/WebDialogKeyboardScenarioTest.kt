@@ -185,8 +185,8 @@ class WebDialogKeyboardScenarioTest {
     // Focus on close
 
     @Test
-    fun `closing a toolbar dialog gives focus back to its button`() = webTest {
-        val page = WebHarness(backgroundScope).startOn()
+    fun `on touch, closing a toolbar dialog gives focus back to its button`() = webTest {
+        val page = WebHarness(backgroundScope, touch = true).startOn()
 
         page.game.onNew()
         page.game.onSizeChosen(4)
@@ -206,8 +206,8 @@ class WebDialogKeyboardScenarioTest {
     }
 
     @Test
-    fun `Give Up's No goes back to Give Up, Yes moves on to Next`() = webTest {
-        val page = WebHarness(backgroundScope).startOn(original)
+    fun `on touch, Give Up's No goes back to Give Up, Yes moves on to Next`() = webTest {
+        val page = WebHarness(backgroundScope, touch = true).startOn(original)
         page.reveal()
 
         page.game.solution.onGiveUp()
@@ -221,8 +221,8 @@ class WebDialogKeyboardScenarioTest {
     }
 
     @Test
-    fun `a dialog that leads to another hands focus to the next one`() = webTest {
-        val page = WebHarness(backgroundScope).seed("foo", solved(4)).start()
+    fun `on touch, a dialog that leads to another hands focus to the next one`() = webTest {
+        val page = WebHarness(backgroundScope, touch = true).seed("foo", solved(4)).start()
         page.game.onLoadChosen(null)
         assertTrue(page.state.dialog is WebDialog.Size, "${page.state.dialog}")
         assertEquals(Focus.SizeChoice(4), page.state.focus)
@@ -242,13 +242,13 @@ class WebDialogKeyboardScenarioTest {
     }
 
     @Test
-    fun `startup dialogs close to the start of the page`() = webTest {
-        val restored = WebHarness(backgroundScope).seed("foo", solved(4)).start()
+    fun `on touch, startup dialogs close to the start of the page`() = webTest {
+        val restored = WebHarness(backgroundScope, touch = true).seed("foo", solved(4)).start()
         restored.game.onLoadChosen("foo")
         assertNull(restored.state.dialog)
         assertEquals(Focus.PageStart, restored.state.focus)
 
-        val fresh = WebHarness(backgroundScope).start()
+        val fresh = WebHarness(backgroundScope, touch = true).start()
         fresh.game.onSizeChosen(null)
         assertNull(fresh.state.dialog)
         assertEquals(Focus.PageStart, fresh.state.focus)

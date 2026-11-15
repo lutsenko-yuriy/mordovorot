@@ -51,18 +51,18 @@ class WebKeyboardAnnounceScenarioTest {
     }
 
     @Test
-    fun `a solving shift says only the win, and mouse mode adds nothing`() = webTest {
+    fun `a solving shift says only the win, and touch adds nothing`() = webTest {
         val solving = WebHarness(backgroundScope).remembering().startOn()
         solving.key("h")
         assertEquals("Solved in 1 move", solving.said.last())
 
-        val mouse = WebHarness(backgroundScope).startOn(mixedUp)
-        mouse.game.onArrow(Arrow.LEFT, 1)
-        assertEquals("Row 2 left, 1 move", mouse.said.last())
+        val touch = WebHarness(backgroundScope, touch = true).startOn(mixedUp)
+        touch.game.onArrow(Arrow.LEFT, 1)
+        assertEquals("Row 2 left, 1 move", touch.said.last())
     }
 
     @Test
-    fun `the solution's board is named after the current step, in keyboard mode only`() = webTest {
+    fun `the solution's board is named after the current step, on a computer only`() = webTest {
         val original = intArrayOf(9, 2, 3, 0, 4, 13, 6, 7, 8, 1, 10, 11, 12, 5, 14, 15)
         val path = listOf(SolutionMove(isRow = true, index = 0, amount = 1), SolutionMove(isRow = false, index = 1, amount = 2))
         fun WebHarness.givenUp(): WebHarness {
@@ -79,7 +79,7 @@ class WebKeyboardAnnounceScenarioTest {
         assertEquals("Board, step 1 of 2: Row 1 right 1", page.state.boardName)
 
         assertNull(WebHarness(backgroundScope).remembering().startOn(mixedUp).state.boardName, "in play, the grid is plain `Board`")
-        assertNull(WebHarness(backgroundScope).startOn(original).givenUp().state.boardName)
+        assertNull(WebHarness(backgroundScope, touch = true).startOn(original).givenUp().state.boardName)
     }
 
     @Test
@@ -103,15 +103,15 @@ class WebKeyboardAnnounceScenarioTest {
     }
 
     @Test
-    fun `0 says nothing in a dialog, in mouse mode or off play`() = webTest {
+    fun `0 says nothing in a dialog, on touch or off play`() = webTest {
         val dialog = WebHarness(backgroundScope).remembering().startOn(mixedUp)
         dialog.key("2")
         assertFalse(dialog.press("0"))
         assertEquals(emptyList(), dialog.said)
 
-        val mouse = WebHarness(backgroundScope).startOn(mixedUp)
-        assertFalse(mouse.press("0"))
-        assertEquals(emptyList(), mouse.said)
+        val touch = WebHarness(backgroundScope, touch = true).startOn(mixedUp)
+        assertFalse(touch.press("0"))
+        assertEquals(emptyList(), touch.said)
 
         val won = WebHarness(backgroundScope).remembering().startOn()
         won.key("h")
