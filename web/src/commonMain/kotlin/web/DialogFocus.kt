@@ -31,6 +31,8 @@ sealed class Focus(override val key: String) : FocusTarget {
     data object ShareLinkField : Focus("share-link")
     /** The Share dialog's `Include my tile labels` toggle (GH-267). */
     data object ShareLabels : Focus("share-labels")
+    /** The Share dialog's `Include my progress` toggle (GH-272). */
+    data object ShareProgress : Focus("share-progress")
     data class Label(val labels: TileLabels) : Focus("label-${labels.name.lowercase()}")
     data object No : Focus("no")
     data object NewButton : Focus("new")

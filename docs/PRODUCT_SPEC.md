@@ -517,11 +517,18 @@ Web client only.
   board as it is now` when the start is unknown); the link in a read-only field (named `Share link`,
   selected when focused); a QR code of the same link, dark brown on the page's light colour in both themes (scanners want dark modules on light); the toggle
   `Include my tile labels (Pairs)`, naming the scheme shown; `[ Copy link ]` and `[ Close ]`. It opens focused on Copy
-  link, and Tab stays inside it: the field, the toggle, Copy link, Close.
+  link, and Tab stays inside it: the field, the toggles, Copy link, Close.
 - **The labels toggle (GH-267):** a switch, off the first time and then as the sender last left it (kept in
   `localStorage` like the other preferences, per address). Flipping it rebuilds the link and the QR code at
   once, puts `Copy link` back (the link copied is now the other one) and keeps focus on the toggle;
   Space and Enter flip it, and a screen reader calls it a check box named by its text.
+- **The progress toggle (GH-272):** a second switch below it, `Include my progress (3 moves, not solved)`,
+  `(solved in 3 moves)`, `(gave up after 3 moves)` or `(gave up)` for a solution-screen save from before the
+  result was kept; `1 move` for one. It works like the labels toggle, remembered under its own key. At 0 moves
+  (including Give Up before any move) there is nothing to send: it reads `Include my progress`, is dimmed, shown
+  off and skipped by Tab, and a remembered on is kept for the next game with moves. The link then ends in `&p=n3`,
+  `&p=s3`, `&p=g3` or `&p=g`, after `&l=` when both are on. Analytics: `share_progress_toggled`,
+  `screen_share_dialog.include_progress`, `board_share_link_copied.includes_progress`.
 - **Copy link** puts the link on the clipboard. The button then reads `Copied!` and the status line
   says `Link copied.`; the dialog stays open. Where the browser refuses (a page served over plain http
   on a network address has no clipboard), the field is focused with the link selected, and the status
@@ -550,5 +557,5 @@ Web client only.
   shows `Can't open this board`, then the usual startup. Analytics: `shared_board_opened`,
   `shared_labels_accepted`, `screen_shared_labels_dialog`, `screen_share_dialog`, `board_share_link_copied`
   (`docs/ANALYTICS_EVENTS.md`).
-- Not shared: moves and Mordie's solution. A pasted code or file, the native share sheet and
+- Not shared: Mordie's solution or the sender's moves (only their count, when the toggle is on). A pasted code or file, the native share sheet and
   saving the QR as an image are out of scope.

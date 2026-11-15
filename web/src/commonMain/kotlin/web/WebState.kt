@@ -2,6 +2,8 @@ package web
 
 import viewmodel.GiveUpButton
 import viewmodel.KeyboardLayout
+import viewmodel.MordieText
+import viewmodel.SharedProgress
 import viewmodel.SolutionState
 import viewmodel.TileLabels
 import viewmodel.TileSelection
@@ -115,9 +117,23 @@ sealed interface WebDialog {
         /** The scheme shown on the board, which the link carries when [includeLabels] is on (GH-267). */
         val labels: TileLabels = TileLabels.DEFAULT,
         val includeLabels: Boolean = false,
+        /** What the sender's game says now, which the link carries when [includeProgress] is on; `null` at 0 moves (GH-272). */
+        val progress: SharedProgress? = null,
+        val includeProgress: Boolean = false,
     ) : WebDialog {
         /** The toggle's text, which also names it for readers. */
         val labelsToggle: String get() = "Include my tile labels (${labels.title})"
+
+        /** The progress toggle's text: what it would send. */
+        val progressToggle: String get() = when (progress) {
+            null -> "Include my progress"
+            is SharedProgress.Solving -> "Include my progress (${MordieText.moves(progress.moves)}, not solved)"
+            is SharedProgress.Solved -> "Include my progress (solved in ${MordieText.moves(progress.moves)})"
+            is SharedProgress.GaveUp -> "Include my progress (gave up${progress.moves.let { if (it == null) "" else " after ${MordieText.moves(it)}" }})"
+        }
+
+        /** The progress toggle can be flipped: there is progress to send. */
+        val progressAvailable: Boolean get() = progress != null
 
         val note: String get() =
             if (startKnown) "Anyone who opens this link starts from the same ${side}x$side board."

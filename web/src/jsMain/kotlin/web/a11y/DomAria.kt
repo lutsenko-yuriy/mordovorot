@@ -40,11 +40,15 @@ internal fun asRadio(button: Element, checked: Boolean, rovingTabStop: Boolean =
     }
 }
 
-/** [button] as a check box, which its text names (GH-267). A button rather than a native check box: the page is rebuilt every
+/** [button] as a check box, which its text names (GH-267); an [unavailable] one is disabled (GH-272). A button rather than a native check box: the page is rebuilt every
  *  frame, so a native one would lose its focus and state, as radios would (GH-139). */
-internal fun asCheckbox(button: Element, checked: Boolean) {
+internal fun asCheckbox(button: Element, checked: Boolean, unavailable: Boolean = false) {
     button.setAttribute("role", "checkbox")
     button.setAttribute("aria-checked", checked.toString())
+    if (unavailable) {
+        button.setAttribute("disabled", "")
+        button.setAttribute("aria-disabled", "true")
+    }
 }
 
 /** Seen, not read. */

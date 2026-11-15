@@ -207,4 +207,20 @@ class ShareLinkTest {
     fun `a link of progress alone is not a share link`() {
         assertNull(ShareLink.read("#p=n3"))
     }
+
+    @Test
+    fun `progress round-trips at both ends of the range`() {
+        for (progress in listOf(SharedProgress.Solving(1), SharedProgress.Solved(9999999), SharedProgress.GaveUp(1), SharedProgress.GaveUp(null))) {
+            val link = ShareLink.of("https://x.test/", 3, IntArray(9) { it }, progress = progress)
+
+            assertEquals(LinkProgress.Sent(progress), assertIs<LinkBoard.Playable>(ShareLink.read(link.substringAfter('#'))).progress)
+        }
+    }
+
+    @Test
+    fun `a count the link can't carry is left out`() {
+        for (progress in listOf(SharedProgress.Solving(0), SharedProgress.Solved(10000000), SharedProgress.GaveUp(0))) {
+            assertEquals(ShareLink.of("https://x.test/", 3, IntArray(9) { it }), ShareLink.of("https://x.test/", 3, IntArray(9) { it }, progress = progress))
+        }
+    }
 }

@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.44.0] — 2026-11-15 (PR #281 merged)
+
+### Added
+
+- [user] (PR #281) GH-272: the Share dialog has an `Include my progress` toggle (moves made, solved or gave up), and your friend's Mordie opens by telling them how you did. Off by default, remembered, and dimmed until you have made a move.
+- [non-user] (PR #281) GH-272 (WU2): the harness's `share` mode makes a move first, and keys_check gets queries for the progress toggle.
+
 ## [0.43.2] — 2026-11-15 (PR #280 merged)
 
 ### Added

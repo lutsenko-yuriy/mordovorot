@@ -26,6 +26,9 @@ async function setUpMode(win, mode) {
         await wait(300);
     }
     if (mode === "share") {
+        // One move first (GH-272): at 0 moves the progress toggle is dimmed.
+        win.document.querySelector(".arrow")?.click();
+        await wait(300);
         clickText(win.document, "Share");
         await wait(300);
     }

@@ -118,7 +118,8 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                     text("message", dialog.note),
                     field,
                     *listOfNotNull(dialog.qr?.let(::qrElement)).toTypedArray(),
-                    labelsToggle(dialog, game),
+                    toggle(dialog.labelsToggle, dialog.includeLabels, enabled = true, Focus.ShareLabels) { game.share.onLabelsToggled() },
+                    toggle(dialog.progressToggle, dialog.includeProgress, dialog.progressAvailable, Focus.ShareProgress) { game.share.onProgressToggled() },
                     actions(
                         // A click with no pointer is the keyboard's Enter or Space.
                         (button(if (dialog.copied) "Copied!" else "Copy link") {}).apply {
@@ -162,13 +163,14 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
         }
     }
 
-/** The Share dialog's `Include my tile labels` toggle (GH-267): a switch drawn in CSS, hidden from readers, and the text as its name. */
-private fun labelsToggle(dialog: WebDialog.Share, game: WebGame) =
-    button("", "toggle") { game.share.onLabelsToggled() }.focusKey(Focus.ShareLabels).apply {
-        asCheckbox(this, dialog.includeLabels)
+/** One of the Share dialog's toggles (GH-267, GH-272): a switch drawn in CSS, hidden from readers, and [text] as its name.
+ *  Dimmed and out of the Tab order when not [enabled]. */
+private fun toggle(text: String, on: Boolean, enabled: Boolean, focus: Focus, onClick: () -> Unit) =
+    button("", "toggle") { onClick() }.focusKey(focus).apply {
+        asCheckbox(this, on, unavailable = !enabled)
         append(
-            element("span", "name").apply { textContent = dialog.labelsToggle },
-            hiddenFromReaders(element("span", if (dialog.includeLabels) "switch on" else "switch")).apply { append(element("span", "knob")) },
+            element("span", "name").apply { textContent = text },
+            hiddenFromReaders(element("span", if (on) "switch on" else "switch")).apply { append(element("span", "knob")) },
         )
     }
 

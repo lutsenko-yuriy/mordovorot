@@ -38,6 +38,10 @@ queries=(
   "report=keys&keys=click:Share,Tab,Tab,Tab,Tab,Escape"
   # GH-267: the labels toggle is a check box; Space and Enter flip it, and focus stays on it.
   "report=keys&keys=click:Share,focus:share-labels,Space,Enter,Escape"
+  # GH-272: the progress toggle is dimmed and skipped by Tab at 0 moves; after a move it is a Tab stop, and Space and Enter flip it.
+  "report=keys&keys=click:Share,Tab,Tab,Tab,Escape"
+  "report=keys&keys=click:▶,click:Share,Tab,Tab,Tab,Tab,Escape"
+  "report=keys&keys=click:▶,click:Share,focus:share-progress,Space,Enter,Escape"
   # GH-267: a link whose labels differ asks first, focus on Yes; Tab cycles inside; Escape is No; Enter on Yes accepts.
   "report=keys&mode=shared-labels&keys=Tab,Tab,Escape"
   "report=keys&mode=shared-labels&keys=Enter"
