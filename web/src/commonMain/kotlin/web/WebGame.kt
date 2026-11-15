@@ -74,7 +74,7 @@ class WebGame internal constructor(
 
     /** A share link's board replaces the restore offer. After the tutorial's Skip, a link that isn't opened (Cancel) keeps the tutorial's board too. */
     internal suspend fun startup(afterSkip: Boolean = false) {
-        val linked = afterSkip && share.hasStartupLink()
+        val linked = afterSkip && share.hasPlayableStartupLink()
         if (!share.openAtStartup() && !linked) viewModel.restoreOnStartup()
     }
 
@@ -95,7 +95,7 @@ class WebGame internal constructor(
     internal fun shiftLine(arrow: Arrow, line: Int, source: ShiftSource, focus: Focus? = null) {
         val row = arrow == Arrow.LEFT || arrow == Arrow.RIGHT
         val forward = arrow == Arrow.RIGHT || arrow == Arrow.DOWN
-        if (!tutorial.allows(if (row) Axis.ROW else Axis.COLUMN, line, if (forward) 1 else -1)) return
+        if (!tutorial.take(if (row) Axis.ROW else Axis.COLUMN, line, if (forward) 1 else -1)) return
         shift({ Announcements.shift(arrow.direction, line, it) }, Slides.ofArrow(arrow, line), focus) {
             when (arrow) {
                 Arrow.LEFT -> viewModel.shiftLeft(line, source)

@@ -193,6 +193,30 @@ class WebTutorialStartScenarioTest {
     }
 
     @Test
+    fun `Skip opens a link that arrived mid-tutorial once`() = webTest {
+        val page = tutorialPage(backgroundScope)
+        page.stepByArrow(1)
+        page.changeLink(4, ONE_SHIFT_FROM_SOLVED)
+
+        page.game.tutorial.onSkip()
+        page.game.share.onOpenAnswered(true)
+
+        assertNull(page.state.dialog)
+        assertEquals(1, page.props("shared_board_opened").size)
+    }
+
+    @Test
+    fun `Skip with a rejected link shows the notice, then the size picker`() = webTest {
+        val page = WebHarness(backgroundScope, firstLaunch = true).startWithLink(3, UNSOLVABLE_3X3)
+
+        page.game.tutorial.onSkip()
+        assertIs<WebDialog.LinkRejected>(page.state.dialog)
+        page.game.share.onNoticeAnswered()
+
+        assertIs<WebDialog.Size>(page.state.dialog)
+    }
+
+    @Test
     fun `no leave-site prompt during steps 1 to 5`() = webTest {
         val page = tutorialPage(backgroundScope)
 

@@ -29,10 +29,17 @@ internal class WebShareFlows(
     private var pending: String? = null
 
     /** The link in the address at startup; whether it started a board. */
-    suspend fun openAtStartup(): Boolean = openLink(address.fragment())
+    suspend fun openAtStartup(): Boolean {
+        // The address holds the latest link, so one that waited as pending is the same (the tutorial's Skip, GH-288).
+        pending = null
+        return openLink(address.fragment())
+    }
 
     /** Whether the address holds a share link, read or not. */
     fun hasStartupLink(): Boolean = ShareLink.read(address.fragment()) != null
+
+    /** Whether the address holds a link that starts a board, not a rejected one. */
+    fun hasPlayableStartupLink(): Boolean = ShareLink.read(address.fragment()) is LinkBoard.Playable
 
     /** The link left in the address while the tutorial ran now waits as any other. */
     fun holdStartupLink() {

@@ -48,8 +48,9 @@ internal class WebTutorial(
         analytics.track("tutorial_started", mapOf("source" to "first_launch"))
     }
 
-    /** Whether the shift of [line] on [axis] by [steps] (positive is right or down) goes ahead; one that doesn't is drawn as blocked. */
-    fun allows(axis: Axis, line: Int, steps: Int): Boolean {
+    /** Takes the shift of [line] on [axis] by [steps] (positive is right or down) into the step's progress, and whether it goes ahead;
+     *  one that doesn't is drawn as blocked. A shift that goes ahead is followed by [afterShift]. */
+    fun take(axis: Axis, line: Int, steps: Int): Boolean {
         val progress = progress ?: return true
         verdict = progress.check(axis, line, steps)
         if (verdict == Verdict.BLOCKED) blockedAxis = progress.asked?.axis else if (verdict != Verdict.IGNORED) blockedAxis = null

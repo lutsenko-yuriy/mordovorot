@@ -37,7 +37,7 @@ internal class WebDragFlows(private val game: WebGame, private val viewModel: Ga
     fun onEnd() {
         val released = drag?.release() ?: return onCancel()
         drag = null
-        if (game.tutorial.allows(released.axis, released.line, released.steps)) {
+        if (game.tutorial.take(released.axis, released.line, released.steps)) {
             game.shift({ Announcements.drag(released.direction, released.line, abs(released.steps), it) }) {
                 when (released.axis) {
                     Axis.ROW -> viewModel.shiftRow(released.line, released.steps, PointerShift.DRAG)
