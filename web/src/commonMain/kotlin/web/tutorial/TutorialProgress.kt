@@ -1,7 +1,10 @@
 package web.tutorial
 
+import kotlin.math.abs
 import viewmodel.Direction
 import web.drag.Axis
+import web.drag.DragShift
+import web.drag.direction
 
 /** What a shift means to the tutorial (GH-288). */
 enum class Verdict {
@@ -45,8 +48,8 @@ class TutorialProgress {
     fun check(axis: Axis, line: Int, steps: Int): Verdict {
         val asked = asked
         if (asked == null || steps == 0) return Verdict.IGNORED
-        val direction = directionOf(axis, steps)
-        val tiles = kotlin.math.abs(steps)
+        val direction = DragShift(axis, line, steps).direction
+        val tiles = abs(steps)
         val wanted = chosen ?: asked.arrow.direction
         val turnsEitherWay = asked.halfTurn && !begun
         val counts = axis == asked.axis && line == asked.line && tiles <= remaining && (direction == wanted || turnsEitherWay)
@@ -69,10 +72,5 @@ class TutorialProgress {
         blockedInStep = 0
         chosen = null
         remaining = asked?.tiles ?: 0
-    }
-
-    private fun directionOf(axis: Axis, steps: Int) = when (axis) {
-        Axis.ROW -> if (steps > 0) Direction.RIGHT else Direction.LEFT
-        Axis.COLUMN -> if (steps > 0) Direction.DOWN else Direction.UP
     }
 }

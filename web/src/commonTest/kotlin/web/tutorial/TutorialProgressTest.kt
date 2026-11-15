@@ -105,7 +105,7 @@ class TutorialProgressTest {
     }
 
     @Test
-    fun `a step does not take a half turn the other way when the other directions are asked`() {
+    fun `step 1 is not a half turn, so the other way is blocked`() {
         assertFalse(TutorialScript.shifts[0].halfTurn)
         assertEquals(BLOCKED, progress.check(ROW, 0, 1))
     }
