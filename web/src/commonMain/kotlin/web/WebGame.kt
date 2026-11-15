@@ -139,6 +139,7 @@ class WebGame internal constructor(
         dialogs.chooseSize("toolbar")?.let {
             viewModel.newGame(it, trigger = "toolbar")
             saying = Announcements.newGame(it)
+            closing = onBoard ?: closing
         }
     }
 
@@ -162,7 +163,10 @@ class WebGame internal constructor(
     fun onSaveAnswered(name: String?) = modal.answer<WebDialog.Save, String?>(name)
 
     fun onLoad(opener: Focus = Focus.LoadButton) = runFlow(opener) {
-        dialogs.chooseSave(viewModel.listSaves(), restore = false)?.let { viewModel.loadGame(it) }
+        dialogs.chooseSave(viewModel.listSaves(), restore = false)?.let {
+            // A repaired or loaded save, or Can't be solved's new game, is a different game: the keys work on the board (GH-277).
+            if (viewModel.loadGame(it) || dialogs.newGameAsked) closing = onBoard ?: closing
+        }
     }
 
     /** The Load dialog's answer, a listed save's name; `null` is Cancel. */

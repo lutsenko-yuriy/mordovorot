@@ -37,6 +37,9 @@ internal class WebDialogFlows(
     /** The viewModel asked for a size during a flow, which so ends in a new game. */
     private var sizeAsked = false
 
+    /** The viewModel asked for a new game's size in this flow. */
+    val newGameAsked get() = sizeAsked
+
     /** [openedFrom] is `toolbar` or a `ChooseBoardSize.origin`, as `screen_size_dialog.opened_from`. */
     suspend fun chooseSize(openedFrom: String): Int? {
         analytics.track("screen_size_dialog", mapOf("opened_from" to openedFrom))
