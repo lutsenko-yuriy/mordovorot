@@ -88,7 +88,8 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                              # plays every board size, 3x3 to 9x9 (GH-225)
 │       └── MordieLine.kt            # MordieLine (sealed, incl. FoundUnproven / Shorter) /
 │                                      # MordieCheck / MordieOutcome / MordieResult (incl.
-│                                      # BEAT_MORDIE) / MordieSnapshot (what a save stores)
+│                                      # BEAT_MORDIE) / MordieSnapshot (what a save stores);
+│                                      # MordieLine.Friend (GH-272): a share link's progress opens the game
 ├── viewmodel/           # :shared:viewmodel - the game flows (api
 │   │                      # dependency on the four modules above + coroutines)
 │   └── viewmodel/
@@ -139,6 +140,7 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       ├── SolutionScreen.kt      # The session's solution screen: its SolutionReplay, null off it,
 │       │                             # and the PlayerResult it was reached with. One per session (GH-126, GH-273)
 │       ├── PlayerResult.kt        # How the player's game ended (gave up or solved) and its moves (GH-273)
+│       ├── SharedProgress.kt      # What a share link says about the sender's game: Solving, Solved or GaveUp (GH-272)
 │       ├── TileLabels.kt          # The six label schemes: wireName (analytics, saves, the
 │       │                             # preference), title, maxSide, fits(side), label(tile, side), sampleRow.
 │       │                             # NUMBERS is the default (GH-139)
@@ -210,6 +212,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── ShareLink.kt     # GH-243 (WU1): `<page address>#b=<board>` built and read; playable, or rejected
 │   │                      # as invalid / unsupported_size / unsolvable. storage.BoardLinkFormat (ADR-0005) holds the board's bits.
 │   │                      # GH-267: an optional `&l=<TileLabels.wireName>` part, read as LinkLabels (None, Unreadable or Scheme)
+│   │                      # GH-272: an optional `&p=<letter><moves>` part (SharedProgress), read as LinkProgress (None, Unreadable or Sent)
 │   ├── qr/              # GH-243 (WU1): a DOM-free QR encoder (byte mode, ECC M, versions 1-10: QrCode, ReedSolomon, QrTables, QrMasks) and its SVG path (QrSvg);
 │   │                      # imports only the standard library, a boundary test checks it (as web.a11y)
 │   ├── Clipboard.kt     # GH-243 (WU3): copy(text, done), which may be refused; DomClipboard (jsMain) tries the async API, then the old copy command on the selected link field

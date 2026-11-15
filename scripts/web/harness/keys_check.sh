@@ -41,6 +41,8 @@ queries=(
   # GH-267: a link whose labels differ asks first, focus on Yes; Tab cycles inside; Escape is No; Enter on Yes accepts.
   "report=keys&mode=shared-labels&keys=Tab,Tab,Escape"
   "report=keys&mode=shared-labels&keys=Enter"
+  # GH-272: a link that carries progress raises no prompt: the board starts at once, focus stays where it was.
+  "report=keys&mode=shared-progress&keys=Tab,Escape"
   # OK into keyboard mode: focus on the board, where the digits then work.
   "report=keys&keys=6,ArrowRight,click:OK,1,Escape"
   # Digits only work in keyboard mode, where each button shows and names its shortcut.

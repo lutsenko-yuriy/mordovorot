@@ -84,7 +84,7 @@ class GameViewModelImpl internal constructor(
 
     override fun newGame(size: Int, trigger: String) = newGameUseCase.newGame(size, trigger)
 
-    override fun newGameFrom(arrangement: IntArray) = newGameUseCase.newGameFrom(arrangement)
+    override fun newGameFrom(arrangement: IntArray, sender: SharedProgress?) = newGameUseCase.newGameFrom(arrangement, sender)
 
     override suspend fun saveGame(name: String): Boolean = saveGameUseCase.saveGame(name)
 

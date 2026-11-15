@@ -36,7 +36,7 @@ class WebSharedLabelsScenarioTest {
             page.ownProps("screen_shared_labels_dialog"),
         )
         assertEquals(
-            listOf(mapOf("result" to "started", "board_size" to 4, "labels" to "differs")),
+            listOf(mapOf("result" to "started", "board_size" to 4, "labels" to "differs", "progress" to "none")),
             page.ownProps("shared_board_opened"),
         )
     }

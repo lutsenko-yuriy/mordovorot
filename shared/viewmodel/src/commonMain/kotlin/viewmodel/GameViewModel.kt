@@ -34,8 +34,9 @@ interface GameViewModel {
     fun newGame(size: Int, trigger: String)
 
     /** Starts a fresh game on [arrangement] (GH-243, a share link's board): 0 moves, a new Mordie
-     *  race, and tracks nothing. Throws, changing nothing, unless it is a valid, solvable board. */
-    fun newGameFrom(arrangement: IntArray)
+     *  race, and tracks nothing. Throws, changing nothing, unless it is a valid, solvable board.
+     *  [sender] is the progress the link carries (GH-272): Mordie opens by telling it. */
+    fun newGameFrom(arrangement: IntArray, sender: SharedProgress? = null)
 
     /** Returns whether the save actually succeeded. `suspend` (GH-42): asks the
      *  View for confirmation/messages instead of returning synchronously. */

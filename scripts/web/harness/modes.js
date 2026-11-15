@@ -1,8 +1,9 @@
 // harness.html's modes (split out of it, GH-267): what each does once the board is up, and the address a mode opens the page on.
 
 /** The fragment the page opens with. mode=shared-labels is a visit to a share link (GH-267) to a 4x4 board that
- *  carries Pairs, which the default Numbers differ from, so the page asks about them. */
-const modeFragment = mode => mode === "shared-labels" ? "#b=TBEQERBJAA&l=pairs" : "";
+ *  carries Pairs, which the default Numbers differ from, so the page asks about them. mode=shared-progress (GH-272)
+ *  is one that carries the sender's progress, `n12`: no prompt, Mordie's opening line says it. */
+const modeFragment = mode => ({ "shared-labels": "#b=TBEQERBJAA&l=pairs", "shared-progress": "#b=TBEQERBJAA&p=n12" })[mode] ?? "";
 
 /** Gets the page to the screen [mode] names: the solution screen, a dialog, or neither. */
 async function setUpMode(win, mode) {

@@ -59,8 +59,10 @@ class Mordie(private val factory: MordieSearchFactory) {
     var resumedFromSave = false
         private set
 
-    fun startFresh(arrangement: IntArray) {
+    /** [friend] opens the game in place of the usual line (GH-272). */
+    fun startFresh(arrangement: IntArray, friend: MordieLine.Friend? = null) {
         bind(arrangement)
+        friend?.let { opening = it }
         search = factory.start(original!!, -1)
     }
 

@@ -7,6 +7,7 @@ import viewmodel.CurrentSaveName
 import viewmodel.GameShiftSources
 import viewmodel.MordieHooks
 import viewmodel.SessionTileLabels
+import viewmodel.SharedProgress
 import viewmodel.UnsavedProgress
 
 /** Starts a fresh game at a chosen size (GH-44), with Mordie racing it (GH-83). */
@@ -27,16 +28,17 @@ internal class NewGameUseCase(
         analytics.track("new_game_size_selected", mapOf("size" to size, "trigger" to trigger))
     }
 
-    /** A fresh game on [arrangement] (GH-243, a share link's): throws, changing nothing, unless it is a solvable board. */
-    fun newGameFrom(arrangement: IntArray) {
+    /** A fresh game on [arrangement] (GH-243, a share link's): throws, changing nothing, unless it is a solvable board.
+     *  [sender]'s progress, if the link carries it, opens Mordie's line (GH-272). */
+    fun newGameFrom(arrangement: IntArray, sender: SharedProgress?) {
         require(Solvability.isSolvable(arrangement)) { "No sequence of shifts solves this board" }
         board.restoreState(arrangement, 0)
-        begin()
+        begin(sender)
     }
 
-    private fun begin() {
+    private fun begin(sender: SharedProgress? = null) {
         solution.leave()
-        mordieHooks.onNewGame()
+        mordieHooks.onNewGame(sender)
         currentSaveName.name = null
         tileLabels.resetToPreference(board.squareSide)
         gameShiftSources.reset()

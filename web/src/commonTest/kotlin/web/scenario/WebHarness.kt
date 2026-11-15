@@ -81,8 +81,9 @@ internal class WebHarness(
     }
 
     /** Starts as a visit to the share link to [tiles] (a [side] x [side] board), restore prompt and all;
-     *  [labels] is the raw value of its `l=` part, `null` for a link without one (GH-267). */
-    fun startWithLink(side: Int, tiles: IntArray, labels: String? = null): WebHarness = startWithFragment(linkTo(side, tiles, labels))
+     *  [labels] and [progress] are the raw values of its `l=` and `p=` parts, `null` for a link without one (GH-267, GH-272). */
+    fun startWithLink(side: Int, tiles: IntArray, labels: String? = null, progress: String? = null): WebHarness =
+        startWithFragment(linkTo(side, tiles, labels, progress))
 
     /** Starts with [fragment] in the address bar. */
     fun startWithFragment(fragment: String): WebHarness {
@@ -91,9 +92,11 @@ internal class WebHarness(
     }
 
     /** The address changes to the share link to [tiles]: the page's `hashchange`. */
-    fun changeLink(side: Int, tiles: IntArray, labels: String? = null) = changeFragment(linkTo(side, tiles, labels))
+    fun changeLink(side: Int, tiles: IntArray, labels: String? = null, progress: String? = null) =
+        changeFragment(linkTo(side, tiles, labels, progress))
 
-    private fun linkTo(side: Int, tiles: IntArray, labels: String?) = ShareLink.of("", side, tiles) + (labels?.let { "&l=$it" } ?: "")
+    private fun linkTo(side: Int, tiles: IntArray, labels: String?, progress: String?) =
+        ShareLink.of("", side, tiles) + (labels?.let { "&l=$it" } ?: "") + (progress?.let { "&p=$it" } ?: "")
 
     fun changeFragment(fragment: String) {
         address.fragment = fragment

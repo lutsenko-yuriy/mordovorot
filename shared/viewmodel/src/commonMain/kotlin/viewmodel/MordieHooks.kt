@@ -5,6 +5,7 @@ import board_model.BoardModel
 import board_model.Solvability
 import mordie.Mordie
 import mordie.MordieCheck
+import mordie.MordieLine
 import mordie.SearchProgress
 import mordie.SolutionMove
 import mordie.SolutionSource
@@ -21,7 +22,14 @@ internal class MordieHooks(
     private val solutionScreen: SolutionScreen,
 ) {
 
-    fun onNewGame() = mordie.startFresh(board.boardArray)
+    /** A fresh game; [sender]'s progress (GH-272, a share link's) opens Mordie's line. */
+    fun onNewGame(sender: SharedProgress? = null) = mordie.startFresh(board.boardArray, sender?.let(::friendLine))
+
+    private fun friendLine(progress: SharedProgress): MordieLine.Friend = when (progress) {
+        is SharedProgress.Solving -> MordieLine.FriendSolving(progress.moves)
+        is SharedProgress.Solved -> MordieLine.FriendSolved(progress.moves)
+        is SharedProgress.GaveUp -> MordieLine.FriendGaveUp(progress.moves)
+    }
 
     /** Binds Mordie to the board just loaded from a save with [data]. A solution-screen save
      *  (GH-126) resumes found, whatever the board. A searching save with an unsolvable original
