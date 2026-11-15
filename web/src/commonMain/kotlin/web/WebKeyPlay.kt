@@ -20,6 +20,9 @@ internal class WebKeyPlay(
     /** Kept across a new game and a load, clamped to a smaller board. */
     private var selection = TileSelection.INITIAL
 
+    /** Whether the outlines show: after a select or shift key, until a press on a tile or an arrow (GH-287). Kept across a new game and a load. */
+    private var outlined = false
+
     /** A dialog a digit opens gives focus back to the control keyed [from]. */
     fun onKey(press: KeyPress, from: String?): Boolean {
         pressedWith.key()
@@ -28,7 +31,10 @@ internal class WebKeyPlay(
         val onSolution = boardFocused && viewModel.solution() != null
         when (val key = WebKeys.pageKey(press, computer, game.controls.layout, boardFocused && game.playable, onSolution)) {
             is PageKey.Digit -> onDigit(key.button, from)
-            is PageKey.Board -> onBoardKey(key.key)
+            is PageKey.Board -> {
+                outlined = true
+                onBoardKey(key.key)
+            }
             is PageKey.Solution -> onSolutionKey(key.key)
             PageKey.ReadBoard -> game.readBoard()
             null -> return false
@@ -41,8 +47,17 @@ internal class WebKeyPlay(
         val onSolution = game.idle && viewModel.solution() != null
         if (!computer || !(game.playable || onSolution)) return
         if (game.playable) selection = TileSelection(row, col)
+        outlined = false
         game.render(focus = Focus.Board)
     }
+
+    /** A press on an arrow, by mouse or key, hides the outlines; the selection stays. */
+    fun onArrowPressed() {
+        outlined = false
+    }
+
+    /** Whether this frame draws the selection's outlines. */
+    fun outlined(): Boolean = outlined
 
     /** The selection this frame shows: on a computer, during play. */
     fun shownSelection(): TileSelection? {

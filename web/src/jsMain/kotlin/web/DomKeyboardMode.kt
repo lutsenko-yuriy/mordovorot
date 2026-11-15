@@ -7,14 +7,16 @@ import web.a11y.hiddenFromReaders
 // GH-171: what a computer draws beside the board, apart from how a screen reader reads it.
 
 /** The rounded rectangles around [selection]'s row and column, and the thicker ring on its tile. Seen, not read. */
-internal fun selectionOutlines(selection: TileSelection) = element("div", "selection").apply {
+internal fun selectionOutlines(selection: TileSelection, shown: Boolean) = element("div", "selection").apply {
     hiddenFromReaders(this)
-    placeOutlines(this, selection)
+    placeOutlines(this, selection, shown)
     append(element("div", "selected-row"), element("div", "selected-col"), element("div", "selected-tile"))
 }
 
-internal fun placeOutlines(outlines: Element, selection: TileSelection) =
+internal fun placeOutlines(outlines: Element, selection: TileSelection, shown: Boolean) {
     outlines.setAttribute("style", "--selected-row: ${selection.row}; --selected-col: ${selection.col};")
+    if (shown) outlines.removeAttribute("hidden") else outlines.setAttribute("hidden", "")
+}
 
 /** The key hints under the board: the keys above what they do. */
 internal fun keyHints(hints: List<KeyHint>) = element("div", "key-hints").apply {

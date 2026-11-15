@@ -73,7 +73,7 @@ internal class DomBoard(private val root: HTMLElement, private val game: () -> W
                 arrows(Arrow.RIGHT, "▶", "column"),
                 element("span"), arrows(Arrow.DOWN, "▼", "row"), element("span"),
             )
-            outlines = state.selection?.let { selectionOutlines(it).also(::append) }
+            outlines = state.selection?.let { selectionOutlines(it, state.selectionShown).also(::append) }
         }
     }
 
@@ -82,7 +82,7 @@ internal class DomBoard(private val root: HTMLElement, private val game: () -> W
         redrawTiles(state, offset)
         state.selection?.let { selection ->
             tiles?.let { activeCell(it, selection) }
-            outlines?.let { placeOutlines(it, selection) }
+            outlines?.let { placeOutlines(it, selection, state.selectionShown) }
         }
         state.boardName?.let { name -> tiles?.let { nameBoard(it, name) } }
     }

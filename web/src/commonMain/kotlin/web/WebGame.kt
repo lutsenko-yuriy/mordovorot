@@ -79,7 +79,9 @@ class WebGame internal constructor(
     fun hasUnsavedProgress(): Boolean = !updates.applying && viewModel.hasUnsavedProgress()
 
     fun onArrow(arrow: Arrow, line: Int) {
-        if (playable) shiftLine(arrow, line, PointerShift.ARROW)
+        if (!playable) return
+        keys.onArrowPressed()
+        shiftLine(arrow, line, PointerShift.ARROW)
     }
 
     /** One step of the line [arrow] and [line] name, by [source], sliding it into place. */
@@ -271,6 +273,7 @@ class WebGame internal constructor(
             announcement = saying,
             computer = computer,
             selection = keys.shownSelection(),
+            selectionShown = keys.outlined(),
             hints = when {
                 !computer -> null
                 viewModel.solution() != null -> KeyHints.SOLUTION
