@@ -99,7 +99,7 @@ class BestSolutionSolver(original: IntArray, ruledOut: Int = -1, best: List<Solu
         /** The largest board side the exact search runs on, 4x4 (GH-260). */
         const val EXACT_SEARCH_MAX_SIDE = 4
 
-        /** Building one table state costs about this many search nodes (measured with scripts compiled and not). */
+        /** Building one table state costs about this many search nodes. */
         private const val NODES_PER_STATE = 5
     }
 }

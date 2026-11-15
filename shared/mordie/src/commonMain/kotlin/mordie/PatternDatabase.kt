@@ -32,10 +32,10 @@ class PatternDatabase(private val n: Int) {
     val done: Boolean get() = tail > 0 && head == tail
 
     /** The number of states reached so far: all of them, once [done]. */
-    val seen: Int get() = tail
+    internal val seen: Int get() = tail
 
     /** The largest distance in the table, once [done]. */
-    val farthest: Int get() = distance.maxOf { it.toInt() }
+    internal val farthest: Int get() = distance.maxOf { it.toInt() }
 
     private val copies = 2 * cells
 
@@ -110,6 +110,8 @@ class PatternDatabase(private val n: Int) {
                 }
             }
         }
+        // Not needed any more; non-empty, so that a later step doesn't start over.
+        if (head == tail) queue = IntArray(1)
     }
 
     /** The bound for [state] (the tile on each cell): the best of every copy. Needs [done]. */
