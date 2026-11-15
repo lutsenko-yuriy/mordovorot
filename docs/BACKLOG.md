@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-_(nothing in progress)_
+- GH-272: Share the sender's progress in the link (WU1/2 merged; WU2 pending)
 
 ---
 
