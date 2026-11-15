@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.43.1] — 2026-11-15 (PR #278 merged)
+
+### Fixed
+
+- [user] (PR #278) GH-277: in keyboard mode the board keys work right after starting a new game, loading one or saving: focus goes to the board instead of staying on New, Load or Save.
+
 ## [0.43.0] — 2026-11-15 (PR #276 merged)
 
 ### Added
