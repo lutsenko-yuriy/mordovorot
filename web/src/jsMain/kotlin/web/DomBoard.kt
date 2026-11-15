@@ -51,7 +51,7 @@ internal class DomBoard(private val root: HTMLElement, private val game: () -> W
         val side = state.side
         val disabled = !state.arrowsEnabled || state.dialog != null
         fun arrow(label: String, arrow: Arrow, line: Int) =
-            button(label, "arrow") { game().onArrow(arrow, line) }.focusKey(Focus.ArrowButton(arrow, line)).also {
+            clickButton(label, "arrow") { click -> game().onArrow(arrow, line, byMouse = click.detail > 0) }.focusKey(Focus.ArrowButton(arrow, line)).also {
                 it.disabled = disabled
                 named(it, Announcements.line(arrow.direction, line))
             }

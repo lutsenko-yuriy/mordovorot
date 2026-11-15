@@ -241,7 +241,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
     a size change (clamped), and goes once solved, when the select and shift keys go inert. A shift that solves
     the board passes focus on as an arrow's would.
   - **Mouse:** drags and clicks work as usual. A press on a tile selects it (hiding the outlines) and gives
-    the board focus, so after a drag the selection sits on the dragged line.
+    the board focus, so after a drag the selection sits on the dragged line. A mouse click on an arrow also hides them and gives the board focus, so the keys work next; an arrow pressed by key keeps its focus.
   - **Key hints:** the keys above what they do, under the board, ordered by hand:
     `W A S D` select, `← → H L` row, `↑ ↓ K J` column; left-handed `A D` row, `W S` column,
     `←↑↓→ H J K L` select. The solution screen shows its own: `← → A D H L` prev/next, `Space Enter`

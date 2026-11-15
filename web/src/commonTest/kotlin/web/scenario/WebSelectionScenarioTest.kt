@@ -64,6 +64,26 @@ class WebSelectionScenarioTest {
         assertEquals(TileSelection(0, 1), page.state.selection)
     }
 
+    @Test
+    fun `a mouse click on an arrow puts focus on the board, so a select key shows the selection again`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+
+        page.game.onArrow(Arrow.UP, 1, byMouse = true)
+        assertEquals(Focus.Board, page.state.focus)
+        page.press("d", from = Focus.Board)
+
+        assertTrue(page.state.selectionShown)
+    }
+
+    @Test
+    fun `an arrow pressed by key keeps its focus`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+
+        page.game.onArrow(Arrow.UP, 1)
+
+        assertNull(page.state.focus)
+    }
+
     // A key press on an arrow button reaches the page as the same click, so this is the click's scenario again.
     @Test
     fun `an arrow pressed by key hides the selection`() = webTest {
