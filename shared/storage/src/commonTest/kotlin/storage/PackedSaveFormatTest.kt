@@ -35,10 +35,10 @@ class PackedSaveFormatTest {
         val steps = listOf(SavedMove(true, 0, 1), SavedMove(true, 0, 1))
         val mordie = SavedMordie(original, 2, found = true, solution = steps, solutionScreen = true, provenShortest = false, ruledOut = 0)
 
-        val text = PackedSaveFormat.encode(3, original, 5, mordie, "pairs")
+        val text = PackedSaveFormat.encode(3, original, 0, mordie, "pairs")
 
-        assertEquals("~N-CkAAAgAAAQAAA", text)
-        assertEquals(SavedBoard(3, original, 5, mordie, "pairs"), PackedSaveFormat.decode("g", text))
+        assertEquals("~N-AEAAAgAAAQAAA", text)
+        assertEquals(SavedBoard(3, original, 0, mordie, "pairs"), PackedSaveFormat.decode("g", text))
     }
 
     @Test
@@ -89,7 +89,7 @@ class PackedSaveFormatTest {
             val current = IntArray(side * side) { it }.also { it.shuffle(random) }
             for ((label, mordie) in shapes(side, random)) {
                 for (labels in listOf(null) + names + "hexes") {
-                    val moves = random.nextInt(100_000)
+                    val moves = if (mordie?.solutionScreen == true) 0 else random.nextInt(100_000)
                     val text = PackedSaveFormat.encode(side, current, moves, mordie, labels)
                     assertEquals(SavedBoard(side, current, moves, mordie, labels), PackedSaveFormat.decode("s", text), "side $side, $label, $labels")
                 }

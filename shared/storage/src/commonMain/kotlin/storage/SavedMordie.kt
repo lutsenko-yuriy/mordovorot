@@ -3,7 +3,7 @@ package storage
 /** Mordie's part of a save (GH-83): the game's [original] arrangement and Mordie's [moves] -
  *  its solution's length if [found], else the largest length ruled out. [solution] is that
  *  solution's moves, when known, and [solutionScreen] marks a save made on the solution screen
- *  (GH-126). A found answer is [provenShortest] unless the save says otherwise (the text format's line 9, the packed format's status), and [ruledOut] is
+ *  (GH-126), with [playerResult] how the player's game ended (GH-273). A found answer is [provenShortest] unless the save says otherwise (the text format's line 9, the packed format's status), and [ruledOut] is
  *  then the largest length the exact search had ruled out (GH-224). Hand-written equals/hashCode because [original] is an [IntArray]. */
 class SavedMordie(
     val original: IntArray,
@@ -13,6 +13,7 @@ class SavedMordie(
     val solutionScreen: Boolean = false,
     val provenShortest: Boolean = true,
     val ruledOut: Int = 0,
+    val playerResult: SavedPlayerResult? = null,
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -20,7 +21,7 @@ class SavedMordie(
         if (other !is SavedMordie) return false
         return original.contentEquals(other.original) && moves == other.moves && found == other.found &&
             solution == other.solution && solutionScreen == other.solutionScreen &&
-            provenShortest == other.provenShortest && ruledOut == other.ruledOut
+            provenShortest == other.provenShortest && ruledOut == other.ruledOut && playerResult == other.playerResult
     }
 
     override fun hashCode(): Int {
@@ -31,9 +32,10 @@ class SavedMordie(
         result = 31 * result + solutionScreen.hashCode()
         result = 31 * result + provenShortest.hashCode()
         result = 31 * result + ruledOut
+        result = 31 * result + playerResult.hashCode()
         return result
     }
 
     override fun toString() = "SavedMordie(original=${original.contentToString()}, moves=$moves, found=$found, " +
-        "solution=$solution, solutionScreen=$solutionScreen, provenShortest=$provenShortest, ruledOut=$ruledOut)"
+        "solution=$solution, solutionScreen=$solutionScreen, provenShortest=$provenShortest, ruledOut=$ruledOut, playerResult=$playerResult)"
 }
