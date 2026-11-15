@@ -18,6 +18,9 @@ object SaveFileCodec {
             require(mordie.moves >= 0) { "Mordie's moves must not be negative" }
             mordie.solution?.let { solution -> SaveRules.solutionProblem(solution, mordie, squareSide)?.let { throw IllegalArgumentException(it) } }
             require(!mordie.solutionScreen || !mordie.solution.isNullOrEmpty()) { "A solution-screen save needs Mordie's solution" }
+            require(mordie.playerResult == null || mordie.solutionScreen) { "A player result needs a solution-screen save" }
+            require(!mordie.solutionScreen || moveCount == 0) { "A solution-screen save has no move count, its slot holds the player result" }
+            mordie.playerResult?.let { require(it.moves in 0..PackedSaveFormat.MAX_RESULT_MOVES) { "The player result's moves must be 0-${PackedSaveFormat.MAX_RESULT_MOVES}" } }
             require(mordie.provenShortest || SaveRules.ruledOutProblem(mordie.found, mordie.moves, mordie.ruledOut) == null) {
                 "An unproven answer needs a found save and a ruled out length of 0 to N-2"
             }

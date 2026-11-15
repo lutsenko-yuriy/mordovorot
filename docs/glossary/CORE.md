@@ -19,6 +19,7 @@ Core game: the board, its moves, Mordie and saves — what every client shares. 
 | Save info | A save's name plus its board size, as shown in every save listing (e.g. `foo (5x5)`) | `SaveInfo` |
 | Shared module | One of the five Kotlin Multiplatform modules the web client and future Android/iOS clients build on: Core (board), Analytics, Mordie, Storage (save contract only), ViewModel (the game flows). Everything else is in the web client (GH-41, GH-228) | — |
 | Shift | Cyclically rotating one row (left/right) or column (up/down) by one position | `shiftLeft`, `shiftRight`, `shiftUp`, `shiftDown` |
+| Player result | How the player's game ended before the solution screen: gave up or solved, and the moves made (0 moves reads `You did not even start this one.`). Kept in the session and in solution-screen saves, in the move-count slot of the packed format (GH-273) | `PlayerResult`, `SavedPlayerResult` |
 | Solution screen | The screen after giving up, or after a win via `[ Mordie's solution ]`: the original arrangement, Mordie's solution as a numbered step list (one step per move, e.g. `03. Col 3 ↑ ×1`), and Prev / Next / Restart to step through it on the board one shift at a time. Saved and loaded as such (GH-126) | `SolutionScreen`, `SolutionReplay` |
 | Solved | The board state where all values are in ascending order. "Correct" is the board-model name for the same check | `isSolved()`, `isCorrect()` |
 | Square side | The board's edge length (default 4, giving a 4×4 board) | `squareSide` |

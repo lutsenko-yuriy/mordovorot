@@ -20,6 +20,9 @@ A save is written as one marker character that is not a digit, then base64url of
 | Side minus 3 in 3 bits | Would put the 2x2 boards of the codec tests out of range; the side itself in 4 bits costs one bit and leaves room to grow (decided in the GH-237 plan). |
 | Plain fixed-width tiles instead of Lehmer codes | 700 characters on 9x9 still meets the Should; kept as the fallback if the Lehmer code proves a burden, since it costs about 6% only. |
 
+## Amendment (GH-273)
+On a solution-screen save the move-count varint, always 0 there before, holds the player's result: 0 none, 2m + 1 gave up after m moves, 2m + 2 solved in m. No bits were added, saves from before read as no result, and older builds still load new ones, showing the old line. The codec requires move count 0 on those saves.
+
 ## Related ticket
 GH-220
 

@@ -18,10 +18,10 @@ class PackedSaveSizeTest {
 
     @Test
     fun `a 9x9 save with a 604-move solution, the labels and the screen flag is under 1 KB`() {
-        val text = PackedSaveFormat.encode(side, solved, 500, save(604), "letter_pairs")
+        val text = PackedSaveFormat.encode(side, solved, 0, save(604), "letter_pairs")
 
         assertTrue(text.length < 1024, "${text.length} chars")
-        assertEquals(SavedBoard(side, solved, 500, save(604), "letter_pairs"), PackedSaveFormat.decode("s", text))
+        assertEquals(SavedBoard(side, solved, 0, save(604), "letter_pairs"), PackedSaveFormat.decode("s", text))
     }
 
     @Test

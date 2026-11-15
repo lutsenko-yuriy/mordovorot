@@ -5,6 +5,7 @@ import board_model.BoardModel
 import viewmodel.GiveUpButton
 import viewmodel.MordieHooks
 import viewmodel.MordieText
+import viewmodel.PlayerResult
 import viewmodel.SolutionReplay
 import viewmodel.SolutionScreen
 import viewmodel.SolutionState
@@ -47,29 +48,31 @@ internal class SolutionUseCase(
                 "solution_proven_shortest" to mordieHooks.provenShortest(),
             ) + mordieHooks.sinceRevealProps(),
         )
-        enter("give_up")
+        enter("give_up", PlayerResult(gaveUp = true, moves = board.moveCount))
     }
 
     fun showAfterWin() {
-        if (button() == GiveUpButton.MORDIES_SOLUTION) enter("after_win")
+        if (button() == GiveUpButton.MORDIES_SOLUTION) enter("after_win", PlayerResult(gaveUp = false, moves = board.moveCount))
     }
 
     /** After a load of a solution-screen save, [trigger] being the load's. */
-    fun enterLoaded(trigger: String) = enter(if (trigger == "startup_prompt") "startup_prompt" else "load")
+    fun enterLoaded(trigger: String, result: PlayerResult?) = enter(if (trigger == "startup_prompt") "startup_prompt" else "load", result)
 
     fun leave() {
         solutionScreen.replay = null
+        solutionScreen.result = null
     }
 
     /** Puts the original arrangement back on the board, which discards the player's moves. */
-    private fun enter(openedFrom: String) {
+    private fun enter(openedFrom: String, result: PlayerResult?) {
         val original = mordieHooks.original() ?: return
         val moves = mordieHooks.solution() ?: return
         board.restoreState(original, 0)
         val replay = SolutionReplay(original, board.squareSide, SolutionSteps.of(moves, board.squareSide))
         solutionScreen.replay = replay
+        solutionScreen.result = result
         unsavedProgress.unsaved = false
-        analytics.track("screen_solution", mapOf("opened_from" to openedFrom) + replayProps(replay))
+        analytics.track("screen_solution", mapOf("opened_from" to openedFrom, "player_result" to (result?.analyticsName ?: "unknown")) + replayProps(replay))
     }
 
     fun state(): SolutionState? = solutionScreen.replay?.let {
@@ -77,7 +80,7 @@ internal class SolutionUseCase(
     }
 
     /** Mordie's line on the screen; `null` off it. */
-    fun line(): String? = solutionScreen.replay?.let { MordieText.solution(it.steps.size) }
+    fun line(): String? = solutionScreen.replay?.let { MordieText.solution(it.steps.size, solutionScreen.result) }
 
     /** The replay's tiles; `null` off the screen. */
     fun tiles(): IntArray? = solutionScreen.replay?.tiles

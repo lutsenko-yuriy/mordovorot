@@ -14,7 +14,7 @@ class SaveFileCodecProvenTest {
     private val board = intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)
     private val unproven = SavedMordie(original, 2, found = true, solution = path, provenShortest = false, ruledOut = 0)
 
-    private fun encode(mordie: SavedMordie?, labels: String? = null) = SaveFileCodec.encode(3, board, 4, mordie, labels)
+    private fun encode(mordie: SavedMordie?, labels: String? = null) = SaveFileCodec.encode(3, board, if (mordie?.solutionScreen == true) 0 else 4, mordie, labels)
 
     private fun decode(text: String) = SaveFileCodec.decode("s", text)
 

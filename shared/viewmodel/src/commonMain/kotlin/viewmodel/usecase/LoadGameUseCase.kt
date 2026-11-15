@@ -7,6 +7,7 @@ import storage.SaveRepository
 import viewmodel.CurrentSaveName
 import viewmodel.GameShiftSources
 import viewmodel.MordieHooks
+import viewmodel.PlayerResult
 import viewmodel.SaveCatalog
 import viewmodel.SessionTileLabels
 import viewmodel.TileLabels
@@ -76,7 +77,7 @@ internal class LoadGameUseCase(
                 "load_command_used",
                 mapOf("trigger" to trigger, "result" to "success", "labels_differ_from_preference" to labelsDiffer),
             )
-            if (saved.mordie?.solutionScreen == true) solution.enterLoaded(trigger)
+            if (saved.mordie?.solutionScreen == true) solution.enterLoaded(trigger, saved.mordie?.playerResult?.let { PlayerResult(it.gaveUp, it.moves) })
             if (fromSave != null && !fromSave.fits(board.squareSide)) chooseFittingLabels()
             ui.showMessage("Loaded '$name'.", loadedSave = name)
             LoadResult.LOADED

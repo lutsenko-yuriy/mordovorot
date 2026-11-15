@@ -13,6 +13,7 @@ import mordie.SolutionMove
 import storage.SavedBoard
 import storage.SavedMordie
 import storage.SavedMove
+import storage.SavedPlayerResult
 import testing.FakeMordieSearchFactory
 import testing.FakeSaveRepository
 import testing.FakeViewModelUi
@@ -27,6 +28,7 @@ class ViewModelSolutionSaveLoadTest {
     private val path = listOf(SolutionMove(isRow = true, index = 0, amount = 1), SolutionMove(isRow = false, index = 0, amount = 1))
     private val savedPath = path.map { SavedMove(it.isRow, it.index, it.amount) }
     private val screenSave = SavedMordie(original, 2, found = true, solution = savedPath, solutionScreen = true)
+    private val gaveUpAfterOneMove = SavedMordie(original, 2, found = true, solution = savedPath, solutionScreen = true, playerResult = SavedPlayerResult(gaveUp = true, moves = 1))
 
     private val factory = FakeMordieSearchFactory()
     private val analytics = RecordingAnalyticsService()
@@ -58,7 +60,7 @@ class ViewModelSolutionSaveLoadTest {
 
         viewModel.save("s")
 
-        assertEquals(SavedBoard(3, original, 0, screenSave, "numbers"), saves.load("s"))
+        assertEquals(SavedBoard(3, original, 0, gaveUpAfterOneMove, "numbers"), saves.load("s"))
     }
 
     @Test
@@ -72,8 +74,30 @@ class ViewModelSolutionSaveLoadTest {
         assertNull(viewModel.solution()?.current)
         assertContentEquals(original, viewModel.boardState())
         assertEquals("Here's how I did it in 2 moves!", viewModel.mordieLine())
-        assertEquals(mapOf("opened_from" to "load", "board_size" to 3, "solution_length" to 2), event("screen_solution"))
+        assertEquals(mapOf("opened_from" to "load", "player_result" to "unknown", "board_size" to 3, "solution_length" to 2), event("screen_solution"))
         assertFalse(viewModel.hasUnsavedProgress())
+    }
+
+    @Test
+    fun `loading a solution-screen save with a result shows it in front of Mordie's line`() = runTest {
+        saves.save("s", original, 3, 0, gaveUpAfterOneMove)
+        val viewModel = viewModel()
+
+        viewModel.load("s")
+
+        assertEquals("You gave up after 1 move. Here's how I did it in 2 moves!", viewModel.mordieLine())
+        assertEquals("gave_up", event("screen_solution")["player_result"])
+    }
+
+    @Test
+    fun `restoring a solution-screen save with a result at startup shows the same line`() = runTest {
+        saves.save("s", original, 3, 0, SavedMordie(original, 2, found = true, solution = savedPath, solutionScreen = true, playerResult = SavedPlayerResult(gaveUp = false, moves = 2)))
+        val viewModel = viewModel()
+
+        FakeViewModelUi(confirmRestoreResponses = mutableListOf(true)).drive(viewModel) { viewModel.restoreOnStartup() }
+
+        assertEquals("You solved it in 2 moves. Here's how I did it in 2 moves!", viewModel.mordieLine())
+        assertEquals("solved", event("screen_solution")["player_result"])
     }
 
     @Test

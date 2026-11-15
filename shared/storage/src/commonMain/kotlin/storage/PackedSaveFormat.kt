@@ -8,7 +8,9 @@ import kotlin.text.CharacterCodingException
  *
  *  Header: the side (4 bits), the labels (3 bits: 0 none, 1-6 a known name, 7 an escape followed by
  *  the name), the status (2 bits: no Mordie, searching, found proven, found unproven), the
- *  solution-screen flag and the has-solution flag. Then the move count (varint), the current board
+ *  solution-screen flag and the has-solution flag. Then the move count (varint; on a solution-screen
+ *  save it holds the player's result instead, GH-273: 0 none, 2m + 1 gave up after m moves, 2m + 2 solved
+ *  in m), the current board
  *  (Lehmer code), and with Mordie its original (Lehmer code), N (varint), R when unproven (varint)
  *  and last N solution steps, each one number for the axis, line and shift. Widths that depend on
  *  the side come after the side, and the long solution is last. */
@@ -27,6 +29,7 @@ internal object PackedSaveFormat {
     private const val UNPROVEN = 3
     const val MIN_SIDE = 2
     const val MAX_SIDE = 15
+    const val MAX_RESULT_MOVES = 1_000_000_000
     private val base64 = Base64.UrlSafe.withPadding(Base64.PaddingOption.ABSENT)
 
     /** Assumes [SaveFileCodec.encode]'s checks have passed. An empty solution is written as none. */
@@ -49,7 +52,7 @@ internal object PackedSaveFormat {
             out.putVarint(name.size)
             name.forEach { out.put(it.toInt() and 0xFF, 8) }
         }
-        out.putVarint(moveCount)
+        out.putVarint(if (mordie?.solutionScreen == true) resultCode(mordie.playerResult) else moveCount)
         out.putPermutation(state)
         if (mordie != null) {
             out.putPermutation(mordie.original)
@@ -83,14 +86,28 @@ internal object PackedSaveFormat {
         val hasSolution = reader.get(1) == 1
         flagProblem(status, screen, hasSolution)?.let { throw SaveFileFormatException(name, it) }
         val labels = readLabels(name, reader, labelCode)
-        val moveCount = reader.getVarint()
+        val slot = reader.getVarint()
         val state = reader.getPermutation(side * side, "the board")
-        val mordie = if (status == NO_MORDIE) null else readMordie(name, reader, side, status, screen, hasSolution)
+        val result = if (screen) readResult(slot) else null
+        if (result != null && result.moves > MAX_RESULT_MOVES) throw SaveFileFormatException(name, "the player's moves are out of range")
+        val mordie = if (status == NO_MORDIE) null else readMordie(name, reader, side, status, screen, hasSolution, result)
         if (!reader.atEnd()) {
             val reason = if (reader.bitsLeft() >= 8) "the packed data has extra bytes at the end" else "the packed data's padding bits are not zero"
             throw SaveFileFormatException(name, reason)
         }
-        return SavedBoard(side, state, moveCount, mordie, labels)
+        return SavedBoard(side, state, if (screen) 0 else slot, mordie, labels)
+    }
+
+    private fun resultCode(result: SavedPlayerResult?) = when {
+        result == null -> 0
+        result.gaveUp -> 2 * result.moves + 1
+        else -> 2 * result.moves + 2
+    }
+
+    private fun readResult(code: Int) = when {
+        code == 0 -> null
+        code % 2 == 1 -> SavedPlayerResult(gaveUp = true, moves = (code - 1) / 2)
+        else -> SavedPlayerResult(gaveUp = false, moves = (code - 2) / 2)
     }
 
     private fun flagProblem(status: Int, screen: Boolean, hasSolution: Boolean): String? = when {
@@ -120,7 +137,7 @@ internal object PackedSaveFormat {
         return label
     }
 
-    private fun readMordie(name: String, reader: BitReader, side: Int, status: Int, screen: Boolean, hasSolution: Boolean): SavedMordie {
+    private fun readMordie(name: String, reader: BitReader, side: Int, status: Int, screen: Boolean, hasSolution: Boolean, result: SavedPlayerResult?): SavedMordie {
         val original = reader.getPermutation(side * side, "Mordie's original")
         val moves = reader.getVarint()
         val found = status != SEARCHING
@@ -131,7 +148,7 @@ internal object PackedSaveFormat {
         // Each step is at least 2 bits, so a count the data cannot hold is cut off before a list is made for it.
         if (hasSolution && moves > reader.bitsLeft() / bitsFor(stepCodes(side))) throw BitFormatException("the packed data ends early")
         val solution = if (hasSolution) List(moves) { readStep(name, reader, side) } else null
-        val mordie = SavedMordie(original, moves, found, solution, screen, provenShortest, ruledOut)
+        val mordie = SavedMordie(original, moves, found, solution, screen, provenShortest, ruledOut, result)
         solution?.let { SaveRules.solutionProblem(it, mordie, side) }?.let { throw SaveFileFormatException(name, it) }
         return mordie
     }

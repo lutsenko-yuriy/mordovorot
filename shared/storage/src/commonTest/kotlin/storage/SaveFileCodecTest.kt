@@ -248,4 +248,32 @@ class SaveFileCodecTest {
         assertEquals("letter", labels)
         SaveFileCodec.encode(2, state, 7, null, labels)
     }
+
+    @Test
+    fun `encode rejects a player result off the solution screen, GH-273`() {
+        val mordie = SavedMordie(swapped, 2, found = true, solution = path, playerResult = SavedPlayerResult(gaveUp = true, moves = 3))
+        assertFailsWith<IllegalArgumentException> { SaveFileCodec.encode(2, state, 0, mordie) }
+    }
+
+    @Test
+    fun `encode rejects a move count on a solution-screen save, GH-273`() {
+        val screen = SavedMordie(swapped, 2, found = true, solution = path, solutionScreen = true)
+        assertFailsWith<IllegalArgumentException> { SaveFileCodec.encode(2, swapped, 3, screen) }
+    }
+
+    @Test
+    fun `encode rejects a negative or overflowing result move count, GH-273`() {
+        for (moves in listOf(-1, Int.MAX_VALUE)) {
+            val screen = SavedMordie(swapped, 2, found = true, solution = path, solutionScreen = true, playerResult = SavedPlayerResult(true, moves))
+            assertFailsWith<IllegalArgumentException>("$moves") { SaveFileCodec.encode(2, swapped, 0, screen) }
+        }
+    }
+
+    @Test
+    fun `a solution-screen save keeps its player result through encode and decode, GH-273`() {
+        val result = SavedPlayerResult(gaveUp = false, moves = 14)
+        val screen = SavedMordie(swapped, 2, found = true, solution = path, solutionScreen = true, playerResult = result)
+
+        assertEquals(SavedBoard(2, swapped, 0, screen), SaveFileCodec.decode("foo", SaveFileCodec.encode(2, swapped, 0, screen)))
+    }
 }

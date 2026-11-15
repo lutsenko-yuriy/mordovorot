@@ -81,7 +81,8 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
 - **Solution screen saves (GH-126):** a save also stores Mordie's solution once it has found
   one, and whether it was made on the solution screen (Feature 10). Loading a solution-screen
   save, by Load or the startup restore prompt, opens the solution screen again at the start of
-  the replay.
+  the replay. It also stores how the player's game ended, `gave up` or `solved` and the moves
+  made (GH-273); a solution-screen save from before that keeps no result and shows the old line.
 - **Tile labels in saves (GH-139):** a save also stores the tile labels it was shown with, and
   loading it (Load, the startup restore, Repair & load) shows them again, ahead of the player's
   preference, until the next new game. A save from before GH-139, or one naming labels this
@@ -155,8 +156,9 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   - M < N, N proven shortest (with a hand-edited save only, so a likely cheat):
     `I made N moves and you made M moves! Are you a machine?`
   - A count of 1 reads `1 move`.
-- **Solution screen (GH-126):** Mordie's line reads `Here's how I did it in N moves!` there
-  (Feature 10).
+- **Solution screen (GH-126):** Mordie's line reads `Here's how I did it in N moves!` there,
+  led by the player's result (GH-273): `You gave up after M moves.` or `You solved it in M moves.`
+  (`You did not even start this one.` when they gave up with 0 moves) (Feature 10).
 - **Saves** also store the original arrangement, Mordie's N and whether it had found its
   solution (older saves still load).
   - Loading a save where Mordie was still searching resumes the search past the saved N, and the
@@ -443,7 +445,9 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
 - **Solution screen:**
   - The board goes back to the game's original arrangement and isn't playable: no arrows, no
     drag, no shift keys. `Moves: N` is hidden, Mordie's line reads
-    `Here's how I did it in N moves!` (`1 move` for one), and the Give Up row is empty.
+    `You gave up after M moves. Here's how I did it in N moves!` or, after a win,
+    `You solved it in M moves. Here's how I did it in N moves!` (`1 move` for one; GH-273), and
+    the Give Up row is empty. A save from before GH-273 keeps `Here's how I did it in N moves!`.
   - **Step list:** one numbered step per Mordie move, `<n>. Row <i> <→|←> ×<k>` or
     `<n>. Col <i> <↑|↓> ×<k>`, each the shortest way round its line (a tie goes → or ↓). Numbers
     are zero-padded to the total's width (`01.` to `12.`). It sits right of the board (the
