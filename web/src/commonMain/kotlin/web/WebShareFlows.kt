@@ -68,7 +68,7 @@ internal class WebShareFlows(
         val start = viewModel.startingBoard()
         val side = viewModel.squareSide()
         val labels = viewModel.tileLabels()
-        val progress = viewModel.sharedProgress()
+        val progress = viewModel.sharedProgress()?.takeIf(ShareLink::carries)
         val sent = progress.takeIf { includeProgress }
         val link = ShareLink.of(address.base(), side, start ?: viewModel.boardState(), labels.takeIf { includeLabels }, sent)
         // Too long for the largest code (a fork's long address): the link alone.

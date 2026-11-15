@@ -321,4 +321,18 @@ class WebShareProgressScenarioTest {
         assertTrue(page.share.link.endsWith("&l=numbers&p=n3"), page.share.link)
         assertNull(page.state.status)
     }
+
+    @Test
+    fun `a count too big for a link is treated as no progress`() = webTest {
+        val page = WebHarness(backgroundScope).seed("big", ONE_SHIFT_FROM_SOLVED, moves = 10_000_000).start()
+        page.game.onLoadChosen("big")
+
+        page.game.share.open()
+        page.game.share.onProgressToggled()
+
+        assertFalse(page.share.progressAvailable)
+        assertFalse(page.share.includeProgress)
+        assertEquals("Include my progress", page.share.progressToggle)
+        assertEquals(false, page.ownProps("screen_share_dialog").single()["include_progress"])
+    }
 }

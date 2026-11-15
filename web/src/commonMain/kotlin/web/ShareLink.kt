@@ -51,7 +51,10 @@ object ShareLink {
     fun of(base: String, side: Int, arrangement: IntArray, labels: TileLabels? = null, progress: SharedProgress? = null): String =
         "$base#$BOARD_KEY${BoardLinkFormat.encode(side, arrangement)}" +
             (labels?.let { "&$LABELS_KEY${it.wireName}" } ?: "") +
-            (progress?.takeIf { it.moves == null || it.moves in 1..MAX_MOVES }?.let { "&$PROGRESS_KEY${progressText(it)}" } ?: "")
+            (progress?.takeIf(::carries)?.let { "&$PROGRESS_KEY${progressText(it)}" } ?: "")
+
+    /** Whether a link can carry [progress]: its count, when known, is 1 to 9999999. */
+    fun carries(progress: SharedProgress): Boolean = progress.moves == null || progress.moves in 1..MAX_MOVES
 
     /** What [fragment] (with or without its `#`) names: `null` when it names no board, so it isn't a share link. */
     fun read(fragment: String): LinkBoard? {
