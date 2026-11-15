@@ -27,7 +27,8 @@ class WebGiveUpScenarioTest {
     private val path = listOf(SolutionMove(isRow = true, index = 0, amount = 1), SolutionMove(isRow = false, index = 1, amount = 2))
     private val steps = listOf("1. Row 1 → ×1", "2. Col 2 ↓ ×2")
     private val moves = listOf(SolutionStep(isRow = true, index = 0, forward = true, count = 1), SolutionStep(isRow = false, index = 1, forward = true, count = 2))
-    private val solutionLine = "Here's how I did it in 2 moves!"
+    private val solutionLine = "You gave up after 2 moves. Here's how I did it in 2 moves!"
+    private val solvedLine = "You solved it in 2 moves. Here's how I did it in 2 moves!"
 
     private fun WebHarness.searchFinds() {
         mordieSearches.latest.progress = SearchProgress(path.size, found = true, elapsedMs = 0, solution = path)
@@ -155,7 +156,7 @@ class WebGiveUpScenarioTest {
         page.game.solution.onMordiesSolution()
         assertNull(page.state.dialog)
         assertEquals(shown(original), page.state.tiles)
-        assertEquals(solutionLine, page.state.mordie)
+        assertEquals(solvedLine, page.state.mordie)
         assertEquals("after_win", page.props("screen_solution").single()["opened_from"])
         assertTrue(page.props("game_given_up").isEmpty())
 

@@ -10,6 +10,7 @@ import storage.SaveFileFormatException
 import storage.SavedBoard
 import storage.SavedMordie
 import storage.SavedMove
+import storage.SavedPlayerResult
 
 class BrowserSaveRepositoryTest {
 
@@ -45,6 +46,15 @@ class BrowserSaveRepositoryTest {
         repo.save("s", intArrayOf(2, 3, 0, 1), 2, moveCount = 0, mordie = mordie)
 
         assertEquals(SavedBoard(2, intArrayOf(2, 3, 0, 1), 0, mordie), repo.load("s"))
+    }
+
+    @Test
+    fun `load returns the player result of a solution-screen save, GH-273`() {
+        val path = listOf(SavedMove(isRow = false, index = 0, amount = 1), SavedMove(isRow = false, index = 1, amount = 1))
+        val mordie = SavedMordie(intArrayOf(2, 3, 0, 1), moves = 2, found = true, solution = path, solutionScreen = true, playerResult = SavedPlayerResult(gaveUp = true, moves = 5))
+        repo.save("r", intArrayOf(2, 3, 0, 1), 2, moveCount = 0, mordie = mordie)
+
+        assertEquals(SavedBoard(2, intArrayOf(2, 3, 0, 1), 0, mordie), repo.load("r"))
     }
 
     @Test
