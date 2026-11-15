@@ -47,6 +47,8 @@ data class WebState(
     val hints: List<KeyHint>? = null,
     /** The footer line, with the New version available notice once one is ready (GH-262). */
     val footer: List<FooterPart> = emptyList(),
+    /** The tutorial's panel (GH-288), in place of the Give Up row and the toolbar; `null` off the guided steps. */
+    val guidance: Guidance? = null,
 ) {
     /** The digit [button] shows, `null` when it shows none (GH-171). */
     fun digitOf(button: ToolbarButton): Int? = button.digit.takeIf { WebKeys.live(button, computer) }

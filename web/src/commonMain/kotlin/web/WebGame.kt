@@ -6,11 +6,13 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import viewmodel.GameViewModel
+import viewmodel.GiveUpButton
 import viewmodel.PointerShift
 import viewmodel.SessionKeyboardLayout
 import viewmodel.ShiftSource
 import viewmodel.UnsolvableSaveChoice
 import web.a11y.Announcements
+import web.drag.Axis
 import web.drag.LineOffset
 
 /** The browser's View (GH-110): takes the page's intents, runs them on [viewModel] and renders a
@@ -31,6 +33,8 @@ class WebGame internal constructor(
     appVersion: String,
     shareLabels: ShareTogglePreference,
     shareProgress: ShareTogglePreference,
+    tutorialSeen: TutorialPreference,
+    tutorialOn: Boolean,
 ) {
 
     private val modal = WebModal { render(focus = it) }
@@ -40,6 +44,7 @@ class WebGame internal constructor(
     internal val controls = WebControlsDialog(this, viewModel, modal, keyboardLayout)
     internal val share = WebShareFlows(this, viewModel, analytics, modal, address, clipboard, shareLabels, shareProgress)
     internal val updates = WebUpdateFlows(this, viewModel, analytics, modal, updates, appVersion)
+    internal val tutorial = WebTutorial(this, viewModel, analytics, tutorialSeen, scope, computer, tutorialOn)
     private val keys = WebKeyPlay(this, viewModel, pressedWith, computer)
     private val requests = WebRequestRouter(this)
     private val dragging = WebDragFlows(this, viewModel)
@@ -54,25 +59,30 @@ class WebGame internal constructor(
     /** Mordie's solution screen (GH-126): the board is the replay's, not the player's. */
     internal val playable get() = idle && !viewModel.isSolved() && viewModel.solution() == null
 
-    /** Answers the viewModel's requests, then runs the startup restore. */
+    /** Answers the viewModel's requests, then starts the tutorial on a first launch, else runs the startup restore. */
     internal fun start() {
         updates.start()
         render()
         scope.launch { for (request in viewModel.uiRequests) requests.handle(request) }
         flow = scope.launch {
-            // A share link's board replaces the restore offer.
-            if (!share.openAtStartup()) viewModel.restoreOnStartup()
+            if (tutorial.shouldStart()) tutorial.begin() else startup()
             share.openPending()
             dialogs.sayAskedNewGame()
             render(focus = onBoard ?: Focus.PageStart)
         }
     }
 
+    /** A share link's board replaces the restore offer. After the tutorial's Skip, a link that isn't opened (Cancel) keeps the tutorial's board too. */
+    internal suspend fun startup(afterSkip: Boolean = false) {
+        val linked = afterSkip && share.hasStartupLink()
+        if (!share.openAtStartup() && !linked) viewModel.restoreOnStartup()
+    }
+
     /** Where a computer's board has focus, the keys working there (GH-171); none on touch. */
     internal val onBoard get() = Focus.Board.takeIf { computer }
 
     /** Backs the page's leave-site prompt. */
-    fun hasUnsavedProgress(): Boolean = !updates.applying && viewModel.hasUnsavedProgress()
+    fun hasUnsavedProgress(): Boolean = !updates.applying && !tutorial.running && viewModel.hasUnsavedProgress()
 
     /** A click on an arrow; on a computer a mouse's puts focus on the board, so its keys work next (GH-287). */
     fun onArrow(arrow: Arrow, line: Int, byMouse: Boolean = false) {
@@ -82,7 +92,10 @@ class WebGame internal constructor(
     }
 
     /** One step of the line [arrow] and [line] name, by [source], sliding it into place. */
-    internal fun shiftLine(arrow: Arrow, line: Int, source: ShiftSource, focus: Focus? = null) =
+    internal fun shiftLine(arrow: Arrow, line: Int, source: ShiftSource, focus: Focus? = null) {
+        val row = arrow == Arrow.LEFT || arrow == Arrow.RIGHT
+        val forward = arrow == Arrow.RIGHT || arrow == Arrow.DOWN
+        if (!tutorial.allows(if (row) Axis.ROW else Axis.COLUMN, line, if (forward) 1 else -1)) return
         shift({ Announcements.shift(arrow.direction, line, it) }, Slides.ofArrow(arrow, line), focus) {
             when (arrow) {
                 Arrow.LEFT -> viewModel.shiftLeft(line, source)
@@ -91,6 +104,8 @@ class WebGame internal constructor(
                 Arrow.DOWN -> viewModel.shiftDown(line, source)
             }
         }
+        tutorial.afterShift()
+    }
 
     fun onDragStart(row: Int, col: Int, x: Double, y: Double, pitch: Double) = dragging.onStart(row, col, x, y, pitch)
 
@@ -226,16 +241,21 @@ class WebGame internal constructor(
 
     private fun frame(slide: LineOffset?, focus: Focus?): WebState {
         val solved = viewModel.isSolved()
+        val guidance = tutorial.guidance()
         return WebState(
             side = viewModel.squareSide(),
             tiles = viewModel.boardState().map { it + 1 },
             moves = viewModel.moveCount(),
-            mordie = if (solved) viewModel.mordieEnding() ?: SOLVED_TITLE else viewModel.mordieLine(),
+            mordie = when {
+                tutorial.holdsEnding -> null
+                solved -> viewModel.mordieEnding() ?: SOLVED_TITLE
+                else -> viewModel.mordieLine()
+            },
             solved = solved,
             status = status,
             dialog = modal.shown,
             drag = dragging.offset,
-            giveUp = viewModel.giveUpButton(),
+            giveUp = if (guidance == null) viewModel.giveUpButton() else GiveUpButton.HIDDEN,
             solution = viewModel.solution(),
             slide = slide,
             // The Labels dialog's marked scheme, or a share link's labels, previewed until OK or Yes keeps them or Cancel or No drops them.
@@ -251,6 +271,7 @@ class WebGame internal constructor(
                 else -> KeyHints.board(controls.layout)
             },
             footer = updates.footer,
+            guidance = guidance,
         )
     }
 

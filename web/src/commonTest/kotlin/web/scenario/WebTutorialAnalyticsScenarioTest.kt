@@ -1,86 +1,129 @@
 package web.scenario
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import mordie.SearchProgress
+import mordie.SolutionMove
+import web.Arrow
 
-/** GH-288 (WU0) scenario stubs: the tutorial's analytics events (docs/ANALYTICS_EVENTS.md, GH-288 section). The WU that wires the tutorial fills them in. */
+/** GH-288: the tutorial's analytics events (docs/ANALYTICS_EVENTS.md, GH-288 section). */
 class WebTutorialAnalyticsScenarioTest {
+
+    private fun WebHarness.tutorialEvents() = analytics.events.filter { it.name.startsWith("tutorial_") }
 
     @Test
     fun `tutorial_started is sent on a first launch`() = webTest {
-        // TODO: 1. First launch.
-        // TODO: 2. The `tutorial_started` event is sent.
+        val page = tutorialPage(backgroundScope)
+
+        assertEquals(listOf(mapOf("source" to "first_launch")), page.ownProps("tutorial_started"))
     }
 
     @Test
     fun `tutorial_started is sent again after a reload halfway`() = webTest {
-        // TODO: 1. Make a shift.
-        // TODO: 2. Relaunch.
-        // TODO: 3. `tutorial_started` is sent a second time.
+        val first = tutorialPage(backgroundScope)
+        first.stepByArrow(1)
+
+        val page = tutorialPage(backgroundScope, first.store)
+
+        assertEquals(1, page.props("tutorial_started").size)
+        assertEquals(1, first.props("tutorial_started").size)
     }
 
     @Test
     fun `no tutorial events for a player with saves`() = webTest {
-        // TODO: 1. Seed a save.
-        // TODO: 2. Launch.
-        // TODO: 3. No `tutorial_*` event is sent.
+        val page = WebHarness(backgroundScope, firstLaunch = true).seed("foo", solved(4)).start()
+
+        assertTrue(page.tutorialEvents().isEmpty())
     }
 
     @Test
     fun `tutorial_step_completed is sent for each of steps 1 to 4`() = webTest {
-        // TODO: 1. Play the four steps.
-        // TODO: 2. `tutorial_step_completed` is sent four times, with `step` 1 to 4.
+        val page = tutorialPage(backgroundScope)
+
+        page.playSteps()
+
+        assertEquals(listOf(1, 2, 3, 4), page.ownProps("tutorial_step_completed").map { it["step"] })
     }
 
     @Test
     fun `tutorial_step_completed carries the step's blocked shifts`() = webTest {
-        // TODO: 1. Make two blocked shifts on step 1.
-        // TODO: 2. Do step 1.
-        // TODO: 3. The event for step 1 carries `blocked_shifts` 2.
+        val page = tutorialPage(backgroundScope)
+        page.game.onArrow(Arrow.LEFT, 1)
+        page.game.onArrow(Arrow.RIGHT, 0)
+
+        page.stepByArrow(1)
+
+        assertEquals(mapOf("step" to 1, "blocked_shifts" to 2), page.ownProps("tutorial_step_completed").single())
     }
 
     @Test
     fun `tutorial_ended is sent as completed at step 6`() = webTest {
-        // TODO: 1. Play the four steps and wait 3 s.
-        // TODO: 2. `tutorial_ended` is sent with `result` completed and `last_step` 6.
+        val page = tutorialPage(backgroundScope)
+        page.playSteps()
+        waitPause()
+
+        assertEquals(mapOf("result" to "completed", "last_step" to 6, "blocked_shifts" to 0), page.ownProps("tutorial_ended").single())
     }
 
     @Test
     fun `tutorial_ended is sent as skipped, with the step`() = webTest {
-        // TODO: 1. Do step 1.
-        // TODO: 2. Press Skip.
-        // TODO: 3. `tutorial_ended` is sent with `result` skipped and `last_step` 2.
+        val page = tutorialPage(backgroundScope)
+        page.stepByArrow(1)
+
+        page.game.tutorial.onSkip()
+
+        assertEquals(mapOf("result" to "skipped", "last_step" to 2, "blocked_shifts" to 0), page.ownProps("tutorial_ended").single())
     }
 
     @Test
     fun `Controls opened from the panel says so`() = webTest {
-        // TODO: 1. Press the panel's Controls button.
-        // TODO: 2. `screen_controls_dialog` is sent with `opened_from` `tutorial`.
+        val page = tutorialPage(backgroundScope)
+
+        page.game.tutorial.onControls()
+
+        assertEquals("tutorial", page.props("screen_controls_dialog").last()["opened_from"])
     }
 
     @Test
     fun `Labels opened from the panel says so`() = webTest {
-        // TODO: 1. Press the panel's Labels button.
-        // TODO: 2. `screen_labels_dialog` is sent with `opened_from` `tutorial`.
+        val page = tutorialPage(backgroundScope)
+
+        page.game.tutorial.onLabels()
+
+        assertEquals("tutorial", page.props("screen_labels_dialog").last()["opened_from"])
     }
 
     @Test
     fun `board_solved is flagged as the tutorial's`() = webTest {
-        // TODO: 1. Play the four steps.
-        // TODO: 2. `board_solved` is sent with `tutorial` true.
+        val page = tutorialPage(backgroundScope)
+
+        page.playSteps()
+
+        assertEquals(true, page.props("board_solved").single()["tutorial"])
     }
 
     @Test
     fun `mordie_solution_found is flagged as the tutorial's`() = webTest {
-        // TODO: 1. First launch.
-        // TODO: 2. Mordie finds its solution.
-        // TODO: 3. `mordie_solution_found` is sent with `tutorial` true.
+        val page = tutorialPage(backgroundScope)
+        page.mordieSearches.latest.progress = SearchProgress(4, found = true, elapsedMs = 0, solution = List(4) { SolutionMove(isRow = true, index = 0, amount = 1) })
+
+        page.playSteps()
+
+        assertEquals(true, page.props("mordie_solution_found").single()["tutorial"])
     }
 
     @Test
     fun `a new game after the tutorial is not flagged`() = webTest {
-        // TODO: 1. Play to step 6.
-        // TODO: 2. Choose New, then 4x4.
-        // TODO: 3. Solve it.
-        // TODO: 4. `board_solved` is sent with `tutorial` false.
+        val page = tutorialPage(backgroundScope)
+        page.playSteps()
+        waitPause()
+
+        page.game.onNew()
+        page.game.onSizeChosen(4)
+        page.board.restoreState(ONE_SHIFT_FROM_SOLVED, 0)
+        page.game.onArrow(Arrow.LEFT, 0)
+
+        assertEquals(listOf(true, false), page.props("board_solved").map { it["tutorial"] })
     }
 }

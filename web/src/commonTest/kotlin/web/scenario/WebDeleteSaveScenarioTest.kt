@@ -175,7 +175,7 @@ class WebDeleteSaveScenarioTest {
         page.game.onDeletePressed(0)
         page.game.onDeleteAnswered(true)
 
-        assertTrue(page.store.entries.isEmpty())
+        assertTrue(page.saves.listSaves().isEmpty())
         assertEquals(listOf("unsolvable", "corrupted"), page.ownProps("screen_delete_save_dialog").map { it["save_state"] })
         assertEquals(listOf("unsolvable", "corrupted"), page.ownProps("save_deleted").map { it["save_state"] })
     }

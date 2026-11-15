@@ -31,6 +31,14 @@ internal class WebShareFlows(
     /** The link in the address at startup; whether it started a board. */
     suspend fun openAtStartup(): Boolean = openLink(address.fragment())
 
+    /** Whether the address holds a share link, read or not. */
+    fun hasStartupLink(): Boolean = ShareLink.read(address.fragment()) != null
+
+    /** The link left in the address while the tutorial ran now waits as any other. */
+    fun holdStartupLink() {
+        if (hasStartupLink()) pending = address.fragment()
+    }
+
     /** The address changed (`hashchange`): opens a share link now, or once the dialog or action ends. */
     fun onLinkChanged() {
         val fragment = address.fragment()
@@ -41,12 +49,12 @@ internal class WebShareFlows(
 
     /** Opens the link that waited, if nothing is under way now (a drag ended). */
     fun openWaiting() {
-        if (pending != null && game.idle) game.runFlow(game.onBoard ?: Focus.PageStart) { openPending() }
+        if (pending != null && game.idle && !game.tutorial.running) game.runFlow(game.onBoard ?: Focus.PageStart) { openPending() }
     }
 
     /** Opens the links that waited, if any: one that arrives while another is asked about waits for that answer. */
     suspend fun openPending() {
-        while (true) {
+        while (!game.tutorial.running) {
             val fragment = pending ?: return
             pending = null
             openLink(fragment)

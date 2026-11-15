@@ -50,6 +50,8 @@ internal class WebHarness(
     private val host: Host = Host.LOCALHOST,
     private val touch: Boolean = false,
     val address: FakePageAddress = FakePageAddress(),
+    /** The first-launch tutorial (GH-288) shows when nothing is saved: off unless asked for, so a scenario starts as it did before it. */
+    private val firstLaunch: Boolean = false,
 ) {
     val saves = BrowserSaveRepository(store)
     val preferences = BrowserPreferenceRepository(store)
@@ -75,7 +77,8 @@ internal class WebHarness(
     val scrolled: List<Int> get() = renderer.scrolled
 
     fun start(): WebHarness {
-        game = startWebGame(board, saves, preferences, analytics, mordie, renderer, scope, layout, appVersion, host, touch, pressedWith, address, clipboard, updates)
+        if (!firstLaunch) preferences.set("tutorial", "seen")
+        game = startWebGame(board, saves, preferences, analytics, mordie, renderer, scope, layout, appVersion, host, touch, pressedWith, address, clipboard, updates, tutorial = true)
         return this
     }
 

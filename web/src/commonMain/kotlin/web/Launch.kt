@@ -29,7 +29,7 @@ fun webBoard(): BoardImpl = BoardImpl(maxSide = BoardSize.VERY_LARGE.last)
  *  [preferences], GH-139), then starts a [WebGame] on [scope].
  *  Every event gets `platform: web`, and all but `app_launched` get `input_method` from
  *  [pressedWith] (GH-171). A share link in [address] starts its board (GH-243). On a [touch] screen the keys and Controls are out of reach (GH-287).
- *  [updates] checks for a new version of the page (GH-262). */
+ *  [updates] checks for a new version of the page (GH-262). The first-launch [tutorial] runs when it is on (GH-288). */
 fun startWebGame(
     board: BoardModel,
     saves: SaveRepository,
@@ -46,6 +46,7 @@ fun startWebGame(
     address: PageAddress,
     clipboard: Clipboard,
     updates: AppUpdates,
+    tutorial: Boolean,
 ): WebGame {
     val platform = PlatformAnalyticsService(analytics, "web")
     val tileLabels = SessionTileLabels(TileLabelsPreference(preferences))
@@ -62,7 +63,7 @@ fun startWebGame(
         ui = UiRequestChannel(),
     )
     val keyboardLayout = SessionKeyboardLayout(KeyboardLayoutPreference(preferences))
-    return WebGame(viewModel, pressed, renderer, scope, pressedWith, keyboardLayout, !touch, address, clipboard, updates, appVersion, ShareTogglePreference(preferences, "share_labels"), ShareTogglePreference(preferences, "share_progress")).also { it.start() }
+    return WebGame(viewModel, pressed, renderer, scope, pressedWith, keyboardLayout, !touch, address, clipboard, updates, appVersion, ShareTogglePreference(preferences, "share_labels"), ShareTogglePreference(preferences, "share_progress"), TutorialPreference(preferences), tutorial).also { it.start() }
 }
 
 fun trackAppLaunched(analytics: AnalyticsService, layout: Layout, appVersion: String, host: Host, tileLabels: String) {

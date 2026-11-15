@@ -55,7 +55,7 @@ class WebSaveLoadScenarioTest {
         assertNull(page.state.status)
         assertNull(page.state.dialog)
 
-        assertTrue(page.store.entries.isEmpty())
+        assertTrue(page.saves.listSaves().isEmpty())
     }
 
     @Test
@@ -66,7 +66,7 @@ class WebSaveLoadScenarioTest {
         page.game.onSaveAnswered(null)
 
         assertNull(page.state.dialog)
-        assertTrue(page.store.entries.isEmpty())
+        assertTrue(page.saves.listSaves().isEmpty())
         assertEquals(listOf("save"), page.props("dialog_cancelled").map { it["dialog"] })
     }
 
