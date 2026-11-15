@@ -138,4 +138,20 @@ class IdaStarSolverTest {
 
         assertNull(solver.solutionLength)
     }
+
+    /** How many nodes [state]'s search expands before it finds the minimum. */
+    private fun expansions(state: IntArray): Long {
+        val solver = IdaStarSolver(state)
+        var count = 0L
+        while (!solver.step(1)) count++
+        return count + 1
+    }
+
+    @Test
+    fun `the search tree stays the same size`() {
+        // GH-282: recorded before the per-node cleanups; a change to the pruning or the bound moves these.
+        val ticketBoard = intArrayOf(2, 15, 1, 0, 4, 5, 9, 8, 3, 7, 12, 6, 14, 11, 13, 10)
+        assertEquals(2650L, expansions(scramble(4, 8, Random(5))))
+        assertEquals(34_511_703L, expansions(ticketBoard))
+    }
 }
