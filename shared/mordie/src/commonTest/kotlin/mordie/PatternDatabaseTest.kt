@@ -70,6 +70,13 @@ class PatternDatabaseTest {
     }
 
     @Test
+    fun `the queue is let go once the build is whole, whatever the slice`() {
+        for (slice in listOf(200, 1_000, Int.MAX_VALUE)) {
+            assertEquals(1, built(4, slice).queueSize, "slice $slice")
+        }
+    }
+
+    @Test
     fun `a board and its translated or transposed image have the same bound`() {
         val database = built(4)
         val random = Random(11)

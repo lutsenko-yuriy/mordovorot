@@ -4,6 +4,7 @@ import board_model.BoardImpl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -219,6 +220,18 @@ class BestSolutionSolverTest {
 
         assertTrue(stepsToProve(solver) < 100)
         assertEquals(3, solver.bestLength)
+    }
+
+    @Test
+    fun `the table is not built in the step that gives the first answer (GH-282)`() {
+        val solver = BestSolutionSolver(ticketBoard)
+
+        solver.step(1_000)
+        assertEquals(0, solver.patternStatesBuilt)
+        assertNotNull(solver.solution)
+
+        solver.step(1_000)
+        assertTrue(solver.patternStatesBuilt > 0)
     }
 
     @Test

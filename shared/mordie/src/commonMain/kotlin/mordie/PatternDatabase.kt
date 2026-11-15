@@ -85,7 +85,10 @@ class PatternDatabase(private val n: Int) {
         val mask = (1 shl bits) - 1
         val at = IntArray(k)
         repeat(maxStates) {
-            if (head == tail) return
+            if (head == tail) {
+                release()
+                return
+            }
             val state = queue[head++]
             val next = (distance[state] + 1).toByte()
             for (i in 0 until k) at[i] = (state ushr (bits * i)) and mask
@@ -110,9 +113,16 @@ class PatternDatabase(private val n: Int) {
                 }
             }
         }
-        // Not needed any more; non-empty, so that a later step doesn't start over.
-        if (head == tail) queue = IntArray(1)
+        if (head == tail) release()
     }
+
+    /** The queue isn't needed any more; the stand-in is non-empty, so that a later step doesn't start over. */
+    private fun release() {
+        queue = IntArray(1)
+    }
+
+    /** The queue's length: 1 once the build is whole and the queue let go. */
+    internal val queueSize: Int get() = queue.size
 
     /** The bound for [state] (the tile on each cell): the best of every copy. Needs [done]. */
     fun lowerBound(state: IntArray): Int {

@@ -41,6 +41,9 @@ class BestSolutionSolver(original: IntArray, ruledOut: Int = -1, best: List<Solu
     /** True when no further [step] can change the answer: it is proven, or the exact search doesn't run here. */
     val done: Boolean get() = provenShortest || (!exactRuns && bestLength != null)
 
+    /** How many table states are built so far (GH-282). */
+    internal val patternStatesBuilt: Int get() = patterns?.seen ?: 0
+
     /** The largest solution length proven impossible so far. */
     val ruledOut: Int get() = exact.ruledOut
 
@@ -50,9 +53,11 @@ class BestSolutionSolver(original: IntArray, ruledOut: Int = -1, best: List<Solu
         if (exact.solutionLength != null) {
             takeExact()
         } else {
-            if (bestLength == null) takeFast()
+            val fastPending = bestLength == null
+            if (fastPending) takeFast()
             if (exactRuns) {
-                buildPatterns(maxNodes)
+                // Not in the step that gave the first answer, so that answer isn't published later for it.
+                if (!fastPending) buildPatterns(maxNodes)
                 exact.step(maxNodes)
             }
             if (exact.solutionLength != null) takeExact()
