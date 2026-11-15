@@ -608,3 +608,27 @@ Planned in `/analyze`; the web client uses `NoopAnalyticsService` until an SDK i
 No new events or screen views. `screen_solution` gains `player_result` (`string`): `gave_up` (the solution screen was reached through Give Up), `solved` (the player solved the board, then opened Mordie's solution) or `unknown` (a solution-screen save from before this ticket, which keeps the line without the player's result). It lets `opened_from: load` and `startup_prompt` be split by whether the save carried a result.
 
 Not tracked: the player's move count on the solution screen (`game_given_up.move_count` and `board_solved.move_count` already report it when it happened, and a loaded save would only repeat an earlier game), the new Mordie line being shown (it follows from `screen_solution` and `player_result`), and how the result is stored in a save.
+
+## GH-272 (share the sender's progress in the link)
+
+Planned in `/analyze`; the web client uses `NoopAnalyticsService` until an SDK is wired up (GH-256).
+
+New event:
+
+### `share_progress_toggled`
+
+Fired when the sender flips the `Include my progress` toggle in the Share dialog. *(GH-272)*
+
+| Property | Type | Description |
+|---|---|---|
+| `enabled` | `boolean` | The toggle's new state. |
+| `progress` | `string` | What the link would carry: `solving`, `solved` or `gave_up`. |
+| `board_size` | `number` | The shared board's side. |
+| `input_method` | `string` | `keyboard` or `rich_ui`. |
+
+Additions to existing events:
+- `screen_share_dialog` gains `include_progress` (`boolean`): the toggle's state when the dialog opened (the remembered choice); always `false` at 0 moves.
+- `board_share_link_copied` gains `includes_progress` (`boolean`): whether the copied link carries the sender's progress.
+- `shared_board_opened` gains `progress` (`string`, only when `result` is `started`): `none` (the link has no progress), `solving`, `solved` or `gave_up` (Mordie's opening line shows that status), or `unreadable` (the progress was ignored).
+
+Not tracked: move counts (`board_solved.move_count` and `game_given_up.move_count` report them, and the link's contents are never sent), whether a receiver goes on to solve a game that came from a link (as in GH-267), the `gave_up` row with an unknown count (folded into `gave_up`), the toggle's remembered state at launch (`screen_share_dialog.include_progress` covers it), QR scans, Mordie's opening line being shown (it follows from `shared_board_opened.progress`), and hovering over or focusing the toggle.
