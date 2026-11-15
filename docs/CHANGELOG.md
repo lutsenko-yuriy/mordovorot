@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.45.1] — 2026-11-16 (PR #295 merged)
+
+### Added
+
+- [wip] [app] (PR #295) GH-288: the tutorial's board and rules, not shown yet (WU1 of 3; the screens, spec and glossary follow in WU2 and WU3).
+
 ## [0.45.0] — 2026-11-15 (PR #293 merged)
 
 ### Changed

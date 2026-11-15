@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-_(nothing in progress)_
+- GH-288: First-launch tutorial: Mordie guides a short game (WU1/3 merged; WU2, WU3 pending)
 
 ---
 
