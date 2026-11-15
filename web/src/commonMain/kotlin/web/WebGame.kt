@@ -78,13 +78,16 @@ class WebGame internal constructor(
     /** Backs the page's leave-site prompt. */
     fun hasUnsavedProgress(): Boolean = !updates.applying && viewModel.hasUnsavedProgress()
 
-    fun onArrow(arrow: Arrow, line: Int) {
-        if (playable) shiftLine(arrow, line, PointerShift.ARROW)
+    /** A click on an arrow; on a computer a mouse's puts focus on the board, so its keys work next (GH-287). */
+    fun onArrow(arrow: Arrow, line: Int, byMouse: Boolean = false) {
+        if (!playable) return
+        keys.onArrowPressed()
+        shiftLine(arrow, line, PointerShift.ARROW, focus = onBoard.takeIf { byMouse })
     }
 
     /** One step of the line [arrow] and [line] name, by [source], sliding it into place. */
-    internal fun shiftLine(arrow: Arrow, line: Int, source: ShiftSource) =
-        shift({ Announcements.shift(arrow.direction, line, it) }, Slides.ofArrow(arrow, line)) {
+    internal fun shiftLine(arrow: Arrow, line: Int, source: ShiftSource, focus: Focus? = null) =
+        shift({ Announcements.shift(arrow.direction, line, it) }, Slides.ofArrow(arrow, line), focus) {
             when (arrow) {
                 Arrow.LEFT -> viewModel.shiftLeft(line, source)
                 Arrow.RIGHT -> viewModel.shiftRight(line, source)
@@ -209,7 +212,7 @@ class WebGame internal constructor(
 
     /** Runs a shift on the unsolved board and renders, sliding [slide] and saying it in [words] (given
      *  the move count when the shift started a move), or the win. */
-    private fun shift(words: (newMove: Int?) -> String, slide: LineOffset? = null, action: () -> Unit) {
+    private fun shift(words: (newMove: Int?) -> String, slide: LineOffset? = null, focus: Focus? = null, action: () -> Unit) {
         status = null
         val before = viewModel.moveCount()
         action()
@@ -220,7 +223,7 @@ class WebGame internal constructor(
             updates.check(CheckTrigger.GAME_END)
             Announcements.solved(moves)
         } else keys.withTileNow(words(moves.takeIf { it != before }))
-        render(slide)
+        render(slide, focus.takeUnless { viewModel.isSolved() })
     }
 
     /** Runs a toolbar action, unless another action or a dialog is under way, then renders with
@@ -271,6 +274,7 @@ class WebGame internal constructor(
             announcement = saying,
             computer = computer,
             selection = keys.shownSelection(),
+            selectionShown = keys.outlined(),
             hints = when {
                 !computer -> null
                 viewModel.solution() != null -> KeyHints.SOLUTION

@@ -4,6 +4,7 @@ import kotlinx.browser.document
 import org.w3c.dom.Element
 import org.w3c.dom.HTMLButtonElement
 import org.w3c.dom.events.KeyboardEvent
+import org.w3c.dom.events.MouseEvent
 import web.a11y.hiddenFromReaders
 import web.a11y.keyShortcut
 import web.a11y.named
@@ -15,10 +16,13 @@ internal fun element(tag: String, cssClass: String? = null): Element =
 
 internal fun text(cssClass: String, content: String) = element("div", cssClass).apply { textContent = content }
 
-internal fun button(label: String, cssClass: String? = null, onClick: () -> Unit) =
+internal fun button(label: String, cssClass: String? = null, onClick: () -> Unit) = clickButton(label, cssClass) { onClick() }
+
+/** As above, with the click: a key's `detail` is 0, a mouse's isn't. */
+internal fun clickButton(label: String, cssClass: String? = null, onClick: (MouseEvent) -> Unit) =
     (element("button", cssClass) as HTMLButtonElement).apply {
         textContent = label
-        addEventListener("click", { onClick() })
+        addEventListener("click", { onClick(it as MouseEvent) })
     }
 
 /** A square button showing the inline [svg] icon, named [label] for readers and as a tooltip (GH-251). */

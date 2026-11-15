@@ -41,6 +41,8 @@ data class WebState(
     val computer: Boolean = false,
     /** The selected tile, on a computer during play (GH-171). */
     val selection: TileSelection? = null,
+    /** Whether the outlines on [selection] show (GH-287): after a select or shift key, until a press on a tile or an arrow. The selection drives the grid and the Tab stop either way. */
+    val selectionShown: Boolean = false,
     /** The key hints under the board, or the solution screen's keys, on a computer (GH-171). */
     val hints: List<KeyHint>? = null,
     /** The footer line, with the New version available notice once one is ready (GH-262). */

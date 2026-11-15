@@ -51,7 +51,7 @@ internal class DomBoard(private val root: HTMLElement, private val game: () -> W
         val side = state.side
         val disabled = !state.arrowsEnabled || state.dialog != null
         fun arrow(label: String, arrow: Arrow, line: Int) =
-            button(label, "arrow") { game().onArrow(arrow, line) }.focusKey(Focus.ArrowButton(arrow, line)).also {
+            clickButton(label, "arrow") { click -> game().onArrow(arrow, line, byMouse = click.detail > 0) }.focusKey(Focus.ArrowButton(arrow, line)).also {
                 it.disabled = disabled
                 named(it, Announcements.line(arrow.direction, line))
             }
@@ -73,7 +73,7 @@ internal class DomBoard(private val root: HTMLElement, private val game: () -> W
                 arrows(Arrow.RIGHT, "▶", "column"),
                 element("span"), arrows(Arrow.DOWN, "▼", "row"), element("span"),
             )
-            outlines = state.selection?.let { selectionOutlines(it).also(::append) }
+            outlines = state.selection?.let { selectionOutlines(it, state.selectionShown).also(::append) }
         }
     }
 
@@ -82,7 +82,7 @@ internal class DomBoard(private val root: HTMLElement, private val game: () -> W
         redrawTiles(state, offset)
         state.selection?.let { selection ->
             tiles?.let { activeCell(it, selection) }
-            outlines?.let { placeOutlines(it, selection) }
+            outlines?.let { placeOutlines(it, selection, state.selectionShown) }
         }
         state.boardName?.let { name -> tiles?.let { nameBoard(it, name) } }
     }
