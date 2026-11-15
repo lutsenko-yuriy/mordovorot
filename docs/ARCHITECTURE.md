@@ -56,7 +56,9 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                                # SavedMordie, GH-83, and the labels' wire name, GH-139)
 │       ├── SavedMordie.kt             # Original arrangement + Mordie's N + found flag (GH-83);
 │       │                                # Mordie's solution and the solution-screen flag (GH-126),
-│       │                                # whether the answer is proven shortest and R (GH-224)
+│       │                                # whether the answer is proven shortest and R (GH-224),
+│       │                                # and how the player's game ended (GH-273)
+│       ├── SavedPlayerResult.kt       # Gave up or solved, and the move count (GH-273)
 │       └── SavedMove.kt               # One step of that solution; mirrors mordie.SolutionMove (GH-126)
 ├── mordie/              # :shared:mordie (depends on kotlinx-coroutines-core)
 │   └── mordie/              # GH-83: the computer opponent - pure domain, no project imports
@@ -134,8 +136,9 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                             # its analytics, words its line and ending (GH-83)
 │       ├── MordieText.kt          # Every Mordie string (line bodies + the four endings), singular
 │       │                             # `1 move` included (GH-83)
-│       ├── SolutionScreen.kt      # The session's solution screen: its SolutionReplay, null off it.
-│       │                             # One per session (GH-126)
+│       ├── SolutionScreen.kt      # The session's solution screen: its SolutionReplay, null off it,
+│       │                             # and the PlayerResult it was reached with. One per session (GH-126, GH-273)
+│       ├── PlayerResult.kt        # How the player's game ended (gave up or solved) and its moves (GH-273)
 │       ├── TileLabels.kt          # The six label schemes: wireName (analytics, saves, the
 │       │                             # preference), title, maxSide, fits(side), label(tile, side), sampleRow.
 │       │                             # NUMBERS is the default (GH-139)

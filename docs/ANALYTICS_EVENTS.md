@@ -600,3 +600,11 @@ Additions to existing events:
 - `tile_labels_changed.from_source` takes a new value, `shared_link`: the game showed labels the receiver accepted from a link.
 
 Not tracked: QR scans of a labelled link (indistinguishable from a typed link, as in GH-243), which solved games came from a link (`board_solved.tile_labels` already gives difficulty by labels), the toggle's remembered state at launch (`screen_share_dialog.include_labels` covers it), and hovering over or focusing the toggle. The link and the board are never sent.
+
+## GH-273 (remember how a game ended before the solution screen)
+
+Planned in `/analyze`; the web client uses `NoopAnalyticsService` until an SDK is wired up (GH-256).
+
+No new events or screen views. `screen_solution` gains `player_result` (`string`): `gave_up` (the solution screen was reached through Give Up), `solved` (the player solved the board, then opened Mordie's solution) or `unknown` (a solution-screen save from before this ticket, which keeps the line without the player's result). It lets `opened_from: load` and `startup_prompt` be split by whether the save carried a result.
+
+Not tracked: the player's move count on the solution screen (`game_given_up.move_count` and `board_solved.move_count` already report it when it happened, and a loaded save would only repeat an earlier game), the new Mordie line being shown (it follows from `screen_solution` and `player_result`), and how the result is stored in a save.
