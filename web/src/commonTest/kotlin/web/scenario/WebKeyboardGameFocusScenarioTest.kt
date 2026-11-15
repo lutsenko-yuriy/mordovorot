@@ -9,7 +9,7 @@ import viewmodel.UnsolvableSaveChoice
 import web.Focus
 import web.WebDialog
 
-/** GH-277 scenarios: in keyboard mode, a dialog that ends in a new or loaded game puts focus on the
+/** GH-277 scenarios: in keyboard mode, a dialog that ends in a new, loaded or saved game puts focus on the
  *  board, so the board keys work at once. Cancelling still gives focus back to the opener. */
 class WebKeyboardGameFocusScenarioTest {
 
@@ -124,6 +124,55 @@ class WebKeyboardGameFocusScenarioTest {
         page.game.onSizeChosen(5)
 
         assertEquals(Focus.Board, page.state.focus)
+    }
+
+    @Test
+    fun `Save then a name gives the board focus`() = webTest {
+        val page = keyboardPage()
+
+        page.game.onSave()
+        page.game.onSaveAnswered("s")
+
+        assertEquals(Focus.Board, page.state.focus)
+    }
+
+    @Test
+    fun `a board key works right after Save and a name`() = webTest {
+        val page = keyboardPage()
+        page.game.onSave()
+        page.game.onSaveAnswered("s")
+
+        assertTrue(page.press("s", from = page.state.focus))
+    }
+
+    @Test
+    fun `Save then Cancel gives focus back to Save`() = webTest {
+        val page = keyboardPage()
+
+        page.game.onSave()
+        page.game.onSaveAnswered(null)
+
+        assertEquals(Focus.SaveButton, page.state.focus)
+    }
+
+    @Test
+    fun `Save with a name that has a space gives focus back to Save`() = webTest {
+        val page = keyboardPage()
+
+        page.game.onSave()
+        page.game.onSaveAnswered("a b")
+
+        assertEquals(Focus.SaveButton, page.state.focus)
+    }
+
+    @Test
+    fun `mouse mode keeps focus on Save after a save`() = webTest {
+        val page = WebHarness(backgroundScope).startOn(mixedUp)
+
+        page.game.onSave()
+        page.game.onSaveAnswered("s")
+
+        assertEquals(Focus.SaveButton, page.state.focus)
     }
 
     @Test

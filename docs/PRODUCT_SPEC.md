@@ -202,7 +202,8 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
     be solved`); to `Next ▶` after Give Up → Yes (keyboard mode: the board); to the start of the page after a startup dialog.
     In keyboard mode a dialog that ends in a new or loaded game puts focus on the board instead, so its keys work
     at once: New → a size, Load → a save, `Can't be solved` → Repair or New game, even when the size picker after
-    New game is cancelled, as that game still starts (GH-277). Cancel and Escape still go back to the button.
+    New game is cancelled, as that game still starts, and Save → a name that saves (GH-277). Cancel and Escape, and
+    a Save name that isn't usable, still go back to the button.
   - Focus rings show only once a key has been pressed, so a dialog's default control isn't ringed
     for mouse players.
 - **Focus after a press (GH-164):** a pressed arrow, toolbar button or solution-screen button keeps
@@ -226,8 +227,8 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   - **Toolbar:** every button shows its digit: `[ New 1 ][ Save 2 ][ Load 3 ][ Labels 4 ]`,
     `[ Share 7 ]`, `[ Give Up 5 ]` or `[ Mordie's solution 5 ]`, `[ Controls 6 ]`. The digits work wherever focus
     is, outside dialogs. In mouse mode only 6 works, and only its button shows its digit.
-  - **Board:** one Tab stop, focused at page load in keyboard mode, on entering the mode, after a new or
-    loaded game and when a dialog opened from it closes. While it has focus, right-handed: W/A/S/D move the selected tile,
+  - **Board:** one Tab stop, focused at page load in keyboard mode, on entering the mode, after a new, loaded or
+    saved game and when a dialog opened from it closes. While it has focus, right-handed: W/A/S/D move the selected tile,
     wrapping; H/← L/→ shift its row, K/↑ J/↓ its column. Left-handed: H/J/K/L or the arrows move it;
     A/D shift its row, W/S its column. Letters work in either case, and held keys repeat.
   - **Non-Latin keyboards (GH-200):** on a non-Latin system keyboard layout, a letter key on the board

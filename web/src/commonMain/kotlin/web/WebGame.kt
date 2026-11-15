@@ -149,7 +149,7 @@ class WebGame internal constructor(
             name == null -> {}
             // The name check alone allows spaces.
             name.any { it.isWhitespace() } -> showStatus("'$name' isn't a usable save name (no spaces) - not saved.")
-            else -> viewModel.saveGame(name)
+            else -> if (viewModel.saveGame(name)) closing = onBoard ?: closing
         }
     }
 
