@@ -1,100 +1,149 @@
 package web.scenario
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNull
+import viewmodel.TileLabels
+import web.Arrow
+import web.WebDialog
 
-/** GH-272 scenarios: opening a share link that carries the sender's progress, through [WebHarness]. Stubs until WU1. */
+/** GH-272 scenarios: opening a share link that carries the sender's progress, through [WebHarness]. */
 class WebSharedProgressScenarioTest {
+
+    private val usual = "Alright! Let's sort this one out!"
+    private val solving12 = "Okay, so your friend made 12 moves and did not solve the puzzle yet. Maybe we could help?"
+
+    /** [count] shifts of column 3, which never solve this board. */
+    private fun WebHarness.shifts(count: Int) = repeat(count) { game.onArrow(Arrow.UP, 3) }
 
     @Test
     fun `a link that says the sender is still solving puts that status in Mordie's opening`() = webTest {
-        // TODO: 1. Open a link with `p=n12`
-        // TODO: 2. Moves is 0 and the board is fresh
-        // TODO: 3. Mordie says `Okay, so your friend made 12 moves and did not solve the puzzle yet. Maybe we could help?`
+        val page = WebHarness(backgroundScope).startWithLink(4, ONE_SHIFT_FROM_SOLVED, progress = "n12")
+
+        assertEquals(0, page.state.moves)
+        assertEquals(shown(ONE_SHIFT_FROM_SOLVED), page.state.tiles)
+        assertEquals(solving12, page.state.mordie)
     }
 
     @Test
     fun `a link that says the sender solved it puts that status in Mordie's opening`() = webTest {
-        // TODO: 1. Open a link with `p=s12`
-        // TODO: 2. Mordie says `Okay, so your friend solved this one in 12 moves. Wanna beat this?`
+        val page = WebHarness(backgroundScope).startWithLink(4, ONE_SHIFT_FROM_SOLVED, progress = "s12")
+
+        assertEquals("Okay, so your friend solved this one in 12 moves. Wanna beat this?", page.state.mordie)
     }
 
     @Test
     fun `a link that says the sender gave up puts that status in Mordie's opening`() = webTest {
-        // TODO: 1. Open a link with `p=g12`
-        // TODO: 2. Mordie says `So after making 12 moves your friend gave up before finding the solution. Can we find one?`
+        val page = WebHarness(backgroundScope).startWithLink(4, ONE_SHIFT_FROM_SOLVED, progress = "g12")
+
+        assertEquals("So after making 12 moves your friend gave up before finding the solution. Can we find one?", page.state.mordie)
     }
 
     @Test
     fun `a gave-up link with no count drops the count from Mordie's line`() = webTest {
-        // TODO: 1. Open a link with `p=g`
-        // TODO: 2. Mordie says `So your friend gave up before finding the solution. Can we find one?`
+        val page = WebHarness(backgroundScope).startWithLink(4, ONE_SHIFT_FROM_SOLVED, progress = "g")
+
+        assertEquals("So your friend gave up before finding the solution. Can we find one?", page.state.mordie)
     }
 
     @Test
     fun `a count of 1 reads 1 move`() = webTest {
-        // TODO: 1. Open a link with `p=n1`
-        // TODO: 2. Mordie says `Okay, so your friend made 1 move and did not solve the puzzle yet. Maybe we could help?`
+        val page = WebHarness(backgroundScope).startWithLink(4, ONE_SHIFT_FROM_SOLVED, progress = "n1")
+
+        assertEquals("Okay, so your friend made 1 move and did not solve the puzzle yet. Maybe we could help?", page.state.mordie)
     }
 
     @Test
     fun `the sender's status stays through shift 4`() = webTest {
-        // TODO: 1. Open a link with `p=n12`
-        // TODO: 2. Make shifts 1 to 4, checking Mordie's line after each
-        // TODO: 3. The friend line is still shown
+        val page = WebHarness(backgroundScope).startWithLink(4, ONE_SHIFT_FROM_SOLVED, progress = "n12")
+
+        repeat(4) {
+            page.shifts(1)
+            assertEquals(solving12, page.state.mordie)
+        }
     }
 
     @Test
     fun `from shift 5 the normal Mordie rules apply`() = webTest {
-        // TODO: 1. Open a link with `p=n12`
-        // TODO: 2. Make 5 shifts
-        // TODO: 3. Mordie's line is no longer the friend line
+        val page = WebHarness(backgroundScope).startWithLink(4, ONE_SHIFT_FROM_SOLVED, progress = "n12")
+
+        page.shifts(5)
+
+        assertNotEquals(solving12, page.state.mordie)
     }
 
     @Test
     fun `a link without progress opens with Mordie's usual line`() = webTest {
-        // TODO: 1. Open a link with no `p=`
-        // TODO: 2. Mordie says `Alright! Let's sort this one out!`
+        val page = WebHarness(backgroundScope).startWithLink(4, ONE_SHIFT_FROM_SOLVED)
+
+        assertEquals(usual, page.state.mordie)
     }
 
     @Test
     fun `progress the page can't read is ignored without a word`() = webTest {
-        // TODO: 1. Open links with `p=x`, `p=n0`, `p=n012`, `p=n10000000` and `p=s`, one after the other
-        // TODO: 2. Each opens the board, Mordie shows the usual line, and no dialog or status message mentions it
+        for (progress in listOf("x", "n0", "n012", "n10000000", "s")) {
+            val page = WebHarness(backgroundScope).startWithLink(4, ONE_SHIFT_FROM_SOLVED, progress = progress)
+
+            assertNull(page.state.dialog, progress)
+            assertEquals("Started a shared 4x4 board.", page.state.status, progress)
+            assertEquals(usual, page.state.mordie, progress)
+        }
     }
 
     @Test
     fun `a new game after a progress link opens with Mordie's usual line`() = webTest {
-        // TODO: 1. Open a link with `p=n12`
-        // TODO: 2. Start a new game
-        // TODO: 3. Mordie says the usual line
+        val page = WebHarness(backgroundScope).startWithLink(4, ONE_SHIFT_FROM_SOLVED, progress = "n12")
+
+        page.game.onNew()
+        page.game.onSizeChosen(4)
+
+        assertEquals(usual, page.state.mordie)
     }
 
     @Test
     fun `a load at 0 moves after a progress link opens with Mordie's usual line`() = webTest {
-        // TODO: 1. Open a link with `p=n12`
-        // TODO: 2. Load a save that has 0 moves
-        // TODO: 3. Mordie says the usual line
+        val page = WebHarness(backgroundScope).startWithLink(4, ONE_SHIFT_FROM_SOLVED, progress = "n12")
+        page.seed("zero", ONE_SHIFT_FROM_SOLVED)
+
+        page.game.onLoad()
+        page.game.onLoadChosen("zero")
+
+        assertEquals(usual, page.state.mordie)
     }
 
     @Test
     fun `a link with labels and progress shows both`() = webTest {
-        // TODO: 1. Open a link with `l=pairs` and `p=g3`
-        // TODO: 2. The labels prompt shows
-        // TODO: 3. Answer Yes
-        // TODO: 4. Mordie shows the gave-up line
+        val page = WebHarness(backgroundScope).startWithLink(4, ONE_SHIFT_FROM_SOLVED, labels = "pairs", progress = "g3")
+
+        assertEquals(WebDialog.SharedLabels(TileLabels.PAIRS), page.state.dialog)
+        page.game.share.onSharedLabelsAnswered(true)
+
+        assertNull(page.state.dialog)
+        assertEquals(TileLabels.PAIRS, page.state.labels)
+        assertEquals("So after making 3 moves your friend gave up before finding the solution. Can we find one?", page.state.mordie)
     }
 
     @Test
     fun `a progress link met in an open tab works like one at load`() = webTest {
-        // TODO: 1. Start a game
-        // TODO: 2. A link with `p=s12` arrives (`hashchange`)
-        // TODO: 3. Confirm `Open the shared board?`
-        // TODO: 4. Mordie shows the solved line
+        val page = WebHarness(backgroundScope).startOn()
+        page.game.onArrow(Arrow.LEFT, 0)
+
+        page.changeLink(4, ONE_SHIFT_FROM_SOLVED, progress = "s12")
+        assertEquals(WebDialog.OpenShared(4), page.state.dialog)
+        page.game.share.onOpenAnswered(true)
+
+        assertNull(page.state.dialog)
+        assertEquals("Okay, so your friend solved this one in 12 moves. Wanna beat this?", page.state.mordie)
     }
 
     @Test
     fun `shared_board_opened tells what the link carried`() = webTest {
-        // TODO: 1. Open links with `p=n3`, `p=s3`, `p=g3`, `p=g`, no `p=` and `p=x`
-        // TODO: 2. The `shared_board_opened` events carry `progress` as `solving`, `solved`, `gave_up`, `gave_up`, `none` and `unreadable`
+        val cases = listOf("n3" to "solving", "s3" to "solved", "g3" to "gave_up", "g" to "gave_up", null to "none", "x" to "unreadable")
+        for ((sent, told) in cases) {
+            val page = WebHarness(backgroundScope).startWithLink(4, ONE_SHIFT_FROM_SOLVED, progress = sent)
+
+            assertEquals(told, page.ownProps("shared_board_opened").single()["progress"], "p=$sent")
+        }
     }
 }

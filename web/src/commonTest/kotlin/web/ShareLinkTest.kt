@@ -6,6 +6,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import storage.BoardLinkFormat
+import viewmodel.SharedProgress
 import viewmodel.TileLabels
 
 class ShareLinkTest {
@@ -145,5 +146,65 @@ class ShareLinkTest {
     @Test
     fun `a link of labels alone is not a share link`() {
         assertNull(ShareLink.read("#l=pairs"))
+    }
+
+    // --- the sender's progress (GH-272) ---
+
+    private fun progressOf(fragment: String) = assertIs<LinkBoard.Playable>(ShareLink.read(fragment)).progress
+
+    @Test
+    fun `a link with progress adds a letter and the count after the board`() {
+        assertEquals("${base}#b=$board&p=n12", ShareLink.of(base, 4, shifted, progress = SharedProgress.Solving(12)))
+        assertEquals("${base}#b=$board&p=s12", ShareLink.of(base, 4, shifted, progress = SharedProgress.Solved(12)))
+        assertEquals("${base}#b=$board&p=g12", ShareLink.of(base, 4, shifted, progress = SharedProgress.GaveUp(12)))
+        assertEquals("${base}#b=$board&p=g", ShareLink.of(base, 4, shifted, progress = SharedProgress.GaveUp(null)))
+        assertEquals("${base}#b=$board&l=pairs&p=n3", ShareLink.of(base, 4, shifted, TileLabels.PAIRS, SharedProgress.Solving(3)))
+    }
+
+    @Test
+    fun `each state reads back from its link`() {
+        for (sent in listOf(SharedProgress.Solving(12), SharedProgress.Solved(1), SharedProgress.GaveUp(9999999), SharedProgress.GaveUp(null))) {
+            val link = ShareLink.of(base, 4, shifted, progress = sent)
+
+            assertEquals(LinkProgress.Sent(sent), progressOf(link.substringAfter(base)), "$sent")
+        }
+    }
+
+    @Test
+    fun `a link without progress reads as none`() {
+        assertEquals(LinkProgress.None, progressOf("#b=$board"))
+    }
+
+    @Test
+    fun `progress that can't be read is unreadable, never an error`() {
+        for (value in listOf("", "x", "n", "s", "n0", "n012", "n00", "n10000000", "N12", "g-1", "n1.5", "n 1", "12", "gg", "g0")) {
+            assertEquals(LinkProgress.Unreadable, progressOf("#b=$board&p=$value"), "p=$value")
+        }
+    }
+
+    @Test
+    fun `progress may come before the board, and the first progress part wins`() {
+        assertEquals(LinkProgress.Sent(SharedProgress.Solved(5)), progressOf("#p=s5&b=$board"))
+        assertEquals(LinkProgress.Sent(SharedProgress.Solved(5)), progressOf("#b=$board&p=s5&p=n2"))
+        assertEquals(LinkProgress.Unreadable, progressOf("#b=$board&p=x&p=n2"))
+    }
+
+    @Test
+    fun `labels and progress read together`() {
+        val read = assertIs<LinkBoard.Playable>(ShareLink.read("#b=$board&l=pairs&p=g3"))
+
+        assertEquals(LinkLabels.Scheme(TileLabels.PAIRS), read.labels)
+        assertEquals(LinkProgress.Sent(SharedProgress.GaveUp(3)), read.progress)
+    }
+
+    @Test
+    fun `progress never changes a board's rejection`() {
+        assertEquals(LinkBoard.Rejected("invalid"), ShareLink.read("#b=!!!&p=n3"))
+        assertEquals(LinkBoard.Rejected("unsolvable"), ShareLink.read("#b=" + BoardLinkFormat.encode(3, intArrayOf(1, 0) + IntArray(7) { it + 2 }) + "&p=n3"))
+    }
+
+    @Test
+    fun `a link of progress alone is not a share link`() {
+        assertNull(ShareLink.read("#p=n3"))
     }
 }

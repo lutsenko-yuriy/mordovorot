@@ -5,6 +5,16 @@ sealed interface MordieLine {
     /** Shifts 0-4 of a fresh game. */
     data object Opening : MordieLine
 
+    /** Shifts 0-4 of a game opened from a share link that carries the sender's progress (GH-272). */
+    sealed interface Friend : MordieLine
+
+    data class FriendSolving(val moves: Int) : Friend
+
+    data class FriendSolved(val moves: Int) : Friend
+
+    /** [moves] is `null` when the link doesn't say. */
+    data class FriendGaveUp(val moves: Int?) : Friend
+
     /** Shifts 0-4 after loading a save Mordie was still searching in, at [moves]. */
     data class Resumed(val moves: Int) : MordieLine
 

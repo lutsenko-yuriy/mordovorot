@@ -127,4 +127,34 @@ class MordieTextTest {
         assertEquals("Cool, you matched me! 40 moves each!", MordieText.ending(unproven, 40))
         assertEquals("Sorry, but I win: 40 moves vs your 45.", MordieText.ending(unproven, 45))
     }
+
+    @Test
+    fun `the friend lines (GH-272)`() {
+        assertEquals(
+            "Okay, so your friend made 12 moves and did not solve the puzzle yet. Maybe we could help?",
+            MordieText.line(MordieLine.FriendSolving(12)),
+        )
+        assertEquals("Okay, so your friend solved this one in 12 moves. Wanna beat this?", MordieText.line(MordieLine.FriendSolved(12)))
+        assertEquals(
+            "So after making 12 moves your friend gave up before finding the solution. Can we find one?",
+            MordieText.line(MordieLine.FriendGaveUp(12)),
+        )
+        assertEquals(
+            "So your friend gave up before finding the solution. Can we find one?",
+            MordieText.line(MordieLine.FriendGaveUp(null)),
+        )
+    }
+
+    @Test
+    fun `the friend lines say 1 move`() {
+        assertEquals(
+            "Okay, so your friend made 1 move and did not solve the puzzle yet. Maybe we could help?",
+            MordieText.line(MordieLine.FriendSolving(1)),
+        )
+        assertEquals("Okay, so your friend solved this one in 1 move. Wanna beat this?", MordieText.line(MordieLine.FriendSolved(1)))
+        assertEquals(
+            "So after making 1 move your friend gave up before finding the solution. Can we find one?",
+            MordieText.line(MordieLine.FriendGaveUp(1)),
+        )
+    }
 }

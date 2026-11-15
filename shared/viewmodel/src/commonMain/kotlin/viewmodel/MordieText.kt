@@ -11,6 +11,13 @@ object MordieText {
     fun line(line: MordieLine): String = when (line) {
         MordieLine.Opening -> "Alright! Let's sort this one out!"
         is MordieLine.Resumed -> "Okay, so we stopped when I was at ${moves(line.moves)}! What was I doing?.."
+        is MordieLine.FriendSolving ->
+            "Okay, so your friend made ${moves(line.moves)} and did not solve the puzzle yet. Maybe we could help?"
+        is MordieLine.FriendSolved -> "Okay, so your friend solved this one in ${moves(line.moves)}. Wanna beat this?"
+        is MordieLine.FriendGaveUp -> line.moves.let {
+            if (it == null) "So your friend gave up before finding the solution. Can we find one?"
+            else "So after making ${moves(it)} your friend gave up before finding the solution. Can we find one?"
+        }
         is MordieLine.Progress ->
             (if (line.hard) "This one is hard! " else "") +
                 "I have already made ${moves(line.moves)} and have not solved it yet!"

@@ -134,7 +134,8 @@ internal class WebShareFlows(
                 val carried = (link.labels as? LinkLabels.Scheme)?.labels
                 // The labels prompt may follow, so the page doesn't blink between the two.
                 if (viewModel.hasUnsavedProgress() && !modal.ask<Boolean>(WebDialog.OpenShared(side), leadsOn = { it && carried != null })) return false
-                viewModel.newGameFrom(link.tiles)
+                val sent = (link.progress as? LinkProgress.Sent)?.progress
+                viewModel.newGameFrom(link.tiles, sent)
                 val own = viewModel.tileLabels()
                 val labels = when {
                     link.labels is LinkLabels.None -> "none"
@@ -142,7 +143,12 @@ internal class WebShareFlows(
                     carried == own -> "same"
                     else -> "differs"
                 }
-                analytics.track("shared_board_opened", mapOf("result" to "started", "board_size" to side, "labels" to labels))
+                val progress = when (link.progress) {
+                    LinkProgress.None -> "none"
+                    LinkProgress.Unreadable -> "unreadable"
+                    is LinkProgress.Sent -> link.progress.progress.analyticsName
+                }
+                analytics.track("shared_board_opened", mapOf("result" to "started", "board_size" to side, "labels" to labels, "progress" to progress))
                 val started = "Started a shared ${side}x$side board."
                 if (labels == "differs") {
                     // Not drawn on its own: the prompt's frame shows it, so a prompt that follows another doesn't blink.
