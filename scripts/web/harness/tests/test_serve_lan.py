@@ -182,9 +182,10 @@ class ServeLanFollowTest(ServeLanCase):
             taken.listen()
             result = subprocess.run(
                 ["bash", str(self.repo / "scripts/web/harness/serve_lan.sh"), str(taken.getsockname()[1])],
-                env={**os.environ, "SERVE_LAN_BIND": "127.0.0.1"}, capture_output=True, text=True, timeout=20,
+                env={**os.environ, "SERVE_LAN_BIND": "127.0.0.1", "SERVE_LAN_POLL_S": "0.2"}, capture_output=True, text=True, timeout=20,
             )
-        self.assertNotEqual(0, result.returncode)
+        self.assertEqual(1, result.returncode)
+        self.assertIn("Address already in use", result.stderr)
 
     def test_ctrl_c_stops_the_server(self):
         self.process.send_signal(signal.SIGINT)

@@ -78,6 +78,8 @@ trap 'kill "$server" 2>/dev/null' EXIT
 trap 'exit 130' INT TERM
 
 last="$(git -C "$project" rev-parse HEAD)"
+# A moment for the server to fail to start (the port is taken) before the first look at it.
+sleep 1
 # `wait` rather than a plain sleep, so Ctrl+C is not held up until the sleep ends.
 while kill -0 "$server" 2>/dev/null; do
   sleep "$poll" & wait $!
