@@ -69,9 +69,12 @@ class WebGame internal constructor(
             if (!share.openAtStartup()) viewModel.restoreOnStartup()
             share.openPending()
             dialogs.sayAskedNewGame()
-            render(focus = if (controls.mode == PlayMode.KEYBOARD) Focus.Board else Focus.PageStart)
+            render(focus = onBoard ?: Focus.PageStart)
         }
     }
+
+    /** Where keyboard mode's board has focus, the keys working there (GH-171); none in mouse mode. */
+    internal val onBoard get() = Focus.Board.takeIf { controls.mode == PlayMode.KEYBOARD }
 
     /** Backs the page's leave-site prompt. */
     fun hasUnsavedProgress(): Boolean = !updates.applying && viewModel.hasUnsavedProgress()
