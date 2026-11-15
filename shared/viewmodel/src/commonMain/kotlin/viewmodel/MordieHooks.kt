@@ -10,6 +10,7 @@ import mordie.SolutionMove
 import mordie.SolutionSource
 import storage.SavedMordie
 import storage.SavedMove
+import storage.SavedPlayerResult
 
 /** Mordie's part of [GameViewModelImpl] (GH-83): binds it to each game, tracks its analytics and
  *  words its line and ending. */
@@ -93,6 +94,7 @@ internal class MordieHooks(
         SavedMordie(
             snapshot.original, snapshot.moves, snapshot.found, solution, solutionScreen = solutionScreen.replay != null,
             provenShortest = snapshot.provenShortest, ruledOut = snapshot.ruledOut,
+            playerResult = solutionScreen.result?.let { SavedPlayerResult(it.gaveUp, it.moves) },
         )
     }
 

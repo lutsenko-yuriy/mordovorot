@@ -32,8 +32,15 @@ object MordieText {
         }
     }
 
-    /** The solution screen's line (GH-126), Mordie's solution being [length] moves long. */
-    fun solution(length: Int): String = "Here's how I did it in ${moves(length)}!"
+    /** The solution screen's line (GH-126), Mordie's solution being [length] moves long, led by the player's [result] (GH-273). */
+    fun solution(length: Int, result: PlayerResult? = null): String = "${resultSentence(result)}Here's how I did it in ${moves(length)}!"
+
+    private fun resultSentence(result: PlayerResult?) = when {
+        result == null -> ""
+        !result.gaveUp -> "You solved it in ${moves(result.moves)}. "
+        result.moves == 0 -> "You did not even start this one. "
+        else -> "You gave up after ${moves(result.moves)}. "
+    }
 
     private fun moves(count: Int) = if (count == 1) "1 move" else "$count moves"
 }

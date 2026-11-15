@@ -78,6 +78,12 @@ class MordieTextTest {
     fun `the solution screen's line, GH-126`() {
         assertEquals("Here's how I did it in 7 moves!", MordieText.solution(7))
         assertEquals("Here's how I did it in 1 move!", MordieText.solution(1))
+        assertEquals("Here's how I did it in 7 moves!", MordieText.solution(7, null))
+        assertEquals("You gave up after 14 moves. Here's how I did it in 9 moves!", MordieText.solution(9, PlayerResult(gaveUp = true, moves = 14)))
+        assertEquals("You solved it in 14 moves. Here's how I did it in 9 moves!", MordieText.solution(9, PlayerResult(gaveUp = false, moves = 14)))
+        assertEquals("You gave up after 1 move. Here's how I did it in 1 move!", MordieText.solution(1, PlayerResult(gaveUp = true, moves = 1)))
+        assertEquals("You solved it in 1 move. Here's how I did it in 2 moves!", MordieText.solution(2, PlayerResult(gaveUp = false, moves = 1)))
+        assertEquals("You did not even start this one. Here's how I did it in 2 moves!", MordieText.solution(2, PlayerResult(gaveUp = true, moves = 0)))
     }
 
     @Test

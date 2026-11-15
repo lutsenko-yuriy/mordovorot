@@ -142,7 +142,7 @@ class ViewModelGiveUpTest {
         assertEquals(0, viewModel.moveCount())
         assertFalse(viewModel.isSolved())
         assertEquals(GiveUpButton.HIDDEN, viewModel.giveUpButton())
-        assertEquals("Here's how I did it in 2 moves!", viewModel.mordieLine())
+        assertEquals("You gave up after 2 moves. Here's how I did it in 2 moves!", viewModel.mordieLine())
         assertNull(viewModel.mordieEnding())
     }
 
@@ -157,7 +157,7 @@ class ViewModelGiveUpTest {
             ),
             event("game_given_up"),
         )
-        assertEquals(mapOf("opened_from" to "give_up", "board_size" to 3, "solution_length" to 2), event("screen_solution"))
+        assertEquals(mapOf("opened_from" to "give_up", "player_result" to "gave_up", "board_size" to 3, "solution_length" to 2), event("screen_solution"))
         assertEquals(listOf("game_given_up", "screen_solution"), analytics.events.map { it.name }.takeLast(2))
     }
 
@@ -183,7 +183,7 @@ class ViewModelGiveUpTest {
 
         assertEquals(SolutionState(steps, current = null, atStart = true, atEnd = false, moves = moves), viewModel.solution())
         assertContentEquals(original, viewModel.boardState())
-        assertEquals(mapOf("opened_from" to "after_win", "board_size" to 3, "solution_length" to 2), event("screen_solution"))
+        assertEquals(mapOf("opened_from" to "after_win", "player_result" to "solved", "board_size" to 3, "solution_length" to 2), event("screen_solution"))
         assertEquals(0, count("game_given_up"))
     }
 
