@@ -1,0 +1,78 @@
+package web.tutorial
+
+import viewmodel.Direction
+import web.drag.Axis
+
+/** What a shift means to the tutorial (GH-288). */
+enum class Verdict {
+    /** Part of the asked shift: more tiles are still asked. */
+    COUNTS,
+
+    /** The last tiles of the asked shift: the step is over. */
+    DONE,
+
+    /** Not what is asked: the board stays as it was. */
+    BLOCKED,
+
+    /** Not a shift (a drag released at 0 tiles), or the guided steps are over. */
+    IGNORED,
+}
+
+/** Where the player is in the tutorial's four guided steps, and what each shift they make does to it (GH-288). */
+class TutorialProgress {
+
+    var step = 1
+        private set
+
+    /** Blocked shifts on [step]; [totalBlocked] is over the whole tutorial. */
+    var blockedInStep = 0
+        private set
+    var totalBlocked = 0
+        private set
+
+    private var remaining = asked?.tiles ?: 0
+    private var chosen: Direction? = null
+
+    /** The shift [step] asks for, with the tiles still to go; `null` once the guided steps are over. */
+    val asked: AskedShift? get() = TutorialScript.shifts.getOrNull(step - 1)
+
+    val tilesLeft get() = remaining
+
+    /** Whether [step] has had part of its shift made. */
+    val begun get() = asked?.let { remaining < it.tiles } == true
+
+    /** Takes a shift of [line] on [axis] by [steps] tiles (positive is right or down), as the viewModel would. */
+    fun check(axis: Axis, line: Int, steps: Int): Verdict {
+        val asked = asked
+        if (asked == null || steps == 0) return Verdict.IGNORED
+        val direction = directionOf(axis, steps)
+        val tiles = kotlin.math.abs(steps)
+        val wanted = chosen ?: asked.arrow.direction
+        val turnsEitherWay = asked.halfTurn && !begun
+        val counts = axis == asked.axis && line == asked.line && tiles <= remaining && (direction == wanted || turnsEitherWay)
+        if (!counts) return blocked()
+        chosen = direction
+        remaining -= tiles
+        if (remaining > 0) return Verdict.COUNTS
+        advance()
+        return Verdict.DONE
+    }
+
+    private fun blocked(): Verdict {
+        blockedInStep++
+        totalBlocked++
+        return Verdict.BLOCKED
+    }
+
+    private fun advance() {
+        step++
+        blockedInStep = 0
+        chosen = null
+        remaining = asked?.tiles ?: 0
+    }
+
+    private fun directionOf(axis: Axis, steps: Int) = when (axis) {
+        Axis.ROW -> if (steps > 0) Direction.RIGHT else Direction.LEFT
+        Axis.COLUMN -> if (steps > 0) Direction.DOWN else Direction.UP
+    }
+}
