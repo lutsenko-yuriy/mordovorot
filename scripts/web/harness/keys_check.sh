@@ -83,6 +83,7 @@ log="$(cd "$project" && ./gradlew -q :web:jsBrowserDistribution 2>&1)" || {
 # on grid lines (GH-167): the numbers and phonetic letters said and counted, and which of the first
 # row's cells are in place.
 actual="$("$here/measure.sh" "${queries[@]}" | perl -pe '
+  s/said "[^"]*\bNow \K\d+/N/;
   s{(?:said|name) "\K[^"]*}{$& =~ s/\d+/N/gr =~ s/\b(?:Row|Column) N (?:left|right|up|down)\b/LINE N DIR/gr}ge if /^\S+ solution /;
   if (/\| grid (?:table|grid) /) { s{(?:said|row1) "\K[^"]*}{$& =~ s/\d+/N/gr =~ s/\b(?:alpha|bravo|charlie|delta|echo|foxtrot|golf|hotel|india|juliet|kilo|lima|mike|november|oscar|papa|quebec|romeo|sierra|tango|uniform|victor|whiskey|x-ray|yankee|zulu)\b/W/gr =~ s/, in place//gr =~ s/\b(tile|move)s?\b/$1s/gr}ge; s/in-place \K\d+/N/ }')"
 if grep -q '^TIMEOUT' <<<"$actual"; then

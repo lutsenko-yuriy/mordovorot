@@ -44,7 +44,7 @@ class WebControlsScenarioTest {
     }
 
     @Test
-    fun `OK in Controls saves the layout and returns to the opener`() = webTest {
+    fun `OK in Controls saves the layout and puts focus on the board`() = webTest {
         val page = WebHarness(backgroundScope).startOn()
         page.game.controls.open()
         page.game.controls.onLayout(KeyboardLayout.LEFT_HANDED)
@@ -53,6 +53,17 @@ class WebControlsScenarioTest {
 
         assertNull(page.state.dialog)
         assertEquals("left_handed", page.preferences.get("keyboard_layout"))
+        assertEquals(Focus.Board, page.state.focus)
+    }
+
+    @Test
+    fun `Cancel in Controls returns focus to the opener`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.game.controls.open()
+        page.game.controls.onLayout(KeyboardLayout.LEFT_HANDED)
+
+        page.game.controls.onAnswered(ok = false)
+
         assertEquals(Focus.ControlsButton, page.state.focus)
     }
 

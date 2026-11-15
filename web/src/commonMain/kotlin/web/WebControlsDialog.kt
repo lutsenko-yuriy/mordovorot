@@ -14,11 +14,16 @@ internal class WebControlsDialog(
 
     val layout get() = keyboardLayout.current
 
-    /** `[ Controls 6 ]`, or 6 with [openedFrom] `shortcut`. Focus goes back to [opener]. */
+    /** `[ Controls 6 ]`, or 6 with [openedFrom] `shortcut`. Focus goes back to [opener], or to the board after OK (GH-287). */
     fun open(openedFrom: String = "toolbar", opener: Focus = Focus.ControlsButton) = game.runFlow(opener) {
         viewModel.controlsDialogOpened(openedFrom)
         val chosen = modal.ask<WebDialog.Controls?>(dialog(layout))
-        if (chosen == null) game.cancelled("controls") else keyboardLayout.choose(chosen.layout)
+        if (chosen == null) {
+            game.cancelled("controls")
+        } else {
+            keyboardLayout.choose(chosen.layout)
+            game.closing = game.onBoard ?: game.closing
+        }
     }
 
     /** A `Keyboard keys` option pressed: it becomes the marked one, and the key list follows. */
