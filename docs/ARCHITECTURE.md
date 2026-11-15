@@ -361,6 +361,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # animations; no arrows under `pointer: coarse` (GH-111);
 │                                       # tile labels grow with `--text-scale`, capped (GH-168)
 ├── src/jsMain/resources/dialogs.css    # GH-153: the modal dialogs, the Tile labels picker (GH-139)
+├── src/jsMain/resources/toggle.css     # GH-267: the Share dialog's `Include my tile labels` switch
 ├── src/jsMain/resources/solution.css   # GH-153: `.app.solution` and the step list (GH-126); its
 │                                       # tall `.steps` overrides the base `.steps` by coming later
 ├── src/commonTest/kotlin/web/scenario/ # GH-110 end to end: WebGame over startWebGame's wiring

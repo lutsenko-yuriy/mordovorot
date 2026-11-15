@@ -1,0 +1,57 @@
+/* The Share dialog's `Include my tile labels` toggle (GH-267): the name, then a switch that slides its knob. */
+.dialog button.toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8em;
+    background: transparent;
+    color: var(--ink);
+    box-shadow: inset 0 0 0 2px var(--frame);
+}
+
+.dialog button.toggle:hover {
+    background: var(--frame);
+}
+
+.dialog button.toggle .name {
+    text-align: left;
+}
+
+.dialog button.toggle .switch {
+    position: relative;
+    flex: none;
+    width: 2.6em;
+    height: 1.5em;
+    border-radius: 999px;
+    background: var(--frame);
+    box-shadow: inset 0 0 0 2px var(--muted);
+    transition: background 0.15s;
+}
+
+.dialog button.toggle .switch.on {
+    background: var(--button);
+    box-shadow: none;
+}
+
+.dialog button.toggle .knob {
+    position: absolute;
+    top: 0.2em;
+    left: 0.2em;
+    width: 1.1em;
+    height: 1.1em;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: transform 0.15s;
+}
+
+.dialog button.toggle .switch.on .knob {
+    background: var(--button-ink);
+    transform: translateX(1.1em);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dialog button.toggle .switch,
+    .dialog button.toggle .knob {
+        transition: none;
+    }
+}
