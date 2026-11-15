@@ -35,7 +35,9 @@ queries=(
   # GH-262: the New version available notice. Update with no moves reloads, so a shift first; the dialog opens on Cancel, Escape and Cancel return to Update.
   "report=keys&update=ready&keys=click:▶,focus:update,Enter,Escape,focus:update,Enter,Tab,Tab,Enter"
   # GH-243: Share opens on Copy link; Tab stays inside it; Escape puts focus back on Share.
-  "report=keys&keys=click:Share,Tab,Tab,Tab,Escape"
+  "report=keys&keys=click:Share,Tab,Tab,Tab,Tab,Escape"
+  # GH-267: the labels toggle is a check box; Space and Enter flip it, and focus stays on it.
+  "report=keys&keys=click:Share,focus:share-labels,Space,Enter,Escape"
   # GH-267: a link whose labels differ asks first, focus on Yes; Tab cycles inside; Escape is No; Enter on Yes accepts.
   "report=keys&mode=shared-labels&keys=Tab,Tab,Escape"
   "report=keys&mode=shared-labels&keys=Enter"

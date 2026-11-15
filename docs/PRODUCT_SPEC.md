@@ -503,12 +503,17 @@ Web client only.
   **Share this board** during play, after a win and on the solution screen. Escape and Close cancel it.
 - **The link** is the page's own address plus `#b=` and the board (ADR-0005): the board Mordie started
   from, or the board as it is when the start is unknown (an old save with moves, a repaired board). No
-  moves travel in it. It can carry the sender's tile labels as a further `&l=` part (GH-267, ADR-0005),
-  but only a link made by hand does so for now: the Share dialog's toggle comes with GH-267's last work unit. A 9x9 link is about 120 characters on the public site.
+  moves travel in it. With the dialog's toggle on it also carries the sender's tile labels as a further `&l=`
+  part (GH-267, ADR-0005): the labels shown on the board, so a Letters preference on 6x6 sends Numbers. A 9x9 link is about 120 characters on the public site.
 - **The dialog:** a line saying anyone who opens the link starts from the same NxN board (`from this NxN
   board as it is now` when the start is unknown); the link in a read-only field (named `Share link`,
-  selected when focused); a QR code of the same link, dark brown on the page's light colour in both themes (scanners want dark modules on light); `[ Copy link ]`
-  and `[ Close ]`. It opens focused on Copy link, and Tab stays inside it.
+  selected when focused); a QR code of the same link, dark brown on the page's light colour in both themes (scanners want dark modules on light); the toggle
+  `Include my tile labels (Pairs)`, naming the scheme shown; `[ Copy link ]` and `[ Close ]`. It opens focused on Copy
+  link, and Tab stays inside it: the field, the toggle, Copy link, Close.
+- **The labels toggle (GH-267):** a switch, off the first time and then as the sender last left it (kept in
+  `localStorage` like the other preferences, per address). Flipping it rebuilds the link and the QR code at
+  once, puts `Copy link` back (the link copied is now the other one) and keeps focus on the toggle;
+  Space and Enter flip it, and a screen reader calls it a check box named by its text.
 - **Copy link** puts the link on the clipboard. The button then reads `Copied!` and the status line
   says `Link copied.`; the dialog stays open. Where the browser refuses (a page served over plain http
   on a network address has no clipboard), the field is focused with the link selected, and the status
@@ -529,5 +534,5 @@ Web client only.
   shows `Can't open this board`, then the usual startup. Analytics: `shared_board_opened`,
   `shared_labels_accepted`, `screen_shared_labels_dialog`, `screen_share_dialog`, `board_share_link_copied`
   (`docs/ANALYTICS_EVENTS.md`).
-- Not shared: moves and Mordie's solution; labels only in a link made by hand (above). A pasted code or file, the native share sheet and
+- Not shared: moves and Mordie's solution. A pasted code or file, the native share sheet and
   saving the QR as an image are out of scope.

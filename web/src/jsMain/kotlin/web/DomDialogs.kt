@@ -7,6 +7,7 @@ import org.w3c.dom.events.KeyboardEvent
 import org.w3c.dom.events.MouseEvent
 import viewmodel.KeyboardLayout
 import viewmodel.UnsolvableSaveChoice
+import web.a11y.asCheckbox
 import web.a11y.asDialog
 import web.a11y.asRadio
 import web.a11y.asRadioGroup
@@ -117,6 +118,7 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                     text("message", dialog.note),
                     field,
                     *listOfNotNull(dialog.qr?.let(::qrElement)).toTypedArray(),
+                    labelsToggle(dialog, game),
                     actions(
                         // A click with no pointer is the keyboard's Enter or Space.
                         (button(if (dialog.copied) "Copied!" else "Copy link") {}).apply {
@@ -158,6 +160,16 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                 ),
             )
         }
+    }
+
+/** The Share dialog's `Include my tile labels` toggle (GH-267): a switch drawn in CSS, hidden from readers, and the text as its name. */
+private fun labelsToggle(dialog: WebDialog.Share, game: WebGame) =
+    button("", "toggle") { game.share.onLabelsToggled() }.focusKey(Focus.ShareLabels).apply {
+        asCheckbox(this, dialog.includeLabels)
+        append(
+            element("span", "name").apply { textContent = dialog.labelsToggle },
+            hiddenFromReaders(element("span", if (dialog.includeLabels) "switch on" else "switch")).apply { append(element("span", "knob")) },
+        )
     }
 
 /** A trash can, drawn in the button's text colour and hidden from readers by iconButton: the button carries the name. */

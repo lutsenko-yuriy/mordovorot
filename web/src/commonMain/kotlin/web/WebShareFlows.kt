@@ -15,7 +15,11 @@ internal class WebShareFlows(
     private val modal: WebModal,
     private val address: PageAddress,
     private val clipboard: Clipboard,
+    private val shareLabels: ShareLabelsPreference,
 ) {
+
+    /** Whether the Share dialog's toggle is on: read once, kept for the session and written on each flip (GH-267). */
+    private var includeLabels = shareLabels.load()
 
     /** The latest link that arrived while a dialog or action was under way. */
     private var pending: String? = null
@@ -47,15 +51,37 @@ internal class WebShareFlows(
 
     /** `[ Share ]`, or 7: the dialog with the link to the board Mordie started from, else to the board as it is. */
     fun open(opener: Focus = Focus.ShareButton) = game.runFlow(opener) {
+        val side = viewModel.squareSide()
+        val dialog = shareDialog(copied = false)
+        analytics.track("screen_share_dialog", mapOf("board_size" to side, "start_known" to dialog.startKnown, "include_labels" to dialog.includeLabels))
+        modal.ask<Unit>(dialog)
+        game.cancelled("share")
+    }
+
+    /** The dialog for the board as it is: the labels shown go in the link when the toggle is on (GH-267), so a
+     *  6x6 board with a Letters preference carries Numbers. */
+    private fun shareDialog(copied: Boolean): WebDialog.Share {
         val start = viewModel.startingBoard()
         val side = viewModel.squareSide()
-        val link = ShareLink.of(address.base(), side, start ?: viewModel.boardState())
-        val props = mapOf("board_size" to side, "start_known" to (start != null))
-        analytics.track("screen_share_dialog", props)
+        val labels = viewModel.tileLabels()
+        val link = ShareLink.of(address.base(), side, start ?: viewModel.boardState(), labels.takeIf { includeLabels })
         // Too long for the largest code (a fork's long address): the link alone.
         val qr = try { QrCode.encode(link) } catch (e: IllegalArgumentException) { null }
-        modal.ask<Unit>(WebDialog.Share(link, side, start != null, qr))
-        game.cancelled("share")
+        return WebDialog.Share(link, side, start != null, qr, copied, labels, includeLabels)
+    }
+
+    /** The toggle, flipped: the link and its code are rebuilt, and Copied! no longer holds, as the link copied is the
+     *  other one. Focus stays on the toggle. */
+    fun onLabelsToggled() {
+        val open = modal.shown as? WebDialog.Share ?: return
+        includeLabels = !includeLabels
+        shareLabels.save(includeLabels)
+        modal.update(shareDialog(copied = false))
+        analytics.track(
+            "share_labels_toggled",
+            mapOf("enabled" to includeLabels, "labels" to open.labels.wireName, "board_size" to open.side),
+        )
+        game.render(focus = Focus.ShareLabels)
     }
 
     /** Copy link, from the keyboard when [fromKeyboard] (a click with no pointer): the button reads
@@ -68,7 +94,10 @@ internal class WebShareFlows(
                 modal.update(open.copy(copied = true))
                 analytics.track(
                     "board_share_link_copied",
-                    mapOf("board_size" to open.side, "start_known" to open.startKnown, "via" to if (fromKeyboard) "enter_key" else "button"),
+                    mapOf(
+                        "board_size" to open.side, "start_known" to open.startKnown, "includes_labels" to open.includeLabels,
+                        "via" to if (fromKeyboard) "enter_key" else "button",
+                    ),
                 )
                 game.showStatus("Link copied.")
             } else {

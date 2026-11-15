@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.42.0] — 2026-11-15 (PR #270 merged)
+
+### Added
+
+- [user] (PR #270) GH-267: the Share dialog has an `Include my tile labels (<scheme>)` toggle. On, the link carries the labels shown on the board, and a receiver is asked whether to use them for that game. Off by default, remembered.
+- [non-user] (PR #270) GH-267 (WU2): the harness gets a keys_check query for the toggle, and its styles move to their own `toggle.css`.
+
 ## [0.41.1] — 2026-11-14 (PR #269 merged)
 
 ### Added

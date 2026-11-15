@@ -202,6 +202,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── WebSolutionFlows.kt # WebGame's Give Up and the solution screen's replay (GH-126, split out in GH-171)
 │   ├── WebControlsDialog.kt # The Controls dialog's flow over WebGame's modal and the session's mode (GH-171)
 │   ├── PlayMode.kt / PlayModePreference.kt # Mouse or keyboard, kept under `input_mode` (GH-171)
+│   ├── ShareLabelsPreference.kt # GH-267: the Share dialog's `Include my tile labels` toggle, on or off under `share_labels`, read once per session
 │   ├── PressedWith.kt   # The session's last input, read per event as input_method (GH-171)
 │   ├── ShareLink.kt     # GH-243 (WU1): `<page address>#b=<board>` built and read; playable, or rejected
 │   │                      # as invalid / unsupported_size / unsolvable. storage.BoardLinkFormat (ADR-0005) holds the board's bits.
@@ -210,7 +211,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │                      # imports only the standard library, a boundary test checks it (as web.a11y)
 │   ├── Clipboard.kt     # GH-243 (WU3): copy(text, done), which may be refused; DomClipboard (jsMain) tries the async API, then the old copy command on the selected link field
 │   ├── PageAddress.kt   # GH-243 (WU2): the address bar's base, fragment and clearFragment (DomPageAddress in jsMain; a fake in the harness)
-│   ├── WebShareFlows.kt # GH-243 (WU2): opening a link at startup and on hashchange, the Can't open and Open the shared board dialogs, and (GH-267) the Use the sender's labels prompt over the started board; (WU3) the Share dialog and Copy link, and a Clipboard seam (DomClipboard in jsMain; a fake in the harness)
+│   ├── WebShareFlows.kt # GH-243 (WU2): opening a link at startup and on hashchange, the Can't open and Open the shared board dialogs, and (GH-267) the Use the sender's labels prompt over the started board, and the labels toggle's flip; (WU3) the Share dialog and Copy link, and a Clipboard seam (DomClipboard in jsMain; a fake in the harness)
 │   ├── WebKeys.kt       # A key outside a dialog to a PageKey: ToolbarButton's digits, 0, or a shared
 │   │                    # BoardKey or SolutionKey while the board has focus (GH-171); a non-Latin
 │   │                    # key counts as the Latin letter at its position (GH-200)
@@ -360,6 +361,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # animations; no arrows under `pointer: coarse` (GH-111);
 │                                       # tile labels grow with `--text-scale`, capped (GH-168)
 ├── src/jsMain/resources/dialogs.css    # GH-153: the modal dialogs, the Tile labels picker (GH-139)
+├── src/jsMain/resources/toggle.css     # GH-267: the Share dialog's `Include my tile labels` switch
 ├── src/jsMain/resources/solution.css   # GH-153: `.app.solution` and the step list (GH-126); its
 │                                       # tall `.steps` overrides the base `.steps` by coming later
 ├── src/commonTest/kotlin/web/scenario/ # GH-110 end to end: WebGame over startWebGame's wiring

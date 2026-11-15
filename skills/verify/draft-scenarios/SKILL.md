@@ -42,6 +42,13 @@ For each scenario present:
 2. **Description** — one sentence on what behaviour it verifies.
 3. **Steps** — a numbered list of the interactions and assertions in order (e.g. "1. Seed a stopped pact with an existing note", "2. Open pact detail", "3. Verify note field is pre-populated", "4. Edit the text — Save button becomes enabled", "5. Tap Save — note is persisted in the repository").
 
+   Steps SHOULD be atomic and quick to skim (GH-267):
+   - One step is one user action or one observable result. A step with "and", or one that bundles several actions or assertions, is split.
+   - A scenario of about six steps or more is split into two scenarios, each named for its behaviour, so the names alone give the feature's outline.
+   - An analytics assertion is one step naming the event ("the `share_labels_toggled` event is sent"); the exact properties live in `docs/ANALYTICS_EVENTS.md`, and `implement` takes them from there.
+
+   These are SHOULDs: break one when there is a good reason, and say which and why when presenting the scenario.
+
 This level of detail lets the user verify the test logic before anything is written to disk.
 
 ### 5. Write the scenarios

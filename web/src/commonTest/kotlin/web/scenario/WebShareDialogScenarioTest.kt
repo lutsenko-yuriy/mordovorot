@@ -38,7 +38,7 @@ class WebShareDialogScenarioTest {
         assertEquals(ShareLinkOf(page, ONE_SHIFT_FROM_SOLVED), page.share.link)
         assertTrue(page.share.note.endsWith("starts from the same 4x4 board."))
         assertEquals(Focus.CopyLink, page.state.focus)
-        assertEquals(listOf(mapOf("board_size" to 4, "start_known" to true)), page.ownProps("screen_share_dialog"))
+        assertEquals(listOf(mapOf("board_size" to 4, "start_known" to true, "include_labels" to false)), page.ownProps("screen_share_dialog"))
     }
 
     @Test
@@ -68,7 +68,7 @@ class WebShareDialogScenarioTest {
 
         assertEquals(ShareLinkOf(page, current), page.share.link)
         assertTrue(page.share.note.endsWith("starts from this 4x4 board as it is now."))
-        assertEquals(listOf(mapOf("board_size" to 4, "start_known" to false)), page.ownProps("screen_share_dialog"))
+        assertEquals(listOf(mapOf("board_size" to 4, "start_known" to false, "include_labels" to false)), page.ownProps("screen_share_dialog"))
     }
 
     @Test
@@ -105,7 +105,7 @@ class WebShareDialogScenarioTest {
         assertEquals(listOf(link), page.clipboard.copied)
         assertTrue(page.share.copied)
         assertEquals("Link copied.", page.state.status)
-        assertEquals(listOf(mapOf("board_size" to 4, "start_known" to true, "via" to "button")), page.ownProps("board_share_link_copied"))
+        assertEquals(listOf(mapOf("board_size" to 4, "start_known" to true, "includes_labels" to false, "via" to "button")), page.ownProps("board_share_link_copied"))
 
         page.game.share.onCopyLink(fromKeyboard = true)
         assertEquals("enter_key", page.props("board_share_link_copied").last()["via"])
