@@ -24,6 +24,15 @@ class IdaStarSolver(original: IntArray, ruledOut: Int = -1) {
     /** Moves are numbered row moves first, then column moves; each axis has [movesPerAxis]. */
     private val movesPerAxis = n * movesPerLine
 
+    // Tables instead of `/` and `%` in the node loop, which a phone browser that doesn't compile scripts runs
+    // slowly (GH-282). [lines] is MoveMetricHeuristic's ceil(wrong / n).
+    private val homeRow = IntArray(n * n) { it / n }
+    private val homeCol = IntArray(n * n) { it % n }
+    private val moveLine = IntArray(2 * movesPerAxis) { (it % movesPerAxis) / movesPerLine }
+    private val moveAmount = IntArray(2 * movesPerAxis) { it % movesPerLine + 1 }
+    private val wrap = IntArray(2 * n) { it % n }
+    private val lines = IntArray(n * n + 1) { (it + n - 1) / n }
+
     private var wrongRow = 0
     private var wrongCol = 0
 
@@ -47,8 +56,8 @@ class IdaStarSolver(original: IntArray, ruledOut: Int = -1) {
 
     init {
         for (i in board.indices) {
-            if (board[i] / n != i / n) wrongRow++
-            if (board[i] % n != i % n) wrongCol++
+            if (homeRow[board[i]] != i / n) wrongRow++
+            if (homeCol[board[i]] != i % n) wrongCol++
         }
         val h0 = heuristic()
         bound = maxOf(h0, ruledOut + 1)
@@ -78,14 +87,15 @@ class IdaStarSolver(original: IntArray, ruledOut: Int = -1) {
             return
         }
         cursor[depth] = move + 1
-        apply(move, forward = true)
-        val h = heuristic()
+        // The child's counts are read off the moved line before anything is rotated: most children are cut here.
+        val delta = shiftDelta(move, amountOf(move))
+        val h = if (isRow(move)) lines[wrongRow] + lines[wrongCol + delta] else lines[wrongRow + delta] + lines[wrongCol]
         val f = depth + 1 + h
         if (f > bound) {
             if (f < nextBound) nextBound = f
-            apply(move, forward = false)
             return
         }
+        apply(move, forward = true)
         applied[depth] = move
         if (h == 0) {
             solutionLength = depth + 1
@@ -128,30 +138,39 @@ class IdaStarSolver(original: IntArray, ruledOut: Int = -1) {
     }
 
     private fun isRow(move: Int) = move < movesPerAxis
-    private fun lineOf(move: Int) = (move % movesPerAxis) / movesPerLine
-    private fun amountOf(move: Int) = move % movesPerLine + 1
+    private fun lineOf(move: Int) = moveLine[move]
+    private fun amountOf(move: Int) = moveAmount[move]
+
+    /** How much a rotation of [move]'s line by [k] changes the wrong-column count (a row move) or the
+     *  wrong-row count (a column move), without rotating: only the n tiles of the line move. */
+    private fun shiftDelta(move: Int, k: Int): Int {
+        val isRow = isRow(move)
+        val first = if (isRow) lineOf(move) * n else lineOf(move)
+        val stride = if (isRow) 1 else n
+        var delta = 0
+        for (j in 0 until n) {
+            val tile = board[first + j * stride]
+            val home = if (isRow) homeCol[tile] else homeRow[tile]
+            if (home != j) delta--
+            if (home != wrap[j + k]) delta++
+        }
+        return delta
+    }
 
     /** Rotates in place, keeping the wrong-row/column counts current: a row rotation only
      *  changes the columns of its own tiles, a column rotation only their rows. */
     private fun apply(move: Int, forward: Boolean) {
         val isRow = isRow(move)
-        val index = lineOf(move)
+        val first = if (isRow) lineOf(move) * n else lineOf(move)
+        val stride = if (isRow) 1 else n
         val k = if (forward) amountOf(move) else n - amountOf(move)
-        for (j in 0 until n) {
-            val at = if (isRow) index * n + j else j * n + index
-            if (isRow && board[at] % n != j) wrongCol--
-            if (!isRow && board[at] / n != j) wrongRow--
-            scratch[(j + k) % n] = board[at]
-        }
-        for (j in 0 until n) {
-            val at = if (isRow) index * n + j else j * n + index
-            board[at] = scratch[j]
-            if (isRow && board[at] % n != j) wrongCol++
-            if (!isRow && board[at] / n != j) wrongRow++
-        }
+        val delta = shiftDelta(move, k)
+        for (j in 0 until n) scratch[wrap[j + k]] = board[first + j * stride]
+        for (j in 0 until n) board[first + j * stride] = scratch[j]
+        if (isRow) wrongCol += delta else wrongRow += delta
     }
 
-    private fun heuristic() = MoveMetricHeuristic.of(n, wrongRow, wrongCol)
+    private fun heuristic() = lines[wrongRow] + lines[wrongCol]
 
     private companion object {
         const val INITIAL_DEPTH = 32

@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.44.2] — 2026-11-15 (PR #285 merged)
+
+### Changed
+
+- [wip] [app] (PR #285) GH-282: the exact search spends less per node (same results, about twice as fast on desktop).
+
 ## [0.44.1] — 2026-11-15 (PR #284 merged)
 
 ### Changed
