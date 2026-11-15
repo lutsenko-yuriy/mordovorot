@@ -30,8 +30,8 @@ internal class WebShareFlows(
 
     /** The link in the address at startup; whether it started a board. */
     suspend fun openAtStartup(): Boolean {
-        // The address holds the latest link, so one that waited as pending is the same (the tutorial's Skip, GH-288).
-        pending = null
+        // A link that waited as pending and is still in the address is this one (the tutorial's Skip, GH-288); a pasted one the address has moved on from still waits.
+        if (pending == address.fragment()) pending = null
         return openLink(address.fragment())
     }
 

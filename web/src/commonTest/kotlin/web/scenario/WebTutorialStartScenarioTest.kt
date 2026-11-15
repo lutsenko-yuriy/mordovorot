@@ -206,6 +206,18 @@ class WebTutorialStartScenarioTest {
     }
 
     @Test
+    fun `a link pasted mid-tutorial and then left still waits through Skip`() = webTest {
+        val page = tutorialPage(backgroundScope)
+        page.changeLink(4, ONE_SHIFT_FROM_SOLVED)
+        page.changeFragment("")
+
+        page.game.tutorial.onSkip()
+        page.game.onSizeChosen(null)
+
+        assertEquals(shown(ONE_SHIFT_FROM_SOLVED), page.state.tiles)
+    }
+
+    @Test
     fun `Skip with a rejected link shows the notice, then the size picker`() = webTest {
         val page = WebHarness(backgroundScope, firstLaunch = true).startWithLink(3, UNSOLVABLE_3X3)
 

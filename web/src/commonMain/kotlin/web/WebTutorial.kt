@@ -30,7 +30,7 @@ internal class WebTutorial(
     /** The axis of the line a blocked shift said to shift, until the next shift that counts or is blocked. */
     private var blockedAxis: Axis? = null
 
-    /** What [allows] said about the shift now being made. */
+    /** What [take] said about the shift now being made. */
     private var verdict = Verdict.IGNORED
     private var pause: Job? = null
 
