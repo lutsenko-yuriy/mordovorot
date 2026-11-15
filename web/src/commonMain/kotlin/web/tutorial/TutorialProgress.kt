@@ -33,6 +33,12 @@ class TutorialProgress {
     var totalBlocked = 0
         private set
 
+    /** The step [check] last returned [Verdict.DONE] for, and the shifts blocked on it: [step] has moved on by then. */
+    var completedStep = 0
+        private set
+    var completedBlocked = 0
+        private set
+
     private var remaining = asked?.tiles ?: 0
     private var chosen: Direction? = null
 
@@ -44,9 +50,11 @@ class TutorialProgress {
     /** Whether [step] has had part of its shift made. */
     val begun get() = asked?.let { remaining < it.tiles } == true
 
-    /** Takes a shift of [line] on [axis] by [steps] tiles (positive is right or down), as the viewModel would. */
-    fun check(axis: Axis, line: Int, steps: Int): Verdict {
+    /** Takes a shift of [line] on [axis] by [rawSteps] tiles (positive is right or down), as the viewModel would.
+     *  A drag's count is read the short way round, so 3 right is 1 left. */
+    fun check(axis: Axis, line: Int, rawSteps: Int): Verdict {
         val asked = asked
+        val steps = shortWay(rawSteps)
         if (asked == null || steps == 0) return Verdict.IGNORED
         val direction = DragShift(axis, line, steps).direction
         val tiles = abs(steps)
@@ -67,7 +75,14 @@ class TutorialProgress {
         return Verdict.BLOCKED
     }
 
+    private fun shortWay(steps: Int): Int {
+        val turned = (steps % TutorialScript.SIDE + TutorialScript.SIDE) % TutorialScript.SIDE
+        return if (turned > TutorialScript.SIDE / 2) turned - TutorialScript.SIDE else turned
+    }
+
     private fun advance() {
+        completedStep = step
+        completedBlocked = blockedInStep
         step++
         blockedInStep = 0
         chosen = null

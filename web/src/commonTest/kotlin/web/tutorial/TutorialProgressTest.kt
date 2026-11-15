@@ -122,4 +122,35 @@ class TutorialProgressTest {
         assertEquals(1, progress.blockedInStep)
         assertEquals(3, progress.totalBlocked)
     }
+
+    @Test
+    fun `a finished step is kept with its blocked shifts after step has moved on`() {
+        progress.check(ROW, 1, 1)
+        progress.check(ROW, 0, -2)
+
+        assertEquals(DONE, progress.check(ROW, 0, -1))
+
+        assertEquals(2, progress.step)
+        assertEquals(1, progress.completedStep)
+        assertEquals(2, progress.completedBlocked)
+    }
+
+    @Test
+    fun `a drag is read the short way round`() {
+        assertEquals(DONE, progress.check(ROW, 0, 3))
+    }
+
+    @Test
+    fun `a drag of 3 on step 3 is 1 the other way, which begins the half turn`() {
+        atStep(3)
+
+        assertEquals(COUNTS, progress.check(ROW, 2, 3))
+        assertEquals(1, progress.tilesLeft)
+    }
+
+    @Test
+    fun `a drag of a whole turn is not a shift`() {
+        assertEquals(IGNORED, progress.check(ROW, 0, 4))
+        assertEquals(0, progress.totalBlocked)
+    }
 }
