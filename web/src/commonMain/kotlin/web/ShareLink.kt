@@ -38,8 +38,8 @@ sealed interface LinkBoard {
 
 /** The share link (GH-243, ADR-0005): the page's address and `#b=` and the board; the fragment, so the server
  *  never sees it. `&l=` adds the tile labels' wire name (GH-267), `&p=` the sender's progress: a letter (`n` not
- *  solved yet, `s` solved, `g` gave up) and the move count, 1 to 9999999; `g` alone is a count not known (GH-272). Other `&key=value` parts are ignored, which
- *  leaves room for more later. */
+ *  solved yet, `s` solved, `g` gave up) and the move count, 1 to 9999999; `g` alone is a count not known (GH-272).
+ *  Other `&key=value` parts are ignored, which leaves room for more later. */
 object ShareLink {
     private const val BOARD_KEY = "b="
     private const val LABELS_KEY = "l="
