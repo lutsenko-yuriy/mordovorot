@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-- GH-282: Mordie's exact search does not advance on the phone (WU1/2 merged; WU2 pending)
+_(nothing in progress)_
 
 ---
 
