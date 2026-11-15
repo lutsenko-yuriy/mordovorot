@@ -98,6 +98,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-262: Offline play and a New version available notice](GH-262.md)
 - [GH-267: Share tile labels in the share link](GH-267.md)
 - [GH-273: Remember how a game ended before the solution screen](GH-273.md)
+- [GH-277: Keyboard mode: the board has focus after a new, loaded or saved game](GH-277.md)
 - [GH-41: Kotlin Multiplatform shared modules: Core, Analytics, Mordie, Storage, ViewModel](GH-41.md)
 - [GH-6: Save and load game state to/from local files](GH-6.md)
 - [GH-62: Move counter](GH-62.md)
