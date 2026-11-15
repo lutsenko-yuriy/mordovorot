@@ -1,7 +1,6 @@
 package web
 
 import analytics.AnalyticsService
-import kotlin.math.abs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
@@ -12,10 +11,7 @@ import viewmodel.SessionKeyboardLayout
 import viewmodel.ShiftSource
 import viewmodel.UnsolvableSaveChoice
 import web.a11y.Announcements
-import web.drag.Axis
-import web.drag.LineDrag
 import web.drag.LineOffset
-import web.drag.direction
 
 /** The browser's View (GH-110): takes the page's intents, runs them on [viewModel] and renders a
  *  [WebState] after every change. A dialog is modal: while one is open, or a toolbar action or the
@@ -46,15 +42,15 @@ class WebGame internal constructor(
     internal val updates = WebUpdateFlows(this, viewModel, analytics, modal, updates, appVersion)
     private val keys = WebKeyPlay(this, viewModel, pressedWith, computer)
     private val requests = WebRequestRouter(this)
+    private val dragging = WebDragFlows(this, viewModel)
     internal var status: String? = null
     /** The toolbar action or startup restore under way, if any. */
     private var flow: Job? = null
     /** Where focus goes once [flow] ends: back to the button that started it, unless it moves on. */
     internal var closing: Focus = Focus.PageStart
-    private var drag: LineDrag? = null
     /** What the next frame says (GH-166); [render] hands it on once. */
     internal var saying: String? = null
-    internal val idle get() = modal.shown == null && flow?.isActive != true && drag == null
+    internal val idle get() = modal.shown == null && flow?.isActive != true && !dragging.active
     /** Mordie's solution screen (GH-126): the board is the replay's, not the player's. */
     internal val playable get() = idle && !viewModel.isSolved() && viewModel.solution() == null
 
@@ -96,39 +92,13 @@ class WebGame internal constructor(
             }
         }
 
-    /** A press on the tile at [row], [col], at ([x], [y]) on a board with tiles [pitch] apart, in pixels. */
-    fun onDragStart(row: Int, col: Int, x: Double, y: Double, pitch: Double) {
-        if (!playable) return
-        drag = LineDrag(row, col, x, y, pitch, viewModel.squareSide())
-    }
+    fun onDragStart(row: Int, col: Int, x: Double, y: Double, pitch: Double) = dragging.onStart(row, col, x, y, pitch)
 
-    fun onDragMove(x: Double, y: Double) {
-        val drag = drag ?: return
-        val before = drag.offset
-        drag.move(x, y)
-        if (drag.offset != before) render()
-    }
+    fun onDragMove(x: Double, y: Double) = dragging.onMove(x, y)
 
-    /** The release: the line snaps to the nearest tile, and the whole drag is one shift. */
-    fun onDragEnd() {
-        val released = drag?.release() ?: return onDragCancel()
-        drag = null
-        shift({ Announcements.drag(released.direction, released.line, abs(released.steps), it) }) {
-            when (released.axis) {
-                Axis.ROW -> viewModel.shiftRow(released.line, released.steps, PointerShift.DRAG)
-                Axis.COLUMN -> viewModel.shiftColumn(released.line, released.steps, PointerShift.DRAG)
-            }
-        }
-        share.openWaiting()
-    }
+    fun onDragEnd() = dragging.onEnd()
 
-    /** Drops the drag, leaving the board as it was. */
-    fun onDragCancel() {
-        val moved = drag?.offset != null
-        drag = null
-        if (moved) render()
-        share.openWaiting()
-    }
+    fun onDragCancel() = dragging.onCancel()
 
     /** A key outside a dialog, with focus on the control keyed [from] (GH-171); whether the game
      *  took it. */
@@ -212,7 +182,7 @@ class WebGame internal constructor(
 
     /** Runs a shift on the unsolved board and renders, sliding [slide] and saying it in [words] (given
      *  the move count when the shift started a move), or the win. */
-    private fun shift(words: (newMove: Int?) -> String, slide: LineOffset? = null, focus: Focus? = null, action: () -> Unit) {
+    internal fun shift(words: (newMove: Int?) -> String, slide: LineOffset? = null, focus: Focus? = null, action: () -> Unit) {
         status = null
         val before = viewModel.moveCount()
         action()
@@ -264,7 +234,7 @@ class WebGame internal constructor(
             solved = solved,
             status = status,
             dialog = modal.shown,
-            drag = drag?.offset,
+            drag = dragging.offset,
             giveUp = viewModel.giveUpButton(),
             solution = viewModel.solution(),
             slide = slide,

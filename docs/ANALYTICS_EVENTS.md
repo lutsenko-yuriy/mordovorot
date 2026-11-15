@@ -642,3 +642,40 @@ No new events or screen views. Retired, and kept above as history:
 `board_solved.shift_keys` is no longer "keyboard mode only": every game can report it, and it is still sent only when the solving shift is a keyboard one. `input_method` is unchanged (the press that fired the event), so `screen_controls_dialog.input_method` is the press that opened the dialog, not a mode.
 
 Not tracked: the selection showing or hiding after key or mouse use, how often the digits and key hints are used (`input_method` already shows keyboard use), and the one-time drop of a stored keyboard mode.
+
+## GH-288 (first-launch tutorial)
+
+Planned in `/analyze`; the web client uses `NoopAnalyticsService` until an SDK is wired up (GH-256). No new screen views: the tutorial is a panel, not a screen.
+
+### `tutorial_started`
+
+Fired when the tutorial begins. After a reload halfway it fires again, since the tutorial restarts from step 1. *(GH-288)*
+
+| Property | Type | Description |
+|---|---|---|
+| `source` | `string` | `first_launch`. GH-289 adds `replay`. |
+
+### `tutorial_step_completed`
+
+Fired when the player makes the asked-for shift of a guided step. *(GH-288)*
+
+| Property | Type | Description |
+|---|---|---|
+| `step` | `number` | 1 to 4. |
+| `blocked_shifts` | `number` | Other shifts blocked on this step. |
+
+### `tutorial_ended`
+
+Fired when the tutorial's last step ends (the panel hides) or the player skips it. *(GH-288)*
+
+| Property | Type | Description |
+|---|---|---|
+| `result` | `string` | `completed` or `skipped`. |
+| `last_step` | `number` | 1 to 6: the step the player was on. |
+| `blocked_shifts` | `number` | Blocked shifts over the whole tutorial. |
+
+Changes to existing entries:
+- `screen_controls_dialog.opened_from` and `screen_labels_dialog.opened_from` take a new value, `tutorial`: opened from the guidance panel's buttons.
+- `board_solved` and `mordie_solution_found` gain `tutorial` (`boolean`): true for the tutorial game, so its solve doesn't skew `mordie_result` and move counts.
+
+Not tracked: each shift made during the tutorial (`board_solved.shift_input` and `tutorial_step_completed` cover it), a reload or close halfway (can't be detected; the next launch's `tutorial_started` shows it), the bubble texts and the highlight being shown (they follow from `step`), whether the tutorial game is later saved or loaded (the usual events cover it), the share link met on a first launch (`shared_board_opened` fires as usual after the tutorial), and a player with saves never seeing the tutorial (no `tutorial_started`).

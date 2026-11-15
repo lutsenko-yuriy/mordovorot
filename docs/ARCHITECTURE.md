@@ -100,7 +100,8 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                           # surface (listSaves/saveExists/currentSaveName/isSolved/
 │       │                           # boardState/squareSide/moveCount) and restoreOnStartup
 │                           # and newGameFrom(arrangement), a fresh game on a given solvable board, and
-│                           # startingBoard(), the board Mordie started from, null when it sits out (GH-243)
+│                           # startingBoard(), the board Mordie started from, null when it sits out (GH-243); newGameFrom's `tutorial` flag (GH-288) marks
+│                           # the first-launch tutorial's game, so board_solved and mordie_solution_found say `tutorial`
 │       ├── GameViewModelImpl.kt  # Its one implementation (GH-42 WU3, collapsing the earlier
 │       │                           # per-client viewmodels). Keeps shifts and the
 │       │                           # queries; delegates every other flow to a usecase/ class. All
@@ -208,8 +209,11 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── AppUpdates.kt    # GH-262: the seam to the offline worker (start/check/apply; DomAppUpdates in jsMain, FakeAppUpdates in the harness), CheckTrigger and OFFLINE_WORKER, the worker's fixed relative URL
 │   ├── WebUpdateFlows.kt # GH-262: the New version available notice (ready, the footer it implies, update_available), Update and its confirmation (update_applied), the checks' triggers
 │   ├── WebSolutionFlows.kt # WebGame's Give Up and the solution screen's replay (GH-126, split out in GH-171)
+│   ├── WebDragFlows.kt  # WebGame's drag of a row or column: press, moves, release as one shift (GH-110, split out in GH-288)
 │   ├── WebControlsDialog.kt # The Controls dialog's flow over WebGame's modal and the session's mode (GH-171)
 │   ├── ShareTogglePreference.kt # GH-267, GH-272: a Share dialog toggle (`Include my tile labels` under `share_labels`, `Include my progress` under `share_progress`), on or off, read once per session
+│   ├── TutorialPreference.kt # GH-288: whether the first-launch tutorial was seen (`tutorial` = `seen`); a failed read counts as seen
+│   ├── tutorial/        # GH-288: TutorialScript (the tutorial board and its four shifts), TutorialProgress (the step, and what each shift means: counts, done, blocked), TutorialText (Mordie's texts for a computer and a phone)
 │   ├── PressedWith.kt   # The session's last input, read per event as input_method (GH-171)
 │   ├── ShareLink.kt     # GH-243 (WU1): `<page address>#b=<board>` built and read; playable, or rejected
 │   │                      # as invalid / unsupported_size / unsolvable. storage.BoardLinkFormat (ADR-0005) holds the board's bits.
@@ -384,6 +388,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/commonTest/kotlin/web/TextScaleTest.kt # GH-168: textScaleOf's ratios, floor and bad readings;
 │                                       # when rootFontPx leaves the default alone
 ├── src/commonTest/kotlin/web/drag/     # LineDragTest, WrapPositionsTest
+├── src/commonTest/kotlin/web/tutorial/ # TutorialScriptTest, TutorialProgressTest, TutorialTextTest (GH-288); TutorialPreferenceTest is in web/
 ├── src/commonTest/kotlin/web/storage/  # BrowserSaveRepositoryTest, BrowserPreferenceRepositoryTest
 │                                       # over InMemoryKeyValueStore
 ├── src/jvmTest/kotlin/web/IndexPageTest.kt # Pins the title rule (the title appears only in the tab)

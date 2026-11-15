@@ -22,8 +22,15 @@ internal class MordieHooks(
     private val solutionScreen: SolutionScreen,
 ) {
 
+    /** Whether this game is the first-launch tutorial's (GH-288); not saved, so a load says false. */
+    var tutorialGame = false
+        private set
+
     /** A fresh game; [sender]'s progress (GH-272, a share link's) opens Mordie's line. */
-    fun onNewGame(sender: SharedProgress? = null) = mordie.startFresh(board.boardArray, sender?.let(::friendLine))
+    fun onNewGame(sender: SharedProgress? = null, tutorial: Boolean = false) {
+        tutorialGame = tutorial
+        mordie.startFresh(board.boardArray, sender?.let(::friendLine))
+    }
 
     private fun friendLine(progress: SharedProgress): MordieLine.Friend = when (progress) {
         is SharedProgress.Solving -> MordieLine.FriendSolving(progress.moves)
@@ -35,6 +42,7 @@ internal class MordieHooks(
      *  (GH-126) resumes found, whatever the board. A searching save with an unsolvable original
      *  can only be hand-edited, so it is treated like a save with no data. */
     fun onLoaded(data: SavedMordie?) {
+        tutorialGame = false
         when {
             data != null && data.solutionScreen -> mordie.resume(data.original, data.moves, found = true, data.solutionMoves(), data.provenShortest, data.ruledOut, solutionScreen = true)
             board.isCorrect() ->
@@ -78,6 +86,7 @@ internal class MordieHooks(
             "resumed_from_save" to mordie.resumedFromSave,
             "source" to (found.source ?: SolutionSource.EXACT_SEARCH).analyticsName,
             "proven_shortest" to found.provenShortest,
+            "tutorial" to tutorialGame,
         ),
     )
 
@@ -132,6 +141,7 @@ internal class MordieHooks(
 
     /** Mordie's N would cover only the moves from here, so it sits out a board already played on. */
     private fun startOnLoadedBoard() {
+        tutorialGame = false
         if (board.moveCount == 0) mordie.startFresh(board.boardArray) else mordie.clear()
     }
 }

@@ -75,7 +75,7 @@ class GameViewModelImpl internal constructor(
             val mordieProps = mordieHooks.onSolved()
             analytics.track(
                 "board_solved",
-                mapOf("move_count" to board.moveCount, "board_size" to board.squareSide, "tile_labels" to tileLabels.current.wireName) +
+                mapOf("move_count" to board.moveCount, "board_size" to board.squareSide, "tile_labels" to tileLabels.current.wireName, "tutorial" to mordieHooks.tutorialGame) +
                     mordieProps +
                     gameShiftSources.propertiesFor(source),
             )
@@ -84,7 +84,7 @@ class GameViewModelImpl internal constructor(
 
     override fun newGame(size: Int, trigger: String) = newGameUseCase.newGame(size, trigger)
 
-    override fun newGameFrom(arrangement: IntArray, sender: SharedProgress?) = newGameUseCase.newGameFrom(arrangement, sender)
+    override fun newGameFrom(arrangement: IntArray, sender: SharedProgress?, tutorial: Boolean) = newGameUseCase.newGameFrom(arrangement, sender, tutorial)
 
     override suspend fun saveGame(name: String): Boolean = saveGameUseCase.saveGame(name)
 
