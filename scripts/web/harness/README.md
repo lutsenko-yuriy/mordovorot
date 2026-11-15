@@ -133,7 +133,7 @@ scrollbar's width, and Mordie may not reveal its solution in time, so a `solutio
 its `[solution]` mark on one side. Both went away when rerun alone (GH-156). `::before` and
 `::after` aren't compared.
 
-The compare logic and `serve_lan.sh`'s rebuild are unit-tested: `python3 -m unittest discover -s
+The compare logic and `serve_lan.sh`'s rebuild and commit-following are unit-tested: `python3 -m unittest discover -s
 scripts/web/harness/tests -t scripts/web/harness`.
 
 ## From the keyboard
@@ -195,6 +195,15 @@ phone's camera when `qrencode` is installed (`brew install qrencode`), so the ph
 swap in an older address from its history (GH-148). Ctrl+C stops it.
 
 It builds the bundle first unless the bundle was built from `HEAD` with a clean tree: each build
-stamps the bundle with its commit (`.commit`), and uncommitted changes always rebuild (GH-160: the
-phone showed a bundle older than the fix it was meant to check). `SERVE_LAN_DRY_RUN=1` stops it
-before it serves; `tests/test_serve_lan.py` uses that.
+stamps the bundle with its commit (`.commit`), and uncommitted changes always rebuild at start-up
+(GH-160: the phone showed a bundle older than the fix it was meant to check).
+
+It then follows the commits (GH-283): every 15 seconds (`SERVE_LAN_POLL_S`) it looks at `HEAD`, and
+after a new commit, checkout or amend it builds the bundle again and serves that one, so a fix is
+re-checked on the phone with a reload and no restart. It prints `Serving <commit>` once the new
+bundle is up. Uncommitted edits are not picked up after start-up. A build that fails prints its error
+and `still serving <commit>`, keeps the old bundle, and is not tried again until the next commit.
+Each build is copied to `web/build/serve-lan/` and served from there with `Cache-Control:
+no-cache`, so the phone never gets a half-built bundle, nor one that a `measure.sh` run left in
+`dist/`. `SERVE_LAN_DRY_RUN=1` stops it before it serves, and `SERVE_LAN_BIND` sets the address it
+serves on (`0.0.0.0`); `tests/test_serve_lan.py` uses both.
