@@ -150,9 +150,9 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       ├── TileLabelsPreference.kt # TileLabels over a PreferenceRepository under `tile_labels`;
 │       │                             # a failed read is no preference, a failed write is silent (GH-139)
 │       ├── Direction.kt           # UP/DOWN/LEFT/RIGHT, what a key can mean (GH-18, shared by GH-171)
-│       ├── TileSelection.kt       # Keyboard mode's selected tile (GH-170, replaced GH-101's line
+│       ├── TileSelection.kt       # A computer's selected tile (GH-170, replaced GH-101's line
 │       │                             # selection): (row, col), move with wraparound, clampedTo(side)
-│       ├── KeyScheme.kt           # Keyboard mode's keys (ADR-0003) per KeyboardLayout: boardKey gives
+│       ├── KeyScheme.kt           # A computer's keys (ADR-0003) per KeyboardLayout: boardKey gives
 │       │                             # a BoardKey (select / shift; a left-handed shift has no ShiftKey),
 │       │                             # solutionKey a SolutionKey, boardKeyLines the Controls key list's
 │       │                             # first lines. The client adapts its own events to it (GH-171)
@@ -209,7 +209,6 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── WebUpdateFlows.kt # GH-262: the New version available notice (ready, the footer it implies, update_available), Update and its confirmation (update_applied), the checks' triggers
 │   ├── WebSolutionFlows.kt # WebGame's Give Up and the solution screen's replay (GH-126, split out in GH-171)
 │   ├── WebControlsDialog.kt # The Controls dialog's flow over WebGame's modal and the session's mode (GH-171)
-│   ├── PlayMode.kt / PlayModePreference.kt # Mouse or keyboard, kept under `input_mode` (GH-171)
 │   ├── ShareTogglePreference.kt # GH-267, GH-272: a Share dialog toggle (`Include my tile labels` under `share_labels`, `Include my progress` under `share_progress`), on or off, read once per session
 │   ├── PressedWith.kt   # The session's last input, read per event as input_method (GH-171)
 │   ├── ShareLink.kt     # GH-243 (WU1): `<page address>#b=<board>` built and read; playable, or rejected
@@ -312,7 +311,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # the board sits in `.stage`, the box the tall layout's
 │                                       # tiles are sized from (GH-147)
 ├── src/jsMain/kotlin/web/DomBoard.kt   # The board: tiles, arrows and pointer drags -> WebGame, split from DomRenderer (GH-171).
-│                                       # Its cells are kept and rewritten across a slide; in keyboard mode, where
+│                                       # Its cells are kept and rewritten across a slide; on a computer, where
 │                                       # WebState.keepsBoardFrom says, across a frame too, so a screen reader hears
 │                                       # the live region rather than a refocused board
 ├── src/jsMain/kotlin/web/DomKeyboardMode.kt # GH-171: the selection's outlines and the key hints, drawn beside the board
@@ -364,7 +363,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # height and tiles fit `.stage` (GH-147), scrolling past 16px
 │                                       # tiles (GH-168); wide, the one-line footer and tighter spacing
 │                                       # on short and narrow phones
-├── src/jsMain/resources/keyboard.css   # GH-171: keyboard mode: arrows hidden, the selection's outlines,
+├── src/jsMain/resources/keyboard.css   # GH-171: a computer's board: the selection's outlines (hidden until a select or shift key, GH-287),
 │                                       # the board's focus ring, the key hints
 ├── src/jsMain/resources/board.css      # GH-153: tile colours by home row/column, arrows, solve
 │                                       # animations; no arrows under `pointer: coarse` (GH-111);
@@ -584,7 +583,7 @@ that needs to track an event), currently backed by `NoopAnalyticsService`.
 `InputMethodAnalyticsService` (GH-3) decorates another `AnalyticsService`,
 adding an `input_method` property (`keyboard` or `rich_ui`, the press that fired the event,
 GH-171; `mouse` went with the terminal, GH-228) to every forwarded event — the decorator pattern lets the page distinguish events
-by input mode without `GameViewModelImpl` itself knowing which UI mode is
+by input method without `GameViewModelImpl` itself knowing which UI mode is
 running. `PlatformAnalyticsService` (GH-110) adds `platform` the same way; it is the
 innermost decorator, wrapping the outermost service in `startWebGame`, so
 `app_launched` and `input_mode_switched` carry it too. Its value is always `web` now; the property
@@ -592,7 +591,7 @@ stays for the mobile clients.
 
 `board_solved` (GH-62) is tracked in `GameViewModelImpl`, not a View: every shift goes
 through one private `shift` helper that fires it when the shift turns an unsolved
-board into a solved one, so it covers both input modes. Loads bypass that helper,
+board into a solved one, so it covers every client. Loads bypass that helper,
 so restoring a solved save never fires it. GH-83 adds `mordie_result`/`mordie_moves` to it
 and tracks `mordie_solution_found` from the same helper, when a 5-shift check reveals
 the solution. `shiftRow`/`shiftColumn` (GH-110, a web drag) run the same helper over several
@@ -612,14 +611,14 @@ collaborators and hands them to `startWebGame` (`Launch.kt`), which decorates an
 `buildGameViewModel` and starts a `WebGame`.
 `Main.kt` also passes the stamped `BuildInfo.VERSION` and `hostOf(window.location.hostname)` for
 `app_launched` (GH-111), and appends the footer to `<body>` once, outside `#app`, which
-`DomRenderer` rebuilds (all of it every frame, but for keyboard mode's board, GH-171).
+`DomRenderer` rebuilds (all of it every frame, but for a computer's board, GH-171).
 The web scenario tests go through the same `startWebGame` with fakes.
 
 ### Board-size surfaces (GH-44)
 Two entry points, both of which *start a fresh game* rather than resizing the
 running one: a startup prompt raised by
 `StartupRestoreUseCase.restoreOnStartup` as `UiRequest.ChooseBoardSize`, and the page's `[ New ]`
-button (1 in keyboard mode), which opens the
+button (1 on a computer), which opens the
 same picker. (The terminal's `--size=N` flag went with it, GH-228.) Both funnel into `GameViewModel.newGame(size, trigger)` →
 `BoardImpl.newGame`, which is also where `new_game_size_selected` is tracked
 (only on success). Save/load auto-resizes instead of rejecting a size
@@ -657,13 +656,13 @@ established nothing was actually restored (no saves, declined, or a failed load)
 `restoreOnStartup` matches the answer against save names exactly; the page always answers with a
 listed name, so anything else counts as declined (GH-79).
 
-### Input mode (GH-3, GH-18, GH-30, GH-171)
-`app_launched` fires once per page load. The page starts in the stored `PlayMode` (mouse on a
-first visit). The Controls dialog (`[ Controls 6 ]` / 6, GH-170) marks the current mode and
-`SessionKeyboardLayout.current`; OK applies the marked layout and, with the other mode marked,
-switches `PlayMode` in place, tracking `input_mode_switched` (`trigger: controls_dialog`). Nothing
-is rebuilt: the same board, saves, Mordie and viewmodel carry on, so a switch never reshuffles
-(`docs/ANALYTICS_EVENTS.md`).
+### Computer or touch (GH-3, GH-18, GH-30, GH-171, GH-287)
+`WebState.computer` is `!touch`, where touch is `(pointer: coarse)`: a computer shows and takes the keys, digits,
+key hints, `[ Controls 6 ]` and the selection, with no mode to choose (GH-287 retired `PlayMode`; an old `input_mode`
+in `localStorage` is left unread). The Controls dialog (`[ Controls 6 ]` / 6, GH-170) picks the keyboard layout
+alone. The selection (`WebKeyPlay`) drives the grid and the Tab stop; whether its outlines show (`selectionShown`)
+follows the last input: a select or shift key shows them, a press on a tile or an arrow hides them, and the
+page updates the outlines' `hidden` attribute in place (`docs/ANALYTICS_EVENTS.md`).
 
 ## Agent tooling (not part of the game)
 

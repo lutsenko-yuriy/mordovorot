@@ -8,7 +8,7 @@ When a new term is introduced during a `brief` session, add it to its domain's f
 | File | What belongs there |
 |---|---|
 | [glossary/CORE.md](glossary/CORE.md) | The board, its moves, Mordie and saves: terms every client shares |
-| [glossary/CONTROLS.md](glossary/CONTROLS.md) | Input and display settings: input mode, keyboard layouts, selection, tile labels |
+| [glossary/CONTROLS.md](glossary/CONTROLS.md) | Input and display settings: keyboard layouts, selection, tile labels |
 | [glossary/WEB.md](glossary/WEB.md) | A term defined for the web client (page, footer, drag, large boards, public site) |
 | [glossary/ACCESSIBILITY.md](glossary/ACCESSIBILITY.md) | Screen-reader and text-size support |
 
