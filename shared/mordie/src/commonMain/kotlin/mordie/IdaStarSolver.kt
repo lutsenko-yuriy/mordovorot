@@ -24,7 +24,8 @@ class IdaStarSolver(original: IntArray, ruledOut: Int = -1) {
     /** Moves are numbered row moves first, then column moves; each axis has [movesPerAxis]. */
     private val movesPerAxis = n * movesPerLine
 
-    // Tables instead of `/` and `%` in the node loop: Mordie may run where scripts aren't compiled (GH-282).
+    // Tables instead of `/` and `%` in the node loop, which a phone browser that doesn't compile scripts runs
+    // slowly (GH-282). [lines] is MoveMetricHeuristic's ceil(wrong / n).
     private val homeRow = IntArray(n * n) { it / n }
     private val homeCol = IntArray(n * n) { it % n }
     private val moveLine = IntArray(2 * movesPerAxis) { (it % movesPerAxis) / movesPerLine }
