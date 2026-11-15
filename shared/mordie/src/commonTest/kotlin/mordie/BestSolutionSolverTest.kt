@@ -1,5 +1,6 @@
 package mordie
 
+import board_model.BoardImpl
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -200,6 +201,33 @@ class BestSolutionSolverTest {
         assertEquals(0, solver.bestLength)
         assertTrue(solver.provenShortest)
         assertTrue(solver.done)
+    }
+
+    private val ticketBoard = intArrayOf(2, 15, 1, 0, 4, 5, 9, 8, 3, 7, 12, 6, 14, 11, 13, 10)
+
+    private fun stepsToProve(solver: BestSolutionSolver): Int {
+        var steps = 0
+        while (!solver.step(1_000)) steps++
+        return steps + 1
+    }
+
+    @Test
+    fun `a short 4x4 board is proven long before the table is built (GH-282)`() {
+        val state = BoardImpl(4).apply { restoreState(IntArray(16) { it }); shiftRight(0); shiftDown(1); shiftRight(2) }.boardArray
+
+        val solver = BestSolutionSolver(state)
+
+        assertTrue(stepsToProve(solver) < 100)
+        assertEquals(3, solver.bestLength)
+    }
+
+    @Test
+    fun `a long 4x4 board gets the table and is proven in a tenth of the steps without it (GH-282)`() {
+        val solver = BestSolutionSolver(ticketBoard)
+
+        // 2.1 M nodes with the table, 2.6 k steps of building it; the plain bound takes 34.5 k steps.
+        assertTrue(stepsToProve(solver) < 8_000)
+        assertEquals(11, solver.bestLength)
     }
 
     @Test

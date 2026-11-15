@@ -11,12 +11,17 @@ package mordie
  *
  * The exact search runs only up to [EXACT_SEARCH_MAX_SIDE] (GH-260): it never finishes on bigger
  * boards and only heats the device. There the fast answer, or a kept one, is final: [done].
+ *
+ * On those boards a [PatternDatabase] is built in slices alongside the exact search (GH-282), which
+ * switches to its bound once it is ready: a short board is proven at once, and a long one faster
+ * than the plain bound would.
  */
 class BestSolutionSolver(original: IntArray, ruledOut: Int = -1, best: List<SolutionMove>? = null) {
 
     private val fast = ThreeCycleSolver(original)
     private val exact = IdaStarSolver(original, ruledOut)
     private val exactRuns = MoveMetricHeuristic.sideOf(original) <= EXACT_SEARCH_MAX_SIDE
+    private val patterns = if (exactRuns) PatternDatabase(MoveMetricHeuristic.sideOf(original)) else null
 
     /** The best solution's length, once any solver has one. */
     var bestLength: Int? = best?.size
@@ -46,7 +51,10 @@ class BestSolutionSolver(original: IntArray, ruledOut: Int = -1, best: List<Solu
             takeExact()
         } else {
             if (bestLength == null) takeFast()
-            if (exactRuns) exact.step(maxNodes)
+            if (exactRuns) {
+                buildPatterns(maxNodes)
+                exact.step(maxNodes)
+            }
             if (exact.solutionLength != null) takeExact()
         }
         if (bestLength?.let { exact.ruledOut >= it - 1 } == true) provenShortest = true
@@ -62,6 +70,13 @@ class BestSolutionSolver(original: IntArray, ruledOut: Int = -1, best: List<Solu
         provenShortest = provenShortest,
         source = source,
     )
+
+    /** Builds a slice of the table, about as long as [maxNodes] nodes; hands it to the search when it is whole. */
+    private fun buildPatterns(maxNodes: Int) {
+        val table = patterns?.takeIf { !it.done } ?: return
+        table.step(maxOf(1, maxNodes / NODES_PER_STATE))
+        if (table.done) exact.usePatterns(table)
+    }
 
     private fun takeFast() {
         fast.step(Int.MAX_VALUE)
@@ -83,5 +98,8 @@ class BestSolutionSolver(original: IntArray, ruledOut: Int = -1, best: List<Solu
     companion object {
         /** The largest board side the exact search runs on, 4x4 (GH-260). */
         const val EXACT_SEARCH_MAX_SIDE = 4
+
+        /** Building one table state costs about this many search nodes (measured with scripts compiled and not). */
+        private const val NODES_PER_STATE = 5
     }
 }

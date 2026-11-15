@@ -6,6 +6,7 @@ import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -153,5 +154,94 @@ class IdaStarSolverTest {
         val ticketBoard = intArrayOf(2, 15, 1, 0, 4, 5, 9, 8, 3, 7, 12, 6, 14, 11, 13, 10)
         assertEquals(2650L, expansions(scramble(4, 8, Random(5))))
         assertEquals(34_511_703L, expansions(ticketBoard))
+    }
+
+    private fun solveWith(database: PatternDatabase, state: IntArray): IdaStarSolver =
+        IdaStarSolver(state).also { it.usePatterns(database) }.also { while (!it.step(10_000)) { } }
+
+    @Test
+    fun `with the table, sampled 3x3 boards still get the exact minimum`() {
+        val database = builtDatabase(3)
+        val states = ThreeByThreeOracle.solvableStates().toList()
+        val random = Random(42)
+        repeat(300) {
+            val state = states[random.nextInt(states.size)]
+            assertEquals(ThreeByThreeOracle.distance(state), solveWith(database, state).solutionLength, state.joinToString(" "))
+        }
+    }
+
+    @Test
+    fun `with the table, 4x4 scrambles get the same length, and ruledOut only rises to one below it`() {
+        val database = builtDatabase(4)
+        val random = Random(21)
+        repeat(12) {
+            val state = scramble(4, 6 + it % 4, random)
+            val plain = solve(state).solutionLength
+
+            val solver = IdaStarSolver(state).also { s -> s.usePatterns(database) }
+            var previous = solver.ruledOut
+            while (!solver.step(100)) {
+                assertTrue(solver.ruledOut >= previous)
+                previous = solver.ruledOut
+            }
+
+            assertEquals(plain, solver.solutionLength, state.joinToString(" "))
+            assertEquals(plain!! - 1, solver.ruledOut)
+        }
+    }
+
+    @Test
+    fun `with the table, the ticket board is solved in 11 within a tenth of the plain search`() {
+        // GH-282: 2.10 M expands against 34.5 M; a guard on the tree size.
+        val ticketBoard = intArrayOf(2, 15, 1, 0, 4, 5, 9, 8, 3, 7, 12, 6, 14, 11, 13, 10)
+        val solver = IdaStarSolver(ticketBoard).also { it.usePatterns(builtDatabase(4)) }
+        var count = 0L
+        while (!solver.step(1)) count++
+
+        assertEquals(11, solver.solutionLength)
+        assertTrue(count < 2_200_000, "$count expands")
+    }
+
+    @Test
+    fun `the table can come in mid-search without changing the answer`() {
+        val database = builtDatabase(4)
+        repeat(4) {
+            val state = scramble(4, 8, Random(30 + it))
+            val plain = solve(state).solutionLength
+
+            val solver = IdaStarSolver(state)
+            solver.step(300)
+            solver.usePatterns(database)
+            while (!solver.step(10_000)) { }
+
+            assertEquals(plain, solver.solutionLength)
+        }
+    }
+
+    @Test
+    fun `with the table, stepping is deterministic`() {
+        val database = builtDatabase(4)
+        val state = scramble(4, 8, Random(9))
+        val a = IdaStarSolver(state).also { it.usePatterns(database) }
+        val b = IdaStarSolver(state).also { it.usePatterns(database) }
+        repeat(50) {
+            a.step(97)
+            b.step(97)
+            assertEquals(a.ruledOut, b.ruledOut)
+        }
+        assertEquals(a.solutionLength, b.solutionLength)
+    }
+
+    @Test
+    fun `a table that is not built yet is refused`() {
+        assertFailsWith<IllegalArgumentException> { IdaStarSolver(IntArray(16) { it }).usePatterns(PatternDatabase(4)) }
+    }
+
+    private companion object {
+        private val databases = HashMap<Int, PatternDatabase>()
+
+        /** One table per side for the whole class: a 4x4 build is the slow part. */
+        fun builtDatabase(side: Int): PatternDatabase =
+            databases.getOrPut(side) { PatternDatabase(side).also { while (!it.done) it.step(100_000) } }
     }
 }
