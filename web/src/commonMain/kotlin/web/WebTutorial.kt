@@ -6,8 +6,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import viewmodel.GameViewModel
+import viewmodel.KeyShift
 import viewmodel.KeyboardLayout
 import viewmodel.PointerShift
+import viewmodel.ShiftKey
 import viewmodel.ShiftSource
 import viewmodel.TileSelection
 import web.drag.Axis
@@ -99,7 +101,7 @@ internal class WebTutorial(
         input = when (source) {
             PointerShift.DRAG -> DRAG
             PointerShift.ARROW -> CLICK
-            else -> KEY
+            is KeyShift, is ShiftKey -> KEY
         }
         verdict = progress.check(axis, line, steps)
         if (verdict == Verdict.BLOCKED) blockedAxis = progress.asked?.axis else if (verdict != Verdict.IGNORED) blockedAxis = null
