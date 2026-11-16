@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.48.0] — 2026-11-16 (PR #302 merged)
+
+### Added
+
+- [user] (PR #302) GH-290: On a computer, the tutorial now shows three ways to make each shift: drag it, click its arrow, or press the keys, named for your chosen hand and following your selected tile. (WU0 #301, WU1 #302).
+- [non-user] GH-290: tutorial_step_completed gains input (drag, click or key); new TutorialWays, KeyHints.selectKeys/shiftKeys, Guidance.ways; short-window bubble rules in tutorial.css; the spec and glossary are in the same PR.
+
 ## [0.47.0] — 2026-11-16 (PR #300 merged)
 
 ### Added
