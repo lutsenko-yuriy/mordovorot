@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.48.1] — 2026-11-16 (PR #304 merged)
+
+### Fixed
+
+- [user] (PR #304) GH-303: On a phone, no copy highlight shows in the corner of the page after shifting any more.
+- [non-user] GH-303: user-select and touch-callout rules moved from .app to body, so the live region and footer are covered too; the save dialog's input still takes text.
+
 ## [0.48.0] — 2026-11-16 (PR #302 merged)
 
 ### Added
