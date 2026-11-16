@@ -5,6 +5,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import viewmodel.Direction
 import web.drag.Axis.COLUMN
 import web.drag.Axis.ROW
 import web.tutorial.Verdict.BLOCKED
@@ -152,5 +153,24 @@ class TutorialProgressTest {
     fun `a drag of a whole turn is not a shift`() {
         assertEquals(IGNORED, progress.check(ROW, 0, 4))
         assertEquals(0, progress.totalBlocked)
+    }
+
+    @Test
+    fun `the wanted direction is the asked one, until step 3 is begun the other way (GH-290)`() {
+        assertEquals(Direction.LEFT, progress.wantedDirection)
+        atStep(3)
+        assertEquals(Direction.RIGHT, progress.wantedDirection)
+        assertEquals(COUNTS, progress.check(ROW, 2, -1))
+        assertEquals(Direction.LEFT, progress.wantedDirection)
+    }
+
+    @Test
+    fun `the wanted direction is back to the asked one on the next step, and null after the last`() {
+        atStep(3)
+        progress.check(ROW, 2, -1)
+        progress.check(ROW, 2, -1)
+        assertEquals(Direction.DOWN, progress.wantedDirection)
+        progress.check(COLUMN, 3, 1)
+        assertNull(progress.wantedDirection)
     }
 }

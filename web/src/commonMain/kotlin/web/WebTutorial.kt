@@ -6,10 +6,15 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import viewmodel.GameViewModel
+import viewmodel.KeyboardLayout
+import viewmodel.PointerShift
+import viewmodel.ShiftSource
+import viewmodel.TileSelection
 import web.drag.Axis
 import web.tutorial.TutorialProgress
 import web.tutorial.TutorialScript
 import web.tutorial.TutorialText
+import web.tutorial.TutorialWays
 import web.tutorial.Verdict
 
 /** What the save question was answered with (GH-289). */
@@ -36,6 +41,9 @@ internal class WebTutorial(
 
     /** What [take] said about the shift now being made. */
     private var verdict = Verdict.IGNORED
+
+    /** `drag`, `click` or `key`: how the shift [take] last saw was made, for `tutorial_step_completed.input`. */
+    private var input = DRAG
     private var pause: Job? = null
 
     /** `first_launch` or `replay`: what started the tutorial now running, as `tutorial_started.source`. */
@@ -85,9 +93,14 @@ internal class WebTutorial(
     fun onReplayAnswered(choice: ReplaySaveChoice) = modal.answer<WebDialog.ReplaySave, ReplaySaveChoice>(choice)
 
     /** Takes the shift of [line] on [axis] by [steps] (positive is right or down) into the step's progress, and whether it goes ahead;
-     *  one that doesn't is drawn as blocked. A shift that goes ahead is followed by [afterShift]. */
-    fun take(axis: Axis, line: Int, steps: Int): Boolean {
+     *  one that doesn't is drawn as blocked. A shift that goes ahead is followed by [afterShift]. [source] is how it was made. */
+    fun take(axis: Axis, line: Int, steps: Int, source: ShiftSource): Boolean {
         val progress = progress ?: return true
+        input = when (source) {
+            PointerShift.DRAG -> DRAG
+            PointerShift.ARROW -> CLICK
+            else -> KEY
+        }
         verdict = progress.check(axis, line, steps)
         if (verdict == Verdict.BLOCKED) blockedAxis = progress.asked?.axis else if (verdict != Verdict.IGNORED) blockedAxis = null
         if (verdict == Verdict.COUNTS || verdict == Verdict.DONE) return true
@@ -99,7 +112,7 @@ internal class WebTutorial(
     fun afterShift() {
         val progress = progress ?: return
         if (verdict != Verdict.DONE) return
-        analytics.track("tutorial_step_completed", mapOf("step" to progress.completedStep, "blocked_shifts" to progress.completedBlocked))
+        analytics.track("tutorial_step_completed", mapOf("step" to progress.completedStep, "blocked_shifts" to progress.completedBlocked, "input" to input))
         if (progress.step == TutorialScript.SOLVED_STEP) pause = scope.launch {
             delay(PAUSE_MS)
             finish()
@@ -119,8 +132,8 @@ internal class WebTutorial(
 
     fun onLabels() = game.labels.open("tutorial", Focus.TutorialLabels)
 
-    /** The panel for this frame, `null` off the guided steps. */
-    fun guidance(): Guidance? {
+    /** The panel for this frame, `null` off the guided steps. The key line follows the [selection] and the hand [layout] (GH-290). */
+    fun guidance(selection: TileSelection?, layout: KeyboardLayout): Guidance? {
         val progress = progress ?: return null
         val step = progress.step
         val asked = progress.asked
@@ -129,7 +142,12 @@ internal class WebTutorial(
             step == 3 && progress.begun -> TutorialText.again(viewModel.moveCount())
             else -> TutorialText.step(step, computer, viewModel.tileLabels())
         }
-        return Guidance(step, text, controls = computer, highlight = asked?.let { TutorialHighlight(it.axis, it.line, it.arrow.takeIf { computer }) })
+        val ways = if (computer && asked != null) {
+            TutorialWays.lines(progress.wantedDirection ?: asked.arrow.direction, asked.line, progress.tilesLeft, selection, layout)
+        } else {
+            emptyList()
+        }
+        return Guidance(step, text, ways, controls = computer, highlight = asked?.let { TutorialHighlight(it.axis, it.line, it.arrow.takeIf { computer }) })
     }
 
     /** Step 6: the panel goes, Mordie's ending shows, and a share link that waited is asked about. */
@@ -151,6 +169,9 @@ internal class WebTutorial(
     private companion object {
         const val FIRST_LAUNCH = "first_launch"
         const val REPLAY = "replay"
+        const val DRAG = "drag"
+        const val CLICK = "click"
+        const val KEY = "key"
         const val PAUSE_MS = 3_000L
         const val LAST_STEP = 6
     }

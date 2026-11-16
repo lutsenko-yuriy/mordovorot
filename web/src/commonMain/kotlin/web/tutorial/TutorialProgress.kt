@@ -47,6 +47,9 @@ class TutorialProgress {
 
     val tilesLeft get() = remaining
 
+    /** The way the asked shift goes: step 3's first tile can fix it the other way round; `null` once the guided steps are over. */
+    val wantedDirection: Direction? get() = chosen ?: asked?.arrow?.direction
+
     /** Whether [step] has had part of its shift made. */
     val begun get() = asked?.let { remaining < it.tiles } == true
 
@@ -58,7 +61,7 @@ class TutorialProgress {
         if (asked == null || steps == 0) return Verdict.IGNORED
         val direction = DragShift(axis, line, steps).direction
         val tiles = abs(steps)
-        val wanted = chosen ?: asked.arrow.direction
+        val wanted = wantedDirection
         val turnsEitherWay = asked.halfTurn && !begun
         val counts = axis == asked.axis && line == asked.line && tiles <= remaining && (direction == wanted || turnsEitherWay)
         if (!counts) return blocked()
