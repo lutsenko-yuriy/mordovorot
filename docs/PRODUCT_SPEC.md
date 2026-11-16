@@ -34,6 +34,7 @@ https://lutsenko-yuriy.github.io/mordovorot/ (Feature 9). It was a terminal game
 
 ### Feature 3 — Launch (GH-79)
 Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is the only client.
+The first visit starts with the tutorial (Feature 13).
 
 ### Feature 4 — Save and load (GH-6)
 - The Save dialog stores the board's current tile arrangement to the browser's storage, creating it or
@@ -73,7 +74,8 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
 - Saves are kept in the browser's `localStorage` (Feature 9), in the format above.
 - **Startup restore prompt:** on launch, before the first move, the app checks for existing
   saves:
-  - No saves — skips straight to the board-size prompt (GH-44).
+  - No saves — skips straight to the board-size prompt (GH-44), but on a first visit the tutorial comes
+    first (Feature 13).
   - One or more saves — opens the Load-shaped "Restore a saved game?" dialog (Feature 9).
     Cancelling it falls through to the board-size prompt.
 - **Solution screen saves (GH-126):** a save also stores Mordie's solution once it has found
@@ -556,3 +558,44 @@ Web client only.
   (`docs/ANALYTICS_EVENTS.md`).
 - Not shared: Mordie's solution or the sender's moves (only their count, when the toggle is on). A pasted code or file, the native share sheet and
   saving the QR as an image are out of scope.
+
+### Feature 13 — First-launch tutorial (GH-288)
+Web client only. On a first visit Mordie walks the player through a short game.
+- **When:** at launch, when the `tutorial` preference isn't `seen` and there are no saves (a corrupted entry
+  counts as a save). A failed read of the preference counts as seen. Players with no saves who already
+  played see it once after the update. Skip and the last step mark it seen. There is no way to replay it yet (GH-289).
+- **The game:** a fixed 4x4 board, `8 1 14 3 / 5 2 7 12 / 11 6 9 10 / 13 16 15 4`, which four shifts solve.
+  Moves and Mordie's usual line work as in any game, and Mordie searches it as usual.
+- **The panel:** in place of the Give Up row and the toolbar, Mordie's bubble (`Mordie:` and the step's text,
+  larger than his line, on the card colour with a rust edge and a tail) above `[ Controls 6 ] [ Labels 4 ]
+  [ Skip ]`. On a phone, `[ Labels ] [ Skip ]`: Controls is out of reach on touch. The bubble keeps the
+  height of the longest text, so the board doesn't change size between steps.
+- **The steps** (the 1-based tile named is the one Labels shows):
+  1. `Hi there! I'm Mordie. Let's play a short game. Drag the top row one tile left, or click its ◀.`
+  2. `Lines go round: see tile 14 at the top of the second column? Shift that column one tile up, by dragging or with ▲, and 14 comes back in at the bottom.`
+  3. `A move is one row or column shifted, however far. Drag the third row two tiles right, or click its ▶ twice: still 1 move.` After one of its two tiles: `Once more! It's the same row, so Moves stays at 3.` Either direction counts, as two tiles is half a turn.
+  4. `Last one: drag the fourth column one tile down, or click its ▼. That solves it!`
+  5. `Can you beat my results?`, on the solved board, with Mordie's spot empty.
+  6. After 3 seconds the panel goes, the toolbar and Give Up row (`Mordie's solution`) return, and Mordie's ending shows.
+  On a phone the texts name dragging only and leave the arrows out.
+- **The highlight** (steps 1 to 4): the asked row or column has a dashed rust outline with a pulsing halo
+  (still under reduced motion), and on a computer its asked arrow is rust, bold and ringed.
+- **Matching:** only the asked shift counts, by drag, arrow or key. A drag counts the short way round; a whole turn is ignored.
+  Any other shift is blocked: the board doesn't change (a drag snaps back), Moves stays, and the bubble shows
+  `You can do that later. For now shift that row please!` (`column` for a column) until the next shift.
+- **Keys on a computer:** select keys work and shift keys go through the same check. 4 and 6 open Labels and
+  Controls; 1, 2, 3, 5 and 7 do nothing (their buttons are hidden). 0 reads the board.
+- **Skip** (any step) marks the tutorial seen and runs the usual startup: a share link in the address opens, else
+  `Restore a saved game?` when there are saves, else the size picker. Cancelling the picker keeps the tutorial board
+  as an ordinary game.
+- **The end** (step 6) marks it seen and opens only a waiting share link. There is no restore and no picker:
+  the tutorial board stays the game, and Save, Load and New work.
+- **A share link** at launch is left unread in the address until the tutorial ends or is skipped, so a reload halfway
+  meets it again. A link opened by hand mid-tutorial waits, and `Open the shared board?` is asked as usual when there are unsaved moves.
+- **The leave-site prompt and the Update confirmation** count no progress during steps 1 to 5, since a reload only restarts it.
+- **Focus:** at the start, the board. Tab goes the arrows and the board, then `[ Controls ] [ Labels ] [ Skip ]`, then the footer.
+  The panel's buttons open their dialogs with themselves as opener. On step 5's solved board focus falls to `[ Labels ]`, so a
+  held Enter can't skip; once the panel is gone, a gone button's focus falls back as on a won board.
+- **Screen readers:** the bubble is plain text, not a live region; shifts that count are announced as always and a blocked one says nothing.
+- **Analytics:** `tutorial_started`, `tutorial_step_completed`, `tutorial_ended`, `opened_from: tutorial` for the panel's
+  Controls and Labels, and `tutorial: true` on `board_solved` and `mordie_solution_found` (`docs/ANALYTICS_EVENTS.md`).

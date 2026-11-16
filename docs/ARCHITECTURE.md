@@ -341,6 +341,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/jsMain/kotlin/web/DomPlayKeys.kt # GH-171: keys outside dialogs -> WebGame.onKey, and PressedWith from
 │                                       # every keydown and pointerdown, in the capture phase
 ├── src/jsMain/kotlin/web/DomSolution.kt # The step list, Prev/Next/Restart and the Give Up row (GH-126)
+├── src/jsMain/kotlin/web/DomGuidance.kt # GH-288: the tutorial's bubble and buttons (they stand where the toolbar does, and are the
+│                                       # element Mordie's arriving line rises from) and the asked line's highlight, placed by DomBoard
 ├── src/jsMain/kotlin/web/a11y/DomBoardGrid.kt # GH-167: during play, the tiles as a table for screen
 │                                       # readers - a row element per board row, each cell heard as
 │                                       # said (`delta, in place`), a wrapped copy aria-hidden - and the hidden Read board
@@ -370,6 +372,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # height and tiles fit `.stage` (GH-147), scrolling past 16px
 │                                       # tiles (GH-168); wide, the one-line footer and tighter spacing
 │                                       # on short and narrow phones
+├── src/jsMain/resources/tutorial.css   # GH-288: the bubble (its min-height keeps the board's size from one step to the next), the
+│                                       # dashed highlight with its halo, the asked arrow; linked after keyboard.css
 ├── src/jsMain/resources/keyboard.css   # GH-171: a computer's board: the selection's outlines (hidden until a select or shift key, GH-287),
 │                                       # the board's focus ring, the key hints
 ├── src/jsMain/resources/board.css      # GH-153: tile colours by home row/column, arrows, solve
