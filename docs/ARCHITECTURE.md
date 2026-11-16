@@ -139,8 +139,8 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       ├── MordieHooks.kt         # GameViewModelImpl's Mordie part: binds it on new game/load/repair/
 │       │                             # startup (sits out a loaded board already played on, GH-83), tracks
 │       │                             # its analytics, words its line and ending (GH-83)
-│       ├── MordieText.kt          # Every Mordie string (line bodies + the four endings), singular
-│       │                             # `1 move` included (GH-83)
+│       ├── MordieText.kt          # Which Mordie line or ending a game state gets (GH-83); the words are in
+│       │                             # `:shared:texts` (GH-274)
 │       ├── SolutionScreen.kt      # The session's solution screen: its SolutionReplay, null off it,
 │       │                             # and the PlayerResult it was reached with. One per session (GH-126, GH-273)
 │       ├── PlayerResult.kt        # How the player's game ended (gave up or solved) and its moves (GH-273)
@@ -190,6 +190,11 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │                                     # screen view and OK, GH-139), ControlsDialogUseCase (the
 │                                     # Controls dialog's screen view, GH-170); both take `screen`
 │                                     # from ScreenName.kt's one rule
+├── texts/               # GH-274 (WU1): :shared:texts - every text the player sees, under stable keys (an
+│                          # interface per area: mordie, tutorial, dialogs, status, page, keys, reader), English
+│                          # first in `texts.en`; a text with a number or a name is a function of it, so
+│                          # each language words plurals and cases itself. `texts()` returns the active
+│                          # language (English until GH-275). `english.txt` snapshots every key's output
 └── testing/             # :shared:testing - plain JVM module of test doubles shared by every
                            # module's tests: FakeBoardModel / FakeSaveRepository / FakePreferenceRepository /
                            # RecordingAnalyticsService / FakeMordieSearch + FakeMordieSearchFactory /
@@ -267,7 +272,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │   │                # depends on it, not it on web: it imports only the standard library, the DOM
 │   │   │                # and a few :shared:viewmodel types, pinned by A11yBoundaryTest (GH-201). The
 │   │   │                # game's ARIA moving in is GH-201's next step; a Gradle module is future work
-│   │   ├── Announcements.kt # GH-166: what a screen reader hears - shifts, the win, new game, load,
+│   │   ├── Announcements.kt # GH-166 (words in :shared:texts, GH-274): what a screen reader hears - shifts, the win, new game, load,
 │   │   │                # solution steps - and the arrows' accessible names; Read board's
 │   │   │                # row-by-row words, letters in the phonetic alphabet (GH-167)
 │   │   └── FocusTarget.kt # GH-201: a control's data-focus key, and whether focus falls back from it
@@ -719,9 +724,10 @@ the preferences.
   `commonTest` and run on both the JVM and Node.js (GH-103); only mordie's
   `BackgroundMordieSearchThreadTest` stays in `jvmTest`, since it reads the search from a
   second thread. `./gradlew check` runs them all. Module graph:
-  `core`, `analytics`, `storage` and `mordie` depend on no other module; `viewmodel` has an
-  `api` dependency on all four (its public types expose them).
-  `:web` (GH-110) depends on `viewmodel`. Its `browser()` target makes KGP add
+  `core`, `analytics`, `storage`, `mordie` and `texts` depend on no other module; `viewmodel` has an
+  `api` dependency on the first four (its public types expose them) and an `implementation`
+  dependency on `texts` (GH-274).
+  `:web` (GH-110) depends on `viewmodel` and `texts`. Its `browser()` target makes KGP add
   webpack and webpack-dev-server (build time only, pinned in the same `yarn.lock`); the
   browser test task is off, so CI needs no headless browser. `serve` (GH-124) needs `-t`:
   `settings.gradle.kts` fails it fast without, and points every project's build directory to

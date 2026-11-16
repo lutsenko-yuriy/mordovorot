@@ -20,7 +20,7 @@
 
 ## Tooling
 
-- **Build / package manager:** Gradle 9.7.1 (wrapper), Kotlin Multiplatform for the `shared/` modules (GH-41: `jvm()` + `js { nodejs() }`,
+- **Build / package manager:** Gradle 9.7.1 (wrapper), Kotlin Multiplatform for the `shared/` modules (GH-41: `jvm()` + `js { nodejs() }`; GH-274: `:shared:texts` holds every player-facing text as plain Kotlin interfaces, with no localization library, and its `EnglishSnapshotTest` reads the JVM-only `english.txt` by Java reflection,
   GH-103; the Kotlin Gradle plugin downloads Node.js and yarn, `kotlin-js-store/yarn.lock` pins
   the npm packages; a Kotlin upgrade that changes them fails the build until
   `./gradlew kotlinUpgradeYarnLock` is run and the new lock committed; GH-137: yarn resolutions in the
