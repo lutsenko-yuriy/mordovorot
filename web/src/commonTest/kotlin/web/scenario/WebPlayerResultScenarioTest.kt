@@ -170,4 +170,33 @@ class WebPlayerResultScenarioTest {
         assertTrue(page.state.movesShown)
         assertFalse(page.state.mordie.orEmpty().contains("gave up"))
     }
+
+    @Test
+    fun `giving up before the first shift is put softly`() = webTest {
+        // TODO: 1. Give Up before the first shift
+        // TODO: 2. The solution screen opens
+        // TODO: 3. Its line starts with `mordie.solutionNotStarted`
+    }
+
+    @Test
+    fun `giving up after shifts is put softly`() = webTest {
+        // TODO: 1. Make two shifts
+        // TODO: 2. Give Up
+        // TODO: 3. Its line starts with `mordie.solutionStopped(2)`
+    }
+
+    @Test
+    fun `losing to Mordie keeps units on both counts`() = webTest {
+        // TODO: 1. Solve in more moves than Mordie's solution
+        // TODO: 2. The ending shows `mordie.endingMordieWon(mine, yours)`
+        // TODO: 3. Both counts carry their unit
+    }
+
+    @Test
+    fun `beating an unproven answer has its own ending`() = webTest {
+        // TODO: 1. Seed Mordie's answer as not proven shortest
+        // TODO: 2. Solve in fewer moves
+        // TODO: 3. The ending shows `mordie.endingBeatUnproven(mine, yours)`
+        // TODO: 4. It differs from `mordie.endingPlayerWon(mine)`
+    }
 }

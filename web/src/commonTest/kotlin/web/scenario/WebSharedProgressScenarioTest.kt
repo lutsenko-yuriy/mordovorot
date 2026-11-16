@@ -146,4 +146,11 @@ class WebSharedProgressScenarioTest {
             assertEquals(told, page.ownProps("shared_board_opened").single()["progress"], "p=$sent")
         }
     }
+
+    @Test
+    fun `a friend's solved line asks the usual challenge`() = webTest {
+        // TODO: 1. Open a link with a friend's solved progress
+        // TODO: 2. Mordie shows `mordie.friendSolved(12)`
+        // TODO: 3. It ends with the same challenge as `mordie.found`
+    }
 }
