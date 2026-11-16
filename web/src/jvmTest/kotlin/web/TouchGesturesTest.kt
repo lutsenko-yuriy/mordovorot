@@ -62,6 +62,14 @@ class TouchGesturesTest {
     }
 
     @Test
+    fun `the whole page can't be selected, so the live region and footer offer no copy (GH-303)`() {
+        val body = rule("body")
+
+        assertTrue("user-select: none;" in body && "-webkit-user-select: none;" in body, body)
+        assertTrue("-webkit-touch-callout: none;" in body, body)
+    }
+
+    @Test
     fun `the save dialog's input still takes text`() {
         val input = rule(".dialog input", dialogs)
 
