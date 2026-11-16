@@ -28,7 +28,7 @@ class WebKeyboardPlayScenarioTest {
     fun `keyboard mode shows the digit toolbar and the Controls row`() = webTest {
         val page = WebHarness(backgroundScope).remembering().startOn()
 
-        assertEquals(listOf(1, 2, 3, 4, 5, 6, 7), ToolbarButton.entries.map { page.state.digitOf(it) })
+        assertEquals(listOf(1, 2, 3, 4, 5, 6, 7, 8), ToolbarButton.entries.map { page.state.digitOf(it) })
         assertTrue(page.state.computer)
     }
 

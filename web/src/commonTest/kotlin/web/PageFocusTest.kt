@@ -61,6 +61,14 @@ class PageFocusTest {
     }
 
     @Test
+    fun `the Tutorial button gone passes focus as the Give Up row does`() {
+        val key = Focus.TutorialReplay.key
+        assertEquals(Focus.ReplayNext, fallbackFocus(key, replay(atStart = true, atEnd = false)))
+        assertEquals(Focus.Board, fallbackFocus(key, playing.copy(selection = TileSelection.INITIAL)))
+        assertEquals(Focus.PageStart, fallbackFocus(key, playing))
+    }
+
+    @Test
     fun `anything else goes to the start of the page`() {
         assertEquals(Focus.PageStart, fallbackFocus("nothing-like-this", playing))
         assertEquals(Focus.PageStart, fallbackFocus(Focus.GiveUpRow.key, playing))
@@ -79,6 +87,7 @@ class PageFocusTest {
         WebDialog.LinkRejected("no"),
         WebDialog.OpenShared(side = 3),
         WebDialog.Update,
+        WebDialog.ReplaySave,
     )
 
     @Test

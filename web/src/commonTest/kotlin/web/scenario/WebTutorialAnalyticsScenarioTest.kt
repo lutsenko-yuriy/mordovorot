@@ -63,7 +63,7 @@ class WebTutorialAnalyticsScenarioTest {
         page.playSteps()
         waitPause()
 
-        assertEquals(mapOf("result" to "completed", "last_step" to 6, "blocked_shifts" to 0), page.ownProps("tutorial_ended").single())
+        assertEquals(mapOf("source" to "first_launch", "result" to "completed", "last_step" to 6, "blocked_shifts" to 0), page.ownProps("tutorial_ended").single())
     }
 
     @Test
@@ -73,7 +73,7 @@ class WebTutorialAnalyticsScenarioTest {
 
         page.game.tutorial.onSkip()
 
-        assertEquals(mapOf("result" to "skipped", "last_step" to 2, "blocked_shifts" to 0), page.ownProps("tutorial_ended").single())
+        assertEquals(mapOf("source" to "first_launch", "result" to "skipped", "last_step" to 2, "blocked_shifts" to 0), page.ownProps("tutorial_ended").single())
     }
 
     @Test

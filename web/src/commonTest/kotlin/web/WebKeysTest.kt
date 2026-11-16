@@ -33,7 +33,7 @@ class WebKeysTest {
 
     @Test
     fun `other keys are nothing`() {
-        for (other in listOf("8", "x", "Enter", "Escape", "F1", "!")) assertNull(key(KeyPress(other)))
+        for (other in listOf("9", "x", "Enter", "Escape", "F1", "!")) assertNull(key(KeyPress(other)))
     }
 
     @Test

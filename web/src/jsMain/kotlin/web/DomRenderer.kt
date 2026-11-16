@@ -131,7 +131,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         append(
             text("moves", if (state.movesShown) "Moves: ${state.moves}" else "").also { moves = it },
             element("div", "mordie").apply { append(element("div", "line")) }.also { mordie = it },
-            *listOfNotNull(state.solution?.let { replayButtons(it, { game }, dialogOpen) }, giveUpRow(state.giveUp, state.digitOf(ToolbarButton.GIVE_UP_ROW), { game }, dialogOpen)).toTypedArray(),
+            *listOfNotNull(state.solution?.let { replayButtons(it, { game }, dialogOpen) }, giveUpRow(state.giveUp, state.digitOf(ToolbarButton.GIVE_UP_ROW), state.tutorialButton, state.digitOf(ToolbarButton.TUTORIAL), { game }, dialogOpen)).toTypedArray(),
             state.guidance?.let { guidancePanel(it, state) { game }.also { panel -> toolbar = panel } } ?: element("div", "toolbar").also { toolbar = it }.apply {
                 append(
                     toolbarButton("New", ToolbarButton.NEW, Focus.NewButton, state) { game.onNew() },
