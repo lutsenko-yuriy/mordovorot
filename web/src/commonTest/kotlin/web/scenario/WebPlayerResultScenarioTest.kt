@@ -8,6 +8,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import mordie.SearchProgress
 import mordie.SolutionMove
+import mordie.SolutionSource
 import storage.SavedMordie
 import storage.SavedMove
 import web.Arrow
@@ -176,30 +177,53 @@ class WebPlayerResultScenarioTest {
 
     @Test
     fun `giving up before the first shift is put softly`() = webTest {
-        // TODO: 1. Give Up before the first shift
-        // TODO: 2. The solution screen opens
-        // TODO: 3. Its line starts with `mordie.solutionNotStarted`
+        val page = WebHarness(backgroundScope).seed("m", original, mordie = SavedMordie(original, 2, found = true, solution = savedPath)).start()
+        page.game.onLoadChosen("m")
+
+        page.giveUp()
+
+        assertTrue(page.state.solution != null)
+        assertTrue(page.state.mordie.orEmpty().startsWith(mordieTexts.solutionNotStarted))
     }
 
     @Test
     fun `giving up after shifts is put softly`() = webTest {
-        // TODO: 1. Make two shifts
-        // TODO: 2. Give Up
-        // TODO: 3. Its line starts with `mordie.solutionStopped(2)`
+        val page = WebHarness(backgroundScope).startOn(original)
+        page.movesMade(more = 1)
+        assertEquals(2, page.state.moves)
+
+        page.giveUp()
+
+        assertTrue(page.state.mordie.orEmpty().startsWith(mordieTexts.solutionStopped(2)))
     }
 
     @Test
     fun `losing to Mordie keeps units on both counts`() = webTest {
-        // TODO: 1. Solve in more moves than Mordie's solution
-        // TODO: 2. The ending shows `mordie.endingMordieWon(mine, yours)`
-        // TODO: 3. Both counts carry their unit
+        val page = WebHarness(backgroundScope).startOn(original)
+        page.searchFinds()
+        // Two detours undone in reverse order, then Mordie's own 2 moves.
+        page.game.onArrow(Arrow.LEFT, 2)
+        page.game.onArrow(Arrow.UP, 3)
+        page.game.onArrow(Arrow.DOWN, 3)
+        page.game.onArrow(Arrow.RIGHT, 2)
+        page.solve()
+
+        val yours = page.state.moves
+        assertTrue(yours > 2)
+        assertEquals(mordieTexts.endingMordieWon(2, yours), page.state.mordie)
+        assertTrue("2 moves" in page.state.mordie.orEmpty() && "$yours moves" in page.state.mordie.orEmpty())
     }
 
     @Test
     fun `beating an unproven answer has its own ending`() = webTest {
-        // TODO: 1. Seed Mordie's answer as not proven shortest
-        // TODO: 2. Solve in fewer moves
-        // TODO: 3. The ending shows `mordie.endingBeatUnproven(mine, yours)`
-        // TODO: 4. It differs from `mordie.endingPlayerWon(mine)`
+        val page = WebHarness(backgroundScope).startOn(original)
+        page.mordieSearches.latest.progress = SearchProgress(
+            5, found = true, elapsedMs = 0, solution = List(5) { SolutionMove(isRow = true, index = 0, amount = 1) },
+            ruledOut = 3, provenShortest = false, source = SolutionSource.FAST_SOLVER,
+        )
+        page.solve()
+
+        assertEquals(mordieTexts.endingBeatUnproven(5, 2), page.state.mordie)
+        assertTrue(page.state.mordie != mordieTexts.endingPlayerWon(5))
     }
 }

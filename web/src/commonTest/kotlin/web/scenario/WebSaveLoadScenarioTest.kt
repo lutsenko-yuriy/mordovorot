@@ -3,6 +3,7 @@ package web.scenario
 import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import mordie.SearchProgress
@@ -52,10 +53,7 @@ class WebSaveLoadScenarioTest {
         assertEquals(statusTexts.saveNameHasSpaces("a b"), page.state.status)
         for (name in listOf("a/b", "..")) {
             saveAs(name)
-            assertEquals(
-                statusTexts.saveFailed(name, "Save name must not be blank, contain a path separator, or contain '..'"),
-                page.state.status,
-            )
+            assertEquals(statusTexts.saveNameRejected(name), page.state.status)
         }
         saveAs("   ")
         assertNull(page.state.status)
@@ -181,22 +179,35 @@ class WebSaveLoadScenarioTest {
 
     @Test
     fun `a damaged save shows one friendly error`() = webTest {
-        // TODO: 1. Seed a corrupted save named `foo`
-        // TODO: 2. Load `foo`
-        // TODO: 3. The status line shows `status.saveDamaged("foo")`
-        // TODO: 4. The storage's own reason is absent
+        val page = WebHarness(backgroundScope).startOn()
+        page.store.entries["mordovorot.save.foo"] = "x\n0 1 2 3\n"
+
+        page.game.onLoad()
+        page.game.onLoadChosen("foo")
+
+        assertEquals(statusTexts.saveDamaged("foo"), page.state.status)
+        assertFalse("square side" in page.state.status.orEmpty())
     }
 
     @Test
     fun `a failed save shows one friendly error`() = webTest {
-        // TODO: 1. Make the storage write fail
-        // TODO: 2. Save as `foo`
-        // TODO: 3. The status line shows `status.saveFailed("foo")`
+        val page = WebHarness(backgroundScope).startOn()
+        page.store.setException = IllegalStateException("QuotaExceededError")
+
+        page.game.onSave()
+        page.game.onSaveAnswered("foo")
+
+        assertEquals(statusTexts.saveFailed("foo"), page.state.status)
     }
 
     @Test
     fun `an empty Load list says no saves yet`() = webTest {
-        // TODO: 1. Open Load with no saves
-        // TODO: 2. The list shows `dialogs.noSaves`
+        val page = WebHarness(backgroundScope).startOn()
+
+        page.game.onLoad()
+
+        // The DOM prints `dialogs.noSaves` for an empty list; the status line says the same.
+        assertEquals(WebDialog.Load(restore = false, emptyList()), page.state.dialog)
+        assertEquals(statusTexts.noSavesAvailable, dialogTexts.noSaves)
     }
 }

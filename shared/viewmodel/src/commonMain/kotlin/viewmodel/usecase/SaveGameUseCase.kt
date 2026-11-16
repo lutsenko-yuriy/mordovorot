@@ -38,8 +38,11 @@ internal class SaveGameUseCase(
         return catchingNonCancellation(
             onError = { e ->
                 analytics.track("save_command_used", mapOf("result" to "error", "name_source" to nameSource))
-                // Always say the save failed - e.message alone can be just a path (PR #15).
-                ui.showMessage(texts().status.saveFailed(name, e.message ?: e::class.simpleName ?: ""))
+                // Always say the save failed - e.message alone can be just a path (PR #15). A name
+                // the store refuses (SaveNames.requireSafe) is the player's to fix; the rest is storage (GH-274).
+                ui.showMessage(
+                    if (e is IllegalArgumentException) texts().status.saveNameRejected(name) else texts().status.saveFailed(name),
+                )
                 false
             },
         ) {

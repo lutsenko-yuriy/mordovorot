@@ -5,6 +5,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import viewmodel.TileLabels
 import web.Arrow
 import web.WebDialog
@@ -153,8 +154,10 @@ class WebSharedProgressScenarioTest {
 
     @Test
     fun `a friend's solved line asks the usual challenge`() = webTest {
-        // TODO: 1. Open a link with a friend's solved progress
-        // TODO: 2. Mordie shows `mordie.friendSolved(12)`
-        // TODO: 3. It ends with the same challenge as `mordie.found`
+        val page = WebHarness(backgroundScope).startWithLink(4, ONE_SHIFT_FROM_SOLVED, progress = "s12")
+
+        assertEquals(mordieTexts.friendSolved(12), page.state.mordie)
+        val challenge = "Can you beat it?"
+        assertTrue(mordieTexts.friendSolved(12).endsWith(challenge) && mordieTexts.found(12).endsWith(challenge))
     }
 }

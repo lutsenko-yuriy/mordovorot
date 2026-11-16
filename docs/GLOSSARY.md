@@ -22,3 +22,9 @@ When two files fit, the more specific domain wins (a web-only screen-reader term
 | rotate | shift |
 | win, correct state | solved |
 | line selection | selected tile (a retired term: `glossary/CONTROLS.md` keeps its row as history) |
+| could not, did not, have not, do not, cannot | the contraction: couldn't, didn't, haven't, don't, can't (texts always contract, GH-274) |
+| wanna | can you |
+| `?..` | `?` |
+| available saves | your saves |
+| corrupted | damaged |
+| puzzle | board |

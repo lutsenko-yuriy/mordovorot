@@ -130,7 +130,7 @@ internal class WebDialogFlows(
     /** [openedFrom] is `startup` or `toolbar`, as `screen_unsolvable_dialog.opened_from`. */
     suspend fun resolveUnsolvable(save: SaveInfo, openedFrom: String): UnsolvableSaveChoice {
         // The viewModel's can't-be-solved message, just shown, goes in the dialog instead.
-        val message = takeStatus() ?: texts().status.cantBeSolvedDialog(save.displayWithSize())
+        val message = takeStatus() ?: texts().status.cantBeSolved(save.displayWithSize())
         analytics.track("screen_unsolvable_dialog", mapOf("opened_from" to openedFrom))
         return modal.ask(WebDialog.Unsolvable(message))
     }
