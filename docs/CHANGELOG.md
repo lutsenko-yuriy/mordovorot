@@ -13,17 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
-## [0.48.1] — 2026-11-16 (PR #309 merged)
+## [0.49.0] — 2026-11-16 (PR #310 merged)
 
 ### Changed
 
-- [wip] (PR #309) GH-274 (WU2/3): the tests assert on text keys, not literal English; no wording changed yet (WU3 follows).
-
-## [0.48.1] — 2026-11-16 (PR #308 merged)
-
-### Changed
-
-- [wip] (PR #308) GH-274 (WU1/3): the :shared:texts module holds every English text, and the game words its texts through texts(); no wording changed yet (WU2 and WU3 follow).
+- [user] (PR #310) GH-274: The game's texts are friendlier and more consistent, and Mordie no longer contradicts himself.
+- [non-user] GH-274: every English text lives in the :shared:texts module and is read through texts(); the tests assert on text keys; an avoid-word test guards the wording.
 
 ## [0.48.1] — 2026-11-16 (PR #304 merged)
 

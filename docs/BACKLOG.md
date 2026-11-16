@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-- GH-274: Friendlier wording of the game's text (WU2/3 merged; WU3 pending)
+_(nothing in progress)_
 
 ---
 
