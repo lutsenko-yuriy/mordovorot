@@ -6,6 +6,7 @@ import kotlin.test.assertTrue
 import mordie.SearchProgress
 import mordie.SolutionMove
 import web.Arrow
+import web.Focus
 
 /** GH-288: the tutorial's analytics events (docs/ANALYTICS_EVENTS.md, GH-288 section). */
 class WebTutorialAnalyticsScenarioTest {
@@ -54,7 +55,7 @@ class WebTutorialAnalyticsScenarioTest {
 
         page.stepByArrow(1)
 
-        assertEquals(mapOf("step" to 1, "blocked_shifts" to 2), page.ownProps("tutorial_step_completed").single())
+        assertEquals(mapOf("step" to 1, "blocked_shifts" to 2, "input" to "click"), page.ownProps("tutorial_step_completed").single())
     }
 
     @Test
@@ -129,27 +130,41 @@ class WebTutorialAnalyticsScenarioTest {
 
     @Test
     fun `input is drag for a dragged step`() = webTest {
-        // TODO: 1. Drag step 1's row
-        // TODO: 2. `tutorial_step_completed` has `input: drag` (GH-290)
+        val page = tutorialPage(backgroundScope)
+
+        page.stepByDrag(1)
+
+        assertEquals("drag", page.ownProps("tutorial_step_completed").single()["input"])
     }
 
     @Test
     fun `input is click for an arrow`() = webTest {
-        // TODO: 1. Click step 1's arrow
-        // TODO: 2. `tutorial_step_completed` has `input: click` (GH-290)
+        val page = tutorialPage(backgroundScope)
+
+        page.stepByArrow(1)
+
+        assertEquals("click", page.ownProps("tutorial_step_completed").single()["input"])
     }
 
     @Test
     fun `input is key for a key shift`() = webTest {
-        // TODO: 1. Press step 1's shift key
-        // TODO: 2. `tutorial_step_completed` has `input: key` (GH-290)
+        val page = tutorialPage(backgroundScope)
+
+        page.stepByKey(1)
+
+        assertEquals("key", page.ownProps("tutorial_step_completed").single()["input"])
     }
 
     @Test
     fun `step 3 done by click then key says key`() = webTest {
-        // TODO: 1. Play steps 1 and 2
-        // TODO: 2. Shift step 3's row one tile by click
-        // TODO: 3. Shift it the second tile by key
-        // TODO: 4. `tutorial_step_completed` for step 3 has `input: key` (GH-290)
+        val page = tutorialPage(backgroundScope)
+        page.playSteps(2)
+
+        page.game.onArrow(Arrow.RIGHT, 2)
+        page.press("s", from = Focus.Board)
+        page.press("s", from = Focus.Board)
+        page.press("ArrowRight", from = Focus.Board)
+
+        assertEquals("key", page.ownProps("tutorial_step_completed").first { it["step"] == 3 }["input"])
     }
 }

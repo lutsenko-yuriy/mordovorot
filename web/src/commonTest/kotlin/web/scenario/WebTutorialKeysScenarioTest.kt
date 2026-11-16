@@ -1,103 +1,165 @@
 package web.scenario
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlinx.coroutines.test.TestScope
+import viewmodel.KeyboardLayout
+import web.Arrow
+import web.Focus
+import web.KeyHints
+import web.ReplaySaveChoice
+import web.tutorial.TutorialText
 
 /** GH-290: on a computer, the tutorial's steps list the ways to do the asked shift: drag, click, keys. */
 class WebTutorialKeysScenarioTest {
 
+    private fun WebHarness.ways() = state.guidance!!.ways
+
+    private fun WebHarness.keyLine() = ways().last()
+
+    private fun WebHarness.key(name: String) = press(name, from = Focus.Board)
+
+    private fun TestScope.leftHanded() = WebHarness(backgroundScope, firstLaunch = true).remembering(KeyboardLayout.LEFT_HANDED).start()
+
     @Test
     fun `step 1 lists drag, click and keys`() = webTest {
-        // TODO: 1. First launch on a computer, right hand, selection on tile 1
-        // TODO: 2. The bubble's lead sentence is the computer's step 1 text
-        // TODO: 3. Its lines are `Drag it left`, `Click its ◀`, `Press H or ←`
+        val page = tutorialPage(backgroundScope)
+
+        assertEquals(TutorialText.step(1, computer = true, labels = page.state.labels), page.state.guidance?.text)
+        assertEquals(listOf("Drag it left", "Click its ◀", "Press H or ←"), page.ways())
     }
 
     @Test
     fun `step 2 starts the key line with a select key`() = webTest {
-        // TODO: 1. Play step 1 by arrow
-        // TODO: 2. The lines are `Drag it up`, `Click its ▲`, `Press D, then K or ↑`
+        val page = tutorialPage(backgroundScope)
+
+        page.stepByArrow(1)
+
+        assertEquals(listOf("Drag it up", "Click its ▲", "Press D, then K or ↑"), page.ways())
     }
 
     @Test
     fun `the key line names what is left after a select key`() = webTest {
-        // TODO: 1. Play step 1
-        // TODO: 2. Press D
-        // TODO: 3. The key line is `Press K or ↑`
+        val page = tutorialPage(backgroundScope)
+        page.stepByArrow(1)
+
+        page.key("d")
+
+        assertEquals("Press K or ↑", page.keyLine())
     }
 
     @Test
     fun `a tile press redraws the key line`() = webTest {
-        // TODO: 1. Play step 1
-        // TODO: 2. Press the tile in the second column
-        // TODO: 3. The key line is `Press K or ↑`
+        val page = tutorialPage(backgroundScope)
+        page.stepByArrow(1)
+
+        page.game.onTilePressed(2, 1)
+
+        assertEquals("Press K or ↑", page.keyLine())
     }
 
     @Test
     fun `a column far from the selection asks for at most three select keys`() = webTest {
-        // TODO: 1. Play steps 1 to 3 (the selection stays on column 1)
-        // TODO: 2. Step 4's column is the fourth
-        // TODO: 3. The key line is `Press D three times, then J or ↓`
+        val page = tutorialPage(backgroundScope)
+
+        page.playSteps(3)
+
+        assertEquals("Press D three times, then J or ↓", page.keyLine())
     }
 
     @Test
     fun `a row asks only for up and down select keys`() = webTest {
-        // TODO: 1. Play steps 1 and 2
-        // TODO: 2. Step 3's row is the third; the selection is on the first
-        // TODO: 3. The key line is `Press S twice, then L or →`
+        val page = tutorialPage(backgroundScope)
+
+        page.playSteps(2)
+
+        assertEquals("Press S twice, then L or → twice", page.keyLine())
     }
 
     @Test
     fun `the left hand's lines`() = webTest {
-        // TODO: 1. A visit with the left hand remembered
-        // TODO: 2. Step 1's key line is `Press A`: the left hand shifts a row with A and D
-        // TODO: 3. Step 2's key line starts with the left hand's select keys
+        val page = leftHanded()
+
+        assertEquals("Press A", page.keyLine())
+        page.stepByArrow(1)
+        assertEquals("Press L or →, then W", page.keyLine())
     }
 
     @Test
     fun `OK in Controls changes the key line`() = webTest {
-        // TODO: 1. Open Controls during step 1
-        // TODO: 2. Mark Left-handed: the key line is unchanged
-        // TODO: 3. Press OK: the key line names the left hand's keys
+        val page = tutorialPage(backgroundScope)
+        page.game.tutorial.onControls()
+
+        page.game.controls.onLayout(KeyboardLayout.LEFT_HANDED)
+        assertEquals("Press H or ←", page.keyLine())
+        page.game.controls.onAnswered(ok = true)
+
+        assertEquals("Press A", page.keyLine())
     }
 
     @Test
     fun `Cancel in Controls keeps the key line`() = webTest {
-        // TODO: 1. Open Controls and mark Left-handed
-        // TODO: 2. Cancel: the key line is unchanged
+        val page = tutorialPage(backgroundScope)
+        page.game.tutorial.onControls()
+        page.game.controls.onLayout(KeyboardLayout.LEFT_HANDED)
+
+        page.game.controls.onAnswered(ok = false)
+
+        assertEquals("Press H or ←", page.keyLine())
     }
 
     @Test
     fun `a replay's step 1 starts with select keys when the selection is elsewhere`() = webTest {
-        // TODO: 1. Finish the tutorial with the selection on another row
-        // TODO: 2. Replay it with [ Tutorial ]
-        // TODO: 3. Step 1's key line starts with the up and down select keys
+        val page = tutorialPage(backgroundScope)
+        page.key("s")
+        page.playSteps()
+        waitPause()
+
+        page.game.tutorial.onReplay("button")
+        page.game.tutorial.onReplayAnswered(ReplaySaveChoice.DONT_SAVE)
+
+        assertEquals("Press W, then H or ←", page.keyLine())
     }
 
     @Test
     fun `the lines stay under a blocked message`() = webTest {
-        // TODO: 1. Shift another row on step 1
-        // TODO: 2. The blocked message shows
-        // TODO: 3. The three lines are still there
+        val page = tutorialPage(backgroundScope)
+        val before = page.ways()
+
+        page.game.onArrow(Arrow.LEFT, 1)
+
+        assertEquals(TutorialText.blocked(web.drag.Axis.ROW), page.state.guidance?.text)
+        assertEquals(before, page.ways())
     }
 
     @Test
     fun `the lines stay under Once more, naming the way begun`() = webTest {
-        // TODO: 1. Play steps 1 and 2
-        // TODO: 2. Shift step 3's row one tile by arrow
-        // TODO: 3. `Once more!` shows
-        // TODO: 4. The click line is the one for the arrow already used
+        val page = tutorialPage(backgroundScope)
+        page.playSteps(2)
+
+        page.game.onArrow(Arrow.LEFT, 2)
+
+        assertEquals(TutorialText.again(3), page.state.guidance?.text)
+        assertEquals(listOf("Drag it left", "Click its ◀", "Press S twice, then H or ←"), page.ways())
     }
 
     @Test
     fun `a phone shows no lines`() = webTest {
-        // TODO: 1. First launch on touch
-        // TODO: 2. Step 1's text is today's drag-only text
-        // TODO: 3. There are no lines
+        val page = tutorialPage(backgroundScope, touch = true)
+
+        assertEquals(TutorialText.step(1, computer = false, labels = page.state.labels), page.state.guidance?.text)
+        assertTrue(page.state.guidance!!.ways.isEmpty())
     }
 
     @Test
     fun `the Key hints are unchanged through the tutorial`() = webTest {
-        // TODO: 1. Play steps 1 to 4, checking the hints at each step
-        // TODO: 2. The hints equal the board's hints for the hand
+        val page = tutorialPage(backgroundScope)
+
+        (1..4).forEach {
+            assertEquals(KeyHints.board(KeyboardLayout.RIGHT_HANDED), page.state.hints)
+            page.stepByArrow(it)
+        }
+        assertEquals(KeyHints.board(KeyboardLayout.RIGHT_HANDED), page.state.hints)
     }
 }

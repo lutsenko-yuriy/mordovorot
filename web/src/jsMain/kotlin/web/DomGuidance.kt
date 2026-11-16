@@ -7,14 +7,17 @@ import web.drag.Axis
 
 // GH-288: what the tutorial adds to the page: Mordie's bubble and its buttons, and the asked line's highlight.
 
-/** Mordie's [guidance] in a bubble, over `[ Controls 6 ] [ Labels 4 ] [ Skip ]`, which stand where the toolbar does.
+/** Mordie's [guidance] in a bubble, a computer's with its ways lines under the text (GH-290), over `[ Controls 6 ] [ Labels 4 ] [ Skip ]`, which stand where the toolbar does.
  *  A phone has no Controls button. [game] is read only on a click, as in [giveUpRow]. */
 internal fun guidancePanel(guidance: Guidance, state: WebState, game: () -> WebGame): Element = element("div", "guidance").apply {
     val off = state.dialog != null
     fun tutorialButton(label: String, focus: Focus, digit: Int?, onClick: () -> Unit) =
         button(label, onClick = onClick).focusKey(focus).withDigit(digit).also { it.disabled = off }
     append(
-        element("div", "bubble").apply { append(element("span", "name").apply { textContent = "Mordie:" }, " ${guidance.text}") },
+        element("div", "bubble").apply {
+            append(element("span", "name").apply { textContent = "Mordie:" }, " ${guidance.text}")
+            if (guidance.ways.isNotEmpty()) append(element("div", "ways").apply { guidance.ways.forEach { append(element("div", "way").apply { textContent = it }) } })
+        },
         element("div", "guidance-buttons").apply {
             if (guidance.controls) append(tutorialButton("Controls", Focus.TutorialControls, state.digitOf(ToolbarButton.CONTROLS)) { game().tutorial.onControls() })
             append(

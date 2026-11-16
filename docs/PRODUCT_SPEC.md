@@ -574,15 +574,27 @@ Web client only. On a first visit Mordie walks the player through a short game.
 - **The panel:** in place of the Give Up row and the toolbar, Mordie's bubble (`Mordie:` and the step's text,
   larger than his line, on the card colour with a rust edge and a tail) above `[ Controls 6 ] [ Labels 4 ]
   [ Skip ]`. On a phone, `[ Labels ] [ Skip ]`: Controls is out of reach on touch. The bubble keeps the
-  height of the longest text, so the board doesn't change size between steps.
-- **The steps** (the 1-based tile named is the one Labels shows):
-  1. `Hi there! I'm Mordie. Let's play a short game. Drag the top row one tile left, or click its ◀.`
-  2. `Lines go round: see tile 14 at the top of the second column? Shift that column one tile up, by dragging or with ▲, and 14 comes back in at the bottom.`
-  3. `A move is one row or column shifted, however far. Drag the third row two tiles right, or click its ▶ twice: still 1 move.` After one of its two tiles: `Once more! It's the same row, so Moves stays at 3.` Either direction counts, as two tiles is half a turn.
-  4. `Last one: drag the fourth column one tile down, or click its ▼. That solves it!`
+  height of the longest text and ways lines, so the board doesn't change size between steps.
+- **The steps** (the 1-based tile named is the one Labels shows). On a computer steps 1 to 4 end their text in a colon or
+  full stop and are followed by the ways lines (below):
+  1. `Hi there! I'm Mordie. Let's play a short game. Shift the top row one tile left:`
+  2. `Lines go round: see tile 14 at the top of the second column? Shift that column one tile up, and 14 comes back in at the bottom:`
+  3. `A move is one row or column shifted, however far. Shift the third row two tiles right: still 1 move.` After one of its two tiles: `Once more! It's the same row, so Moves stays at 3.` Either direction counts, as two tiles is half a turn.
+  4. `Last one: shift the fourth column one tile down. That solves it!`
   5. `Can you beat my results?`, on the solved board, with Mordie's spot empty.
   6. After 3 seconds the panel goes, the toolbar and Give Up row (`Mordie's solution`) return, and Mordie's ending shows.
-  On a phone the texts name dragging only and leave the arrows out.
+  On a phone the texts say `Drag` instead of `Shift`, name dragging only and show no ways lines.
+- **The ways (GH-290):** on a computer, steps 1 to 4 list below the text three lines, in this order, for the shift still asked.
+  Example, step 2 with the selection on row 1, column 1, right hand:
+  - `Drag it up` (`Drag it two tiles right` for two tiles left).
+  - `Click its ▲` (`Click its ▶ twice`).
+  - `Press D, then K or ↑`: the select keys that bring the selection to the asked row or column, then the shift key, each as the
+    letter and the arrow where both work. A row needs only up and down select keys, a column only left and right; the path is
+    straight, never round the edge, so at most 3 presses (`once` is left out; `twice`, `three times`). Nothing is said when the
+    selection is already on the line. Right hand: select W A S D, shift H/← L/→ K/↑ J/↓. Left hand: select H/← L/→ K/↑ J/↓, shift A D W S.
+  - The key line is live: each select key, tile press or shift redraws it with what is left. A hand chosen in Controls takes effect when OK
+    closes the dialog, as the Key hints do; marking an option changes nothing. The lines stay under the blocked message and under step 3's
+    `Once more!`, naming the arrow already used and the tiles left. The Key hints under the board are unchanged and get no extra highlight.
 - **The highlight** (steps 1 to 4): the asked row or column has a dashed rust outline with a pulsing halo
   (still under reduced motion), and on a computer its asked arrow is rust, bold and ringed.
 - **Matching:** only the asked shift counts, by drag, arrow or key. A drag counts the short way round; a whole turn is ignored.
@@ -618,5 +630,5 @@ Web client only. On a first visit Mordie walks the player through a short game.
   The panel's buttons open their dialogs with themselves as opener. On step 5's solved board focus falls to `[ Labels ]`, so a
   held Enter can't skip; once the panel is gone, a gone button's focus falls back as on a won board.
 - **Screen readers:** the bubble is plain text, not a live region; shifts that count are announced as always and a blocked one says nothing.
-- **Analytics:** `tutorial_started`, `tutorial_step_completed`, `tutorial_ended`, `opened_from: tutorial` for the panel's
+- **Analytics:** `tutorial_started`, `tutorial_step_completed` (with `input`: `drag`, `click` or `key`, of the shift that finished the step, GH-290), `tutorial_ended`, `opened_from: tutorial` for the panel's
   Controls and Labels, and `tutorial: true` on `board_solved` and `mordie_solution_found` (`docs/ANALYTICS_EVENTS.md`).

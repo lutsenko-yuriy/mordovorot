@@ -95,7 +95,7 @@ class WebGame internal constructor(
     internal fun shiftLine(arrow: Arrow, line: Int, source: ShiftSource, focus: Focus? = null) {
         val row = arrow == Arrow.LEFT || arrow == Arrow.RIGHT
         val forward = arrow == Arrow.RIGHT || arrow == Arrow.DOWN
-        if (!tutorial.take(if (row) Axis.ROW else Axis.COLUMN, line, if (forward) 1 else -1)) return
+        if (!tutorial.take(if (row) Axis.ROW else Axis.COLUMN, line, if (forward) 1 else -1, source)) return
         shift({ Announcements.shift(arrow.direction, line, it) }, Slides.ofArrow(arrow, line), focus) {
             when (arrow) {
                 Arrow.LEFT -> viewModel.shiftLeft(line, source)
@@ -247,7 +247,7 @@ class WebGame internal constructor(
 
     private fun frame(slide: LineOffset?, focus: Focus?): WebState {
         val solved = viewModel.isSolved()
-        val guidance = tutorial.guidance()
+        val guidance = tutorial.guidance(keys.shownSelection(), controls.layout)
         return WebState(
             side = viewModel.squareSide(),
             tiles = viewModel.boardState().map { it + 1 },

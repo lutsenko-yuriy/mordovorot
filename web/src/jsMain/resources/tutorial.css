@@ -47,6 +47,11 @@
     transform: rotate(45deg);
 }
 
+/* GH-290: a computer's ways lines, one under the other, below the text. */
+.bubble .ways {
+    margin-top: 0.4em;
+}
+
 .bubble .name {
     color: var(--mordie);
     font-weight: 700;
@@ -61,6 +66,39 @@
 @media (orientation: portrait) {
     .guidance-buttons {
         justify-content: center;
+    }
+}
+
+/* A computer's bubble also holds the three ways lines (GH-290), so it keeps room for the longest step 2 text and them. */
+.app.computer .guidance {
+    --bubble-lines: 8;
+}
+
+/* A short window gives the board the height instead: smaller text, so the lines take fewer rows. */
+@media (max-height: 640px) {
+    .app.computer .guidance {
+        --bubble-lines: 7;
+    }
+
+    .app.computer .bubble {
+        font-size: 0.95rem;
+    }
+}
+
+/* Under that, the bubble widens instead, as far as the panel's column goes. */
+@media (max-height: 500px) {
+    .app.computer .guidance {
+        --bubble-lines: 5;
+        --bubble-pad: 0.35em;
+        max-width: 40rem;
+    }
+
+    .app.computer .bubble {
+        font-size: 0.85rem;
+    }
+
+    .app.computer .bubble .ways {
+        margin-top: 0;
     }
 }
 

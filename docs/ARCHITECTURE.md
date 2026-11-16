@@ -231,7 +231,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │                    # key counts as the Latin letter at its position (GH-200)
 │   ├── WebKeyPlay.kt    # WebGame's keys outside dialogs, tile presses and the TileSelection (GH-171)
 │   ├── KeyHints.kt      # The web's Controls key list and the hints under the board, in play and on
-│   │                    # the solution screen (GH-171)
+│   │                    # the solution screen (GH-171); selectKeys/shiftKeys name a key for the
+│   │                    # tutorial's ways lines (GH-290)
 │   ├── WebState.kt      # One frame: tiles (1-based), Moves, Mordie's spot, solved, status, WebDialog,
 │   │                    # the dragged line's live offset; the Give Up row, the solution screen and
 │   │                    # the replay shift to slide (GH-126); the tile labels and tileTexts (GH-139);

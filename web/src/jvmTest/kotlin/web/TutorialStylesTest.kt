@@ -37,4 +37,9 @@ class TutorialStylesTest {
     fun `the bubble keeps room for the longest text`() {
         assertTrue("min-height:" in rule(".bubble"))
     }
+
+    @Test
+    fun `a computer's bubble has room for the ways lines (GH-290)`() {
+        assertTrue("--bubble-lines:" in rule(".app.computer .guidance"))
+    }
 }
