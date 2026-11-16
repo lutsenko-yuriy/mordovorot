@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.46.0] — 2026-11-16 (PR #297 merged)
+
+### Added
+
+- [user] (PR #297) GH-288: On a first visit, Mordie walks you through a short game: shifting a row, rows going round, what a move is, and a column. Skip any time. (WU1 #295, WU2 #296, WU3 #297).
+- [non-user] GH-288: the tutorial's panel and highlight (DomGuidance.kt, tutorial.css), switched on in Main.kt; harness mode=tutorial; panel buttons fall back for focus; the spec and glossary are in the same PR.
+
 ## [0.45.2] — 2026-11-16 (PR #296 merged)
 
 ### Added
