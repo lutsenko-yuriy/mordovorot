@@ -1,0 +1,63 @@
+package texts.ru
+
+import texts.DialogTexts
+
+object RussianDialogTexts : DialogTexts {
+    override val sizeTitle = "Размер новой игры"
+    override val saveTitle = "Сохранить игру"
+    override val loadTitle = "Загрузить игру"
+    override val restoreTitle = "Восстановить сохранённую игру?"
+    override fun deleteTitle(name: String) = "Удалить «$name»?"
+    override val unsolvableTitle = "Не решается"
+    override val labelsTitle = "Метки плиток"
+    override val giveUpTitle = "Сдаться и посмотреть решение Морди?"
+    override val controlsTitle = "Управление"
+    override val linkRejectedTitle = "Не удаётся открыть эту доску"
+    override val openSharedTitle = "Открыть доску по ссылке?"
+    override fun sharedLabelsTitle(labels: String) = "Использовать метки отправителя ($labels)?"
+    override val shareTitle = "Поделиться доской"
+    override val updateTitle = "Обновиться до новой версии?"
+    override val replaySaveTitle = "Сначала сохранить игру?"
+
+    override val veryLargeTitle = "Очень большая"
+    override val veryLargeWarning = "Решать сложнее, а плитки могут быть слишком мелкими для удобной игры."
+
+    override val cancel = "Отмена"
+    override val ok = "OK"
+    override val save = "Сохранить"
+    override val dontSave = "Не сохранять"
+    override val delete = "Удалить"
+    override val close = "Закрыть"
+    override val open = "Открыть"
+    override val update = "Обновить"
+    override val yes = "Да"
+    override val no = "Нет"
+    override val newGame = "Новая игра"
+    override val repairAndLoad = "Исправить и загрузить"
+    override val copyLink = "Копировать ссылку"
+    override val copied = "Скопировано!"
+
+    override val noSaves = "Сохранений пока нет."
+    override val deleteMessage = "Это нельзя отменить."
+    override val openSharedMessage = "Твои ходы после последнего сохранения пропадут."
+    override val updateMessage = "Твои ходы после последнего сохранения пропадут."
+    override val sharedLabelsMessage = "Только для этой игры: в следующей новой игре будут твои метки."
+    override val replaySaveMessage = "Обучение заменит текущую игру."
+    override fun overwriteWarning(name: String) = "«$name» уже есть. Сохранение перезапишет его."
+
+    override fun shareNoteSame(side: Int) = "Каждый, кто откроет эту ссылку, начнёт с той же доски ${side}x$side."
+    override fun shareNoteNow(side: Int) = "Каждый, кто откроет эту ссылку, начнёт с этой доски ${side}x$side в её нынешнем виде."
+    override fun shareLabels(labels: String) = "Добавить мои метки ($labels)"
+    override val shareProgress = "Добавить мой прогресс"
+    override fun shareProgressSolving(moves: Int) = "Добавить мой прогресс (${russianMoves(moves)}, не решено)"
+    override fun shareProgressSolved(moves: Int) = "Добавить мой прогресс (решено за ${russianMoves(moves)})"
+    override val shareProgressGaveUp = "Добавить мой прогресс (игра сдана)"
+    override fun shareProgressGaveUpAfter(moves: Int) = "Добавить мой прогресс (игра сдана после ${russianMovesGenitive(moves)})"
+
+    override fun deleteName(name: String) = "Удалить «$name»"
+
+    override val saveNameName = "Имя сохранения"
+    override val shareLinkName = "Ссылка"
+    override val tileLabelsName = "Метки плиток"
+    override val keyboardKeysName = "Клавиши"
+}

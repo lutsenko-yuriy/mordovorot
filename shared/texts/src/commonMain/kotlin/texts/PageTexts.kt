@@ -2,6 +2,12 @@ package texts
 
 /** The page's own words: toolbar, buttons, counters, footer, labels and layout titles. */
 interface PageTexts {
+    /** The browser tab's title. */
+    val title: String
+
+    /** The language picker's accessible name (GH-275). */
+    val language: String
+
     val toolbarNew: String
     val toolbarSave: String
     val toolbarLoad: String

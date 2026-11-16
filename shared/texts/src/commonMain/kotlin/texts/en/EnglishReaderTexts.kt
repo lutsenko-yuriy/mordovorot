@@ -1,5 +1,6 @@
 package texts.en
 
+import texts.NATO_WORDS
 import texts.ReaderTexts
 
 object EnglishReaderTexts : ReaderTexts {
@@ -27,8 +28,5 @@ object EnglishReaderTexts : ReaderTexts {
     override val board = "Board"
     override val readBoard = "Read board"
 
-    override val phonetic = listOf(
-        "alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel", "india", "juliet", "kilo", "lima", "mike",
-        "november", "oscar", "papa", "quebec", "romeo", "sierra", "tango", "uniform", "victor", "whiskey", "x-ray", "yankee", "zulu",
-    )
+    override val phonetic = NATO_WORDS
 }

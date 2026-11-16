@@ -3,6 +3,9 @@ package texts.en
 import texts.PageTexts
 
 object EnglishPageTexts : PageTexts {
+    override val title = "Mordovorot"
+    override val language = "Language"
+
     override val toolbarNew = "New"
     override val toolbarSave = "Save"
     override val toolbarLoad = "Load"

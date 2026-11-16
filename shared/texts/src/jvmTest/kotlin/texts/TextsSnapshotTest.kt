@@ -5,26 +5,36 @@ import java.lang.reflect.Method
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.fail
-import texts.en.EnglishTexts
 
 /**
- * Pins every English text (GH-274): each key, called with sample arguments, against the committed
- * `english.txt`. A changed or new text shows up as a diff of that file, and a key's parameters are
- * limited to `Int`, `String` and `Boolean`, so every language can inflect them itself.
+ * Pins every text of every language (GH-274, GH-275): each key, called with sample arguments, against
+ * the committed `<language>.txt` (`english.txt`, `russian.txt`), which is also the translation review
+ * sheet. A changed or new text shows up as a diff of that file, and a key's parameters are limited to
+ * `Int`, `String` and `Boolean`, so every language can inflect them itself.
  *
- * After a deliberate change, copy `build/english.actual.txt` over `src/jvmTest/resources/english.txt`.
+ * After a deliberate change, copy `build/<language>.actual.txt` over `src/jvmTest/resources/<language>.txt`.
  */
-class EnglishSnapshotTest {
+class TextsSnapshotTest {
+
+    private val names = mapOf(Language.EN to "english", Language.RU to "russian")
 
     @Test
-    fun `every English text matches the committed english txt`() {
-        val actual = snapshot()
-        val expected = checkNotNull(javaClass.getResourceAsStream("/english.txt")) { "english.txt is missing" }
-            .reader().readText()
-        if (actual != expected) {
-            val file = File("build/english.actual.txt").apply { parentFile.mkdirs(); writeText(actual) }
-            fail("The English texts changed. Review them against english.txt, then copy ${file.path} over it.\n" + firstDifference(expected, actual))
+    fun `every text of every language matches its committed snapshot`() {
+        val failures = Language.entries.mapNotNull { language ->
+            val name = names.getValue(language)
+            val actual = snapshot(language.texts)
+            val expected = checkNotNull(javaClass.getResourceAsStream("/$name.txt")) { "$name.txt is missing" }
+                .reader().readText()
+            if (actual == expected) return@mapNotNull null
+            val file = File("build/$name.actual.txt").apply { parentFile.mkdirs(); writeText(actual) }
+            "The $name texts changed. Review them against $name.txt, then copy ${file.path} over it.\n" + firstDifference(expected, actual)
         }
+        if (failures.isNotEmpty()) fail(failures.joinToString("\n\n"))
+    }
+
+    @Test
+    fun `every language has a name for its snapshot`() {
+        assertEquals(Language.entries.toSet(), names.keys)
     }
 
     @Test
@@ -35,8 +45,8 @@ class EnglishSnapshotTest {
         assertEquals(emptyList(), bad)
     }
 
-    private fun snapshot(): String = keys().sortedBy { it.first }.flatMap { (key, method) ->
-        val target = if (key.contains('.')) group(key.substringBefore('.')) else EnglishTexts
+    private fun snapshot(texts: Texts): String = keys().sortedBy { it.first }.flatMap { (key, method) ->
+        val target = if (key.contains('.')) group(texts, key.substringBefore('.')) else texts
         argumentSets(method).map { args -> "$key${args.display()} = ${render(method.invoke(target, *args.toTypedArray()))}" }
     }.joinToString("\n", postfix = "\n")
 
@@ -49,14 +59,14 @@ class EnglishSnapshotTest {
         }
     }
 
-    private fun group(name: String): Any =
-        Texts::class.java.methods.first { name(it) == name }.invoke(EnglishTexts)!!
+    private fun group(texts: Texts, name: String): Any =
+        Texts::class.java.methods.first { name(it) == name }.invoke(texts)!!
 
     /** `getFoo` is the key `foo`. */
     private fun name(method: Method) =
         if (method.parameterCount == 0 && method.name.startsWith("get")) method.name.removePrefix("get").replaceFirstChar { it.lowercase() } else method.name
 
-    /** Ints go 0, 1, 2 and 5 one at a time, the others staying 5; strings are `foo`, `bar`, `baz`; flags both ways. */
+    /** Ints go 0, 1, 2, 3, 5, 11, 21 and 22 one at a time (Russian's one, few and many, and its teens), the others staying 5; strings are `foo`, `bar`, `baz`; flags both ways. */
     private fun argumentSets(method: Method): List<List<Any>> {
         val types = method.parameterTypes
         var sets = listOf(emptyList<Any>())
@@ -70,7 +80,7 @@ class EnglishSnapshotTest {
             }
         }
         val ints = types.indices.filter { types[it] == Int::class.java }
-        val varied = ints.flatMap { at -> listOf(0, 1, 2).flatMap { value -> sets.map { it.toMutableList().apply { this[at] = value } } } }
+        val varied = ints.flatMap { at -> listOf(0, 1, 2, 3, 5, 11, 21, 22).flatMap { value -> sets.map { it.toMutableList().apply { this[at] = value } } } }
         return (varied + sets).distinct()
     }
 
