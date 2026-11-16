@@ -38,8 +38,7 @@ fun main() {
         DomPageAddress,
         DomClipboard,
         DomAppUpdates(window),
-        // Switched on once the panel is drawn (GH-288).
-        tutorial = false,
+        tutorial = true,
     )
     renderer.game = game
     listenForKeys(root)
