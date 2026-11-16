@@ -1,5 +1,6 @@
 package web.tutorial
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -9,53 +10,54 @@ import web.drag.Axis
 
 /** GH-288: Mordie's texts, for a computer and a phone, under each label scheme. */
 class TutorialTextTest {
+    private val tutorial = texts().tutorial
+
 
     private fun text(step: Int, computer: Boolean = true, labels: TileLabels = TileLabels.NUMBERS) = TutorialText.step(step, computer, labels)
 
     @Test
     fun `a computer gets a lead sentence, the ways follow on their own lines (GH-290)`() {
-        assertEquals("Hi there! I'm Mordie. Let's play a short game. Shift the top row one tile left:", text(1))
+        assertEquals(tutorial.step1(computer = true), text(1))
         assertEquals(
-            "Lines go round: see tile 14 at the top of the second column? Shift that column one tile up, and 14 comes back in at the bottom:",
+            tutorial.step2("14", computer = true),
             text(2),
         )
-        assertEquals("A move is one row or column shifted, however far. Shift the third row two tiles right: still 1 move.", text(3))
-        assertEquals("Last one: shift the fourth column one tile down. That solves it!", text(4))
+        assertEquals(tutorial.step3(computer = true), text(3))
+        assertEquals(tutorial.step4(computer = true), text(4))
     }
 
     @Test
     fun `a phone is told to drag only`() {
-        assertEquals("Hi there! I'm Mordie. Let's play a short game. Drag the top row one tile left.", text(1, computer = false))
+        assertEquals(tutorial.step1(computer = false), text(1, computer = false))
         assertEquals(
-            "Lines go round: see tile 14 at the top of the second column? Drag that column one tile up, and 14 comes back in at the bottom.",
+            tutorial.step2("14", computer = false),
             text(2, computer = false),
         )
-        assertEquals("A move is one row or column shifted, however far. Drag the third row two tiles right: still 1 move.", text(3, computer = false))
-        assertEquals("Last one: drag the fourth column one tile down. That solves it!", text(4, computer = false))
+        assertEquals(tutorial.step3(computer = false), text(3, computer = false))
+        assertEquals(tutorial.step4(computer = false), text(4, computer = false))
         (1..4).forEach { step -> listOf("◀", "▶", "▲", "▼").forEach { assertFalse(it in text(step, computer = false)) } }
     }
 
     @Test
     fun `step 2 names the tile by the labels in use`() {
-        assertTrue("see tile N at" in text(2, labels = TileLabels.LETTERS))
-        assertTrue("N comes back" in text(2, labels = TileLabels.LETTERS))
-        assertTrue("see tile 42 at" in text(2, labels = TileLabels.PAIRS))
-        assertTrue("see tile 13 at" in text(2, labels = TileLabels.NUMBERS_FROM_0))
+        assertEquals(tutorial.step2("N", computer = true), text(2, labels = TileLabels.LETTERS))
+        assertEquals(tutorial.step2("42", computer = true), text(2, labels = TileLabels.PAIRS))
+        assertEquals(tutorial.step2("13", computer = true), text(2, labels = TileLabels.NUMBERS_FROM_0))
     }
 
     @Test
     fun `step 5 challenges the player`() {
-        assertEquals("Can you beat my results?", text(5))
+        assertEquals(tutorial.step5, text(5))
     }
 
     @Test
     fun `step 3 once more says the live move count`() {
-        assertEquals("Once more! It's the same row, so Moves stays at 3.", TutorialText.again(3))
+        assertEquals(tutorial.again(3), TutorialText.again(3))
     }
 
     @Test
     fun `the blocked line names a row or a column`() {
-        assertEquals("You can do that later. For now shift that row please!", TutorialText.blocked(Axis.ROW))
-        assertEquals("You can do that later. For now shift that column please!", TutorialText.blocked(Axis.COLUMN))
+        assertEquals(tutorial.blockedRow, TutorialText.blocked(Axis.ROW))
+        assertEquals(tutorial.blockedColumn, TutorialText.blocked(Axis.COLUMN))
     }
 }

@@ -1,6 +1,7 @@
 package web
 
 import kotlin.test.Test
+import texts.texts
 import kotlin.test.assertEquals
 import viewmodel.GiveUpButton
 import viewmodel.SolutionState
@@ -106,7 +107,7 @@ class PageFocusTest {
     }
 
     // GH-288
-    private val panel = Guidance(step = 5, text = "Can you beat my results?", controls = true, highlight = null)
+    private val panel = Guidance(step = 5, text = texts().tutorial.step5, controls = true, highlight = null)
 
     @Test
     fun `on step 5 a winning arrow or the board passes focus to Labels, not Skip`() {

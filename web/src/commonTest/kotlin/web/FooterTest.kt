@@ -1,16 +1,19 @@
 package web
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /** GH-111 scenarios: the footer's wording and links. */
 class FooterTest {
+    private val page = texts().page
+
 
     @Test
     fun `footer reads version and Loopover credit`() {
         val text = footer("1.2.3").joinToString("") { it.text }
 
-        assertEquals("v1.2.3 · Based on Loopover by Cary Huang (carykh) · original · loopover.xyz", text)
+        assertEquals("${page.footerBasedOn("1.2.3")}Cary Huang (carykh) · ${page.footerOriginal} · loopover.xyz", text)
     }
 
     @Test
@@ -19,7 +22,7 @@ class FooterTest {
 
         assertEquals(
             listOf(
-                FooterPart.Link("original", "https://openprocessing.org/@carykh/580366", wideOnly = true),
+                FooterPart.Link(page.footerOriginal, "https://openprocessing.org/@carykh/580366", wideOnly = true),
                 FooterPart.Link("loopover.xyz", "https://loopover.xyz", wideOnly = true),
             ),
             links,
@@ -30,8 +33,8 @@ class FooterTest {
     fun `footer announces a new version with an Update link`() {
         val parts = footer("1.2.3", updateReady = true)
 
-        assertEquals("v1.2.3 · New version available. Update", parts.joinToString("") { it.text })
-        assertEquals(listOf(FooterPart.UpdateLink("Update")), parts.filterIsInstance<FooterPart.UpdateLink>())
+        assertEquals(page.footerUpdateNotice("1.2.3") + page.footerUpdate, parts.joinToString("") { it.text })
+        assertEquals(listOf(FooterPart.UpdateLink(page.footerUpdate)), parts.filterIsInstance<FooterPart.UpdateLink>())
     }
 
     @Test
@@ -50,6 +53,6 @@ class FooterTest {
     fun `narrow footer keeps the version and the short credit, without links`() {
         val text = footer("1.2.3").filterNot { it.wideOnly }.joinToString("") { it.text }
 
-        assertEquals("v1.2.3 · Based on Loopover by carykh", text)
+        assertEquals(page.footerBasedOn("1.2.3") + "carykh", text)
     }
 }
