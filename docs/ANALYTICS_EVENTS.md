@@ -705,7 +705,7 @@ Fired when the player picks Save or Don't save in that dialog. Cancel fires `dia
 Changes to existing entries:
 - `dialog_cancelled.dialog` takes a new value, `replay_save`.
 - `screen_save_dialog.opened_from` takes a new value, `tutorial_replay`: opened from the replay save question's Save.
-- `tutorial_ended` gains `source` (above); `tutorial_started.source` takes `replay`.
+- `tutorial_ended` gains `source` (above); `tutorial_started.source` takes `replay`, and fires once: after Don't save, after a successful save, or at once with no unsaved moves.
 - Skip in a replay runs the startup sequence again, in the same session as a launch's. So `startup_restore_prompt_shown`, `startup_restore_decision`, `load_command_used`, `unsolvable_save_resolved` and `new_game_size_selected`, all with `trigger: startup_prompt`, fire again, and a replay-Skip can't be told from a launch by `trigger`. Count real launches with `app_launched`. A distinct trigger value for the replay's startup is left until an SDK is wired up (GH-256) and the numbers show it matters.
 
 Not tracked: a replay that never starts because the question was cancelled (`dialog_cancelled` covers it), which control opened the replay beyond `opened_from`, and how often it is replayed (`tutorial_started` with `source: replay` counts it).
