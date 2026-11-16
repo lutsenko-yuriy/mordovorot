@@ -220,7 +220,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── WebTutorial.kt   # GH-288: the first-launch tutorial's flow: starts it (switch on, not seen, no saves), checks every shift against the step's (WebGame.shiftLine, WebDragFlows.onEnd), blocks others, the 3 s pause at step 5, Skip, step 6; `guidance()` is the frame's panel (Guidance.kt); GH-289: `offered`, `onReplay` (the `ReplaySave` question, then `begin("replay")`) and `onReplayAnswered` replay it from the Give Up row's `[ Tutorial 8 ]`
 │   ├── Guidance.kt      # GH-288: the panel's step, text, Controls and the asked line (Guidance, TutorialHighlight)
 │   ├── TutorialPreference.kt # GH-288: whether the first-launch tutorial was seen (`tutorial` = `seen`); a failed read counts as seen
-│   ├── tutorial/        # GH-288: TutorialScript (the tutorial board and its four shifts), TutorialProgress (the step, and what each shift means: counts, done, blocked), TutorialText (Mordie's texts for a computer and a phone), TutorialWays (GH-290: a computer's drag, click and key lines for the asked shift, from the selection and the hand)
+│   ├── tutorial/        # GH-288: TutorialScript (the tutorial board and its four shifts), TutorialProgress (the step, and what each shift means: counts, done, blocked), TutorialText (which of Mordie's texts a step gets, for a computer and a phone), TutorialWays (GH-290: which drag, click and key lines the asked shift gets, from the selection and the hand); both only pick keys, the words are in :shared:texts (GH-274)
 │   ├── PressedWith.kt   # The session's last input, read per event as input_method (GH-171)
 │   ├── ShareLink.kt     # GH-243 (WU1): `<page address>#b=<board>` built and read; playable, or rejected
 │   │                      # as invalid / unsupported_size / unsolvable. storage.BoardLinkFormat (ADR-0005) holds the board's bits.
@@ -270,7 +270,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── Footer.kt        # footer(version, updateReady): the footer line as Text/Link parts, worded as the README's Credits (GH-111); with a new version, the notice and its UpdateLink part (GH-262)
 │   ├── a11y/            # GH-179: web.a11y, screen readers and focus (also in jsMain below). web
 │   │   │                # depends on it, not it on web: it imports only the standard library, the DOM
-│   │   │                # and a few :shared:viewmodel types, pinned by A11yBoundaryTest (GH-201). The
+│   │   │                # and a few :shared:viewmodel and :shared:texts types, pinned by A11yBoundaryTest (GH-201). The
 │   │   │                # game's ARIA moving in is GH-201's next step; a Gradle module is future work
 │   │   ├── Announcements.kt # GH-166 (words in :shared:texts, GH-274): what a screen reader hears - shifts, the win, new game, load,
 │   │   │                # solution steps - and the arrows' accessible names; Read board's
