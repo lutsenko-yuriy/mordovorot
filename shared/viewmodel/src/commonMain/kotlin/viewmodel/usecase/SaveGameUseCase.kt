@@ -38,8 +38,11 @@ internal class SaveGameUseCase(
         return catchingNonCancellation(
             onError = { e ->
                 analytics.track("save_command_used", mapOf("result" to "error", "name_source" to nameSource))
-                // Always say the save failed - e.message alone can be just a path (PR #15).
-                ui.showMessage(texts().status.saveFailed(name, e.message ?: e::class.simpleName ?: ""))
+                // Always say the save failed - e.message alone can be just a path (PR #15). Only a name
+                // the store refuses is the player's to fix; any other failure is storage's (GH-274).
+                ui.showMessage(
+                    if (saves.isValidName(name)) texts().status.saveFailed(name) else texts().status.saveNameRejected(name),
+                )
                 false
             },
         ) {

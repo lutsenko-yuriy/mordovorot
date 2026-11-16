@@ -19,8 +19,8 @@ object EnglishTutorialTexts : TutorialTexts {
     override val step5 = "Can you beat my results?"
 
     override fun again(moves: Int) = "Once more! It's the same row, so Moves stays at $moves."
-    override val blockedRow = "You can do that later. For now shift that row please!"
-    override val blockedColumn = "You can do that later. For now shift that column please!"
+    override val blockedRow = "You can do that later. For now, please shift that row!"
+    override val blockedColumn = "You can do that later. For now, please shift that column!"
 
     override fun dragLeft(tiles: Int) = "Drag it " + if (tiles == 1) "left" else "${number(tiles)} tiles left"
     override fun dragRight(tiles: Int) = "Drag it " + if (tiles == 1) "right" else "${number(tiles)} tiles right"

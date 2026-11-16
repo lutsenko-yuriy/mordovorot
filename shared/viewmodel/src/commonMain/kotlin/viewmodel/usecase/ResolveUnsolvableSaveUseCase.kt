@@ -65,7 +65,7 @@ internal class ResolveUnsolvableSaveUseCase(
                 track(mapOf("repair_saved" to (error == null)))
                 ui.showMessage(
                     if (error == null) texts().status.repaired(name)
-                    else texts().status.repairedNotUpdated(name, error.message ?: error::class.simpleName ?: "")
+                    else texts().status.repairedNotUpdated(name)
                 )
                 return LoadResult.LOADED
             }

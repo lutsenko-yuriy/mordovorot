@@ -1,11 +1,13 @@
 package texts
 
-/** The status line's messages, [save] being a save's `name (NxN)`. [reason] is a developer diagnostic passed through. */
+/** The status line's messages, [save] being a save's `name (NxN)`. Storage's own reasons are never shown (GH-274). */
 interface StatusTexts {
     fun saved(name: String): String
-    fun saveFailed(name: String, reason: String): String
+    fun saveFailed(name: String): String
+    fun saveNameRejected(name: String): String
     fun loaded(name: String): String
     fun loadFailed(name: String): String
+    fun saveDamaged(name: String): String
 
     /** [saves] is [availableSaves] or one of its two failure sentences. */
     fun noSaveNamed(name: String, saves: String): String
@@ -14,9 +16,8 @@ interface StatusTexts {
     fun availableSaves(list: String): String
     fun lettersDontFit(side: Int): String
     fun cantBeSolved(save: String): String
-    fun cantBeSolvedDialog(save: String): String
     fun repaired(name: String): String
-    fun repairedNotUpdated(name: String, reason: String): String
+    fun repairedNotUpdated(name: String): String
 
     fun deleted(name: String): String
     fun deletedNoneLeft(name: String): String

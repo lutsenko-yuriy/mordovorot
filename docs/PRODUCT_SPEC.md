@@ -9,6 +9,25 @@
 Mordovorot — A browser version of Loopover, a sliding-row/column puzzle, published at
 https://lutsenko-yuriy.github.io/mordovorot/ (Feature 9). It was a terminal game first; that client was dropped in GH-228.
 
+## Voice and wording (GH-274)
+
+Every text the player reads lives in `:shared:texts` under a key, English first (GH-275 adds German and Russian). A text with a
+number or a name is a function that takes it, so each language can inflect it, and a move count is never preformatted.
+
+**Mordie** is cheerful and chatty: first person, a friendly rival who counts moves aloud and is glad to be beaten. He opens
+with `Alright!` or `Okay, so…`, and a friend's progress always opens `Okay, so…`. He has one challenge, `Can you beat it?`.
+A count of the player's moves always carries its unit (`vs your 12 moves`), and `You beat me!` is only for the plain win.
+
+**Every other text** follows four rules:
+- plain and warm, with no jokes;
+- contractions always (`couldn't`, never `could not`);
+- one wording per meaning (`No saves yet.` everywhere, `Your saves`, one sentence for a board that can't be solved);
+- an error says what happened and what to do next, and never blames the player or shows a developer's reason (a damaged save
+  reads `'foo' is damaged and can't be loaded. You can delete it in Load.`).
+
+The words the glossary lists under "Known aliases to avoid" never appear in a text; a test enforces it. Screen-reader texts
+keep their terse wording while `docs/CONSTRAINTS.md` freezes screen readers.
+
 ## Features
 
 ### Feature 1 — Board
@@ -129,7 +148,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   |---|---|
   | 0-4 | `Alright! Let's sort this one out!` (after a load, the load line below) |
   | 5-19 | empty |
-  | 20-24 | `I have already made N moves and have not solved it yet!` |
+  | 20-24 | `I've already made N moves and haven't solved it yet!` |
   | 25-39 | empty |
   | ...5 shown, 15 empty, repeating... | |
 
@@ -138,8 +157,8 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   - From the 60th shift on, the progress line starts with `This one is hard! `.
   - When a check finds that Mordie has a solution, the line switches at once, even in an empty
     stretch, and stays until the board is solved or the line below replaces it. If the answer is
-    proven shortest (always on 3x3 and 4x4) it is `Found it! I had to make N moves to find the
-    solution! Can you beat it?`; if not, it is `Found one in N moves, but maybe there's a shorter
+    proven shortest (always on 3x3 and 4x4) it is `Got it! I found it in N moves!
+    Can you beat it?`; if not, it is `Found one in N moves, but maybe there's a shorter
     one! Can you beat it?` (GH-223).
   - Later checks, every 5 shifts, look at the best solution while it is not proven shortest.
     When the exact search (3x3 and 4x4 only) has found a shorter one, the line switches at once to `Wait, I found a
@@ -149,25 +168,25 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   of `Congratulations ✓`, and the line disappears:
   - Mordie has no solution yet: `You beat me! I was still at N moves.`
   - M = N: `Cool, you matched me! N moves each!`
-  - M > N: `Sorry, but I win: N moves vs your M.`
-  - M < N, N not proven shortest (GH-222, GH-223): `You beat me! N moves vs your M. Mine may not have
-    been the shortest.`
+  - M > N: `Sorry, I beat you this time: N moves vs your M moves.`
+  - M < N, N not proven shortest (GH-222, GH-223): `Wow, you found a shorter one: your M moves vs my N moves!
+    Mine may not have been the shortest.`
   - M < N, N proven shortest (with a hand-edited save only, so a likely cheat):
     `I made N moves and you made M moves! Are you a machine?`
   - A count of 1 reads `1 move`.
 - **Solution screen (GH-126):** Mordie's line reads `Here's how I did it in N moves!` there,
-  led by the player's result (GH-273): `You gave up after M moves.` or `You solved it in M moves.`
-  (`You did not even start this one.` when they gave up with 0 moves) (Feature 10).
+  led by the player's result (GH-273): `You stopped after M moves.` or `You solved it in M moves.`
+  (`You didn't try this one yet.` when they gave up with 0 moves) (Feature 10).
 - **Saves** also store the original arrangement, Mordie's N and whether it had found its
   solution (older saves still load).
   - Loading a save where Mordie was still searching resumes the search past the saved N, and the
-    first line (shifts 0-4) is `Okay, so we stopped when I was at N moves! What was I doing?..`
+    first line (shifts 0-4) is `Okay, so we stopped when I was at N moves! Where was I?`
     On 5x5 and bigger "resumes" means Mordie finds the fast answer; no exact search follows (GH-260).
   - A game saved while Mordie's answer is not yet proven shortest keeps that answer (GH-224):
     loading it shows the unproven found line at once, with Give Up lit, and on 3x3 and 4x4 only the
     exact search restarts (on 5x5 and bigger nothing restarts), above the longest length it had ruled out and starting from the kept solution. A
     shorter answer it later finds is announced as usual.
-  - Loading a save where Mordie had found its solution shows the `Found it!` line at once.
+  - Loading a save where Mordie had found its solution shows the `Got it!` line at once.
   - A save also keeps whether that solution is proven shortest (GH-224): a solution-screen save of an
     unproven answer reopens it unproven, and a solved save of one reloads with the `You beat me!`
     ending when the player won below it, not `Are you a machine?`. A save with no such flag (made
@@ -304,7 +323,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   - **Save** prefills the current save name and warns before overwriting. A blank name counts as
     Cancel. A rejected name (spaces, a path separator, `..`) saves nothing, and the message
     shows on the status line.
-  - **Load** lists each save as `foo (5x5)`, marking unsolvable ones; `No saves found.` when
+  - **Load** lists each save as `foo (5x5)`, marking unsolvable ones; `No saves yet.` when
     there are none.
   - **Delete a save (GH-251):** each row of Load and of `Restore a saved game?` ends in a trash icon
     (named `Delete 'foo'`). It opens `Delete 'foo'?` / `This can't be undone.` with `[ Delete ]
@@ -314,8 +333,8 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
     previous one when the last went), so a stray second Enter only asks again. Deleting the current save clears the Save dialog's prefilled name (GH-99), and
     never counts as unsaved progress. If it was the last save: mid-game the dialog closes and the
     game carries on (`Deleted 'foo'. No saves left.`); at startup the new-game size picker opens.
-    A save that is already gone (`No save named 'foo' - it was already deleted.`) or that storage
-    refuses to delete (`Could not delete 'foo'.`) leaves the list as it was.
+    A save that is already gone (`'foo' was already deleted.`) or that storage
+    refuses to delete (`Couldn't delete 'foo'. Please try again.`) leaves the list as it was.
   - The `Can't be solved` dialog offers `[ Repair & load ] [ New game ]`, with no Exit.
   - **Labels** opens the Tile labels dialog (GH-139, Feature 11).
   - **Share** opens the Share dialog (GH-243, Feature 12), last in the row.
@@ -427,8 +446,8 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   (above). An open page never switches version by itself: a new version opens on the visit after
   every tab of the game has been closed, or when you click `Update`.
   - `Update` with no unsaved progress reloads at once. With unsaved progress (the same test as the
-    leave-site prompt) it opens `Update to the new version?`: `The current game will be lost unless
-    you save it first.`, with `Cancel` (where focus starts) and `Update`. Escape is Cancel, which
+    leave-site prompt) it opens `Update to the new version?`: `Your moves since the last
+    save will be lost.`, with `Cancel` (where focus starts) and `Update`. Escape is Cancel, which
     closes the dialog, puts focus back on `Update` and keeps the game and the notice. The browser's
     own leave-site prompt does not ask a second time.
   - Saves are never touched by an update.
@@ -453,7 +472,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
 - **Solution screen:**
   - The board goes back to the game's original arrangement and isn't playable: no arrows, no
     drag, no shift keys. `Moves: N` is hidden, Mordie's line reads
-    `You gave up after M moves. Here's how I did it in N moves!` or, after a win,
+    `You stopped after M moves. Here's how I did it in N moves!` or, after a win,
     `You solved it in M moves. Here's how I did it in N moves!` (`1 move` for one; GH-273), and
     the Give Up row is empty. A save from before GH-273 keeps `Here's how I did it in N moves!`.
   - **Step list:** one numbered step per Mordie move, `<n>. Row <i> <→|←> ×<k>` or
@@ -500,7 +519,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   in the dialog is dimmed, reads `up to 5x5` instead of a sample, and can't be picked or focused.
   A Letters preference shows Numbers on 6x6 and stays Letters, so smaller boards keep letters; OK
   on those Numbers changes nothing. Loading a 6x6 save with Letters (only possible by hand-editing)
-  opens the dialog by itself, with `Letters don't fit a 6x6 board (26 letters, 36 tiles) - pick
+  opens the dialog by itself, with `Letters don't fit a 6x6 board (26 letters, 36 tiles). Please pick
   other labels.` above the rows and Numbers marked: OK applies the pick (and makes it the
   preference), Cancel keeps Numbers. Either way the next save stores the labels shown. The
   `Loaded '<name>'.` message follows once the dialog closes.
@@ -551,9 +570,9 @@ Web client only.
     6x6 and bigger) are ignored without a word, and a link with none is as before.
   - **The sender's progress in a link (GH-272):** a link can carry how the sender's game stands (ADR-0005, `&p=`).
     Mordie's opening line, for shifts 0-4 of the new game, then says it instead of `Alright! Let's sort this one
-    out!`: `Okay, so your friend made N moves and did not solve the puzzle yet. Maybe we could help?`,
-    `Okay, so your friend solved this one in N moves. Wanna beat this?`, `So after making N moves your friend
-    gave up before finding the solution. Can we find one?`, or, when the count is unknown, `So your friend gave
+    out!`: `Okay, so your friend made N moves and hasn't solved it yet. Can we help?`,
+    `Okay, so your friend solved this one in N moves. Can you beat it?`, `Okay, so your friend gave up after N moves, before
+    finding the solution. Can we find one?`, or, when the count is unknown, `Okay, so your friend gave
     up before finding the solution. Can we find one?` (`1 move` for one). From shift 5 the usual rules apply.
     A new game, a load or a repair after it shows the usual line, and a save doesn't keep the friend's line.
     Progress the page can't read is ignored without a word. Analytics: `shared_board_opened.progress`.

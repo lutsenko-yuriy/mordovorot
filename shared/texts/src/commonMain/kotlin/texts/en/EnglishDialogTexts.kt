@@ -37,13 +37,13 @@ object EnglishDialogTexts : DialogTexts {
     override val copyLink = "Copy link"
     override val copied = "Copied!"
 
-    override val noSaves = "No saves found."
+    override val noSaves = "No saves yet."
     override val deleteMessage = "This can't be undone."
     override val openSharedMessage = "Your moves since the last save will be lost."
-    override val updateMessage = "The current game will be lost unless you save it first."
+    override val updateMessage = "Your moves since the last save will be lost."
     override val sharedLabelsMessage = "For this game only: your next new game uses your own labels."
     override val replaySaveMessage = "The tutorial replaces the current game."
-    override fun overwriteWarning(name: String) = "'$name' already exists - it will be overwritten."
+    override fun overwriteWarning(name: String) = "'$name' already exists. Saving will overwrite it."
 
     override fun shareNoteSame(side: Int) = "Anyone who opens this link starts from the same ${side}x$side board."
     override fun shareNoteNow(side: Int) = "Anyone who opens this link starts from this ${side}x$side board as it is now."

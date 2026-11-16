@@ -122,7 +122,7 @@ class WebAnnounceFlowsScenarioTest {
         page.game.onLoad()
         page.game.onLoadChosen("bad")
 
-        assertEquals(listOf("Save 'bad' is corrupted: square side is not an integer"), page.said)
+        assertEquals(listOf(statusTexts.saveDamaged("bad")), page.said)
     }
 
     @Test

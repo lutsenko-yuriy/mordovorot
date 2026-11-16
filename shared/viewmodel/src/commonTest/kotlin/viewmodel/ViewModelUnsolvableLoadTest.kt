@@ -88,7 +88,7 @@ class ViewModelUnsolvableLoadTest {
 
         assertEquals(repairedState, board.boardArray.toList())
         assertEquals(oddState.toList(), saves.load("odd")!!.state.toList())
-        assertEquals(statusTexts.repairedNotUpdated("odd", "disk full"), ui.shownMessages.last())
+        assertEquals(statusTexts.repairedNotUpdated("odd"), ui.shownMessages.last())
         assertEquals(
             Event(
                 "unsolvable_save_resolved",

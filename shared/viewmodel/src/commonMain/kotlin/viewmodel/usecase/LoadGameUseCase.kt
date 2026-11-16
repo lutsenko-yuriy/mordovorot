@@ -3,6 +3,7 @@ package viewmodel.usecase
 import analytics.AnalyticsService
 import board_model.BoardModel
 import board_model.Solvability
+import storage.SaveFileFormatException
 import storage.SaveRepository
 import texts.texts
 import viewmodel.CurrentSaveName
@@ -48,7 +49,8 @@ internal class LoadGameUseCase(
         return catchingNonCancellation(
             onError = { e ->
                 analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "error"))
-                ui.showMessage(e.message ?: texts().status.loadFailed(name))
+                // Storage's reasons are developer diagnostics: the player gets one friendly line per case (GH-274).
+                ui.showMessage(if (e is SaveFileFormatException) texts().status.saveDamaged(name) else texts().status.loadFailed(name))
                 LoadResult.NOT_LOADED
             },
         ) {

@@ -81,11 +81,47 @@ class ViewModelSaveLoadTest {
 
         ui.drive(viewModel) { viewModel.saveGame("..") }
 
-        assertTrue(ui.shownMessages.any { it.contains("Save name must not be blank") })
+        assertEquals(listOf(statusTexts.saveNameRejected("..")), ui.shownMessages)
         assertEquals(
             listOf(RecordingAnalyticsService.Event("save_command_used", mapOf("result" to "error", "name_source" to "typed"))),
             analytics.events,
         )
+    }
+
+    @Test
+    fun `a storage failure on save shows one friendly line, not the storage's reason`() = runTest {
+        val saves = FakeSaveRepository().apply { saveException = IllegalStateException("QuotaExceededError: disk full") }
+        val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }
+        val viewModel = testViewModel(board, saves, RecordingAnalyticsService())
+        val ui = FakeViewModelUi()
+
+        ui.drive(viewModel) { viewModel.saveGame("foo") }
+
+        assertEquals(listOf(statusTexts.saveFailed("foo")), ui.shownMessages)
+    }
+
+    @Test
+    fun `an IllegalArgumentException for a valid name is a storage failure, not a name problem`() = runTest {
+        val saves = FakeSaveRepository().apply { saveException = IllegalArgumentException("Move count must not be negative") }
+        val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }
+        val viewModel = testViewModel(board, saves, RecordingAnalyticsService())
+        val ui = FakeViewModelUi()
+
+        ui.drive(viewModel) { viewModel.saveGame("foo") }
+
+        assertEquals(listOf(statusTexts.saveFailed("foo")), ui.shownMessages)
+    }
+
+    @Test
+    fun `an unexpected failure on load shows one friendly line, not the storage's reason`() = runTest {
+        val saves = FakeSaveRepository().apply { loadException = IllegalStateException("disk unplugged") }
+        val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }
+        val viewModel = testViewModel(board, saves, RecordingAnalyticsService())
+        val ui = FakeViewModelUi()
+
+        ui.drive(viewModel) { viewModel.loadGame("foo") }
+
+        assertEquals(listOf(statusTexts.loadFailed("foo")), ui.shownMessages)
     }
 
     @Test
@@ -141,7 +177,7 @@ class ViewModelSaveLoadTest {
 
         ui.drive(viewModel) { viewModel.loadGame("missing") }
 
-        assertTrue(ui.shownMessages.any { it.contains("No saves available") })
+        assertTrue(ui.shownMessages.any { it.contains(statusTexts.noSavesAvailable) })
     }
 
     @Test
@@ -181,7 +217,7 @@ class ViewModelSaveLoadTest {
         ui.drive(viewModel) { viewModel.loadGame("missing") }
 
         assertEquals(listOf(0, 1, 2, 3, 4, 5, 6, 7, 8), board.boardArray.toList())
-        assertTrue(ui.shownMessages.any { it.contains("Could not list available saves") })
+        assertTrue(ui.shownMessages.any { it.contains(statusTexts.couldNotListSaves) })
         assertEquals(
             listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "not_found"))),
             analytics.events,
@@ -203,7 +239,7 @@ class ViewModelSaveLoadTest {
 
         assertFalse(loaded)
         assertEquals(listOf(0, 1, 2, 3, 4, 5, 6, 7, 8), board.boardArray.toList())
-        assertTrue(ui.shownMessages.any { it.contains("corrupt") })
+        assertEquals(listOf(statusTexts.saveDamaged("corrupt")), ui.shownMessages)
         assertEquals(listOf<String?>(null), ui.loadedSaves)
         assertEquals(
             listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "error"))),
