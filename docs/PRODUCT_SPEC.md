@@ -601,7 +601,7 @@ Web client only. On a first visit Mordie walks the player through a short game.
     - **Cancel** starts nothing and changes nothing; focus goes back to the button or place 8 was pressed.
     - **Don't save** starts the tutorial.
     - **Save** opens the Save dialog as the toolbar's does, prefilled with the current save's name. Once the game is saved the
-      tutorial starts; a cancelled Save, a name with spaces or a failed save starts nothing and puts focus back on `[ Tutorial ]`.
+      tutorial starts; a cancelled Save, a name with spaces or a failed save starts nothing and puts focus back where the replay was started: `[ Tutorial ]`, or where 8 was pressed.
   - The replay is a new game: the current save name is forgotten, and saves are left alone. Focus goes to the board on
     a computer and to the start of the page on touch, as at a first launch.
   - It plays as the first launch does. Skip and the end run the same ways (below), so Skip offers
