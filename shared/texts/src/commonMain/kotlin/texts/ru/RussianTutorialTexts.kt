@@ -40,13 +40,14 @@ object RussianTutorialTexts : TutorialTexts {
     private fun times(count: Int) = when (count) {
         1 -> ""
         2 -> " дважды"
-        else -> " ${number(count)} раза"
+        else -> " ${number(count, "три")} " + russianPlural(count, "раз", "раза", "раз")
     }
 
-    private fun tilesIn(count: Int) = "${number(count)} плитки"
+    private fun tilesIn(count: Int) = "${number(count, "одну")} " + russianPlural(count, "плитку", "плитки", "плиток")
 
-    private fun number(count: Int) = when (count) {
-        1 -> "одну"
+    /** [count] in words where it has a form of its own (`две плитки`, `три раза`), else in digits. */
+    private fun number(count: Int, one: String) = when (count) {
+        1 -> one
         2 -> "две"
         3 -> "три"
         else -> "$count"

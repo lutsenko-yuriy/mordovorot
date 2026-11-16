@@ -51,6 +51,19 @@ class RussianPluralsTest {
     }
 
     @Test
+    fun `the tutorial's counts beyond three take the plural too`() {
+        val tutorial = texts.tutorial
+        assertEquals(
+            listOf("Перетащи на 5 плиток влево", "Перетащи на 21 плитку влево", "Перетащи на 22 плитки влево"),
+            listOf(5, 21, 22).map(tutorial::dragLeft),
+        )
+        assertEquals(
+            listOf("Нажми на ◀ 5 раз", "Нажми на ◀ 21 раз", "Нажми на ◀ 22 раза"),
+            listOf(5, 21, 22).map { tutorial.click("◀", it) },
+        )
+    }
+
+    @Test
     fun `a board size names both sides`() {
         assertEquals("4x4", texts.boardSize(4))
     }

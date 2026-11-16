@@ -17,12 +17,12 @@ object RussianMordieTexts : MordieTexts {
         "Нашёл решение за ${russianMoves(moves)}, но, может, есть и короче! Сможешь быстрее?"
     override fun shorter(moves: Int) = "Стоп, я нашёл короче: теперь ${russianMoves(moves)}! Сможешь быстрее?"
 
-    override fun endingPlayerWon(mine: Int) = "Ты меня обогнал! Я успел сделать только ${russianMoves(mine)}."
+    override fun endingPlayerWon(mine: Int) = "Ты быстрее меня! Я успел сделать только ${russianMoves(mine)}."
     override fun endingMatched(mine: Int) = "Круто, ничья! Мы оба справились за ${russianMoves(mine)}!"
     override fun endingMordieWon(mine: Int, yours: Int) =
         "Извини, в этот раз я быстрее: я справился за ${russianMoves(mine)}, а ты за ${russianMoves(yours)}."
     override fun endingBeatUnproven(mine: Int, yours: Int) =
-        "Ого, ты нашёл короче: ты за ${russianMoves(yours)}, я за ${russianMoves(mine)}! Моё могло быть не самым коротким."
+        "Ого, твоё решение короче: у тебя ${russianMoves(yours)}, у меня ${russianMoves(mine)}! Моё могло быть не самым коротким."
     override fun endingMachine(mine: Int, yours: Int) =
         "Я сделал ${russianMoves(mine)}, а ты ${russianMoves(yours)}! Ты, случайно, не машина?"
 

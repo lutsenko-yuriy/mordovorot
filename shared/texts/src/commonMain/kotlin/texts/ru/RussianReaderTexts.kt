@@ -1,7 +1,7 @@
 package texts.ru
 
 import texts.ReaderTexts
-import texts.en.EnglishReaderTexts
+import texts.NATO_WORDS
 
 object RussianReaderTexts : ReaderTexts {
     override fun rowLeft(line: Int) = "Строка $line влево"
@@ -28,6 +28,6 @@ object RussianReaderTexts : ReaderTexts {
     override val board = "Доска"
     override val readBoard = "Озвучить доску"
 
-    /** Tiles are read by the Latin letters' English words in every language (GH-275). */
-    override val phonetic = EnglishReaderTexts.phonetic
+    /** The Latin letters stay NATO words in every language (GH-275). */
+    override val phonetic = NATO_WORDS
 }
