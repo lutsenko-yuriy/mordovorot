@@ -1,12 +1,13 @@
 # Glossary — Controls
 
-Input and display settings of the web client: keyboard layouts, selection, tile labels. Part of the [glossary](../GLOSSARY.md).
+Input and display settings of the web client: keyboard layouts, selection, tile labels, language. Part of the [glossary](../GLOSSARY.md).
 
 | Term | Definition | Code symbol |
 |---|---|---|
 | Controls dialog | The dialog `[ Controls ]` / 6 opens on a computer: picks the keyboard layout and lists the keys of the marked layout. Replaces the mode-switch button (GH-189; built in GH-170, GH-171) | `ControlsDialogUseCase`, `WebControlsDialog` |
 | Key hints | A computer's on-page reminder of the board keys for the active layout, ordered by hand: two lines under the board, the keys above what they do (GH-170, GH-171) | `KeyHints` |
 | Keyboard layout | Which hand does which job on a computer: Right-handed (default; WASD select, HJKL/arrows shift) or Left-handed (HJKL/arrows select, WASD shift). Chosen in the Controls dialog, remembered as a preference (GH-189) | `KeyboardLayout`, `KeyboardLayoutPreference` |
+| Language | Which language the game's texts are in: English, German or Russian. The first visit follows the browser (English for any other), the picker in the top right corner overrides it (a dropdown on a phone, `EN DE RU` toggles on wider pages); remembered as a preference, never stored in saves or share links (GH-275) | `Language`, `LanguagePreference` |
 | Line selection | The selected row and selected column of the old keyboard mode, one of them active; WASD selects, HJKL/arrows shift the active line. Its tiles are highlighted (GH-101). Replaced by Selected tile (GH-169; built in GH-170, GH-171) and no longer in the game | — |
 | Selected tile | A computer's selection under the shared keyboard scheme: one tile, so a selected row and column at once; WASD move it, HJKL/arrows shift its row (←/→) or column (↑/↓), and it stays put after a shift; its outlines show after a select or shift key and hide after a press on a tile or an arrow (GH-287). Replaces line selection (GH-169; built in GH-170, GH-171) | `TileSelection` |
 | System keyboard layout | The layout the player's OS types with (Latin, Ukrainian, Russian, ...). Not the same as the game's Keyboard layout, which is which hand does which job. Any non-Latin one plays by key position | — |
