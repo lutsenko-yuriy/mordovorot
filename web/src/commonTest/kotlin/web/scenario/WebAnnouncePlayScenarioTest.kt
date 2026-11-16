@@ -1,5 +1,6 @@
 package web.scenario
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -12,6 +13,9 @@ private const val PITCH = 40.0
 /** GH-166 scenarios: what a screen reader hears while playing - shifts, drags and the win. On a computer a shift adds
  *  the tile now under the selection (`WebKeyboardAnnounceScenarioTest`), so these run on touch. */
 class WebAnnouncePlayScenarioTest {
+    private val mordieTexts = texts().mordie
+    private val readerTexts = texts().reader
+
 
     @Test
     fun `an arrow announces its line and direction, and the move count when a move starts`() = webTest {
@@ -21,7 +25,7 @@ class WebAnnouncePlayScenarioTest {
         page.game.onArrow(Arrow.RIGHT, 1)
         page.game.onArrow(Arrow.UP, 3)
 
-        assertEquals(listOf("Row 2 right, 1 move", "Row 2 right", "Column 4 up, 2 moves"), page.said)
+        assertEquals(listOf(readerTexts.withMoves(readerTexts.rowRight(2), 1), readerTexts.rowRight(2), readerTexts.withMoves(readerTexts.columnUp(4), 2)), page.said)
     }
 
     @Test
@@ -56,7 +60,7 @@ class WebAnnouncePlayScenarioTest {
         page.game.onArrow(Arrow.LEFT, 0)
 
         assertTrue(page.state.solved)
-        assertEquals(listOf("Solved in 1 move"), page.said)
+        assertEquals(listOf(readerTexts.solved(1)), page.said)
     }
 
     @Test
@@ -85,7 +89,7 @@ class WebAnnouncePlayScenarioTest {
         shifts(5)
 
         val lines = page.frames.mapNotNull { it.mordie }.toSet()
-        assertTrue(lines.any { it.startsWith("Found it!") } && lines.any { it.startsWith("I have already made") }, "$lines")
+        assertTrue(mordieTexts.found(11) in lines && mordieTexts.progress(3) in lines, "$lines")
         assertEquals(25, page.said.size)
         assertTrue(page.said.all { it.matches(Regex("""Row 2 (left|right)(, \d+ moves?)?""")) }, "${page.said}")
     }

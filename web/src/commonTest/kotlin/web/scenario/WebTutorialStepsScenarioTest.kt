@@ -1,5 +1,6 @@
 package web.scenario
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -11,6 +12,8 @@ import web.tutorial.TutorialText
 
 /** GH-288: each step advances on its shift. The board is `8 1 14 3 / 5 2 7 12 / 11 6 9 10 / 13 16 15 4`; the shifts are top row left 1, column 2 up 1, row 3 right 2, column 4 down 1. */
 class WebTutorialStepsScenarioTest {
+    private val tutorialTexts = texts().tutorial
+
 
     private fun text(page: WebHarness, step: Int) = TutorialText.step(step, computer = true, labels = page.state.labels)
 
@@ -58,7 +61,7 @@ class WebTutorialStepsScenarioTest {
         val page = tutorialPage(backgroundScope)
         page.stepByArrow(1)
         assertEquals(14, page.state.tiles[1])
-        assertTrue(page.state.guidance!!.text.contains("tile 14 at the top of the second column"))
+        assertEquals(tutorialTexts.step2("14", computer = true), page.state.guidance?.text)
 
         page.stepByArrow(2)
 
@@ -107,7 +110,7 @@ class WebTutorialStepsScenarioTest {
 
         page.game.onArrow(Arrow.RIGHT, 2)
 
-        assertEquals("Once more! It's the same row, so Moves stays at 3.", page.state.guidance?.text)
+        assertEquals(tutorialTexts.again(3), page.state.guidance?.text)
     }
 
     @Test

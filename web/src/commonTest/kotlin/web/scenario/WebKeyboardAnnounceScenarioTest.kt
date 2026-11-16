@@ -1,5 +1,6 @@
 package web.scenario
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -13,6 +14,8 @@ import web.Focus
 /** GH-171: what a screen reader hears in keyboard mode. The reader says the selected cell itself, on
  *  a selection move and on the board taking focus (`docs/knowledge/notes/GH-171.md`). */
 class WebKeyboardAnnounceScenarioTest {
+    private val readerTexts = texts().reader
+
 
     /** Row 0 is 4 1 2 3, one shift from solved; the second row is out of place too. */
     private val mixedUp = intArrayOf(3, 0, 1, 2, 5, 6, 7, 4) + IntArray(8) { it + 8 }
@@ -54,11 +57,11 @@ class WebKeyboardAnnounceScenarioTest {
     fun `a solving shift says only the win, and touch adds nothing`() = webTest {
         val solving = WebHarness(backgroundScope).remembering().startOn()
         solving.key("h")
-        assertEquals("Solved in 1 move", solving.said.last())
+        assertEquals(readerTexts.solved(1), solving.said.last())
 
         val touch = WebHarness(backgroundScope, touch = true).startOn(mixedUp)
         touch.game.onArrow(Arrow.LEFT, 1)
-        assertEquals("Row 2 left, 1 move", touch.said.last())
+        assertEquals(readerTexts.withMoves(readerTexts.rowLeft(2), 1), touch.said.last())
     }
 
     @Test
@@ -74,7 +77,7 @@ class WebKeyboardAnnounceScenarioTest {
         }
 
         val page = WebHarness(backgroundScope).remembering().startOn(original).givenUp()
-        assertEquals("Board, start, step 0 of 2", page.state.boardName)
+        assertEquals(readerTexts.boardStep(readerTexts.stepStart(2)), page.state.boardName)
         page.key("l")
         assertEquals("Board, step 1 of 2: Row 1 right 1", page.state.boardName)
 

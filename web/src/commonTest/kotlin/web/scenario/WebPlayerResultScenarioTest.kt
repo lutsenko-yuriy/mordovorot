@@ -1,5 +1,6 @@
 package web.scenario
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -14,12 +15,14 @@ import web.Arrow
 /** GH-273 scenarios: Mordie's line on the solution screen opens with how the player's game ended.
  *  Same setup as [WebGiveUpScenarioTest]: a 4x4 board two moves from solved. */
 class WebPlayerResultScenarioTest {
+    private val mordieTexts = texts().mordie
+
 
     private val original = intArrayOf(9, 2, 3, 0, 4, 13, 6, 7, 8, 1, 10, 11, 12, 5, 14, 15)
     private val path = listOf(SolutionMove(isRow = true, index = 0, amount = 1), SolutionMove(isRow = false, index = 1, amount = 2))
     private val savedPath = path.map { SavedMove(it.isRow, it.index, it.amount) }
-    private val gaveUpLine = "You gave up after 3 moves. Here's how I did it in 2 moves!"
-    private val solvedLine = "You solved it in 2 moves. Here's how I did it in 2 moves!"
+    private val gaveUpLine = "${mordieTexts.solutionStopped(3)} ${mordieTexts.solutionHere(2)}"
+    private val solvedLine = "${mordieTexts.solutionSolved(2)} ${mordieTexts.solutionHere(2)}"
 
     private fun WebHarness.searchFinds() {
         mordieSearches.latest.progress = SearchProgress(path.size, found = true, elapsedMs = 0, solution = path)
@@ -86,7 +89,7 @@ class WebPlayerResultScenarioTest {
 
         page.giveUp()
 
-        assertEquals("You gave up after 1 move. Here's how I did it in 2 moves!", page.state.mordie)
+        assertEquals("${mordieTexts.solutionStopped(1)} ${mordieTexts.solutionHere(2)}", page.state.mordie)
     }
 
     @Test
@@ -97,7 +100,7 @@ class WebPlayerResultScenarioTest {
 
         page.giveUp()
 
-        assertEquals("You did not even start this one. Here's how I did it in 2 moves!", page.state.mordie)
+        assertEquals("${mordieTexts.solutionNotStarted} ${mordieTexts.solutionHere(2)}", page.state.mordie)
         assertEquals("gave_up", page.props("screen_solution").single()["player_result"])
     }
 
@@ -155,7 +158,7 @@ class WebPlayerResultScenarioTest {
 
         page.game.onLoadChosen("old")
 
-        assertEquals("Here's how I did it in 2 moves!", page.state.mordie)
+        assertEquals(mordieTexts.solutionHere(2), page.state.mordie)
         assertEquals("unknown", page.props("screen_solution").single()["player_result"])
     }
 

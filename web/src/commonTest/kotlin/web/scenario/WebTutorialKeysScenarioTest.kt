@@ -1,5 +1,6 @@
 package web.scenario
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -13,6 +14,9 @@ import web.tutorial.TutorialText
 
 /** GH-290: on a computer, the tutorial's steps list the ways to do the asked shift: drag, click, keys. */
 class WebTutorialKeysScenarioTest {
+    private val tutorialTexts = texts().tutorial
+
+    private fun or(letter: String, arrow: String) = texts().keys.letterOrArrow(letter, arrow)
 
     private fun WebHarness.ways() = state.guidance!!.ways
 
@@ -27,7 +31,7 @@ class WebTutorialKeysScenarioTest {
         val page = tutorialPage(backgroundScope)
 
         assertEquals(TutorialText.step(1, computer = true, labels = page.state.labels), page.state.guidance?.text)
-        assertEquals(listOf("Drag it left", "Click its ◀", "Press H or ←"), page.ways())
+        assertEquals(listOf(tutorialTexts.dragLeft(1), tutorialTexts.click("◀", 1), tutorialTexts.press(or("H", "←"), 1)), page.ways())
     }
 
     @Test
@@ -36,7 +40,7 @@ class WebTutorialKeysScenarioTest {
 
         page.stepByArrow(1)
 
-        assertEquals(listOf("Drag it up", "Click its ▲", "Press D, then K or ↑"), page.ways())
+        assertEquals(listOf(tutorialTexts.dragUp(1), tutorialTexts.click("▲", 1), tutorialTexts.pressThen("D", 1, or("K", "↑"), 1)), page.ways())
     }
 
     @Test
@@ -46,7 +50,7 @@ class WebTutorialKeysScenarioTest {
 
         page.key("d")
 
-        assertEquals("Press K or ↑", page.keyLine())
+        assertEquals(tutorialTexts.press(or("K", "↑"), 1), page.keyLine())
     }
 
     @Test
@@ -56,7 +60,7 @@ class WebTutorialKeysScenarioTest {
 
         page.game.onTilePressed(2, 1)
 
-        assertEquals("Press K or ↑", page.keyLine())
+        assertEquals(tutorialTexts.press(or("K", "↑"), 1), page.keyLine())
     }
 
     @Test
@@ -65,7 +69,7 @@ class WebTutorialKeysScenarioTest {
 
         page.playSteps(3)
 
-        assertEquals("Press D three times, then J or ↓", page.keyLine())
+        assertEquals(tutorialTexts.pressThen("D", 3, or("J", "↓"), 1), page.keyLine())
     }
 
     @Test
@@ -74,16 +78,16 @@ class WebTutorialKeysScenarioTest {
 
         page.playSteps(2)
 
-        assertEquals("Press S twice, then L or → twice", page.keyLine())
+        assertEquals(tutorialTexts.pressThen("S", 2, or("L", "→"), 2), page.keyLine())
     }
 
     @Test
     fun `the left hand's lines`() = webTest {
         val page = leftHanded()
 
-        assertEquals("Press A", page.keyLine())
+        assertEquals(tutorialTexts.press("A", 1), page.keyLine())
         page.stepByArrow(1)
-        assertEquals("Press L or →, then W", page.keyLine())
+        assertEquals(tutorialTexts.pressThen(or("L", "→"), 1, "W", 1), page.keyLine())
     }
 
     @Test
@@ -92,10 +96,10 @@ class WebTutorialKeysScenarioTest {
         page.game.tutorial.onControls()
 
         page.game.controls.onLayout(KeyboardLayout.LEFT_HANDED)
-        assertEquals("Press H or ←", page.keyLine())
+        assertEquals(tutorialTexts.press(or("H", "←"), 1), page.keyLine())
         page.game.controls.onAnswered(ok = true)
 
-        assertEquals("Press A", page.keyLine())
+        assertEquals(tutorialTexts.press("A", 1), page.keyLine())
     }
 
     @Test
@@ -106,7 +110,7 @@ class WebTutorialKeysScenarioTest {
 
         page.game.controls.onAnswered(ok = false)
 
-        assertEquals("Press H or ←", page.keyLine())
+        assertEquals(tutorialTexts.press(or("H", "←"), 1), page.keyLine())
     }
 
     @Test
@@ -119,7 +123,7 @@ class WebTutorialKeysScenarioTest {
         page.game.tutorial.onReplay("button")
         page.game.tutorial.onReplayAnswered(ReplaySaveChoice.DONT_SAVE)
 
-        assertEquals("Press W, then H or ←", page.keyLine())
+        assertEquals(tutorialTexts.pressThen("W", 1, or("H", "←"), 1), page.keyLine())
     }
 
     @Test
@@ -141,7 +145,7 @@ class WebTutorialKeysScenarioTest {
         page.game.onArrow(Arrow.LEFT, 2)
 
         assertEquals(TutorialText.again(3), page.state.guidance?.text)
-        assertEquals(listOf("Drag it left", "Click its ◀", "Press S twice, then H or ←"), page.ways())
+        assertEquals(listOf(tutorialTexts.dragLeft(1), tutorialTexts.click("◀", 1), tutorialTexts.pressThen("S", 2, or("H", "←"), 1)), page.ways())
     }
 
     @Test

@@ -1,5 +1,6 @@
 package web.scenario
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -13,6 +14,9 @@ import web.WebDialog
 /** GH-251 scenarios: deleting a save from the Load dialog and the startup restore dialog, in the
  *  browser, through [WebHarness]. Saves list sorted by name; a row is pressed by its index. */
 class WebDeleteSaveScenarioTest {
+    private val pageTexts = texts().page
+    private val statusTexts = texts().status
+
 
     private fun entries(vararg names: String) = names.map { SaveEntry(it, "$it (4x4)") }
 
@@ -63,8 +67,8 @@ class WebDeleteSaveScenarioTest {
         page.game.onDeleteAnswered(true)
 
         assertEquals(listOf("bar"), page.saves.listSaves())
-        assertEquals(WebDialog.Load(restore = false, entries("bar"), Focus.DeleteSave(0), "Deleted 'foo'."), page.state.dialog)
-        assertEquals("Deleted 'foo'.", page.state.status)
+        assertEquals(WebDialog.Load(restore = false, entries("bar"), Focus.DeleteSave(0), statusTexts.deleted("foo")), page.state.dialog)
+        assertEquals(statusTexts.deleted("foo"), page.state.status)
         assertEquals(board, page.state.tiles)
         assertEquals(0, page.state.moves)
     }
@@ -93,7 +97,7 @@ class WebDeleteSaveScenarioTest {
         page.game.onDeletePressed(1)
         page.game.onDeleteAnswered(true)
 
-        assertEquals(WebDialog.Load(restore = true, entries("bar"), Focus.DeleteSave(0), "Deleted 'foo'."), page.state.dialog)
+        assertEquals(WebDialog.Load(restore = true, entries("bar"), Focus.DeleteSave(0), statusTexts.deleted("foo")), page.state.dialog)
 
         page.game.onLoadChosen("bar")
         assertNull(page.state.dialog)
@@ -108,7 +112,7 @@ class WebDeleteSaveScenarioTest {
         one.game.onDeleteAnswered(true)
 
         assertTrue(one.state.dialog is WebDialog.Size, "${one.state.dialog}")
-        assertEquals("Deleted 'foo'.", one.state.status)
+        assertEquals(statusTexts.deleted("foo"), one.state.status)
         assertEquals(listOf("all_deleted"), one.ownProps("startup_restore_decision").map { it["decision"] })
         assertEquals(listOf("startup"), one.ownProps("screen_size_dialog").map { it["opened_from"] })
 
@@ -138,7 +142,7 @@ class WebDeleteSaveScenarioTest {
         assertNull(page.state.dialog)
         assertEquals(tiles, page.state.tiles)
         assertEquals(moves, page.state.moves)
-        assertEquals("Deleted 'foo'. No saves left.", page.state.status)
+        assertEquals(statusTexts.deletedNoneLeft("foo"), page.state.status)
         assertTrue(page.props("dialog_cancelled").isEmpty())
         assertEquals(Focus.LoadButton, page.state.focus)
     }
@@ -168,7 +172,7 @@ class WebDeleteSaveScenarioTest {
     fun `WU2 corrupted and unsolvable saves can be deleted`() = webTest {
         val page = WebHarness(backgroundScope).startOn().seed("odd", UNSOLVABLE_3X3).seedCorrupted("bad")
         page.game.onLoad()
-        assertEquals(listOf(SaveEntry("bad", "bad"), SaveEntry("odd", "odd (3x3) unsolvable")), (page.state.dialog as WebDialog.Load).saves)
+        assertEquals(listOf(SaveEntry("bad", "bad"), SaveEntry("odd", "odd (3x3) ${pageTexts.unsolvable}")), (page.state.dialog as WebDialog.Load).saves)
 
         page.game.onDeletePressed(1)
         page.game.onDeleteAnswered(true)
@@ -190,15 +194,15 @@ class WebDeleteSaveScenarioTest {
         page.game.onDeletePressed(1)
         page.saves.delete("foo")
         page.game.onDeleteAnswered(true)
-        assertEquals("No save named 'foo' - it was already deleted.", page.state.status)
-        assertEquals(WebDialog.Load(restore = false, list, Focus.DeleteSave(1), "No save named 'foo' - it was already deleted."), page.state.dialog)
+        assertEquals(statusTexts.alreadyDeleted("foo"), page.state.status)
+        assertEquals(WebDialog.Load(restore = false, list, Focus.DeleteSave(1), statusTexts.alreadyDeleted("foo")), page.state.dialog)
         assertEquals(Focus.DeleteSave(1), page.state.focus)
 
         page.store.removeException = IllegalStateException("storage is blocked")
         page.game.onDeletePressed(0)
         page.game.onDeleteAnswered(true)
-        assertEquals("Could not delete 'bar'.", page.state.status)
-        assertEquals(WebDialog.Load(restore = false, list, Focus.DeleteSave(0), "Could not delete 'bar'."), page.state.dialog)
+        assertEquals(statusTexts.couldNotDelete("bar"), page.state.status)
+        assertEquals(WebDialog.Load(restore = false, list, Focus.DeleteSave(0), statusTexts.couldNotDelete("bar")), page.state.dialog)
         assertEquals(Focus.DeleteSave(0), page.state.focus)
 
         assertEquals(board, page.state.tiles)

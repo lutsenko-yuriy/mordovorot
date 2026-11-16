@@ -1,5 +1,6 @@
 package web.scenario
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import mordie.SearchProgress
@@ -23,6 +24,9 @@ private fun WebHarness.searchFinds() {
 /** GH-166 scenarios: what a screen reader hears from the status line, New, Load, startup and the
  *  solution screen. */
 class WebAnnounceFlowsScenarioTest {
+    private val statusTexts = texts().status
+    private val readerTexts = texts().reader
+
 
     @Test
     fun `the same status message twice is announced twice`() = webTest {
@@ -33,7 +37,7 @@ class WebAnnounceFlowsScenarioTest {
             page.game.onSaveAnswered("a")
         }
 
-        assertEquals(listOf("Saved as 'a'.", "Saved as 'a'."), page.said)
+        assertEquals(listOf(statusTexts.saved("a"), statusTexts.saved("a")), page.said)
     }
 
     @Test
@@ -43,7 +47,7 @@ class WebAnnounceFlowsScenarioTest {
         page.game.onSave()
         page.game.onSaveAnswered("a b")
 
-        assertEquals(listOf("'a b' isn't a usable save name (no spaces) - not saved."), page.said)
+        assertEquals(listOf(statusTexts.saveNameHasSpaces("a b")), page.said)
     }
 
     @Test
@@ -76,8 +80,8 @@ class WebAnnounceFlowsScenarioTest {
         page.game.onLoad()
         page.game.onLoadChosen("foo")
 
-        assertEquals("Loaded 'foo'.", page.state.status)
-        assertEquals(listOf("Loaded 'foo', 5x5, 12 moves"), page.said)
+        assertEquals(statusTexts.loaded("foo"), page.state.status)
+        assertEquals(listOf(readerTexts.loadedPlain("foo", 5, 12)), page.said)
     }
 
     @Test
@@ -87,7 +91,7 @@ class WebAnnounceFlowsScenarioTest {
         page.game.onLoad()
         page.game.onLoadChosen("done")
 
-        assertEquals(listOf("Loaded 'done', 4x4, solved in 14 moves"), page.said)
+        assertEquals(listOf(readerTexts.loadedSolved("done", 4, 14)), page.said)
     }
 
     @Test
@@ -98,7 +102,7 @@ class WebAnnounceFlowsScenarioTest {
         page.game.onLoad()
         page.game.onLoadChosen("sol")
 
-        assertEquals(listOf("Loaded 'sol', 4x4, solution, 2 moves"), page.said)
+        assertEquals(listOf(readerTexts.loadedSolution("sol", 4, 2)), page.said)
     }
 
     @Test
@@ -107,7 +111,7 @@ class WebAnnounceFlowsScenarioTest {
 
         page.game.onLoadChosen("foo")
 
-        assertEquals(listOf("Loaded 'foo', 4x4, 0 moves"), page.said)
+        assertEquals(listOf(readerTexts.loadedPlain("foo", 4, 0)), page.said)
     }
 
     @Test
@@ -124,7 +128,7 @@ class WebAnnounceFlowsScenarioTest {
     @Test
     fun `Can't be solved - New game announces the new game, Repair announces its message`() = webTest {
         val page = WebHarness(backgroundScope).seed("odd", UNSOLVABLE_3X3).startOn()
-        val unsolvable = "'odd (3x3)' can't be solved - no sequence of shifts reaches the solved board."
+        val unsolvable = statusTexts.cantBeSolved("odd (3x3)")
 
         page.game.onLoad()
         page.game.onLoadChosen("odd")
@@ -138,7 +142,7 @@ class WebAnnounceFlowsScenarioTest {
         page.game.onLoadChosen("odd")
         page.game.onUnsolvableChoice(UnsolvableSaveChoice.REPAIR)
 
-        assertEquals(listOf(unsolvable, "Repaired 'odd' (two tiles swapped) and loaded it."), page.said)
+        assertEquals(listOf(unsolvable, statusTexts.repaired("odd")), page.said)
     }
 
     @Test
@@ -156,18 +160,19 @@ class WebAnnounceFlowsScenarioTest {
         page.game.solution.onReplayNext()
         page.game.solution.onReplayNext()
         assertEquals(
-            listOf("Solution, 2 moves", "Step 1 of 2: Row 1 right 1", "Step 2 of 2: Column 2 down 2", "Step 2 of 2: Column 2 down 2"),
+            listOf(readerTexts.solution(2), readerTexts.stepOf(1, 2, readerTexts.rowRight(1), 1), readerTexts.stepOf(2, 2, readerTexts.columnDown(2), 2),
+                readerTexts.stepOf(2, 2, readerTexts.columnDown(2), 2)),
             page.said,
         )
         page.said.clear()
 
         repeat(3) { page.game.solution.onReplayPrevious() }
-        assertEquals("Start, step 0 of 2", page.said.last())
+        assertEquals(readerTexts.stepStart(2), page.said.last())
         page.game.solution.onReplayNext()
         page.said.clear()
         page.game.solution.onReplayRestart()
 
-        assertEquals(listOf("Start, step 0 of 2"), page.said)
+        assertEquals(listOf(readerTexts.stepStart(2)), page.said)
     }
 
     @Test
@@ -180,6 +185,6 @@ class WebAnnounceFlowsScenarioTest {
 
         page.game.solution.onMordiesSolution()
 
-        assertEquals(listOf("Solution, 2 moves"), page.said)
+        assertEquals(listOf(readerTexts.solution(2)), page.said)
     }
 }

@@ -1,6 +1,7 @@
 package web.scenario
 
 import board_model.Solvability
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -19,6 +20,10 @@ import web.WebDialog
 
 /** GH-207 scenarios: very large boards (7x7 to 9x9) in the web client, through [WebHarness]. */
 class WebVeryLargeScenarioTest {
+    private val mordieTexts = texts().mordie
+    private val pageTexts = texts().page
+    private val dialogTexts = texts().dialogs
+
 
     private val sizePicker = WebDialog.Size(listOf(3, 4, 5, 6), current = 4, veryLarge = listOf(7, 8, 9))
 
@@ -33,8 +38,8 @@ class WebVeryLargeScenarioTest {
 
         page.game.onNew()
         assertEquals(sizePicker, page.state.dialog)
-        assertEquals("Very large", VERY_LARGE_TITLE)
-        assertEquals("Harder to solve, and the tiles may be too small to use comfortably.", VERY_LARGE_WARNING)
+        assertEquals(dialogTexts.veryLargeTitle, VERY_LARGE_TITLE)
+        assertEquals(dialogTexts.veryLargeWarning, VERY_LARGE_WARNING)
         page.game.onSizeChosen(7)
         page.game.onNew()
         page.game.onSizeChosen(8)
@@ -79,11 +84,11 @@ class WebVeryLargeScenarioTest {
         page.game.onSizeChosen(9)
 
         assertEquals(81, page.mordieSearches.latest.original.size)
-        assertEquals("Alright! Let's sort this one out!", page.state.mordie)
+        assertEquals(mordieTexts.opening, page.state.mordie)
         assertEquals(GiveUpButton.DIMMED, page.state.giveUp)
         page.mordieSearches.latest.progress = fastAnswer(334)
         repeat(5) { page.game.onArrow(Arrow.UP, 0) }
-        assertEquals("Found one in 334 moves, but maybe there's a shorter one! Can you beat it?", page.state.mordie)
+        assertEquals(mordieTexts.foundUnproven(334), page.state.mordie)
         assertEquals(GiveUpButton.GIVE_UP, page.state.giveUp)
 
         val won = WebHarness(backgroundScope).startOn(oneShiftFromSolved(9))
@@ -91,7 +96,7 @@ class WebVeryLargeScenarioTest {
         won.game.onArrow(Arrow.LEFT, 0)
 
         assertTrue(won.state.solved)
-        assertEquals("You beat me! 334 moves vs your 1. Mine may not have been the shortest.", won.state.mordie)
+        assertEquals(mordieTexts.endingBeatUnproven(334, 1), won.state.mordie)
         val solved = won.ownProps("board_solved").single()
         assertEquals(9, solved["board_size"])
         assertEquals(334, solved["mordie_moves"])
@@ -124,7 +129,7 @@ class WebVeryLargeScenarioTest {
         page.game.onLoad()
         page.game.onLoadChosen("foo")
 
-        assertEquals("Found one in 334 moves, but maybe there's a shorter one! Can you beat it?", page.state.mordie)
+        assertEquals(mordieTexts.foundUnproven(334), page.state.mordie)
         page.game.solution.onGiveUp()
         page.game.solution.onGiveUpAnswered(true)
         assertEquals(334, page.state.solution!!.moves.size)
@@ -143,7 +148,7 @@ class WebVeryLargeScenarioTest {
 
         page.game.labels.open()
         val dialog = page.state.dialog as WebDialog.Labels
-        assertEquals(LabelOption(TileLabels.LETTERS, "Letters", listOf("up to 5x5"), available = false), dialog.options[4])
+        assertEquals(LabelOption(TileLabels.LETTERS, pageTexts.labelLetters, listOf(pageTexts.labelLimit(5)), available = false), dialog.options[4])
         assertTrue(dialog.options.filter { it.labels != TileLabels.LETTERS }.all { it.available })
         page.game.labels.onAnswered(ok = true)
         assertEquals("letters", page.preferences.get("tile_labels"))
@@ -187,7 +192,7 @@ class WebVeryLargeScenarioTest {
         val page = WebHarness(backgroundScope).seed("foo", swapped(7)).startOn()
 
         page.game.onLoad()
-        assertEquals(WebDialog.Load(restore = false, listOf(SaveEntry("foo", "foo (7x7) unsolvable"))), page.state.dialog)
+        assertEquals(WebDialog.Load(restore = false, listOf(SaveEntry("foo", "foo (7x7) ${pageTexts.unsolvable}"))), page.state.dialog)
         page.game.onLoadChosen("foo")
         assertTrue(page.state.dialog is WebDialog.Unsolvable, "${page.state.dialog}")
         page.game.onUnsolvableChoice(UnsolvableSaveChoice.REPAIR)

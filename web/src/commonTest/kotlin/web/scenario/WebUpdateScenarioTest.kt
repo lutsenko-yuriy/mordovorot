@@ -1,5 +1,6 @@
 package web.scenario
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -15,8 +16,9 @@ import web.WebDialog
 
 /** GH-262 scenarios: the New version available notice and the Update flow, through [WebHarness]. */
 class WebUpdateScenarioTest {
+    private val pageTexts = texts().page
 
-    private val NOTICE = "v9.9.9 · New version available. Update"
+    private val NOTICE = pageTexts.footerUpdateNotice("9.9.9") + pageTexts.footerUpdate
 
     private fun WebHarness.footerText() = state.footer.joinToString("") { it.text }
 
@@ -41,7 +43,7 @@ class WebUpdateScenarioTest {
         val page = WebHarness(backgroundScope).start()
 
         assertFalse(page.hasUpdateLink())
-        assertTrue(page.footerText().endsWith("Based on Loopover by Cary Huang (carykh) · original · loopover.xyz"), page.footerText())
+        assertTrue(page.footerText().endsWith("Cary Huang (carykh) · ${pageTexts.footerOriginal} · loopover.xyz"), page.footerText())
         assertTrue(page.props("update_available").isEmpty())
     }
 

@@ -1,6 +1,7 @@
 package web.scenario
 
 import board_model.Solvability
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -13,6 +14,9 @@ import web.WebDialog
 /** GH-110 scenarios: shifting with the arrows, New, Moves, Mordie and the solved state. Same setup
  *  as [WebStartupScenarioTest]. */
 class WebPlayScenarioTest {
+    private val mordieTexts = texts().mordie
+    private val pageTexts = texts().page
+
 
     @Test
     fun `an arrow click shifts the line by one, wrapping around`() = webTest {
@@ -93,7 +97,7 @@ class WebPlayScenarioTest {
 
         page.game.onArrow(Arrow.LEFT, 0)
 
-        assertEquals("Congratulations ✓", page.state.mordie)
+        assertEquals(pageTexts.solved, page.state.mordie)
     }
 
     @Test
@@ -104,14 +108,14 @@ class WebPlayScenarioTest {
         fun shifts(count: Int) = repeat(count) { page.game.onArrow(if (it % 2 == 0) Arrow.RIGHT else Arrow.LEFT, 1) }
 
         shifts(1)
-        assertEquals("Alright! Let's sort this one out!", page.state.mordie)
+        assertEquals(mordieTexts.opening, page.state.mordie)
 
         shifts(19)
-        assertEquals("I have already made 3 moves and have not solved it yet!", page.state.mordie)
+        assertEquals(mordieTexts.progress(3), page.state.mordie)
 
         page.mordieSearches.latest.progress = SearchProgress(moves = 11, found = true, elapsedMs = 0)
         shifts(5)
-        assertEquals("Found it! I had to make 11 moves to find the solution! Can you beat it?", page.state.mordie)
+        assertEquals(mordieTexts.found(11), page.state.mordie)
     }
 
     @Test
@@ -120,6 +124,6 @@ class WebPlayScenarioTest {
 
         page.game.onArrow(Arrow.LEFT, 0)
 
-        assertEquals("You beat me! I was still at 0 moves.", page.state.mordie)
+        assertEquals(mordieTexts.endingPlayerWon(0), page.state.mordie)
     }
 }

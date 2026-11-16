@@ -1,5 +1,6 @@
 package web.scenario
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -13,8 +14,10 @@ import web.Arrow
  *  tiles are home. The press itself and the grid's markup are checked by the harness
  *  (`keys_check.sh`, `grid=1`). */
 class WebReadBoardScenarioTest {
+    private val readerTexts = texts().reader
 
-    private val startWords = "Row 1: 4, 1, 2, 3. Row 2: 5, 6, 7, 8. Row 3: 9, 10, 11, 12. Row 4: 13, 14, 15, 16. 12 tiles in place."
+    private val startWords = listOf("4, 1, 2, 3", "5, 6, 7, 8", "9, 10, 11, 12", "13, 14, 15, 16").mapIndexed { i, row -> readerTexts.boardRow(i + 1, row) }.joinToString(" ") +
+            " " + readerTexts.tilesInPlace(12)
     private val rowOneOut = List(4) { false } + List(12) { true }
 
     @Test
@@ -33,7 +36,7 @@ class WebReadBoardScenarioTest {
 
         val words = page.state.boardWords!!
         assertTrue("Row 2: 8, 5, 6, 7." in words, words)
-        assertTrue(words.endsWith("8 tiles in place."), words)
+        assertTrue(words.endsWith(readerTexts.tilesInPlace(8)), words)
         assertEquals(List(4) { false }, page.state.home.subList(4, 8))
     }
 

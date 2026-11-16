@@ -1,5 +1,6 @@
 package web.scenario
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -17,12 +18,14 @@ private val SHARED_5X5 = intArrayOf(4, 0, 1, 2, 3) + IntArray(20) { it + 5 }
 /** A solvable 4x4 other than the harness's: column 0 shifted one tile down. */
 private val SHARED_4X4 = intArrayOf(12, 1, 2, 3, 0, 5, 6, 7, 4, 9, 10, 11, 8, 13, 14, 15)
 
-private const val INVALID = "This link's board isn't a valid board."
-private const val TOO_BIG = "This link's board is 12x12; this site plays 3x3 to 9x9."
-private const val UNSOLVABLE = "No sequence of shifts can solve this link's board."
+private val INVALID = texts().status.linkInvalid
+private val TOO_BIG = texts().status.linkUnsupportedSize(12, 3, 9)
+private val UNSOLVABLE = texts().status.linkUnsolvable
 
 /** GH-243 scenarios: opening a share link at startup and on `hashchange`, through [WebHarness]. */
 class WebShareLinkScenarioTest {
+    private val statusTexts = texts().status
+
 
     @Test
     fun `a link at startup starts that board at once, skipping the restore prompt`() = webTest {
@@ -35,7 +38,7 @@ class WebShareLinkScenarioTest {
         assertEquals(0, page.state.moves)
         assertNull(page.state.dialog)
         assertContentEquals(SHARED_5X5, page.mordieSearches.latest.original)
-        assertEquals("Started a shared 5x5 board.", page.state.status)
+        assertEquals(statusTexts.startedShared(5), page.state.status)
         assertEquals(listOf("app_launched", "shared_board_opened"), page.analytics.events.map { it.name })
         assertEquals(listOf(mapOf("result" to "started", "board_size" to 5, "labels" to "none", "progress" to "none")), page.ownProps("shared_board_opened"))
     }
@@ -96,7 +99,7 @@ class WebShareLinkScenarioTest {
 
         assertNull(page.state.dialog)
         assertEquals(shown(SHARED_4X4), page.state.tiles)
-        assertEquals("Started a shared 4x4 board.", page.state.status)
+        assertEquals(statusTexts.startedShared(4), page.state.status)
         assertEquals(listOf(mapOf("result" to "started", "board_size" to 4, "labels" to "none", "progress" to "none")), page.ownProps("shared_board_opened"))
     }
 

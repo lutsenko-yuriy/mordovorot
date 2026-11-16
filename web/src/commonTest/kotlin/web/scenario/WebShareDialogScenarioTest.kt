@@ -1,5 +1,6 @@
 package web.scenario
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -17,6 +18,9 @@ import web.qr.QrCode
 
 /** GH-243 scenarios: the Share dialog and Copy link, through [WebHarness]. */
 class WebShareDialogScenarioTest {
+    private val dialogTexts = texts().dialogs
+    private val statusTexts = texts().status
+
 
     private val WebHarness.share get() = assertIs<WebDialog.Share>(state.dialog)
 
@@ -36,7 +40,7 @@ class WebShareDialogScenarioTest {
         page.game.share.open()
 
         assertEquals(ShareLinkOf(page, ONE_SHIFT_FROM_SOLVED), page.share.link)
-        assertTrue(page.share.note.endsWith("starts from the same 4x4 board."))
+        assertEquals(dialogTexts.shareNoteSame(4), page.share.note)
         assertEquals(Focus.CopyLink, page.state.focus)
         assertEquals(listOf(mapOf("board_size" to 4, "start_known" to true, "include_labels" to false, "include_progress" to false)), page.ownProps("screen_share_dialog"))
     }
@@ -67,7 +71,7 @@ class WebShareDialogScenarioTest {
         page.game.share.open()
 
         assertEquals(ShareLinkOf(page, current), page.share.link)
-        assertTrue(page.share.note.endsWith("starts from this 4x4 board as it is now."))
+        assertEquals(dialogTexts.shareNoteNow(4), page.share.note)
         assertEquals(listOf(mapOf("board_size" to 4, "start_known" to false, "include_labels" to false, "include_progress" to false)), page.ownProps("screen_share_dialog"))
     }
 
@@ -104,7 +108,7 @@ class WebShareDialogScenarioTest {
 
         assertEquals(listOf(link), page.clipboard.copied)
         assertTrue(page.share.copied)
-        assertEquals("Link copied.", page.state.status)
+        assertEquals(statusTexts.linkCopied, page.state.status)
         assertEquals(listOf(mapOf("board_size" to 4, "start_known" to true, "includes_labels" to false, "includes_progress" to false, "via" to "button")), page.ownProps("board_share_link_copied"))
 
         page.game.share.onCopyLink(fromKeyboard = true)
@@ -122,7 +126,7 @@ class WebShareDialogScenarioTest {
         assertEquals(1, page.clipboard.refused)
         assertFalse(page.share.copied)
         assertEquals(Focus.ShareLinkField, page.state.focus)
-        assertEquals("Couldn't copy the link - it's selected, so copy it yourself.", page.state.status)
+        assertEquals(statusTexts.copyFailed, page.state.status)
         assertTrue(page.props("board_share_link_copied").isEmpty())
     }
 
