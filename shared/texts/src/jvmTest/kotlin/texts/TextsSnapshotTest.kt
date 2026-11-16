@@ -8,7 +8,7 @@ import kotlin.test.fail
 
 /**
  * Pins every text of every language (GH-274, GH-275): each key, called with sample arguments, against
- * the committed `<language>.txt` (`english.txt`, `russian.txt`), which is also the translation review
+ * the committed `<language>.txt` (`english.txt`, `german.txt`, `russian.txt`), which is also the translation review
  * sheet. A changed or new text shows up as a diff of that file, and a key's parameters are limited to
  * `Int`, `String` and `Boolean`, so every language can inflect them itself.
  *
@@ -16,7 +16,7 @@ import kotlin.test.fail
  */
 class TextsSnapshotTest {
 
-    private val names = mapOf(Language.EN to "english", Language.RU to "russian")
+    private val names = mapOf(Language.EN to "english", Language.DE to "german", Language.RU to "russian")
 
     @Test
     fun `every text of every language matches its committed snapshot`() {

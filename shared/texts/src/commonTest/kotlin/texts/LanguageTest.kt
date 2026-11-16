@@ -10,6 +10,7 @@ class LanguageTest {
     fun `a code finds its language`() {
         assertEquals(Language.RU, Language.fromCode("ru"))
         assertEquals(Language.EN, Language.fromCode("en"))
+        assertEquals(Language.DE, Language.fromCode("de"))
     }
 
     @Test
