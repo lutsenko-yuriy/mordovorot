@@ -10,6 +10,8 @@ async function runKeys(win, steps, label) {
         const region = win.document.getElementById("announcer");
         if (region) region.textContent = "";
         const how = play(win, step);
+        // GH-289: wait:<ms> lets a timer fire (the tutorial's 3 s pause) with the screen as the steps left it.
+        if (step.startsWith("wait:")) await new Promise(r => setTimeout(r, Number(step.slice(5))));
         await redrawn(win);
         lines.push(`${label} | ${step} ${how} -> ${snapshot(win)}`);
     }
@@ -24,6 +26,7 @@ function play(win, step) {
         clickText(doc, step.slice(6)); // harness.html's
         return "-";
     }
+    if (step.startsWith("wait:")) return "-"; // runKeys waits
     if (step.startsWith("focus:")) {
         doc.querySelector(`[data-focus="${step.slice(6)}"]`)?.focus();
         return "-";

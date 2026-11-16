@@ -73,6 +73,9 @@ queries=(
   "report=keys&mode=tutorial&keys=focus:tutorial-skip,Enter,Escape"
   # Step 5: the solved board's focus falls to Labels, not Skip, so a held Enter can't skip.
   "report=keys&mode=tutorial&step=5&keys=focus:tutorial-labels,Enter,Escape"
+  # GH-289: step 6's redraw (3 s after step 5) under an open Labels dialog keeps focus on OK or Cancel, never the page body; Escape then closes it.
+  "report=keys&mode=tutorial&step=5&keys=4,focus:dialog-ok,wait:3500,Escape"
+  "report=keys&mode=tutorial&step=5&keys=4,focus:dialog-cancel,wait:3500,Escape"
   # GH-200: on a non-Latin layout a letter key acts by its position; a Latin one by what it types.
   "report=keys&grid=1&keys=в@KeyD,р@KeyH,ц@KeyW,z@KeyW"
   # The solution screen: the board takes focus and the keys, in place; off the board the keys are nothing.
