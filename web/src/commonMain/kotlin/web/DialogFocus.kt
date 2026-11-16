@@ -50,6 +50,10 @@ sealed class Focus(override val key: String) : FocusTarget {
     data class Restore(val control: String) : Focus(control) {
         override val fallsBack get() = true
     }
+    /** The tutorial's panel buttons (GH-288). */
+    data object TutorialControls : Focus("tutorial-controls")
+    data object TutorialLabels : Focus("tutorial-labels")
+    data object TutorialSkip : Focus("tutorial-skip")
     /** The footer's Update button (GH-262), outside `#app`. */
     data object UpdateLink : Focus("update")
     /** The update confirmation's Cancel, where it opens (GH-262). */

@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.45.2] — 2026-11-16 (PR #296 merged)
+
+### Added
+
+- [wip] [app] (PR #296) GH-288: the tutorial's flow, switched off on the site (WU2 of 3; the panel and switching it on follow in WU3).
+
 ## [0.45.1] — 2026-11-16 (PR #295 merged)
 
 ### Added

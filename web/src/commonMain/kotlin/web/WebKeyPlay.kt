@@ -78,6 +78,8 @@ internal class WebKeyPlay(
             Focus.Board.key -> Focus.Board
             else -> Focus.Restore(from)
         }
+        // The tutorial's panel has no other buttons.
+        if (game.tutorial.running && button != ToolbarButton.LABELS && button != ToolbarButton.CONTROLS) return
         when (button) {
             ToolbarButton.NEW -> game.onNew(opener)
             ToolbarButton.SAVE -> game.onSave(opener)

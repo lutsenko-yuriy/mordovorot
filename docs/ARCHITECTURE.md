@@ -212,6 +212,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── WebDragFlows.kt  # WebGame's drag of a row or column: press, moves, release as one shift (GH-110, split out in GH-288)
 │   ├── WebControlsDialog.kt # The Controls dialog's flow over WebGame's modal and the session's mode (GH-171)
 │   ├── ShareTogglePreference.kt # GH-267, GH-272: a Share dialog toggle (`Include my tile labels` under `share_labels`, `Include my progress` under `share_progress`), on or off, read once per session
+│   ├── WebTutorial.kt   # GH-288: the first-launch tutorial's flow: starts it (switch on, not seen, no saves), checks every shift against the step's (WebGame.shiftLine, WebDragFlows.onEnd), blocks others, the 3 s pause at step 5, Skip, step 6; `guidance()` is the frame's panel (Guidance.kt)
+│   ├── Guidance.kt      # GH-288: the panel's step, text, Controls and the asked line (Guidance, TutorialHighlight)
 │   ├── TutorialPreference.kt # GH-288: whether the first-launch tutorial was seen (`tutorial` = `seen`); a failed read counts as seen
 │   ├── tutorial/        # GH-288: TutorialScript (the tutorial board and its four shifts), TutorialProgress (the step, and what each shift means: counts, done, blocked), TutorialText (Mordie's texts for a computer and a phone)
 │   ├── PressedWith.kt   # The session's last input, read per event as input_method (GH-171)
@@ -252,7 +254,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── Launch.kt        # startWebGame: the page's wiring (PlatformAnalyticsService "web" wrapped
 │   │                    # by InputMethodAnalyticsService "rich_ui"), app_launched {mode, layout,
 │   │                    # app_version, host} (GH-111) and tile_labels (GH-139); webBoard(): the
-│   │                    # page's BoardImpl(maxSide = 9), shared with WebHarness (GH-207)
+│   │                    # page's BoardImpl(maxSide = 9), shared with WebHarness (GH-207); its
+│   │                    # `tutorial` switch is Main.kt's `false` until the panel is drawn (GH-288)
 │   ├── TextScale.kt     # GH-168: textScaleOf(root, appleBody): the system text size as a scale, never below 1;
 │   │                    # rootFontPx: the root's size for it, null when the default already is
 │   ├── Host.kt          # hostOf(hostname): PUBLIC_SITE, LOCALHOST or OTHER - only the bucket is sent (GH-111)
@@ -378,7 +381,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # tall `.steps` overrides the base `.steps` by coming later
 ├── src/commonTest/kotlin/web/scenario/ # GH-110 end to end: WebGame over startWebGame's wiring
 │                                       # (WebHarness), recording each WebState (startup, play,
-│                                       # save/load, unsaved progress, drag, analytics; GH-126 give up;
+│                                       # save/load, unsaved progress, drag, analytics; GH-126 give up; GH-288 the tutorial,
+│                                       # with WebHarness's `firstLaunch` (else it seeds `tutorial=seen`);
 │                                       # GH-139 tile labels; GH-166 announcements, as WebHarness.said)
 ├── src/commonTest/kotlin/web/FooterTest.kt # GH-111: the footer's wording and links; GH-262: the notice, and the worker's relative URL
 ├── src/jvmTest/kotlin/web/UpdateNoticeStylesTest.kt # GH-262: the footer's Update looks like a link and keeps a keyboard ring
@@ -613,7 +617,9 @@ and the web scenario harness, which call the same functions with fakes.
 It builds the page's
 collaborators and hands them to `startWebGame` (`Launch.kt`), which decorates analytics
 (`platform: web`, then `input_method` from the last press for everything but `app_launched`), calls
-`buildGameViewModel` and starts a `WebGame`.
+`buildGameViewModel` and starts a `WebGame`. At start, `WebGame` begins the first-launch tutorial
+(`WebTutorial`, GH-288) when the switch is on, `tutorial` isn't `seen` and there are no saves; else it runs the
+startup (a share link, else `restoreOnStartup`). The tutorial leaves the link in the address until it ends, and Skip runs the startup.
 `Main.kt` also passes the stamped `BuildInfo.VERSION` and `hostOf(window.location.hostname)` for
 `app_launched` (GH-111), and appends the footer to `<body>` once, outside `#app`, which
 `DomRenderer` rebuilds (all of it every frame, but for a computer's board, GH-171).

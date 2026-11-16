@@ -66,4 +66,27 @@ class PageFocusTest {
         assertEquals(Focus.PageStart, fallbackFocus(Focus.GiveUpRow.key, playing))
         assertEquals(Focus.PageStart, fallbackFocus(Focus.SaveButton.key, playing))
     }
+
+    // GH-288
+    private val panel = Guidance(step = 5, text = "Can you beat my results?", controls = true, highlight = null)
+
+    @Test
+    fun `on step 5 a winning arrow or the board passes focus to Labels, not Skip`() {
+        val step5 = won.copy(guidance = panel, giveUp = GiveUpButton.HIDDEN)
+        assertEquals(Focus.TutorialLabels, fallbackFocus(Focus.ArrowButton(Arrow.DOWN, 3).key, step5))
+        assertEquals(Focus.TutorialLabels, fallbackFocus(Focus.Board.key, step5))
+    }
+
+    @Test
+    fun `the panel gone from a won board passes focus as a winning arrow does`() {
+        assertEquals(Focus.GiveUpRow, fallbackFocus(Focus.TutorialSkip.key, won.copy(giveUp = GiveUpButton.MORDIES_SOLUTION)))
+        assertEquals(Focus.NewButton, fallbackFocus(Focus.TutorialLabels.key, won.copy(giveUp = GiveUpButton.HIDDEN)))
+    }
+
+    @Test
+    fun `the panel gone from a game in play passes focus to the board on a computer`() {
+        val keyboardPlay = playing.copy(selection = TileSelection.INITIAL)
+        assertEquals(Focus.Board, fallbackFocus(Focus.TutorialSkip.key, keyboardPlay))
+        assertEquals(Focus.PageStart, fallbackFocus(Focus.TutorialSkip.key, playing))
+    }
 }
