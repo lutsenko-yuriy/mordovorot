@@ -53,7 +53,7 @@ class WebSaveLoadScenarioTest {
         for (name in listOf("a/b", "..")) {
             saveAs(name)
             assertEquals(
-                "Could not save as '$name': Save name must not be blank, contain a path separator, or contain '..'",
+                statusTexts.saveFailed(name, "Save name must not be blank, contain a path separator, or contain '..'"),
                 page.state.status,
             )
         }

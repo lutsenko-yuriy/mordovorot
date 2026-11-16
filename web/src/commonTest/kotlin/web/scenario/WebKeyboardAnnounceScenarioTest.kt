@@ -79,7 +79,7 @@ class WebKeyboardAnnounceScenarioTest {
         val page = WebHarness(backgroundScope).remembering().startOn(original).givenUp()
         assertEquals(readerTexts.boardStep(readerTexts.stepStart(2)), page.state.boardName)
         page.key("l")
-        assertEquals("Board, step 1 of 2: Row 1 right 1", page.state.boardName)
+        assertEquals(readerTexts.boardStep(readerTexts.stepOf(1, 2, readerTexts.rowRight(1), 1)), page.state.boardName)
 
         assertNull(WebHarness(backgroundScope).remembering().startOn(mixedUp).state.boardName, "in play, the grid is plain `Board`")
         assertNull(WebHarness(backgroundScope, touch = true).startOn(original).givenUp().state.boardName)

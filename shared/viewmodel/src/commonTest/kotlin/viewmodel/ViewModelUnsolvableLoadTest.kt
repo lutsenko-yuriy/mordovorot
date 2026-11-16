@@ -40,7 +40,7 @@ class ViewModelUnsolvableLoadTest {
 
         ui.drive(viewModel) { viewModel.loadGame("odd") }
 
-        assertEquals(listOf("odd (3x3) unsolvable" to false), ui.resolveUnsolvableSaveCalls)
+        assertEquals(listOf("odd (3x3) ${texts().page.unsolvable}" to false), ui.resolveUnsolvableSaveCalls)
         assertEquals(unsolvableMessage, ui.shownMessages.first())
         assertEquals(Event("load_command_used", mapOf("trigger" to "command", "result" to "unsolvable")), analytics.events.first())
     }
@@ -168,7 +168,7 @@ class ViewModelUnsolvableLoadTest {
 
         ui.drive(viewModel) { viewModel.restoreOnStartup() }
 
-        assertEquals(listOf("odd (3x3) unsolvable" to true), ui.resolveUnsolvableSaveCalls)
+        assertEquals(listOf("odd (3x3) ${texts().page.unsolvable}" to true), ui.resolveUnsolvableSaveCalls)
         assertEquals(repairedState, board.boardArray.toList())
         assertEquals(emptyList(), ui.chooseBoardSizeCalls)
         assertEquals(
