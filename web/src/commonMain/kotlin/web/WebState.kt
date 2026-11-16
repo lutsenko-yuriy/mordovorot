@@ -1,8 +1,8 @@
 package web
 
+import texts.texts
 import viewmodel.GiveUpButton
 import viewmodel.KeyboardLayout
-import viewmodel.MordieText
 import viewmodel.SharedProgress
 import viewmodel.SolutionState
 import viewmodel.TileLabels
@@ -128,25 +128,22 @@ sealed interface WebDialog {
         val includeProgress: Boolean = false,
     ) : WebDialog {
         /** The toggle's text, which also names it for readers. */
-        val labelsToggle: String get() = "Include my tile labels (${labels.title})"
+        val labelsToggle: String get() = texts().dialogs.shareLabels(labels.title)
 
         /** The progress toggle's text: what it would send. */
-        val progressToggle: String get() = when (progress) {
-            null -> "Include my progress"
-            is SharedProgress.Solving -> "Include my progress (${MordieText.moves(progress.moves)}, not solved)"
-            is SharedProgress.Solved -> "Include my progress (solved in ${MordieText.moves(progress.moves)})"
-            is SharedProgress.GaveUp -> {
-                val count = progress.moves
-                "Include my progress (gave up${if (count == null) "" else " after ${MordieText.moves(count)}"})"
+        val progressToggle: String get() = with(texts().dialogs) {
+            when (progress) {
+                null -> shareProgress
+                is SharedProgress.Solving -> shareProgressSolving(progress.moves)
+                is SharedProgress.Solved -> shareProgressSolved(progress.moves)
+                is SharedProgress.GaveUp -> progress.moves.let { if (it == null) shareProgressGaveUp else shareProgressGaveUpAfter(it) }
             }
         }
 
         /** The progress toggle can be flipped: there is progress to send. */
         val progressAvailable: Boolean get() = progress != null
 
-        val note: String get() =
-            if (startKnown) "Anyone who opens this link starts from the same ${side}x$side board."
-            else "Anyone who opens this link starts from this ${side}x$side board as it is now."
+        val note: String get() = with(texts().dialogs) { if (startKnown) shareNoteSame(side) else shareNoteNow(side) }
     }
 
     /** A share link's board can't be opened (GH-243): [message] says why; OK. */
@@ -158,12 +155,12 @@ sealed interface WebDialog {
     /** A share link's tile labels differ from the player's own (GH-267): Yes shows the sender's [labels] for this
      *  game only, No keeps the player's. [labels] are previewed behind the dialog. */
     data class SharedLabels(val labels: TileLabels) : WebDialog {
-        val message: String get() = "For this game only: your next new game uses your own labels."
+        val message: String get() = texts().dialogs.sharedLabelsMessage
     }
 
     /** The question before the tutorial replaces a game with unsaved progress (GH-289): Save, Don't save or Cancel, where focus starts. */
     data object ReplaySave : WebDialog {
-        val message: String get() = "The tutorial replaces the current game."
+        val message: String get() = texts().dialogs.replaySaveMessage
     }
 
     /** The confirmation before updating with unsaved progress (GH-262): Cancel, where focus starts, or Update. */
@@ -173,7 +170,7 @@ sealed interface WebDialog {
 /** A save as a Load row: its [label] is `name (NxN)`, with the unsolvable mark when it applies. */
 data class SaveEntry(val name: String, val label: String) {
     /** What its trash button is called (GH-251). */
-    val deleteName: String get() = "Delete '$name'"
+    val deleteName: String get() = texts().dialogs.deleteName(name)
 }
 
 /** A Labels row: a scheme, its [title] and its [sample], the solved board's first row - or, when

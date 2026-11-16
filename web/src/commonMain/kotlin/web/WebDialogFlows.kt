@@ -2,6 +2,7 @@ package web
 
 import analytics.AnalyticsService
 import board_model.BoardSize
+import texts.texts
 import viewmodel.DeleteResult
 import viewmodel.GameViewModel
 import viewmodel.SaveInfo
@@ -74,9 +75,9 @@ internal class WebDialogFlows(
                     val result = if (confirmDelete(save, listed.size, openedFrom)) viewModel.deleteSave(save, trigger) else null
                     message = when (result) {
                         null -> null
-                        DeleteResult.DELETED -> "Deleted '${save.name}'."
-                        DeleteResult.NOT_FOUND -> "No save named '${save.name}' - it was already deleted."
-                        DeleteResult.ERROR -> "Could not delete '${save.name}'."
+                        DeleteResult.DELETED -> texts().status.deleted(save.name)
+                        DeleteResult.NOT_FOUND -> texts().status.alreadyDeleted(save.name)
+                        DeleteResult.ERROR -> texts().status.couldNotDelete(save.name)
                     }
                     if (result == DeleteResult.DELETED) {
                         // At startup only the saves on offer when the dialog opened: StartupRestoreUseCase
@@ -85,7 +86,7 @@ internal class WebDialogFlows(
                         if (listed.isEmpty()) {
                             // Mid-game there is nothing left to load: back to the game. At startup the
                             // viewModel sees the empty list and opens the size picker.
-                            noteStatus(if (restore) "Deleted '${save.name}'." else "Deleted '${save.name}'. No saves left.")
+                            noteStatus(if (restore) texts().status.deleted(save.name) else texts().status.deletedNoneLeft(save.name))
                             return null
                         }
                         // On the trash of the row that took its place: a stray second Enter then only opens another
@@ -123,13 +124,13 @@ internal class WebDialogFlows(
 
     fun saveDialog(name: String) = WebDialog.Save(
         name,
-        if (name.isNotEmpty() && viewModel.saveExists(name)) "'$name' already exists - it will be overwritten." else null,
+        if (name.isNotEmpty() && viewModel.saveExists(name)) texts().dialogs.overwriteWarning(name) else null,
     )
 
     /** [openedFrom] is `startup` or `toolbar`, as `screen_unsolvable_dialog.opened_from`. */
     suspend fun resolveUnsolvable(save: SaveInfo, openedFrom: String): UnsolvableSaveChoice {
         // The viewModel's can't-be-solved message, just shown, goes in the dialog instead.
-        val message = takeStatus() ?: "'${save.displayWithSize()}' can't be solved by any sequence of shifts."
+        val message = takeStatus() ?: texts().status.cantBeSolvedDialog(save.displayWithSize())
         analytics.track("screen_unsolvable_dialog", mapOf("opened_from" to openedFrom))
         return modal.ask(WebDialog.Unsolvable(message))
     }

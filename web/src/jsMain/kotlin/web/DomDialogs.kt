@@ -5,6 +5,7 @@ import org.w3c.dom.Element
 import org.w3c.dom.HTMLInputElement
 import org.w3c.dom.events.KeyboardEvent
 import org.w3c.dom.events.MouseEvent
+import texts.texts
 import viewmodel.KeyboardLayout
 import viewmodel.UnsolvableSaveChoice
 import web.a11y.asCheckbox
@@ -26,19 +27,19 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
         when (dialog) {
             is WebDialog.Size -> {
                 fun sizeButtons(sizes: List<Int>) =
-                    choices(sizes.map { size -> button("${size}x$size") { game.onSizeChosen(size) }.focusKey(Focus.SizeChoice(size)) })
+                    choices(sizes.map { size -> button(texts().boardSize(size)) { game.onSizeChosen(size) }.focusKey(Focus.SizeChoice(size)) })
                 append(sizeButtons(dialog.sizes))
                 if (dialog.veryLarge.isNotEmpty()) append(
                     element("div", "section").apply {
                         append(text("section-title", VERY_LARGE_TITLE), text("section-note", VERY_LARGE_WARNING), sizeButtons(dialog.veryLarge))
                     },
                 )
-                append(actions(button("Cancel", "secondary") { game.onSizeChosen(null) }.focusKey(Focus.DialogCancel)))
+                append(actions(button(texts().dialogs.cancel, "secondary") { game.onSizeChosen(null) }.focusKey(Focus.DialogCancel)))
             }
             is WebDialog.Save -> {
                 val name = (element("input") as HTMLInputElement).apply {
                     value = dialog.name
-                    named(this, "Save name")
+                    named(this, texts().dialogs.saveNameName)
                     focusKey(Focus.SaveName)
                     addEventListener("input", { game.onSaveNameTyped(value) })
                     addEventListener("keydown", {
@@ -53,14 +54,14 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                     name,
                     warning,
                     actions(
-                        button("Cancel", "secondary") { game.onSaveAnswered(null) }.focusKey(Focus.DialogCancel),
-                        button("Save") { game.onSaveAnswered(name.value) }.focusKey(Focus.DialogOk),
+                        button(texts().dialogs.cancel, "secondary") { game.onSaveAnswered(null) }.focusKey(Focus.DialogCancel),
+                        button(texts().dialogs.save) { game.onSaveAnswered(name.value) }.focusKey(Focus.DialogOk),
                     ),
                 )
             }
             is WebDialog.Load -> {
                 dialog.message?.let { append(text("message", it)) }
-                if (dialog.saves.isEmpty()) append(text("message", "No saves found."))
+                if (dialog.saves.isEmpty()) append(text("message", texts().dialogs.noSaves))
                 else append(choices(dialog.saves.mapIndexed { i, save ->
                     element("div", "save-row").apply {
                         append(
@@ -69,45 +70,45 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                         )
                     }
                 }, "list"))
-                append(actions(button("Cancel", "secondary") { game.onLoadChosen(null) }.focusKey(Focus.DialogCancel)))
+                append(actions(button(texts().dialogs.cancel, "secondary") { game.onLoadChosen(null) }.focusKey(Focus.DialogCancel)))
             }
             is WebDialog.DeleteSave -> append(
-                text("message", "This can't be undone."),
+                text("message", texts().dialogs.deleteMessage),
                 actions(
-                    button("Delete") { game.onDeleteAnswered(true) }.focusKey(Focus.DialogOk),
-                    button("Cancel", "secondary") { game.onDeleteAnswered(false) }.focusKey(Focus.DeleteCancel),
+                    button(texts().dialogs.delete) { game.onDeleteAnswered(true) }.focusKey(Focus.DialogOk),
+                    button(texts().dialogs.cancel, "secondary") { game.onDeleteAnswered(false) }.focusKey(Focus.DeleteCancel),
                 ),
             )
             is WebDialog.Unsolvable -> append(
                 text("message", dialog.message),
                 actions(
-                    button("New game", "secondary") { game.onUnsolvableChoice(UnsolvableSaveChoice.NEW_GAME) }.focusKey(Focus.DialogCancel),
-                    button("Repair & load") { game.onUnsolvableChoice(UnsolvableSaveChoice.REPAIR) }.focusKey(Focus.Repair),
+                    button(texts().dialogs.newGame, "secondary") { game.onUnsolvableChoice(UnsolvableSaveChoice.NEW_GAME) }.focusKey(Focus.DialogCancel),
+                    button(texts().dialogs.repairAndLoad) { game.onUnsolvableChoice(UnsolvableSaveChoice.REPAIR) }.focusKey(Focus.Repair),
                 ),
             )
             is WebDialog.Labels -> append(
                 *listOfNotNull(dialog.message?.let { text("message", it) }).toTypedArray(),
-                choices(dialog.options.map { labelRow(it, it.labels == dialog.selected, game) }, "list labels").also { asRadioGroup(it, "Tile labels") },
+                choices(dialog.options.map { labelRow(it, it.labels == dialog.selected, game) }, "list labels").also { asRadioGroup(it, texts().dialogs.tileLabelsName) },
                 actions(
-                    button("Cancel", "secondary") { game.labels.onAnswered(ok = false) }.focusKey(Focus.DialogCancel),
-                    button("OK") { game.labels.onAnswered(ok = true) }.focusKey(Focus.DialogOk),
+                    button(texts().dialogs.cancel, "secondary") { game.labels.onAnswered(ok = false) }.focusKey(Focus.DialogCancel),
+                    button(texts().dialogs.ok) { game.labels.onAnswered(ok = true) }.focusKey(Focus.DialogOk),
                 ),
             )
             is WebDialog.Controls -> append(
-                radios("Keyboard keys", KeyboardLayout.entries.map { layout ->
+                radios(texts().dialogs.keyboardKeysName, KeyboardLayout.entries.map { layout ->
                     radio(layout.title, layout == dialog.layout, Focus.LayoutOption(layout)) { game.controls.onLayout(layout) }
                 }),
                 element("div", "key-list").apply { dialog.keyList.forEach { append(text("key-line", it)) } },
                 actions(
-                    button("OK") { game.controls.onAnswered(ok = true) }.focusKey(Focus.DialogOk),
-                    button("Cancel", "secondary") { game.controls.onAnswered(ok = false) }.focusKey(Focus.DialogCancel),
+                    button(texts().dialogs.ok) { game.controls.onAnswered(ok = true) }.focusKey(Focus.DialogOk),
+                    button(texts().dialogs.cancel, "secondary") { game.controls.onAnswered(ok = false) }.focusKey(Focus.DialogCancel),
                 ),
             )
             is WebDialog.Share -> {
                 val field = (element("input") as HTMLInputElement).apply {
                     value = dialog.link
                     readOnly = true
-                    named(this, "Share link")
+                    named(this, texts().dialogs.shareLinkName)
                     focusKey(Focus.ShareLinkField)
                     addEventListener("focus", { select() })
                 }
@@ -119,50 +120,50 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                     toggle(dialog.progressToggle, dialog.includeProgress, dialog.progressAvailable, Focus.ShareProgress) { game.share.onProgressToggled() },
                     actions(
                         // A click with no pointer is the keyboard's Enter or Space.
-                        (button(if (dialog.copied) "Copied!" else "Copy link") {}).apply {
+                        (button(if (dialog.copied) texts().dialogs.copied else texts().dialogs.copyLink) {}).apply {
                             addEventListener("click", { game.share.onCopyLink(fromKeyboard = (it as MouseEvent).detail == 0) })
                         }.focusKey(Focus.CopyLink),
-                        button("Close", "secondary") { game.share.onClosed() }.focusKey(Focus.DialogCancel),
+                        button(texts().dialogs.close, "secondary") { game.share.onClosed() }.focusKey(Focus.DialogCancel),
                     ),
                 )
             }
             is WebDialog.LinkRejected -> append(
                 text("message", dialog.message),
-                actions(button("OK") { game.share.onNoticeAnswered() }.focusKey(Focus.LinkRejectedOk)),
+                actions(button(texts().dialogs.ok) { game.share.onNoticeAnswered() }.focusKey(Focus.LinkRejectedOk)),
             )
             is WebDialog.OpenShared -> append(
-                text("message", "Your moves since the last save will be lost."),
+                text("message", texts().dialogs.openSharedMessage),
                 actions(
-                    button("Cancel", "secondary") { game.share.onOpenAnswered(false) }.focusKey(Focus.OpenSharedCancel),
-                    button("Open") { game.share.onOpenAnswered(true) }.focusKey(Focus.DialogOk),
+                    button(texts().dialogs.cancel, "secondary") { game.share.onOpenAnswered(false) }.focusKey(Focus.OpenSharedCancel),
+                    button(texts().dialogs.open) { game.share.onOpenAnswered(true) }.focusKey(Focus.DialogOk),
                 ),
             )
             is WebDialog.SharedLabels -> append(
                 text("message", dialog.message),
                 actions(
-                    button("No", "secondary") { game.share.onSharedLabelsAnswered(false) }.focusKey(Focus.SharedLabelsNo),
-                    button("Yes") { game.share.onSharedLabelsAnswered(true) }.focusKey(Focus.SharedLabelsYes),
+                    button(texts().dialogs.no, "secondary") { game.share.onSharedLabelsAnswered(false) }.focusKey(Focus.SharedLabelsNo),
+                    button(texts().dialogs.yes) { game.share.onSharedLabelsAnswered(true) }.focusKey(Focus.SharedLabelsYes),
                 ),
             )
             WebDialog.Update -> append(
-                text("message", "The current game will be lost unless you save it first."),
+                text("message", texts().dialogs.updateMessage),
                 actions(
-                    button("Cancel", "secondary") { game.updates.onUpdateAnswered(false) }.focusKey(Focus.UpdateCancel),
-                    button("Update") { game.updates.onUpdateAnswered(true) }.focusKey(Focus.DialogOk),
+                    button(texts().dialogs.cancel, "secondary") { game.updates.onUpdateAnswered(false) }.focusKey(Focus.UpdateCancel),
+                    button(texts().dialogs.update) { game.updates.onUpdateAnswered(true) }.focusKey(Focus.DialogOk),
                 ),
             )
             WebDialog.ReplaySave -> append(
                 text("message", WebDialog.ReplaySave.message),
                 actions(
-                    button("Cancel", "secondary") { game.tutorial.onReplayAnswered(ReplaySaveChoice.CANCEL) }.focusKey(Focus.DialogCancel),
-                    button("Don't save", "secondary") { game.tutorial.onReplayAnswered(ReplaySaveChoice.DONT_SAVE) }.focusKey(Focus.ReplayDontSave),
+                    button(texts().dialogs.cancel, "secondary") { game.tutorial.onReplayAnswered(ReplaySaveChoice.CANCEL) }.focusKey(Focus.DialogCancel),
+                    button(texts().dialogs.dontSave, "secondary") { game.tutorial.onReplayAnswered(ReplaySaveChoice.DONT_SAVE) }.focusKey(Focus.ReplayDontSave),
                     button("Save") { game.tutorial.onReplayAnswered(ReplaySaveChoice.SAVE) }.focusKey(Focus.ReplaySaveSave),
                 ),
             )
             WebDialog.GiveUp -> append(
                 actions(
-                    button("No", "secondary") { game.solution.onGiveUpAnswered(false) }.focusKey(Focus.No),
-                    button("Yes") { game.solution.onGiveUpAnswered(true) }.focusKey(Focus.DialogOk),
+                    button(texts().dialogs.no, "secondary") { game.solution.onGiveUpAnswered(false) }.focusKey(Focus.No),
+                    button(texts().dialogs.yes) { game.solution.onGiveUpAnswered(true) }.focusKey(Focus.DialogOk),
                 ),
             )
         }

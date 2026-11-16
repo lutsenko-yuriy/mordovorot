@@ -5,6 +5,7 @@ import kotlinx.browser.window
 import kotlinx.dom.clear
 import org.w3c.dom.Element
 import org.w3c.dom.HTMLElement
+import texts.texts
 import web.a11y.DomAnnouncer
 import web.a11y.applyFocus
 import web.a11y.focusKey
@@ -129,20 +130,20 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
     private fun panel(state: WebState) = element("div", "panel").apply {
         val dialogOpen = state.dialog != null
         append(
-            text("moves", if (state.movesShown) "Moves: ${state.moves}" else "").also { moves = it },
+            text("moves", if (state.movesShown) texts().page.movesCounter(state.moves) else "").also { moves = it },
             element("div", "mordie").apply { append(element("div", "line")) }.also { mordie = it },
             *listOfNotNull(state.solution?.let { replayButtons(it, { game }, dialogOpen) }, giveUpRow(state.giveUp, state.digitOf(ToolbarButton.GIVE_UP_ROW), state.tutorialButton, state.digitOf(ToolbarButton.TUTORIAL), { game }, dialogOpen)).toTypedArray(),
             state.guidance?.let { guidancePanel(it, state) { game }.also { panel -> toolbar = panel } } ?: element("div", "toolbar").also { toolbar = it }.apply {
                 append(
-                    toolbarButton("New", ToolbarButton.NEW, Focus.NewButton, state) { game.onNew() },
-                    toolbarButton("Save", ToolbarButton.SAVE, Focus.SaveButton, state) { game.onSave() },
-                    toolbarButton("Load", ToolbarButton.LOAD, Focus.LoadButton, state) { game.onLoad() },
-                    toolbarButton("Labels", ToolbarButton.LABELS, Focus.LabelsButton, state) { game.labels.open() },
-                    toolbarButton("Share", ToolbarButton.SHARE, Focus.ShareButton, state) { game.share.open() },
+                    toolbarButton(texts().page.toolbarNew, ToolbarButton.NEW, Focus.NewButton, state) { game.onNew() },
+                    toolbarButton(texts().page.toolbarSave, ToolbarButton.SAVE, Focus.SaveButton, state) { game.onSave() },
+                    toolbarButton(texts().page.toolbarLoad, ToolbarButton.LOAD, Focus.LoadButton, state) { game.onLoad() },
+                    toolbarButton(texts().page.toolbarLabels, ToolbarButton.LABELS, Focus.LabelsButton, state) { game.labels.open() },
+                    toolbarButton(texts().page.toolbarShare, ToolbarButton.SHARE, Focus.ShareButton, state) { game.share.open() },
                 )
                 // A row of its own under the five (GH-171).
                 if (state.computer) append(element("div", "controls-row").apply {
-                    append(toolbarButton("Controls", ToolbarButton.CONTROLS, Focus.ControlsButton, state) { game.controls.open() })
+                    append(toolbarButton(texts().page.toolbarControls, ToolbarButton.CONTROLS, Focus.ControlsButton, state) { game.controls.open() })
                 })
             },
             text("status", state.status ?: ""),
@@ -196,7 +197,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
             when {
                 message == null -> {}
                 message.ending -> line.textContent = message.text
-                else -> line.append(element("span", "name").apply { textContent = "Mordie:" }, " ${message.text}")
+                else -> line.append(element("span", "name").apply { textContent = texts().page.mordieName }, " ${message.text}")
             }
         }
         val place = spot.getBoundingClientRect()

@@ -4,51 +4,48 @@ import mordie.Mordie
 import mordie.MordieLine
 import mordie.MordieOutcome
 import mordie.MordieResult
+import texts.texts
 
-/** Mordie's words (GH-83). [line] leaves out the `Mordie:` prefix - the view colors it. */
+/** Mordie's words (GH-83), picked from `:shared:texts` (GH-274). [line] leaves out the `Mordie:` prefix - the view colors it. */
 object MordieText {
 
-    fun line(line: MordieLine): String = when (line) {
-        MordieLine.Opening -> "Alright! Let's sort this one out!"
-        is MordieLine.Resumed -> "Okay, so we stopped when I was at ${moves(line.moves)}! What was I doing?.."
-        is MordieLine.FriendSolving ->
-            "Okay, so your friend made ${moves(line.moves)} and did not solve the puzzle yet. Maybe we could help?"
-        is MordieLine.FriendSolved -> "Okay, so your friend solved this one in ${moves(line.moves)}. Wanna beat this?"
-        is MordieLine.FriendGaveUp -> line.moves.let {
-            if (it == null) "So your friend gave up before finding the solution. Can we find one?"
-            else "So after making ${moves(it)} your friend gave up before finding the solution. Can we find one?"
+    fun line(line: MordieLine): String = with(texts().mordie) {
+        when (line) {
+            MordieLine.Opening -> opening
+            is MordieLine.Resumed -> resumed(line.moves)
+            is MordieLine.FriendSolving -> friendSolving(line.moves)
+            is MordieLine.FriendSolved -> friendSolved(line.moves)
+            is MordieLine.FriendGaveUp -> line.moves.let { if (it == null) friendGaveUp else friendGaveUpAfter(it) }
+            is MordieLine.Progress -> if (line.hard) progressHard(line.moves) else progress(line.moves)
+            is MordieLine.Found -> found(line.moves)
+            is MordieLine.FoundUnproven -> foundUnproven(line.moves)
+            is MordieLine.Shorter -> shorter(line.moves)
         }
-        is MordieLine.Progress ->
-            (if (line.hard) "This one is hard! " else "") +
-                "I have already made ${moves(line.moves)} and have not solved it yet!"
-        is MordieLine.Found -> "Found it! I had to make ${moves(line.moves)} to find the solution! Can you beat it?"
-        is MordieLine.FoundUnproven -> "Found one in ${moves(line.moves)}, but maybe there's a shorter one! Can you beat it?"
-        is MordieLine.Shorter -> "Wait, I found a shorter one: ${moves(line.moves)} now! Can you beat it?"
     }
 
     /** The solved title, given the player's [playerMoves]. */
-    fun ending(outcome: MordieOutcome, playerMoves: Int): String {
-        val mine = moves(outcome.moves)
-        return when (outcome.result(playerMoves)) {
-            MordieResult.PLAYER_WON -> "You beat me! I was still at $mine."
-            MordieResult.MATCHED -> "Cool, you matched me! $mine each!"
-            MordieResult.MORDIE_WON -> "Sorry, but I win: $mine vs your $playerMoves."
-            MordieResult.BEAT_MORDIE ->
-                "You beat me! $mine vs your $playerMoves. Mine may not have been the shortest."
-            MordieResult.MACHINE -> "I made $mine and you made ${moves(playerMoves)}! Are you a machine?"
+    fun ending(outcome: MordieOutcome, playerMoves: Int): String = with(texts().mordie) {
+        val mine = outcome.moves
+        when (outcome.result(playerMoves)) {
+            MordieResult.PLAYER_WON -> endingPlayerWon(mine)
+            MordieResult.MATCHED -> endingMatched(mine)
+            MordieResult.MORDIE_WON -> endingMordieWon(mine, playerMoves)
+            MordieResult.BEAT_MORDIE -> endingBeatUnproven(mine, playerMoves)
+            MordieResult.MACHINE -> endingMachine(mine, playerMoves)
         }
     }
 
     /** The solution screen's line (GH-126), Mordie's solution being [length] moves long, led by the player's [result] (GH-273). */
-    fun solution(length: Int, result: PlayerResult? = null): String = "${resultSentence(result)}Here's how I did it in ${moves(length)}!"
-
-    private fun resultSentence(result: PlayerResult?) = when {
-        result == null -> ""
-        !result.gaveUp -> "You solved it in ${moves(result.moves)}. "
-        result.moves == 0 -> "You did not even start this one. "
-        else -> "You gave up after ${moves(result.moves)}. "
+    fun solution(length: Int, result: PlayerResult? = null): String = with(texts().mordie) {
+        val here = solutionHere(length)
+        when {
+            result == null -> here
+            !result.gaveUp -> "${solutionSolved(result.moves)} $here"
+            result.moves == 0 -> "$solutionNotStarted $here"
+            else -> "${solutionStopped(result.moves)} $here"
+        }
     }
 
     /** `1 move`, `2 moves`. */
-    fun moves(count: Int) = if (count == 1) "1 move" else "$count moves"
+    fun moves(count: Int) = texts().moves(count)
 }

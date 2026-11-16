@@ -2,6 +2,7 @@ package web
 
 import analytics.AnalyticsService
 import board_model.BoardSize
+import texts.texts
 import viewmodel.GameViewModel
 import viewmodel.TileLabels
 import web.qr.QrCode
@@ -135,9 +136,9 @@ internal class WebShareFlows(
                         "via" to if (fromKeyboard) "enter_key" else "button",
                     ),
                 )
-                game.showStatus("Link copied.")
+                game.showStatus(texts().status.linkCopied)
             } else {
-                game.showStatus("Couldn't copy the link - it's selected, so copy it yourself.")
+                game.showStatus(texts().status.copyFailed)
                 game.render(focus = Focus.ShareLinkField)
             }
         }
@@ -185,7 +186,7 @@ internal class WebShareFlows(
                     is LinkProgress.Sent -> link.progress.progress.analyticsName
                 }
                 analytics.track("shared_board_opened", mapOf("result" to "started", "board_size" to side, "labels" to labels, "progress" to progress))
-                val started = "Started a shared ${side}x$side board."
+                val started = texts().status.startedShared(side)
                 if (labels == "differs") {
                     // Not drawn on its own: the prompt's frame shows it, so a prompt that follows another doesn't blink.
                     game.noteStatus(started)
@@ -218,8 +219,8 @@ internal class WebShareFlows(
 
     private fun message(link: LinkBoard.Rejected) = when (link.reason) {
         "unsupported_size" ->
-            "This link's board is ${link.side}x${link.side}; this site plays ${BoardSize.MIN}x${BoardSize.MIN} to ${BoardSize.VERY_LARGE.last}x${BoardSize.VERY_LARGE.last}."
-        "unsolvable" -> "No sequence of shifts can solve this link's board."
-        else -> "This link's board isn't a valid board."
+            texts().status.linkUnsupportedSize(link.side ?: 0, BoardSize.MIN, BoardSize.VERY_LARGE.last)
+        "unsolvable" -> texts().status.linkUnsolvable
+        else -> texts().status.linkInvalid
     }
 }

@@ -1,6 +1,7 @@
 package web
 
 import org.w3c.dom.Element
+import texts.texts
 import viewmodel.GiveUpButton
 import viewmodel.SolutionState
 import web.a11y.asList
@@ -22,9 +23,9 @@ internal fun stepList(solution: SolutionState): Element = element("div", "steps"
  *  click: the first frame is drawn before the renderer has its game. */
 internal fun replayButtons(solution: SolutionState, game: () -> WebGame, dialogOpen: Boolean): Element = element("div", "replay").apply {
     append(
-        button("◀ Prev") { game().solution.onReplayPrevious() }.focusKey(Focus.ReplayPrev).also { it.disabled = dialogOpen || solution.atStart },
-        button("Next ▶") { game().solution.onReplayNext() }.focusKey(Focus.ReplayNext).also { it.disabled = dialogOpen || solution.atEnd },
-        button("↻ Restart") { game().solution.onReplayRestart() }.focusKey(Focus.ReplayRestart).also { it.disabled = dialogOpen || solution.atStart },
+        button(texts().page.replayPrev) { game().solution.onReplayPrevious() }.focusKey(Focus.ReplayPrev).also { it.disabled = dialogOpen || solution.atStart },
+        button(texts().page.replayNext) { game().solution.onReplayNext() }.focusKey(Focus.ReplayNext).also { it.disabled = dialogOpen || solution.atEnd },
+        button(texts().page.replayRestart) { game().solution.onReplayRestart() }.focusKey(Focus.ReplayRestart).also { it.disabled = dialogOpen || solution.atStart },
     )
 }
 
@@ -33,13 +34,13 @@ internal fun replayButtons(solution: SolutionState, game: () -> WebGame, dialogO
 internal fun giveUpRow(giveUp: GiveUpButton, digit: Int?, tutorial: Boolean, tutorialDigit: Int?, game: () -> WebGame, dialogOpen: Boolean): Element? {
     val first = when (giveUp) {
         GiveUpButton.HIDDEN -> null
-        GiveUpButton.MORDIES_SOLUTION -> button("Mordie's solution") { game().solution.onMordiesSolution() }
-        GiveUpButton.GIVE_UP, GiveUpButton.DIMMED -> button("Give Up") { game().solution.onGiveUp() }
+        GiveUpButton.MORDIES_SOLUTION -> button(texts().page.mordiesSolution) { game().solution.onMordiesSolution() }
+        GiveUpButton.GIVE_UP, GiveUpButton.DIMMED -> button(texts().page.giveUp) { game().solution.onGiveUp() }
     }?.also {
         it.disabled = dialogOpen || giveUp == GiveUpButton.DIMMED
         it.focusKey(Focus.GiveUpRow).withDigit(digit)
     }
-    val replay = if (tutorial) button("Tutorial") { game().tutorial.onReplay("button") }.also {
+    val replay = if (tutorial) button(texts().page.tutorial) { game().tutorial.onReplay("button") }.also {
         it.disabled = dialogOpen
         it.focusKey(Focus.TutorialReplay).withDigit(tutorialDigit)
     } else null

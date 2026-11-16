@@ -3,6 +3,7 @@ package web.a11y
 import kotlinx.browser.document
 import org.w3c.dom.Element
 import org.w3c.dom.HTMLButtonElement
+import texts.texts
 import viewmodel.TileSelection
 
 // GH-167: during play, the tiles as a table a screen reader reads - a row element per board row,
@@ -22,7 +23,7 @@ internal fun cellId(row: Int, col: Int) = "tile-$row-$col"
 internal fun asTable(layer: Element, playing: Boolean, selection: TileSelection?, board: FocusTarget) = layer.apply {
     if (!playing) return@apply
     setAttribute("role", if (selection != null) "grid" else "table")
-    setAttribute("aria-label", "Board")
+    setAttribute("aria-label", texts().reader.board)
     if (selection == null) return@apply
     setAttribute("tabindex", "0")
     activeCell(layer, selection)
@@ -79,7 +80,7 @@ internal fun asCopy(tile: Element) = hiddenFromReaders(tile)
  *  [announcer]; disabled while a dialog is open, as the toolbar is. */
 internal fun readBoardButton(words: () -> String?, dialogOpen: Boolean, announcer: DomAnnouncer?, focus: FocusTarget) =
     (element("button", "visually-hidden") as HTMLButtonElement).apply {
-        textContent = "Read board"
+        textContent = texts().reader.readBoard
         addEventListener("click", { words()?.let { announcer?.say(it) } })
         disabled = dialogOpen
         focusKey(focus)

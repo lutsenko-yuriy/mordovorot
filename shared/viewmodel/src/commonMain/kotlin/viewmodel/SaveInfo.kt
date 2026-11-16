@@ -1,5 +1,7 @@
 package viewmodel
 
+import texts.texts
+
 /** A save's name plus its board size (GH-44 WU4) - every save-listing surface (startup restore
  *  prompts, the mid-game Load dialog/command) shows both, so a player can tell at a glance
  *  what size loading a save will resize the board to (WU5). [squareSide] is
@@ -14,10 +16,10 @@ data class SaveInfo(
 )
 
 /** `"name (NxN)"`, or just `"name"` when [SaveInfo.squareSide] is unknown. */
-fun SaveInfo.displayWithSize(): String = if (squareSide != null) "$name (${squareSide}x${squareSide})" else name
+fun SaveInfo.displayWithSize(): String = if (squareSide != null) "$name (${texts().boardSize(squareSide)})" else name
 
 /** Appended by [display] to a save that can't be solved; `load` strips it back off (GH-74). */
-const val UNSOLVABLE_MARK = "unsolvable"
+val UNSOLVABLE_MARK: String get() = texts().page.unsolvable
 
 /** [displayWithSize] plus the [UNSOLVABLE_MARK] when the save can't be solved (GH-74). */
 fun SaveInfo.display(): String = if (solvable) displayWithSize() else "${displayWithSize()} $UNSOLVABLE_MARK"

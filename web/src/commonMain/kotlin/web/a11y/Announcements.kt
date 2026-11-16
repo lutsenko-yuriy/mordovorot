@@ -1,5 +1,6 @@
 package web.a11y
 
+import texts.texts
 import viewmodel.Direction
 import viewmodel.SolutionStep
 
@@ -9,73 +10,71 @@ import viewmodel.SolutionStep
 internal object Announcements {
 
     /** `Row 2 left`, `Column 4 up`. */
-    fun line(direction: Direction, line: Int): String = when (direction) {
-        Direction.LEFT -> "Row ${line + 1} left"
-        Direction.RIGHT -> "Row ${line + 1} right"
-        Direction.UP -> "Column ${line + 1} up"
-        Direction.DOWN -> "Column ${line + 1} down"
+    fun line(direction: Direction, line: Int): String = with(texts().reader) {
+        when (direction) {
+            Direction.LEFT -> rowLeft(line + 1)
+            Direction.RIGHT -> rowRight(line + 1)
+            Direction.UP -> columnUp(line + 1)
+            Direction.DOWN -> columnDown(line + 1)
+        }
     }
 
-    fun shift(direction: Direction, line: Int, newMove: Int?): String = line(direction, line) + movesSuffix(newMove)
+    fun shift(direction: Direction, line: Int, newMove: Int?): String = withMoves(line(direction, line), newMove)
 
     /** `Row 2 left 2`: how far the drag shifted its line. */
     fun drag(direction: Direction, line: Int, distance: Int, newMove: Int?): String =
-        "${line(direction, line)} $distance" + movesSuffix(newMove)
+        withMoves(texts().reader.dragged(line(direction, line), distance), newMove)
 
-    fun solved(moves: Int) = "Solved in ${moves(moves)}"
+    fun solved(moves: Int) = texts().reader.solved(moves)
 
-    fun newGame(side: Int) = "New ${side}x$side game"
+    fun newGame(side: Int) = texts().reader.newGame(side)
 
     /** A load; [solutionSteps] when it reopened the solution screen, with that many steps. */
-    fun loaded(name: String, side: Int, moves: Int, solved: Boolean, solutionSteps: Int? = null) =
-        "Loaded '$name', ${side}x$side, " + when {
-            solutionSteps != null -> "solution, ${moves(solutionSteps)}"
-            solved -> "solved in ${moves(moves)}"
-            else -> moves(moves)
+    fun loaded(name: String, side: Int, moves: Int, solved: Boolean, solutionSteps: Int? = null) = with(texts().reader) {
+        when {
+            solutionSteps != null -> loadedSolution(name, side, solutionSteps)
+            solved -> loadedSolved(name, side, moves)
+            else -> loadedPlain(name, side, moves)
         }
+    }
 
     /** Entering the solution screen, with its number of [steps]. */
-    fun solution(steps: Int) = "Solution, ${moves(steps)}"
+    fun solution(steps: Int) = texts().reader.solution(steps)
 
     /** The solution screen's [current] step in words, or the start when `null`. */
     fun step(steps: List<SolutionStep>, current: Int?): String {
-        if (current == null) return "Start, step 0 of ${steps.size}"
+        if (current == null) return texts().reader.stepStart(steps.size)
         val step = steps[current]
         val direction = when {
             step.isRow -> if (step.forward) Direction.RIGHT else Direction.LEFT
             else -> if (step.forward) Direction.DOWN else Direction.UP
         }
-        return "Step ${current + 1} of ${steps.size}: ${line(direction, step.index)} ${step.count}"
+        return texts().reader.stepOf(current + 1, steps.size, line(direction, step.index), step.count)
     }
 
     /** The solution's board as a reader names it on taking focus: `Board, step 3 of 12: Column 3 up 2`. */
-    fun boardStep(steps: List<SolutionStep>, current: Int?) = "Board, " + step(steps, current).replaceFirstChar { it.lowercase() }
+    fun boardStep(steps: List<SolutionStep>, current: Int?) = texts().reader.boardStep(step(steps, current))
 
     /** [words] for a shift, then the [tile] now under the selection: `Row 2 left, 5 moves. Now charlie`. */
-    fun withNow(words: String, tile: String) = "$words. Now ${spoken(tile)}"
+    fun withNow(words: String, tile: String) = texts().reader.withNow(words, spoken(tile))
 
     /** `Row 1: 5, 2, 9. Row 2: … 3 tiles in place.`: [texts] row by row on a [side] board, [home]
      *  marking the tiles in place. */
-    fun board(texts: List<String>, home: List<Boolean>, side: Int): String {
-        val rows = texts.chunked(side).mapIndexed { row, line -> "Row ${row + 1}: ${line.joinToString(", ", transform = ::spoken)}." }
-        val count = home.count { it }
-        return rows.joinToString(" ") + " ${if (count == 1) "1 tile" else "$count tiles"} $IN_PLACE."
+    fun board(texts: List<String>, home: List<Boolean>, side: Int): String = with(reader()) {
+        val rows = texts.chunked(side).mapIndexed { row, line -> boardRow(row + 1, line.joinToString(", ", transform = ::spoken)) }
+        rows.joinToString(" ") + " " + tilesInPlace(home.count { it })
     }
 
     /** A tile [label] as said: letters in the phonetic alphabet (`BC` -> `bravo charlie`), so `B`
      *  and `D` don't sound alike; numbers as they are. */
     fun spoken(label: String): String =
-        if (label.all { it in 'A'..'Z' }) label.map { PHONETIC[it - 'A'] }.joinToString(" ") else label
-
-    private val PHONETIC = listOf(
-        "alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel", "india", "juliet", "kilo", "lima", "mike",
-        "november", "oscar", "papa", "quebec", "romeo", "sierra", "tango", "uniform", "victor", "whiskey", "x-ray", "yankee", "zulu",
-    )
+        if (label.all { it in 'A'..'Z' }) label.map { texts().reader.phonetic[it - 'A'] }.joinToString(" ") else label
 
     /** What a tile in place adds: to Read board's count, and to the tile's own cell. */
-    const val IN_PLACE = "in place"
+    val IN_PLACE: String get() = texts().reader.inPlace
 
-    private fun movesSuffix(newMove: Int?) = newMove?.let { ", ${moves(it)}" } ?: ""
+    /** A function of its own, since [board]'s `texts` parameter hides the accessor. */
+    private fun reader() = texts().reader
 
-    private fun moves(n: Int) = if (n == 1) "1 move" else "$n moves"
+    private fun withMoves(words: String, newMove: Int?) = newMove?.let { texts().reader.withMoves(words, it) } ?: words
 }
