@@ -67,6 +67,35 @@ class PageFocusTest {
         assertEquals(Focus.PageStart, fallbackFocus(Focus.SaveButton.key, playing))
     }
 
+    // GH-289: a redraw under an open dialog
+    private val dialogs = listOf(
+        WebDialog.Size(listOf(3, 4), current = 4),
+        WebDialog.Save("foo", warning = null),
+        WebDialog.Load(restore = false, saves = emptyList()),
+        WebDialog.DeleteSave("foo"),
+        WebDialog.Unsolvable("no"),
+        WebDialog.GiveUp,
+        WebDialog.Controls(viewmodel.KeyboardLayout.entries.first(), keyList = emptyList()),
+        WebDialog.LinkRejected("no"),
+        WebDialog.OpenShared(side = 3),
+        WebDialog.Update,
+    )
+
+    @Test
+    fun `a gone or disabled control under an open dialog passes focus to the dialog's default, not the page start`() {
+        for (dialog in dialogs) {
+            val open = playing.copy(dialog = dialog)
+            assertEquals(defaultFocus(dialog), fallbackFocus("nothing-like-this", open), dialog.toString())
+            assertEquals(defaultFocus(dialog), fallbackFocus(Focus.TutorialSkip.key, open), dialog.toString())
+        }
+    }
+
+    @Test
+    fun `the rules for a game with no dialog are unchanged`() {
+        assertEquals(Focus.PageStart, fallbackFocus(Focus.DialogOk.key, playing))
+        assertEquals(Focus.PageStart, fallbackFocus(Focus.DialogCancel.key, playing))
+    }
+
     // GH-288
     private val panel = Guidance(step = 5, text = "Can you beat my results?", controls = true, highlight = null)
 

@@ -85,7 +85,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         }
         saveWarning = null
         val stepsScroll = stepsScrollTop()
-        val focused = focusedKey()
+        val focused = focusedKeyIn(state)
         root.clear()
         root.style.setProperty("--side", state.side.toString())
         root.classList.toggle("solved", state.solved)
@@ -115,7 +115,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
     /** A frame around the kept board (GH-171): the tiles updated, the rest redrawn, focus left or put back. */
     private fun redrawAroundBoard(state: WebState, now: Double) {
         val stepsScroll = stepsScrollTop()
-        val focused = focusedKey()
+        val focused = focusedKeyIn(state)
         root.classList.toggle("dragging", state.drag != null)
         board.update(state, state.drag ?: slideOffset())
         state.solution?.let { root.querySelector(".steps")?.replaceWith(stepList(it)) }
@@ -148,6 +148,11 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
             text("status", state.status ?: ""),
         )
     }
+
+    /** The focused control's key before a redraw. While a dialog shows, focus on no keyed control means it
+     *  already fell to the body, so the dialog's default control stands in (GH-289). */
+    private fun focusedKeyIn(state: WebState): String? =
+        focusedKey() ?: state.dialog?.let { defaultFocus(it).key }
 
     private fun stepsScrollTop() = root.querySelector(".steps")?.scrollTop
 

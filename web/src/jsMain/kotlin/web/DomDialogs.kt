@@ -33,7 +33,7 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                         append(text("section-title", VERY_LARGE_TITLE), text("section-note", VERY_LARGE_WARNING), sizeButtons(dialog.veryLarge))
                     },
                 )
-                append(actions(button("Cancel", "secondary") { game.onSizeChosen(null) }))
+                append(actions(button("Cancel", "secondary") { game.onSizeChosen(null) }.focusKey(Focus.DialogCancel)))
             }
             is WebDialog.Save -> {
                 val name = (element("input") as HTMLInputElement).apply {
@@ -53,8 +53,8 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                     name,
                     warning,
                     actions(
-                        button("Cancel", "secondary") { game.onSaveAnswered(null) },
-                        button("Save") { game.onSaveAnswered(name.value) },
+                        button("Cancel", "secondary") { game.onSaveAnswered(null) }.focusKey(Focus.DialogCancel),
+                        button("Save") { game.onSaveAnswered(name.value) }.focusKey(Focus.DialogOk),
                     ),
                 )
             }
@@ -74,14 +74,14 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
             is WebDialog.DeleteSave -> append(
                 text("message", "This can't be undone."),
                 actions(
-                    button("Delete") { game.onDeleteAnswered(true) },
+                    button("Delete") { game.onDeleteAnswered(true) }.focusKey(Focus.DialogOk),
                     button("Cancel", "secondary") { game.onDeleteAnswered(false) }.focusKey(Focus.DeleteCancel),
                 ),
             )
             is WebDialog.Unsolvable -> append(
                 text("message", dialog.message),
                 actions(
-                    button("New game", "secondary") { game.onUnsolvableChoice(UnsolvableSaveChoice.NEW_GAME) },
+                    button("New game", "secondary") { game.onUnsolvableChoice(UnsolvableSaveChoice.NEW_GAME) }.focusKey(Focus.DialogCancel),
                     button("Repair & load") { game.onUnsolvableChoice(UnsolvableSaveChoice.REPAIR) }.focusKey(Focus.Repair),
                 ),
             )
@@ -89,8 +89,8 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                 *listOfNotNull(dialog.message?.let { text("message", it) }).toTypedArray(),
                 choices(dialog.options.map { labelRow(it, it.labels == dialog.selected, game) }, "list labels").also { asRadioGroup(it, "Tile labels") },
                 actions(
-                    button("Cancel", "secondary") { game.labels.onAnswered(ok = false) },
-                    button("OK") { game.labels.onAnswered(ok = true) },
+                    button("Cancel", "secondary") { game.labels.onAnswered(ok = false) }.focusKey(Focus.DialogCancel),
+                    button("OK") { game.labels.onAnswered(ok = true) }.focusKey(Focus.DialogOk),
                 ),
             )
             is WebDialog.Controls -> append(
@@ -99,8 +99,8 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                 }),
                 element("div", "key-list").apply { dialog.keyList.forEach { append(text("key-line", it)) } },
                 actions(
-                    button("OK") { game.controls.onAnswered(ok = true) },
-                    button("Cancel", "secondary") { game.controls.onAnswered(ok = false) },
+                    button("OK") { game.controls.onAnswered(ok = true) }.focusKey(Focus.DialogOk),
+                    button("Cancel", "secondary") { game.controls.onAnswered(ok = false) }.focusKey(Focus.DialogCancel),
                 ),
             )
             is WebDialog.Share -> {
@@ -122,7 +122,7 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                         (button(if (dialog.copied) "Copied!" else "Copy link") {}).apply {
                             addEventListener("click", { game.share.onCopyLink(fromKeyboard = (it as MouseEvent).detail == 0) })
                         }.focusKey(Focus.CopyLink),
-                        button("Close", "secondary") { game.share.onClosed() },
+                        button("Close", "secondary") { game.share.onClosed() }.focusKey(Focus.DialogCancel),
                     ),
                 )
             }
@@ -134,7 +134,7 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                 text("message", "Your moves since the last save will be lost."),
                 actions(
                     button("Cancel", "secondary") { game.share.onOpenAnswered(false) }.focusKey(Focus.OpenSharedCancel),
-                    button("Open") { game.share.onOpenAnswered(true) },
+                    button("Open") { game.share.onOpenAnswered(true) }.focusKey(Focus.DialogOk),
                 ),
             )
             is WebDialog.SharedLabels -> append(
@@ -148,13 +148,13 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                 text("message", "The current game will be lost unless you save it first."),
                 actions(
                     button("Cancel", "secondary") { game.updates.onUpdateAnswered(false) }.focusKey(Focus.UpdateCancel),
-                    button("Update") { game.updates.onUpdateAnswered(true) },
+                    button("Update") { game.updates.onUpdateAnswered(true) }.focusKey(Focus.DialogOk),
                 ),
             )
             WebDialog.GiveUp -> append(
                 actions(
                     button("No", "secondary") { game.solution.onGiveUpAnswered(false) }.focusKey(Focus.No),
-                    button("Yes") { game.solution.onGiveUpAnswered(true) },
+                    button("Yes") { game.solution.onGiveUpAnswered(true) }.focusKey(Focus.DialogOk),
                 ),
             )
         }

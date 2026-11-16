@@ -244,8 +244,10 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │                    # opened it, the cancel's `via` (GH-163); `ask(leadsOn)` skips the dialog-less frame
 │   │                    # between chained dialogs (Load → Delete 'foo'?, GH-251)
 │   ├── DialogFocus.kt   # GH-163: Focus (a FocusTarget: the game's controls by data-focus key), each
-│   │                    # dialog's default focus and title
-│   ├── PageFocus.kt     # GH-164: fallbackFocus - where focus goes when its control is gone or disabled
+│   │                    # dialog's default focus and title; every dialog button has a key (DialogOk,
+│   │                    # DialogCancel, GH-289), so a redraw under a dialog finds it again
+│   ├── PageFocus.kt     # GH-164: fallbackFocus - where focus goes when its control is gone or disabled;
+│   │                    # under an open dialog, the dialog's default control (GH-289)
 │   ├── Arrow.kt         # Which arrow was clicked, with its viewmodel Direction (GH-201)
 │   ├── Layout.kt        # layoutOf(width, height): WIDE (wider than tall) or TALL
 │   ├── Slides.kt        # The eased slide after an arrow shift, a drag release or a replay shift
