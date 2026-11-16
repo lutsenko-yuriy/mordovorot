@@ -7,7 +7,8 @@
 # bundle older than the fix it was meant to show). Then it follows the commits (GH-283): every
 # SERVE_LAN_POLL_S seconds (15) it looks at HEAD, and a new one is built and served in place of the
 # old. A build that fails keeps the old bundle served. Uncommitted edits are built at start-up, and ride
-# along (stamped -dirty) in a build a commit starts; saving a file starts none.
+# along (stamped -dirty) in a build a commit starts; saving a file starts none. The address and its QR
+# code are printed again after each new build (GH-311).
 # Each build is copied to web/build/serve-lan/ and served from there, so the phone never gets a half-built
 # bundle, nor one a harness run left in dist/. SERVE_LAN_DRY_RUN=1 stops before serving (tests);
 # SERVE_LAN_BIND sets the address to serve on (0.0.0.0).
@@ -52,13 +53,17 @@ address="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/n
 # Not inside ${...:-...}: macOS's bash 3.2 takes an apostrophe there for an opening quote.
 [[ -n "$address" ]] || address="<this Mac's IP>"
 url="http://$address:$port/"
-echo "On the phone, on the same Wi-Fi: $url"
-# A code for the phone's camera, so its browser can't suggest an older address (GH-148).
-if command -v qrencode >/dev/null 2>&1; then
-  qrencode -t ANSIUTF8 "$url"
-else
-  echo "(brew install qrencode to get a QR code for the phone's camera here)"
-fi
+# The address and a code for the phone's camera, so its browser can't suggest an older address (GH-148).
+# Printed again after every new build (GH-311), so the phone is one scan from the latest commit.
+show_url() {
+  echo "On the phone, on the same Wi-Fi: $url"
+  if command -v qrencode >/dev/null 2>&1; then
+    qrencode -t ANSIUTF8 "$url"
+  else
+    echo "(brew install qrencode to get a QR code for the phone's camera here)"
+  fi
+}
+show_url
 
 # No-cache, so a reload on the phone asks again instead of reusing the old bundle's files.
 python3 - "$port" "${SERVE_LAN_BIND:-0.0.0.0}" "$serve/current" <<'PY' &
@@ -86,7 +91,7 @@ while kill -0 "$server" 2>/dev/null; do
   head="$(git -C "$project" rev-parse HEAD)"
   [[ "$head" != "$last" ]] || continue
   last="$head"
-  build "$(stamp)" || echo "The build failed, still serving $(cat "$serve/current/.commit")."
+  if build "$(stamp)"; then show_url; else echo "The build failed, still serving $(cat "$serve/current/.commit")."; fi
 done
 # The server ended on its own (the port is taken): its status is ours.
 wait "$server"
