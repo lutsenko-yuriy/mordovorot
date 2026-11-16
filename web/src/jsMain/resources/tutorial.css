@@ -1,0 +1,175 @@
+/* GH-288: the first-launch tutorial: Mordie's bubble and buttons where the toolbar stands, the asked
+   line's dashed outline and its arrow. The outline runs outside the selection's (keyboard.css), over
+   the frame and the page, in --mordie, whose contrast there is checked (ColourContrastStylesTest). */
+
+.guidance {
+    grid-area: toolbar;
+    /* Above Mordie's line as it rises in from underneath, as the toolbar is. */
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 22rem;
+}
+
+/* Room for the longest step's lines (--bubble-lines, measured per width), so the board doesn't change
+   size from one step to the next. */
+.guidance {
+    --bubble-lines: 5;
+    --bubble-pad: 0.7em;
+}
+
+.bubble {
+    position: relative;
+    min-height: calc(var(--bubble-lines) * 1.4em + 2 * var(--bubble-pad) + 4px);
+    padding: var(--bubble-pad) 0.9em;
+    border: 2px solid var(--mordie);
+    border-radius: 14px;
+    background: var(--card);
+    color: var(--ink);
+    font-size: 1.15rem;
+    line-height: 1.4;
+}
+
+/* The tail, up towards Mordie's line. */
+.bubble::before {
+    content: "";
+    position: absolute;
+    top: -9px;
+    left: 1.6em;
+    width: 14px;
+    height: 14px;
+    border-top: 2px solid var(--mordie);
+    border-left: 2px solid var(--mordie);
+    background: var(--card);
+    transform: rotate(45deg);
+}
+
+.bubble .name {
+    color: var(--mordie);
+    font-weight: 700;
+}
+
+.guidance-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+@media (orientation: portrait) {
+    .guidance-buttons {
+        justify-content: center;
+    }
+}
+
+/* Phones: a little smaller, so the longest step takes fewer lines. */
+@media (max-width: 480px) {
+    .guidance {
+        --bubble-lines: 5;
+    }
+
+    .bubble {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 380px) {
+    .guidance {
+        --bubble-lines: 4;
+    }
+}
+
+/* A phone turned: the panel has the window's height to share with Mordie's line and Moves. */
+@media (orientation: landscape) and (max-height: 500px) {
+    .guidance {
+        --bubble-lines: 5;
+        --bubble-pad: 0.35em;
+        gap: 8px;
+    }
+
+    .bubble {
+        font-size: 0.9rem;
+    }
+}
+
+/* The SE turned: the panel starts level with the arrows already (fit.css), so the bubble gives a little more. */
+@media (orientation: landscape) and (max-height: 340px) {
+    .guidance {
+        --bubble-pad: 0.15em;
+        gap: 6px;
+    }
+
+    .bubble {
+        font-size: 0.85rem;
+    }
+
+    .guidance-buttons button {
+        padding-block: 0.4em;
+    }
+}
+
+/* Where the toolbar's own phone rules (styles.css) shrink its buttons. */
+@media (max-width: 480px), (orientation: landscape) and (max-width: 760px) {
+    .guidance-buttons {
+        gap: 6px;
+    }
+
+    .guidance-buttons button {
+        padding: 0.55em 0.65em;
+    }
+}
+
+/* Over the tiles, in the board's middle cell, as .selection is. A touch screen's board is not a grid:
+   the box is the board's own. */
+.board.guided {
+    position: relative;
+}
+
+.tutorial-line {
+    position: absolute;
+    grid-row: 2 / 3;
+    grid-column: 2 / 3;
+    inset: 0;
+    pointer-events: none;
+}
+
+.tutorial-line .mark {
+    position: absolute;
+    border: max(3px, calc(var(--gap) * 0.8)) dashed var(--mordie);
+    border-radius: calc(var(--tile) * 0.2);
+    animation: asked-halo 1s ease-in-out infinite;
+}
+
+.tutorial-line.row .mark {
+    left: calc(var(--gap) * -1.4);
+    right: calc(var(--gap) * -1.4);
+    top: calc(var(--line) * var(--pitch));
+    height: var(--pitch);
+}
+
+.tutorial-line.column .mark {
+    top: calc(var(--gap) * -1.4);
+    bottom: calc(var(--gap) * -1.4);
+    left: calc(var(--line) * var(--pitch));
+    width: var(--pitch);
+}
+
+/* The halo breathes; the outline stays solid, so its contrast never dips. */
+@keyframes asked-halo {
+    from { box-shadow: 0 0 0 0 transparent; }
+    50% { box-shadow: 0 0 calc(var(--gap) * 2) calc(var(--gap) * 0.6) var(--mordie); }
+    to { box-shadow: 0 0 0 0 transparent; }
+}
+
+.arrow.asked {
+    color: var(--mordie);
+    font-weight: 700;
+    box-shadow: 0 0 0 2px var(--mordie);
+}
+
+/* board.css greys a hovered arrow's colour to --ink; the asked one keeps its. */
+.arrow.asked:hover:not(:disabled) {
+    color: var(--mordie);
+}

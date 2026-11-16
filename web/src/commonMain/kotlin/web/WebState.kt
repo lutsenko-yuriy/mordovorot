@@ -63,7 +63,8 @@ data class WebState(
      *  has VoiceOver say the board over the live region, or keep saying the tile just left (GH-171). */
     fun keepsBoardFrom(before: WebState): Boolean =
         boardFocusable && before.boardFocusable && dialog == null && before.dialog == null &&
-            side == before.side && solved == before.solved && (solution == null) == (before.solution == null)
+            side == before.side && solved == before.solved && (solution == null) == (before.solution == null) &&
+            (guidance == null) == (before.guidance == null)
 
     /** Each tile's text, in [tiles]' order. */
     val tileTexts: List<String> get() = tiles.map { labels.label(it - 1, side) }

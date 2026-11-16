@@ -48,6 +48,8 @@ class ColourContrastStylesTest {
             check(paint("styles.css", ".status", "color"), "page", 4.5, "status"),
             check(paint("keyboard.css", ".key-hint .keys", "color"), "page", 4.5, "a key hint's keys"),
             check(paint("keyboard.css", ".key-hint .does", "color"), "page", 4.5, "what a key hint's keys do"),
+            check(paint("tutorial.css", ".bubble", "color"), "card", 4.5, "Mordie's bubble (GH-288)"),
+            check(paint("tutorial.css", ".bubble .name", "color"), "card", 4.5, "Mordie's name in the bubble (GH-288)"),
             check(paint("styles.css", ".footer", "color"), "page", 4.5, "footer"),
             check(buttonInk, "button", 4.5, "buttons"),
             check(buttonInk, "button-hover", 4.5, "a hovered button"),
@@ -68,6 +70,12 @@ class ColourContrastStylesTest {
             check(ring, "page", 3.0, "focus ring"),
             check(ring, "frame", 3.0, "focus ring on the board's frame"),
             check(paint("board.css", ".arrow", "color"), "page", 3.0, "shift arrows"),
+            // GH-288: the tutorial's asked arrow and its ring, the line's outline, and the bubble's edge.
+            check(paint("tutorial.css", ".arrow.asked", "color"), "page", 3.0, "the asked arrow"),
+            check(paint("tutorial.css", ".arrow.asked", "box-shadow"), "page", 3.0, "the asked arrow's ring"),
+            check(paint("tutorial.css", ".tutorial-line .mark", "border"), "frame", 3.0, "the asked line's outline in a gap"),
+            check(paint("tutorial.css", ".tutorial-line .mark", "border"), "page", 3.0, "the asked line's outline past the board"),
+            check(paint("tutorial.css", ".bubble", "border"), "page", 3.0, "the bubble's edge"),
             check(paint("dialogs.css", ".dialog .choices.labels button.checked", "box-shadow"), "card", 3.0, "the checked label row's ring"),
             check(paint("dialogs.css", ".dialog input", "border"), "card", 3.0, "the Save name field's edge"),
         ).flatten()

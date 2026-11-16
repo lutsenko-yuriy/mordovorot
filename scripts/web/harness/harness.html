@@ -22,9 +22,9 @@ const PRESETS = {
 };
 const sizeList = q.get("sizes") || (keys ? "1200x800" : "portrait");
 const sizes = (PRESETS[sizeList] || sizeList).split(",");
-// mode=shared-labels (GH-267) and mode=shared-progress (GH-272) open a fixed 4x4 link, so they measure 4x4 only.
-const boards = (q.get("boards") || (keys || q.get("mode")?.startsWith("shared-") ? "4" : "3,4,5")).split(",").map(Number);
-const mode = q.get("mode") || "play"; // play | dialog | share | solution | offline | shared-labels | shared-progress
+// mode=tutorial (GH-288) opens the fixed 4x4 tutorial board, so measures it only. mode=shared-labels (GH-267) and mode=shared-progress (GH-272) open a fixed 4x4 link, so they measure 4x4 only.
+const boards = (q.get("boards") || (keys || q.get("mode")?.startsWith("shared-") || q.get("mode") === "tutorial" ? "4" : "3,4,5")).split(",").map(Number);
+const mode = q.get("mode") || "play"; // play | dialog | share | solution | offline | shared-labels | shared-progress | tutorial
 // GH-262: update=ready has the page find a new version, which it takes a worker for.
 // update=uncontrolled (GH-262): the page the worker never took control of (a first visit), where nothing but the worker's
 // own state says an Update is done.
@@ -60,7 +60,8 @@ function measure(win, label) {
     const doc = win.document;
     const de = doc.documentElement;
     const rect = selector => doc.querySelector(selector)?.getBoundingClientRect();
-    const toolbar = rect(".toolbar"), button = rect(".toolbar button"), footer = rect(".footer");
+    // GH-288: the tutorial's buttons stand where the toolbar does, under the bubble.
+    const toolbar = rect(".toolbar, .guidance-buttons"), button = rect(".toolbar button, .guidance-buttons button"), bubble = rect(".bubble"), footer = rect(".footer");
     const tiles = rect(".tiles"), tile = rect(".tile"), mordie = rect(".mordie"), panel = rect(".panel");
     // Past any of the window's four edges (GH-148). The arrows hidden on touch screens are 1px boxes
     // wherever they land, and a dialog's buttons scroll inside it, so neither counts; the dialog does.
@@ -87,7 +88,7 @@ function measure(win, label) {
     const ok = fits && de.scrollWidth <= de.clientWidth && overflow <= 0.5 && sideways <= 0;
     return `${ok ? "OK  " : "BAD "}${label} page ${de.scrollWidth}x${de.scrollHeight} win ${win.innerWidth}x${win.innerHeight} `
         + `toolbar h${Math.round(toolbar?.height)} w${Math.round(toolbar?.width)}@${round(toolbar)} `
-        + `footer h${Math.round(footer?.height)} tiles@${round(tiles)} tile ${Math.round(tile?.width)} `
+        + `${bubble ? `bubble h${Math.round(bubble.height)} ` : ""}footer h${Math.round(footer?.height)} tiles@${round(tiles)} tile ${Math.round(tile?.width)} `
         + `mordie h${Math.round(mordie?.height)}${panel?.height ? ` panel h${Math.round(panel.height)}` : ""}`
         + `${steps ? ` steps sideways ${sideways}` : ""}${dialog ? ` dialog h${dialog.clientHeight}/${dialog.scrollHeight}` : ""} `
         + `${fit === "scroll" ? `labels out ${labelsOut} ${scrolled ? `scrolled ${Math.round(scrolled)} ` : ""}` : ""}overflow ${Math.round(overflow)} ${culprit}`;
@@ -201,6 +202,8 @@ async function runCase(size, board) {
     f.height = h;
     // Before the game reads it. layout= (GH-171) is what an earlier visit would have left.
     localStorage.clear();
+    // GH-288: every case but mode=tutorial has seen the tutorial, which a launch with no saves would otherwise open on.
+    if (mode !== "tutorial") localStorage.setItem("mordovorot.pref.tutorial", "seen");
     if (q.get("layout") === "left") localStorage.setItem("mordovorot.pref.keyboard_layout", "left_handed");
     // GH-251: saves= are solved 4x4 saves (the old text format), corrupt= entries nothing decodes.
     const named = key => (q.get(key) || "").split(",").filter(Boolean);
@@ -226,14 +229,14 @@ async function runCase(size, board) {
     // With no saves, startup asks for a size.
     const pick = `${board}x${board}`;
     // mode=shared-labels (GH-267) and mode=shared-progress (GH-272) open on a share link, which starts its board and skips the size picker.
-    let picked = keepRestore || mode.startsWith("shared-") || clickText(win.document, pick);
+    let picked = keepRestore || mode.startsWith("shared-") || mode === "tutorial" || clickText(win.document, pick);
     if (!picked) {
         clickText(win.document, "New");
         await wait(200);
         picked = clickText(win.document, pick);
     }
     await wait(400);
-    await setUpMode(win, mode);
+    await setUpMode(win, mode, Number(q.get("step") || 1));
     if (update) {
         for (let i = 0; i < 100 && !win.document.querySelector(".footer .update"); i++) await wait(200);
         await wait(100);

@@ -28,6 +28,9 @@ internal class DomBoard(private val root: HTMLElement, private val game: () -> W
 
     private var tiles: Element? = null
     private var outlines: Element? = null
+    private var highlight: Element? = null
+    /** The arrow buttons by arrow and line, for the tutorial's asked one. */
+    private val arrowButtons = mutableMapOf<Pair<Arrow, Int>, Element>()
     /** This board's row elements and cells, kept across a shift and a slide's frames so a reader's
      *  active cell stays the same element; the [copies] of tiles pushed past its edge come and go. */
     private var rows: List<Element> = emptyList()
@@ -50,10 +53,12 @@ internal class DomBoard(private val root: HTMLElement, private val game: () -> W
     fun draw(state: WebState, justSolved: Boolean, offset: LineOffset?): Element {
         val side = state.side
         val disabled = !state.arrowsEnabled || state.dialog != null
+        arrowButtons.clear()
         fun arrow(label: String, arrow: Arrow, line: Int) =
             clickButton(label, "arrow") { click -> game().onArrow(arrow, line, byMouse = click.detail > 0) }.focusKey(Focus.ArrowButton(arrow, line)).also {
                 it.disabled = disabled
                 named(it, Announcements.line(arrow.direction, line))
+                arrowButtons[arrow to line] = it
             }
         fun arrows(arrow: Arrow, label: String, axis: String) =
             element("div", "arrows $axis").apply { repeat(side) { append(arrow(label, arrow, it)) } }
@@ -64,7 +69,8 @@ internal class DomBoard(private val root: HTMLElement, private val game: () -> W
         buildTiles(layer, state)
         redrawTiles(state, offset)
 
-        val classes = listOfNotNull("board", "solved".takeIf { state.solved }, "just-solved".takeIf { justSolved })
+        val asked = state.guidance?.highlight
+        val classes = listOfNotNull("board", "solved".takeIf { state.solved }, "just-solved".takeIf { justSolved }, "guided".takeIf { state.guidance != null })
         return element("div", classes.joinToString(" ")).apply {
             append(
                 element("span"), arrows(Arrow.UP, "▲", "row"), element("span"),
@@ -73,18 +79,27 @@ internal class DomBoard(private val root: HTMLElement, private val game: () -> W
                 arrows(Arrow.RIGHT, "▶", "column"),
                 element("span"), arrows(Arrow.DOWN, "▼", "row"), element("span"),
             )
+            highlight = state.guidance?.let { tutorialHighlight(asked).also(::append) }
             outlines = state.selection?.let { selectionOutlines(it, state.selectionShown).also(::append) }
-        }
+        }.also { markAsked(asked) }
     }
 
     /** The kept board brought up to [state], for a frame that doesn't rebuild it (GH-171). */
     fun update(state: WebState, offset: LineOffset?) {
         redrawTiles(state, offset)
+        val asked = state.guidance?.highlight
+        highlight?.let { placeHighlight(it, asked) }
+        markAsked(asked)
         state.selection?.let { selection ->
             tiles?.let { activeCell(it, selection) }
             outlines?.let { placeOutlines(it, selection, state.selectionShown) }
         }
         state.boardName?.let { name -> tiles?.let { nameBoard(it, name) } }
+    }
+
+    /** Only the arrow [asked] by the tutorial's step is marked. */
+    private fun markAsked(asked: TutorialHighlight?) {
+        arrowButtons.forEach { (key, button) -> button.classList.toggle("asked", asked?.arrow != null && key == asked.arrow to asked.line) }
     }
 
     /** Fills [layer] with the board's cells, a row element per board row (GH-167). */

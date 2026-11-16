@@ -67,6 +67,12 @@ queries=(
   "report=keys&keys=focus:new,Enter,Escape"
   # 0 reads the board wherever focus is, once per press; not under a dialog.
   "report=keys&grid=1&keys=0,R-0,focus:new,0,2,0,Escape"
+  # GH-288: the tutorial's panel. from the last arrow, Tab goes Controls, Labels, Skip, then the footer; 4 and 6 open their dialogs and Escape comes back to the panel's button; 1, 2, 3, 5 and 7 do nothing.
+  "report=keys&mode=tutorial&keys=focus:arrow-down-3,Tab,Tab,Tab,Tab"
+  "report=keys&mode=tutorial&keys=4,Escape,6,Escape,1,2,3,5,7"
+  "report=keys&mode=tutorial&keys=focus:tutorial-skip,Enter,Escape"
+  # Step 5: the solved board's focus falls to Labels, not Skip, so a held Enter can't skip.
+  "report=keys&mode=tutorial&step=5&keys=focus:tutorial-labels,Enter,Escape"
   # GH-200: on a non-Latin layout a letter key acts by its position; a Latin one by what it types.
   "report=keys&grid=1&keys=в@KeyD,р@KeyH,ц@KeyW,z@KeyW"
   # The solution screen: the board takes focus and the keys, in place; off the board the keys are nothing.
