@@ -1,6 +1,7 @@
 package viewmodel
 
 import board_model.BoardImpl
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.coroutineScope
@@ -53,7 +54,7 @@ class ViewModelOrderingTest {
 
         assertEquals(
             listOf(
-                "message: 'odd (3x3)' can't be solved - no sequence of shifts reaches the solved board.",
+                "message: ${texts().status.cantBeSolved("odd (3x3)")}",
                 "resolveUnsolvableSave",
             ),
             events.take(2),

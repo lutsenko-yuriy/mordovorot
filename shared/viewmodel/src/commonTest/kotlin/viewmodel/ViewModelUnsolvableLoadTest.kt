@@ -2,6 +2,7 @@ package viewmodel
 
 import board_model.BoardImpl
 import board_model.Solvability
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -17,11 +18,13 @@ import testing.testViewModel
 /** GH-74: [GameViewModelImpl.loadGame] and [GameViewModelImpl.restoreOnStartup] on an unsolvable save -
  *  the [UiRequest.ResolveUnsolvableSave] choice and each of its three branches. */
 class ViewModelUnsolvableLoadTest {
+    private val statusTexts = texts().status
+
 
     /** 3x3, tiles 0/2 swapped - odd, unsolvable. Repair swaps positions 0/1. */
     private val oddState = intArrayOf(2, 1, 0, 3, 4, 5, 6, 7, 8)
     private val repairedState = listOf(1, 2, 0, 3, 4, 5, 6, 7, 8)
-    private val unsolvableMessage = "'odd (3x3)' can't be solved - no sequence of shifts reaches the solved board."
+    private val unsolvableMessage = statusTexts.cantBeSolved("odd (3x3)")
 
     private fun saves() = FakeSaveRepository(mutableMapOf("odd" to SavedBoard(3, oddState.copyOf(), 5)))
 
@@ -59,7 +62,7 @@ class ViewModelUnsolvableLoadTest {
         assertEquals(repairedState, board.boardArray.toList())
         assertEquals(5, board.moveCount)
         assertTrue(Solvability.isSolvable(board.boardArray))
-        assertEquals("Repaired 'odd' (two tiles swapped) and loaded it.", ui.shownMessages.last())
+        assertEquals(statusTexts.repaired("odd"), ui.shownMessages.last())
         assertTrue(ui.loadedSaves.all { it == null })
         assertEquals(
             listOf(
@@ -85,7 +88,7 @@ class ViewModelUnsolvableLoadTest {
 
         assertEquals(repairedState, board.boardArray.toList())
         assertEquals(oddState.toList(), saves.load("odd")!!.state.toList())
-        assertEquals("Repaired and loaded 'odd', but could not update the save file: disk full", ui.shownMessages.last())
+        assertEquals(statusTexts.repairedNotUpdated("odd", "disk full"), ui.shownMessages.last())
         assertEquals(
             Event(
                 "unsolvable_save_resolved",
@@ -218,7 +221,7 @@ class ViewModelUnsolvableLoadTest {
         ui.drive(viewModel) { viewModel.loadGame("ok") }
 
         assertEquals(emptyList(), ui.resolveUnsolvableSaveCalls)
-        assertEquals(listOf("Loaded 'ok'."), ui.shownMessages)
+        assertEquals(listOf(statusTexts.loaded("ok")), ui.shownMessages)
         assertEquals(listOf<String?>("ok"), ui.loadedSaves)
     }
 }

@@ -1,6 +1,7 @@
 package viewmodel
 
 import board_model.BoardImpl
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -22,6 +23,7 @@ import testing.testViewModel
 
 /** GH-126: the Give Up button, the solution screen and its replay, through the viewModel. */
 class ViewModelGiveUpTest {
+    private val mordieTexts = texts().mordie
 
     /** A 3x3 two moves from solved: row 0 right once, then column 0 down once. */
     private val original = intArrayOf(1, 2, 3, 6, 4, 5, 0, 7, 8)
@@ -142,7 +144,7 @@ class ViewModelGiveUpTest {
         assertEquals(0, viewModel.moveCount())
         assertFalse(viewModel.isSolved())
         assertEquals(GiveUpButton.HIDDEN, viewModel.giveUpButton())
-        assertEquals("You gave up after 2 moves. Here's how I did it in 2 moves!", viewModel.mordieLine())
+        assertEquals("${mordieTexts.solutionStopped(2)} ${mordieTexts.solutionHere(2)}", viewModel.mordieLine())
         assertNull(viewModel.mordieEnding())
     }
 

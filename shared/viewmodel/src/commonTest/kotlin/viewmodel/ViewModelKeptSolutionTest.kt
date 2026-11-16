@@ -1,6 +1,7 @@
 package viewmodel
 
 import board_model.BoardImpl
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -19,6 +20,7 @@ import testing.testViewModel
 
 /** GH-224: saves keep whether Mordie's answer is proven shortest, so a reload ends the same way. */
 class ViewModelKeptSolutionTest {
+    private val mordieTexts = texts().mordie
 
     /** A 3x3 two moves from solved: row 0 right once, then column 0 down once. */
     private val original = intArrayOf(1, 2, 3, 6, 4, 5, 0, 7, 8)
@@ -44,7 +46,7 @@ class ViewModelKeptSolutionTest {
 
         viewModel.load("s")
 
-        assertEquals("You beat me! 4 moves vs your 2. Mine may not have been the shortest.", viewModel.mordieEnding())
+        assertEquals(mordieTexts.endingBeatUnproven(4, 2), viewModel.mordieEnding())
     }
 
     @Test
@@ -54,7 +56,7 @@ class ViewModelKeptSolutionTest {
 
         viewModel.load("s")
 
-        assertEquals("I made 4 moves and you made 2 moves! Are you a machine?", viewModel.mordieEnding())
+        assertEquals(mordieTexts.endingMachine(4, 2), viewModel.mordieEnding())
     }
 
     @Test

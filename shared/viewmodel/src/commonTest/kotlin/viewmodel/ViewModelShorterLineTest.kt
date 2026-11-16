@@ -1,6 +1,7 @@
 package viewmodel
 
 import board_model.BoardImpl
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import mordie.Mordie
@@ -13,6 +14,7 @@ import testing.testViewModel
 
 /** GH-223: Mordie's lines for an answer that may not be the shortest, through the viewModel. */
 class ViewModelShorterLineTest {
+    private val mordieTexts = texts().mordie
 
     /** A 5x5 far from solved: no exact search runs on it (GH-260). */
     private val original = IntArray(25) { 24 - it }
@@ -51,7 +53,7 @@ class ViewModelShorterLineTest {
             mapOf("board_size" to 5, "solution_length" to 31, "previous_length" to 40, "proven_shortest" to false),
             events("mordie_shorter_found").single(),
         )
-        assertEquals("Wait, I found a shorter one: 31 moves now! Can you beat it?", viewModel.mordieLine())
+        assertEquals(mordieTexts.shorter(31), viewModel.mordieLine())
     }
 
     @Test
@@ -96,7 +98,7 @@ class ViewModelShorterLineTest {
         viewModel.shiftLeft(0)
 
         assertEquals("beat_mordie", events("board_solved").single()["mordie_result"])
-        assertEquals("You beat me! 40 moves vs your ${board.moveCount}. Mine may not have been the shortest.", viewModel.mordieEnding())
+        assertEquals(mordieTexts.endingBeatUnproven(40, board.moveCount), viewModel.mordieEnding())
     }
 
     @Test
@@ -110,6 +112,6 @@ class ViewModelShorterLineTest {
         viewModel.shiftLeft(0)
 
         assertEquals("machine", events("board_solved").single()["mordie_result"])
-        assertEquals("I made 12 moves and you made 1 move! Are you a machine?", viewModel.mordieEnding())
+        assertEquals(mordieTexts.endingMachine(12, 1), viewModel.mordieEnding())
     }
 }

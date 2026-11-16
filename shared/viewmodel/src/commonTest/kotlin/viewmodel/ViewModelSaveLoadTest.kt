@@ -1,6 +1,7 @@
 package viewmodel
 
 import board_model.BoardImpl
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -18,6 +19,8 @@ import testing.testViewModel
  *  so every test here needs something draining [ViewModel.uiRequests] concurrently, not just the
  *  ones that previously asserted on a message. */
 class ViewModelSaveLoadTest {
+    private val statusTexts = texts().status
+
 
     @Test
     fun `saveGame creates a new file when none exists`() = runTest {
@@ -99,7 +102,7 @@ class ViewModelSaveLoadTest {
 
         assertTrue(loaded)
         assertEquals(listOf(8, 7, 6, 5, 4, 3, 2, 1, 0), board.boardArray.toList())
-        assertEquals(listOf("Loaded 'foo'."), ui.shownMessages)
+        assertEquals(listOf(statusTexts.loaded("foo")), ui.shownMessages)
         assertEquals(listOf<String?>("foo"), ui.loadedSaves)
         assertEquals(
             listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "success", "labels_differ_from_preference" to false))),
@@ -154,7 +157,7 @@ class ViewModelSaveLoadTest {
 
         assertEquals(3, board.squareSide)
         assertEquals(listOf(3, 2, 1, 0, 7, 6, 5, 4, 8), board.boardArray.toList())
-        assertTrue(ui.shownMessages.any { it.contains("Loaded 'small'") })
+        assertTrue(ui.shownMessages.any { it.contains(statusTexts.loaded("small")) })
         assertEquals(
             listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "success", "labels_differ_from_preference" to false))),
             analytics.events,
