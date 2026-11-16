@@ -27,7 +27,7 @@ object GermanTutorialTexts : TutorialTexts {
     override fun dragUp(tiles: Int) = "Ziehe sie " + if (tiles == 1) "nach oben" else "um ${tilesBy(tiles)} nach oben"
     override fun dragDown(tiles: Int) = "Ziehe sie " + if (tiles == 1) "nach unten" else "um ${tilesBy(tiles)} nach unten"
 
-    override fun click(arrow: String, times: Int) = "Klicke auf $arrow" + times(times)
+    override fun click(arrow: String, times: Int) = "Klicke" + times(times) + " auf $arrow"
     override fun press(keys: String, times: Int) = "Drücke $keys" + times(times)
     override fun pressThen(select: String, selectTimes: Int, shift: String, shiftTimes: Int) =
         "Drücke $select${times(selectTimes)}, dann $shift${times(shiftTimes)}"

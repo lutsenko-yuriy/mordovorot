@@ -11,13 +11,13 @@ object GermanMordieTexts : MordieTexts {
     override fun friendGaveUpAfter(moves: Int) =
         "Okay, dein Freund hat nach ${germanMoves(moves, dative = true)} aufgegeben, ohne eine Lösung zu finden. Finden wir eine?"
     override fun progress(moves: Int) = "Ich habe schon ${germanMoves(moves)} gemacht und es noch nicht gelöst!"
-    override fun progressHard(moves: Int) = "Das ist ein hartes Rätsel! " + progress(moves)
+    override fun progressHard(moves: Int) = "Das ist ein kniffliges Rätsel! " + progress(moves)
     override fun found(moves: Int) = "Geschafft! Ich habe eine Lösung in ${germanMoves(moves, dative = true)} gefunden! Schaffst du es schneller?"
     override fun foundUnproven(moves: Int) =
         "Ich habe eine Lösung in ${germanMoves(moves, dative = true)} gefunden, aber vielleicht gibt es eine kürzere! Schaffst du es schneller?"
     override fun shorter(moves: Int) = "Moment, ich habe eine kürzere gefunden: jetzt ${germanMoves(moves)}! Schaffst du es schneller?"
 
-    override fun endingPlayerWon(mine: Int) = "Du warst schneller als ich! Ich habe nur ${germanMoves(mine)} geschafft."
+    override fun endingPlayerWon(mine: Int) = "Du warst schneller als ich! Ich war erst bei ${germanMoves(mine, dative = true)}."
     override fun endingMatched(mine: Int) = "Wow, Gleichstand! Wir haben beide ${germanMoves(mine)} gebraucht!"
     override fun endingMordieWon(mine: Int, yours: Int) =
         "Tut mir leid, diesmal war ich schneller: Ich habe ${germanMoves(mine)} gebraucht, du ${germanMoves(yours)}."

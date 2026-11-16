@@ -48,7 +48,7 @@ class GermanPluralsTest {
             listOf(1, 2, 3, 5).map(tutorial::dragLeft),
         )
         assertEquals(
-            listOf("Klicke auf ◀", "Klicke auf ◀ zweimal", "Klicke auf ◀ dreimal", "Klicke auf ◀ 5-mal"),
+            listOf("Klicke auf ◀", "Klicke zweimal auf ◀", "Klicke dreimal auf ◀", "Klicke 5-mal auf ◀"),
             listOf(1, 2, 3, 5).map { tutorial.click("◀", it) },
         )
     }

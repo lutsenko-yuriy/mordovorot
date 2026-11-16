@@ -46,7 +46,7 @@ object GermanDialogTexts : DialogTexts {
     override fun overwriteWarning(name: String) = "„$name“ gibt es schon. Speichern überschreibt es."
 
     override fun shareNoteSame(side: Int) = "Wer diesen Link öffnet, startet mit demselben ${side}x$side-Brett."
-    override fun shareNoteNow(side: Int) = "Wer diesen Link öffnet, startet mit diesem ${side}x$side-Brett in seinem jetzigen Stand."
+    override fun shareNoteNow(side: Int) = "Wer diesen Link öffnet, startet mit diesem ${side}x$side-Brett, so wie es jetzt ist."
     override fun shareLabels(labels: String) = "Meine Beschriftungen hinzufügen ($labels)"
     override val shareProgress = "Meinen Fortschritt hinzufügen"
     override fun shareProgressSolving(moves: Int) = "Meinen Fortschritt hinzufügen (${germanMoves(moves)}, nicht gelöst)"
