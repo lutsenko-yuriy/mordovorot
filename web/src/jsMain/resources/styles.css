@@ -48,6 +48,10 @@ body {
     background: var(--page);
     color: var(--ink);
     font: 1rem/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    /* GH-303: as .app below, for what stands outside it too: the screen reader's live region and the footer. */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
 }
 
 /* Sized so the board and its arrows fit the window beside (wide) or under (tall) the rest. */
