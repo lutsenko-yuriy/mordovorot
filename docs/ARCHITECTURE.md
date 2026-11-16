@@ -194,7 +194,10 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │                          # interface per area: mordie, tutorial, dialogs, status, page, keys, reader), English
 │                          # first in `texts.en`; a text with a number or a name is a function of it, so
 │                          # each language words plurals and cases itself. `texts()` returns the active
-│                          # language (English until GH-275). `english.txt` snapshots every key's output
+│                          # language (English until GH-275). GH-275 adds `texts.de` and `texts.ru`, a `Language`
+│                          # enum and one global active language that `SessionLanguage` sets (detected from the
+│                          # browser, then the `language` preference; a switch needs no reload); the web client
+│                          # adds `DomLanguagePicker` and `WebLanguageFlows`. `english.txt` snapshots every key's output
 └── testing/             # :shared:testing - plain JVM module of test doubles shared by every
                            # module's tests: FakeBoardModel / FakeSaveRepository / FakePreferenceRepository /
                            # RecordingAnalyticsService / FakeMordieSearch + FakeMordieSearchFactory /
@@ -726,7 +729,7 @@ the preferences.
   second thread. `./gradlew check` runs them all. Module graph:
   `core`, `analytics`, `storage`, `mordie` and `texts` depend on no other module; `viewmodel` has an
   `api` dependency on the first four (its public types expose them) and an `implementation`
-  dependency on `texts` (GH-274).
+  dependency on `texts` (GH-274; `api` from GH-275, since the viewmodel sets the language).
   `:web` (GH-110) depends on `viewmodel` and `texts`. Its `browser()` target makes KGP add
   webpack and webpack-dev-server (build time only, pinned in the same `yarn.lock`); the
   browser test task is off, so CI needs no headless browser. `serve` (GH-124) needs `-t`:
