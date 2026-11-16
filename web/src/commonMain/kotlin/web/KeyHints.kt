@@ -1,5 +1,6 @@
 package web
 
+import texts.texts
 import viewmodel.Direction
 import viewmodel.KeyScheme
 import viewmodel.KeyboardLayout
@@ -11,9 +12,11 @@ data class KeyHint(val keys: String, val does: String)
 internal object KeyHints {
 
     /** The two lines under the board, ordered by hand; on a solved board too. */
-    fun board(layout: KeyboardLayout): List<KeyHint> = when (layout) {
-        KeyboardLayout.RIGHT_HANDED -> listOf(KeyHint("W A S D", "select"), KeyHint("← → H L", "row"), KeyHint("↑ ↓ K J", "column"))
-        KeyboardLayout.LEFT_HANDED -> listOf(KeyHint("A D", "row"), KeyHint("W S", "column"), KeyHint("←↑↓→ H J K L", "select"))
+    fun board(layout: KeyboardLayout): List<KeyHint> = with(texts().keys) {
+        when (layout) {
+            KeyboardLayout.RIGHT_HANDED -> listOf(KeyHint("W A S D", hintSelect), KeyHint("← → H L", hintRow), KeyHint("↑ ↓ K J", hintColumn))
+            KeyboardLayout.LEFT_HANDED -> listOf(KeyHint("A D", hintRow), KeyHint("W S", hintColumn), KeyHint("←↑↓→ H J K L", hintSelect))
+        }
     }
 
     /** The key that moves the selection [direction] (GH-290), as the tutorial names it: the letter, then the arrow where it works too. */
@@ -35,18 +38,23 @@ internal object KeyHints {
         Direction.RIGHT -> "D"
     }
 
-    private fun hjkl(direction: Direction) = when (direction) {
-        Direction.LEFT -> "H or ←"
-        Direction.RIGHT -> "L or →"
-        Direction.UP -> "K or ↑"
-        Direction.DOWN -> "J or ↓"
+    private fun hjkl(direction: Direction) = with(texts().keys) {
+        when (direction) {
+            Direction.LEFT -> letterOrArrow("H", "←")
+            Direction.RIGHT -> letterOrArrow("L", "→")
+            Direction.UP -> letterOrArrow("K", "↑")
+            Direction.DOWN -> letterOrArrow("J", "↓")
+        }
     }
 
     /** The solution screen's, in the same form; the same in both layouts. */
-    val SOLUTION = listOf(KeyHint("← → A D H L", "prev/next"), KeyHint("Space Enter", "next"), KeyHint("R", "restart"), KeyHint("↑ ↓ W S K J", "scroll"))
+    val SOLUTION: List<KeyHint>
+        get() = with(texts().keys) {
+            listOf(KeyHint("← → A D H L", hintPrevNext), KeyHint("Space Enter", hintNext), KeyHint("R", hintRestart), KeyHint("↑ ↓ W S K J", hintScroll))
+        }
 
     /** The Controls dialog's key list. */
     fun keyList(layout: KeyboardLayout) = KeyScheme.boardKeyLines(layout) + TOOLBAR_KEYS + KeyScheme.SOLUTION_KEY_LINES
 
-    private val TOOLBAR_KEYS = listOf("New 1 · Save 2 · Load 3 · Labels 4", "Give Up 5 · Controls 6 · Share 7 · Tutorial 8", "0 Read board (screen reader)")
+    private val TOOLBAR_KEYS get() = with(texts().keys) { listOf(toolbarLine1, toolbarLine2, toolbarLine3) }
 }

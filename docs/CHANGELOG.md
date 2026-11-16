@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.48.1] — 2026-11-16 (PR #308 merged)
+
+### Changed
+
+- [wip] (PR #308) GH-274 (WU1/3): the :shared:texts module holds every English text, and the game words its texts through texts(); no wording changed yet (WU2 and WU3 follow).
+
 ## [0.48.1] — 2026-11-16 (PR #304 merged)
 
 ### Fixed

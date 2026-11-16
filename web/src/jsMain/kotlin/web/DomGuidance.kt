@@ -1,6 +1,7 @@
 package web
 
 import org.w3c.dom.Element
+import texts.texts
 import web.a11y.focusKey
 import web.a11y.hiddenFromReaders
 import web.drag.Axis
@@ -15,14 +16,14 @@ internal fun guidancePanel(guidance: Guidance, state: WebState, game: () -> WebG
         button(label, onClick = onClick).focusKey(focus).withDigit(digit).also { it.disabled = off }
     append(
         element("div", "bubble").apply {
-            append(element("span", "name").apply { textContent = "Mordie:" }, " ${guidance.text}")
+            append(element("span", "name").apply { textContent = texts().page.mordieName }, " ${guidance.text}")
             if (guidance.ways.isNotEmpty()) append(element("div", "ways").apply { guidance.ways.forEach { append(element("div", "way").apply { textContent = it }) } })
         },
         element("div", "guidance-buttons").apply {
-            if (guidance.controls) append(tutorialButton("Controls", Focus.TutorialControls, state.digitOf(ToolbarButton.CONTROLS)) { game().tutorial.onControls() })
+            if (guidance.controls) append(tutorialButton(texts().page.tutorialControls, Focus.TutorialControls, state.digitOf(ToolbarButton.CONTROLS)) { game().tutorial.onControls() })
             append(
-                tutorialButton("Labels", Focus.TutorialLabels, state.digitOf(ToolbarButton.LABELS)) { game().tutorial.onLabels() },
-                tutorialButton("Skip", Focus.TutorialSkip, null) { game().tutorial.onSkip() },
+                tutorialButton(texts().page.tutorialLabels, Focus.TutorialLabels, state.digitOf(ToolbarButton.LABELS)) { game().tutorial.onLabels() },
+                tutorialButton(texts().page.tutorialSkip, Focus.TutorialSkip, null) { game().tutorial.onSkip() },
             )
         },
     )

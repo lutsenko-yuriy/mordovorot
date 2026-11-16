@@ -3,6 +3,7 @@ package viewmodel.usecase
 import analytics.AnalyticsService
 import board_model.BoardModel
 import storage.SaveRepository
+import texts.texts
 import viewmodel.CurrentSaveName
 import viewmodel.MordieHooks
 import viewmodel.SessionTileLabels
@@ -38,7 +39,7 @@ internal class SaveGameUseCase(
             onError = { e ->
                 analytics.track("save_command_used", mapOf("result" to "error", "name_source" to nameSource))
                 // Always say the save failed - e.message alone can be just a path (PR #15).
-                ui.showMessage("Could not save as '$name': ${e.message ?: e::class.simpleName}")
+                ui.showMessage(texts().status.saveFailed(name, e.message ?: e::class.simpleName ?: ""))
                 false
             },
         ) {
@@ -51,7 +52,7 @@ internal class SaveGameUseCase(
                 "save_command_used",
                 mapOf("result" to "success", "overwrote_existing" to existed, "name_source" to nameSource),
             )
-            ui.showMessage("Saved as '$name'.")
+            ui.showMessage(texts().status.saved(name))
             true
         }
     }

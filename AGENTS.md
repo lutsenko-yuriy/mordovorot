@@ -54,7 +54,7 @@ Full product specifications: docs/PRODUCT_SPEC.md
 
 ## Architecture
 
-MVVM (Model-View-ViewModel): board_model + viewmodel + view packages. Everything platform-independent (board, analytics, the save contract, Mordie and the viewmodel) is in Kotlin Multiplatform modules under `shared/`; the browser client is the `web` module (GH-41, GH-228)
+MVVM (Model-View-ViewModel): board_model + viewmodel + view packages. Everything platform-independent (board, analytics, the save contract, Mordie, every text the player reads and the viewmodel) is in Kotlin Multiplatform modules under `shared/`; the browser client is the `web` module (GH-41, GH-228)
 
 Details and directory layout: @docs/ARCHITECTURE.md. Languages and tooling: docs/TECH_STACK.md.
 

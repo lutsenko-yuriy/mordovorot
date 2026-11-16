@@ -1,5 +1,6 @@
 package web
 
+import texts.texts
 import viewmodel.KeyboardLayout
 import viewmodel.TileLabels
 import web.a11y.FocusTarget
@@ -102,23 +103,25 @@ fun defaultFocus(dialog: WebDialog): Focus = when (dialog) {
 }
 
 /** The Very large section's title and warning line in the size picker (GH-207). */
-const val VERY_LARGE_TITLE = "Very large"
-const val VERY_LARGE_WARNING = "Harder to solve, and the tiles may be too small to use comfortably."
+val VERY_LARGE_TITLE: String get() = texts().dialogs.veryLargeTitle
+val VERY_LARGE_WARNING: String get() = texts().dialogs.veryLargeWarning
 
 /** The dialog's title, which also names it for screen readers. */
-val WebDialog.title: String get() = when (this) {
-    is WebDialog.Size -> "New game size"
-    is WebDialog.Save -> "Save game"
-    is WebDialog.Load -> if (restore) "Restore a saved game?" else "Load game"
-    is WebDialog.DeleteSave -> "Delete '$name'?"
-    is WebDialog.Unsolvable -> "Can't be solved"
-    is WebDialog.Labels -> "Tile labels"
-    WebDialog.GiveUp -> "Give up and see Mordie's solution?"
-    is WebDialog.Controls -> "Controls"
-    is WebDialog.LinkRejected -> "Can't open this board"
-    is WebDialog.OpenShared -> "Open the shared board?"
-    is WebDialog.SharedLabels -> "Use the sender's labels (${labels.title})?"
-    is WebDialog.Share -> "Share this board"
-    WebDialog.Update -> "Update to the new version?"
-    WebDialog.ReplaySave -> "Save your game first?"
+val WebDialog.title: String get() = with(texts().dialogs) {
+    when (this@title) {
+        is WebDialog.Size -> sizeTitle
+        is WebDialog.Save -> saveTitle
+        is WebDialog.Load -> if (restore) restoreTitle else loadTitle
+        is WebDialog.DeleteSave -> deleteTitle(name)
+        is WebDialog.Unsolvable -> unsolvableTitle
+        is WebDialog.Labels -> labelsTitle
+        WebDialog.GiveUp -> giveUpTitle
+        is WebDialog.Controls -> controlsTitle
+        is WebDialog.LinkRejected -> linkRejectedTitle
+        is WebDialog.OpenShared -> openSharedTitle
+        is WebDialog.SharedLabels -> sharedLabelsTitle(labels.title)
+        is WebDialog.Share -> shareTitle
+        WebDialog.Update -> updateTitle
+        WebDialog.ReplaySave -> replaySaveTitle
+    }
 }

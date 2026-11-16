@@ -2,6 +2,7 @@ package viewmodel
 
 import board_model.Solvability
 import storage.SaveRepository
+import texts.texts
 
 /** Read-only view of [saves] as the viewmodel shows them (GH-78): [SaveInfo]s and the
  *  "available saves" message. */
@@ -38,12 +39,12 @@ internal class SaveCatalog(private val saves: SaveRepository) {
         val names = try {
             saves.listSaves()
         } catch (e: Exception) {
-            return "Could not list available saves."
+            return texts().status.couldNotListSaves
         }
         return if (names.isEmpty()) {
-            "No saves available."
+            texts().status.noSavesAvailable
         } else {
-            "Available saves: ${names.joinToString(", ") { infoOf(it).display() }}"
+            texts().status.availableSaves(names.joinToString(", ") { infoOf(it).display() })
         }
     }
 

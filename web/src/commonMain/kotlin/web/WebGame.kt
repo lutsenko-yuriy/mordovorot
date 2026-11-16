@@ -5,6 +5,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import texts.texts
 import viewmodel.GameViewModel
 import viewmodel.GiveUpButton
 import viewmodel.PointerShift
@@ -139,7 +140,7 @@ class WebGame internal constructor(
             name == null -> false
             // The name check alone allows spaces.
             name.any { it.isWhitespace() } -> {
-                showStatus("'$name' isn't a usable save name (no spaces) - not saved.")
+                showStatus(texts().status.saveNameHasSpaces(name))
                 false
             }
             else -> viewModel.saveGame(name).also { if (it) closing = onBoard ?: closing }
@@ -283,6 +284,6 @@ class WebGame internal constructor(
     }
 
     private companion object {
-        const val SOLVED_TITLE = "Congratulations ✓"
+        val SOLVED_TITLE: String get() = texts().page.solved
     }
 }

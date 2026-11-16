@@ -1,5 +1,7 @@
 package web
 
+import texts.texts
+
 internal const val ORIGINAL_URL = "https://openprocessing.org/@carykh/580366"
 internal const val LOOPOVER_URL = "https://loopover.xyz"
 
@@ -18,15 +20,17 @@ sealed interface FooterPart {
 /** The footer line (GH-111): the app's [version] and the Loopover credit, worded as the README's Credits.
  *  Narrow, it reads `v<version> · Based on Loopover by carykh`. With a new version [updateReady] (GH-262), the
  *  credit gives way to `v<version> · New version available. Update`, the same wide and narrow. */
-fun footer(version: String, updateReady: Boolean = false): List<FooterPart> = if (updateReady) listOf(
-    FooterPart.Text("v$version · New version available. "),
-    FooterPart.UpdateLink("Update"),
-) else listOf(
-    FooterPart.Text("v$version · Based on Loopover by "),
-    FooterPart.Text("Cary Huang (", wideOnly = true),
-    FooterPart.Text("carykh"),
-    FooterPart.Text(") · ", wideOnly = true),
-    FooterPart.Link("original", ORIGINAL_URL, wideOnly = true),
-    FooterPart.Text(" · ", wideOnly = true),
-    FooterPart.Link("loopover.xyz", LOOPOVER_URL, wideOnly = true),
-)
+fun footer(version: String, updateReady: Boolean = false): List<FooterPart> = with(texts().page) {
+    if (updateReady) listOf(
+        FooterPart.Text(footerUpdateNotice(version)),
+        FooterPart.UpdateLink(footerUpdate),
+    ) else listOf(
+        FooterPart.Text(footerBasedOn(version)),
+        FooterPart.Text("Cary Huang (", wideOnly = true),
+        FooterPart.Text("carykh"),
+        FooterPart.Text(") · ", wideOnly = true),
+        FooterPart.Link(footerOriginal, ORIGINAL_URL, wideOnly = true),
+        FooterPart.Text(" · ", wideOnly = true),
+        FooterPart.Link("loopover.xyz", LOOPOVER_URL, wideOnly = true),
+    )
+}

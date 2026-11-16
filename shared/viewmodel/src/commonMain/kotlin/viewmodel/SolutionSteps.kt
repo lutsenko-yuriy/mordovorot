@@ -1,6 +1,7 @@
 package viewmodel
 
 import mordie.SolutionMove
+import texts.texts
 
 /** One step of Mordie's solution as the solution screen shows and replays it (GH-126): [count]
  *  shifts of row or column [index] (0-based), right/down when [forward], otherwise left/up. */
@@ -20,7 +21,7 @@ internal object SolutionSteps {
     fun format(steps: List<SolutionStep>): List<String> {
         val width = steps.size.toString().length
         return steps.mapIndexed { i, step ->
-            val line = if (step.isRow) "Row" else "Col"
+            val line = with(texts().page) { if (step.isRow) stepRow else stepColumn }
             "${(i + 1).toString().padStart(width, '0')}. $line ${step.index + 1} ${arrow(step)} ×${step.count}"
         }
     }

@@ -1,5 +1,7 @@
 package viewmodel
 
+import texts.texts
+
 /** What a board key does in keyboard mode (GH-170): move the selected tile, or shift its row or
  *  column, tagged with the [ShiftKey] that made it - `null` for a left-handed W/A/S/D shift,
  *  which `board_solved.shift_keys` leaves out. */
@@ -47,11 +49,11 @@ object KeyScheme {
     }
 
     /** The solution screen's lines of the Controls dialog's key list. */
-    val SOLUTION_KEY_LINES = listOf("Solution: ← → A D H L Prev/Next ·", "  Space/Enter Next · R Restart ·", "  ↑ ↓ W S K J scroll")
+    val SOLUTION_KEY_LINES: List<String> get() = with(texts().keys) { listOf(solutionLine1, solutionLine2, solutionLine3) }
 
     /** The first lines of the Controls dialog's key list. */
     fun boardKeyLines(layout: KeyboardLayout) = when (layout) {
-        KeyboardLayout.RIGHT_HANDED -> listOf("Select tile    W A S D", "Shift row      ← →  H L", "Shift column   ↑ ↓  K J")
-        KeyboardLayout.LEFT_HANDED -> listOf("Select tile    ← ↑ ↓ →  H J K L", "Shift row      A D", "Shift column   W S")
+        KeyboardLayout.RIGHT_HANDED -> with(texts().keys) { listOf(rightHandedSelect, rightHandedShiftRow, rightHandedShiftColumn) }
+        KeyboardLayout.LEFT_HANDED -> with(texts().keys) { listOf(leftHandedSelect, leftHandedShiftRow, leftHandedShiftColumn) }
     }
 }

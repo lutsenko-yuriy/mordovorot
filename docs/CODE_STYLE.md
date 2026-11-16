@@ -17,6 +17,7 @@ None configured for any language (no ktlint/detekt, ruff, or shellcheck).
 ## Naming and structure
 
 - Packages follow MVVM layers: `board_model`, `viewmodel`, `view`, plus `storage` and `analytics`
+- Player-facing text lives only in `:shared:texts` (GH-274), under a key; code asks `texts()` for it, never writes a sentence in a literal. A text with a number or a name is a function taking it (`found(moves: Int)`), never preformatted, so each language words plurals and cases itself. Analytics names, `require`/`check` messages, CSS classes and key codes are not texts and stay in code
 - Interface + `Impl` pairs (`BoardModel`/`BoardImpl`, `ViewModel`/`ViewModelImpl`)
 - Tests mirror the main package path, named class + aspect under test (e.g. `BoardImplShiftTest.kt`); fakes (`Fake*`, `Recording*`) of a shared-module type go in the `:shared:testing` module (`shared/testing/src/commonMain/kotlin/testing/`), so every module's tests can use them; client-only fakes go in that client's own test sources
 - Aim to keep source files under ~300 lines. This is a guideline, not a hard limit: a file over it

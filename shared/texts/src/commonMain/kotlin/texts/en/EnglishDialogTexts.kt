@@ -1,0 +1,63 @@
+package texts.en
+
+import texts.DialogTexts
+
+object EnglishDialogTexts : DialogTexts {
+    override val sizeTitle = "New game size"
+    override val saveTitle = "Save game"
+    override val loadTitle = "Load game"
+    override val restoreTitle = "Restore a saved game?"
+    override fun deleteTitle(name: String) = "Delete '$name'?"
+    override val unsolvableTitle = "Can't be solved"
+    override val labelsTitle = "Tile labels"
+    override val giveUpTitle = "Give up and see Mordie's solution?"
+    override val controlsTitle = "Controls"
+    override val linkRejectedTitle = "Can't open this board"
+    override val openSharedTitle = "Open the shared board?"
+    override fun sharedLabelsTitle(labels: String) = "Use the sender's labels ($labels)?"
+    override val shareTitle = "Share this board"
+    override val updateTitle = "Update to the new version?"
+    override val replaySaveTitle = "Save your game first?"
+
+    override val veryLargeTitle = "Very large"
+    override val veryLargeWarning = "Harder to solve, and the tiles may be too small to use comfortably."
+
+    override val cancel = "Cancel"
+    override val ok = "OK"
+    override val save = "Save"
+    override val dontSave = "Don't save"
+    override val delete = "Delete"
+    override val close = "Close"
+    override val open = "Open"
+    override val update = "Update"
+    override val yes = "Yes"
+    override val no = "No"
+    override val newGame = "New game"
+    override val repairAndLoad = "Repair & load"
+    override val copyLink = "Copy link"
+    override val copied = "Copied!"
+
+    override val noSaves = "No saves found."
+    override val deleteMessage = "This can't be undone."
+    override val openSharedMessage = "Your moves since the last save will be lost."
+    override val updateMessage = "The current game will be lost unless you save it first."
+    override val sharedLabelsMessage = "For this game only: your next new game uses your own labels."
+    override val replaySaveMessage = "The tutorial replaces the current game."
+    override fun overwriteWarning(name: String) = "'$name' already exists - it will be overwritten."
+
+    override fun shareNoteSame(side: Int) = "Anyone who opens this link starts from the same ${side}x$side board."
+    override fun shareNoteNow(side: Int) = "Anyone who opens this link starts from this ${side}x$side board as it is now."
+    override fun shareLabels(labels: String) = "Include my tile labels ($labels)"
+    override val shareProgress = "Include my progress"
+    override fun shareProgressSolving(moves: Int) = "Include my progress (${englishMoves(moves)}, not solved)"
+    override fun shareProgressSolved(moves: Int) = "Include my progress (solved in ${englishMoves(moves)})"
+    override val shareProgressGaveUp = "Include my progress (gave up)"
+    override fun shareProgressGaveUpAfter(moves: Int) = "Include my progress (gave up after ${englishMoves(moves)})"
+
+    override fun deleteName(name: String) = "Delete '$name'"
+
+    override val saveNameName = "Save name"
+    override val shareLinkName = "Share link"
+    override val tileLabelsName = "Tile labels"
+    override val keyboardKeysName = "Keyboard keys"
+}

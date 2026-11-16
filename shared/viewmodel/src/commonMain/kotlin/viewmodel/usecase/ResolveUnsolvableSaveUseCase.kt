@@ -5,6 +5,7 @@ import board_model.BoardModel
 import board_model.Solvability
 import storage.SaveRepository
 import storage.SavedBoard
+import texts.texts
 import viewmodel.CurrentSaveName
 import viewmodel.GameShiftSources
 import viewmodel.MordieHooks
@@ -37,7 +38,7 @@ internal class ResolveUnsolvableSaveUseCase(
     suspend fun resolve(name: String, saved: SavedBoard, trigger: String): LoadResult {
         val atStartup = trigger == "startup_prompt"
         val info = SaveInfo(name, saved.squareSide, solvable = false)
-        ui.showMessage("'${info.displayWithSize()}' can't be solved - no sequence of shifts reaches the solved board.")
+        ui.showMessage(texts().status.cantBeSolved(info.displayWithSize()))
         val choice = ui.ask(UiRequest.ResolveUnsolvableSave(info, atStartup))
         fun track(extra: Map<String, Any> = emptyMap()) = analytics.track(
             "unsolvable_save_resolved",
@@ -63,8 +64,8 @@ internal class ResolveUnsolvableSaveUseCase(
                 }
                 track(mapOf("repair_saved" to (error == null)))
                 ui.showMessage(
-                    if (error == null) "Repaired '$name' (two tiles swapped) and loaded it."
-                    else "Repaired and loaded '$name', but could not update the save file: ${error.message ?: error::class.simpleName}"
+                    if (error == null) texts().status.repaired(name)
+                    else texts().status.repairedNotUpdated(name, error.message ?: error::class.simpleName ?: "")
                 )
                 return LoadResult.LOADED
             }

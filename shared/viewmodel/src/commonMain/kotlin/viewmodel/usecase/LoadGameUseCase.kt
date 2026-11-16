@@ -4,6 +4,7 @@ import analytics.AnalyticsService
 import board_model.BoardModel
 import board_model.Solvability
 import storage.SaveRepository
+import texts.texts
 import viewmodel.CurrentSaveName
 import viewmodel.GameShiftSources
 import viewmodel.MordieHooks
@@ -47,14 +48,14 @@ internal class LoadGameUseCase(
         return catchingNonCancellation(
             onError = { e ->
                 analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "error"))
-                ui.showMessage(e.message ?: "Could not load '$name'.")
+                ui.showMessage(e.message ?: texts().status.loadFailed(name))
                 LoadResult.NOT_LOADED
             },
         ) {
             val saved = saves.load(name)
             if (saved == null) {
                 analytics.track("load_command_used", mapOf("trigger" to trigger, "result" to "not_found"))
-                ui.showMessage("No save named '$name'. ${catalog.availableSavesMessage()}")
+                ui.showMessage(texts().status.noSaveNamed(name, catalog.availableSavesMessage()))
                 return LoadResult.NOT_LOADED
             }
             if (!Solvability.isSolvable(saved.state)) {
@@ -79,7 +80,7 @@ internal class LoadGameUseCase(
             )
             if (saved.mordie?.solutionScreen == true) solution.enterLoaded(trigger, saved.mordie?.playerResult?.let { PlayerResult(it.gaveUp, it.moves) })
             if (fromSave != null && !fromSave.fits(board.squareSide)) chooseFittingLabels()
-            ui.showMessage("Loaded '$name'.", loadedSave = name)
+            ui.showMessage(texts().status.loaded(name), loadedSave = name)
             LoadResult.LOADED
         }
     }
@@ -89,7 +90,7 @@ internal class LoadGameUseCase(
     private suspend fun chooseFittingLabels() {
         val side = board.squareSide
         tileLabelsUseCase.dialogOpened("letters_save")
-        val message = "Letters don't fit a ${side}x$side board (26 letters, ${side * side} tiles) - pick other labels."
+        val message = texts().status.lettersDontFit(side)
         ui.ask(UiRequest.ChooseFittingLabels(message))?.let(tileLabelsUseCase::change)
     }
 }
