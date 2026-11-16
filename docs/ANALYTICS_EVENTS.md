@@ -718,3 +718,27 @@ Changes to existing entries:
 - `tutorial_step_completed` gains `input` (`string`): how the asked-for shift was made: `drag`, `click` (an arrow) or `key`. `key` never occurs on a phone. It doesn't say which keys or which layout: the keyboard layout is not tracked (GH-170).
 
 Not tracked: the keys pressed and the select keys on the way (the layout would show), the hand changed in Controls mid-tutorial (`screen_controls_dialog` with `opened_from: tutorial` covers that Controls was opened), which lines the bubble listed, and the way a blocked shift was made (`blocked_shifts` covers it).
+
+## GH-275 (German and Russian)
+
+Planned in `/analyze`; the web client uses `NoopAnalyticsService` until an SDK is wired up (GH-256). Languages are `en`, `de` and `ru`. The browser's own language (`navigator.language`) is never sent, only one of these three codes: a raw value could point to a player's nationality or location (see GH-200). Every other event, property name and value stays English and language-independent.
+
+No screen views: the picker is a control in the page corner, not a dialog.
+
+### `language_changed`
+
+Fired when the player picks a **different** language in the picker. Picking the current one fires nothing.
+
+| Property | Type | Description |
+|---|---|---|
+| `from` | `string` | The language shown before: `en`, `de` or `ru`. |
+| `to` | `string` | The language chosen. |
+| `from_source` | `string` | Why the game showed `from`: `default` (English, nothing detected), `browser` (detected on the first visit) or `preference` (an earlier pick). |
+| `screen` | `string` | `play`, `solved` or `solution` - where the player was. |
+| `control` | `string` | `dropdown` (phone width) or `toggles` (wider pages). |
+| `input_method` | `string` | `keyboard` or `rich_ui`. |
+
+Changes to existing entries:
+- `app_launched` gains `language` (`string`, always sent): `en`, `de` or `ru`, the language the page started in.
+
+Not tracked: the browser's raw language list and unsupported languages it asked for, opening the dropdown without choosing (too granular), and a language per save or share link (neither carries one).
