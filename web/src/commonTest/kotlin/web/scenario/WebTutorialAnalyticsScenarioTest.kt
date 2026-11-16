@@ -126,4 +126,30 @@ class WebTutorialAnalyticsScenarioTest {
 
         assertEquals(listOf(true, false), page.props("board_solved").map { it["tutorial"] })
     }
+
+    @Test
+    fun `input is drag for a dragged step`() = webTest {
+        // TODO: 1. Drag step 1's row
+        // TODO: 2. `tutorial_step_completed` has `input: drag` (GH-290)
+    }
+
+    @Test
+    fun `input is click for an arrow`() = webTest {
+        // TODO: 1. Click step 1's arrow
+        // TODO: 2. `tutorial_step_completed` has `input: click` (GH-290)
+    }
+
+    @Test
+    fun `input is key for a key shift`() = webTest {
+        // TODO: 1. Press step 1's shift key
+        // TODO: 2. `tutorial_step_completed` has `input: key` (GH-290)
+    }
+
+    @Test
+    fun `step 3 done by click then key says key`() = webTest {
+        // TODO: 1. Play steps 1 and 2
+        // TODO: 2. Shift step 3's row one tile by click
+        // TODO: 3. Shift it the second tile by key
+        // TODO: 4. `tutorial_step_completed` for step 3 has `input: key` (GH-290)
+    }
 }
