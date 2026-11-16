@@ -101,6 +101,18 @@ class ViewModelSaveLoadTest {
     }
 
     @Test
+    fun `an IllegalArgumentException for a valid name is a storage failure, not a name problem`() = runTest {
+        val saves = FakeSaveRepository().apply { saveException = IllegalArgumentException("Move count must not be negative") }
+        val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }
+        val viewModel = testViewModel(board, saves, RecordingAnalyticsService())
+        val ui = FakeViewModelUi()
+
+        ui.drive(viewModel) { viewModel.saveGame("foo") }
+
+        assertEquals(listOf(statusTexts.saveFailed("foo")), ui.shownMessages)
+    }
+
+    @Test
     fun `an unexpected failure on load shows one friendly line, not the storage's reason`() = runTest {
         val saves = FakeSaveRepository().apply { loadException = IllegalStateException("disk unplugged") }
         val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }

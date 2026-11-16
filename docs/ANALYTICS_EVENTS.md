@@ -214,7 +214,7 @@ message and exits - instead of `app_launched`, which only fires when a game star
 
 ### `mordie_solution_found`
 
-Fired when a 5-shift check first reveals that Mordie has found its solution, so the `Found it!`
+Fired when a 5-shift check first reveals that Mordie has found its solution, so the `Got it!`
 line appears during play. Not fired when a save with Mordie's solution already found is
 loaded. *(GH-83)*
 
@@ -245,7 +245,7 @@ Fired when the player confirms **Yes** in the `Give up and see Mordie's solution
 | `board_size` | `number` | The board side (3-5). |
 | `move_count` | `number` | The player's moves on this board, which giving up discards. |
 | `solution_length` | `number` | Mordie's N - its solution's length in moves. |
-| `moves_since_solution_found` | `number` | The player's moves since the `Found it!` line appeared. Absent when a save was loaded with Mordie's solution already found. |
+| `moves_since_solution_found` | `number` | The player's moves since the `Got it!` line appeared. Absent when a save was loaded with Mordie's solution already found. |
 | `shifts_since_solution_found` | `number` | The same, in shifts. Absent in the same case. |
 | `input_method` | `string` | `keyboard` or `rich_ui`. *(`mouse` retired — GH-228)* |
 

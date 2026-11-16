@@ -186,7 +186,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
     loading it shows the unproven found line at once, with Give Up lit, and on 3x3 and 4x4 only the
     exact search restarts (on 5x5 and bigger nothing restarts), above the longest length it had ruled out and starting from the kept solution. A
     shorter answer it later finds is announced as usual.
-  - Loading a save where Mordie had found its solution shows the `Found it!` line at once.
+  - Loading a save where Mordie had found its solution shows the `Got it!` line at once.
   - A save also keeps whether that solution is proven shortest (GH-224): a solution-screen save of an
     unproven answer reopens it unproven, and a solved save of one reloads with the `You beat me!`
     ending when the player won below it, not `Are you a machine?`. A save with no such flag (made
