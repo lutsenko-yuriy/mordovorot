@@ -9,6 +9,8 @@ import mordie.SearchProgress
 import mordie.SolutionMove
 import viewmodel.GiveUpButton
 import viewmodel.TileLabels
+import web.Focus
+import web.fallbackFocus
 import web.WebDialog
 import web.tutorial.TutorialScript
 import web.tutorial.TutorialText
@@ -133,5 +135,19 @@ class WebTutorialEndingScenarioTest {
 
         val tile = TileLabels.LETTERS.label(TutorialScript.WRAPPING_TILE, TutorialScript.SIDE)
         assertTrue(page.state.guidance!!.text.contains("see tile $tile at the top"))
+    }
+
+    @Test
+    fun `a dialog from the panel still open when step 6 comes hands its focus to what a won board offers`() = webTest {
+        val page = tutorialPage(backgroundScope)
+        page.playSteps()
+        page.game.tutorial.onLabels()
+
+        waitPause()
+        page.game.labels.onAnswered(false)
+
+        val focus = checkNotNull(page.state.focus)
+        assertTrue(focus.fallsBack, "the page looks for the gone panel button, then falls back")
+        assertEquals(Focus.NewButton, fallbackFocus(focus.key, page.state))
     }
 }

@@ -75,6 +75,12 @@
     }
 }
 
+@media (max-width: 380px) {
+    .guidance {
+        --bubble-lines: 4;
+    }
+}
+
 /* A phone turned: the panel has the window's height to share with Mordie's line and Moves. */
 @media (orientation: landscape) and (max-height: 500px) {
     .guidance {
