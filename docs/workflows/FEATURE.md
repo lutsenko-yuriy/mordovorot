@@ -126,6 +126,7 @@ behaviour beyond a literal value, it is not trivial — use the full workflow in
        ARIA, `inert`), check in headless Chrome everything it can show (where focus lands, what a
        key does, accessible names, what is `inert`) with the harness's `report=keys` and report
        it, and run `scripts/web/harness/keys_check.sh` (see its README, GH-174). Then hand the user a short
+       If the page changes by itself on a timer (an auto-advance, a pause that removes a control), also add a `keys_check.sh` case where a dialog opened from that control is still open when the timer fires, then closed: focus must land somewhere, not on the body (GH-288: step 5's 3-second pause removed `[ Labels ]` while its dialog was open, and Escape left focus on the page body).
        checklist in the PR/MR of only what it can't: a numbered list per flow, one key press and
        what to see or hear per line (VoiceOver: Cmd+F5; Control stops its
        speech, and VoiceOver Utility → Speech sets a less tiring voice and rate, GH-166), e.g. "1. Click Save. 2. Press Escape:
