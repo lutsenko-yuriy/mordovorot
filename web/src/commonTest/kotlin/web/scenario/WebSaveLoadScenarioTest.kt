@@ -172,4 +172,25 @@ class WebSaveLoadScenarioTest {
         assertEquals(first.state.tiles, reloaded.state.tiles)
         assertEquals(first.state.moves, reloaded.state.moves)
     }
+
+    @Test
+    fun `a damaged save shows one friendly error`() = webTest {
+        // TODO: 1. Seed a corrupted save named `foo`
+        // TODO: 2. Load `foo`
+        // TODO: 3. The status line shows `status.saveDamaged("foo")`
+        // TODO: 4. The storage's own reason is absent
+    }
+
+    @Test
+    fun `a failed save shows one friendly error`() = webTest {
+        // TODO: 1. Make the storage write fail
+        // TODO: 2. Save as `foo`
+        // TODO: 3. The status line shows `status.saveFailed("foo")`
+    }
+
+    @Test
+    fun `an empty Load list says no saves yet`() = webTest {
+        // TODO: 1. Open Load with no saves
+        // TODO: 2. The list shows `dialogs.noSaves`
+    }
 }
