@@ -1,6 +1,7 @@
 package viewmodel
 
 import board_model.BoardImpl
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.test.runTest
@@ -251,7 +252,7 @@ class ViewModelTileLabelsTest {
         assertEquals("letters_unavailable", event("tile_labels_changed")["from_source"])
     }
 
-    private val lettersWarning = "Letters don't fit a 6x6 board (26 letters, 36 tiles) - pick other labels."
+    private val lettersWarning = texts().status.lettersDontFit(6)
 
     @Test
     fun `a 6x6 save with Letters asks for labels before Loaded, and OK applies the pick`() = runTest {
@@ -262,7 +263,7 @@ class ViewModelTileLabelsTest {
         viewModel.load("six", ui)
 
         assertEquals(listOf(lettersWarning to emptyList<String>()), ui.chooseFittingLabelsCalls)
-        assertEquals(listOf("Loaded 'six'."), ui.shownMessages)
+        assertEquals(listOf(texts().status.loaded("six")), ui.shownMessages)
         assertEquals(TileLabels.PAIRS, viewModel.tileLabels())
         assertEquals("pairs", store.values["tile_labels"])
         assertEquals(

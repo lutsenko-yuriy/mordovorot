@@ -1,5 +1,6 @@
 package web.scenario
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -10,9 +11,12 @@ import web.WebDialog
 
 /** GH-272 scenarios: opening a share link that carries the sender's progress, through [WebHarness]. */
 class WebSharedProgressScenarioTest {
+    private val mordieTexts = texts().mordie
+    private val statusTexts = texts().status
 
-    private val usual = "Alright! Let's sort this one out!"
-    private val solving12 = "Okay, so your friend made 12 moves and did not solve the puzzle yet. Maybe we could help?"
+
+    private val usual = mordieTexts.opening
+    private val solving12 = mordieTexts.friendSolving(12)
 
     /** [count] shifts of column 3, which never solve this board. */
     private fun WebHarness.shifts(count: Int) = repeat(count) { game.onArrow(Arrow.UP, 3) }
@@ -30,28 +34,28 @@ class WebSharedProgressScenarioTest {
     fun `a link that says the sender solved it puts that status in Mordie's opening`() = webTest {
         val page = WebHarness(backgroundScope).startWithLink(4, ONE_SHIFT_FROM_SOLVED, progress = "s12")
 
-        assertEquals("Okay, so your friend solved this one in 12 moves. Wanna beat this?", page.state.mordie)
+        assertEquals(mordieTexts.friendSolved(12), page.state.mordie)
     }
 
     @Test
     fun `a link that says the sender gave up puts that status in Mordie's opening`() = webTest {
         val page = WebHarness(backgroundScope).startWithLink(4, ONE_SHIFT_FROM_SOLVED, progress = "g12")
 
-        assertEquals("So after making 12 moves your friend gave up before finding the solution. Can we find one?", page.state.mordie)
+        assertEquals(mordieTexts.friendGaveUpAfter(12), page.state.mordie)
     }
 
     @Test
     fun `a gave-up link with no count drops the count from Mordie's line`() = webTest {
         val page = WebHarness(backgroundScope).startWithLink(4, ONE_SHIFT_FROM_SOLVED, progress = "g")
 
-        assertEquals("So your friend gave up before finding the solution. Can we find one?", page.state.mordie)
+        assertEquals(mordieTexts.friendGaveUp, page.state.mordie)
     }
 
     @Test
     fun `a count of 1 reads 1 move`() = webTest {
         val page = WebHarness(backgroundScope).startWithLink(4, ONE_SHIFT_FROM_SOLVED, progress = "n1")
 
-        assertEquals("Okay, so your friend made 1 move and did not solve the puzzle yet. Maybe we could help?", page.state.mordie)
+        assertEquals(mordieTexts.friendSolving(1), page.state.mordie)
     }
 
     @Test
@@ -86,7 +90,7 @@ class WebSharedProgressScenarioTest {
             val page = WebHarness(backgroundScope).startWithLink(4, ONE_SHIFT_FROM_SOLVED, progress = progress)
 
             assertNull(page.state.dialog, progress)
-            assertEquals("Started a shared 4x4 board.", page.state.status, progress)
+            assertEquals(statusTexts.startedShared(4), page.state.status, progress)
             assertEquals(usual, page.state.mordie, progress)
         }
     }
@@ -121,7 +125,7 @@ class WebSharedProgressScenarioTest {
 
         assertNull(page.state.dialog)
         assertEquals(TileLabels.PAIRS, page.state.labels)
-        assertEquals("So after making 3 moves your friend gave up before finding the solution. Can we find one?", page.state.mordie)
+        assertEquals(mordieTexts.friendGaveUpAfter(3), page.state.mordie)
     }
 
     @Test
@@ -134,7 +138,7 @@ class WebSharedProgressScenarioTest {
         page.game.share.onOpenAnswered(true)
 
         assertNull(page.state.dialog)
-        assertEquals("Okay, so your friend solved this one in 12 moves. Wanna beat this?", page.state.mordie)
+        assertEquals(mordieTexts.friendSolved(12), page.state.mordie)
     }
 
     @Test

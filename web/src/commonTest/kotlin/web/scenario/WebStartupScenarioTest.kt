@@ -1,5 +1,6 @@
 package web.scenario
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -13,6 +14,8 @@ private val FOO = intArrayOf(4, 0, 1, 2, 3) + IntArray(20) { it + 5 }
 /** GH-110 scenarios: what the page opens with. Each scenario drives `WebGame` through a
  *  [WebHarness], which records every `WebState` frame. Each test names the WU that makes it green. */
 class WebStartupScenarioTest {
+    private val statusTexts = texts().status
+
 
     @Test
     fun `no saves - the page opens the size picker`() = webTest {
@@ -52,7 +55,7 @@ class WebStartupScenarioTest {
         assertEquals(shown(FOO), page.state.tiles)
         assertEquals(3, page.state.moves)
         assertNull(page.state.dialog)
-        assertEquals("Loaded 'foo'.", page.state.status)
+        assertEquals(statusTexts.loaded("foo"), page.state.status)
         assertEquals(listOf(mapOf<String, Any?>("opened_from" to "startup", "save_file_count" to 1)), page.ownProps("screen_load_dialog"))
     }
 
@@ -86,7 +89,7 @@ class WebStartupScenarioTest {
     fun `unsolvable save at startup - Repair & load or New game`() = webTest {
         val page = WebHarness(backgroundScope).seed("odd", UNSOLVABLE_3X3, moves = 5).start()
         page.game.onLoadChosen("odd")
-        val unsolvable = WebDialog.Unsolvable("'odd (3x3)' can't be solved - no sequence of shifts reaches the solved board.")
+        val unsolvable = WebDialog.Unsolvable(statusTexts.cantBeSolved("odd (3x3)"))
         assertEquals(unsolvable, page.state.dialog)
         assertNull(page.state.status)
 
@@ -95,7 +98,7 @@ class WebStartupScenarioTest {
         assertEquals(shown(intArrayOf(1, 2, 0, 3, 4, 5, 6, 7, 8)), page.state.tiles)
         assertEquals(5, page.state.moves)
         assertNull(page.state.dialog)
-        assertEquals("Repaired 'odd' (two tiles swapped) and loaded it.", page.state.status)
+        assertEquals(statusTexts.repaired("odd"), page.state.status)
         assertEquals(listOf("startup"), page.props("screen_unsolvable_dialog").map { it["opened_from"] })
     }
 

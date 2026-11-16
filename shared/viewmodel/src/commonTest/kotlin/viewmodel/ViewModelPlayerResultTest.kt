@@ -1,6 +1,7 @@
 package viewmodel
 
 import board_model.BoardImpl
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -14,6 +15,7 @@ import testing.testViewModel
 
 /** GH-273: Mordie's line on the solution screen opens with how the player's game ended. */
 class ViewModelPlayerResultTest {
+    private val mordieTexts = texts().mordie
 
     /** A 3x3 two moves from solved: row 0 right once, then column 0 down once. */
     private val original = intArrayOf(1, 2, 3, 6, 4, 5, 0, 7, 8)
@@ -42,7 +44,7 @@ class ViewModelPlayerResultTest {
 
         viewModel.giveUp()
 
-        assertEquals("You gave up after 3 moves. Here's how I did it in 2 moves!", viewModel.mordieLine())
+        assertEquals("${mordieTexts.solutionStopped(3)} ${mordieTexts.solutionHere(2)}", viewModel.mordieLine())
         assertEquals("gave_up", playerResult())
     }
 
@@ -57,7 +59,7 @@ class ViewModelPlayerResultTest {
 
         viewModel.giveUp()
 
-        assertEquals("You did not even start this one. Here's how I did it in 2 moves!", viewModel.mordieLine())
+        assertEquals("${mordieTexts.solutionNotStarted} ${mordieTexts.solutionHere(2)}", viewModel.mordieLine())
     }
 
     @Test
@@ -69,7 +71,7 @@ class ViewModelPlayerResultTest {
 
         viewModel.showSolution()
 
-        assertEquals("You solved it in 2 moves. Here's how I did it in 2 moves!", viewModel.mordieLine())
+        assertEquals("${mordieTexts.solutionSolved(2)} ${mordieTexts.solutionHere(2)}", viewModel.mordieLine())
         assertEquals("solved", playerResult())
     }
 

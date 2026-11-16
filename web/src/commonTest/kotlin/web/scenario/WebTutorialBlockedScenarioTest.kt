@@ -1,5 +1,6 @@
 package web.scenario
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -15,9 +16,11 @@ import web.tutorial.TutorialText
 
 /** GH-288: shifts that aren't asked for, and the keys and buttons during steps 1 to 5. */
 class WebTutorialBlockedScenarioTest {
+    private val tutorialTexts = texts().tutorial
 
-    private val rowLine = "You can do that later. For now shift that row please!"
-    private val columnLine = "You can do that later. For now shift that column please!"
+
+    private val rowLine = tutorialTexts.blockedRow
+    private val columnLine = tutorialTexts.blockedColumn
 
     @Test
     fun `another row is blocked`() = webTest {

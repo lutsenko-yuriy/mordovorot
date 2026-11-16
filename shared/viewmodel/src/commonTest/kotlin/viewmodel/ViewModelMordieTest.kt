@@ -2,6 +2,7 @@ package viewmodel
 
 import kotlinx.coroutines.test.runTest
 import board_model.BoardImpl
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -26,6 +27,7 @@ import testing.testViewModel
 /** GH-83: Mordie's wiring through the viewModel - binding on new game/load/repair/startup,
  *  the save snapshot, its two analytics changes and the line/ending queries. */
 class ViewModelMordieTest {
+    private val mordieTexts = texts().mordie
 
     /** 3x3, one `shiftLeft(0)` from solved. */
     private val nearlySolved = intArrayOf(2, 0, 1, 3, 4, 5, 6, 7, 8)
@@ -66,7 +68,7 @@ class ViewModelMordieTest {
         assertEquals(1, factory.started.size)
         assertEquals(-1, factory.latest.ruledOut)
         assertContentEquals(viewModel.boardState(), factory.latest.original)
-        assertEquals("Alright! Let's sort this one out!", viewModel.mordieLine())
+        assertEquals(mordieTexts.opening, viewModel.mordieLine())
     }
 
     @Test
@@ -88,7 +90,7 @@ class ViewModelMordieTest {
 
         assertContentEquals(nearlySolved, factory.latest.original)
         assertEquals(-1, factory.latest.ruledOut)
-        assertEquals("Alright! Let's sort this one out!", viewModel.mordieLine())
+        assertEquals(mordieTexts.opening, viewModel.mordieLine())
     }
 
     @Test
@@ -116,7 +118,7 @@ class ViewModelMordieTest {
 
         assertContentEquals(original, factory.latest.original)
         assertEquals(8, factory.latest.ruledOut)
-        assertEquals("Okay, so we stopped when I was at 8 moves! What was I doing?..", viewModel.mordieLine())
+        assertEquals(mordieTexts.resumed(8), viewModel.mordieLine())
     }
 
     @Test
@@ -137,7 +139,7 @@ class ViewModelMordieTest {
         repeat(5) { viewModel.shiftUp(0) }
 
         assertEquals(0, factory.started.size)
-        assertEquals("Found it! I had to make 11 moves to find the solution! Can you beat it?", viewModel.mordieLine())
+        assertEquals(mordieTexts.found(11), viewModel.mordieLine())
         assertTrue(analytics.events.none { it.name == "mordie_solution_found" })
     }
 
@@ -149,7 +151,7 @@ class ViewModelMordieTest {
 
         assertEquals(0, factory.started.size)
         assertNull(viewModel.mordieLine())
-        assertEquals("Cool, you matched me! 3 moves each!", viewModel.mordieEnding())
+        assertEquals(mordieTexts.endingMatched(3), viewModel.mordieEnding())
     }
 
     @Test
@@ -340,7 +342,7 @@ class ViewModelMordieTest {
 
         assertEquals("player_won", event("board_solved")["mordie_result"])
         assertEquals(0, event("board_solved")["mordie_moves"])
-        assertEquals("You beat me! I was still at 0 moves.", viewModel.mordieEnding())
+        assertEquals(mordieTexts.endingPlayerWon(0), viewModel.mordieEnding())
         assertTrue(factory.latest.cancelled)
     }
 
@@ -354,7 +356,7 @@ class ViewModelMordieTest {
 
         assertEquals("matched", event("board_solved")["mordie_result"])
         assertEquals(1, event("board_solved")["mordie_moves"])
-        assertEquals("Cool, you matched me! 1 move each!", viewModel.mordieEnding())
+        assertEquals(mordieTexts.endingMatched(1), viewModel.mordieEnding())
     }
 
     @Test
@@ -368,7 +370,7 @@ class ViewModelMordieTest {
         viewModel.shiftLeft(0)
 
         assertEquals("mordie_won", event("board_solved")["mordie_result"])
-        assertEquals("Sorry, but I win: 1 move vs your 2.", viewModel.mordieEnding())
+        assertEquals(mordieTexts.endingMordieWon(1, 2), viewModel.mordieEnding())
     }
 
     @Test
@@ -380,6 +382,6 @@ class ViewModelMordieTest {
 
         assertEquals("machine", event("board_solved")["mordie_result"])
         assertEquals(5, event("board_solved")["mordie_moves"])
-        assertEquals("I made 5 moves and you made 1 move! Are you a machine?", viewModel.mordieEnding())
+        assertEquals(mordieTexts.endingMachine(5, 1), viewModel.mordieEnding())
     }
 }

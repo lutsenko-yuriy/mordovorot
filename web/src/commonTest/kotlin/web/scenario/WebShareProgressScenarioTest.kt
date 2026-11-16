@@ -1,5 +1,6 @@
 package web.scenario
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -20,6 +21,8 @@ import web.qr.QrCode
 
 /** GH-272 scenarios: the Share dialog's `Include my progress` toggle, through [WebHarness]. */
 class WebShareProgressScenarioTest {
+    private val dialogTexts = texts().dialogs
+
 
     private val WebHarness.share get() = assertIs<WebDialog.Share>(state.dialog)
 
@@ -66,7 +69,7 @@ class WebShareProgressScenarioTest {
 
         page.game.share.open()
 
-        assertEquals("Include my progress (3 moves, not solved)", page.share.progressToggle)
+        assertEquals(dialogTexts.shareProgressSolving(3), page.share.progressToggle)
         assertFalse(page.share.includeProgress)
         assertTrue(page.share.progressAvailable)
         assertEquals(link(page), page.share.link)
@@ -145,7 +148,7 @@ class WebShareProgressScenarioTest {
         page.game.share.open()
         page.game.share.onProgressToggled()
 
-        assertEquals("Include my progress (solved in 2 moves)", page.share.progressToggle)
+        assertEquals(dialogTexts.shareProgressSolved(2), page.share.progressToggle)
         assertEquals(link(page, SharedProgress.Solved(2), original), page.share.link)
         assertTrue(page.share.link.endsWith("&p=s2"))
     }
@@ -159,7 +162,7 @@ class WebShareProgressScenarioTest {
         page.game.share.open()
         page.game.share.onProgressToggled()
 
-        assertEquals("Include my progress (gave up after 3 moves)", page.share.progressToggle)
+        assertEquals(dialogTexts.shareProgressGaveUpAfter(3), page.share.progressToggle)
         assertTrue(page.share.link.endsWith("&p=g3"))
         assertEquals("gave_up", page.ownProps("share_progress_toggled").single()["progress"])
     }
@@ -173,7 +176,7 @@ class WebShareProgressScenarioTest {
 
         page.game.share.open()
 
-        assertEquals("Include my progress (solved in 2 moves)", page.share.progressToggle)
+        assertEquals(dialogTexts.shareProgressSolved(2), page.share.progressToggle)
     }
 
     @Test
@@ -188,7 +191,7 @@ class WebShareProgressScenarioTest {
         page.game.onLoadChosen("s")
         page.game.share.open()
 
-        assertEquals("Include my progress (3 moves, not solved)", page.share.progressToggle)
+        assertEquals(dialogTexts.shareProgressSolving(3), page.share.progressToggle)
     }
 
     @Test
@@ -200,7 +203,7 @@ class WebShareProgressScenarioTest {
         page.game.share.open()
         page.game.share.onProgressToggled()
 
-        assertEquals("Include my progress (gave up)", page.share.progressToggle)
+        assertEquals(dialogTexts.shareProgressGaveUp, page.share.progressToggle)
         assertTrue(page.share.link.endsWith("&p=g"))
     }
 
@@ -211,7 +214,7 @@ class WebShareProgressScenarioTest {
         page.game.share.open()
         page.game.share.onProgressToggled()
 
-        assertEquals("Include my progress", page.share.progressToggle)
+        assertEquals(dialogTexts.shareProgress, page.share.progressToggle)
         assertFalse(page.share.progressAvailable)
         assertFalse(page.share.includeProgress)
         assertEquals(link(page), page.share.link)
@@ -227,7 +230,7 @@ class WebShareProgressScenarioTest {
         page.game.share.open()
 
         assertFalse(page.share.progressAvailable)
-        assertEquals("Include my progress", page.share.progressToggle)
+        assertEquals(dialogTexts.shareProgress, page.share.progressToggle)
         assertEquals(link(page, start = original), page.share.link)
     }
 
@@ -237,7 +240,7 @@ class WebShareProgressScenarioTest {
 
         page.game.share.open()
 
-        assertEquals("Include my progress (1 move, not solved)", page.share.progressToggle)
+        assertEquals(dialogTexts.shareProgressSolving(1), page.share.progressToggle)
     }
 
     @Test
@@ -262,7 +265,7 @@ class WebShareProgressScenarioTest {
         page.game.share.open()
         page.game.share.onProgressToggled()
 
-        assertEquals("Include my progress (2 moves, not solved)", page.share.progressToggle)
+        assertEquals(dialogTexts.shareProgressSolving(2), page.share.progressToggle)
         assertTrue(page.share.link.endsWith("&p=n2"))
     }
 
@@ -332,7 +335,7 @@ class WebShareProgressScenarioTest {
 
         assertFalse(page.share.progressAvailable)
         assertFalse(page.share.includeProgress)
-        assertEquals("Include my progress", page.share.progressToggle)
+        assertEquals(dialogTexts.shareProgress, page.share.progressToggle)
         assertEquals(false, page.ownProps("screen_share_dialog").single()["include_progress"])
     }
 }

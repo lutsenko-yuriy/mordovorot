@@ -1,5 +1,6 @@
 package web.scenario
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -13,6 +14,10 @@ import web.WebDialog
 
 /** GH-160 scenarios: 6x6 boards in the web client, through [WebHarness]. */
 class WebSixBySixScenarioTest {
+    private val mordieTexts = texts().mordie
+    private val statusTexts = texts().status
+    private val pageTexts = texts().page
+
 
     /** Solved 6x6 with row 0 shifted one tile right: `shiftLeft(0)` solves it. */
     private val oneShiftFromSolved = intArrayOf(5, 0, 1, 2, 3, 4) + IntArray(30) { it + 6 }
@@ -37,11 +42,11 @@ class WebSixBySixScenarioTest {
         page.game.onSizeChosen(6)
 
         assertEquals(36, page.mordieSearches.latest.original.size)
-        assertEquals("Alright! Let's sort this one out!", page.state.mordie)
+        assertEquals(mordieTexts.opening, page.state.mordie)
         assertEquals(GiveUpButton.DIMMED, page.state.giveUp)
         page.mordieSearches.latest.progress = fastAnswer(40)
         repeat(5) { page.game.onArrow(Arrow.UP, 0) }
-        assertEquals("Found one in 40 moves, but maybe there's a shorter one! Can you beat it?", page.state.mordie)
+        assertEquals(mordieTexts.foundUnproven(40), page.state.mordie)
         assertEquals(GiveUpButton.GIVE_UP, page.state.giveUp)
 
         val won = WebHarness(backgroundScope).startOn(oneShiftFromSolved)
@@ -49,7 +54,7 @@ class WebSixBySixScenarioTest {
         won.game.onArrow(Arrow.LEFT, 0)
 
         assertTrue(won.state.solved)
-        assertEquals("You beat me! 40 moves vs your 1. Mine may not have been the shortest.", won.state.mordie)
+        assertEquals(mordieTexts.endingBeatUnproven(40, 1), won.state.mordie)
         val solved = won.ownProps("board_solved").single()
         assertEquals(6, solved["board_size"])
         assertEquals(40, solved["mordie_moves"])
@@ -103,7 +108,7 @@ class WebSixBySixScenarioTest {
         page.game.onArrow(Arrow.RIGHT, 0)
 
         assertTrue(page.state.solved)
-        assertEquals("Congratulations ✓", page.state.mordie)
+        assertEquals(pageTexts.solved, page.state.mordie)
         val solved = page.ownProps("board_solved").single()
         assertTrue("mordie_result" !in solved && "mordie_moves" !in solved, "$solved")
     }
@@ -120,7 +125,7 @@ class WebSixBySixScenarioTest {
         page.game.onLoad()
         page.game.onLoadChosen("foo")
 
-        assertEquals("Found one in 37 moves, but maybe there's a shorter one! Can you beat it?", page.state.mordie)
+        assertEquals(mordieTexts.foundUnproven(37), page.state.mordie)
         assertEquals(GiveUpButton.GIVE_UP, page.state.giveUp)
     }
 
@@ -137,7 +142,7 @@ class WebSixBySixScenarioTest {
 
         page.game.labels.open()
         val dialog = page.state.dialog as WebDialog.Labels
-        assertEquals(LabelOption(TileLabels.LETTERS, "Letters", listOf("up to 5x5"), available = false), dialog.options[4])
+        assertEquals(LabelOption(TileLabels.LETTERS, pageTexts.labelLetters, listOf(pageTexts.labelLimit(5)), available = false), dialog.options[4])
         assertEquals(listOf("AA", "AB", "AC", "AD", "AE", "AF"), dialog.options[5].sample)
         assertTrue(dialog.options.filter { it.labels != TileLabels.LETTERS }.all { it.available })
         page.game.labels.onSelected(TileLabels.LETTERS)
@@ -159,7 +164,7 @@ class WebSixBySixScenarioTest {
         page.game.onLoadChosen("six")
 
         val dialog = page.state.dialog as WebDialog.Labels
-        assertEquals("Letters don't fit a 6x6 board (26 letters, 36 tiles) - pick other labels.", dialog.message)
+        assertEquals(statusTexts.lettersDontFit(6), dialog.message)
         assertEquals(TileLabels.NUMBERS, dialog.selected)
         assertEquals(false, dialog.options.single { it.labels == TileLabels.LETTERS }.available)
         assertEquals(
@@ -170,7 +175,7 @@ class WebSixBySixScenarioTest {
         assertEquals(dialog.message, (page.state.dialog as WebDialog.Labels).message)
         page.game.labels.onAnswered(ok = true)
         assertEquals(TileLabels.PAIRS, page.state.labels)
-        assertEquals("Loaded 'six'.", page.state.status)
+        assertEquals(statusTexts.loaded("six"), page.state.status)
         assertEquals(listOf<Any?>("letters_unavailable"), page.props("tile_labels_changed").map { it["from_source"] })
 
         val reloaded = WebHarness(backgroundScope, store = page.store).startOn()

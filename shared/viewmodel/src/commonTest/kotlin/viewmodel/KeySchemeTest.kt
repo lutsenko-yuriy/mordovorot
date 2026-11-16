@@ -1,5 +1,6 @@
 package viewmodel
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -8,6 +9,8 @@ import viewmodel.KeyboardLayout.RIGHT_HANDED
 
 /** ADR-0003's key scheme, (GH-171). */
 class KeySchemeTest {
+    private val keys = texts().keys
+
 
     private fun letter(char: Char, layout: KeyboardLayout) = KeyScheme.boardKey(char, null, layout)
     private fun arrow(direction: Direction, layout: KeyboardLayout) = KeyScheme.boardKey(null, direction, layout)
@@ -79,11 +82,11 @@ class KeySchemeTest {
     @Test
     fun `boardKeyLines names each layout's keys`() {
         assertEquals(
-            listOf("Select tile    W A S D", "Shift row      ← →  H L", "Shift column   ↑ ↓  K J"),
+            listOf(keys.rightHandedSelect, keys.rightHandedShiftRow, keys.rightHandedShiftColumn),
             KeyScheme.boardKeyLines(RIGHT_HANDED),
         )
         assertEquals(
-            listOf("Select tile    ← ↑ ↓ →  H J K L", "Shift row      A D", "Shift column   W S"),
+            listOf(keys.leftHandedSelect, keys.leftHandedShiftRow, keys.leftHandedShiftColumn),
             KeyScheme.boardKeyLines(LEFT_HANDED),
         )
     }
@@ -91,7 +94,7 @@ class KeySchemeTest {
     @Test
     fun `the solution key lines name its keys`() {
         assertEquals(
-            listOf("Solution: ← → A D H L Prev/Next ·", "  Space/Enter Next · R Restart ·", "  ↑ ↓ W S K J scroll"),
+            listOf(keys.solutionLine1, keys.solutionLine2, keys.solutionLine3),
             KeyScheme.SOLUTION_KEY_LINES,
         )
     }

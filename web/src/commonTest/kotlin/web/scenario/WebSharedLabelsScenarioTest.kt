@@ -1,5 +1,6 @@
 package web.scenario
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -16,6 +17,10 @@ private val LINKED_4X4 = intArrayOf(12, 1, 2, 3, 0, 5, 6, 7, 4, 9, 10, 11, 8, 13
 
 /** GH-267 scenarios: opening a share link that carries tile labels, through [WebHarness]. */
 class WebSharedLabelsScenarioTest {
+    private val statusTexts = texts().status
+    private val pageTexts = texts().page
+    private val dialogTexts = texts().dialogs
+
 
     private val PromptForPairs = WebDialog.SharedLabels(TileLabels.PAIRS)
 
@@ -25,10 +30,10 @@ class WebSharedLabelsScenarioTest {
 
         assertEquals(shown(LINKED_4X4), page.state.tiles)
         assertEquals(0, page.state.moves)
-        assertEquals("Started a shared 4x4 board.", page.state.status)
+        assertEquals(statusTexts.startedShared(4), page.state.status)
         assertEquals(PromptForPairs, page.state.dialog)
-        assertEquals("Use the sender's labels (Pairs)?", PromptForPairs.title)
-        assertEquals("For this game only: your next new game uses your own labels.", PromptForPairs.message)
+        assertEquals(dialogTexts.sharedLabelsTitle(pageTexts.labelPairs), PromptForPairs.title)
+        assertEquals(dialogTexts.sharedLabelsMessage, PromptForPairs.message)
         assertEquals(Focus.SharedLabelsYes, page.state.focus)
         assertEquals(TileLabels.PAIRS, page.state.labels)
         assertEquals(
@@ -120,7 +125,7 @@ class WebSharedLabelsScenarioTest {
 
             assertNull(page.state.dialog, labels)
             assertEquals(TileLabels.NUMBERS, page.state.labels, labels)
-            assertEquals("Started a shared ${side}x$side board.", page.state.status, labels)
+            assertEquals(statusTexts.startedShared(side), page.state.status, labels)
             assertEquals("unreadable", page.ownProps("shared_board_opened").single()["labels"], labels)
             assertEquals(emptyList(), page.props("screen_shared_labels_dialog"), labels)
         }

@@ -1,6 +1,7 @@
 package viewmodel
 
 import board_model.BoardImpl
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -22,6 +23,7 @@ import testing.testViewModel
 
 /** GH-126: the solution screen across Save, Load, startup restore, New and a mode switch. */
 class ViewModelSolutionSaveLoadTest {
+    private val mordieTexts = texts().mordie
 
     /** A 3x3 two moves from solved: row 0 right once, then column 0 down once. */
     private val original = intArrayOf(1, 2, 3, 6, 4, 5, 0, 7, 8)
@@ -73,7 +75,7 @@ class ViewModelSolutionSaveLoadTest {
         assertEquals(true, viewModel.solution()?.atStart)
         assertNull(viewModel.solution()?.current)
         assertContentEquals(original, viewModel.boardState())
-        assertEquals("Here's how I did it in 2 moves!", viewModel.mordieLine())
+        assertEquals(mordieTexts.solutionHere(2), viewModel.mordieLine())
         assertEquals(mapOf("opened_from" to "load", "player_result" to "unknown", "board_size" to 3, "solution_length" to 2), event("screen_solution"))
         assertFalse(viewModel.hasUnsavedProgress())
     }
@@ -85,7 +87,7 @@ class ViewModelSolutionSaveLoadTest {
 
         viewModel.load("s")
 
-        assertEquals("You gave up after 1 move. Here's how I did it in 2 moves!", viewModel.mordieLine())
+        assertEquals("${mordieTexts.solutionStopped(1)} ${mordieTexts.solutionHere(2)}", viewModel.mordieLine())
         assertEquals("gave_up", event("screen_solution")["player_result"])
     }
 
@@ -96,7 +98,7 @@ class ViewModelSolutionSaveLoadTest {
 
         FakeViewModelUi(confirmRestoreResponses = mutableListOf(true)).drive(viewModel) { viewModel.restoreOnStartup() }
 
-        assertEquals("You solved it in 2 moves. Here's how I did it in 2 moves!", viewModel.mordieLine())
+        assertEquals("${mordieTexts.solutionSolved(2)} ${mordieTexts.solutionHere(2)}", viewModel.mordieLine())
         assertEquals("solved", event("screen_solution")["player_result"])
     }
 

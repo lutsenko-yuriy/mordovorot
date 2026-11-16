@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.48.1] — 2026-11-16 (PR #309 merged)
+
+### Changed
+
+- [wip] (PR #309) GH-274 (WU2/3): the tests assert on text keys, not literal English; no wording changed yet (WU3 follows).
+
 ## [0.48.1] — 2026-11-16 (PR #308 merged)
 
 ### Changed

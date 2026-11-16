@@ -1,5 +1,6 @@
 package web.scenario
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -19,6 +20,8 @@ import web.drag.LineOffset
  *  stepping the replay by hand with Prev / Next / Restart. Same setup as
  *  [WebStartupScenarioTest]. */
 class WebGiveUpScenarioTest {
+    private val mordieTexts = texts().mordie
+
 
     /** 4x4 two moves from solved: row 0 right once, then column 1 down twice. */
     private val original = intArrayOf(9, 2, 3, 0, 4, 13, 6, 7, 8, 1, 10, 11, 12, 5, 14, 15)
@@ -27,8 +30,8 @@ class WebGiveUpScenarioTest {
     private val path = listOf(SolutionMove(isRow = true, index = 0, amount = 1), SolutionMove(isRow = false, index = 1, amount = 2))
     private val steps = listOf("1. Row 1 → ×1", "2. Col 2 ↓ ×2")
     private val moves = listOf(SolutionStep(isRow = true, index = 0, forward = true, count = 1), SolutionStep(isRow = false, index = 1, forward = true, count = 2))
-    private val solutionLine = "You gave up after 2 moves. Here's how I did it in 2 moves!"
-    private val solvedLine = "You solved it in 2 moves. Here's how I did it in 2 moves!"
+    private val solutionLine = "${mordieTexts.solutionStopped(2)} ${mordieTexts.solutionHere(2)}"
+    private val solvedLine = "${mordieTexts.solutionSolved(2)} ${mordieTexts.solutionHere(2)}"
 
     private fun WebHarness.searchFinds() {
         mordieSearches.latest.progress = SearchProgress(path.size, found = true, elapsedMs = 0, solution = path)

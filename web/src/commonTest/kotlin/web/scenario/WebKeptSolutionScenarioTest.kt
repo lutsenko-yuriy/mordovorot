@@ -1,5 +1,6 @@
 package web.scenario
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -16,6 +17,8 @@ import web.Arrow
 /** GH-224 scenarios: saves keep Mordie's best solution so far and whether it is proven shortest,
  *  in the browser, through [WebHarness]. Each name notes the work unit that turns it green. */
 class WebKeptSolutionScenarioTest {
+    private val mordieTexts = texts().mordie
+
 
     private val five = IntArray(25) { 24 - it }
     private fun path(length: Int) = List(length) { SolutionMove(isRow = true, index = 0, amount = 1) }
@@ -38,7 +41,7 @@ class WebKeptSolutionScenarioTest {
         val page = WebHarness(backgroundScope).seedSolved(40, provenShortest = false).startOn(five)
 
         page.loadWon()
-        assertEquals("You beat me! 40 moves vs your 1. Mine may not have been the shortest.", page.state.mordie)
+        assertEquals(mordieTexts.endingBeatUnproven(40, 1), page.state.mordie)
         assertEquals(emptyList(), page.props("board_solved"))
     }
 
@@ -47,7 +50,7 @@ class WebKeptSolutionScenarioTest {
         val page = WebHarness(backgroundScope).seedSolved(12, provenShortest = true).startOn(five)
 
         page.loadWon()
-        assertEquals("I made 12 moves and you made 1 move! Are you a machine?", page.state.mordie)
+        assertEquals(mordieTexts.endingMachine(12, 1), page.state.mordie)
     }
 
     /** Row 0 one cell left of solved: 41 steps of "row 0 right once" solve it (41 mod 5 = 1). */
@@ -70,7 +73,7 @@ class WebKeptSolutionScenarioTest {
 
         page.loadFoo()
 
-        assertEquals("Found one in 41 moves, but maybe there's a shorter one! Can you beat it?", page.state.mordie)
+        assertEquals(mordieTexts.foundUnproven(41), page.state.mordie)
         assertEquals(GiveUpButton.GIVE_UP, page.state.giveUp)
 
         page.game.solution.onGiveUp()
@@ -94,7 +97,7 @@ class WebKeptSolutionScenarioTest {
         search.progress = SearchProgress(31, found = true, elapsedMs = 4, solution = path(31), ruledOut = 5, provenShortest = false)
         repeat(5) { page.game.onArrow(Arrow.UP, 2) }
 
-        assertEquals("Wait, I found a shorter one: 31 moves now! Can you beat it?", page.state.mordie)
+        assertEquals(mordieTexts.shorter(31), page.state.mordie)
         assertEquals(41, page.props("mordie_shorter_found").single()["previous_length"])
     }
 
@@ -106,7 +109,7 @@ class WebKeptSolutionScenarioTest {
 
         page.loadFoo()
 
-        assertEquals("Okay, so we stopped when I was at 7 moves! What was I doing?..", page.state.mordie)
+        assertEquals(mordieTexts.resumed(7), page.state.mordie)
         assertEquals(7, page.mordieSearches.latest.ruledOut)
         assertNull(page.mordieSearches.latest.best)
     }

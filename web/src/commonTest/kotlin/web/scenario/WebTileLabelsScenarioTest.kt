@@ -1,5 +1,6 @@
 package web.scenario
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -15,6 +16,7 @@ import web.WebDialog
 /** GH-139 scenarios: tile labels in the web client. A relaunch is a new [WebHarness] over the same
  *  store. The toolbar's `[ Labels ]` button itself is `DomRenderer`'s, checked in the smoke test. */
 class WebTileLabelsScenarioTest {
+    private val pageTexts = texts().page
 
     private fun WebHarness.choose(labels: TileLabels) {
         game.labels.open()
@@ -31,7 +33,7 @@ class WebTileLabelsScenarioTest {
         val dialog = page.state.dialog
         assertTrue(dialog is WebDialog.Labels, "$dialog")
         assertEquals(TileLabels.entries, dialog.options.map { it.labels })
-        assertEquals(LabelOption(TileLabels.PAIRS, "Pairs", listOf("11", "12", "13", "14")), dialog.options[2])
+        assertEquals(LabelOption(TileLabels.PAIRS, pageTexts.labelPairs, listOf("11", "12", "13", "14")), dialog.options[2])
         assertEquals(TileLabels.NUMBERS, dialog.selected)
         assertEquals(
             listOf(mapOf("opened_from" to "toolbar", "screen" to "play", "current_labels" to "numbers")),

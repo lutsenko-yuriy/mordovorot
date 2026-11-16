@@ -1,5 +1,6 @@
 package web
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import viewmodel.KeyboardLayout
@@ -7,6 +8,8 @@ import viewmodel.TileLabels
 
 /** GH-163: each dialog's control focused on open, and its title, the dialog's accessible name. */
 class DialogFocusTest {
+    private val dialogs = texts().dialogs
+
     private val labels = WebDialog.Labels(listOf(LabelOption(TileLabels.PAIRS, "Pairs", listOf("11"))), TileLabels.PAIRS)
     private val saves = listOf(SaveEntry("foo", "foo (4x4)"))
     private val controls = WebDialog.Controls(KeyboardLayout.LEFT_HANDED, emptyList())
@@ -31,22 +34,22 @@ class DialogFocusTest {
 
     @Test
     fun `each dialog is named by its title`() {
-        assertEquals("New game size", WebDialog.Size(listOf(4), current = 4).title)
-        assertEquals("Save game", WebDialog.Save("", null).title)
-        assertEquals("Load game", WebDialog.Load(restore = false, saves).title)
-        assertEquals("Restore a saved game?", WebDialog.Load(restore = true, saves).title)
-        assertEquals("Delete 'foo'?", WebDialog.DeleteSave("foo").title)
-        assertEquals("Can't be solved", WebDialog.Unsolvable("x").title)
-        assertEquals("Tile labels", labels.title)
-        assertEquals("Give up and see Mordie's solution?", WebDialog.GiveUp.title)
-        assertEquals("Controls", controls.title)
-        assertEquals("Update to the new version?", WebDialog.Update.title)
-        assertEquals("Use the sender's labels (Pairs from 0)?", WebDialog.SharedLabels(TileLabels.PAIRS_FROM_0).title)
+        assertEquals(dialogs.sizeTitle, WebDialog.Size(listOf(4), current = 4).title)
+        assertEquals(dialogs.saveTitle, WebDialog.Save("", null).title)
+        assertEquals(dialogs.loadTitle, WebDialog.Load(restore = false, saves).title)
+        assertEquals(dialogs.restoreTitle, WebDialog.Load(restore = true, saves).title)
+        assertEquals(dialogs.deleteTitle("foo"), WebDialog.DeleteSave("foo").title)
+        assertEquals(dialogs.unsolvableTitle, WebDialog.Unsolvable("x").title)
+        assertEquals(dialogs.labelsTitle, labels.title)
+        assertEquals(dialogs.giveUpTitle, WebDialog.GiveUp.title)
+        assertEquals(dialogs.controlsTitle, controls.title)
+        assertEquals(dialogs.updateTitle, WebDialog.Update.title)
+        assertEquals(dialogs.sharedLabelsTitle(texts().page.labelPairsFrom0), WebDialog.SharedLabels(TileLabels.PAIRS_FROM_0).title)
     }
 
     @Test
     fun `a save entry names its trash button after the save`() {
-        assertEquals("Delete 'foo'", SaveEntry("foo", "foo (4x4)").deleteName)
+        assertEquals(dialogs.deleteName("foo"), SaveEntry("foo", "foo (4x4)").deleteName)
     }
 
     @Test

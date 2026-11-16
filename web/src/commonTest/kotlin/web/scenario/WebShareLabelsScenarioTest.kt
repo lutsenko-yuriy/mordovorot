@@ -1,5 +1,6 @@
 package web.scenario
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -15,6 +16,9 @@ import web.qr.QrCode
 
 /** GH-267 scenarios: the Share dialog's `Include my tile labels` toggle, through [WebHarness]. */
 class WebShareLabelsScenarioTest {
+    private val pageTexts = texts().page
+    private val dialogTexts = texts().dialogs
+
 
     private val WebHarness.share get() = assertIs<WebDialog.Share>(state.dialog)
 
@@ -32,7 +36,7 @@ class WebShareLabelsScenarioTest {
 
         page.game.share.open()
 
-        assertEquals("Include my tile labels (Numbers)", page.share.labelsToggle)
+        assertEquals(dialogTexts.shareLabels(pageTexts.labelNumbers), page.share.labelsToggle)
         assertFalse(page.share.includeLabels)
         assertEquals(boardLink(page), page.share.link)
         assertEquals(listOf(mapOf("board_size" to 4, "start_known" to true, "include_labels" to false, "include_progress" to false)), page.ownProps("screen_share_dialog"))
@@ -103,7 +107,7 @@ class WebShareLabelsScenarioTest {
 
         page.game.share.onLabelsToggled()
 
-        assertEquals("Include my tile labels (Numbers)", page.share.labelsToggle)
+        assertEquals(dialogTexts.shareLabels(pageTexts.labelNumbers), page.share.labelsToggle)
         assertTrue(page.share.link.endsWith("&l=numbers"))
         assertEquals("numbers", page.ownProps("share_labels_toggled").single()["labels"])
     }

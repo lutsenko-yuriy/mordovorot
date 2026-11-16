@@ -1,5 +1,6 @@
 package web.scenario
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -14,6 +15,11 @@ import web.storage.InMemoryKeyValueStore
 /** GH-110 scenarios: Save and Load in the browser, kept in the in-memory store. Same setup as
  *  [WebStartupScenarioTest]; a "reload" is a new `WebGame` over the same store. */
 class WebSaveLoadScenarioTest {
+    private val pageTexts = texts().page
+    private val mordieTexts = texts().mordie
+    private val statusTexts = texts().status
+    private val dialogTexts = texts().dialogs
+
 
     @Test
     fun `Save prefills the current save name and warns before overwriting`() = webTest {
@@ -22,14 +28,14 @@ class WebSaveLoadScenarioTest {
         page.analytics.events.clear()
 
         page.game.onSave()
-        assertEquals(WebDialog.Save("foo", "'foo' already exists - it will be overwritten."), page.state.dialog)
+        assertEquals(WebDialog.Save("foo", dialogTexts.overwriteWarning("foo")), page.state.dialog)
         page.game.onSaveNameTyped("bar")
         assertEquals(WebDialog.Save("bar", null), page.state.dialog)
         page.game.onSaveNameTyped("foo")
         page.game.onSaveAnswered("foo")
 
         assertNull(page.state.dialog)
-        assertEquals("Saved as 'foo'.", page.state.status)
+        assertEquals(statusTexts.saved("foo"), page.state.status)
         assertEquals(listOf(mapOf<String, Any?>("opened_from" to "toolbar", "prefilled" to true)), page.ownProps("screen_save_dialog"))
     }
 
@@ -43,11 +49,11 @@ class WebSaveLoadScenarioTest {
         }
 
         saveAs("a b")
-        assertEquals("'a b' isn't a usable save name (no spaces) - not saved.", page.state.status)
+        assertEquals(statusTexts.saveNameHasSpaces("a b"), page.state.status)
         for (name in listOf("a/b", "..")) {
             saveAs(name)
             assertEquals(
-                "Could not save as '$name': Save name must not be blank, contain a path separator, or contain '..'",
+                statusTexts.saveFailed(name, "Save name must not be blank, contain a path separator, or contain '..'"),
                 page.state.status,
             )
         }
@@ -77,7 +83,7 @@ class WebSaveLoadScenarioTest {
         page.game.onLoad()
 
         assertEquals(
-            WebDialog.Load(restore = false, listOf(SaveEntry("even", "even (4x4)"), SaveEntry("odd", "odd (3x3) unsolvable"))),
+            WebDialog.Load(restore = false, listOf(SaveEntry("even", "even (4x4)"), SaveEntry("odd", "odd (3x3) ${pageTexts.unsolvable}"))),
             page.state.dialog,
         )
         assertEquals(listOf(mapOf<String, Any?>("opened_from" to "toolbar", "save_file_count" to 2)), page.ownProps("screen_load_dialog"))
@@ -114,7 +120,7 @@ class WebSaveLoadScenarioTest {
         page.mordieSearches.latest.progress = SearchProgress(moves = 11, found = true, elapsedMs = 0)
         // Row 1 back and forth: row 0 stays off, so the board never solves.
         repeat(5) { page.game.onArrow(if (it % 2 == 0) Arrow.RIGHT else Arrow.LEFT, 1) }
-        val found = "Found it! I had to make 11 moves to find the solution! Can you beat it?"
+        val found = mordieTexts.found(11)
         assertEquals(found, page.state.mordie)
         page.game.onSave()
         page.game.onSaveAnswered("m")

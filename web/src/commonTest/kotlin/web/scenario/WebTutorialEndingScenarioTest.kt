@@ -1,5 +1,6 @@
 package web.scenario
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -17,6 +18,9 @@ import web.tutorial.TutorialText
 
 /** GH-288: steps 5 and 6, the game after the tutorial, the phone variant and the labels. */
 class WebTutorialEndingScenarioTest {
+    private val mordieTexts = texts().mordie
+    private val tutorialTexts = texts().tutorial
+
 
     /** Mordie solves the board in four moves too. */
     private fun WebHarness.mordieFoundFour() {
@@ -30,7 +34,7 @@ class WebTutorialEndingScenarioTest {
         page.playSteps()
 
         assertTrue(page.state.solved)
-        assertEquals("Can you beat my results?", page.state.guidance?.text)
+        assertEquals(tutorialTexts.step5, page.state.guidance?.text)
     }
 
     @Test
@@ -63,7 +67,7 @@ class WebTutorialEndingScenarioTest {
 
         waitPause()
 
-        assertEquals("Cool, you matched me! 4 moves each!", page.state.mordie)
+        assertEquals(mordieTexts.endingMatched(4), page.state.mordie)
     }
 
     @Test
@@ -106,13 +110,13 @@ class WebTutorialEndingScenarioTest {
     fun `on a phone, the texts name dragging only`() = webTest {
         val page = tutorialPage(backgroundScope, touch = true)
         val first = page.state.guidance!!
-        assertTrue(first.text.contains("Drag the top row one tile left"))
+        assertEquals(tutorialTexts.step1(computer = false), first.text)
         assertTrue(!first.text.contains("◀"))
 
         page.stepByDrag(1)
 
         assertEquals(TutorialText.step(2, computer = false, labels = page.state.labels), page.state.guidance?.text)
-        assertTrue(page.state.guidance!!.text.contains("Drag that column"))
+        assertEquals(tutorialTexts.step2("14", computer = false), page.state.guidance?.text)
     }
 
     @Test

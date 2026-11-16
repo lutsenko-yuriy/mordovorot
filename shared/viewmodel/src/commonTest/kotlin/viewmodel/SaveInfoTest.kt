@@ -1,5 +1,6 @@
 package viewmodel
 
+import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -17,7 +18,7 @@ class SaveInfoTest {
 
     @Test
     fun `display marks an unsolvable save`() {
-        assertEquals("foo (3x3) unsolvable", SaveInfo("foo", 3, solvable = false).display())
+        assertEquals("foo (${texts().boardSize(3)}) ${texts().page.unsolvable}", SaveInfo("foo", 3, solvable = false).display())
     }
 
     @Test
