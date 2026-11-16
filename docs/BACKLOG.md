@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-- GH-289: Replay the tutorial from the Give Up row, saving first (WU0, WU1 merged; WU2 pending)
+_(nothing in progress)_
 
 ---
 

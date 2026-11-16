@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.47.0] — 2026-11-16 (PR #300 merged)
+
+### Added
+
+- [user] (PR #300) GH-289: Replay the tutorial any time from the new Tutorial button next to Give Up, with an offer to save your game first.
+- [app] (PR #300) GH-289: the Tutorial row in the Give Up area, and the save-first offer before a replay (WU2 #300).
+
 ## [0.46.1] — 2026-11-16 (PR #299 merged)
 
 ### Fixed
