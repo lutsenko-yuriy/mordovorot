@@ -37,7 +37,8 @@ interface GameViewModel {
      *  race, and tracks nothing. Throws, changing nothing, unless it is a valid, solvable board.
      *  [sender] is the progress the link carries (GH-272): Mordie opens by telling it.
      *  [tutorial] (GH-288) marks the first-launch tutorial's game: its `board_solved` and
-     *  `mordie_solution_found` say so, until the next new game, load or repair. */
+     *  `mordie_solution_found` say so, until the next new game, load or repair. It also lets
+     *  [restoreOnStartup] run again (GH-289), as the tutorial replaces the startup and a replay comes after one. */
     fun newGameFrom(arrangement: IntArray, sender: SharedProgress? = null, tutorial: Boolean = false)
 
     /** Returns whether the save actually succeeded. `suspend` (GH-42): asks the

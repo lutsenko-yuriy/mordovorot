@@ -190,12 +190,13 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   Space, in either mode.
   - **Focus on open:** the size picker on the current board's size, Save on its name field, Load
     and `Restore a saved game?` on the first save (Cancel when there are none), `Delete 'foo'?` on Cancel, `Can't be solved`
-    on `Repair & load`, Tile labels on the marked scheme (and on each row picked), Give Up on No.
+    on `Repair & load`, Tile labels on the marked scheme (and on each row picked), Give Up on No, and
+    `Save your game first?` (before the tutorial replays, GH-289) on Cancel.
   - **Tab** and Shift+Tab cycle through the open dialog's controls only; the page behind it, the
     footer included, can't be reached, by Tab or by a screen reader. A screen reader names each
     dialog by its title.
   - **Escape** does what the dialog's Cancel does (Give Up: No; Restore: Cancel, so the size picker
-    opens); `Can't be solved` has no Cancel, and Escape does nothing there.
+    opens; `Save your game first?`: Cancel, which starts no tutorial); `Can't be solved` has no Cancel, and Escape does nothing there.
   - **Focus on close** goes back to the button that opened the dialog, however it closed; to the
     next dialog's default when one leads straight to another (Restore → size picker, Load → `Can't
     be solved`); to `Next ▶` after Give Up → Yes (on a computer: the board); to the start of the page after a startup dialog.
@@ -226,7 +227,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
     It opens on the marked layout; Tab moves between the group, OK and Cancel, and the arrows move the mark.
     OK applies the layout and puts focus on the board; Cancel or Escape changes nothing and returns focus to the opener.
   - **Toolbar:** every button shows its digit: `[ New 1 ][ Save 2 ][ Load 3 ][ Labels 4 ]`,
-    `[ Share 7 ]`, `[ Give Up 5 ]` or `[ Mordie's solution 5 ]`, `[ Controls 6 ]`. The digits work wherever focus
+    `[ Share 7 ]`, `[ Give Up 5 ]` or `[ Mordie's solution 5 ]` with `[ Tutorial 8 ]` beside it (GH-289), `[ Controls 6 ]`. The digits work wherever focus
     is, outside dialogs.
   - **Board:** one Tab stop, focused at page load, after a new, loaded or
     saved game and when a dialog opened from it closes. While it has focus, right-handed: W/A/S/D move the selected tile,
@@ -440,7 +441,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   in either mode: `keyboard` for key presses, `rich_ui` for mouse and touch; see `docs/ANALYTICS_EVENTS.md`.
 
 ### Feature 10 — Give Up and Mordie's solution (GH-126)
-- **Give Up:** `[ Give Up ]` sits on its own row, directly above the toolbar. It is dimmed and
+- **Give Up:** `[ Give Up ]` sits on its own row, directly above the toolbar, with `[ Tutorial ]` to its right (Feature 13, GH-289). It is dimmed and
   inert until Mordie has a solution (the moment a found line appears, Feature 8): at the first 5-shift
   check on every size Mordie plays, 5x5 included (GH-222). The solution it shows is the best
   known when the player gives up, which may be longer than the shortest. On a computer: 5. Pressing it asks
@@ -567,7 +568,7 @@ Web client only.
 Web client only. On a first visit Mordie walks the player through a short game.
 - **When:** at launch, when the `tutorial` preference isn't `seen` and there are no saves (a corrupted entry
   counts as a save). A failed read of the preference counts as seen. Players with no saves who already
-  played see it once after the update. Skip and the last step mark it seen. There is no way to replay it yet (GH-289).
+  played see it once after the update. Skip and the last step mark it seen. It can be replayed at any time (below, GH-289).
 - **The game:** a fixed 4x4 board, `8 1 14 3 / 5 2 7 12 / 11 6 9 10 / 13 16 15 4`, which four shifts solve.
   Moves and Mordie's usual line work as in any game, and Mordie searches it as usual.
 - **The panel:** in place of the Give Up row and the toolbar, Mordie's bubble (`Mordie:` and the step's text,
@@ -588,7 +589,23 @@ Web client only. On a first visit Mordie walks the player through a short game.
   Any other shift is blocked: the board doesn't change (a drag snaps back), Moves stays, and the bubble shows
   `You can do that later. For now shift that row please!` (`column` for a column) until the next shift.
 - **Keys on a computer:** select keys work and shift keys go through the same check. 4 and 6 open Labels and
-  Controls; 1, 2, 3, 5 and 7 do nothing (their buttons are hidden). 0 reads the board.
+  Controls; 1, 2, 3, 5, 7 and 8 do nothing (their buttons are hidden). 0 reads the board.
+- **Replay (GH-289):** `[ Tutorial ]` (`[ Tutorial 8 ]` on a computer) sits in the Give Up row, right of `[ Give Up ]`
+  or `[ Mordie's solution ]` and in the same style, or alone when the row has neither (a won board with no solution to
+  show). It shows during play and on a won board; it is gone on Mordie's solution screen, while the tutorial runs
+  (steps 1 to 5) and with the `tutorial` switch off, and it is disabled while a dialog is open. 8 does the same, on a
+  computer, and nothing during the tutorial or on the solution screen.
+  - With no unsaved moves the tutorial starts at once on its board, at step 1.
+  - With unsaved moves `Save your game first?` opens first: `The tutorial replaces the current game.`, with
+    `[ Cancel ] [ Don't save ] [ Save ]`, focus on Cancel. Escape is Cancel.
+    - **Cancel** starts nothing and changes nothing; focus goes back to the button or place 8 was pressed.
+    - **Don't save** starts the tutorial.
+    - **Save** opens the Save dialog as the toolbar's does, prefilled with the current save's name. Once the game is saved the
+      tutorial starts; a cancelled Save, a name with spaces or a failed save starts nothing and puts focus back where the replay was started: `[ Tutorial ]`, or where 8 was pressed.
+  - The replay is a new game: the current save name is forgotten, and saves are left alone. Focus goes to the board on
+    a computer and to the start of the page on touch, as at a first launch.
+  - It plays as the first launch does. Skip and the end run the same ways (below), so Skip offers
+    `Restore a saved game?` when there are saves, else the size picker. The leave-site prompt is off while it runs.
 - **Skip** (any step) marks the tutorial seen and runs the usual startup: a share link in the address opens, else
   `Restore a saved game?` when there are saves, else the size picker. Cancelling the picker keeps the tutorial board
   as an ordinary game.
@@ -597,7 +614,7 @@ Web client only. On a first visit Mordie walks the player through a short game.
 - **A share link** at launch is left unread in the address until the tutorial ends or is skipped, so a reload halfway
   meets it again. A link opened by hand mid-tutorial waits, and `Open the shared board?` is asked as usual when there are unsaved moves.
 - **The leave-site prompt and the Update confirmation** count no progress during steps 1 to 5, since a reload only restarts it.
-- **Focus:** at the start, the board. Tab goes the arrows and the board, then `[ Controls ] [ Labels ] [ Skip ]`, then the footer.
+- **Focus:** at the start (a replay too), the board. Tab goes the arrows and the board, then `[ Controls ] [ Labels ] [ Skip ]`, then the footer.
   The panel's buttons open their dialogs with themselves as opener. On step 5's solved board focus falls to `[ Labels ]`, so a
   held Enter can't skip; once the panel is gone, a gone button's focus falls back as on a won board.
 - **Screen readers:** the bubble is plain text, not a live region; shifts that count are announced as always and a blocked one says nothing.

@@ -31,6 +31,11 @@ internal class StartupRestoreUseCase(
         mordieHooks.onStartup()
     }
 
+    /** Lets [restoreOnStartup] run again (GH-289): the tutorial's game stands in for the startup, and its Skip runs the startup it replaced. */
+    fun rearm() {
+        startupRestoreDone = false
+    }
+
     private suspend fun restoreOrPickSize() {
         if (startupRestoreDone) return
         startupRestoreDone = true

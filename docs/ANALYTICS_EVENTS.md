@@ -653,7 +653,7 @@ Fired when the tutorial begins. After a reload halfway it fires again, since the
 
 | Property | Type | Description |
 |---|---|---|
-| `source` | `string` | `first_launch`. GH-289 adds `replay`. |
+| `source` | `string` | `first_launch`, or `replay` (GH-289: started from `[ Tutorial ]` or 8). |
 
 ### `tutorial_step_completed`
 
@@ -670,6 +670,7 @@ Fired when the tutorial's last step ends (the panel hides) or the player skips i
 
 | Property | Type | Description |
 |---|---|---|
+| `source` | `string` | `first_launch` or `replay`, as `tutorial_started.source` (GH-289). |
 | `result` | `string` | `completed` or `skipped`. |
 | `last_step` | `number` | 1 to 6: the step the player was on. |
 | `blocked_shifts` | `number` | Blocked shifts over the whole tutorial. |
@@ -679,3 +680,32 @@ Changes to existing entries:
 - `board_solved` and `mordie_solution_found` gain `tutorial` (`boolean`): true for the tutorial game, so its solve doesn't skew `mordie_result` and move counts.
 
 Not tracked: each shift made during the tutorial (`board_solved.shift_input` and `tutorial_step_completed` cover it), a reload or close halfway (can't be detected; the next launch's `tutorial_started` shows it), the bubble texts and the highlight being shown (they follow from `step`), whether the tutorial game is later saved or loaded (the usual events cover it), the share link met on a first launch (`shared_board_opened` fires as usual after the tutorial), and a player with saves never seeing the tutorial (no `tutorial_started`).
+
+## GH-289 (replay the tutorial)
+
+Planned in `/analyze`; the web client uses `NoopAnalyticsService` until an SDK is wired up (GH-256). The replay is the tutorial of GH-288 started from `[ Tutorial ]` or 8, so `tutorial_started`, `tutorial_step_completed` and `tutorial_ended` fire as there, with `source: replay`.
+
+### `screen_replay_save_dialog`
+
+Fired when `Save your game first?` opens: the player started a replay with unsaved moves. *(GH-289)*
+
+| Property | Type | Description |
+|---|---|---|
+| `opened_from` | `string` | `button` (`[ Tutorial ]`) or `shortcut` (8). |
+| `move_count` | `number` | Moves made in the game the replay would replace. |
+
+### `tutorial_replay_decision`
+
+Fired when the player picks Save or Don't save in that dialog. Cancel fires `dialog_cancelled` instead. *(GH-289)*
+
+| Property | Type | Description |
+|---|---|---|
+| `decision` | `string` | `save` or `dont_save`. `save` is the choice, not the outcome: the Save dialog that follows can still be cancelled (`dialog_cancelled` with `dialog: save`), and then no replay starts. |
+
+Changes to existing entries:
+- `dialog_cancelled.dialog` takes a new value, `replay_save`.
+- `screen_save_dialog.opened_from` takes a new value, `tutorial_replay`: opened from the replay save question's Save.
+- `tutorial_ended` gains `source` (above); `tutorial_started.source` takes `replay`.
+- Skip in a replay runs the startup sequence again, in the same session as a launch's. So `startup_restore_prompt_shown`, `startup_restore_decision`, `load_command_used`, `unsolvable_save_resolved` and `new_game_size_selected`, all with `trigger: startup_prompt`, fire again, and a replay-Skip can't be told from a launch by `trigger`. Count real launches with `app_launched`. A distinct trigger value for the replay's startup is left until an SDK is wired up (GH-256) and the numbers show it matters.
+
+Not tracked: a replay that never starts because the question was cancelled (`dialog_cancelled` covers it), which control opened the replay beyond `opened_from`, and how often it is replayed (`tutorial_started` with `source: replay` counts it).

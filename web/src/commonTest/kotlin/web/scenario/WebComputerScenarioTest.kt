@@ -45,7 +45,7 @@ class WebComputerScenarioTest {
     fun `every toolbar button shows its digit on a computer`() = webTest {
         val page = WebHarness(backgroundScope).startOn()
 
-        assertEquals(listOf(1, 2, 3, 4, 5, 6, 7), ToolbarButton.entries.map { page.state.digitOf(it) })
+        assertEquals(listOf(1, 2, 3, 4, 5, 6, 7, 8), ToolbarButton.entries.map { page.state.digitOf(it) })
     }
 
     // One loop over the digits: splitting it into seven scenarios would repeat the same steps.

@@ -49,6 +49,8 @@ data class WebState(
     val footer: List<FooterPart> = emptyList(),
     /** The tutorial's panel (GH-288), in place of the Give Up row and the toolbar; `null` off the guided steps. */
     val guidance: Guidance? = null,
+    /** `[ Tutorial ]` shows in the Give Up row (GH-289): the tutorial can be replayed. */
+    val tutorialButton: Boolean = false,
 ) {
     /** The digit [button] shows, `null` when it shows none (GH-171). */
     fun digitOf(button: ToolbarButton): Int? = button.digit.takeIf { WebKeys.live(button, computer) }
@@ -157,6 +159,11 @@ sealed interface WebDialog {
      *  game only, No keeps the player's. [labels] are previewed behind the dialog. */
     data class SharedLabels(val labels: TileLabels) : WebDialog {
         val message: String get() = "For this game only: your next new game uses your own labels."
+    }
+
+    /** The question before the tutorial replaces a game with unsaved progress (GH-289): Save, Don't save or Cancel, where focus starts. */
+    data object ReplaySave : WebDialog {
+        val message: String get() = "The tutorial replaces the current game."
     }
 
     /** The confirmation before updating with unsaved progress (GH-262): Cancel, where focus starts, or Update. */

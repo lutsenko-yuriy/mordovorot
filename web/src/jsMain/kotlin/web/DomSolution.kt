@@ -28,15 +28,22 @@ internal fun replayButtons(solution: SolutionState, game: () -> WebGame, dialogO
     )
 }
 
-/** `Give Up`, disabled until Mordie's solution is revealed, or `Mordie's solution` after a win;
- *  `null` when the row is empty (GH-126). [game] is read only on a click, as in [replayButtons]. */
-internal fun giveUpRow(giveUp: GiveUpButton, digit: Int?, game: () -> WebGame, dialogOpen: Boolean): Element? {
-    val button = when (giveUp) {
-        GiveUpButton.HIDDEN -> return null
+/** `Give Up`, disabled until Mordie's solution is revealed, or `Mordie's solution` after a win, then `Tutorial` (GH-289) when
+ *  [tutorial] says so, never dimmed; `null` when the row is empty (GH-126). [game] is read only on a click, as in [replayButtons]. */
+internal fun giveUpRow(giveUp: GiveUpButton, digit: Int?, tutorial: Boolean, tutorialDigit: Int?, game: () -> WebGame, dialogOpen: Boolean): Element? {
+    val first = when (giveUp) {
+        GiveUpButton.HIDDEN -> null
         GiveUpButton.MORDIES_SOLUTION -> button("Mordie's solution") { game().solution.onMordiesSolution() }
         GiveUpButton.GIVE_UP, GiveUpButton.DIMMED -> button("Give Up") { game().solution.onGiveUp() }
+    }?.also {
+        it.disabled = dialogOpen || giveUp == GiveUpButton.DIMMED
+        it.focusKey(Focus.GiveUpRow).withDigit(digit)
     }
-    button.disabled = dialogOpen || giveUp == GiveUpButton.DIMMED
-    button.focusKey(Focus.GiveUpRow).withDigit(digit)
-    return element("div", "give-up").apply { append(button) }
+    val replay = if (tutorial) button("Tutorial") { game().tutorial.onReplay("button") }.also {
+        it.disabled = dialogOpen
+        it.focusKey(Focus.TutorialReplay).withDigit(tutorialDigit)
+    } else null
+    val buttons = listOfNotNull(first, replay)
+    if (buttons.isEmpty()) return null
+    return element("div", "give-up").apply { append(*buttons.toTypedArray()) }
 }

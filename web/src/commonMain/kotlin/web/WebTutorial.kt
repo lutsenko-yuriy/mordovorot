@@ -12,13 +12,17 @@ import web.tutorial.TutorialScript
 import web.tutorial.TutorialText
 import web.tutorial.Verdict
 
-/** The first-launch tutorial's flow (GH-288): starts on the fixed board when it is [enabled], not seen and there are no saves,
+/** What the save question was answered with (GH-289). */
+internal enum class ReplaySaveChoice { SAVE, DONT_SAVE, CANCEL }
+
+/** The tutorial's flow (GH-288): starts on the fixed board when it is [enabled], not seen and there are no saves,
  *  checks every shift against the step's asked one, and ends at step 6 or on Skip. While [running] the leave-site prompt,
- *  the share link and most digits wait. */
+ *  the share link and most digits wait. It can be replayed from the Give Up row, after a question about saving (GH-289). */
 internal class WebTutorial(
     private val game: WebGame,
     private val viewModel: GameViewModel,
     private val analytics: AnalyticsService,
+    private val modal: WebModal,
     private val preference: TutorialPreference,
     private val scope: CoroutineScope,
     private val computer: Boolean,
@@ -34,6 +38,9 @@ internal class WebTutorial(
     private var verdict = Verdict.IGNORED
     private var pause: Job? = null
 
+    /** `first_launch` or `replay`: what started the tutorial now running, as `tutorial_started.source`. */
+    private var source = FIRST_LAUNCH
+
     val running get() = progress != null
 
     /** Step 5: the board is solved and Mordie's ending waits for the pause to end. */
@@ -41,12 +48,41 @@ internal class WebTutorial(
 
     fun shouldStart() = enabled && !preference.seen() && viewModel.listSaves().isEmpty()
 
-    fun begin() {
+    /** `[ Tutorial ]` shows in the Give Up row, and 8 works: not while it runs, and not on Mordie's solution screen (GH-289). */
+    val offered get() = enabled && !running && viewModel.solution() == null
+
+    fun begin(source: String = FIRST_LAUNCH) {
+        this.source = source
+        pause?.cancel()
         viewModel.newGameFrom(TutorialScript.board, tutorial = true)
         progress = TutorialProgress()
         blockedAxis = null
-        analytics.track("tutorial_started", mapOf("source" to "first_launch"))
+        analytics.track("tutorial_started", mapOf("source" to source))
     }
+
+    /** `[ Tutorial ]` or 8, [openedFrom] `button` or `shortcut` (GH-289): with unsaved progress the replay asks first, and on Save goes on
+     *  only once the game is saved. A Cancel or a failed save leaves the game as it was, focus back on [opener]. */
+    fun onReplay(openedFrom: String, opener: Focus = Focus.TutorialReplay) = game.runFlow(opener) {
+        if (game.hasUnsavedProgress()) {
+            analytics.track("screen_replay_save_dialog", mapOf("opened_from" to openedFrom, "move_count" to viewModel.moveCount()))
+            when (modal.ask<ReplaySaveChoice>(WebDialog.ReplaySave) { it == ReplaySaveChoice.SAVE }) {
+                ReplaySaveChoice.CANCEL -> {
+                    game.cancelled("replay_save")
+                    return@runFlow
+                }
+                ReplaySaveChoice.SAVE -> {
+                    analytics.track("tutorial_replay_decision", mapOf("decision" to "save"))
+                    if (!game.saveFlow("tutorial_replay")) return@runFlow
+                }
+                ReplaySaveChoice.DONT_SAVE -> analytics.track("tutorial_replay_decision", mapOf("decision" to "dont_save"))
+            }
+        }
+        begin(REPLAY)
+        game.closing = game.onBoard ?: Focus.PageStart
+    }
+
+    /** The save question's answer. */
+    fun onReplayAnswered(choice: ReplaySaveChoice) = modal.answer<WebDialog.ReplaySave, ReplaySaveChoice>(choice)
 
     /** Takes the shift of [line] on [axis] by [steps] (positive is right or down) into the step's progress, and whether it goes ahead;
      *  one that doesn't is drawn as blocked. A shift that goes ahead is followed by [afterShift]. */
@@ -109,10 +145,12 @@ internal class WebTutorial(
         this.progress = null
         blockedAxis = null
         preference.markSeen()
-        analytics.track("tutorial_ended", mapOf("result" to result, "last_step" to lastStep, "blocked_shifts" to progress.totalBlocked))
+        analytics.track("tutorial_ended", mapOf("source" to source, "result" to result, "last_step" to lastStep, "blocked_shifts" to progress.totalBlocked))
     }
 
     private companion object {
+        const val FIRST_LAUNCH = "first_launch"
+        const val REPLAY = "replay"
         const val PAUSE_MS = 3_000L
         const val LAST_STEP = 6
     }

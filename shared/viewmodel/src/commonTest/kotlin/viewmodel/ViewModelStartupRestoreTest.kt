@@ -208,6 +208,21 @@ class ViewModelStartupRestoreTest {
     }
 
     @Test
+    fun `the tutorial's game lets restoreOnStartup run again (GH-289)`() = runTest {
+        val saves = FakeSaveRepository(mutableMapOf("foo" to SavedBoard(4, fourByFour)))
+        val viewModel = testViewModel(FakeBoardModel(), saves, RecordingAnalyticsService())
+        val ui = FakeViewModelUi(confirmRestoreResponses = mutableListOf(false, false), chooseBoardSizeResponses = mutableListOf(null, null))
+
+        ui.drive(viewModel) {
+            viewModel.restoreOnStartup()
+            viewModel.newGameFrom(fourByFour, tutorial = true)
+            viewModel.restoreOnStartup()
+        }
+
+        assertEquals(listOf("foo", "foo"), ui.confirmRestoreCalls)
+    }
+
+    @Test
     fun `restoreOnStartup is a no-op on a second call - does not re-prompt or double-track`() = runTest {
         // A caller invoking it twice in one launch (e.g. by mistake, or two code paths both
         // calling it defensively) must not re-prompt the user or double-emit

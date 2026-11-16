@@ -111,10 +111,10 @@ internal class WebDialogFlows(
         return confirmed
     }
 
-    /** The Save dialog prefilled with the current save's name; the typed name, or `null`. */
-    suspend fun askSaveName(): String? {
+    /** The Save dialog prefilled with the current save's name; the typed name, or `null`. [openedFrom] is `toolbar` or `tutorial_replay`. */
+    suspend fun askSaveName(openedFrom: String = "toolbar"): String? {
         val prefill = viewModel.currentSaveName() ?: ""
-        analytics.track("screen_save_dialog", mapOf("opened_from" to "toolbar", "prefilled" to prefill.isNotEmpty()))
+        analytics.track("screen_save_dialog", mapOf("opened_from" to openedFrom, "prefilled" to prefill.isNotEmpty()))
         val name = modal.ask<String?>(saveDialog(prefill))
         if (name == null) cancelled("save")
         // A blank name is Cancel, untracked.

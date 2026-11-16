@@ -1,74 +1,122 @@
 package web.scenario
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlinx.coroutines.test.TestScope
+import web.Arrow
+import web.ReplaySaveChoice
 
-/** GH-289 (WU0) scenario stubs: the replay's analytics, as catalogued in `docs/ANALYTICS_EVENTS.md`. */
+/** GH-289: the replay's analytics, as catalogued in `docs/ANALYTICS_EVENTS.md`. */
 class WebTutorialReplayAnalyticsScenarioTest {
+
+    /** A game with one move made, unsaved. */
+    private fun TestScope.mid() = WebHarness(backgroundScope).startOn().also { it.game.onArrow(Arrow.RIGHT, 1) }
+
+    private fun TestScope.asked() = mid().also { it.game.tutorial.onReplay("button") }
+
     @Test
     fun `the save question sends screen_replay_save_dialog from a click`() = webTest {
-        // TODO: 1. Click Tutorial with unsaved progress.
-        // TODO: 2. The `screen_replay_save_dialog` event is sent with `opened_from: button`.
+        val page = mid()
+
+        page.game.tutorial.onReplay("button")
+
+        assertEquals("button", page.ownProps("screen_replay_save_dialog").single()["opened_from"])
     }
 
     @Test
     fun `the save question sends screen_replay_save_dialog from key 8`() = webTest {
-        // TODO: 1. Press 8 with unsaved progress.
-        // TODO: 2. The `screen_replay_save_dialog` event is sent with `opened_from: shortcut`.
+        val page = mid()
+
+        page.press("8")
+
+        assertEquals("shortcut", page.ownProps("screen_replay_save_dialog").single()["opened_from"])
     }
 
     @Test
     fun `the question's event carries the move count`() = webTest {
-        // TODO: 1. Make two shifts.
-        // TODO: 2. Open the save question.
-        // TODO: 3. The event's `move_count` is 2.
+        val page = mid()
+        page.game.onArrow(Arrow.RIGHT, 2)
+
+        page.game.tutorial.onReplay("button")
+
+        assertEquals(mapOf("opened_from" to "button", "move_count" to 2), page.ownProps("screen_replay_save_dialog").single())
     }
 
     @Test
     fun `Save sends tutorial_replay_decision`() = webTest {
-        // TODO: 1. Choose Save.
-        // TODO: 2. The `tutorial_replay_decision` event is sent with `decision: save`.
+        val page = asked()
+
+        page.game.tutorial.onReplayAnswered(ReplaySaveChoice.SAVE)
+
+        assertEquals(mapOf("decision" to "save"), page.ownProps("tutorial_replay_decision").single())
     }
 
     @Test
     fun `Don't save sends tutorial_replay_decision`() = webTest {
-        // TODO: 1. Choose Don't save.
-        // TODO: 2. The `tutorial_replay_decision` event is sent with `decision: dont_save`.
+        val page = asked()
+
+        page.game.tutorial.onReplayAnswered(ReplaySaveChoice.DONT_SAVE)
+
+        assertEquals(mapOf("decision" to "dont_save"), page.ownProps("tutorial_replay_decision").single())
     }
 
     @Test
     fun `Cancel sends dialog_cancelled, not a decision`() = webTest {
-        // TODO: 1. Choose Cancel.
-        // TODO: 2. The `dialog_cancelled` event is sent with `dialog: replay_save`.
-        // TODO: 3. `tutorial_replay_decision` is not sent.
+        val page = asked()
+
+        page.game.tutorial.onReplayAnswered(ReplaySaveChoice.CANCEL)
+
+        assertEquals(mapOf("dialog" to "replay_save", "via" to "button"), page.ownProps("dialog_cancelled").single())
+        assertTrue(page.props("tutorial_replay_decision").isEmpty())
     }
 
     @Test
     fun `the Save dialog from the question has its own source`() = webTest {
-        // TODO: 1. Choose Save.
-        // TODO: 2. The `screen_save_dialog` event is sent with `opened_from: tutorial_replay`.
+        val page = asked()
+
+        page.game.tutorial.onReplayAnswered(ReplaySaveChoice.SAVE)
+
+        assertEquals("tutorial_replay", page.ownProps("screen_save_dialog").single()["opened_from"])
     }
 
     @Test
     fun `a replay with nothing to save sends tutorial_started with source replay`() = webTest {
-        // TODO: 1. Click Tutorial with no unsaved progress.
-        // TODO: 2. The `tutorial_started` event is sent with `source: replay`.
+        val page = WebHarness(backgroundScope).startOn()
+
+        page.game.tutorial.onReplay("button")
+
+        assertEquals(mapOf("source" to "replay"), page.ownProps("tutorial_started").single())
+        assertTrue(page.props("screen_replay_save_dialog").isEmpty())
     }
 
     @Test
     fun `a replay after Don't save sends tutorial_started with source replay`() = webTest {
-        // TODO: 1. Choose Don't save.
-        // TODO: 2. The `tutorial_started` event is sent with `source: replay`.
+        val page = asked()
+
+        page.game.tutorial.onReplayAnswered(ReplaySaveChoice.DONT_SAVE)
+
+        assertEquals(mapOf("source" to "replay"), page.ownProps("tutorial_started").single())
     }
 
     @Test
     fun `a replay's end sends tutorial_ended with source replay`() = webTest {
-        // TODO: 1. Play a replay to the end.
-        // TODO: 2. The `tutorial_ended` event is sent with `source: replay`.
+        val page = WebHarness(backgroundScope).startOn()
+        page.game.tutorial.onReplay("button")
+        page.playSteps()
+
+        waitPause()
+
+        assertEquals(mapOf("source" to "replay", "result" to "completed", "last_step" to 6, "blocked_shifts" to 0), page.ownProps("tutorial_ended").single())
     }
 
     @Test
     fun `a first launch's end sends tutorial_ended with source first_launch`() = webTest {
-        // TODO: 1. Play the first-launch tutorial to the end.
-        // TODO: 2. The `tutorial_ended` event is sent with `source: first_launch`.
+        val page = tutorialPage(backgroundScope)
+        page.playSteps()
+
+        waitPause()
+
+        assertEquals("first_launch", page.ownProps("tutorial_ended").single()["source"])
     }
 }

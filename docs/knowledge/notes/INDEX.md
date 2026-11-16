@@ -104,6 +104,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-283: serve_lan.sh updates the served bundle on each commit](GH-283.md)
 - [GH-287: Drop the Mouse/Keyboard mode choice](GH-287.md)
 - [GH-288: First-launch tutorial: Mordie guides a short game](GH-288.md)
+- [GH-289: Replay the tutorial from the Give Up row, saving first](GH-289.md)
 - [GH-41: Kotlin Multiplatform shared modules: Core, Analytics, Mordie, Storage, ViewModel](GH-41.md)
 - [GH-6: Save and load game state to/from local files](GH-6.md)
 - [GH-62: Move counter](GH-62.md)

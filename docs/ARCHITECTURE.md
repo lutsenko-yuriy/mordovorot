@@ -212,7 +212,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── WebDragFlows.kt  # WebGame's drag of a row or column: press, moves, release as one shift (GH-110, split out in GH-288)
 │   ├── WebControlsDialog.kt # The Controls dialog's flow over WebGame's modal and the session's mode (GH-171)
 │   ├── ShareTogglePreference.kt # GH-267, GH-272: a Share dialog toggle (`Include my tile labels` under `share_labels`, `Include my progress` under `share_progress`), on or off, read once per session
-│   ├── WebTutorial.kt   # GH-288: the first-launch tutorial's flow: starts it (switch on, not seen, no saves), checks every shift against the step's (WebGame.shiftLine, WebDragFlows.onEnd), blocks others, the 3 s pause at step 5, Skip, step 6; `guidance()` is the frame's panel (Guidance.kt)
+│   ├── WebTutorial.kt   # GH-288: the first-launch tutorial's flow: starts it (switch on, not seen, no saves), checks every shift against the step's (WebGame.shiftLine, WebDragFlows.onEnd), blocks others, the 3 s pause at step 5, Skip, step 6; `guidance()` is the frame's panel (Guidance.kt); GH-289: `offered`, `onReplay` (the `ReplaySave` question, then `begin("replay")`) and `onReplayAnswered` replay it from the Give Up row's `[ Tutorial 8 ]`
 │   ├── Guidance.kt      # GH-288: the panel's step, text, Controls and the asked line (Guidance, TutorialHighlight)
 │   ├── TutorialPreference.kt # GH-288: whether the first-launch tutorial was seen (`tutorial` = `seen`); a failed read counts as seen
 │   ├── tutorial/        # GH-288: TutorialScript (the tutorial board and its four shifts), TutorialProgress (the step, and what each shift means: counts, done, blocked), TutorialText (Mordie's texts for a computer and a phone)
@@ -342,7 +342,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # it is given, and drops held Enter repeats (GH-164)
 ├── src/jsMain/kotlin/web/DomPlayKeys.kt # GH-171: keys outside dialogs -> WebGame.onKey, and PressedWith from
 │                                       # every keydown and pointerdown, in the capture phase
-├── src/jsMain/kotlin/web/DomSolution.kt # The step list, Prev/Next/Restart and the Give Up row (GH-126)
+├── src/jsMain/kotlin/web/DomSolution.kt # The step list, Prev/Next/Restart and the Give Up row (GH-126), with its `[ Tutorial ]` button (GH-289)
 ├── src/jsMain/kotlin/web/DomGuidance.kt # GH-288: the tutorial's bubble and buttons (they stand where the toolbar does, and are the
 │                                       # element Mordie's arriving line rises from) and the asked line's highlight, placed by DomBoard
 ├── src/jsMain/kotlin/web/a11y/DomBoardGrid.kt # GH-167: during play, the tiles as a table for screen
@@ -625,7 +625,7 @@ collaborators and hands them to `startWebGame` (`Launch.kt`), which decorates an
 (`platform: web`, then `input_method` from the last press for everything but `app_launched`), calls
 `buildGameViewModel` and starts a `WebGame`. At start, `WebGame` begins the first-launch tutorial
 (`WebTutorial`, GH-288) when the switch is on, `tutorial` isn't `seen` and there are no saves; else it runs the
-startup (a share link, else `restoreOnStartup`). The tutorial leaves the link in the address until it ends, and Skip runs the startup.
+startup (a share link, else `restoreOnStartup`). The tutorial leaves the link in the address until it ends, and Skip runs the startup; a replay (GH-289) starts the same tutorial from the Give Up row, and the tutorial's game re-arms `restoreOnStartup` so its Skip can run the startup again.
 `Main.kt` also passes the stamped `BuildInfo.VERSION` and `hostOf(window.location.hostname)` for
 `app_launched` (GH-111), and appends the footer to `<body>` once, outside `#app`, which
 `DomRenderer` rebuilds (all of it every frame, but for a computer's board, GH-171).

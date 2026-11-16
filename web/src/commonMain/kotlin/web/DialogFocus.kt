@@ -24,6 +24,11 @@ sealed class Focus(override val key: String) : FocusTarget {
     data object DialogCancel : Focus("dialog-cancel")
     /** A dialog's primary button (OK, Save, Delete, Open, Update, Yes) where it has no key of its own (GH-289). */
     data object DialogOk : Focus("dialog-ok")
+    /** The save question's Save and Don't save, before the tutorial replays (GH-289); its Cancel is [DialogCancel]. */
+    data object ReplaySaveSave : Focus("replay-save")
+    data object ReplayDontSave : Focus("replay-dont-save")
+    /** The Give Up row's `[ Tutorial ]` (GH-289). */
+    data object TutorialReplay : Focus("tutorial-replay")
     data object Repair : Focus("repair")
     data object LinkRejectedOk : Focus("link-rejected-ok")
     data object OpenSharedCancel : Focus("open-shared-cancel")
@@ -93,6 +98,7 @@ fun defaultFocus(dialog: WebDialog): Focus = when (dialog) {
     is WebDialog.SharedLabels -> Focus.SharedLabelsYes
     is WebDialog.Share -> Focus.CopyLink
     WebDialog.Update -> Focus.UpdateCancel
+    WebDialog.ReplaySave -> Focus.DialogCancel
 }
 
 /** The Very large section's title and warning line in the size picker (GH-207). */
@@ -114,4 +120,5 @@ val WebDialog.title: String get() = when (this) {
     is WebDialog.SharedLabels -> "Use the sender's labels (${labels.title})?"
     is WebDialog.Share -> "Share this board"
     WebDialog.Update -> "Update to the new version?"
+    WebDialog.ReplaySave -> "Save your game first?"
 }

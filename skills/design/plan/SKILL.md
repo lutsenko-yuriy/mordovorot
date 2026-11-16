@@ -51,6 +51,8 @@ Check the line count of every source file in "Files touched" against the `docs/C
 
 When the ticket changes a rule that applies in many places (focus on close, a shared label, a key's meaning, a default), list every place the rule applies in the plan, and say for each whether it changes (GH-277: the plan covered New and Load, and Save, which had the same trap, turned up when the user tried the branch). Find them by searching for the rule's code, not from memory. Where the ticket leaves one out, say so under out of scope.
 
+When the ticket re-runs an existing flow later in a session than it was built for (a startup sequence after a replay, a first-run setup reached from a button), search that flow's code for once-per-launch guards (a `Done` flag, a "runs once" check) and say in the plan how the replay gets past each one (GH-289: Skip after a replay did nothing, because `restoreOnStartup` ran only once per launch, and it surfaced only when the scenarios ran).
+
 ### 4. Post the plan as a PM comment
 
 Post the full plan text as a comment on the primary issue so `implement` can reference it.

@@ -44,7 +44,7 @@ class WebGame internal constructor(
     internal val controls = WebControlsDialog(this, viewModel, modal, keyboardLayout)
     internal val share = WebShareFlows(this, viewModel, analytics, modal, address, clipboard, shareLabels, shareProgress)
     internal val updates = WebUpdateFlows(this, viewModel, analytics, modal, updates, appVersion)
-    internal val tutorial = WebTutorial(this, viewModel, analytics, tutorialSeen, scope, computer, tutorialOn)
+    internal val tutorial = WebTutorial(this, viewModel, analytics, modal, tutorialSeen, scope, computer, tutorialOn)
     private val keys = WebKeyPlay(this, viewModel, pressedWith, computer)
     private val requests = WebRequestRouter(this)
     private val dragging = WebDragFlows(this, viewModel)
@@ -130,13 +130,19 @@ class WebGame internal constructor(
         }
     }
 
-    fun onSave(opener: Focus = Focus.SaveButton) = runFlow(opener) {
-        val name = dialogs.askSaveName()
-        when {
-            name == null -> {}
+    fun onSave(opener: Focus = Focus.SaveButton) = runFlow(opener) { saveFlow("toolbar") }
+
+    /** The Save dialog and the save it asks for, [openedFrom] as `screen_save_dialog.opened_from`; whether the game was saved (GH-289: the replay goes on only if so). */
+    internal suspend fun saveFlow(openedFrom: String): Boolean {
+        val name = dialogs.askSaveName(openedFrom)
+        return when {
+            name == null -> false
             // The name check alone allows spaces.
-            name.any { it.isWhitespace() } -> showStatus("'$name' isn't a usable save name (no spaces) - not saved.")
-            else -> if (viewModel.saveGame(name)) closing = onBoard ?: closing
+            name.any { it.isWhitespace() } -> {
+                showStatus("'$name' isn't a usable save name (no spaces) - not saved.")
+                false
+            }
+            else -> viewModel.saveGame(name).also { if (it) closing = onBoard ?: closing }
         }
     }
 
@@ -272,6 +278,7 @@ class WebGame internal constructor(
             },
             footer = updates.footer,
             guidance = guidance,
+            tutorialButton = tutorial.offered,
         )
     }
 
