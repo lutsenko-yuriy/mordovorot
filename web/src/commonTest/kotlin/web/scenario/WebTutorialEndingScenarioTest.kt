@@ -116,7 +116,8 @@ class WebTutorialEndingScenarioTest {
         page.stepByDrag(1)
 
         assertEquals(TutorialText.step(2, computer = false, labels = page.state.labels), page.state.guidance?.text)
-            }
+        assertEquals(tutorialTexts.step2("14", computer = false), page.state.guidance?.text)
+    }
 
     @Test
     fun `on a phone, the panel has no Controls button`() = webTest {
