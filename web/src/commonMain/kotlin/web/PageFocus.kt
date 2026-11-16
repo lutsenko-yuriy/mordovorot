@@ -23,6 +23,8 @@ fun fallbackFocus(key: String, state: WebState): Focus {
         key == Focus.GiveUpRow.key && state.solution != null -> Focus.ReplayNext
         // A new game's row is dimmed or hidden: on to the board, where the keys work (GH-171).
         key == Focus.GiveUpRow.key && state.selection != null -> Focus.Board
+        // A redraw under an open dialog (GH-289): a control that is gone or disabled passes focus to the dialog's own default, never to the page behind it.
+        state.dialog != null -> defaultFocus(state.dialog)
         else -> Focus.PageStart
     }
 }

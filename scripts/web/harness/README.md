@@ -147,10 +147,10 @@ scripts/web/harness/keys_check.sh
 that screen, then one after each step, once the page has redrawn:
 
 ```
-mouse play 1200x800 4x4 | S-Tab page -> focus BUTTON "OK" role button name "OK" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | S-Tab page -> focus dialog-ok role button name "OK" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
 ```
 
-A step is `click:<button text>` (a mouse click), `focus:<data-focus key>`, or a key: `Tab`,
+A step is `click:<button text>` (a mouse click), `focus:<data-focus key>`, `wait:<ms>` (waits that long, so a timer such as the tutorial's 3 s pause can fire between steps, GH-289), or a key: `Tab`,
 `S-Tab` (Shift+Tab), `Escape`, `Enter`, `Space`, `ArrowUp` and the like, sent as a `keydown` to
 the focused control; `R-` before a key is its auto-repeat while held (`R-Enter`, GH-164), and `@` after one names its position (`ц@KeyW`, GH-200). A synthetic key gets no default action, so when the page doesn't take it
 (`preventDefault`), the harness does what the browser would: Tab moves to the next control in

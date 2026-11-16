@@ -19,8 +19,11 @@ sealed class Focus(override val key: String) : FocusTarget {
     data class DeleteSave(val index: Int) : Focus("delete-save-$index")
     /** The Delete confirmation's Cancel, where it opens (GH-251). */
     data object DeleteCancel : Focus("delete-cancel")
-    /** A dialog's Cancel: Load's, when it has no saves to focus. */
+    /** A dialog's Cancel or Close, and Load's when it has no saves to focus. Every dialog button has a key, so a
+     *  redraw under an open dialog finds the one that had focus again (GH-289); unique only within one dialog. */
     data object DialogCancel : Focus("dialog-cancel")
+    /** A dialog's primary button (OK, Save, Delete, Open, Update, Yes) where it has no key of its own (GH-289). */
+    data object DialogOk : Focus("dialog-ok")
     data object Repair : Focus("repair")
     data object LinkRejectedOk : Focus("link-rejected-ok")
     data object OpenSharedCancel : Focus("open-shared-cancel")

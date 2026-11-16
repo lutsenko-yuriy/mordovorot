@@ -203,6 +203,10 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
     at once: New → a size, Load → a save, `Can't be solved` → Repair or New game, even when the size picker after
     New game is cancelled, as that game still starts, and Save → a name that saves (GH-277). Cancel and Escape, and
     a Save name that isn't usable, still go back to the button.
+  - **A redraw under an open dialog** (GH-289: the tutorial's panel going 3 seconds after step 5, an
+    update arriving, a status line) keeps focus on the dialog's control that had it. If that control is
+    gone, or focus had already fallen to the page, focus lands on the dialog's default control; it
+    never goes to the start of the page behind the dialog.
   - Focus rings show only once a key has been pressed, so a dialog's default control isn't ringed
     for mouse players.
 - **Focus after a press (GH-164):** a pressed arrow, toolbar button or solution-screen button keeps

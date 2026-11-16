@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.46.1] — 2026-11-16 (PR #299 merged)
+
+### Fixed
+
+- [user] (PR #299) GH-289: Keyboard focus no longer jumps to the start of the page when the screen changes behind an open dialog. (WU1 #299).
+- [non-user] GH-289: every dialog button has a data-focus key, fallbackFocus falls back to the open dialog's default control, harness wait: step.
+
 ## [0.46.0] — 2026-11-16 (PR #297 merged)
 
 ### Added
