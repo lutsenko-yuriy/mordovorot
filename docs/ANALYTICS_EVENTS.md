@@ -709,3 +709,12 @@ Changes to existing entries:
 - Skip in a replay runs the startup sequence again, in the same session as a launch's. So `startup_restore_prompt_shown`, `startup_restore_decision`, `load_command_used`, `unsolvable_save_resolved` and `new_game_size_selected`, all with `trigger: startup_prompt`, fire again, and a replay-Skip can't be told from a launch by `trigger`. Count real launches with `app_launched`. A distinct trigger value for the replay's startup is left until an SDK is wired up (GH-256) and the numbers show it matters.
 
 Not tracked: a replay that never starts because the question was cancelled (`dialog_cancelled` covers it), which control opened the replay beyond `opened_from`, and how often it is replayed (`tutorial_started` with `source: replay` counts it).
+
+## GH-290 (the tutorial names the keys on a computer)
+
+Planned in `/analyze`; the web client uses `NoopAnalyticsService` until an SDK is wired up (GH-256). No new events or screen views: the bubble's lines, the key line and the Key hints follow from `step`.
+
+Changes to existing entries:
+- `tutorial_step_completed` gains `input` (`string`): how the asked-for shift was made: `drag`, `click` (an arrow) or `key`. `key` never occurs on a phone. It doesn't say which keys or which layout: the keyboard layout is not tracked (GH-170).
+
+Not tracked: the keys pressed and the select keys on the way (the layout would show), the hand changed in Controls mid-tutorial (`screen_controls_dialog` with `opened_from: tutorial` covers that Controls was opened), which lines the bubble listed, and the way a blocked shift was made (`blocked_shifts` covers it).
