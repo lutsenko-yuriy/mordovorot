@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.49.0] — 2026-11-16 (PR #312 merged)
+
+### Changed
+
+- [meta] (PR #312) GH-311: `serve_lan.sh` prints the phone's address and QR code again after each new build it serves, so the phone is one scan from the latest commit; the address and code also print at start-up as before.
+
 ## [0.49.0] — 2026-11-16 (PR #310 merged)
 
 ### Changed
