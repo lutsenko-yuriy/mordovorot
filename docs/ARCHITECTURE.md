@@ -215,7 +215,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── WebTutorial.kt   # GH-288: the first-launch tutorial's flow: starts it (switch on, not seen, no saves), checks every shift against the step's (WebGame.shiftLine, WebDragFlows.onEnd), blocks others, the 3 s pause at step 5, Skip, step 6; `guidance()` is the frame's panel (Guidance.kt); GH-289: `offered`, `onReplay` (the `ReplaySave` question, then `begin("replay")`) and `onReplayAnswered` replay it from the Give Up row's `[ Tutorial 8 ]`
 │   ├── Guidance.kt      # GH-288: the panel's step, text, Controls and the asked line (Guidance, TutorialHighlight)
 │   ├── TutorialPreference.kt # GH-288: whether the first-launch tutorial was seen (`tutorial` = `seen`); a failed read counts as seen
-│   ├── tutorial/        # GH-288: TutorialScript (the tutorial board and its four shifts), TutorialProgress (the step, and what each shift means: counts, done, blocked), TutorialText (Mordie's texts for a computer and a phone)
+│   ├── tutorial/        # GH-288: TutorialScript (the tutorial board and its four shifts), TutorialProgress (the step, and what each shift means: counts, done, blocked), TutorialText (Mordie's texts for a computer and a phone), TutorialWays (GH-290: a computer's drag, click and key lines for the asked shift, from the selection and the hand)
 │   ├── PressedWith.kt   # The session's last input, read per event as input_method (GH-171)
 │   ├── ShareLink.kt     # GH-243 (WU1): `<page address>#b=<board>` built and read; playable, or rejected
 │   │                      # as invalid / unsupported_size / unsolvable. storage.BoardLinkFormat (ADR-0005) holds the board's bits.
@@ -398,7 +398,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/commonTest/kotlin/web/TextScaleTest.kt # GH-168: textScaleOf's ratios, floor and bad readings;
 │                                       # when rootFontPx leaves the default alone
 ├── src/commonTest/kotlin/web/drag/     # LineDragTest, WrapPositionsTest
-├── src/commonTest/kotlin/web/tutorial/ # TutorialScriptTest, TutorialProgressTest, TutorialTextTest (GH-288); TutorialPreferenceTest is in web/
+├── src/commonTest/kotlin/web/tutorial/ # TutorialScriptTest, TutorialProgressTest, TutorialTextTest (GH-288), TutorialWaysTest (GH-290); TutorialPreferenceTest is in web/
 ├── src/commonTest/kotlin/web/storage/  # BrowserSaveRepositoryTest, BrowserPreferenceRepositoryTest
 │                                       # over InMemoryKeyValueStore
 ├── src/jvmTest/kotlin/web/IndexPageTest.kt # Pins the title rule (the title appears only in the tab)
