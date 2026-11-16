@@ -20,6 +20,7 @@ kotlin {
                 api(project(":shared:analytics"))
                 api(project(":shared:storage"))
                 api(project(":shared:mordie"))
+                implementation(project(":shared:texts"))
                 api(libs.kotlinx.coroutines.core)
             }
         }

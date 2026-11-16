@@ -3,7 +3,7 @@ rootProject.name = "mordovorot"
 // GH-41: the platform-independent game, as Kotlin Multiplatform modules a future Web/Android/iOS
 // client can build on. The root project only aggregates them.
 include(
-    ":shared:core", ":shared:analytics", ":shared:storage", ":shared:mordie", ":shared:viewmodel", ":shared:testing",
+    ":shared:core", ":shared:analytics", ":shared:storage", ":shared:mordie", ":shared:texts", ":shared:viewmodel", ":shared:testing",
     // GH-110: the browser client.
     ":web", ":web:worker", ":web:offline",
 )

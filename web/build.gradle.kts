@@ -49,6 +49,7 @@ kotlin {
             kotlin.srcDir(generateBuildInfo)
             dependencies {
                 implementation(project(":shared:viewmodel"))
+                implementation(project(":shared:texts"))
             }
         }
         jsMain { resources.srcDir(workerResources) }
