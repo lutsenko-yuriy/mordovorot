@@ -157,7 +157,7 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                 actions(
                     button(texts().dialogs.cancel, "secondary") { game.tutorial.onReplayAnswered(ReplaySaveChoice.CANCEL) }.focusKey(Focus.DialogCancel),
                     button(texts().dialogs.dontSave, "secondary") { game.tutorial.onReplayAnswered(ReplaySaveChoice.DONT_SAVE) }.focusKey(Focus.ReplayDontSave),
-                    button("Save") { game.tutorial.onReplayAnswered(ReplaySaveChoice.SAVE) }.focusKey(Focus.ReplaySaveSave),
+                    button(texts().dialogs.save) { game.tutorial.onReplayAnswered(ReplaySaveChoice.SAVE) }.focusKey(Focus.ReplaySaveSave),
                 ),
             )
             WebDialog.GiveUp -> append(
