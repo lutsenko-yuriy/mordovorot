@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.49.0] — 2026-11-17 (PR #317 merged)
+
+### Added
+
+- [wip] (PR #317) GH-275 WU3: language mechanism, switched off for now: the page follows the browser's language and remembers a pick once the picker is on; the page stays English until then.
+
 ## [0.49.0] — 2026-11-17 (PR #316 merged)
 
 ### Added

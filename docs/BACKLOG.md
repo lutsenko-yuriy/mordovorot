@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-- GH-275: Localizations: introduce new languages (WU2/4 merged; WU3-4 pending)
+- GH-275: Localizations: introduce new languages (WU3/4 merged; WU4 pending)
 
 ---
 
