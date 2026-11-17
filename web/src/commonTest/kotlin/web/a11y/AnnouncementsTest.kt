@@ -112,6 +112,14 @@ class AnnouncementsTest {
     }
 
     @Test
+    fun `a Greek label is spoken with the letter names, and the question mark by its own (GH-322)`() {
+        assertEquals("alpha", Announcements.spoken("Α"))
+        assertEquals("gamma alpha", Announcements.spoken("ΓΑ"))
+        assertEquals("omega xi", Announcements.spoken("ΩΞ"))
+        assertEquals("Greek question mark", Announcements.spoken("\u037E"))
+    }
+
+    @Test
     fun `a label mixing scripts is said as it is`() {
         assertEquals("AБ", Announcements.spoken("AБ"))
     }
