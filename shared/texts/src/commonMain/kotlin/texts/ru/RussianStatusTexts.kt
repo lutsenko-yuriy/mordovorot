@@ -18,6 +18,8 @@ object RussianStatusTexts : StatusTexts {
     override fun availableSaves(list: String) = "Твои сохранения: $list"
     override fun lettersDontFit(side: Int) =
         "Буквы не помещаются на доску ${side}x$side (26 букв, ${russianTiles(side * side)}). Выбери другие метки."
+    override fun cyrillicLettersDontFit(side: Int) =
+        "Кириллические буквы не помещаются на доску ${side}x$side (28 букв, ${russianTiles(side * side)}). Выбери другие метки."
     override fun cantBeSolved(save: String) = "Ни одна последовательность сдвигов не решит «$save»."
     override fun repaired(name: String) = "«$name» исправлено (две плитки были поменяны местами) и загружено."
     override fun repairedNotUpdated(name: String) = "«$name» исправлено и загружено, но обновить сохранение не удалось."

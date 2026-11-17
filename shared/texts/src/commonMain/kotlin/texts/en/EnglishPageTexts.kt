@@ -37,6 +37,8 @@ object EnglishPageTexts : PageTexts {
     override val labelPairsFrom0 = "Pairs from 0"
     override val labelLetters = "Letters"
     override val labelLetterPairs = "Letter pairs"
+    override val labelCyrillicLetters = "Cyrillic letters"
+    override val labelCyrillicLetterPairs = "Cyrillic letter pairs"
     override fun labelLimit(side: Int) = "up to ${side}x$side"
     override val layoutRightHanded = "Right-handed"
     override val layoutLeftHanded = "Left-handed"

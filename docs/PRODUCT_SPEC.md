@@ -27,7 +27,7 @@ A count of the player's moves always carries its unit (`vs your 12 moves`), and 
 
 **German** and **Russian** keep Mordie's voice: informal (`du`, `ты`), short and warm, with the same four rules. A count is
 inflected by its own language (`1 Zug, 2 Züge`, `1 ход, 2 хода, 5 ходов`), and quotes are the language's own (`„foo“`, `«foo»`).
-Letters and Letter pairs stay Latin on the tiles, and screen readers keep the NATO words.
+Letters and Letter pairs stay Latin on the tiles, and screen readers keep the NATO words. The two Cyrillic schemes show in every language, and screen readers say them with the Russian spelling words (Feature 11).
 
 The words the glossary lists under "Known aliases to avoid" never appear in a text; a test enforces it. Screen-reader texts
 keep their terse wording while `docs/CONSTRAINTS.md` freezes screen readers.
@@ -511,6 +511,8 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   | Pairs from 0 | solved row and column, from 0 | `00 01 02 03` |
   | Letters | `A` + N | `A B C D` |
   | Letter pairs | solved row and column as letters | `AA AB AC AD` |
+  | Cyrillic letters (GH-313) | the 28 letters `А Б В Г Д Е Ж З И К Л М Н О П Р С Т У Ф Х Ц Ч Ш Щ Э Ю Я` (no ё, й, ъ, ы, ь) | `А Б В Г` |
+  | Cyrillic letter pairs (GH-313) | solved row and column as those letters | `АА АБ АВ АГ` |
 
   Only the text changes: a tile's colour (web) and the step list's `Row …`/`Col …` stay as they are.
 - **The dialog:** `Tile labels`, one row per scheme with the current board size's first solved
@@ -521,6 +523,14 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
 - **Which labels a game shows:** a loaded save's own labels (Feature 4), or the sender's labels the player
   said Yes to on opening a share link (Feature 12, GH-267), win for that game; then
   the remembered preference; then Numbers. A new game goes back to the preference.
+- **Cyrillic letters (GH-313)** work as Letters do: 28 labels fit up to 5x5, so on 6x6 and larger its row is dimmed, reads `up to 5x5`
+  (`bis 5x5`, `до 5x5`), Numbers stand in and the preference is kept. A 6x6 save with Cyrillic letters asks for labels with its own
+  message (28 letters, 36 tiles), the `letters_save` source. **Cyrillic letter pairs** fit every size up to 9x9. The rows are named
+  `Cyrillic letters` / `Cyrillic letter pairs`, `Kyrillische Buchstaben` / `Kyrillische Buchstabenpaare` and `Кириллические буквы` /
+  `Кириллические пары` and sit after Letter pairs, so the dialog has eight rows. They work like the others in the tutorial, saves
+  and share links (an old build opens a Cyrillic save with its own labels and a labelled link as a plain board). Screen readers say
+  each letter with a Russian spelling word, `АБ` as `Анна Борис`, in every language. Cyrillic pairs have a smaller font cap at
+  larger text sizes, as the widest pair (`ЖЖ`) is wider than any Latin one.
 - **Letters on 7x7 to 9x9 (GH-207)** is dimmed and shown as Numbers just as on 6x6, below.
 - **Letters on 6x6 (GH-160):** Letters has 26 labels, too few for 36 tiles. On a 6x6 board its row
   in the dialog is dimmed, reads `up to 5x5` instead of a sample, and can't be picked or focused.
@@ -660,8 +670,7 @@ Web client only. On a first visit Mordie walks the player through a short game.
   Controls and Labels, and `tutorial: true` on `board_solved` and `mordie_solution_found` (`docs/ANALYTICS_EVENTS.md`).
 
 ### Feature 14 — Languages (GH-275)
-Web client only. The game is in English, German and Russian; every text the player reads follows the language. Out of scope: Cyrillic
-tile labels (GH-313), more languages, right-to-left scripts, translating the docs or analytics.
+Web client only. The game is in English, German and Russian; every text the player reads follows the language. Out of scope: more languages, right-to-left scripts, translating the docs or analytics.
 - **First visit:** the browser's first language, when it is German or Russian; English for any other. An earlier pick wins over the
   browser, and is remembered per browser (the `language` preference). Nothing is stored until the player picks: an unpicked player
   follows the browser on every visit. The language is not in saves or share links.
@@ -671,7 +680,7 @@ tile labels (GH-313), more languages, right-to-left scripts, translating the doc
 - **A switch:** applies at once with no reload. Everything the page words follows: Mordie's line (swapped in place), the toolbar, the
   hints, the tutorial bubble, the footer, the tab title and `<html lang>`. The status line is cleared. A pick while a dialog, a
   toolbar action or a drag is under way is ignored.
-- **Stays as it is:** Letters and Letter pairs on the tiles (Latin), the NATO words screen readers speak, and the analytics, which are English.
+- **Stays as it is:** Letters and Letter pairs on the tiles (Latin), the NATO words screen readers speak, and the analytics, which are English. The Cyrillic labels (GH-313) are the same in every language.
 - **Layout:** German and Russian words are longer, so on a phone the toolbar wraps to two rows in those languages (the board is about
   15% smaller on the smallest phones). The Give Up row, dialog buttons and tutorial bubble fit; all are checked at phone widths and at 150% text size.
 - **Analytics:** `language_changed` and `app_launched.language` (`docs/ANALYTICS_EVENTS.md`).

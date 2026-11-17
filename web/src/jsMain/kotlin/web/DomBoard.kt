@@ -3,6 +3,7 @@ package web
 import org.w3c.dom.Element
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.pointerevents.PointerEvent
+import viewmodel.TileLabels
 import web.a11y.Announcements
 import web.a11y.activeCell
 import web.a11y.asCell
@@ -70,7 +71,8 @@ internal class DomBoard(private val root: HTMLElement, private val game: () -> W
         redrawTiles(state, offset)
 
         val asked = state.guidance?.highlight
-        val classes = listOfNotNull("board", "solved".takeIf { state.solved }, "just-solved".takeIf { justSolved }, "guided".takeIf { state.guidance != null })
+        val classes = listOfNotNull("board", "solved".takeIf { state.solved }, "just-solved".takeIf { justSolved }, "guided".takeIf { state.guidance != null },
+            "cyrillic-pairs".takeIf { state.labels == TileLabels.CYRILLIC_LETTER_PAIRS })
         return element("div", classes.joinToString(" ")).apply {
             append(
                 element("span"), arrows(Arrow.UP, "▲", "row"), element("span"),

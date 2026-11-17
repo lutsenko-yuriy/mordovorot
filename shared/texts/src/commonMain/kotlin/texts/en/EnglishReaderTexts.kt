@@ -1,6 +1,7 @@
 package texts.en
 
 import texts.NATO_WORDS
+import texts.RUSSIAN_SPELLING_WORDS
 import texts.ReaderTexts
 
 object EnglishReaderTexts : ReaderTexts {
@@ -29,4 +30,5 @@ object EnglishReaderTexts : ReaderTexts {
     override val readBoard = "Read board"
 
     override val phonetic = NATO_WORDS
+    override val cyrillicPhonetic = RUSSIAN_SPELLING_WORDS
 }

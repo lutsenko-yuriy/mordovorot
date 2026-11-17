@@ -5,6 +5,7 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import storage.BoardLinkFormat
 import viewmodel.SharedProgress
 import viewmodel.TileLabels
@@ -126,6 +127,16 @@ class ShareLinkTest {
 
         assertEquals(LinkLabels.Unreadable, labelsOf("$six&l=letters"))
         assertEquals(LinkLabels.Scheme(TileLabels.LETTER_PAIRS), labelsOf("$six&l=letter_pairs"))
+        assertEquals(LinkLabels.Unreadable, labelsOf("$six&l=cyrillic_letters"))
+        assertEquals(LinkLabels.Scheme(TileLabels.CYRILLIC_LETTER_PAIRS), labelsOf("$six&l=cyrillic_letter_pairs"))
+    }
+
+    @Test
+    fun `the longest link, a 9x9 board with Cyrillic pairs and progress, still fits a QR code (GH-313)`() {
+        val link = ShareLink.of(base, 9, IntArray(81) { 80 - it }, TileLabels.CYRILLIC_LETTER_PAIRS, SharedProgress.Solving(9999999))
+
+        assertTrue(link.contains("&l=cyrillic_letter_pairs"), link)
+        web.qr.QrCode.encode(link)
     }
 
     @Test

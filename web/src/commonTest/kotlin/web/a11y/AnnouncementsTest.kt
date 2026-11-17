@@ -102,4 +102,17 @@ class AnnouncementsTest {
         assertEquals("12", Announcements.spoken("12"))
         assertEquals("0", Announcements.spoken("0"))
     }
+
+    @Test
+    fun `a Cyrillic label is spoken with the Russian spelling words (GH-313)`() {
+        assertEquals("Анна", Announcements.spoken("А"))
+        assertEquals("Анна Борис", Announcements.spoken("АБ"))
+        assertEquals("Яков Юрий", Announcements.spoken("ЯЮ"))
+        assertEquals("Щука Эхо", Announcements.spoken("ЩЭ"))
+    }
+
+    @Test
+    fun `a label mixing scripts is said as it is`() {
+        assertEquals("AБ", Announcements.spoken("AБ"))
+    }
 }

@@ -3,6 +3,7 @@ package web.a11y
 import texts.texts
 import viewmodel.Direction
 import viewmodel.SolutionStep
+import viewmodel.TileLabels
 
 /** What a screen reader hears (GH-166), and the arrows' accessible names. Lines are 0-based here
  *  and counted from 1 in the words. A [newMove] is the move count after a shift that started a
@@ -66,9 +67,12 @@ internal object Announcements {
     }
 
     /** A tile [label] as said: letters in the phonetic alphabet (`BC` -> `bravo charlie`), so `B`
-     *  and `D` don't sound alike; numbers as they are. */
-    fun spoken(label: String): String =
-        if (label.all { it in 'A'..'Z' }) label.map { texts().reader.phonetic[it - 'A'] }.joinToString(" ") else label
+     *  and `D` don't sound alike; Cyrillic letters by the Russian spelling words (`АБ` -> `Анна Борис`, GH-313); numbers as they are. */
+    fun spoken(label: String): String = when {
+        label.all { it in 'A'..'Z' } -> label.map { texts().reader.phonetic[it - 'A'] }.joinToString(" ")
+        label.all { it in TileLabels.CYRILLIC_ALPHABET } -> label.map { texts().reader.cyrillicPhonetic[TileLabels.CYRILLIC_ALPHABET.indexOf(it)] }.joinToString(" ")
+        else -> label
+    }
 
     /** What a tile in place adds: to Read board's count, and to the tile's own cell. */
     val IN_PLACE: String get() = texts().reader.inPlace
