@@ -37,6 +37,8 @@ queries=(
   # GH-323: Tile labels' groups: Tab visits the three headers and the open group's one radio; an arrow moves the mark inside the open group; a header opens its group with focus on its first scheme.
   "report=keys&keys=click:Labels,Tab,Tab,Tab,Tab,Tab,Escape"
   "report=keys&keys=click:Labels,ArrowDown,ArrowDown,ArrowUp,focus:label-group-latin,Enter,ArrowDown,Escape"
+  # GH-323: a group of 0-based schemes: its header opens it, and its rows are named like the 1-based ones'.
+  "report=keys&keys=click:Labels,focus:label-group-numbers_from_0,Enter,ArrowDown,Escape"
   # GH-262: the New version available notice. Update with no moves reloads, so a shift first; the dialog opens on Cancel, Escape and Cancel return to Update.
   "report=keys&update=ready&keys=click:▶,focus:update,Enter,Escape,focus:update,Enter,Tab,Tab,Enter"
   # GH-243: Share opens on Copy link; Tab stays inside it; Escape puts focus back on Share.

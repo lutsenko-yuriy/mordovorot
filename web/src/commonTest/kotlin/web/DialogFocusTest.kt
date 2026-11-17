@@ -55,7 +55,7 @@ class DialogFocusTest {
 
     @Test
     fun `an open group focuses its first scheme that fits when it holds no mark`() {
-        val options = TileLabels.entries.map { LabelOption(it, it.title, if (it == TileLabels.LETTERS) "up to 5x5" else null) }
+        val options = TileLabels.entries.map { LabelOption(it, TileLabelGroup.of(it).rowTitle(it), if (it == TileLabels.LETTERS) "up to 5x5" else null) }
         assertEquals(Focus.Label(TileLabels.LETTER_PAIRS), defaultFocus(WebDialog.Labels(options, TileLabels.NUMBERS, open = TileLabelGroup.LATIN)))
         assertEquals(Focus.Label(TileLabels.CYRILLIC_LETTERS), defaultFocus(WebDialog.Labels(options, TileLabels.NUMBERS, open = TileLabelGroup.CYRILLIC)))
         assertEquals(Focus.Label(TileLabels.PAIRS), defaultFocus(WebDialog.Labels(options, TileLabels.PAIRS)))
