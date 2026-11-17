@@ -2,6 +2,7 @@
 
 /* The Tile labels picker (GH-139, GH-323): a strip previewing the marked scheme, then the three groups, one open at a time. */
 .dialog .label-preview {
+    margin-top: 8px;
     display: flex;
     justify-content: center;
     gap: 8px;
@@ -21,6 +22,11 @@
     font-size: calc(var(--swatch) * 0.4);
     font-weight: 700;
     box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12);
+}
+
+/* More room above Cancel and OK than between the groups. */
+.dialog .label-group + .actions {
+    margin-top: 10px;
 }
 
 .dialog .label-group {
