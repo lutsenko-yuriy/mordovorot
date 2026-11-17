@@ -11,7 +11,6 @@ import viewmodel.UnsolvableSaveChoice
 import web.a11y.asCheckbox
 import web.a11y.asDialog
 import web.a11y.asRadio
-import web.a11y.asRadioGroup
 import web.a11y.asRadioGroupLabelledBy
 import web.a11y.focusKey
 import web.a11y.hiddenFromReaders
@@ -87,8 +86,7 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                 ),
             )
             is WebDialog.Labels -> append(
-                *listOfNotNull(dialog.message?.let { text("message", it) }).toTypedArray(),
-                choices(dialog.options.map { labelRow(it, it.labels == dialog.selected, game) }, "list labels").also { asRadioGroup(it, texts().dialogs.tileLabelsName) },
+                *labelsBody(dialog, game).toTypedArray(),
                 actions(
                     button(texts().dialogs.cancel, "secondary") { game.labels.onAnswered(ok = false) }.focusKey(Focus.DialogCancel),
                     button(texts().dialogs.ok) { game.labels.onAnswered(ok = true) }.focusKey(Focus.DialogOk),
@@ -186,17 +184,6 @@ private const val TRASH_ICON =
         """stroke-linecap="round" stroke-linejoin="round" focusable="false">""" +
         """<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/><path d="M10 10v6"/><path d="M14 10v6"/></svg>"""
 
-/** A radio-role button, since the page is rebuilt every frame and a native radio would lose its state. */
-private fun labelRow(option: LabelOption, checked: Boolean, game: WebGame) =
-    button("", if (checked) "checked" else null) { game.labels.onSelected(option.labels) }.focusKey(Focus.Label(option.labels)).apply {
-        asRadio(this, checked, unavailable = !option.available)
-        append(
-            element("span", "mark").apply { textContent = if (checked) "●" else "○" },
-            element("span", "name").apply { textContent = option.title },
-            element("span", "sample").apply { textContent = option.sample.joinToString(" ") { it.padEnd(2) } },
-        )
-    }
-
 /** A group of radios, one Tab stop: the arrows move its mark (DomKeyboard). */
 private fun radios(title: String, options: List<Element>) = element("div", "radios").apply {
     val titleId = "radios-${title.lowercase().replace(' ', '-')}"
@@ -208,7 +195,7 @@ private fun radios(title: String, options: List<Element>) = element("div", "radi
 /** Only the [checked] radio is a Tab stop. */
 private fun radio(title: String, checked: Boolean, focus: Focus, onClick: () -> Unit) =
     button("", if (checked) "checked" else null, onClick).focusKey(focus).apply {
-        asRadio(this, checked, rovingTabStop = true)
+        asRadio(this, checked, tabStop = checked)
         append(
             hiddenFromReaders(element("span", "mark").apply { textContent = if (checked) "●" else "○" }),
             element("span", "name").apply { textContent = title },

@@ -44,6 +44,17 @@ interface PageTexts {
     val labelCyrillicLetters: String
     val labelCyrillicLetterPairs: String
 
+    /** The Tile labels dialog's group headers (GH-323). */
+    val labelGroupNumbers: String
+    val labelGroupLatin: String
+    val labelGroupCyrillic: String
+
+    /** A scheme's row inside a letter group, whose header already names the alphabet (GH-323): `Letters`; its pair is `Pairs`. */
+    val labelRowLetters: String
+
+    /** A closed group's header when it holds the marked scheme, for screen readers (GH-323): `Latin letters, marked: Pairs`. */
+    fun labelGroupMarked(group: String, row: String): String
+
     /** The labels dialog's sample for a scheme that doesn't fit: `up to 5x5`. */
     fun labelLimit(side: Int): String
     val layoutRightHanded: String

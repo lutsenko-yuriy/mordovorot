@@ -1,6 +1,7 @@
 package web
 
 import viewmodel.GameViewModel
+import viewmodel.TileLabelGroup
 import viewmodel.TileLabels
 
 /** The Tile labels dialog's flows (GH-139, GH-160), as [WebControlsDialog] does Controls. */
@@ -24,6 +25,16 @@ internal class WebLabelsDialog(
         game.render(focus = Focus.Label(labels))
     }
 
+    /** A group header pressed (GH-323): the group opens and focus goes to its marked scheme, else its first that fits.
+     *  The open group again does nothing; the mark stays where it is, and no event is sent. */
+    fun onGroupOpened(group: TileLabelGroup) {
+        val shown = modal.shown as? WebDialog.Labels ?: return
+        if (group == shown.open) return
+        val opened = shown.copy(open = group)
+        modal.update(opened)
+        game.render(focus = defaultFocus(opened))
+    }
+
     /** The dialog's answer: OK with the marked scheme, or Cancel. */
     fun onAnswered(ok: Boolean) {
         val shown = modal.shown as? WebDialog.Labels ?: return
@@ -35,7 +46,7 @@ internal class WebLabelsDialog(
 
     /** [open] with [labels] marked, or `null` when [labels] doesn't fit the board. */
     private fun select(open: WebDialog.Labels, labels: TileLabels): WebDialog.Labels? =
-        if (labels.fits(viewModel.squareSide())) dialog(labels, open.message) else null
+        if (labels.fits(viewModel.squareSide())) open.copy(selected = labels) else null
 
     private suspend fun choose(message: String? = null): TileLabels? {
         val chosen = modal.ask<TileLabels?>(dialog(viewModel.tileLabels(), message))
@@ -46,10 +57,7 @@ internal class WebLabelsDialog(
     private fun dialog(selected: TileLabels, message: String?): WebDialog.Labels {
         val side = viewModel.squareSide()
         return WebDialog.Labels(
-            TileLabels.entries.map {
-                if (it.fits(side)) LabelOption(it, it.title, it.sampleRow(side))
-                else LabelOption(it, it.title, listOf(it.limitText), available = false)
-            },
+            TileLabels.entries.map { LabelOption(it, TileLabelGroup.of(it).rowTitle(it), if (it.fits(side)) null else it.limitText) },
             selected,
             message,
         )

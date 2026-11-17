@@ -150,7 +150,7 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       ├── TileLabels.kt          # The eight label schemes (GH-313 adds the Cyrillic two, CYRILLIC_ALPHABET): wireName (analytics, saves, the
 │       │                             # preference), title, maxSide, fits(side), label(tile, side), sampleRow.
 │       │                             # NUMBERS is the default (GH-139)
-│       ├── TileLabelGroup.kt      # Planned (GH-323): the alphabet groups of the Tile labels dialog (Numbers, Latin letters, Cyrillic letters, later Greek),
+│       ├── TileLabelGroup.kt      # GH-323: the alphabet groups of the Tile labels dialog (Numbers, Latin letters, Cyrillic letters, later Greek),
 │       │                             # each an ordered list of its schemes; a test pins that every TileLabels is in exactly one group
 │       ├── TileLabelsPreference.kt # TileLabels over a PreferenceRepository under `tile_labels`;
 │       │                             # a failed read is no preference, a failed write is silent (GH-139)
@@ -252,7 +252,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │                    # and announcement (GH-166); which tiles are home and Read board's words (GH-167)
 │   ├── WebRenderer.kt   # fun interface render(WebState), and scrollSteps (GH-171) - the DOM on the page, a recorder in tests
 │   ├── WebRequestRouter.kt # Answers each UiRequest (exhaustive `when`)
-│   ├── WebLabelsDialog.kt # The Tile labels dialog's intents and flows over WebGame's modal (GH-160; the intents moved here in GH-243) - GH-323 adds `onGroupOpened` and the open group (`WebDialog.Labels.open`), and the preview strip's three labels
+│   ├── WebLabelsDialog.kt # The Tile labels dialog's intents and flows over WebGame's modal (GH-160; the intents moved here in GH-243) - GH-323 added `onGroupOpened` and the open group (`WebDialog.Labels.open`), and the preview strip's three labels
 │   ├── WebModal.kt      # WebGame's dialog machinery: open/answer a WebDialog, the button that
 │   │                    # opened it, the cancel's `via` (GH-163); `ask(leadsOn)` skips the dialog-less frame
 │   │                    # between chained dialogs (Load → Delete 'foo'?, GH-251)
@@ -353,7 +353,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/jsMain/kotlin/web/DomQr.kt      # GH-243: the Share dialog's QR code as an inline SVG from QrSvg, hidden from readers
 ├── src/jsMain/kotlin/web/DomDialogs.kt  # The modal dialogs, and Escape -> WebGame.onEscape (GH-163, listenForEscape);
 │                                       # DomElements.kt: element/text/button helpers, and KeyboardEvent.composing
-├── src/jsMain/kotlin/web/DomLabelsDialog.kt # Planned (GH-323): the Tile labels dialog's DOM: the preview strip, the group headers (`aria-expanded`) and the open group's stacked radio options
+├── src/jsMain/kotlin/web/DomLabelsDialog.kt # GH-323: the Tile labels dialog's DOM: the preview strip, the group headers (`aria-expanded`) and the open group's two radio options side by side
 ├── src/jsMain/kotlin/web/a11y/DomKeyboard.kt # GH-163: Tab wraps inside the open dialog, the page
 │                                       # behind it `inert`, applyFocus puts a FocusTarget on the page;
 │                                       # keeps the focused control across redraws, else the fallback
@@ -399,7 +399,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/jsMain/resources/board.css      # GH-153: tile colours by home row/column, arrows, solve
 │                                       # animations; no arrows under `pointer: coarse` (GH-111);
 │                                       # tile labels grow with `--text-scale`, capped (GH-168); Cyrillic letter pairs get a smaller cap (GH-313)
-├── src/jsMain/resources/dialogs.css    # GH-153: the modal dialogs, the Tile labels picker (GH-139)
+├── src/jsMain/resources/dialogs.css    # GH-153: the modal dialogs
+├── src/jsMain/resources/labels.css     # GH-323: the Tile labels dialog's preview strip, group headers and scheme rows (moved out of dialogs.css)
 ├── src/jsMain/resources/toggle.css     # GH-267: the Share dialog's `Include my tile labels` switch
 ├── src/jsMain/resources/language.css   # GH-275: the picker's corner spot; toggles on wide windows, the dropdown under the phone breakpoint
 ├── src/jsMain/resources/solution.css   # GH-153: `.app.solution` and the step list (GH-126); its

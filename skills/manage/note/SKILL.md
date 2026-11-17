@@ -79,6 +79,12 @@ YYYY-MM-DD, <branch> (PR #N, CI <green|red|pending>)
 
 Take the facts from `git status`, `git log`, `gh pr view` and the conversation; do not ask the user for them. Then go to step 5.
 
+### 4b. Park mode (GH-323)
+
+Instead of steps 2 and 3 when the user says "park it" or the argument is `park <text>` (optionally `GH-XX: park <text>`); step 1 still resolves the ticket, and the text is what follows `park`, or the side topic just discussed.
+
+Append `N. <text>` (the next number) to the `## Parking lot` section of the ticket's notes file, between `## Notes` and `## Debrief summary`. Create the section if it is missing, and the file as in step 3 if needed. It is a numbered list, never a log: `/debrief` empties it. Then go to step 5.
+
 ### 5. Report back
 
 One line: *"Noted in `docs/knowledge/notes/GH-XX.md`."*
@@ -87,6 +93,6 @@ One line: *"Noted in `docs/knowledge/notes/GH-XX.md`."*
 
 ## Constraints
 
-- Never write to `## Debrief summary` — that section belongs to `/debrief`. In stop mode the only existing text you may change is the `## Where we stopped` section.
+- Never write to `## Debrief summary` — that section belongs to `/debrief`. In stop mode the only existing text you may change is the `## Where we stopped` section; in park mode, the `## Parking lot` section.
 - One question maximum across all steps. If both the ticket and the note text are unknown, ask for the ticket first; ask for the note text in the same response only if the ticket was explicit in the argument.
 - Never modify production code, tests, or any file outside `docs/knowledge/notes/`.

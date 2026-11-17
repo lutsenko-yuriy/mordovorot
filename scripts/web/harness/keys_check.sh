@@ -27,13 +27,18 @@ queries=(
   # GH-167: the board as a table and Read board, pressed, after a shift and under a dialog.
   "report=keys&grid=1&keys=focus:read-board,Enter,click:▶,Enter,click:Labels"
   # Letters, said in the phonetic alphabet by the cells and Read board.
-  "report=keys&grid=1&keys=click:Labels,focus:label-letters,Enter,click:OK,focus:read-board,Enter"
+  "report=keys&grid=1&keys=click:Labels,focus:label-group-latin,Enter,Enter,click:OK,focus:read-board,Enter"
   # GH-313: Cyrillic letters, said by the Russian spelling words.
-  "report=keys&grid=1&keys=click:Labels,focus:label-cyrillic_letters,Enter,click:OK,focus:read-board,Enter"
+  "report=keys&grid=1&keys=click:Labels,focus:label-group-cyrillic,Enter,Enter,click:OK,focus:read-board,Enter"
   # GH-171: Controls with 6 and with Tab+Enter; its groups' Tab stops and arrows; Escape; OK.
   "report=keys&keys=6,ArrowRight,Tab,ArrowDown,ArrowDown,Tab,Tab,Tab,Escape"
   "report=keys&keys=focus:controls,Enter,ArrowLeft,Enter"
   "report=keys&keys=focus:labels,6,Escape,1,Escape"
+  # GH-323: Tile labels' groups: Tab visits the three headers and the open group's one radio; an arrow moves the mark inside the open group; a header opens its group with focus on its first scheme.
+  "report=keys&keys=click:Labels,Tab,Tab,Tab,Tab,Tab,Escape"
+  "report=keys&keys=click:Labels,ArrowDown,ArrowDown,ArrowUp,focus:label-group-latin,Enter,ArrowDown,Escape"
+  # GH-323: a group of 0-based schemes: its header opens it, and its rows are named like the 1-based ones'.
+  "report=keys&keys=click:Labels,focus:label-group-numbers_from_0,Enter,ArrowDown,Escape"
   # GH-262: the New version available notice. Update with no moves reloads, so a shift first; the dialog opens on Cancel, Escape and Cancel return to Update.
   "report=keys&update=ready&keys=click:▶,focus:update,Enter,Escape,focus:update,Enter,Tab,Tab,Enter"
   # GH-243: Share opens on Copy link; Tab stays inside it; Escape puts focus back on Share.

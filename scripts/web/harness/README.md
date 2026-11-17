@@ -149,7 +149,7 @@ scripts/web/harness/keys_check.sh
 that screen, then one after each step, once the page has redrawn:
 
 ```
-mouse play 1200x800 4x4 | S-Tab page -> focus dialog-ok role button name "OK" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
+mouse play 1200x800 4x4 | S-Tab page -> focus label-group-numbers role button name "Numbers" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel FOOTER.footer | said -
 ```
 
 A step is `click:<button text>` (a mouse click), `focus:<data-focus key>`, `wait:<ms>` (waits that long, so a timer such as the tutorial's 3 s pause can fire between steps, GH-289), or a key: `Tab`,
@@ -175,7 +175,7 @@ Headless can't show what VoiceOver says or how a ring looks; those stay a short 
 the user (`docs/workflows/FEATURE.md` step 10.0).
 
 `keys_check.sh` builds the bundle, plays GH-163's dialog flows (Labels with Tab and Shift+Tab
-wrapping, New from Enter, Save, each closed with Escape) and GH-164's kept focus (Tab on from
+wrapping, and GH-323's groups: their headers, the open group's one radio and its arrows; New from Enter, Save, each closed with Escape) and GH-164's kept focus (Tab on from
 Load after its dialog closes; an arrow pressed twice, then a held Enter and Tab; Prev at the first
 step and Restart on the solution screen), GH-166's announcements (New 5x5, then an arrow) and
 GH-167's board table and Read board (pressed, after a shift, under the Labels dialog, with

@@ -24,6 +24,7 @@ docs/knowledge/
 See `docs/knowledge/notes/TEMPLATE.md` for the canonical structure. In brief:
 
 - `## Notes` — dated headings (`### YYYY-MM-DD`) with named observations (bold title + paragraph body), appended mid-session
+- `## Parking lot` — optional, between `## Notes` and `## Debrief summary` (GH-323): a numbered list of side topics, "not now", that either the user or the agent adds so they stay out of the current discussion; `/debrief` turns each into a ticket or a note, or drops it, then removes the section
 - `## Debrief summary` — a single structured block written by `/debrief` after the ticket closes
 
 **Reopened tickets:** if a ticket's notes file is already finalised, do not edit it. Create a new file with a suffix: `GH-XX-adjust-1.md`, `GH-XX-adjust-2.md`, etc. The original file is treated as a closed record.
@@ -34,6 +35,7 @@ See `docs/knowledge/notes/TEMPLATE.md` for the canonical structure. In brief:
 |---|---|
 | `/note [GH-XX:] <text>` | Appends a dated observation to `## Notes` |
 | `/note stop` (or "Okay, we'll stop here") | Replaces `## Where we stopped`: branch, PR, done, open, next, for the next session |
+| `/note park <text>` (or "park it") | Appends `N. <text>` to `## Parking lot`, creating the section if needed |
 | `/debrief GH-XX` | Appends a dated block to `## Debrief summary` |
 | `/checkup [light\|heavy\|status]` | Writes a dated `checkups/CHK-YYYY-MM-DD-<tier>.md` and updates `checkups/LEDGER.md` |
 

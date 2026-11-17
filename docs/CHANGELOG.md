@@ -13,6 +13,14 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.52.0] — 2026-11-17 (PR #327 merged)
+
+### Added
+
+- [user] (PR #327) GH-323: The Tile labels dialog groups the labels by alphabet: Numbers, Numbers from 0, Latin letters and Cyrillic letters open one at a time, each with two schemes side by side, and a strip of tiles previews the marked scheme.
+- [non-user] (PR #326) GH-323 WU0: scenarios for the label groups, as stubs.
+- [non-user] (PR #327) GH-323 WU1: the grouped Tile labels dialog, with its styles in their own labels.css.
+
 ## [0.51.0] — 2026-11-17 (PR #321 merged)
 
 ### Added

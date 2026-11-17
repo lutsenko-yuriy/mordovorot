@@ -6,6 +6,7 @@ import viewmodel.GiveUpButton
 import viewmodel.KeyboardLayout
 import viewmodel.SharedProgress
 import viewmodel.SolutionState
+import viewmodel.TileLabelGroup
 import viewmodel.TileLabels
 import viewmodel.TileSelection
 import web.a11y.Announcements
@@ -110,8 +111,24 @@ sealed interface WebDialog {
     data object GiveUp : WebDialog
 
     /** The tile labels picker (GH-139): [selected] is marked until Cancel or OK. [message] says why
-     *  a load opened it (GH-160). */
-    data class Labels(val options: List<LabelOption>, val selected: TileLabels, val message: String? = null) : WebDialog
+     *  a load opened it (GH-160). Only the [open] group lists its schemes (GH-323); the mark can be in another. */
+    data class Labels(
+        val options: List<LabelOption>,
+        val selected: TileLabels,
+        val message: String? = null,
+        val open: TileLabelGroup = TileLabelGroup.of(selected),
+    ) : WebDialog {
+        /** The preview strip: the marked scheme's first labels, the same on every board (GH-323). */
+        val preview: List<String> get() = selected.sampleRow(PREVIEW_LENGTH)
+
+        /** A group header's name for screen readers: the group's title, and for a closed group that holds the mark, which scheme
+         *  is marked too, since the preview strip is hidden from readers and a closed group lists no rows. */
+        fun headerName(group: TileLabelGroup): String =
+            if (group != open && TileLabelGroup.of(selected) == group) texts().page.labelGroupMarked(group.title, group.rowTitle(selected)) else group.title
+
+        /** The [open] group's options, in order. */
+        val openOptions: List<LabelOption> get() = open.schemes.mapNotNull { scheme -> options.firstOrNull { it.labels == scheme } }
+    }
 
     /** The Controls dialog (GH-171): [layout] is marked until Cancel or OK; [keyList]
      *  names the marked layout's keys. */
@@ -178,6 +195,11 @@ data class SaveEntry(val name: String, val label: String) {
     val deleteName: String get() = texts().dialogs.deleteName(name)
 }
 
-/** A Labels row: a scheme, its [title] and its [sample], the solved board's first row - or, when
- *  not [available] for the board (GH-160), the largest side it labels. */
-data class LabelOption(val labels: TileLabels, val title: String, val sample: List<String>, val available: Boolean = true)
+/** How many labels the Labels dialog's preview strip shows (GH-323). */
+const val PREVIEW_LENGTH = 3
+
+/** A Labels row: a scheme and its [title]; when it doesn't fit the board (GH-160) [limit] says the
+ *  largest side it labels, and the row is not [available]. */
+data class LabelOption(val labels: TileLabels, val title: String, val limit: String? = null) {
+    val available: Boolean get() = limit == null
+}

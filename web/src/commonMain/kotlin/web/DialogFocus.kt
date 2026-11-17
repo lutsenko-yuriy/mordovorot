@@ -2,6 +2,7 @@ package web
 
 import texts.texts
 import viewmodel.KeyboardLayout
+import viewmodel.TileLabelGroup
 import viewmodel.TileLabels
 import web.a11y.FocusTarget
 
@@ -43,6 +44,8 @@ sealed class Focus(override val key: String) : FocusTarget {
     /** The Share dialog's `Include my progress` toggle (GH-272). */
     data object ShareProgress : Focus("share-progress")
     data class Label(val labels: TileLabels) : Focus("label-${labels.name.lowercase()}")
+    /** A Tile labels group's header, which opens it (GH-323). */
+    data class LabelGroup(val group: TileLabelGroup) : Focus("label-group-${group.name.lowercase()}")
     data object No : Focus("no")
     data object NewButton : Focus("new")
     data object SaveButton : Focus("save")
@@ -91,7 +94,7 @@ fun defaultFocus(dialog: WebDialog): Focus = when (dialog) {
     is WebDialog.Load -> dialog.focus ?: if (dialog.saves.isEmpty()) Focus.DialogCancel else Focus.SaveChoice(0)
     is WebDialog.DeleteSave -> Focus.DeleteCancel
     is WebDialog.Unsolvable -> Focus.Repair
-    is WebDialog.Labels -> Focus.Label(dialog.selected)
+    is WebDialog.Labels -> labelsFocus(dialog)
     WebDialog.GiveUp -> Focus.No
     is WebDialog.Controls -> Focus.LayoutOption(dialog.layout)
     is WebDialog.LinkRejected -> Focus.LinkRejectedOk
@@ -100,6 +103,13 @@ fun defaultFocus(dialog: WebDialog): Focus = when (dialog) {
     is WebDialog.Share -> Focus.CopyLink
     WebDialog.Update -> Focus.UpdateCancel
     WebDialog.ReplaySave -> Focus.DialogCancel
+}
+
+/** The marked scheme when the open group holds it, else the open group's first scheme that fits the board (GH-323). */
+private fun labelsFocus(dialog: WebDialog.Labels): Focus {
+    if (TileLabelGroup.of(dialog.selected) == dialog.open) return Focus.Label(dialog.selected)
+    val first = dialog.openOptions.firstOrNull { it.available }
+    return if (first != null) Focus.Label(first.labels) else Focus.LabelGroup(dialog.open)
 }
 
 /** The Very large section's title and warning line in the size picker (GH-207). */
