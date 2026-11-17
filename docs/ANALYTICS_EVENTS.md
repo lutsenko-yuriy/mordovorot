@@ -763,3 +763,19 @@ Changes to existing entries:
 - `tile_labels_changed.board_size` is not limited to 3-5: it takes 6 to 9 as well (a correction to the GH-139 entry, which listed 3-5).
 
 Not tracked: the words a screen reader says, the save version written, and a link's scheme an old build can't read (`shared_board_opened.labels: unreadable` already counts it).
+
+## GH-332 (alphabet hint for letter tile labels)
+
+Planned in `/analyze`; the web client uses `NoopAnalyticsService` until an SDK is wired up (GH-256).
+
+| Screen name | Trigger | Properties |
+|---|---|---|
+| `screen_alphabet_hint_dialog` | The alphabet dialog opens, from `[ Hint 8 ]` or the key 8. | `opened_from`: `button` or `shortcut`; `screen`: `play` or `solved` (the hint is gone on the solution screen); `labels`: the scheme shown, with the values of `tile_labels_changed`; `board_size`: number. *(GH-332)* |
+
+No new events: the dialog changes nothing in the game.
+
+Changes to existing entries:
+- `dialog_cancelled.dialog` takes a new value, `alphabet_hint`: the dialog's Escape (and OK) sends it with `via`, as Share's close does (decided in `/plan`).
+- Tutorial's key moves from 8 to 9, so `screen_replay_save_dialog.opened_from: shortcut` now means 9. The data is unchanged.
+
+Not tracked: a press on the dimmed button on a number scheme (it does nothing), which letters are greyed or used (both follow from `labels` and `board_size`), time spent open, and which letters the player looked at.

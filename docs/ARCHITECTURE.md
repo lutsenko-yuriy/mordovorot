@@ -152,6 +152,8 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                             # NUMBERS is the default (GH-139)
 │       ├── TileLabelGroup.kt      # GH-323: the alphabet groups of the Tile labels dialog (Numbers, Numbers from 0, Latin letters, Cyrillic letters, Greek letters (GH-322)),
 │       │                             # each an ordered list of its schemes; a test pins that every TileLabels is in exactly one group
+│       │                             # GH-332: `alphabet` (LATIN_ALPHABET, CYRILLIC_ALPHABET, GREEK_ALPHABET) and `TileLabels.lettersUsed(side)`
+│       ├── AlphabetHint.kt        # GH-332: what the alphabet hint shows for a scheme and a board side: the alphabet in order and how many of its letters the board uses (null for number schemes)
 │       ├── TileLabelsPreference.kt # TileLabels over a PreferenceRepository under `tile_labels`;
 │       │                             # a failed read is no preference, a failed write is silent (GH-139)
 │       ├── Direction.kt           # UP/DOWN/LEFT/RIGHT, what a key can mean (GH-18, shared by GH-171)
@@ -223,6 +225,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── WebSolutionFlows.kt # WebGame's Give Up and the solution screen's replay (GH-126, split out in GH-171)
 │   ├── WebDragFlows.kt  # WebGame's drag of a row or column: press, moves, release as one shift (GH-110, split out in GH-288)
 │   ├── WebControlsDialog.kt # The Controls dialog's flow over WebGame's modal and the session's mode (GH-171)
+│   ├── WebAlphabetHint.kt # GH-332: the alphabet hint's flow (`[ Hint 8 ]`, `WebDialog.AlphabetHint`), shaped like WebControlsDialog; its spoken letters
 │   ├── ShareTogglePreference.kt # GH-267, GH-272: a Share dialog toggle (`Include my tile labels` under `share_labels`, `Include my progress` under `share_progress`), on or off, read once per session
 │   ├── WebTutorial.kt   # GH-288: the first-launch tutorial's flow: starts it (switch on, not seen, no saves), checks every shift against the step's (WebGame.shiftLine, WebDragFlows.onEnd), blocks others, the 3 s pause at step 5, Skip, step 6; `guidance()` is the frame's panel (Guidance.kt); GH-289: `offered`, `onReplay` (the `ReplaySave` question, then `begin("replay")`) and `onReplayAnswered` replay it from the Give Up row's `[ Tutorial 8 ]`
 │   ├── Guidance.kt      # GH-288: the panel's step, text, Controls and the asked line (Guidance, TutorialHighlight)
@@ -360,7 +363,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # it is given, and drops held Enter repeats (GH-164)
 ├── src/jsMain/kotlin/web/DomPlayKeys.kt # GH-171: keys outside dialogs -> WebGame.onKey, and PressedWith from
 │                                       # every keydown and pointerdown, in the capture phase
-├── src/jsMain/kotlin/web/DomSolution.kt # The step list, Prev/Next/Restart and the Give Up row (GH-126), with its `[ Tutorial ]` button (GH-289)
+├── src/jsMain/kotlin/web/DomSolution.kt # The step list, Prev/Next/Restart and the Give Up row (GH-126), with its `[ Tutorial ]` button (GH-289); GH-332: `[ Hint ]` between them, `[ Tutorial 9 ]`
+├── src/jsMain/kotlin/web/DomAlphabetHint.kt # GH-332: the alphabet hint dialog's grid of letters (the board's in an outline, the rest greyed)
 ├── src/jsMain/kotlin/web/DomGuidance.kt # GH-288: the tutorial's bubble and buttons (they stand where the toolbar does, and are the
 │                                       # element Mordie's arriving line rises from) and the asked line's highlight, placed by DomBoard
 ├── src/jsMain/kotlin/web/a11y/DomBoardGrid.kt # GH-167: during play, the tiles as a table for screen
