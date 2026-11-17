@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.49.0] — 2026-11-17 (PR #316 merged)
+
+### Added
+
+- [wip] (PR #316) GH-275 WU2: German texts and per-language test snapshots, not yet reachable from the page.
+
 ## [0.49.0] — 2026-11-17 (PR #315 merged)
 
 ### Added

@@ -13,7 +13,7 @@ class TranslationsTest {
 
     /** Texts that read the same in every language: the same word, a key's letters, or a name. */
     private val sameAsEnglish = setOf(
-        "dialogs.ok", "boardSize", "reader.dragged", "reader.phonetic",
+        "dialogs.ok", "boardSize", "reader.dragged", "reader.phonetic", "page.title", "page.mordieName", "page.tutorial",
     )
 
     private val translated = Language.entries - Language.EN

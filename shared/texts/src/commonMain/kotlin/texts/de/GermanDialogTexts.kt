@@ -1,0 +1,63 @@
+package texts.de
+
+import texts.DialogTexts
+
+object GermanDialogTexts : DialogTexts {
+    override val sizeTitle = "Größe des neuen Spiels"
+    override val saveTitle = "Spiel speichern"
+    override val loadTitle = "Spiel laden"
+    override val restoreTitle = "Gespeichertes Spiel wiederherstellen?"
+    override fun deleteTitle(name: String) = "„$name“ löschen?"
+    override val unsolvableTitle = "Nicht lösbar"
+    override val labelsTitle = "Kachelbeschriftungen"
+    override val giveUpTitle = "Aufgeben und Mordies Lösung ansehen?"
+    override val controlsTitle = "Steuerung"
+    override val linkRejectedTitle = "Dieses Brett lässt sich nicht öffnen"
+    override val openSharedTitle = "Brett aus dem Link öffnen?"
+    override fun sharedLabelsTitle(labels: String) = "Beschriftungen des Absenders verwenden ($labels)?"
+    override val shareTitle = "Brett teilen"
+    override val updateTitle = "Auf die neue Version aktualisieren?"
+    override val replaySaveTitle = "Spiel zuerst speichern?"
+
+    override val veryLargeTitle = "Sehr groß"
+    override val veryLargeWarning = "Es ist schwerer zu lösen, und die Kacheln können zu klein zum bequemen Spielen sein."
+
+    override val cancel = "Abbrechen"
+    override val ok = "OK"
+    override val save = "Speichern"
+    override val dontSave = "Nicht speichern"
+    override val delete = "Löschen"
+    override val close = "Schließen"
+    override val open = "Öffnen"
+    override val update = "Aktualisieren"
+    override val yes = "Ja"
+    override val no = "Nein"
+    override val newGame = "Neues Spiel"
+    override val repairAndLoad = "Reparieren und laden"
+    override val copyLink = "Link kopieren"
+    override val copied = "Kopiert!"
+
+    override val noSaves = "Noch keine Speicherstände."
+    override val deleteMessage = "Das lässt sich nicht rückgängig machen."
+    override val openSharedMessage = "Deine Züge seit dem letzten Speichern gehen verloren."
+    override val updateMessage = "Deine Züge seit dem letzten Speichern gehen verloren."
+    override val sharedLabelsMessage = "Nur für dieses Spiel: Das nächste neue Spiel nutzt wieder deine Beschriftungen."
+    override val replaySaveMessage = "Das Tutorial ersetzt dein aktuelles Spiel."
+    override fun overwriteWarning(name: String) = "„$name“ gibt es schon. Speichern überschreibt es."
+
+    override fun shareNoteSame(side: Int) = "Wer diesen Link öffnet, startet mit demselben ${side}x$side-Brett."
+    override fun shareNoteNow(side: Int) = "Wer diesen Link öffnet, startet mit diesem ${side}x$side-Brett, so wie es jetzt ist."
+    override fun shareLabels(labels: String) = "Meine Beschriftungen hinzufügen ($labels)"
+    override val shareProgress = "Meinen Fortschritt hinzufügen"
+    override fun shareProgressSolving(moves: Int) = "Meinen Fortschritt hinzufügen (${germanMoves(moves)}, nicht gelöst)"
+    override fun shareProgressSolved(moves: Int) = "Meinen Fortschritt hinzufügen (gelöst in ${germanMoves(moves, dative = true)})"
+    override val shareProgressGaveUp = "Meinen Fortschritt hinzufügen (Spiel aufgegeben)"
+    override fun shareProgressGaveUpAfter(moves: Int) = "Meinen Fortschritt hinzufügen (Spiel aufgegeben nach ${germanMoves(moves, dative = true)})"
+
+    override fun deleteName(name: String) = "„$name“ löschen"
+
+    override val saveNameName = "Name des Speicherstands"
+    override val shareLinkName = "Link"
+    override val tileLabelsName = "Kachelbeschriftungen"
+    override val keyboardKeysName = "Tasten"
+}
