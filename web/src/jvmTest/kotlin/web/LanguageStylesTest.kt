@@ -18,7 +18,7 @@ class LanguageStylesTest {
 
     @Test
     fun `the picker keeps a ring for keyboard focus`() {
-        assertTrue(Regex("""\.language-toggle:focus-visible,\s*\.language-dropdown:focus-within \{[^}]*outline: 3px solid""").containsMatchIn(sheet), sheet)
+        assertTrue(Regex("""\.language-toggle:focus-visible,\s*\.language-dropdown:has\(select:focus-visible\) \{[^}]*outline: 3px solid""").containsMatchIn(sheet), sheet)
     }
 
     @Test

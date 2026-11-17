@@ -669,6 +669,6 @@ tile labels (GH-313), more languages, right-to-left scripts, translating the doc
   hints, the tutorial bubble, the footer, the tab title and `<html lang>`. The status line is cleared. A pick while a dialog, a
   toolbar action or a drag is under way is ignored.
 - **Stays as it is:** Letters and Letter pairs on the tiles (Latin), the NATO words screen readers speak, and the analytics, which are English.
-- **Layout:** German and Russian words are longer, so the toolbar, Give Up row, dialog buttons and tutorial bubble are worded short and
-  checked at phone widths and at 150% text size.
+- **Layout:** German and Russian words are longer, so on a phone the toolbar wraps to two rows in those languages (the board is about
+  15% smaller on the smallest phones). The Give Up row, dialog buttons and tutorial bubble fit; all are checked at phone widths and at 150% text size.
 - **Analytics:** `language_changed` and `app_launched.language` (`docs/ANALYTICS_EVENTS.md`).

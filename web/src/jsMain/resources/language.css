@@ -38,7 +38,7 @@ body {
 }
 
 .language-toggle:focus-visible,
-.language-dropdown:focus-within {
+.language-dropdown:has(select:focus-visible) {
     outline: 3px solid var(--warning);
     outline-offset: 2px;
 }
