@@ -11,6 +11,11 @@ interface DialogTexts {
     val labelsTitle: String
     val giveUpTitle: String
     val controlsTitle: String
+
+    /** The alphabet hint's title by alphabet (GH-332). */
+    val alphabetLatin: String
+    val alphabetCyrillic: String
+    val alphabetGreek: String
     val linkRejectedTitle: String
     val openSharedTitle: String
     fun sharedLabelsTitle(labels: String): String

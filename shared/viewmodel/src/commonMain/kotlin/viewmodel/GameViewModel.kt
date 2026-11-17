@@ -139,6 +139,9 @@ interface GameViewModel {
      *  or `shortcut`. */
     fun tileLabelsDialogOpened(openedFrom: String)
 
+    /** Tracks `screen_alphabet_hint_dialog` as the alphabet hint opens (GH-332); [openedFrom] is `button` or `shortcut`. */
+    fun alphabetHintOpened(openedFrom: String)
+
     /** The Tile labels dialog's OK: relabels and remembers [labels] as the preference, tracking
      *  `tile_labels_changed`. Does nothing when [labels] is already shown. */
     fun changeTileLabels(labels: TileLabels)

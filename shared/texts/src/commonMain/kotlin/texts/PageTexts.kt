@@ -15,6 +15,9 @@ interface PageTexts {
     val toolbarShare: String
     val toolbarControls: String
     val giveUp: String
+
+    /** The `[ Hint ]` button that opens the alphabet of the letter tile labels (GH-332). */
+    val alphabetHint: String
     val mordiesSolution: String
     val tutorial: String
     val tutorialControls: String

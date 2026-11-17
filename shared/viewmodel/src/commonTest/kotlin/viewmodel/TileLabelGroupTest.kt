@@ -25,4 +25,15 @@ class TileLabelGroupTest {
         assertEquals(listOf(TileLabels.NUMBERS_FROM_0, TileLabels.PAIRS_FROM_0), TileLabelGroup.NUMBERS_FROM_0.schemes)
         assertEquals(listOf(2), TileLabelGroup.entries.map { it.schemes.size }.distinct())
     }
+
+    @Test
+    fun `only the two number groups have no alphabet (GH-332)`() {
+        assertEquals(
+            setOf(TileLabelGroup.NUMBERS, TileLabelGroup.NUMBERS_FROM_0),
+            TileLabelGroup.entries.filter { it.alphabet == null }.toSet(),
+        )
+        assertEquals(TileLabels.LATIN_ALPHABET, TileLabelGroup.LATIN.alphabet)
+        assertEquals(TileLabels.CYRILLIC_ALPHABET, TileLabelGroup.CYRILLIC.alphabet)
+        assertEquals(TileLabels.GREEK_ALPHABET, TileLabelGroup.GREEK.alphabet)
+    }
 }

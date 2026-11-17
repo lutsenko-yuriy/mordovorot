@@ -58,11 +58,22 @@ enum class TileLabels(val wireName: String, val maxSide: Int = Int.MAX_VALUE) {
         }
     }
 
+    /** How many of the alphabet's letters, from the start, a [side]x[side] board uses (GH-332): a pair scheme [side], a single-letter
+     *  scheme as many as it has tiles, up to the alphabet's length. `null` for the number schemes, which have no alphabet. */
+    fun lettersUsed(side: Int): Int? {
+        val group = TileLabelGroup.of(this)
+        val alphabet = group.alphabet ?: return null
+        return if (this == group.schemes.last()) side else minOf(side * side, alphabet.length)
+    }
+
     /** The solved board's first row - the labels dialog's sample. */
     fun sampleRow(side: Int): List<String> = (0 until side).map { label(it, side) }
 
     companion object {
         val DEFAULT = NUMBERS
+
+        /** The 26 letters of the Latin schemes (GH-332), as the hint lists them; `label` still says `'A' + tile`, and a test pins that the two agree. */
+        const val LATIN_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
         /** The 28 letters the Cyrillic schemes use, without ё, й, ъ, ы, ь (GH-313): the only place the alphabet lives. */
         const val CYRILLIC_ALPHABET = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЭЮЯ"

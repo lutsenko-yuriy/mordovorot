@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-_(nothing in progress)_
+- GH-332: Alphabet hint button for letter tile labels (WU1/2 merged; WU2 pending)
 
 ---
 

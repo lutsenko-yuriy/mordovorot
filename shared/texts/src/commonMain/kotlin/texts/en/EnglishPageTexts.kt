@@ -13,6 +13,7 @@ object EnglishPageTexts : PageTexts {
     override val toolbarShare = "Share"
     override val toolbarControls = "Controls"
     override val giveUp = "Give Up"
+    override val alphabetHint = "Hint"
     override val mordiesSolution = "Mordie's solution"
     override val tutorial = "Tutorial"
     override val tutorialControls = "Controls"

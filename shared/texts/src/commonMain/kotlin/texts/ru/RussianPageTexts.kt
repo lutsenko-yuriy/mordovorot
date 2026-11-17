@@ -13,6 +13,7 @@ object RussianPageTexts : PageTexts {
     override val toolbarShare = "Поделиться"
     override val toolbarControls = "Управление"
     override val giveUp = "Сдаться"
+    override val alphabetHint = "Подсказка"
     override val mordiesSolution = "Решение Морди"
     override val tutorial = "Обучение"
     override val tutorialControls = "Управление"
