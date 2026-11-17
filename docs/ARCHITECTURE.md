@@ -147,10 +147,10 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                             # and the PlayerResult it was reached with. One per session (GH-126, GH-273)
 │       ├── PlayerResult.kt        # How the player's game ended (gave up or solved) and its moves (GH-273)
 │       ├── SharedProgress.kt      # What a share link says about the sender's game: Solving, Solved or GaveUp (GH-272)
-│       ├── TileLabels.kt          # The eight label schemes (GH-313 adds the Cyrillic two, CYRILLIC_ALPHABET; GH-322 plans the Greek two and GREEK_ALPHABET, 25 labels, the last one U+037E): wireName (analytics, saves, the
+│       ├── TileLabels.kt          # The ten label schemes (GH-313 adds the Cyrillic two, CYRILLIC_ALPHABET; GH-322 the Greek two and GREEK_ALPHABET, 25 labels, the last one U+037E, written as an escape since every normalisation turns it into a semicolon): wireName (analytics, saves, the
 │       │                             # preference), title, maxSide, fits(side), label(tile, side), sampleRow.
 │       │                             # NUMBERS is the default (GH-139)
-│       ├── TileLabelGroup.kt      # GH-323: the alphabet groups of the Tile labels dialog (Numbers, Numbers from 0, Latin letters, Cyrillic letters; GH-322 plans Greek letters as a fifth),
+│       ├── TileLabelGroup.kt      # GH-323: the alphabet groups of the Tile labels dialog (Numbers, Numbers from 0, Latin letters, Cyrillic letters, Greek letters (GH-322)),
 │       │                             # each an ordered list of its schemes; a test pins that every TileLabels is in exactly one group
 │       ├── TileLabelsPreference.kt # TileLabels over a PreferenceRepository under `tile_labels`;
 │       │                             # a failed read is no preference, a failed write is silent (GH-139)
@@ -281,7 +281,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │   │                # game's ARIA moving in is GH-201's next step; a Gradle module is future work
 │   │   ├── Announcements.kt # GH-166 (words in :shared:texts, GH-274): what a screen reader hears - shifts, the win, new game, load,
 │   │   │                # solution steps - and the arrows' accessible names; Read board's
-│   │   │                # row-by-row words, letters in the phonetic alphabet (GH-167), Cyrillic labels in the Russian spelling words (GH-313), Greek labels in their Latin-script names, `alpha` to `omega` (GH-322, planned)
+│   │   │                # row-by-row words, letters in the phonetic alphabet (GH-167), Cyrillic labels in the Russian spelling words (GH-313), Greek labels by the letters' names in the game's language, `alpha` to `omega`, and the question mark (GH-322)
 │   │   └── FocusTarget.kt # GH-201: a control's data-focus key, and whether focus falls back from it
 │   ├── drag/            # LineDrag: one drag in pixels - axis lock past a threshold, live offset,
 │   │                    # snap to whole tiles mod the side; WrapPositions: a part-shifted line's tiles

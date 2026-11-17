@@ -27,7 +27,7 @@ A count of the player's moves always carries its unit (`vs your 12 moves`), and 
 
 **German** and **Russian** keep Mordie's voice: informal (`du`, `ты`), short and warm, with the same four rules. A count is
 inflected by its own language (`1 Zug, 2 Züge`, `1 ход, 2 хода, 5 ходов`), and quotes are the language's own (`„foo“`, `«foo»`).
-Letters and Letter pairs stay Latin on the tiles, and screen readers keep the NATO words. The two Cyrillic schemes show in every language, and screen readers say them with the Russian spelling words (Feature 11).
+Letters and Letter pairs stay Latin on the tiles, and screen readers keep the NATO words. The two Cyrillic schemes and the two Greek ones show in every language; screen readers say Cyrillic with the Russian spelling words and Greek with the letters' names, in the game's language (Feature 11).
 
 The words the glossary lists under "Known aliases to avoid" never appear in a text; a test enforces it. Screen-reader texts
 keep their terse wording while `docs/CONSTRAINTS.md` freezes screen readers.
@@ -513,17 +513,19 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   | Letter pairs | solved row and column as letters | `AA AB AC AD` |
   | Cyrillic letters (GH-313) | the 28 letters `А Б В Г Д Е Ж З И К Л М Н О П Р С Т У Ф Х Ц Ч Ш Щ Э Ю Я` (no ё, й, ъ, ы, ь) | `А Б В Г` |
   | Cyrillic letter pairs (GH-313) | solved row and column as those letters | `АА АБ АВ АГ` |
+  | Greek letters (GH-322) | the 24 capitals `Α Β Γ Δ Ε Ζ Η Θ Ι Κ Λ Μ Ν Ξ Ο Π Ρ Σ Τ Υ Φ Χ Ψ Ω`, then the Greek question mark (U+037E, which looks like `;`) as the 25th | `Α Β Γ Δ` |
+  | Greek letter pairs (GH-322) | solved row and column as those letters | `ΑΑ ΑΒ ΑΓ ΑΔ` |
 
   Only the text changes: a tile's colour (web) and the step list's `Row …`/`Col …` stay as they are.
 - **The dialog:** `Tile labels` (GH-323 grouped it): a preview strip of three tiles showing the marked
-  scheme's first three labels (`1 2 3`, `AA AB AC`, `АА АБ АВ`; the same on every board size and hidden from screen readers),
-  then four collapsible groups, **Numbers** (Numbers, Pairs), **Numbers from 0** (Numbers from 0, Pairs from 0), **Latin letters** (Letters,
-  Letter pairs) and **Cyrillic letters** (Cyrillic letters, Cyrillic letter pairs); `Zahlen` / `Zahlen ab 0` / `Lateinische Buchstaben` /
-  `Kyrillische Buchstaben` and `Числа` / `Числа с 0` / `Латинские буквы` / `Кириллические буквы` in German and Russian. Only the group
+  scheme's first three labels (`1 2 3`, `AA AB AC`, `АА АБ АВ`, `ΑΑ ΑΒ ΑΓ`; the same on every board size and hidden from screen readers),
+  then five collapsible groups, **Numbers** (Numbers, Pairs), **Numbers from 0** (Numbers from 0, Pairs from 0), **Latin letters** (Letters,
+  Letter pairs) **Cyrillic letters** (Cyrillic letters, Cyrillic letter pairs) and **Greek letters** (Greek letters, Greek letter pairs, GH-322); `Zahlen` / `Zahlen ab 0` / `Lateinische Buchstaben` /
+  `Kyrillische Buchstaben` / `Griechische Buchstaben` and `Числа` / `Числа с 0` / `Латинские буквы` / `Кириллические буквы` / `Греческие буквы` in German and Russian. Only the group
   in use is open when the dialog opens; pressing another header opens that group (and focus goes to its marked scheme,
   else its first that fits the board) and closes the open one. Pressing the open group's header does nothing. A group
   lists its two schemes, a single one and its pair, side by side, named `Numbers` or `Letters` and `Pairs` in every group (`Zahlen` / `Buchstaben` / `Paare`, `Числа` / `Буквы` / `Пары`), since the header names the alphabet; the full names (`Cyrillic letter pairs`, `Numbers from 0`) stay in the share prompt, messages and analytics, the marked one `●` and the rest `○`; the mark can sit in a closed
-  group and survives OK. Opening a group sends no event. In a group the arrow keys move the mark, and Tab visits the three
+  group and survives OK. Opening a group sends no event. In a group the arrow keys move the mark, and Tab visits the five
   headers and the open group's one radio. Picking a row marks it; OK
   relabels the board at once, Cancel changes nothing. On the web the board already shows the
   marked scheme while the dialog is open, and Cancel puts the old labels back. It opens from `[ Labels ]` (or 4 on a computer, Feature 9), during play,
@@ -539,6 +541,14 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   and share links (an old build opens a Cyrillic save with its own labels and a labelled link as a plain board). Screen readers say
   each letter with a Russian spelling word, `АБ` as `Анна Борис`, in every language. Cyrillic pairs have a smaller font cap at
   larger text sizes, as the widest pair (`ЖЖ`) is wider than any Latin one.
+- **Greek letters (GH-322)** work as Cyrillic letters do: 25 labels fit up to 5x5, so on 6x6 and larger its row is dimmed, reads `up to 5x5`, Numbers
+  stand in and the preference is kept; a 6x6 save with Greek letters asks for labels with its own message (25 labels, 36 tiles), the `letters_save`
+  source. **Greek letter pairs** fit every size up to 9x9 (`ΑΑ` to `ΙΙ`). They are named `Greek letters` / `Greek letter pairs`, `Griechische
+  Buchstaben` / `Griechische Buchstabenpaare` and `Греческие буквы` / `Греческие пары`, sit in their own group after the Cyrillic one, so the dialog has ten
+  schemes, and work like the others in the tutorial, saves and share links (an old build opens a Greek save with its own labels). The 25th label is the
+  Greek question mark U+037E, a character of its own that only a 5x5 board shows; it is never written as a semicolon. Screen readers say each letter by its
+  name in the game's language, `ΓΑ` as `gamma alpha`, `Gamma Alpha` or `гамма альфа`, and the question mark as `Greek question mark`,
+  `griechisches Fragezeichen` or `греческий вопросительный знак`.
 - **Letters on 7x7 to 9x9 (GH-207)** is dimmed and shown as Numbers just as on 6x6, below.
 - **Letters on 6x6 (GH-160):** Letters has 26 labels, too few for 36 tiles. On a 6x6 board its row
   in the dialog is dimmed, reads `up to 5x5` beside its name, and can't be picked or focused.
@@ -688,7 +698,7 @@ Web client only. The game is in English, German and Russian; every text the play
 - **A switch:** applies at once with no reload. Everything the page words follows: Mordie's line (swapped in place), the toolbar, the
   hints, the tutorial bubble, the footer, the tab title and `<html lang>`. The status line is cleared. A pick while a dialog, a
   toolbar action or a drag is under way is ignored.
-- **Stays as it is:** Letters and Letter pairs on the tiles (Latin), the NATO words screen readers speak, and the analytics, which are English. The Cyrillic labels (GH-313) are the same in every language.
+- **Stays as it is:** Letters and Letter pairs on the tiles (Latin), the NATO words screen readers speak, and the analytics, which are English. The Cyrillic and Greek labels (GH-313, GH-322) are the same in every language.
 - **Layout:** German and Russian words are longer, so on a phone the toolbar wraps to two rows in those languages (the board is about
   15% smaller on the smallest phones). The Give Up row, dialog buttons and tutorial bubble fit; all are checked at phone widths and at 150% text size.
 - **Analytics:** `language_changed` and `app_launched.language` (`docs/ANALYTICS_EVENTS.md`).
