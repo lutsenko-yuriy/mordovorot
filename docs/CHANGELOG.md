@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.54.0] — 2026-11-17 (PR #335 merged)
+
+### Added
+
+- [user] (PR #335) GH-332: The new [ Hint ] button, between Give Up and Tutorial, opens the alphabet of the letter tile labels (Latin, Cyrillic or Greek) with the letters the board uses highlighted; key 8 opens it on a computer, and the tutorial replay moves from 8 to 9.
+- [non-user] (PR #335) GH-332 debrief: the alphabet hint's knowledge-base entry, and its workflow notes.
+
 ## [0.53.1] — 2026-11-17 (PR #334 merged)
 
 ### Added
