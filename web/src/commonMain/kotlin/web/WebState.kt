@@ -167,11 +167,6 @@ sealed interface WebDialog {
         val message: String get() = texts().dialogs.replaySaveMessage
     }
 
-    /** The question before the tutorial replaces a game with unsaved progress (GH-289): Save, Don't save or Cancel, where focus starts. */
-    data object ReplaySave : WebDialog {
-        val message: String get() = "The tutorial replaces the current game."
-    }
-
     /** The confirmation before updating with unsaved progress (GH-262): Cancel, where focus starts, or Update. */
     data object Update : WebDialog
 }
