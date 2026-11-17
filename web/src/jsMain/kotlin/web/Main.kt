@@ -62,9 +62,9 @@ fun main() {
     })
 }
 
-/** The browser's languages, the most wanted first; just its own language where the list is missing. */
+/** The browser's languages, the most wanted first; just its own language where the list is empty, and none where the browser has neither. */
 private fun browserLanguages(): List<String> {
-    val navigator = window.navigator
-    val list = navigator.languages.toList()
-    return list.ifEmpty { listOfNotNull(navigator.language.takeIf { it.isNotEmpty() }) }
+    val navigator = window.navigator.asDynamic()
+    val list = (navigator.languages as? Array<*>)?.mapNotNull { it as? String }.orEmpty()
+    return list.ifEmpty { listOfNotNull((navigator.language as? String)?.takeIf { it.isNotEmpty() }) }
 }
