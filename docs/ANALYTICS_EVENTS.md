@@ -742,3 +742,14 @@ Changes to existing entries:
 - `app_launched` gains `language` (`string`, always sent): `en`, `de` or `ru`, the language the page started in.
 
 Not tracked: the browser's raw language list and unsupported languages it asked for, opening the dropdown without choosing (too granular), and a language per save or share link (neither carries one).
+
+## GH-313 (Cyrillic tile labels)
+
+Planned in `/analyze`; the web client uses `NoopAnalyticsService` until an SDK is wired up (GH-256). No new events or screen views: the two new schemes only add values to every property that carries a scheme (`tile_labels_changed.from`/`to`, `app_launched.tile_labels`, `board_solved.tile_labels`, `screen_labels_dialog.current_labels`, `share_labels_toggled.labels`, `shared_labels_accepted.sender_labels`/`receiver_labels`).
+
+Changes to existing entries:
+- Scheme values take two new names, the schemes' `TileLabels.wireName`: `cyrillic_letters` and `cyrillic_letter_pairs`. They stay English in every game language.
+- `tile_labels_changed.from_source: letters_unavailable` also covers Cyrillic letters on 6x6 and larger (it labels up to 5x5, as Letters does).
+- `tile_labels_changed.board_size` is not limited to 3-5: it takes 6 to 9 as well (a correction to the GH-139 entry, which listed 3-5).
+
+Not tracked: the words a screen reader says, the save version written, and a link's scheme an old build can't read (`shared_board_opened.labels: unreadable` already counts it).
