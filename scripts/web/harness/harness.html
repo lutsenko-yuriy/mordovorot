@@ -205,6 +205,8 @@ async function runCase(size, board) {
     // GH-288: every case but mode=tutorial has seen the tutorial, which a launch with no saves would otherwise open on.
     if (mode !== "tutorial") localStorage.setItem("mordovorot.pref.tutorial", "seen");
     if (q.get("layout") === "left") localStorage.setItem("mordovorot.pref.keyboard_layout", "left_handed");
+    // GH-275: lang= is the pick an earlier visit would have left; with none, the page follows this browser's language.
+    if (q.get("lang")) localStorage.setItem("mordovorot.pref.language", q.get("lang"));
     // GH-251: saves= are solved 4x4 saves (the old text format), corrupt= entries nothing decodes.
     const named = key => (q.get(key) || "").split(",").filter(Boolean);
     for (const name of named("saves")) localStorage.setItem(`mordovorot.save.${name}`, `4\n${[...Array(16).keys()].join(" ")}\n0\n`);

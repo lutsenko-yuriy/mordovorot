@@ -82,9 +82,9 @@ private fun focusable(key: String): HTMLElement? =
 
 private fun blurFocused() = (document.activeElement as? HTMLElement)?.blur()
 
-/** While a dialog is open, the page behind it, the footer included, is out of reach. */
+/** While a dialog is open, the page behind it, the language picker and the footer included, is out of reach. */
 internal fun setBehindDialog(root: Element, dialogOpen: Boolean) {
-    val behind = root.children.asList().filter { !it.classList.contains("overlay") } + listOfNotNull(document.querySelector("footer"))
+    val behind = root.children.asList().filter { !it.classList.contains("overlay") } + listOfNotNull(document.querySelector(".language-picker"), document.querySelector("footer"))
     behind.forEach { if (dialogOpen) it.setAttribute("inert", "") else it.removeAttribute("inert") }
 }
 

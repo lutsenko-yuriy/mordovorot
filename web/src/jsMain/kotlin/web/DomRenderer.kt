@@ -16,7 +16,7 @@ import web.drag.LineOffset
 
 /** Draws each [WebState] into [root] and turns its clicks into [game] intents, the board's and drags to [DomBoard] (GH-110).
  *  Plain DOM, rebuilt every frame, but for a computer's board where [WebState.keepsBoardFrom] says so (GH-171), with the look in the sheets `index.html` links. */
-class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnouncer?) : WebRenderer {
+class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnouncer?, pickerHost: HTMLElement? = null) : WebRenderer {
 
     /** Set once the game is built; only the page's events read it, and none can come before then. */
     lateinit var game: WebGame
@@ -27,6 +27,9 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
     private val board = DomBoard(root) { game }
 
     private var shown: WebState? = null
+
+    /** The language picker (GH-275), kept across frames like the footer. */
+    private val picker = pickerHost?.let { DomLanguagePicker(it) { language, control -> game.language.onLanguage(language, control) } }
 
     /** The line easing into place, redrawn every animation frame until it gets there. */
     private var slide: Slide? = null
@@ -76,6 +79,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         if (state.language != before?.language) {
             document.documentElement?.setAttribute("lang", state.language.code)
             document.title = texts().page.title
+            picker?.show(state.language, texts().page.language)
         }
         if (feed.moving(now)) schedule()
         if (before != null && state.keepsBoardFrom(before)) {

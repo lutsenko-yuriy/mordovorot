@@ -19,8 +19,10 @@ fun main() {
     val root = document.getElementById("app") as? HTMLElement ?: return
     stopPinchZoom(document, window.navigator)
     // Outside #app, which DomRenderer rebuilds: it fills this footer in, and redraws it for the New version available notice.
-    document.body?.append(element("footer", "footer"))
-    val renderer = DomRenderer(root, document.getElementById("announcer")?.let(::DomAnnouncer))
+    // The language picker (GH-275) stands before it, so Tab reaches it after the game's controls and before the credits.
+    val picker = DomLanguagePicker.create()
+    document.body?.append(picker, element("footer", "footer"))
+    val renderer = DomRenderer(root, document.getElementById("announcer")?.let(::DomAnnouncer), picker)
     val pressedWith = PressedWith()
     val game = startWebGame(
         webBoard(),
@@ -40,8 +42,7 @@ fun main() {
         DomAppUpdates(window),
         tutorial = true,
         browserLanguages = browserLanguages(),
-        // Off until the picker is there (GH-275, WU4): the page stays English.
-        languages = false,
+        languages = true,
     )
     renderer.game = game
     listenForKeys(root)
