@@ -6,6 +6,7 @@ import mordie.Mordie
 import storage.SaveRepository
 import viewmodel.usecase.ControlsDialogUseCase
 import viewmodel.usecase.DeleteSaveUseCase
+import viewmodel.usecase.LanguageUseCase
 import viewmodel.usecase.LoadGameUseCase
 import viewmodel.usecase.NewGameUseCase
 import viewmodel.usecase.ResolveUnsolvableSaveUseCase
@@ -28,6 +29,7 @@ fun buildGameViewModel(
     unsavedProgress: UnsavedProgress,
     solutionScreen: SolutionScreen,
     tileLabels: SessionTileLabels,
+    language: SessionLanguage,
     ui: UiRequestChannel,
 ): GameViewModelImpl {
     val mordieHooks = MordieHooks(mordie, board, analytics, solutionScreen)
@@ -50,5 +52,6 @@ fun buildGameViewModel(
     return GameViewModelImpl(
         board, analytics, mordieHooks, ui, catalog, newGame, saveGame, loadGame, deleteSave, startupRestore, solution, tileLabelsUseCase,
         ControlsDialogUseCase(board, analytics, solution), currentSaveName, gameShiftSources, unsavedProgress, tileLabels,
+        language, LanguageUseCase(board, language, analytics, solution),
     )
 }

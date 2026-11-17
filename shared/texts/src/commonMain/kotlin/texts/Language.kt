@@ -13,5 +13,9 @@ enum class Language(val code: String, val nativeName: String, val texts: Texts) 
 
     companion object {
         fun fromCode(code: String?): Language? = entries.firstOrNull { it.code == code }
+
+        /** The language of the browser's first tag (`de-AT` is German), `null` when it isn't one of ours: only the first counts, so `uk, ru` is none. */
+        fun fromBrowser(tags: List<String>): Language? =
+            tags.firstOrNull()?.substringBefore('-')?.substringBefore('_')?.lowercase()?.let(::fromCode)
     }
 }

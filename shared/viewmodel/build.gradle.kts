@@ -13,14 +13,14 @@ kotlin {
 
     sourceSets {
         // api: GameViewModel's public surface exposes BoardModel, AnalyticsService,
-        // SaveRepository, Mordie and coroutines' ReceiveChannel/CompletableDeferred.
+        // SaveRepository, Mordie, texts' Language and coroutines' ReceiveChannel/CompletableDeferred.
         commonMain {
             dependencies {
                 api(project(":shared:core"))
                 api(project(":shared:analytics"))
                 api(project(":shared:storage"))
                 api(project(":shared:mordie"))
-                implementation(project(":shared:texts"))
+                api(project(":shared:texts"))
                 api(libs.kotlinx.coroutines.core)
             }
         }

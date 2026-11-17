@@ -1,5 +1,7 @@
 package viewmodel
 
+import texts.Language
+
 import kotlinx.coroutines.channels.ReceiveChannel
 
 /** The platform-independent viewModel surface (GH-41, split out of GH-42's `ViewModel`) -
@@ -152,4 +154,11 @@ interface GameViewModel {
     /** Tracks `screen_controls_dialog` as the Controls dialog opens (GH-170); [openedFrom] is
      *  `toolbar` or `shortcut`. */
     fun controlsDialogOpened(openedFrom: String)
+
+    /** The session's language (GH-275). */
+    fun language(): Language
+
+    /** The language picker's pick (GH-275): switches `texts()` and remembers [language] as the preference, tracking
+     *  `language_changed`; [control] is `dropdown` or `toggles`. Does nothing when [language] is already the one. */
+    fun changeLanguage(language: Language, control: String)
 }
