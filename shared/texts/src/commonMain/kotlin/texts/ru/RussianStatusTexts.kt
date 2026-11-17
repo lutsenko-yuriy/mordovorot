@@ -10,6 +10,7 @@ object RussianStatusTexts : StatusTexts {
     override fun loaded(name: String) = "Загружено «$name»."
     override fun loadFailed(name: String) = "Не удалось загрузить «$name». Попробуй ещё раз."
     override fun saveDamaged(name: String) = "«$name» повреждено и не загружается. Его можно удалить в «Загрузить»."
+    override val saveFromNewerVersion = "Это сохранение сделано в более новой версии игры. Перезагрузи страницу, чтобы обновиться."
 
     override fun noSaveNamed(name: String, saves: String) = "Нет сохранения «$name». $saves"
     override val couldNotListSaves = "Не удалось показать твои сохранения."

@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-_(nothing in progress)_
+- GH-313: Cyrillic alphabet as tile labels (WU0/3 and WU1/3 merged; WU2 pending)
 
 ---
 

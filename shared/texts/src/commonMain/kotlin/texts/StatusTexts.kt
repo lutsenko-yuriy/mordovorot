@@ -9,6 +9,9 @@ interface StatusTexts {
     fun loadFailed(name: String): String
     fun saveDamaged(name: String): String
 
+    /** A save with a first character no version here knows (GH-313): a newer build wrote it. */
+    val saveFromNewerVersion: String
+
     /** [saves] is [availableSaves] or one of its two failure sentences. */
     fun noSaveNamed(name: String, saves: String): String
     val couldNotListSaves: String

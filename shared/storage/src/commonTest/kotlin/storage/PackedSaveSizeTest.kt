@@ -31,4 +31,12 @@ class PackedSaveSizeTest {
         assertTrue(text.length < 8 * 1024, "${text.length} chars")
         assertEquals(save(1450), PackedSaveFormat.decode("s", text).mordie)
     }
+
+    @Test
+    fun `a 9x9 save with Cyrillic letter pairs through the escape is still under 1 KB, GH-313`() {
+        val text = PackedSaveFormat.encode(side, solved, 0, save(604), "cyrillic_letter_pairs")
+
+        assertTrue(text.length < 1024, "${text.length} chars")
+        assertEquals("cyrillic_letter_pairs", PackedSaveFormat.decode("s", text).labels)
+    }
 }

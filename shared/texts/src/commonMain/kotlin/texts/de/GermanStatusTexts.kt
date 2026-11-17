@@ -10,6 +10,7 @@ object GermanStatusTexts : StatusTexts {
     override fun loaded(name: String) = "„$name“ geladen."
     override fun loadFailed(name: String) = "„$name“ konnte nicht geladen werden. Versuche es noch einmal."
     override fun saveDamaged(name: String) = "„$name“ ist beschädigt und lässt sich nicht laden. Du kannst es unter „Laden“ löschen."
+    override val saveFromNewerVersion = "Dieser Spielstand wurde mit einer neueren Version des Spiels erstellt. Bitte lade die Seite neu, um zu aktualisieren."
 
     override fun noSaveNamed(name: String, saves: String) = "Es gibt keinen Speicherstand „$name“. $saves"
     override val couldNotListSaves = "Deine Speicherstände konnten nicht angezeigt werden."

@@ -117,7 +117,7 @@ class WebAnnounceFlowsScenarioTest {
     @Test
     fun `a load error is announced`() = webTest {
         val page = WebHarness(backgroundScope).startOn()
-        page.store.entries["mordovorot.save.bad"] = "x\n0 1 2 3\n"
+        page.store.entries["mordovorot.save.bad"] = "2x\n0 1 2 3\n"
 
         page.game.onLoad()
         page.game.onLoadChosen("bad")

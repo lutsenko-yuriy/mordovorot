@@ -9,6 +9,7 @@ object EnglishStatusTexts : StatusTexts {
     override fun loaded(name: String) = "Loaded '$name'."
     override fun loadFailed(name: String) = "Couldn't load '$name'. Please try again."
     override fun saveDamaged(name: String) = "'$name' is damaged and can't be loaded. You can delete it in Load."
+    override val saveFromNewerVersion = "This save was made by a newer version of the game. Please reload the page to update."
 
     override fun noSaveNamed(name: String, saves: String) = "No save named '$name'. $saves"
     override val couldNotListSaves = "Couldn't list your saves."

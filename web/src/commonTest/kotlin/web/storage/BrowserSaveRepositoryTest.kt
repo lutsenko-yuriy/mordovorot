@@ -80,7 +80,7 @@ class BrowserSaveRepositoryTest {
 
     @Test
     fun `a corrupted entry fails to load with the save's name`() {
-        store.entries["mordovorot.save.bad"] = "x\n0 1 2 3\n"
+        store.entries["mordovorot.save.bad"] = "2x\n0 1 2 3\n"
 
         val e = assertFailsWith<SaveFileFormatException> { repo.load("bad") }
         assertEquals("Save 'bad' is corrupted: square side is not an integer", e.message)

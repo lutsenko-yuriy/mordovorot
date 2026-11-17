@@ -23,6 +23,9 @@ A save is written as one marker character that is not a digit, then base64url of
 ## Amendment (GH-273)
 On a solution-screen save the move-count varint, always 0 there before, holds the player's result: 0 none, 2m + 1 gave up after m moves, 2m + 2 solved in m. No bits were added, saves from before read as no result, and older builds still load new ones, showing the old line. The codec requires move count 0 on those saves.
 
+## Amendment (GH-313)
+The codec reads several versions of the packed format in parallel, told apart by the first character: each version has its own marker, labels width and frozen list of names (`PackedSaveFormat.Version`). Only the one that exists, with `~`, 3 bits and six names, is written, and its bytes are unchanged. A digit, whitespace or an empty save is the old text format; any other first character is a save from a newer version, which the loader answers with its own text rather than "damaged". The next version is planned with a 6-bit labels field (room for Greek and more); until then new names, such as the two Cyrillic schemes, take the escape (code 7 + UTF-8 name, about 17 bytes more), so older builds load such a save with the preference's labels.
+
 ## Related ticket
 GH-220
 

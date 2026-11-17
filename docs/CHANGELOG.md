@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.50.0] — 2026-11-17 (PR #320 merged)
+
+### Added
+
+- [wip] (PR #320) GH-313 WU1: save codec reads several versions of the packed format; a save from a newer version gets its own message.
+
 ## [0.50.0] — 2026-11-17 (PR #318 merged)
 
 ### Added

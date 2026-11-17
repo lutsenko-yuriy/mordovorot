@@ -4,9 +4,9 @@ import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.text.CharacterCodingException
 
-/** The packed save format (GH-237, ADR-0004): [MARKER], then base64url without padding of a bit stream.
+/** The packed save format (GH-237, ADR-0004): the version's marker, then base64url without padding of a bit stream.
  *
- *  Header: the side (4 bits), the labels (3 bits: 0 none, 1-6 a known name, 7 an escape followed by
+ *  Header: the side (4 bits), the labels (0 none, 1 to the escape minus one a known name, the escape followed by
  *  the name), the status (2 bits: no Mordie, searching, found proven, found unproven), the
  *  solution-screen flag and the has-solution flag. Then the move count (varint; on a solution-screen
  *  save it holds the player's result instead, GH-273: 0 none, 2m + 1 gave up after m moves, 2m + 2 solved
@@ -17,12 +17,20 @@ import kotlin.text.CharacterCodingException
 @OptIn(ExperimentalEncodingApi::class)
 internal object PackedSaveFormat {
 
-    const val MARKER = '~'
+    /** What differs between versions of the format (GH-313): the first character and the labels field.
+     *  [labels] is frozen: a save stores the position in it (`viewmodel.TileLabels` can't be imported here).
+     *  A new version is added here and to [VERSIONS]; the saves of the older ones keep loading. */
+    class Version(val marker: Char, val labelBits: Int, val labels: List<String>) {
+        /** The code that is followed by the name, the highest the field holds. */
+        val escape get() = (1 shl labelBits) - 1
+    }
 
-    /** Frozen: a save stores the position in this list. `viewmodel.TileLabels` can't be imported here. */
-    private val KNOWN_LABELS = listOf("numbers", "numbers_from_0", "pairs", "pairs_from_0", "letters", "letter_pairs")
+    val V1 = Version('~', 3, listOf("numbers", "numbers_from_0", "pairs", "pairs_from_0", "letters", "letter_pairs"))
+    val VERSIONS = listOf(V1)
+
+    /** Written by [encode]. */
+    val LATEST = V1
     private const val NO_LABELS = 0
-    private const val ESCAPED_LABEL = 7
     private const val NO_MORDIE = 0
     private const val SEARCHING = 1
     private const val PROVEN = 2
@@ -33,7 +41,7 @@ internal object PackedSaveFormat {
     private val base64 = Base64.UrlSafe.withPadding(Base64.PaddingOption.ABSENT)
 
     /** Assumes [SaveFileCodec.encode]'s checks have passed. An empty solution is written as none. */
-    fun encode(squareSide: Int, state: IntArray, moveCount: Int, mordie: SavedMordie?, labels: String?): String {
+    fun encode(squareSide: Int, state: IntArray, moveCount: Int, mordie: SavedMordie?, labels: String?, version: Version = LATEST): String {
         val out = BitWriter()
         val solution = mordie?.solution?.takeIf { it.isNotEmpty() }
         val status = when {
@@ -43,11 +51,11 @@ internal object PackedSaveFormat {
             else -> UNPROVEN
         }
         out.put(squareSide, 4)
-        out.put(labelCode(labels), 3)
+        out.put(labelCode(version, labels), version.labelBits)
         out.put(status, 2)
         out.put(if (mordie?.solutionScreen == true) 1 else 0, 1)
         out.put(if (solution != null) 1 else 0, 1)
-        if (labels != null && labels !in KNOWN_LABELS) {
+        if (labels != null && labels !in version.labels) {
             val name = labels.encodeToByteArray()
             out.putVarint(name.size)
             name.forEach { out.put(it.toInt() and 0xFF, 8) }
@@ -60,18 +68,18 @@ internal object PackedSaveFormat {
             if (status == UNPROVEN) out.putVarint(mordie.ruledOut)
             solution?.forEach { out.put(stepCode(it, squareSide), bitsFor(stepCodes(squareSide))) }
         }
-        return "$MARKER${base64.encode(out.toByteArray())}"
+        return "${version.marker}${base64.encode(out.toByteArray())}"
     }
 
     /** Throws [SaveFileFormatException], naming the save [name], when [text] isn't a valid packed save. */
-    fun decode(name: String, text: String): SavedBoard =
+    fun decode(name: String, text: String, version: Version = LATEST): SavedBoard =
         try {
-            read(name, text)
+            read(name, text, version)
         } catch (e: BitFormatException) {
             throw SaveFileFormatException(name, e.message.orEmpty())
         }
 
-    private fun read(name: String, text: String): SavedBoard {
+    private fun read(name: String, text: String, version: Version): SavedBoard {
         val bytes = try {
             base64.decode(text.substring(1))
         } catch (e: IllegalArgumentException) {
@@ -80,12 +88,12 @@ internal object PackedSaveFormat {
         val reader = BitReader(bytes)
         val side = reader.get(4)
         if (side !in MIN_SIDE..MAX_SIDE) throw SaveFileFormatException(name, "square side must be $MIN_SIDE-$MAX_SIDE, not $side")
-        val labelCode = reader.get(3)
+        val labelCode = reader.get(version.labelBits)
         val status = reader.get(2)
         val screen = reader.get(1) == 1
         val hasSolution = reader.get(1) == 1
         flagProblem(status, screen, hasSolution)?.let { throw SaveFileFormatException(name, it) }
-        val labels = readLabels(name, reader, labelCode)
+        val labels = readLabels(name, reader, version, labelCode)
         val slot = reader.getVarint()
         val state = reader.getPermutation(side * side, "the board")
         val result = if (screen) readResult(slot) else null
@@ -117,15 +125,15 @@ internal object PackedSaveFormat {
         else -> null
     }
 
-    private fun labelCode(labels: String?) = when {
+    private fun labelCode(version: Version, labels: String?) = when {
         labels == null -> NO_LABELS
-        labels in KNOWN_LABELS -> KNOWN_LABELS.indexOf(labels) + 1
-        else -> ESCAPED_LABEL
+        labels in version.labels -> version.labels.indexOf(labels) + 1
+        else -> version.escape
     }
 
-    private fun readLabels(name: String, reader: BitReader, code: Int): String? {
+    private fun readLabels(name: String, reader: BitReader, version: Version, code: Int): String? {
         if (code == NO_LABELS) return null
-        if (code != ESCAPED_LABEL) return KNOWN_LABELS[code - 1]
+        if (code != version.escape) return version.labels[code - 1]
         val length = reader.getVarint()
         if (length > reader.bitsLeft() / 8) throw BitFormatException("the packed data ends early")
         val label = try {
