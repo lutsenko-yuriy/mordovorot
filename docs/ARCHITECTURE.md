@@ -44,8 +44,10 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       ├── SaveRepository.kt          # Persistence contract: list/exists/save/load/delete
 │       ├── PreferenceRepository.kt    # Player preferences as plain strings: get/set (GH-139)
 │       ├── SaveFileCodec.kt           # The save codec, the one public seam: decode reads the packed and the old text
-│       │                                # format, dispatching on the first character; encode writes the packed one only (GH-237)
-│       ├── PackedSaveFormat.kt        # The packed format: `~` + base64url of a bit stream (GH-237, ADR-0004)
+│       │                                # format, dispatching on the first character; encode writes the packed one only (GH-237). A first character no
+│       │                                # version claims is a SaveFromNewerVersionException (GH-313)
+│       ├── PackedSaveFormat.kt        # The packed format: `~` + base64url of a bit stream (GH-237, ADR-0004);
+│       │                                # its version-specific parts sit behind `Version`, only V1 exists (GH-313)
 │       ├── SaveBits.kt                # BitWriter / BitReader, varints and the Lehmer code of a permutation (GH-237)
 │       ├── BoardLinkFormat.kt         # A board in a share link: side in 4 bits + Lehmer code, base64url (GH-243, ADR-0005)
 │       ├── TextSaveFormat.kt          # The old nine-line text format, read-only from GH-237 on and deprecated (GH-241; `@Deprecated`, no removal date) (GH-110)
@@ -145,7 +147,7 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                             # and the PlayerResult it was reached with. One per session (GH-126, GH-273)
 │       ├── PlayerResult.kt        # How the player's game ended (gave up or solved) and its moves (GH-273)
 │       ├── SharedProgress.kt      # What a share link says about the sender's game: Solving, Solved or GaveUp (GH-272)
-│       ├── TileLabels.kt          # The six label schemes: wireName (analytics, saves, the
+│       ├── TileLabels.kt          # The eight label schemes (GH-313 adds the Cyrillic two, CYRILLIC_ALPHABET): wireName (analytics, saves, the
 │       │                             # preference), title, maxSide, fits(side), label(tile, side), sampleRow.
 │       │                             # NUMBERS is the default (GH-139)
 │       ├── TileLabelsPreference.kt # TileLabels over a PreferenceRepository under `tile_labels`;
@@ -277,7 +279,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │   │                # game's ARIA moving in is GH-201's next step; a Gradle module is future work
 │   │   ├── Announcements.kt # GH-166 (words in :shared:texts, GH-274): what a screen reader hears - shifts, the win, new game, load,
 │   │   │                # solution steps - and the arrows' accessible names; Read board's
-│   │   │                # row-by-row words, letters in the phonetic alphabet (GH-167)
+│   │   │                # row-by-row words, letters in the phonetic alphabet (GH-167), Cyrillic labels in the Russian spelling words (GH-313)
 │   │   └── FocusTarget.kt # GH-201: a control's data-focus key, and whether focus falls back from it
 │   ├── drag/            # LineDrag: one drag in pixels - axis lock past a threshold, live offset,
 │   │                    # snap to whole tiles mod the side; WrapPositions: a part-shifted line's tiles
@@ -393,7 +395,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # the board's focus ring, the key hints
 ├── src/jsMain/resources/board.css      # GH-153: tile colours by home row/column, arrows, solve
 │                                       # animations; no arrows under `pointer: coarse` (GH-111);
-│                                       # tile labels grow with `--text-scale`, capped (GH-168)
+│                                       # tile labels grow with `--text-scale`, capped (GH-168); Cyrillic letter pairs get a smaller cap (GH-313)
 ├── src/jsMain/resources/dialogs.css    # GH-153: the modal dialogs, the Tile labels picker (GH-139)
 ├── src/jsMain/resources/toggle.css     # GH-267: the Share dialog's `Include my tile labels` switch
 ├── src/jsMain/resources/language.css   # GH-275: the picker's corner spot; toggles on wide windows, the dropdown under the phone breakpoint
@@ -604,7 +606,7 @@ the solution-screen and has-solution flags), the labels' name when it is not one
 as a varint, the current board and Mordie's original as Lehmer codes (a permutation as digits of shrinking range),
 N and, when unproven, R as varints, and last Mordie's solution, one joint number (axis, index, shift) per move.
 Every width that depends on the side is read after the side. `SaveFileCodec.decode` sends a save starting with `~`
-to the packed reader and anything else to the text reader, so old saves keep loading, and `encode` accepts a side of 2 to 15 only; a save that fails either is a
+to the packed reader (V1, behind `PackedSaveFormat.Version` since GH-313, so several versions can be read in parallel), a digit, whitespace or an empty save to the text reader, so old saves keep loading, and any other first character throws `SaveFromNewerVersionException` (a `SaveFileFormatException`), which the loader words as a save from a newer version. The Cyrillic label names (GH-313) are not in V1's list and take its escape (code 7 + UTF-8 name), so older builds load such a save with the preference's labels; and `encode` accepts a side of 2 to 15 only; a save that fails either is a
 `SaveFileFormatException`. A 9x9 save with a 340-move solution is about 600 characters (2.1 KB as text).
 
 ### analytics
