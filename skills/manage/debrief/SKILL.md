@@ -23,7 +23,7 @@ This skill produces workflow improvements and a retrospective record, not code.
 
 ### 2. Open the dialog
 
-If the ticket's notes file has entries under `## Notes`, first show a short summary of them (one line per note), so the dialog builds on what was already captured instead of asking for it again.
+If the ticket's notes file has entries under `## Notes`, first show a short summary of them (one line per note), so the dialog builds on what was already captured instead of asking for it again. Show the `## Parking lot` items too, numbered; each one gets decided during the dialog: a ticket, a note, or dropped (GH-323).
 
 Ask one open question:
 
@@ -95,7 +95,7 @@ Append a dated block to the `## Debrief summary` section of `docs/knowledge/note
 
 Use today's date. Mirror the content from the dialog — do not ask the user for anything at this step.
 
-Then remove the notes file's `## Where we stopped` section, if it has one: the ticket is done, so there is nowhere left to pick up.
+Then remove the notes file's `## Where we stopped` section, if it has one: the ticket is done, so there is nowhere left to pick up. Remove its `## Parking lot` section too, once every item is decided.
 
 ### 7. Commit and open a PR
 
