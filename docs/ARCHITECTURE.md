@@ -399,7 +399,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/jsMain/resources/board.css      # GH-153: tile colours by home row/column, arrows, solve
 │                                       # animations; no arrows under `pointer: coarse` (GH-111);
 │                                       # tile labels grow with `--text-scale`, capped (GH-168); Cyrillic letter pairs get a smaller cap (GH-313)
-├── src/jsMain/resources/dialogs.css    # GH-153: the modal dialogs, the Tile labels picker (GH-139)
+├── src/jsMain/resources/dialogs.css    # GH-153: the modal dialogs
+├── src/jsMain/resources/labels.css     # GH-323: the Tile labels dialog's preview strip, group headers and scheme rows (moved out of dialogs.css)
 ├── src/jsMain/resources/toggle.css     # GH-267: the Share dialog's `Include my tile labels` switch
 ├── src/jsMain/resources/language.css   # GH-275: the picker's corner spot; toggles on wide windows, the dropdown under the phone breakpoint
 ├── src/jsMain/resources/solution.css   # GH-153: `.app.solution` and the step list (GH-126); its

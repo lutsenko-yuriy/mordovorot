@@ -41,6 +41,7 @@ object RussianPageTexts : PageTexts {
     override val labelCyrillicLetterPairs = "Кириллические пары"
     override val labelGroupNumbers = "Числа"
     override val labelGroupLatin = "Латинские буквы"
+    override fun labelGroupMarked(group: String, row: String) = "$group, выбрано: $row"
     override val labelRowLetters = "Буквы"
     override val labelGroupCyrillic = "Кириллические буквы"
     override fun labelLimit(side: Int) = "до ${side}x$side"

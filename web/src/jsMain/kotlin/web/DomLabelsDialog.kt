@@ -7,6 +7,7 @@ import web.a11y.asRadio
 import web.a11y.asRadioGroup
 import web.a11y.focusKey
 import web.a11y.hiddenFromReaders
+import web.a11y.named
 
 /** The Tile labels dialog's body (GH-323): the message, the preview strip and the three groups, only the open one listing
  *  its schemes. */
@@ -16,7 +17,7 @@ internal fun labelsBody(dialog: WebDialog.Labels, game: WebGame): List<Element> 
 
 /** The marked scheme's first labels as tiles, seen but not read: the scheme's name says it all. */
 private fun previewStrip(dialog: WebDialog.Labels) = hiddenFromReaders(element("div", "label-preview")).apply {
-    // Row 0, columns 0 to 2 of a 3x3 board: the same hue and shade as the board's first tiles.
+    // Row 0, columns 0 to 2 of a 3x3 board, on every board size as the strip is: the board's own shade ramp spans its side, so a larger board's first tiles differ slightly.
     dialog.preview.forEachIndexed { col, label ->
         append(element("span", "swatch").apply {
             textContent = label
@@ -30,13 +31,15 @@ private fun groupElement(group: TileLabelGroup, dialog: WebDialog.Labels, game: 
     return element("div", if (open) "label-group open" else "label-group").apply {
         append(
             button(group.title, "group-header") { game.labels.onGroupOpened(group) }.focusKey(Focus.LabelGroup(group)).apply {
-                asDisclosure(this, open)
+                asDisclosure(this, open, controls = if (open) "label-group-options" else null)
+                if (!open) named(this, dialog.headerName(group))
             },
         )
         if (!open) return@apply
         val stopAt = dialog.openOptions.firstOrNull { it.labels == dialog.selected }?.labels ?: dialog.openOptions.firstOrNull { it.available }?.labels
         append(
             element("div", "choices list labels").apply {
+                id = "label-group-options"
                 asRadioGroup(this, group.title)
                 dialog.openOptions.forEach { append(labelRow(it, it.labels == dialog.selected, it.labels == stopAt, game)) }
             },
@@ -49,7 +52,6 @@ private fun labelRow(option: LabelOption, checked: Boolean, tabStop: Boolean, ga
     button("", if (checked) "checked" else null) { game.labels.onSelected(option.labels) }.focusKey(Focus.Label(option.labels)).apply {
         asRadio(this, checked, tabStop = tabStop && option.available, unavailable = !option.available)
         append(
-            hiddenFromReaders(element("span", "mark").apply { textContent = if (checked) "●" else "○" }),
             element("span", "name").apply { textContent = option.title },
             *listOfNotNull(option.limit?.let { element("span", "limit").apply { textContent = it } }).toTypedArray(),
         )

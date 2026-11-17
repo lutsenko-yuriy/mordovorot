@@ -121,6 +121,11 @@ sealed interface WebDialog {
         /** The preview strip: the marked scheme's first labels, the same on every board (GH-323). */
         val preview: List<String> get() = selected.sampleRow(PREVIEW_LENGTH)
 
+        /** A group header's name for screen readers: the group's title, and for a closed group that holds the mark, which scheme
+         *  is marked too, since the preview strip is hidden from readers and a closed group lists no rows. */
+        fun headerName(group: TileLabelGroup): String =
+            if (group != open && TileLabelGroup.of(selected) == group) texts().page.labelGroupMarked(group.title, group.rowTitle(selected)) else group.title
+
         /** The [open] group's options, in order. */
         val openOptions: List<LabelOption> get() = open.schemes.mapNotNull { scheme -> options.firstOrNull { it.labels == scheme } }
     }

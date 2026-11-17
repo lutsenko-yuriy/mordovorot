@@ -40,8 +40,11 @@ internal fun asRadio(button: Element, checked: Boolean, tabStop: Boolean? = null
     }
 }
 
-/** [header] as the button that opens a group of options (GH-323); its group is [expanded] while open. */
-internal fun asDisclosure(header: Element, expanded: Boolean) = header.setAttribute("aria-expanded", expanded.toString())
+/** [header] as the button that opens a group of options (GH-323); its group is [expanded] while open, and the element with id [controls] when given. */
+internal fun asDisclosure(header: Element, expanded: Boolean, controls: String? = null) {
+    header.setAttribute("aria-expanded", expanded.toString())
+    controls?.let { header.setAttribute("aria-controls", it) }
+}
 
 /** [button] as a check box, which its text names (GH-267); an [unavailable] one is disabled (GH-272). A button rather than a native check box: the page is rebuilt every
  *  frame, so a native one would lose its focus and state, as radios would (GH-139). */

@@ -208,6 +208,20 @@ class WebLabelGroupsScenarioTest {
         assertEquals(texts().page.labelNumbers, russian.labels.openOptions.first().title)
     }
 
+    @Test
+    fun `a closed group that holds the mark says so in its header name`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.openDialog()
+        page.game.labels.onGroupOpened(TileLabelGroup.LATIN)
+        page.game.labels.onSelected(TileLabels.LETTER_PAIRS)
+
+        page.game.labels.onGroupOpened(TileLabelGroup.NUMBERS)
+
+        assertEquals("Latin letters, marked: Pairs", page.labels.headerName(TileLabelGroup.LATIN))
+        assertEquals("Numbers", page.labels.headerName(TileLabelGroup.NUMBERS))
+        assertEquals("Cyrillic letters", page.labels.headerName(TileLabelGroup.CYRILLIC))
+    }
+
     // Other ways in
     @Test
     fun `a load that asks for other labels opens Numbers`() = webTest {

@@ -56,8 +56,8 @@ class ColourContrastStylesTest {
             check(paint("solution.css", ".step.current", "color"), "button", 4.5, "the current solution step"),
             check(paint("dialogs.css", ".dialog .message", "color"), "card", 4.5, "dialog message"),
             check(paint("dialogs.css", ".dialog .warning", "color"), "card", 4.5, "dialog warnings"),
-            check(paint("dialogs.css", ".dialog .choices.labels .limit", "color"), "card", 4.5, "label limits"),
-            check(paint("dialogs.css", ".dialog .choices.labels button:hover .limit", "color"), "frame", 4.5, "a hovered label row's limit"),
+            check(paint("labels.css", ".dialog .choices.labels .limit", "color"), "card", 4.5, "label limits"),
+            check(paint("labels.css", ".dialog .choices.labels button:hover .limit", "color"), "frame", 4.5, "a hovered label row's limit"),
         ).flatten()
 
         assertTrue(failures.isEmpty(), failures.joinToString("\n"))
@@ -76,7 +76,7 @@ class ColourContrastStylesTest {
             check(paint("tutorial.css", ".tutorial-line .mark", "border"), "frame", 3.0, "the asked line's outline in a gap"),
             check(paint("tutorial.css", ".tutorial-line .mark", "border"), "page", 3.0, "the asked line's outline past the board"),
             check(paint("tutorial.css", ".bubble", "border"), "page", 3.0, "the bubble's edge"),
-            check(paint("dialogs.css", ".dialog .choices.labels button.checked", "box-shadow"), "card", 3.0, "the checked label row's ring"),
+            check(paint("labels.css", ".dialog .choices.labels button.checked", "box-shadow"), "card", 3.0, "the checked label row's ring"),
             check(paint("dialogs.css", ".dialog input", "border"), "card", 3.0, "the Save name field's edge"),
         ).flatten()
 
