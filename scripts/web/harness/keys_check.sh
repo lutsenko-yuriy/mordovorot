@@ -30,11 +30,13 @@ queries=(
   "report=keys&grid=1&keys=click:Labels,focus:label-group-latin,Enter,Enter,click:OK,focus:read-board,Enter"
   # GH-313: Cyrillic letters, said by the Russian spelling words.
   "report=keys&grid=1&keys=click:Labels,focus:label-group-cyrillic,Enter,Enter,click:OK,focus:read-board,Enter"
+  # GH-322: Greek letters, said by their names; the group is the fifth header.
+  "report=keys&grid=1&keys=click:Labels,focus:label-group-greek,Enter,Enter,click:OK,focus:read-board,Enter"
   # GH-171: Controls with 6 and with Tab+Enter; its groups' Tab stops and arrows; Escape; OK.
   "report=keys&keys=6,ArrowRight,Tab,ArrowDown,ArrowDown,Tab,Tab,Tab,Escape"
   "report=keys&keys=focus:controls,Enter,ArrowLeft,Enter"
   "report=keys&keys=focus:labels,6,Escape,1,Escape"
-  # GH-323: Tile labels' groups: Tab visits the three headers and the open group's one radio; an arrow moves the mark inside the open group; a header opens its group with focus on its first scheme.
+  # GH-323: Tile labels' groups: Tab visits the headers and the open group's one radio; an arrow moves the mark inside the open group; a header opens its group with focus on its first scheme.
   "report=keys&keys=click:Labels,Tab,Tab,Tab,Tab,Tab,Escape"
   "report=keys&keys=click:Labels,ArrowDown,ArrowDown,ArrowUp,focus:label-group-latin,Enter,ArrowDown,Escape"
   # GH-323: a group of 0-based schemes: its header opens it, and its rows are named like the 1-based ones'.
@@ -114,7 +116,7 @@ log="$(cd "$project" && ./gradlew -q :web:jsBrowserDistribution 2>&1)" || {
 actual="$("$here/measure.sh" "${queries[@]}" | perl -pe '
   s/said "[^"]*\bNow \K\d+/N/;
   s{(?:said|name) "\K[^"]*}{$& =~ s/\d+/N/gr =~ s/\b(?:Row|Column) N (?:left|right|up|down)\b/LINE N DIR/gr}ge if /^\S+ solution /;
-  if (/\| grid (?:table|grid) /) { s{(?:said|row1) "\K[^"]*}{$& =~ s/\d+/N/gr =~ s/\b(?:alpha|bravo|charlie|delta|echo|foxtrot|golf|hotel|india|juliet|kilo|lima|mike|november|oscar|papa|quebec|romeo|sierra|tango|uniform|victor|whiskey|x-ray|yankee|zulu)\b/W/gr =~ s/(?:Анна|Борис|Василий|Григорий|Дмитрий|Елена|Женя|Зинаида|Иван|Константин|Леонид|Мария|Николай|Ольга|Павел|Роман|Семён|Тамара|Ульяна|Фёдор|Харитон|Цапля|Человек|Шура|Щука|Эхо|Юрий|Яков)/W/gr =~ s/, in place//gr =~ s/\b(tile|move)s?\b/$1s/gr}ge; s/in-place \K\d+/N/ }')"
+  if (/\| grid (?:table|grid) /) { s{(?:said|row1) "\K[^"]*}{$& =~ s/\d+/N/gr =~ s/\b(?:alpha|bravo|charlie|delta|echo|foxtrot|golf|hotel|india|juliet|kilo|lima|mike|november|oscar|papa|quebec|romeo|sierra|tango|uniform|victor|whiskey|x-ray|yankee|zulu|beta|gamma|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|omicron|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega|Greek question mark)\b/W/gr =~ s/(?:Анна|Борис|Василий|Григорий|Дмитрий|Елена|Женя|Зинаида|Иван|Константин|Леонид|Мария|Николай|Ольга|Павел|Роман|Семён|Тамара|Ульяна|Фёдор|Харитон|Цапля|Человек|Шура|Щука|Эхо|Юрий|Яков)/W/gr =~ s/, in place//gr =~ s/\b(tile|move)s?\b/$1s/gr}ge; s/in-place \K\d+/N/ }')"
 if grep -q '^TIMEOUT' <<<"$actual"; then
   echo "$actual" >&2
   exit 2
