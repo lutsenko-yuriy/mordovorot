@@ -29,7 +29,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
     private var shown: WebState? = null
 
     /** The language picker (GH-275), kept across frames like the footer. */
-    private val picker = pickerHost?.let { DomLanguagePicker(it) { language, control -> game.language.onLanguage(language, control) } }
+    private val picker = pickerHost?.let { DomLanguagePicker(it) { language, control, byPointer -> game.language.onLanguage(language, control, byPointer) } }
 
     /** The line easing into place, redrawn every animation frame until it gets there. */
     private var slide: Slide? = null

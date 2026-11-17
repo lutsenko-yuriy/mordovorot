@@ -35,6 +35,18 @@ class WebLanguageScenarioTest {
     private fun WebHarness.pick(language: Language, control: PickerControl = PickerControl.TOGGLES) = game.language.onLanguage(language, control)
 
     @Test
+    fun `a click on a toggle gives the board focus, a key press leaves focus on the picker`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+
+        game(page).onLanguage(Language.DE, PickerControl.TOGGLES, byPointer = false)
+        assertNull(page.state.focus)
+        game(page).onLanguage(Language.RU, PickerControl.TOGGLES, byPointer = true)
+        assertEquals(web.Focus.Board, page.state.focus)
+    }
+
+    private fun game(page: WebHarness) = page.game.language
+
+    @Test
     fun `a German browser starts the game in German`() = webTest {
         val page = WebHarness(backgroundScope, browserLanguages = listOf("de-DE")).startOn()
 

@@ -89,6 +89,8 @@ queries=(
   "report=keys&keys=focus:footer-0,S-Tab"
   "report=keys&keys=focus:language-de,Enter,Space,Tab"
   "report=keys&keys=focus:language-ru,Enter,focus:language-en,Enter"
+  # A click on a toggle gives the board focus, so its keys work; a key press leaves focus on the toggle.
+  "report=keys&grid=1&keys=click:DE,s,focus:language-ru,Enter,s"
   "report=keys&lang=de&keys=focus:labels,Enter,Escape"
   # GH-275: on a phone the dropdown is the one Tab stop (the toggles are hidden), and under a dialog in German it is inert.
   "report=keys&sizes=390x844&keys=focus:language-select,S-Tab,Tab"

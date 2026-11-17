@@ -10,11 +10,12 @@ enum class PickerControl(val wire: String) { DROPDOWN("dropdown"), TOGGLES("togg
  *  so no text a dialog was worded with can go stale. */
 internal class WebLanguageFlows(private val game: WebGame, private val viewModel: GameViewModel) {
 
-    /** Switches to [language]: everything the frame words follows at once, but the status line, which was worded in the old language and is cleared. */
-    fun onLanguage(language: Language, control: PickerControl) {
+    /** Switches to [language] (by a click, if [byPointer]): everything the frame words follows at once, but the status line, which was worded in the old language and is cleared. */
+    fun onLanguage(language: Language, control: PickerControl, byPointer: Boolean = false) {
         if (!game.idle || language == viewModel.language()) return
         game.status = null
         viewModel.changeLanguage(language, control.wire)
-        game.render()
+        // A click leaves focus on the picker, where the board keys do nothing: it goes to the board on a computer, as after New. A key press stays put, so it can be pressed again.
+        game.render(focus = game.onBoard.takeIf { byPointer })
     }
 }

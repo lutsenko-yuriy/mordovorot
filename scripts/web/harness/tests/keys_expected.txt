@@ -301,6 +301,12 @@ mouse play 1200x800 4x4 | focus:language-ru - -> focus language-ru role button n
 mouse play 1200x800 4x4 | Enter native -> focus language-ru role button name "RU" | dialog - | ring solid | keyboard yes | inert - | said -
 mouse play 1200x800 4x4 | focus:language-en - -> focus language-en role button name "EN" | dialog - | ring solid | keyboard yes | inert - | said -
 mouse play 1200x800 4x4 | Enter native -> focus language-en role button name "EN" | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | start - -> focus board role grid name "Board" | dialog - | ring none | keyboard no | inert - | said "New NxN game" | grid grid "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 0,0 outlined 0,0 new | read-board enabled
+mouse play 1200x800 4x4 | click:DE - -> focus board role grid name "Brett" | dialog - | ring none | keyboard no | inert - | said - | grid grid "Brett" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 0,0 outlined 0,0 new | read-board enabled
+mouse play 1200x800 4x4 | s page -> focus board role grid name "Brett" | dialog - | ring solid | keyboard yes | inert - | said - | grid grid "Brett" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 1,0 outlined 1,0 kept | read-board enabled
+mouse play 1200x800 4x4 | focus:language-ru - -> focus language-ru role button name "RU" | dialog - | ring solid | keyboard yes | inert - | said - | grid grid "Brett" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 1,0 outlined 1,0 kept | read-board enabled
+mouse play 1200x800 4x4 | Enter native -> focus language-ru role button name "RU" | dialog - | ring solid | keyboard yes | inert - | said - | grid grid "Доска" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 1,0 outlined 1,0 new | read-board enabled
+mouse play 1200x800 4x4 | s - -> focus language-ru role button name "RU" | dialog - | ring solid | keyboard yes | inert - | said - | grid grid "Доска" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 1,0 outlined 1,0 kept | read-board enabled
 mouse play 1200x800 4x4 | start - -> focus board role grid name "Brett" | dialog - | ring none | keyboard no | inert - | said "Neues Spiel 4x4"
 mouse play 1200x800 4x4 | focus:labels - -> focus labels role button name "Beschriftung" shortcut 4 | dialog - | ring none | keyboard no | inert - | said -
 mouse play 1200x800 4x4 | Enter native -> focus label-numbers role radio name "●Zahlen1 2 3 4" checked | dialog "Kachelbeschriftungen" | ring solid | keyboard yes | inert DIV.stage DIV.panel DIV.language-picker FOOTER.footer | said -
@@ -309,4 +315,3 @@ mouse play 390x844 4x4 | start - -> focus board role grid name "Board" | dialog 
 mouse play 390x844 4x4 | focus:language-select - -> focus language-select role - name "Language" | dialog - | ring auto | keyboard no | inert - | said -
 mouse play 390x844 4x4 | S-Tab native -> focus controls role button name "Controls" shortcut 6 | dialog - | ring solid | keyboard yes | inert - | said -
 mouse play 390x844 4x4 | Tab native -> focus - | dialog - | ring - | keyboard yes | inert - | said -
-

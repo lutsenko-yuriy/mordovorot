@@ -4,6 +4,7 @@ import kotlinx.dom.clear
 import org.w3c.dom.Element
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.HTMLSelectElement
+import org.w3c.dom.events.MouseEvent
 import texts.Language
 import web.a11y.asPickerGroup
 import web.a11y.asToggle
@@ -12,7 +13,7 @@ import web.a11y.named
 
 /** The language picker in the page's top right corner (GH-275), in [host] outside `#app`, which this keeps rather than rebuilds so
  *  focus stays on the pick. Both forms are built; language.css shows the `EN ▾` dropdown on phones and the `EN DE RU` toggles elsewhere. */
-internal class DomLanguagePicker(private val host: Element, private val onPick: (Language, PickerControl) -> Unit) {
+internal class DomLanguagePicker(private val host: Element, private val onPick: (Language, PickerControl, Boolean) -> Unit) {
 
     private val toggles = Language.entries.associateWith { language ->
         element("button", "language-toggle").apply {
@@ -20,7 +21,8 @@ internal class DomLanguagePicker(private val host: Element, private val onPick: 
             setAttribute("title", language.nativeName)
             setAttribute("lang", language.code)
             setAttribute("data-focus", "language-${language.code}")
-            addEventListener("click", { onPick(language, PickerControl.TOGGLES) })
+            // A key's click has `detail` 0, a mouse's doesn't.
+            addEventListener("click", { onPick(language, PickerControl.TOGGLES, (it as MouseEvent).detail != 0) })
         }
     }
 
@@ -35,7 +37,7 @@ internal class DomLanguagePicker(private val host: Element, private val onPick: 
                 setAttribute("lang", language.code)
             })
         }
-        addEventListener("change", { Language.fromCode(value)?.let { onPick(it, PickerControl.DROPDOWN) } })
+        addEventListener("change", { Language.fromCode(value)?.let { onPick(it, PickerControl.DROPDOWN, false) } })
     }
 
     init {
