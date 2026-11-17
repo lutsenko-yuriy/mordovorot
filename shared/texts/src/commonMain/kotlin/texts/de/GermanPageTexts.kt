@@ -13,6 +13,7 @@ object GermanPageTexts : PageTexts {
     override val toolbarShare = "Teilen"
     override val toolbarControls = "Steuerung"
     override val giveUp = "Aufgeben"
+    override val alphabetHint = "Hinweis"
     override val mordiesSolution = "Mordies Lösung"
     override val tutorial = "Tutorial"
     override val tutorialControls = "Steuerung"

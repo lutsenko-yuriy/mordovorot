@@ -29,6 +29,7 @@ object RussianReaderTexts : ReaderTexts {
     override val inPlace = "на месте"
     override val board = "Доска"
     override val readBoard = "Озвучить доску"
+    override fun notOnBoard(letter: String) = "$letter, нет на доске"
 
     /** The Latin letters stay NATO words in every language (GH-275). */
     override val phonetic = NATO_WORDS

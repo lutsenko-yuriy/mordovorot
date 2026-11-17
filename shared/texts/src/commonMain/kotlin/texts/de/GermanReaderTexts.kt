@@ -30,6 +30,7 @@ object GermanReaderTexts : ReaderTexts {
     override val inPlace = "an ihrem Platz"
     override val board = "Brett"
     override val readBoard = "Brett vorlesen"
+    override fun notOnBoard(letter: String) = "$letter, nicht auf diesem Brett"
 
     /** The Latin letters stay NATO words in every language (GH-275). */
     override val phonetic = NATO_WORDS

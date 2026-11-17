@@ -19,6 +19,16 @@ internal class TileLabelsUseCase(
         mapOf("opened_from" to openedFrom, "screen" to screenName(board, solution), "current_labels" to labels.current.wireName),
     )
 
+    /** The alphabet hint's screen view (GH-332); [openedFrom] is `button` or `shortcut`. `labels` is the scheme shown, so Numbers on a
+     *  board too big for Letters. */
+    fun alphabetHintOpened(openedFrom: String) = analytics.track(
+        "screen_alphabet_hint_dialog",
+        mapOf(
+            "opened_from" to openedFrom, "screen" to screenName(board, solution),
+            "labels" to labels.current.wireName, "board_size" to board.squareSide,
+        ),
+    )
+
     /** Tracks `tile_labels_changed` only when [to] isn't already shown. */
     fun change(to: TileLabels) {
         val from = labels.current

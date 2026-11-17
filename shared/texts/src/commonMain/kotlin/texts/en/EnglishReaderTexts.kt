@@ -29,6 +29,7 @@ object EnglishReaderTexts : ReaderTexts {
     override val inPlace = "in place"
     override val board = "Board"
     override val readBoard = "Read board"
+    override fun notOnBoard(letter: String) = "$letter, not on this board"
 
     override val phonetic = NATO_WORDS
     override val cyrillicPhonetic = RUSSIAN_SPELLING_WORDS

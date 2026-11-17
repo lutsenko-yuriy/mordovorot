@@ -145,6 +145,8 @@ class GameViewModelImpl internal constructor(
 
     override fun tileLabelsDialogOpened(openedFrom: String) = tileLabelsUseCase.dialogOpened(openedFrom)
 
+    override fun alphabetHintOpened(openedFrom: String) = tileLabelsUseCase.alphabetHintOpened(openedFrom)
+
     override fun changeTileLabels(labels: TileLabels) = tileLabelsUseCase.change(labels)
 
     override fun startingBoard(): IntArray? = mordieHooks.original()

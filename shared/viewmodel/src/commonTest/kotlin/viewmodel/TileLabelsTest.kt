@@ -131,4 +131,63 @@ class TileLabelsTest {
     fun `the limit text names the largest board a scheme labels (GH-160)`() {
         assertEquals("up to 5x5", TileLabels.LETTERS.limitText)
     }
+
+    // GH-332: the alphabets behind the hint, and how many of their letters a board uses.
+
+    @Test
+    fun `the single-letter schemes label tile i with the alphabet's letter i`() {
+        for (i in 0 until 25) {
+            assertEquals(TileLabels.LATIN_ALPHABET[i].toString(), TileLabels.LETTERS.label(i, 5))
+            assertEquals(TileLabels.CYRILLIC_ALPHABET[i].toString(), TileLabels.CYRILLIC_LETTERS.label(i, 5))
+            assertEquals(TileLabels.GREEK_ALPHABET[i].toString(), TileLabels.GREEK_LETTERS.label(i, 5))
+        }
+    }
+
+    @Test
+    fun `the alphabets have 26, 28 and 25 letters`() {
+        assertEquals(26, TileLabels.LATIN_ALPHABET.length)
+        assertEquals(28, TileLabels.CYRILLIC_ALPHABET.length)
+        assertEquals(25, TileLabels.GREEK_ALPHABET.length)
+    }
+
+    @Test
+    fun `the Cyrillic alphabet lacks yo, short i, the signs and yery`() {
+        assertTrue("ЁЙЪЫЬ".none { it in TileLabels.CYRILLIC_ALPHABET })
+    }
+
+    @Test
+    fun `the Greek alphabet ends with the question mark U+037E, compared by code`() {
+        assertEquals(0x37E, TileLabels.GREEK_ALPHABET.last().code)
+    }
+
+    @Test
+    fun `a single-letter scheme uses a prefix of its alphabet, as many letters as the board has tiles`() {
+        assertEquals(9, TileLabels.LETTERS.lettersUsed(3))
+        assertEquals(25, TileLabels.LETTERS.lettersUsed(5))
+        assertEquals(25, TileLabels.CYRILLIC_LETTERS.lettersUsed(5))
+        assertEquals(16, TileLabels.GREEK_LETTERS.lettersUsed(4))
+        assertEquals(25, TileLabels.GREEK_LETTERS.lettersUsed(5))
+    }
+
+    @Test
+    fun `a pair scheme uses as many letters as the board's side`() {
+        for (scheme in listOf(TileLabels.LETTER_PAIRS, TileLabels.CYRILLIC_LETTER_PAIRS, TileLabels.GREEK_LETTER_PAIRS)) {
+            for (side in 3..9) assertEquals(side, scheme.lettersUsed(side), "${scheme.wireName} $side")
+        }
+    }
+
+    @Test
+    fun `the number schemes use no letters`() {
+        for (scheme in listOf(TileLabels.NUMBERS, TileLabels.NUMBERS_FROM_0, TileLabels.PAIRS, TileLabels.PAIRS_FROM_0)) {
+            assertNull(scheme.lettersUsed(4), scheme.wireName)
+        }
+    }
+
+    @Test
+    fun `the Greek question mark is in use only on a 5x5 single-letter board`() {
+        val last = TileLabels.GREEK_ALPHABET.length
+        assertTrue(TileLabels.GREEK_LETTERS.lettersUsed(5)!! >= last)
+        assertTrue(TileLabels.GREEK_LETTERS.lettersUsed(4)!! < last)
+        assertTrue((3..9).all { TileLabels.GREEK_LETTER_PAIRS.lettersUsed(it)!! < last })
+    }
 }

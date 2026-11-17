@@ -34,6 +34,9 @@ interface ReaderTexts {
     val board: String
     val readBoard: String
 
+    /** An alphabet hint letter the board doesn't use (GH-332): [letter] as already spoken, `zulu, not on this board`. */
+    fun notOnBoard(letter: String): String
+
     /** The letters A to Z as said, so `B` and `D` don't sound alike. */
     val phonetic: List<String>
 
