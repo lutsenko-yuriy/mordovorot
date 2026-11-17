@@ -13,11 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
-## [0.50.0] — 2026-11-17 (PR #320 merged)
+## [0.51.0] — 2026-11-17 (PR #321 merged)
 
 ### Added
 
-- [wip] (PR #320) GH-313 WU1: save codec reads several versions of the packed format; a save from a newer version gets its own message.
+- [user] (PR #321) GH-313: Tiles can be labelled with Cyrillic letters or Cyrillic letter pairs.
+- [non-user] (PR #320) GH-313 WU1: save codec reads several versions of the packed format; a save from a newer version gets its own message.
+- [non-user] (PR #321) GH-313 WU2: Cyrillic letters and letter pairs as tile labels, switched on.
 
 ## [0.50.0] — 2026-11-17 (PR #318 merged)
 
