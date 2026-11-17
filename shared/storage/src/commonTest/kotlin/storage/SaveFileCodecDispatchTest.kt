@@ -24,9 +24,14 @@ class SaveFileCodecDispatchTest {
     }
 
     @Test
-    fun `anything else keeps the text format's messages`() {
+    fun `an empty save, a digit or whitespace keeps the text format's messages`() {
         assertEquals("Save 'e' is corrupted: missing square side", assertFailsWith<SaveFileFormatException> { SaveFileCodec.decode("e", "") }.message)
-        assertEquals("Save 'x' is corrupted: square side is not an integer", assertFailsWith<SaveFileFormatException> { SaveFileCodec.decode("x", "x\n0 1 2 3\n") }.message)
+        assertEquals("Save 'x' is corrupted: square side is not an integer", assertFailsWith<SaveFileFormatException> { SaveFileCodec.decode("x", " x\n0 1 2 3\n") }.message)
+    }
+
+    @Test
+    fun `any other first character is a save from a newer version, GH-313`() {
+        assertEquals("Save 'x' is corrupted: it was made by a newer version", assertFailsWith<SaveFromNewerVersionException> { SaveFileCodec.decode("x", "x\n0 1 2 3\n") }.message)
     }
 
     @Test

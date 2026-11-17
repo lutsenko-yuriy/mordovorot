@@ -548,6 +548,7 @@ status.repaired(foo) = Repaired 'foo' (two tiles swapped) and loaded it.
 status.repairedNotUpdated(foo) = Repaired and loaded 'foo', but couldn't update the save.
 status.saveDamaged(foo) = 'foo' is damaged and can't be loaded. You can delete it in Load.
 status.saveFailed(foo) = Couldn't save 'foo'. The browser's storage may be full or turned off.
+status.saveFromNewerVersion = This save was made by a newer version of the game. Please reload the page to update.
 status.saveNameHasSpaces(foo) = Save names can't have spaces, so 'foo' wasn't saved. Please pick another name.
 status.saveNameRejected(foo) = Save names can't be blank or contain slashes or '..', so 'foo' wasn't saved. Please pick another name.
 status.saved(foo) = Saved as 'foo'.

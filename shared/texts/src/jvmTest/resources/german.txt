@@ -548,6 +548,7 @@ status.repaired(foo) = „foo“ wurde repariert (zwei Kacheln waren vertauscht)
 status.repairedNotUpdated(foo) = „foo“ wurde repariert und geladen, aber der Speicherstand ließ sich nicht aktualisieren.
 status.saveDamaged(foo) = „foo“ ist beschädigt und lässt sich nicht laden. Du kannst es unter „Laden“ löschen.
 status.saveFailed(foo) = „foo“ konnte nicht gespeichert werden. Vielleicht ist der Browser-Speicher voll oder deaktiviert.
+status.saveFromNewerVersion = Dieser Spielstand wurde mit einer neueren Version des Spiels erstellt. Bitte lade die Seite neu, um zu aktualisieren.
 status.saveNameHasSpaces(foo) = Ein Speichername darf keine Leerzeichen enthalten, deshalb wurde „foo“ nicht gespeichert. Wähle einen anderen Namen.
 status.saveNameRejected(foo) = Ein Speichername darf nicht leer sein und weder Schrägstrich noch „..“ enthalten, deshalb wurde „foo“ nicht gespeichert. Wähle einen anderen Namen.
 status.saved(foo) = Gespeichert als „foo“.

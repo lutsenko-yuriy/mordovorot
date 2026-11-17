@@ -180,7 +180,7 @@ class WebSaveLoadScenarioTest {
     @Test
     fun `a damaged save shows one friendly error`() = webTest {
         val page = WebHarness(backgroundScope).startOn()
-        page.store.entries["mordovorot.save.foo"] = "x\n0 1 2 3\n"
+        page.store.entries["mordovorot.save.foo"] = "2x\n0 1 2 3\n"
 
         page.game.onLoad()
         page.game.onLoadChosen("foo")

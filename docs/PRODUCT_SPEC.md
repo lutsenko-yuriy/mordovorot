@@ -111,6 +111,9 @@ The first visit starts with the tutorial (Feature 13).
   preference, until the next new game. A save from before GH-139, or one naming labels this
   build doesn't know, loads with the preference. Older builds still load a new save and ignore
   its labels.
+- **A save from a newer version (GH-313):** a save whose first character no version of the format
+  here knows is not "damaged": Load says `This save was made by a newer version of the game. Please
+  reload the page to update.` (also in German and Russian) and loads nothing.
 
 ### Feature 5 — Exit (GH-12)
 Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is the only client.

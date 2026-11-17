@@ -1,8 +1,8 @@
 package storage
 
 /** The save codec, the one public seam over the save formats (GH-237): [encode] checks and writes
- *  a save in the packed format ([PackedSaveFormat]), [decode] reads that and the older text format
- *  ([TextSaveFormat], told apart by the first character). */
+ *  a save in the latest packed version ([PackedSaveFormat]), [decode] reads every packed version and the
+ *  older text format ([TextSaveFormat]), told apart by the first character (GH-313). */
 object SaveFileCodec {
 
     /** Throws [IllegalArgumentException] for a state, move count, Mordie data or labels [SaveRepository.save] rejects. */
@@ -29,9 +29,17 @@ object SaveFileCodec {
         return PackedSaveFormat.encode(squareSide, state, moveCount, mordie, labels)
     }
 
-    /** Throws [SaveFileFormatException], naming the save [name], when [text] isn't a valid save. Anything
-     *  that doesn't start with [PackedSaveFormat.MARKER], an empty save included, is read as text. */
+    /** Throws [SaveFileFormatException], naming the save [name], when [text] isn't a valid save, and its
+     *  [SaveFromNewerVersionException] when the first character is none a version here knows. A digit,
+     *  whitespace or an empty save is text. */
     @Suppress("DEPRECATION") // The deprecated text reader stays so saves from before GH-237 still load (GH-241).
-    fun decode(name: String, text: String): SavedBoard =
-        if (text.startsWith(PackedSaveFormat.MARKER)) PackedSaveFormat.decode(name, text) else TextSaveFormat.decode(name, text)
+    fun decode(name: String, text: String): SavedBoard {
+        val first = text.firstOrNull()
+        val packed = PackedSaveFormat.VERSIONS.firstOrNull { it.marker == first }
+        return when {
+            packed != null -> PackedSaveFormat.decode(name, text, packed)
+            first == null || first.isDigit() || first.isWhitespace() -> TextSaveFormat.decode(name, text)
+            else -> throw SaveFromNewerVersionException(name)
+        }
+    }
 }

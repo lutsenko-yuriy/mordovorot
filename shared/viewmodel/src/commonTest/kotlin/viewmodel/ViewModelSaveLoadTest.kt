@@ -8,6 +8,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import storage.SaveFileFormatException
+import storage.SaveFromNewerVersionException
 import testing.FakeSaveRepository
 import testing.FakeViewModelUi
 import testing.RecordingAnalyticsService
@@ -240,6 +241,29 @@ class ViewModelSaveLoadTest {
         assertFalse(loaded)
         assertEquals(listOf(0, 1, 2, 3, 4, 5, 6, 7, 8), board.boardArray.toList())
         assertEquals(listOf(statusTexts.saveDamaged("corrupt")), ui.shownMessages)
+        assertEquals(listOf<String?>(null), ui.loadedSaves)
+        assertEquals(
+            listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "error"))),
+            analytics.events,
+        )
+    }
+
+    @Test
+    fun `a save from a newer version says so and loads nothing, GH-313`() = runTest {
+        val saves = FakeSaveRepository().apply {
+            loadException = SaveFromNewerVersionException("corrupt")
+        }
+        val analytics = RecordingAnalyticsService()
+        val board = BoardImpl(3).apply { restoreState(intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8)) }
+        val viewModel = testViewModel(board, saves, analytics)
+        val ui = FakeViewModelUi()
+        var loaded = true
+
+        ui.drive(viewModel) { loaded = viewModel.loadGame("corrupt") }
+
+        assertFalse(loaded)
+        assertEquals(listOf(0, 1, 2, 3, 4, 5, 6, 7, 8), board.boardArray.toList())
+        assertEquals(listOf(statusTexts.saveFromNewerVersion), ui.shownMessages)
         assertEquals(listOf<String?>(null), ui.loadedSaves)
         assertEquals(
             listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "error"))),
