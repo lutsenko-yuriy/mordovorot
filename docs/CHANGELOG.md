@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.54.1] — 2026-11-17 (PR #337 merged)
+
+### Added
+
+- [meta] (PR #337) GH-336: MIT license, a third-party notices file (Apache-2.0 libraries in the web bundle) and a License section in the README.
+
 ## [0.54.0] — 2026-11-17 (PR #335 merged)
 
 ### Added
