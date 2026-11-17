@@ -247,7 +247,7 @@ class WebAlphabetHintScenarioTest {
         assertTrue(page.press("8", from = Focus.AlphabetHintButton))
         assertIs<WebDialog.AlphabetHint>(page.state.dialog)
         page.game.onEscape()
-        assertEquals(Focus.AlphabetHintButton, page.state.focus)
+        assertEquals(Focus.AlphabetHintButton.key, page.state.focus?.key)
     }
 
     @Test
