@@ -13,23 +13,15 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
-## [0.49.0] — 2026-11-17 (PR #317 merged)
+## [0.50.0] — 2026-11-17 (PR #318 merged)
 
 ### Added
 
-- [wip] (PR #317) GH-275 WU3: language mechanism, switched off for now: the page follows the browser's language and remembers a pick once the picker is on; the page stays English until then.
-
-## [0.49.0] — 2026-11-17 (PR #316 merged)
-
-### Added
-
-- [wip] (PR #316) GH-275 WU2: German texts and per-language test snapshots, not yet reachable from the page.
-
-## [0.49.0] — 2026-11-17 (PR #315 merged)
-
-### Added
-
-- [wip] (PR #315) GH-275 WU1: Russian texts and per-language test snapshots, not yet reachable from the page.
+- [user] (PR #318) GH-275: You can play in German or Russian: the game follows your browser's language, and a picker in the top right corner switches it.
+- [non-user] (PR #315) GH-275 WU1: Russian texts and per-language test snapshots.
+- [non-user] (PR #316) GH-275 WU2: German texts and per-language test snapshots.
+- [non-user] (PR #317) GH-275 WU3: language mechanism: the page follows the browser's language and remembers a pick.
+- [non-user] (PR #318) GH-275 WU4: language picker in the top right corner; a click on a language toggle gives the board focus; the picker's focus ring shows only for the keyboard.
 
 ## [0.49.0] — 2026-11-16 (PR #312 merged)
 

@@ -64,3 +64,11 @@ internal fun asListItem(item: Element, current: Boolean) {
 
 /** The key that presses [element], heard as a shortcut. */
 internal fun keyShortcut(element: Element, key: String) = element.setAttribute("aria-keyshortcuts", key)
+
+/** The language picker (GH-275): a group named [name], whose toggle buttons say which is [pressed]. */
+internal fun asPickerGroup(group: Element, name: String) {
+    group.setAttribute("role", "group")
+    named(group, name)
+}
+
+internal fun asToggle(button: Element, pressed: Boolean) = button.setAttribute("aria-pressed", pressed.toString())

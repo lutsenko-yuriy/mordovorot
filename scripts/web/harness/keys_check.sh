@@ -85,6 +85,15 @@ queries=(
   # The solution screen: the board takes focus and the keys, in place; off the board the keys are nothing.
   "report=keys&grid=1&mode=solution&keys=l,Space,R-Space,Enter,h,r,ArrowDown,w,Tab,l,S-Tab,0"
   "report=keys&layout=left&mode=solution&keys=ArrowRight,d,a,R"
+  # GH-275: the language picker is after the game's controls and before the footer; Enter and Space on a toggle switch the language, focus stays on it; under a dialog in German it is inert.
+  "report=keys&keys=focus:footer-0,S-Tab"
+  "report=keys&keys=focus:language-de,Enter,Space,Tab"
+  "report=keys&keys=focus:language-ru,Enter,focus:language-en,Enter"
+  # A click on a toggle gives the board focus, so its keys work; a key press leaves focus on the toggle.
+  "report=keys&grid=1&keys=click:DE,s,focus:language-ru,Enter,s"
+  "report=keys&lang=de&keys=focus:labels,Enter,Escape"
+  # GH-275: on a phone the dropdown is the one Tab stop (the toggles are hidden).
+  "report=keys&sizes=390x844&keys=focus:language-select,S-Tab,Tab"
 )
 
 log="$(cd "$project" && ./gradlew -q :web:jsBrowserDistribution 2>&1)" || {

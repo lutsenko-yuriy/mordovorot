@@ -530,7 +530,7 @@ No new events or properties. On 5x5 and bigger the exact search no longer runs, 
 
 ## GH-262 (offline play and a New version available notice)
 
-Planned in `/analyze`; the web client uses `NoopAnalyticsService` until an SDK is wired up (GH-256).
+Planned in `/analyze` and built in GH-275 (WU3, WU4); the web client uses `NoopAnalyticsService` until an SDK is wired up (GH-256).
 
 ### `update_available`
 

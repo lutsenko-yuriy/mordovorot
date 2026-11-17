@@ -7,6 +7,8 @@ The board is a square grid (3×3 to 9×9, default 4×4) holding a
 shuffled permutation of numbers. Rows shift left/right and columns shift up/down,
 cyclically wrapping around, until the board is back in ascending order.
 
+The game is in English, German and Russian; it follows the browser's language, and a picker in the top right corner switches it.
+
 ## Credits
 
 Mordovorot is based on Loopover, a puzzle created by Cary Huang (carykh). The original
