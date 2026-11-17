@@ -25,11 +25,33 @@ button:disabled {
     cursor: default;
 }
 
-/* GH-289: the Give Up row holds up to two buttons, Give Up (or Mordie's solution) and Tutorial. */
+/* GH-289, GH-332: the Give Up row holds up to three buttons, Give Up (or Mordie's solution), Hint and Tutorial. */
 .give-up {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+}
+
+/* GH-332: on phones the three buttons take the toolbar's padding (styles.css), so a row with digits fits one line. */
+@media (max-width: 480px), (orientation: landscape) and (max-width: 760px) {
+    .give-up {
+        gap: 6px;
+    }
+
+    .give-up button {
+        padding: 0.55em 0.65em;
+    }
+}
+
+@media (max-width: 380px), (orientation: landscape) and (max-width: 760px) {
+    .give-up {
+        gap: 4px;
+    }
+
+    .give-up button {
+        padding: 0.55em 0.35em;
+        font-size: 0.95em;
+    }
 }
 
 /* GH-163: dialogs focus a control by script, which would ring it for the mouse too, so the ring

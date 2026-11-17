@@ -29,22 +29,28 @@ internal fun replayButtons(solution: SolutionState, game: () -> WebGame, dialogO
     )
 }
 
-/** `Give Up`, disabled until Mordie's solution is revealed, or `Mordie's solution` after a win, then `Tutorial` (GH-289) when
- *  [tutorial] says so, never dimmed; `null` when the row is empty (GH-126). [game] is read only on a click, as in [replayButtons]. */
-internal fun giveUpRow(giveUp: GiveUpButton, digit: Int?, tutorial: Boolean, tutorialDigit: Int?, game: () -> WebGame, dialogOpen: Boolean): Element? {
+/** `Give Up`, disabled until Mordie's solution is revealed, or `Mordie's solution` after a win, then `Hint` (GH-332), dimmed for
+ *  a scheme with no letters, and `Tutorial` (GH-289) when [WebState.tutorialButton] says so, never dimmed; `null` when the row
+ *  is empty (GH-126). [game] is read only on a click, as in [replayButtons]. */
+internal fun giveUpRow(state: WebState, game: () -> WebGame, dialogOpen: Boolean): Element? {
+    val giveUp = state.giveUp
     val first = when (giveUp) {
         GiveUpButton.HIDDEN -> null
         GiveUpButton.MORDIES_SOLUTION -> button(texts().page.mordiesSolution) { game().solution.onMordiesSolution() }
         GiveUpButton.GIVE_UP, GiveUpButton.DIMMED -> button(texts().page.giveUp) { game().solution.onGiveUp() }
     }?.also {
         it.disabled = dialogOpen || giveUp == GiveUpButton.DIMMED
-        it.focusKey(Focus.GiveUpRow).withDigit(digit)
+        it.focusKey(Focus.GiveUpRow).withDigit(state.digitOf(ToolbarButton.GIVE_UP_ROW))
     }
-    val replay = if (tutorial) button(texts().page.tutorial) { game().tutorial.onReplay("button") }.also {
-        it.disabled = dialogOpen
-        it.focusKey(Focus.TutorialReplay).withDigit(tutorialDigit)
+    val hint = if (state.alphabetHint != AlphabetHintButton.HIDDEN) button(texts().page.alphabetHint) { game().alphabetHint.open() }.also {
+        it.disabled = dialogOpen || state.alphabetHint == AlphabetHintButton.DIMMED
+        it.focusKey(Focus.AlphabetHintButton).withDigit(state.digitOf(ToolbarButton.ALPHABET_HINT))
     } else null
-    val buttons = listOfNotNull(first, replay)
+    val replay = if (state.tutorialButton) button(texts().page.tutorial) { game().tutorial.onReplay("button") }.also {
+        it.disabled = dialogOpen
+        it.focusKey(Focus.TutorialReplay).withDigit(state.digitOf(ToolbarButton.TUTORIAL))
+    } else null
+    val buttons = listOfNotNull(first, hint, replay)
     if (buttons.isEmpty()) return null
     return element("div", "give-up").apply { append(*buttons.toTypedArray()) }
 }

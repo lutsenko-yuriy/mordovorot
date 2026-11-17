@@ -37,7 +37,7 @@ class KeyHintsTest {
     fun `the key list follows the layout, then names the toolbar, Read board and the solution keys`() {
         for (layout in KeyboardLayout.entries) {
             assertEquals(
-                KeyScheme.boardKeyLines(layout) + listOf(keys.toolbarLine1, keys.toolbarLine2, keys.toolbarLine3) + KeyScheme.SOLUTION_KEY_LINES,
+                KeyScheme.boardKeyLines(layout) + listOf(keys.toolbarLine1, keys.toolbarLine2, keys.toolbarLine3, keys.toolbarLine4) + KeyScheme.SOLUTION_KEY_LINES,
                 KeyHints.keyList(layout),
             )
         }

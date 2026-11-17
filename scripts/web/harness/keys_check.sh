@@ -59,7 +59,12 @@ queries=(
   # OK in Controls: focus goes to the board, where the digits then work (GH-287: on a computer, whatever opened it).
   "report=keys&keys=6,ArrowRight,click:OK,1,Escape"
   # Each button shows and names its digit, and every digit works (GH-287).
-  "report=keys&keys=focus:new,1,Escape,2,3,Escape,focus:load,3,Escape,focus:save,4,Escape,5,Escape,6,Escape,7,Escape,8"
+  # GH-332: 8 is the Hint, so the run uses a letter scheme (under Numbers it is dimmed and 8 does nothing); 9 is the tutorial replay.
+  "report=keys&labels=letters&keys=focus:new,1,Escape,2,3,Escape,focus:load,3,Escape,focus:save,4,Escape,5,Escape,6,Escape,7,Escape,8,Escape,9"
+  # GH-332: a click on Hint opens the alphabet with focus on OK, and Escape or OK returns focus to Hint; 8 from the board returns to the board, where a shift key still works; a dimmed Hint is skipped by Tab and 8 does nothing.
+  "report=keys&labels=letters&keys=click:Hint,Escape,focus:alphabet-hint,Enter,Enter"
+  "report=keys&labels=letters&keys=focus:board,8,Escape,h"
+  "report=keys&keys=click:Hint,8,Tab,Tab"
   "report=keys&layout=left&keys=6,Tab,Escape"
   # A held 2 opens Save once and isn't typed into its name field.
   "report=keys&keys=2,R-2,3"
@@ -76,18 +81,18 @@ queries=(
   "report=keys&keys=focus:new,Enter,Escape"
   # 0 reads the board wherever focus is, once per press; not under a dialog.
   "report=keys&grid=1&keys=0,R-0,focus:new,0,2,0,Escape"
-  # GH-288: the tutorial's panel. from the last arrow, Tab goes Controls, Labels, Skip, then the footer; 4 and 6 open their dialogs and Escape comes back to the panel's button; 1, 2, 3, 5, 7 and 8 do nothing.
+  # GH-288: the tutorial's panel. from the last arrow, Tab goes Controls, Labels, Skip, then the footer; 4 and 6 open their dialogs and Escape comes back to the panel's button; 1, 2, 3, 5, 7, 8 and 9 do nothing.
   "report=keys&mode=tutorial&keys=focus:arrow-down-3,Tab,Tab,Tab,Tab"
-  "report=keys&mode=tutorial&keys=4,Escape,6,Escape,1,2,3,5,7,8"
+  "report=keys&mode=tutorial&keys=4,Escape,6,Escape,1,2,3,5,7,8,9"
   "report=keys&mode=tutorial&keys=focus:tutorial-skip,Enter,Escape"
   # Step 5: the solved board's focus falls to Labels, not Skip, so a held Enter can't skip.
   "report=keys&mode=tutorial&step=5&keys=focus:tutorial-labels,Enter,Escape"
   # GH-289: step 6's redraw (3 s after step 5) under an open Labels dialog keeps focus on OK or Cancel, never the page body; Escape then closes it.
   "report=keys&mode=tutorial&step=5&keys=4,focus:dialog-ok,wait:3500,Escape"
   "report=keys&mode=tutorial&step=5&keys=4,focus:dialog-cancel,wait:3500,Escape"
-  # GH-289: 8 replays the tutorial at once with no moves, focus on the board. After a move it asks first, opening on Cancel; Escape returns to the board, or to Tutorial for a click on it; a cancelled Save returns to Tutorial.
-  "report=keys&keys=8"
-  "report=keys&keys=click:▶,8,Tab,Tab,Tab,Escape"
+  # GH-289: 9 replays the tutorial at once with no moves, focus on the board. After a move it asks first, opening on Cancel; Escape returns to the board, or to Tutorial for a click on it; a cancelled Save returns to Tutorial.
+  "report=keys&keys=9"
+  "report=keys&keys=click:▶,9,Tab,Tab,Tab,Escape"
   "report=keys&keys=click:▶,focus:tutorial-replay,Enter,Tab,Tab,Enter,Escape"
   # GH-200: on a non-Latin layout a letter key acts by its position; a Latin one by what it types.
   "report=keys&grid=1&keys=в@KeyD,р@KeyH,ц@KeyW,z@KeyW"

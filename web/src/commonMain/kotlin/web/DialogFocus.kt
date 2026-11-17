@@ -29,6 +29,8 @@ sealed class Focus(override val key: String) : FocusTarget {
     /** The save question's Save and Don't save, before the tutorial replays (GH-289); its Cancel is [DialogCancel]. */
     data object ReplaySaveSave : Focus("replay-save")
     data object ReplayDontSave : Focus("replay-dont-save")
+    /** The Give Up row's `[ Hint ]` (GH-332). */
+    data object AlphabetHintButton : Focus("alphabet-hint")
     /** The Give Up row's `[ Tutorial ]` (GH-289). */
     data object TutorialReplay : Focus("tutorial-replay")
     data object Repair : Focus("repair")
@@ -103,6 +105,7 @@ fun defaultFocus(dialog: WebDialog): Focus = when (dialog) {
     is WebDialog.Share -> Focus.CopyLink
     WebDialog.Update -> Focus.UpdateCancel
     WebDialog.ReplaySave -> Focus.DialogCancel
+    is WebDialog.AlphabetHint -> Focus.DialogOk
 }
 
 /** The marked scheme when the open group holds it, else the open group's first scheme that fits the board (GH-323). */
@@ -133,5 +136,6 @@ val WebDialog.title: String get() = with(texts().dialogs) {
         is WebDialog.Share -> shareTitle
         WebDialog.Update -> updateTitle
         WebDialog.ReplaySave -> replaySaveTitle
+        is WebDialog.AlphabetHint -> alphabetTitle
     }
 }

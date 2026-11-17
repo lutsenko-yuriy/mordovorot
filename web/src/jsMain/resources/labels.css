@@ -118,3 +118,26 @@
 .dialog .choices.labels button:hover .limit {
     color: var(--ink);
 }
+
+/* GH-332: the alphabet hint, the whole alphabet on a grid of 7 columns whatever its length. A letter in use has an outline in normal type; the rest are greyed. */
+.dialog .alphabet {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin: 4px 0;
+}
+
+.dialog .alphabet .letter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.2em;
+    border-radius: 6px;
+    font-weight: 700;
+    color: var(--muted);
+}
+
+.dialog .alphabet .letter.used {
+    color: var(--ink);
+    box-shadow: inset 0 0 0 2px var(--button);
+}

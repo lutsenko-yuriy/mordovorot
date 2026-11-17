@@ -56,5 +56,5 @@ internal object KeyHints {
     /** The Controls dialog's key list. */
     fun keyList(layout: KeyboardLayout) = KeyScheme.boardKeyLines(layout) + TOOLBAR_KEYS + KeyScheme.SOLUTION_KEY_LINES
 
-    private val TOOLBAR_KEYS get() = with(texts().keys) { listOf(toolbarLine1, toolbarLine2, toolbarLine3) }
+    private val TOOLBAR_KEYS get() = with(texts().keys) { listOf(toolbarLine1, toolbarLine2, toolbarLine3, toolbarLine4) }
 }

@@ -58,6 +58,9 @@ class ColourContrastStylesTest {
             check(paint("dialogs.css", ".dialog .warning", "color"), "card", 4.5, "dialog warnings"),
             check(paint("labels.css", ".dialog .choices.labels .limit", "color"), "card", 4.5, "label limits"),
             check(paint("labels.css", ".dialog .choices.labels button:hover .limit", "color"), "frame", 4.5, "a hovered label row's limit"),
+            // GH-332: the alphabet hint's letters, the greyed ones included.
+            check(paint("labels.css", ".dialog .alphabet .letter", "color"), "card", 4.5, "a greyed alphabet letter"),
+            check(paint("labels.css", ".dialog .alphabet .letter.used", "color"), "card", 4.5, "an alphabet letter in use"),
         ).flatten()
 
         assertTrue(failures.isEmpty(), failures.joinToString("\n"))
@@ -78,6 +81,7 @@ class ColourContrastStylesTest {
             check(paint("tutorial.css", ".bubble", "border"), "page", 3.0, "the bubble's edge"),
             check(paint("labels.css", ".dialog .choices.labels button.checked", "box-shadow"), "card", 3.0, "the checked label row's ring"),
             check(paint("dialogs.css", ".dialog input", "border"), "card", 3.0, "the Save name field's edge"),
+            check(paint("labels.css", ".dialog .alphabet .letter.used", "box-shadow"), "card", 3.0, "the outline of an alphabet letter in use (GH-332)"),
         ).flatten()
 
         assertTrue(failures.isEmpty(), failures.joinToString("\n"))

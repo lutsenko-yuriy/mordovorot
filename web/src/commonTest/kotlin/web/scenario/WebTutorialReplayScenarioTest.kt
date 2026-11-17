@@ -18,7 +18,7 @@ import web.ToolbarButton
 import web.WebDialog
 import web.tutorial.TutorialScript
 
-/** GH-289: the Tutorial button, key 8, the save question, and Skip and the end of a replay. */
+/** GH-289: the Tutorial button, key 9, the save question, and Skip and the end of a replay. */
 class WebTutorialReplayScenarioTest {
 
     /** 4x4 two moves from solved: row 0 right once, then column 1 down twice. */
@@ -130,7 +130,7 @@ class WebTutorialReplayScenarioTest {
 
         assertTrue(touch.state.tutorialButton)
         assertNull(touch.state.digitOf(ToolbarButton.TUTORIAL))
-        assertEquals(8, computer.state.digitOf(ToolbarButton.TUTORIAL))
+        assertEquals(9, computer.state.digitOf(ToolbarButton.TUTORIAL))
     }
 
     @Test
@@ -138,47 +138,47 @@ class WebTutorialReplayScenarioTest {
         val page = WebHarness(backgroundScope, tutorialOn = false).startOn()
 
         assertFalse(page.state.tutorialButton)
-        page.press("8")
+        page.press("9")
         assertNull(page.state.guidance)
     }
 
-    // Key 8
+    // Key 9
     @Test
-    fun `8 starts the replay when there is no unsaved progress`() = webTest {
+    fun `9 starts the replay when there is no unsaved progress`() = webTest {
         val page = fresh()
 
-        assertTrue(page.press("8"))
+        assertTrue(page.press("9"))
 
         page.assertTutorialStep1()
     }
 
     @Test
-    fun `8 does nothing on touch`() = webTest {
+    fun `9 does nothing on touch`() = webTest {
         val page = WebHarness(backgroundScope, touch = true).startOn()
         val before = page.state
 
-        assertFalse(page.press("8"))
+        assertFalse(page.press("9"))
 
         assertEquals(before, page.state)
     }
 
     @Test
-    fun `8 does nothing during the tutorial`() = webTest {
+    fun `9 does nothing during the tutorial`() = webTest {
         val page = tutorialPage(backgroundScope)
         page.playSteps(1)
 
-        page.press("8", from = Focus.Board)
+        page.press("9", from = Focus.Board)
 
         assertEquals(2, page.state.guidance?.step)
         assertNull(page.state.dialog)
     }
 
     @Test
-    fun `8 does nothing on the solution screen`() = webTest {
+    fun `9 does nothing on the solution screen`() = webTest {
         val page = givenUp()
         val before = page.state
 
-        page.press("8", from = Focus.Board)
+        page.press("9", from = Focus.Board)
 
         assertEquals(before, page.state)
     }

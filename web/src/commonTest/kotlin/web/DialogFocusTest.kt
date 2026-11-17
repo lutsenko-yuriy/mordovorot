@@ -3,6 +3,7 @@ package web
 import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import viewmodel.AlphabetHint
 import viewmodel.KeyboardLayout
 import viewmodel.TileLabelGroup
 import viewmodel.TileLabels
@@ -30,6 +31,7 @@ class DialogFocusTest {
         assertEquals(Focus.No, defaultFocus(WebDialog.GiveUp))
         assertEquals(Focus.LayoutOption(KeyboardLayout.LEFT_HANDED), defaultFocus(controls))
         assertEquals(Focus.UpdateCancel, defaultFocus(WebDialog.Update))
+        assertEquals(Focus.DialogOk, defaultFocus(WebDialog.AlphabetHint(AlphabetHint.of(TileLabels.GREEK_LETTERS, 4)!!)))
         assertEquals(Focus.SharedLabelsYes, defaultFocus(WebDialog.SharedLabels(TileLabels.PAIRS)))
     }
 
@@ -45,6 +47,9 @@ class DialogFocusTest {
         assertEquals(dialogs.giveUpTitle, WebDialog.GiveUp.title)
         assertEquals(dialogs.controlsTitle, controls.title)
         assertEquals(dialogs.updateTitle, WebDialog.Update.title)
+        assertEquals(dialogs.alphabetLatin, WebDialog.AlphabetHint(AlphabetHint.of(TileLabels.LETTERS, 4)!!).title)
+        assertEquals(dialogs.alphabetCyrillic, WebDialog.AlphabetHint(AlphabetHint.of(TileLabels.CYRILLIC_LETTER_PAIRS, 4)!!).title)
+        assertEquals(dialogs.alphabetGreek, WebDialog.AlphabetHint(AlphabetHint.of(TileLabels.GREEK_LETTERS, 4)!!).title)
         assertEquals(dialogs.sharedLabelsTitle(texts().page.labelPairsFrom0), WebDialog.SharedLabels(TileLabels.PAIRS_FROM_0).title)
     }
 
@@ -65,7 +70,7 @@ class DialogFocusTest {
     fun `focus keys are distinct`() {
         val all = listOf(
             Focus.SizeChoice(3), Focus.SizeChoice(4), Focus.SaveName, Focus.SaveChoice(0), Focus.SaveChoice(1), Focus.DeleteSave(0), Focus.DeleteSave(1), Focus.DeleteCancel, Focus.DialogCancel, Focus.Repair,
-            Focus.No, Focus.NewButton, Focus.SaveButton, Focus.LoadButton, Focus.LabelsButton, Focus.GiveUpRow,
+            Focus.No, Focus.NewButton, Focus.SaveButton, Focus.LoadButton, Focus.LabelsButton, Focus.GiveUpRow, Focus.AlphabetHintButton, Focus.TutorialReplay,
             Focus.ReplayNext, Focus.ReplayPrev, Focus.ReplayRestart, Focus.PageStart, Focus.ControlsButton, Focus.Board,
             Focus.UpdateLink, Focus.UpdateCancel,
         ) + TileLabels.entries.map { Focus.Label(it) } + TileLabelGroup.entries.map { Focus.LabelGroup(it) } +

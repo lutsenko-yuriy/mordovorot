@@ -35,6 +35,11 @@ async function setUpMode(win, mode, step) {
         win.document.querySelector('[data-focus="labels"]')?.click();
         await wait(300);
     }
+    if (mode === "alphabet-hint") {
+        // GH-332: the Hint button's dialog; pair it with `labels=` for a letter scheme, as under Numbers the button is dimmed and nothing opens.
+        win.document.querySelector('[data-focus="alphabet-hint"]')?.click();
+        await wait(300);
+    }
     if (mode === "share") {
         // One move first (GH-272): at 0 moves the progress toggle is dimmed.
         win.document.querySelector(".arrow")?.click();

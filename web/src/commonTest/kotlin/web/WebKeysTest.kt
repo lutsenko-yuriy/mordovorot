@@ -15,7 +15,7 @@ class WebKeysTest {
     private fun key(press: KeyPress, computer: Boolean = true) = WebKeys.pageKey(press, computer)
 
     @Test
-    fun `on a computer 1 to 7 press the toolbar`() {
+    fun `on a computer 1 to 9 press the toolbar`() {
         val digits = ToolbarButton.entries.map { key(KeyPress(it.digit.toString())) }
         assertEquals(ToolbarButton.entries.map { PageKey.Digit(it) }, digits)
     }
@@ -33,7 +33,7 @@ class WebKeysTest {
 
     @Test
     fun `other keys are nothing`() {
-        for (other in listOf("9", "x", "Enter", "Escape", "F1", "!")) assertNull(key(KeyPress(other)))
+        for (other in listOf("x", "Enter", "Escape", "F1", "!")) assertNull(key(KeyPress(other)))
     }
 
     @Test

@@ -4,8 +4,8 @@ import viewmodel.GiveUpButton
 
 private const val ARROW_PREFIX = "arrow-"
 
-/** The Give Up row's buttons (GH-289). */
-private val ROW_BUTTONS = setOf(Focus.GiveUpRow.key, Focus.TutorialReplay.key)
+/** The Give Up row's buttons (GH-289, GH-332). */
+private val ROW_BUTTONS = setOf(Focus.GiveUpRow.key, Focus.AlphabetHintButton.key, Focus.TutorialReplay.key)
 
 /** Where focus goes when the control [key] named is gone or disabled in [state] (GH-164): the
  *  next thing that control's screen offers, else the start of the page. */
