@@ -34,6 +34,8 @@ Research-WU, Scenario-WU, and Checklist-WU are named, not numbered — they're p
 
 Each WU gets its own branch (`feature/GH-XX-WUN-<short>`, where N is the WU number from the plan's WU table) created fresh from `origin/main`. Never reuse a branch from a previous WU. Branch names are pre-named in the plan comment's WU table so the full mapping is visible from day one.
 
+In a session whose branch name is fixed (a cloud session's `claude/<name>`), "fresh" means the same branch restarted from the latest `origin/main`: after a WU's PR merges, `git fetch origin`, `git reset --hard origin/main`, and push with `--force-with-lease`. That is safe only when the branch holds nothing but already-merged work; check `git log origin/main..HEAD` against the merged PR first. Otherwise the push is rejected, and merging the old commits back conflicts on every file the squash touched (GH-313: twice, once leaving duplicate code behind).
+
 ## CHANGELOG tags for intermediate WUs
 
 Use `[wip]` as the classification tag for all intermediate WU CHANGELOG entries — every WU except the final one. `[wip]` suppresses builds and distribution so testers do not receive partial builds mid-ticket. The final WU uses whichever tag actually reflects what the ticket produced: a user-facing/app-changing tag if it's user-facing (this is when CI builds and distributes, and "What's New" aggregates all user-facing content back to the last published tag), or an internal-only tag if the ticket is pure process/CI/tooling work end-to-end with nothing user-facing to ship.
