@@ -17,7 +17,7 @@ import viewmodel.usecase.TileLabelsUseCase
 
 /** Builds a [GameViewModelImpl] and its use cases (GH-41) - the only way a platform gets one.
  *  [MordieHooks] is built here, per call, so it tracks through this [analytics]. [ui] is shared
- *  by the viewModel and every use case, and with the View that answers its requests. [solutionScreen] (GH-126) and [tileLabels] (GH-139) are the
+ *  by the viewModel and every use case, and with the View that answers its requests. [solutionScreen] (GH-126), [tileLabels] (GH-139) and [language] (GH-275) are the
  *  session's. */
 fun buildGameViewModel(
     board: BoardModel,

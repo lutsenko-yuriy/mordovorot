@@ -87,4 +87,27 @@ class MessageFeedTest {
 
         assertEquals(MessageFeed.Frame("hi", rise = 1.0, alpha = 0.0), feed.at(95.0))
     }
+
+    @Test
+    fun `a replaced message is the same line reworded, with no phase`() {
+        val feed = feed()
+        feed.show("hi", now = 0.0)
+
+        feed.replace("hallo")
+
+        assertEquals(MessageFeed.Frame("hallo", rise = 0.0, alpha = 1.0), feed.at(500.0))
+        assertFalse(feed.moving(500.0))
+    }
+
+    @Test
+    fun `replacing while a message rises in keeps its phase`() {
+        val feed = feed()
+        feed.show("hi", now = 0.0)
+
+        feed.replace("hallo")
+
+        assertEquals("hallo", feed.at(100.0).message)
+        assertEquals(0.5, feed.at(100.0).alpha)
+        assertEquals(MessageFeed.Frame("hallo", rise = 0.0, alpha = 1.0), feed.at(200.0))
+    }
 }

@@ -70,7 +70,13 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         val still = reducedMotion()
         feed.outMs = if (still) 0.0 else MORDIE_OUT_MS
         feed.inMs = if (still) 0.0 else MORDIE_IN_MS
-        feed.show(state.mordie?.let { MordieLine(it, ending = state.solved) }, now)
+        val line = state.mordie?.let { MordieLine(it, ending = state.solved) }
+        // The same line in another language is swapped in place, not risen out and in as a new one (GH-275).
+        if (line != null && before != null && state.language != before.language) feed.replace(line) else feed.show(line, now)
+        if (state.language != before?.language) {
+            document.documentElement?.setAttribute("lang", state.language.code)
+            document.title = texts().page.title
+        }
         if (feed.moving(now)) schedule()
         if (before != null && state.keepsBoardFrom(before)) {
             redrawAroundBoard(state, now)

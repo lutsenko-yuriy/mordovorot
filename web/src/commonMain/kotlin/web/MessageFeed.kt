@@ -27,6 +27,12 @@ class MessageFeed<T : Any>(var outMs: Double, var inMs: Double) {
         if (phase == null) next(now)
     }
 
+    /** The shown and the next message become [message], whatever phase this is in: the same line, reworded (GH-275). */
+    fun replace(message: T) {
+        if (shown != null) shown = message
+        if (target != null) target = message
+    }
+
     fun moving(now: Double): Boolean {
         advance(now)
         return phase != null

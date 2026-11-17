@@ -1,5 +1,6 @@
 package web
 
+import texts.Language
 import texts.texts
 import viewmodel.GiveUpButton
 import viewmodel.KeyboardLayout
@@ -13,6 +14,8 @@ import web.qr.QrCode
 
 /** One frame of the page (GH-110): what [WebRenderer] draws. [tiles] are 1-based, row by row. */
 data class WebState(
+    /** The language the page is worded in (GH-275). */
+    val language: Language = Language.EN,
     val side: Int,
     val tiles: List<Int>,
     val moves: Int,
@@ -62,9 +65,10 @@ data class WebState(
     val boardName: String? get() = solution?.takeIf { computer }?.let { Announcements.boardStep(it.moves, it.current) }
 
     /** Whether the page keeps the board's element and updates it in place: rebuilt and refocused, it
-     *  has VoiceOver say the board over the live region, or keep saying the tile just left (GH-171). */
+     *  has VoiceOver say the board over the live region, or keep saying the tile just left (GH-171). A new language
+     *  rebuilds it, so its `Board` name and Read board text are reworded (GH-275). */
     fun keepsBoardFrom(before: WebState): Boolean =
-        boardFocusable && before.boardFocusable && dialog == null && before.dialog == null &&
+        language == before.language && boardFocusable && before.boardFocusable && dialog == null && before.dialog == null &&
             side == before.side && solved == before.solved && (solution == null) == (before.solution == null) &&
             (guidance == null) == (before.guidance == null)
 
