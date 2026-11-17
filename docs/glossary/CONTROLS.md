@@ -4,6 +4,7 @@ Input and display settings of the web client: keyboard layouts, selection, tile 
 
 | Term | Definition | Code symbol |
 |---|---|---|
+| Alphabet hint | The `[ Hint ]` button in the Give Up row (8 on a computer) and the dialog it opens: the whole alphabet of the marked letter scheme in order, the letters the board uses in normal type and the rest greyed. Dimmed for the number schemes (GH-332) | — |
 | Controls dialog | The dialog `[ Controls ]` / 6 opens on a computer: picks the keyboard layout and lists the keys of the marked layout. Replaces the mode-switch button (GH-189; built in GH-170, GH-171) | `ControlsDialogUseCase`, `WebControlsDialog` |
 | Cyrillic labels | Two Tile labels schemes after Letter pairs (GH-313), Cyrillic letters (`А Б В Г`, the 28 letters without ё, й, ъ, ы, ь; up to 5x5) and Cyrillic letter pairs (`АА АБ`, up to 9x9), shown in every Language. Screen readers say them with the Russian spelling words (`Анна Борис`) | — |
 | Greek labels | Two Tile labels schemes after the Cyrillic ones (GH-322), Greek letters (`Α Β Γ Δ`, the 24 capitals plus the Greek question mark U+037E as the 25th label; up to 5x5) and Greek letter pairs (`ΑΑ ΑΒ`, up to 9x9), shown in every Language. Screen readers say them by the letters' names in the game's language (`alpha beta`, `Alpha Beta`, `альфа бета`), the question mark as `Greek question mark`. Saved through the packed format's escape, as Cyrillic labels are | — |
