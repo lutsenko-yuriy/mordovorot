@@ -86,6 +86,11 @@
     cursor: grab;
 }
 
+/* GH-313: the widest Cyrillic pair (ЖЖ) is 2.02 times the font size wide, against 1.46 for the widest Latin one (GH), so it gets a smaller cap to fit a tile at larger text sizes. */
+.board.cyrillic-pairs .tile {
+    font-size: calc(var(--tile) * min(0.4 * var(--text-scale, 1), 0.44));
+}
+
 .board.solved .tile {
     cursor: default;
 }

@@ -88,18 +88,18 @@ internal class LoadGameUseCase(
                 mapOf("trigger" to trigger, "result" to "success", "labels_differ_from_preference" to labelsDiffer),
             )
             if (saved.mordie?.solutionScreen == true) solution.enterLoaded(trigger, saved.mordie?.playerResult?.let { PlayerResult(it.gaveUp, it.moves) })
-            if (fromSave != null && !fromSave.fits(board.squareSide)) chooseFittingLabels()
+            if (fromSave != null && !fromSave.fits(board.squareSide)) chooseFittingLabels(fromSave)
             ui.showMessage(texts().status.loaded(name), loadedSave = name)
             LoadResult.LOADED
         }
     }
 
-    /** Only a hand-edited save has Letters on 6x6 (GH-160); numbers show until the player picks.
-     *  The message names Letters: up to 6x6 it is the only scheme that can fail to fit. */
-    private suspend fun chooseFittingLabels() {
+    /** Only a hand-edited save has Letters, or Cyrillic letters, on a board too big for them (GH-160, GH-313); numbers show until the player picks.
+     *  The message names the scheme that didn't fit: the two letter schemes are the only ones that can. */
+    private suspend fun chooseFittingLabels(scheme: TileLabels) {
         val side = board.squareSide
         tileLabelsUseCase.dialogOpened("letters_save")
-        val message = texts().status.lettersDontFit(side)
+        val message = with(texts().status) { if (scheme == TileLabels.CYRILLIC_LETTERS) cyrillicLettersDontFit(side) else lettersDontFit(side) }
         ui.ask(UiRequest.ChooseFittingLabels(message))?.let(tileLabelsUseCase::change)
     }
 }

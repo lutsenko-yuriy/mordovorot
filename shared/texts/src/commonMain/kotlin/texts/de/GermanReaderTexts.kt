@@ -1,6 +1,7 @@
 package texts.de
 
 import texts.NATO_WORDS
+import texts.RUSSIAN_SPELLING_WORDS
 import texts.ReaderTexts
 
 object GermanReaderTexts : ReaderTexts {
@@ -31,4 +32,5 @@ object GermanReaderTexts : ReaderTexts {
 
     /** The Latin letters stay NATO words in every language (GH-275). */
     override val phonetic = NATO_WORDS
+    override val cyrillicPhonetic = RUSSIAN_SPELLING_WORDS
 }

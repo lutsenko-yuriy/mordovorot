@@ -12,6 +12,8 @@ enum class TileLabels(val wireName: String, val maxSide: Int = Int.MAX_VALUE) {
     PAIRS_FROM_0("pairs_from_0", 9),
     LETTERS("letters", 5),
     LETTER_PAIRS("letter_pairs", 26),
+    CYRILLIC_LETTERS("cyrillic_letters", 5),
+    CYRILLIC_LETTER_PAIRS("cyrillic_letter_pairs", 9),
     ;
 
     /** The name the labels dialog shows (GH-274: from `:shared:texts`). */
@@ -23,6 +25,8 @@ enum class TileLabels(val wireName: String, val maxSide: Int = Int.MAX_VALUE) {
             PAIRS_FROM_0 -> labelPairsFrom0
             LETTERS -> labelLetters
             LETTER_PAIRS -> labelLetterPairs
+            CYRILLIC_LETTERS -> labelCyrillicLetters
+            CYRILLIC_LETTER_PAIRS -> labelCyrillicLetterPairs
         }
     }
 
@@ -43,6 +47,8 @@ enum class TileLabels(val wireName: String, val maxSide: Int = Int.MAX_VALUE) {
             PAIRS_FROM_0 -> "$row$col"
             LETTERS -> "${'A' + tile}"
             LETTER_PAIRS -> "${'A' + row}${'A' + col}"
+            CYRILLIC_LETTERS -> "${CYRILLIC_ALPHABET[tile]}"
+            CYRILLIC_LETTER_PAIRS -> "${CYRILLIC_ALPHABET[row]}${CYRILLIC_ALPHABET[col]}"
         }
     }
 
@@ -51,6 +57,9 @@ enum class TileLabels(val wireName: String, val maxSide: Int = Int.MAX_VALUE) {
 
     companion object {
         val DEFAULT = NUMBERS
+
+        /** The 28 letters the Cyrillic schemes use, without ё, й, ъ, ы, ь (GH-313): the only place the alphabet lives. */
+        const val CYRILLIC_ALPHABET = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЭЮЯ"
 
         fun fromWireName(name: String?): TileLabels? = entries.firstOrNull { it.wireName == name }
     }

@@ -31,4 +31,10 @@ class WebStateSelectionTest {
         assertTrue(shown.keepsBoardFrom(shown.copy()))
         assertFalse(shown.copy(language = texts.Language.DE).keepsBoardFrom(shown))
     }
+
+    @Test
+    fun `other labels rebuild the board, so its Cyrillic pairs class follows them (GH-313)`() {
+        assertFalse(shown.copy(labels = viewmodel.TileLabels.CYRILLIC_LETTER_PAIRS).keepsBoardFrom(shown))
+        assertFalse(shown.keepsBoardFrom(shown.copy(labels = viewmodel.TileLabels.CYRILLIC_LETTER_PAIRS)))
+    }
 }

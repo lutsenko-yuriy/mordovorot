@@ -41,6 +41,8 @@ interface PageTexts {
     val labelPairsFrom0: String
     val labelLetters: String
     val labelLetterPairs: String
+    val labelCyrillicLetters: String
+    val labelCyrillicLetterPairs: String
 
     /** The labels dialog's sample for a scheme that doesn't fit: `up to 5x5`. */
     fun labelLimit(side: Int): String

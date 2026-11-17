@@ -124,4 +124,12 @@ class TextSizeStylesTest {
 
         assertTrue("font-size: calc(var(--tile) * min(0.4 * var(--text-scale, 1), 0.6));" in tile, tile)
     }
+
+    /** GH-313: ЖЖ is 2.02 em wide, so Cyrillic pairs stop growing sooner than the others (0.44 of the tile, against 0.6). */
+    @Test
+    fun `Cyrillic letter pairs have a smaller cap`() {
+        val pairs = rule(board, ".board.cyrillic-pairs .tile")
+
+        assertTrue("font-size: calc(var(--tile) * min(0.4 * var(--text-scale, 1), 0.44));" in pairs, pairs)
+    }
 }

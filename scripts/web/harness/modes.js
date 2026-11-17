@@ -31,7 +31,8 @@ async function setUpMode(win, mode, step) {
     const line = win.document.querySelector(".mordie .line");
     if (line && mode !== "offline") line.innerHTML = `<span class="name">Mordie:</span> ${LONG}`;
     if (mode === "dialog") {
-        clickText(win.document, "Labels");
+        // By its focus key, not its English text (GH-313): in lang=de and lang=ru the button isn't called Labels, so the dialog never opened.
+        win.document.querySelector('[data-focus="labels"]')?.click();
         await wait(300);
     }
     if (mode === "share") {

@@ -207,6 +207,8 @@ async function runCase(size, board) {
     if (q.get("layout") === "left") localStorage.setItem("mordovorot.pref.keyboard_layout", "left_handed");
     // GH-275: lang= is the pick an earlier visit would have left; with none, the page follows this browser's language.
     if (q.get("lang")) localStorage.setItem("mordovorot.pref.language", q.get("lang"));
+    // GH-313: labels= is the tile labels an earlier visit would have left, by wire name (`cyrillic_letter_pairs`).
+    if (q.get("labels")) localStorage.setItem("mordovorot.pref.tile_labels", q.get("labels"));
     // GH-251: saves= are solved 4x4 saves (the old text format), corrupt= entries nothing decodes.
     const named = key => (q.get(key) || "").split(",").filter(Boolean);
     for (const name of named("saves")) localStorage.setItem(`mordovorot.save.${name}`, `4\n${[...Array(16).keys()].join(" ")}\n0\n`);

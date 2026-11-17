@@ -36,4 +36,7 @@ interface ReaderTexts {
 
     /** The letters A to Z as said, so `B` and `D` don't sound alike. */
     val phonetic: List<String>
+
+    /** The 28 Cyrillic letters as said (GH-313). */
+    val cyrillicPhonetic: List<String>
 }

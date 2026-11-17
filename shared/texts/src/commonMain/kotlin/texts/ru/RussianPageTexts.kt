@@ -37,6 +37,8 @@ object RussianPageTexts : PageTexts {
     override val labelPairsFrom0 = "Пары с 0"
     override val labelLetters = "Латинские буквы"
     override val labelLetterPairs = "Пары латинских букв"
+    override val labelCyrillicLetters = "Кириллические буквы"
+    override val labelCyrillicLetterPairs = "Кириллические пары"
     override fun labelLimit(side: Int) = "до ${side}x$side"
     override val layoutRightHanded = "Для правши"
     override val layoutLeftHanded = "Для левши"

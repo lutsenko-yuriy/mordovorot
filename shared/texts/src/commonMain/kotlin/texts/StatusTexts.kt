@@ -18,6 +18,7 @@ interface StatusTexts {
     val noSavesAvailable: String
     fun availableSaves(list: String): String
     fun lettersDontFit(side: Int): String
+    fun cyrillicLettersDontFit(side: Int): String
     fun cantBeSolved(save: String): String
     fun repaired(name: String): String
     fun repairedNotUpdated(name: String): String
