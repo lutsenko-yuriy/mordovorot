@@ -100,6 +100,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-272: Share the sender's progress in the link](GH-272.md)
 - [GH-273: Remember how a game ended before the solution screen](GH-273.md)
 - [GH-274: Friendlier wording of the game's text](GH-274.md)
+- [GH-275: Localizations: introduce new languages](GH-275.md)
 - [GH-277: Keyboard mode: the board has focus after a new, loaded or saved game](GH-277.md)
 - [GH-282: Mordie's exact search does not advance on the phone](GH-282.md)
 - [GH-283: serve_lan.sh updates the served bundle on each commit](GH-283.md)

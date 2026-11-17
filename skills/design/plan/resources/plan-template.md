@@ -17,6 +17,8 @@
 
 ### Test strategy
 - <what to test and how; name the test files>
+- A new control outside the game's root (a picker, a button in a page corner): after a mouse click on it, do the game's keys still work? Focus stays on a clicked control, where the board's keys do nothing, so say where focus goes (GH-275).
+- A text change in a fixed row (a toolbar, a button row, a bubble): measure the widest candidate words in that row, headless, before choosing the wording, so a row that can't fit is found in the plan, not in the last WU (GH-275).
 
 ### Docs to update
 - <doc>: <what changes> — check `README.md` whenever the ticket adds a platform, a run
