@@ -25,4 +25,10 @@ class WebStateSelectionTest {
         assertFalse(shown.keepsBoardFrom(guided))
         assertTrue(guided.copy(guidance = Guidance(2, "Up", controls = true, highlight = TutorialHighlight(Axis.COLUMN, 1, Arrow.UP))).keepsBoardFrom(guided))
     }
+
+    @Test
+    fun `a new language rebuilds the board, so its name and Read board text are reworded`() {
+        assertTrue(shown.keepsBoardFrom(shown.copy()))
+        assertFalse(shown.copy(language = texts.Language.DE).keepsBoardFrom(shown))
+    }
 }

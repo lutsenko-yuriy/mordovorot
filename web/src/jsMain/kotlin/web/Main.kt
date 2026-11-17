@@ -39,6 +39,9 @@ fun main() {
         DomClipboard,
         DomAppUpdates(window),
         tutorial = true,
+        browserLanguages = browserLanguages(),
+        // Off until the picker is there (GH-275, WU4): the page stays English.
+        languages = false,
     )
     renderer.game = game
     listenForKeys(root)
@@ -57,4 +60,11 @@ fun main() {
             event.asDynamic().returnValue = true
         }
     })
+}
+
+/** The browser's languages, the most wanted first; just its own language where the list is empty, and none where the browser has neither. */
+private fun browserLanguages(): List<String> {
+    val navigator = window.navigator.asDynamic()
+    val list = (navigator.languages as? Array<*>)?.mapNotNull { it as? String }.orEmpty()
+    return list.ifEmpty { listOfNotNull((navigator.language as? String)?.takeIf { it.isNotEmpty() }) }
 }

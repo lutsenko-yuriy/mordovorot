@@ -13,6 +13,8 @@ import storage.SaveRepository
 import viewmodel.CurrentSaveName
 import viewmodel.GameShiftSources
 import viewmodel.KeyboardLayoutPreference
+import viewmodel.LanguagePreference
+import viewmodel.SessionLanguage
 import viewmodel.SessionKeyboardLayout
 import viewmodel.SessionTileLabels
 import viewmodel.TileLabelsPreference
@@ -29,7 +31,8 @@ fun webBoard(): BoardImpl = BoardImpl(maxSide = BoardSize.VERY_LARGE.last)
  *  [preferences], GH-139), then starts a [WebGame] on [scope].
  *  Every event gets `platform: web`, and all but `app_launched` get `input_method` from
  *  [pressedWith] (GH-171). A share link in [address] starts its board (GH-243). On a [touch] screen the keys and Controls are out of reach (GH-287).
- *  [updates] checks for a new version of the page (GH-262). The first-launch [tutorial] runs when it is on (GH-288). */
+ *  [updates] checks for a new version of the page (GH-262). The first-launch [tutorial] runs when it is on (GH-288).
+ *  The session speaks the stored language, else the first of [browserLanguages] that is ours, when [languages] is on (GH-275). */
 fun startWebGame(
     board: BoardModel,
     saves: SaveRepository,
@@ -47,10 +50,13 @@ fun startWebGame(
     clipboard: Clipboard,
     updates: AppUpdates,
     tutorial: Boolean,
+    browserLanguages: List<String>,
+    languages: Boolean,
 ): WebGame {
     val platform = PlatformAnalyticsService(analytics, "web")
     val tileLabels = SessionTileLabels(TileLabelsPreference(preferences))
-    trackAppLaunched(platform, layout, appVersion, host, tileLabels.effectivePreference.wireName)
+    val language = SessionLanguage(LanguagePreference(preferences), browserLanguages, enabled = languages)
+    trackAppLaunched(platform, layout, appVersion, host, tileLabels.effectivePreference.wireName, language.current.code)
     val pressed = InputMethodAnalyticsService(platform) { pressedWith.inputMethod }
     val viewModel = buildGameViewModel(
         board, saves, pressed,
@@ -60,13 +66,14 @@ fun startWebGame(
         unsavedProgress = UnsavedProgress(),
         solutionScreen = SolutionScreen(),
         tileLabels = tileLabels,
+        language = language,
         ui = UiRequestChannel(),
     )
     val keyboardLayout = SessionKeyboardLayout(KeyboardLayoutPreference(preferences))
     return WebGame(viewModel, pressed, renderer, scope, pressedWith, keyboardLayout, !touch, address, clipboard, updates, appVersion, ShareTogglePreference(preferences, "share_labels"), ShareTogglePreference(preferences, "share_progress"), TutorialPreference(preferences), tutorial).also { it.start() }
 }
 
-fun trackAppLaunched(analytics: AnalyticsService, layout: Layout, appVersion: String, host: Host, tileLabels: String) {
+fun trackAppLaunched(analytics: AnalyticsService, layout: Layout, appVersion: String, host: Host, tileLabels: String, language: String) {
     analytics.track(
         "app_launched",
         mapOf(
@@ -74,6 +81,7 @@ fun trackAppLaunched(analytics: AnalyticsService, layout: Layout, appVersion: St
             "app_version" to appVersion,
             "host" to host.name.lowercase(),
             "tile_labels" to tileLabels,
+            "language" to language,
         ),
     )
 }

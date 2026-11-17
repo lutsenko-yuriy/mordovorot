@@ -27,6 +27,12 @@ class MessageFeed<T : Any>(var outMs: Double, var inMs: Double) {
         if (phase == null) next(now)
     }
 
+    /** The line on screen and the one to come become [message], reworded (GH-275): in place, whatever phase this is in, but for a line fading out, which keeps its words. */
+    fun replace(message: T) {
+        if (shown != null && phase != Phase.OUT) shown = message
+        if (target != null) target = message
+    }
+
     fun moving(now: Double): Boolean {
         advance(now)
         return phase != null

@@ -54,6 +54,10 @@ internal class WebHarness(
     private val firstLaunch: Boolean = false,
     /** The tutorial's kill switch (GH-288, GH-289): on unless a scenario turns it off. */
     private val tutorialOn: Boolean = true,
+    /** The browser's languages, first the most wanted (GH-275). */
+    private val browserLanguages: List<String> = emptyList(),
+    /** The `languages` switch (GH-275): on, so a scenario sees the mechanism the page keeps off until its picker is there. */
+    private val languages: Boolean = true,
 ) {
     val saves = BrowserSaveRepository(store)
     val preferences = BrowserPreferenceRepository(store)
@@ -80,7 +84,7 @@ internal class WebHarness(
 
     fun start(): WebHarness {
         if (!firstLaunch) preferences.set("tutorial", "seen")
-        game = startWebGame(board, saves, preferences, analytics, mordie, renderer, scope, layout, appVersion, host, touch, pressedWith, address, clipboard, updates, tutorial = tutorialOn)
+        game = startWebGame(board, saves, preferences, analytics, mordie, renderer, scope, layout, appVersion, host, touch, pressedWith, address, clipboard, updates, tutorial = tutorialOn, browserLanguages = browserLanguages, languages = languages)
         return this
     }
 
@@ -119,9 +123,10 @@ internal class WebHarness(
         return this
     }
 
-    /** Remembers the keyboard layout [keys], as an earlier visit would. */
-    fun remembering(keys: KeyboardLayout? = null): WebHarness {
+    /** Remembers the keyboard layout [keys] and the language code [language] (any text, as a damaged store has), as an earlier visit would. */
+    fun remembering(keys: KeyboardLayout? = null, language: String? = null): WebHarness {
         keys?.let { preferences.set("keyboard_layout", it.wireName) }
+        language?.let { preferences.set("language", it) }
         return this
     }
 

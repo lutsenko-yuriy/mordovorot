@@ -45,6 +45,7 @@ class WebGame internal constructor(
     internal val controls = WebControlsDialog(this, viewModel, modal, keyboardLayout)
     internal val share = WebShareFlows(this, viewModel, analytics, modal, address, clipboard, shareLabels, shareProgress)
     internal val updates = WebUpdateFlows(this, viewModel, analytics, modal, updates, appVersion)
+    internal val language = WebLanguageFlows(this, viewModel)
     internal val tutorial = WebTutorial(this, viewModel, analytics, modal, tutorialSeen, scope, computer, tutorialOn)
     private val keys = WebKeyPlay(this, viewModel, pressedWith, computer)
     private val requests = WebRequestRouter(this)
@@ -250,6 +251,7 @@ class WebGame internal constructor(
         val solved = viewModel.isSolved()
         val guidance = tutorial.guidance(keys.shownSelection(), controls.layout)
         return WebState(
+            language = viewModel.language(),
             side = viewModel.squareSide(),
             tiles = viewModel.boardState().map { it + 1 },
             moves = viewModel.moveCount(),

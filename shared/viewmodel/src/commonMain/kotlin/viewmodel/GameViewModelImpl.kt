@@ -6,6 +6,8 @@ import kotlin.math.abs
 import kotlinx.coroutines.channels.ReceiveChannel
 import viewmodel.usecase.ControlsDialogUseCase
 import viewmodel.usecase.DeleteSaveUseCase
+import texts.Language
+import viewmodel.usecase.LanguageUseCase
 import viewmodel.usecase.LoadGameUseCase
 import viewmodel.usecase.LoadResult
 import viewmodel.usecase.NewGameUseCase
@@ -37,6 +39,8 @@ class GameViewModelImpl internal constructor(
     private val gameShiftSources: GameShiftSources,
     private val unsavedProgress: UnsavedProgress,
     private val tileLabels: SessionTileLabels,
+    private val language: SessionLanguage,
+    private val languageUseCase: LanguageUseCase,
 ) : GameViewModel {
 
     override val uiRequests: ReceiveChannel<UiRequest<*>> = ui.requests
@@ -148,4 +152,8 @@ class GameViewModelImpl internal constructor(
     override fun sharedProgress(): SharedProgress? = solutionUseCase.sharedProgress()
 
     override fun controlsDialogOpened(openedFrom: String) = controlsDialogUseCase.dialogOpened(openedFrom)
+
+    override fun language(): Language = language.current
+
+    override fun changeLanguage(language: Language, control: String) = languageUseCase.change(language, control)
 }
