@@ -188,6 +188,7 @@
 }
 
 .dialog .choices.labels button {
+    font-weight: 400;
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
