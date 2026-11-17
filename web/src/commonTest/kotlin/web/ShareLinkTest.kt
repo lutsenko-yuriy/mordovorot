@@ -129,6 +129,8 @@ class ShareLinkTest {
         assertEquals(LinkLabels.Scheme(TileLabels.LETTER_PAIRS), labelsOf("$six&l=letter_pairs"))
         assertEquals(LinkLabels.Unreadable, labelsOf("$six&l=cyrillic_letters"))
         assertEquals(LinkLabels.Scheme(TileLabels.CYRILLIC_LETTER_PAIRS), labelsOf("$six&l=cyrillic_letter_pairs"))
+        assertEquals(LinkLabels.Unreadable, labelsOf("$six&l=greek_letters"))
+        assertEquals(LinkLabels.Scheme(TileLabels.GREEK_LETTER_PAIRS), labelsOf("$six&l=greek_letter_pairs"))
     }
 
     @Test

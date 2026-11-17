@@ -39,4 +39,7 @@ interface ReaderTexts {
 
     /** The 28 Cyrillic letters as said (GH-313). */
     val cyrillicPhonetic: List<String>
+
+    /** The 25 Greek labels as said, in the order of `TileLabels.GREEK_ALPHABET`: the 24 letters' names, then the question mark (GH-322). */
+    val greekPhonetic: List<String>
 }

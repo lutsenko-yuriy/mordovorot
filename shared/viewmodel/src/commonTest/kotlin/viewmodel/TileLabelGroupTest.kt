@@ -16,6 +16,7 @@ class TileLabelGroupTest {
         assertEquals(TileLabelGroup.NUMBERS_FROM_0, TileLabelGroup.of(TileLabels.PAIRS_FROM_0))
         assertEquals(TileLabelGroup.LATIN, TileLabelGroup.of(TileLabels.LETTER_PAIRS))
         assertEquals(TileLabelGroup.CYRILLIC, TileLabelGroup.of(TileLabels.CYRILLIC_LETTERS))
+        assertEquals(TileLabelGroup.GREEK, TileLabelGroup.of(TileLabels.GREEK_LETTER_PAIRS))
     }
 
     @Test

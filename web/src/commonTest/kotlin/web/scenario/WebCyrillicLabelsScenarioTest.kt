@@ -47,14 +47,14 @@ class WebCyrillicLabelsScenarioTest {
     }
 
     @Test
-    fun `the labels dialog lists eight rows, the Cyrillic ones last`() = webTest {
+    fun `the labels dialog lists ten rows, the Cyrillic ones after the Latin ones`() = webTest {
         val page = WebHarness(backgroundScope).startOn()
 
         page.game.labels.open()
 
         val dialog = page.state.dialog as WebDialog.Labels
-        assertEquals(8, dialog.options.size)
-        assertEquals(listOf(TileLabels.CYRILLIC_LETTERS, TileLabels.CYRILLIC_LETTER_PAIRS), dialog.options.takeLast(2).map { it.labels })
+        assertEquals(10, dialog.options.size)
+        assertEquals(listOf(TileLabels.CYRILLIC_LETTERS, TileLabels.CYRILLIC_LETTER_PAIRS), dialog.options.subList(6, 8).map { it.labels })
         assertEquals(TileLabels.LETTER_PAIRS, dialog.options[5].labels)
         assertEquals(LabelOption(TileLabels.CYRILLIC_LETTERS, "Letters"), dialog.options[6])
         assertEquals("label-cyrillic_letters", Focus.Label(TileLabels.CYRILLIC_LETTERS).key)
@@ -71,7 +71,7 @@ class WebCyrillicLabelsScenarioTest {
         page.game.labels.open()
         val row = (page.state.dialog as WebDialog.Labels).options.single { it.labels == TileLabels.CYRILLIC_LETTERS }
         assertEquals(LabelOption(TileLabels.CYRILLIC_LETTERS, pageTexts.labelRowLetters, "up to 5x5"), row)
-        assertTrue((page.state.dialog as WebDialog.Labels).options.filter { it.labels != TileLabels.CYRILLIC_LETTERS && it.labels != TileLabels.LETTERS }.all { it.available })
+        assertTrue((page.state.dialog as WebDialog.Labels).options.filter { it.labels.maxSide != 5 }.all { it.available })
     }
 
     @Test
@@ -166,7 +166,7 @@ class WebCyrillicLabelsScenarioTest {
         page.game.labels.open()
 
         val options = (page.state.dialog as WebDialog.Labels).options
-        assertEquals(listOf("Buchstaben", "Paare"), options.takeLast(2).map { it.title })
+        assertEquals(listOf("Buchstaben", "Paare"), options.subList(6, 8).map { it.title })
     }
 
     @Test

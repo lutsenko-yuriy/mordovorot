@@ -743,6 +743,16 @@ Changes to existing entries:
 
 Not tracked: the browser's raw language list and unsupported languages it asked for, opening the dropdown without choosing (too granular), and a language per save or share link (neither carries one).
 
+## GH-322 (Greek tile labels)
+
+No new events or screen views: the two new schemes only add values to every property that carries a scheme, as GH-313's did.
+
+Changes to existing entries:
+- Scheme values take two new names, `TileLabels.wireName`: `greek_letters` and `greek_letter_pairs`. They stay English in every game language.
+- `tile_labels_changed.from_source: letters_unavailable` also covers Greek letters on 6x6 and larger (they label up to 5x5).
+
+Not tracked: the words a screen reader says.
+
 ## GH-313 (Cyrillic tile labels)
 
 Planned in `/analyze`; the web client uses `NoopAnalyticsService` until an SDK is wired up (GH-256). No new events or screen views: the two new schemes only add values to every property that carries a scheme (`tile_labels_changed.from`/`to`, `app_launched.tile_labels`, `board_solved.tile_labels`, `screen_labels_dialog.current_labels`, `share_labels_toggled.labels`, `shared_labels_accepted.sender_labels`/`receiver_labels`).

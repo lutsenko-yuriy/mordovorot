@@ -53,7 +53,7 @@ Query options (harness.html):
 | `report` | `fit` | `fit` (one line per case, above), `styles` (every element's computed styles, for `styles_diff.sh`), `qr` (with `mode=share`: the Share dialog's QR code read back by Chrome's `BarcodeDetector`, GH-243; the line says `NO-DETECTOR` where Chrome has none) or `keys` (below; `sizes` then defaults to `1200x800` and `boards` to `4`) |
 | `keys` | | with `report=keys`, the steps to play, comma-separated (below) |
 | `lang` | | `de` or `ru` starts with that language picked (GH-275; the phone toolbar wraps to two rows in both, so add `rows=2`); with none, the page follows the browser, which is English; `measure.sh` and the keys report then read that language's texts |
-| `labels` | | A tile labels wire name, such as `cyrillic_letter_pairs`: starts with that scheme remembered, as an earlier visit would have left it (GH-313); `mode=dialog` opens the Tile labels dialog in every language |
+| `labels` | | A tile labels wire name, such as `cyrillic_letter_pairs` or `greek_letters`: starts with that scheme remembered, as an earlier visit would have left it (GH-313); `mode=dialog` opens the Tile labels dialog in every language |
 | `layout` | | `left` starts with the left-handed keys (GH-171) |
 | `saves` | | comma-separated names of solved 4x4 saves to put in `localStorage` before the game starts (GH-251); startup's restore dialog is cancelled unless `restore=1` |
 | `corrupt` | | comma-separated names of entries no save decodes, listed by name alone (GH-251) |

@@ -17,7 +17,7 @@ Items raised outside a checkup (e.g. a debrief) for the next run to walk, each u
 
 | Raised | From | For | Dimension | Item |
 |---|---|---|---|---|
-| 2026-11-16 | debrief GH-289 | next checkup | Scenario quality | The keys harness (`scripts/web/harness`) is flaky in a full `keys_check.sh` run (state leaks between queries that share one Chrome profile, so the same case shows different results); give each query its own profile, and fix `lib.sh`'s macOS-only `sed -i ''` so the touch variant works on Linux. |
+| 2026-11-16 | debrief GH-289 | next checkup | Scenario quality | The keys harness (`scripts/web/harness`) is flaky in a full `keys_check.sh` run (state leaks between queries that share one Chrome profile, so the same case shows different results); give each query its own profile, and fix `lib.sh`'s macOS-only `sed -i ''` so the touch variant works on Linux (researched in GH-331). |
 
 ## Open findings
 

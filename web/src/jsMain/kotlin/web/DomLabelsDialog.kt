@@ -9,7 +9,7 @@ import web.a11y.focusKey
 import web.a11y.hiddenFromReaders
 import web.a11y.named
 
-/** The Tile labels dialog's body (GH-323): the message, the preview strip and the four groups, only the open one listing
+/** The Tile labels dialog's body (GH-323): the message, the preview strip and the five groups, only the open one listing
  *  its schemes. */
 internal fun labelsBody(dialog: WebDialog.Labels, game: WebGame): List<Element> =
     listOfNotNull(dialog.message?.let { text("message", it) }, previewStrip(dialog)) +

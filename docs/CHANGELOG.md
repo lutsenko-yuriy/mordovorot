@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.53.0] — 2026-11-17 (PR #330 merged)
+
+### Added
+
+- [user] (PR #330) GH-322: Tiles can be labelled with Greek letters or Greek letter pairs.
+- [non-user] (PR #330) GH-322: FEATURE.md says what to send a user who is away from keyboard: every screenshot and file the PR touches, sent as soon as the PR is open, with the manual checklist kept in the PR.
+
 ## [0.52.0] — 2026-11-17 (PR #327 merged)
 
 ### Added

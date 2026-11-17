@@ -14,6 +14,8 @@ enum class TileLabels(val wireName: String, val maxSide: Int = Int.MAX_VALUE) {
     LETTER_PAIRS("letter_pairs", 26),
     CYRILLIC_LETTERS("cyrillic_letters", 5),
     CYRILLIC_LETTER_PAIRS("cyrillic_letter_pairs", 9),
+    GREEK_LETTERS("greek_letters", 5),
+    GREEK_LETTER_PAIRS("greek_letter_pairs", 9),
     ;
 
     /** The name the labels dialog shows (GH-274: from `:shared:texts`). */
@@ -27,6 +29,8 @@ enum class TileLabels(val wireName: String, val maxSide: Int = Int.MAX_VALUE) {
             LETTER_PAIRS -> labelLetterPairs
             CYRILLIC_LETTERS -> labelCyrillicLetters
             CYRILLIC_LETTER_PAIRS -> labelCyrillicLetterPairs
+            GREEK_LETTERS -> labelGreekLetters
+            GREEK_LETTER_PAIRS -> labelGreekLetterPairs
         }
     }
 
@@ -49,6 +53,8 @@ enum class TileLabels(val wireName: String, val maxSide: Int = Int.MAX_VALUE) {
             LETTER_PAIRS -> "${'A' + row}${'A' + col}"
             CYRILLIC_LETTERS -> "${CYRILLIC_ALPHABET[tile]}"
             CYRILLIC_LETTER_PAIRS -> "${CYRILLIC_ALPHABET[row]}${CYRILLIC_ALPHABET[col]}"
+            GREEK_LETTERS -> "${GREEK_ALPHABET[tile]}"
+            GREEK_LETTER_PAIRS -> "${GREEK_ALPHABET[row]}${GREEK_ALPHABET[col]}"
         }
     }
 
@@ -60,6 +66,11 @@ enum class TileLabels(val wireName: String, val maxSide: Int = Int.MAX_VALUE) {
 
         /** The 28 letters the Cyrillic schemes use, without ё, й, ъ, ы, ь (GH-313): the only place the alphabet lives. */
         const val CYRILLIC_ALPHABET = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЭЮЯ"
+
+        /** The 25 labels the Greek schemes use (GH-322): the 24 capitals, then U+037E, the Greek question mark, which looks
+         *  like a semicolon but is its own character. It is written as an escape, since every Unicode normalisation turns
+         *  it into the semicolon U+003B when it is typed out. Only a 5x5 board's 25th tile shows it. */
+        const val GREEK_ALPHABET = "ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ\u037E"
 
         fun fromWireName(name: String?): TileLabels? = entries.firstOrNull { it.wireName == name }
     }

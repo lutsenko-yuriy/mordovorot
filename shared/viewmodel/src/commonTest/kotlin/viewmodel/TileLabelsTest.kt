@@ -15,43 +15,43 @@ class TileLabelsTest {
     /** GH-237: the packed save format knows these names by position; an unknown name is written out in full, which is longer.
      *  GH-313: the Cyrillic names are such names, so they take the escape and still round-trip. */
     @Test
-    fun `the Latin schemes have a code in the packed format, the Cyrillic ones fall into its escape`() {
+    fun `the Latin schemes have a code in the packed format, the Cyrillic and Greek ones fall into its escape`() {
         val board = intArrayOf(1, 0, 2, 3)
         val plain = SaveFileCodec.encode(2, board, 0, null).length
-        val cyrillic = setOf(TileLabels.CYRILLIC_LETTERS, TileLabels.CYRILLIC_LETTER_PAIRS)
+        val escaped = setOf(TileLabels.CYRILLIC_LETTERS, TileLabels.CYRILLIC_LETTER_PAIRS, TileLabels.GREEK_LETTERS, TileLabels.GREEK_LETTER_PAIRS)
 
         for (scheme in TileLabels.entries) {
             val text = SaveFileCodec.encode(2, board, 0, null, scheme.wireName)
-            if (scheme in cyrillic) assertTrue(text.length > plain, scheme.wireName) else assertEquals(plain, text.length, scheme.wireName)
+            if (scheme in escaped) assertTrue(text.length > plain, scheme.wireName) else assertEquals(plain, text.length, scheme.wireName)
             assertEquals(scheme.wireName, SaveFileCodec.decode("t", text).labels)
         }
     }
 
     @Test
     fun `tile 6 on 4x4 reads 7, 6, 23, 12, G and BC`() {
-        assertEquals(listOf("7", "6", "23", "12", "G", "BC", "Ж", "БВ"), labels(6, 4))
+        assertEquals(listOf("7", "6", "23", "12", "G", "BC", "Ж", "БВ", "Η", "ΒΓ"), labels(6, 4))
     }
 
     @Test
     fun `the first tile on each size`() {
-        for (side in 3..5) assertEquals(listOf("1", "0", "11", "00", "A", "AA", "А", "АА"), labels(0, side))
+        for (side in 3..5) assertEquals(listOf("1", "0", "11", "00", "A", "AA", "А", "АА", "Α", "ΑΑ"), labels(0, side))
     }
 
     @Test
     fun `the middle and last tiles on 3x3`() {
-        assertEquals(listOf("5", "4", "22", "11", "E", "BB", "Д", "ББ"), labels(4, 3))
-        assertEquals(listOf("9", "8", "33", "22", "I", "CC", "И", "ВВ"), labels(8, 3))
+        assertEquals(listOf("5", "4", "22", "11", "E", "BB", "Д", "ББ", "Ε", "ΒΒ"), labels(4, 3))
+        assertEquals(listOf("9", "8", "33", "22", "I", "CC", "И", "ВВ", "Ι", "ΓΓ"), labels(8, 3))
     }
 
     @Test
     fun `the middle and last tiles on 5x5`() {
-        assertEquals(listOf("13", "12", "33", "22", "M", "CC", "Н", "ВВ"), labels(12, 5))
-        assertEquals(listOf("25", "24", "55", "44", "Y", "EE", "Щ", "ДД"), labels(24, 5))
+        assertEquals(listOf("13", "12", "33", "22", "M", "CC", "Н", "ВВ", "Ν", "ΓΓ"), labels(12, 5))
+        assertEquals(listOf("25", "24", "55", "44", "Y", "EE", "Щ", "ДД", "\u037E", "ΕΕ"), labels(24, 5))
     }
 
     @Test
     fun `the last tile on 4x4`() {
-        assertEquals(listOf("16", "15", "44", "33", "P", "DD", "Р", "ГГ"), labels(15, 4))
+        assertEquals(listOf("16", "15", "44", "33", "P", "DD", "Р", "ГГ", "Π", "ΔΔ"), labels(15, 4))
     }
 
     @Test
@@ -65,7 +65,7 @@ class TileLabelsTest {
     fun `wire names round-trip, and an unknown or missing one gives null`() {
         for (labels in TileLabels.entries) assertEquals(labels, TileLabels.fromWireName(labels.wireName))
         assertEquals(
-            listOf("numbers", "numbers_from_0", "pairs", "pairs_from_0", "letters", "letter_pairs", "cyrillic_letters", "cyrillic_letter_pairs"),
+            listOf("numbers", "numbers_from_0", "pairs", "pairs_from_0", "letters", "letter_pairs", "cyrillic_letters", "cyrillic_letter_pairs", "greek_letters", "greek_letter_pairs"),
             TileLabels.entries.map { it.wireName },
         )
         assertNull(TileLabels.fromWireName("emoji"))
@@ -79,6 +79,24 @@ class TileLabelsTest {
         assertEquals(listOf("АА", "АБ", "АВ", "АГ"), TileLabels.CYRILLIC_LETTER_PAIRS.sampleRow(4))
         assertEquals("ИИ", TileLabels.CYRILLIC_LETTER_PAIRS.label(80, 9))
         assertEquals("ИА", TileLabels.CYRILLIC_LETTER_PAIRS.label(72, 9))
+    }
+
+    /** GH-322: U+037E is the Greek question mark; every normalisation form turns it into the semicolon, so it is pinned by code point. */
+    @Test
+    fun `the Greek schemes read the 24 capitals and the Greek question mark`() {
+        assertEquals(25, TileLabels.GREEK_ALPHABET.length)
+        assertEquals(listOf("Α", "Β", "Γ", "Δ"), TileLabels.GREEK_LETTERS.sampleRow(4))
+        assertEquals(0x391, TileLabels.GREEK_ALPHABET.first().code)
+        assertEquals(0x3A9, TileLabels.GREEK_ALPHABET[23].code)
+        assertEquals(0x37E, TileLabels.GREEK_ALPHABET[24].code)
+        assertEquals(0x37E, TileLabels.GREEK_LETTERS.label(24, 5).single().code)
+        assertEquals(listOf("ΑΑ", "ΑΒ", "ΑΓ"), TileLabels.GREEK_LETTER_PAIRS.sampleRow(3))
+        assertEquals("ΙΙ", TileLabels.GREEK_LETTER_PAIRS.label(80, 9))
+        assertTrue(TileLabels.GREEK_LETTERS.fits(5))
+        assertFalse(TileLabels.GREEK_LETTERS.fits(6))
+        assertTrue(TileLabels.GREEK_LETTER_PAIRS.fits(9))
+        assertFalse(TileLabels.GREEK_LETTER_PAIRS.fits(10))
+        assertFailsWith<IllegalArgumentException> { TileLabels.GREEK_LETTERS.label(0, 6) }
     }
 
     @Test
