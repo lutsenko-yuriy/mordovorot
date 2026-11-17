@@ -50,4 +50,11 @@ class AlphabetHintTest {
             assertNull(AlphabetHint.of(scheme, 4), scheme.wireName)
         }
     }
+
+    @Test
+    fun `a scheme too small for the board has no hint`() {
+        assertNull(AlphabetHint.of(TileLabels.LETTERS, 6))
+        assertNull(AlphabetHint.of(TileLabels.CYRILLIC_LETTER_PAIRS, 10))
+        assertNull(AlphabetHint.of(TileLabels.GREEK_LETTER_PAIRS, 10))
+    }
 }

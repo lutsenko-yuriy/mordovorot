@@ -13,7 +13,7 @@ object RussianDialogTexts : DialogTexts {
     override val giveUpTitle = "Сдаться и посмотреть решение Морди?"
     override val controlsTitle = "Управление"
     override val alphabetLatin = "Латинский алфавит"
-    override val alphabetCyrillic = "Кириллица"
+    override val alphabetCyrillic = "Кириллический алфавит"
     override val alphabetGreek = "Греческий алфавит"
     override val linkRejectedTitle = "Не удаётся открыть эту доску"
     override val openSharedTitle = "Открыть доску по ссылке?"
