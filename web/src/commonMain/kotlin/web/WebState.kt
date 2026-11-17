@@ -55,6 +55,8 @@ data class WebState(
     val guidance: Guidance? = null,
     /** `[ Tutorial ]` shows in the Give Up row (GH-289): the tutorial can be replayed. */
     val tutorialButton: Boolean = false,
+    /** `[ Hint ]` in the Give Up row (GH-332): hidden on the solution screen and in the tutorial, dimmed for a scheme with no letters to show. */
+    val alphabetHint: AlphabetHintButton = AlphabetHintButton.HIDDEN,
 ) {
     /** The digit [button] shows, `null` when it shows none (GH-171). */
     fun digitOf(button: ToolbarButton): Int? = button.digit.takeIf { WebKeys.live(button, computer) }
@@ -187,7 +189,29 @@ sealed interface WebDialog {
 
     /** The confirmation before updating with unsaved progress (GH-262): Cancel, where focus starts, or Update. */
     data object Update : WebDialog
+
+    /** The alphabet hint (GH-332): [hint]'s whole alphabet, the letters in use outlined and the rest greyed; OK. */
+    data class AlphabetHint(val hint: viewmodel.AlphabetHint) : WebDialog {
+        /** The alphabet's name, which titles the dialog. */
+        val alphabetTitle: String get() = with(texts().dialogs) {
+            when (hint.group) {
+                TileLabelGroup.CYRILLIC -> alphabetCyrillic
+                TileLabelGroup.GREEK -> alphabetGreek
+                else -> alphabetLatin
+            }
+        }
+
+        /** Whether the letter at [index] is in use on the board. */
+        fun inUse(index: Int): Boolean = index < hint.used
+
+        /** The letter at [index] as a reader says it: as Read board does, and a greyed one marked as not on the board. */
+        fun letterName(index: Int): String =
+            Announcements.spoken(hint.letters[index]).let { if (inUse(index)) it else texts().reader.notOnBoard(it) }
+    }
 }
+
+/** `[ Hint ]`'s state (GH-332): [DIMMED] is shown but does nothing. */
+enum class AlphabetHintButton { HIDDEN, DIMMED, LIVE }
 
 /** A save as a Load row: its [label] is `name (NxN)`, with the unsolvable mark when it applies. */
 data class SaveEntry(val name: String, val label: String) {

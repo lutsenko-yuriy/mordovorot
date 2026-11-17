@@ -25,10 +25,10 @@ class WebTutorialReplayAnalyticsScenarioTest {
     }
 
     @Test
-    fun `the save question sends screen_replay_save_dialog from key 8`() = webTest {
+    fun `the save question sends screen_replay_save_dialog from key 9`() = webTest {
         val page = mid()
 
-        page.press("8")
+        page.press("9")
 
         assertEquals("shortcut", page.ownProps("screen_replay_save_dialog").single()["opened_from"])
     }

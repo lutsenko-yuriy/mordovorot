@@ -11,6 +11,7 @@ class PhoneFitStylesTest {
     private val board = File("src/jsMain/resources/board.css").readText()
     private val solution = File("src/jsMain/resources/solution.css").readText()
     private val fitSheet = File("src/jsMain/resources/fit.css").readText()
+    private val buttons = File("src/jsMain/resources/buttons.css").readText()
 
     /** styles.css and fit.css, linked one after the other, which the fit's rules rely on. */
     private val layout = styles + fitSheet
@@ -151,5 +152,15 @@ class PhoneFitStylesTest {
         assertTrue("@media (max-width: 380px), $narrowWide {" in styles, "the toolbar's tight rule covers narrow wide phones")
         val narrowest = rule(block("@media (orientation: landscape) and (max-width: 600px)", solution), ".app.solution")
         assertTrue("--column-gap: 8px;" in narrowest && "--pad-x: 8px;" in narrowest, narrowest)
+    }
+
+    @Test
+    fun `the Give Up row's three buttons take the toolbar's phone padding`() {
+        val phones = "(max-width: 480px), (orientation: landscape) and (max-width: 760px)"
+        val tight = "(max-width: 380px), (orientation: landscape) and (max-width: 760px)"
+
+        assertTrue("padding: 0.55em 0.65em;" in rule(block("@media $phones", buttons), ".give-up button"), buttons)
+        val narrowest = rule(block("@media $tight", buttons), ".give-up button")
+        assertTrue("padding: 0.55em 0.35em;" in narrowest && "font-size: 0.95em;" in narrowest, narrowest)
     }
 }

@@ -125,6 +125,10 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                     ),
                 )
             }
+            is WebDialog.AlphabetHint -> append(
+                alphabetGrid(dialog),
+                actions(button(texts().dialogs.ok) { game.alphabetHint.onClosed() }.focusKey(Focus.DialogOk)),
+            )
             is WebDialog.LinkRejected -> append(
                 text("message", dialog.message),
                 actions(button(texts().dialogs.ok) { game.share.onNoticeAnswered() }.focusKey(Focus.LinkRejectedOk)),

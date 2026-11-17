@@ -43,6 +43,7 @@ class WebGame internal constructor(
     internal val dialogs = WebDialogFlows(viewModel, analytics, modal, ::cancelled, ::noteStatus, ::takeStatus) { saying = it }
     internal val solution = WebSolutionFlows(this, viewModel, analytics, modal)
     internal val controls = WebControlsDialog(this, viewModel, modal, keyboardLayout)
+    internal val alphabetHint = WebAlphabetHint(this, viewModel, modal)
     internal val share = WebShareFlows(this, viewModel, analytics, modal, address, clipboard, shareLabels, shareProgress)
     internal val updates = WebUpdateFlows(this, viewModel, analytics, modal, updates, appVersion)
     internal val language = WebLanguageFlows(this, viewModel)
@@ -282,6 +283,7 @@ class WebGame internal constructor(
             footer = updates.footer,
             guidance = guidance,
             tutorialButton = tutorial.offered,
+            alphabetHint = alphabetHint.button(),
         )
     }
 

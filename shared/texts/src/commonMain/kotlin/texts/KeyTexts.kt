@@ -22,6 +22,7 @@ interface KeyTexts {
     val toolbarLine1: String
     val toolbarLine2: String
     val toolbarLine3: String
+    val toolbarLine4: String
     val solutionLine1: String
     val solutionLine2: String
     val solutionLine3: String

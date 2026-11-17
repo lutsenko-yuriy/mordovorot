@@ -253,7 +253,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
     It opens on the marked layout; Tab moves between the group, OK and Cancel, and the arrows move the mark.
     OK applies the layout and puts focus on the board; Cancel or Escape changes nothing and returns focus to the opener.
   - **Toolbar:** every button shows its digit: `[ New 1 ][ Save 2 ][ Load 3 ][ Labels 4 ]`,
-    `[ Share 7 ]`, `[ Give Up 5 ]` or `[ Mordie's solution 5 ]` with `[ Tutorial 8 ]` beside it (GH-289), `[ Controls 6 ]`. The digits work wherever focus
+    `[ Share 7 ]`, `[ Give Up 5 ]` or `[ Mordie's solution 5 ]` with `[ Hint 8 ]` (GH-332) and `[ Tutorial 9 ]` (GH-289, which was 8 before GH-332) beside it, `[ Controls 6 ]`. The digits work wherever focus
     is, outside dialogs.
   - **Board:** one Tab stop, focused at page load, after a new, loaded or
     saved game and when a dialog opened from it closes. While it has focus, right-handed: W/A/S/D move the selected tile,
@@ -467,7 +467,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   in either mode: `keyboard` for key presses, `rich_ui` for mouse and touch; see `docs/ANALYTICS_EVENTS.md`.
 
 ### Feature 10 — Give Up and Mordie's solution (GH-126)
-- **Give Up:** `[ Give Up ]` sits on its own row, directly above the toolbar, with `[ Tutorial ]` to its right (Feature 13, GH-289). It is dimmed and
+- **Give Up:** `[ Give Up ]` sits on its own row, directly above the toolbar, with `[ Hint ]` (Feature 11, GH-332) and `[ Tutorial ]` to its right (Feature 13, GH-289). It is dimmed and
   inert until Mordie has a solution (the moment a found line appears, Feature 8): at the first 5-shift
   check on every size Mordie plays, 5x5 included (GH-222). The solution it shows is the best
   known when the player gives up, which may be longer than the shortest. On a computer: 5. Pressing it asks
@@ -563,6 +563,20 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   like the saves. If it can't be written the board still relabels, silently; it just isn't
   remembered. Changing the labels isn't unsaved progress.
 
+### Alphabet hint (GH-332)
+- **The button:** `[ Hint ]` (`[ Hint 8 ]` on a computer) sits in the Give Up row, between `[ Give Up ]` (or `[ Mordie's solution ]`) and `[ Tutorial ]`; the row reads
+  `[ Give Up 5 ] [ Hint 8 ] [ Tutorial 9 ]`. German `Hinweis`, Russian `Подсказка`. It shows in play and on a won board, and is gone on Mordie's solution screen and during the
+  tutorial; it is disabled while a dialog is open and does not depend on the `tutorial` switch. It is **dimmed** and inert for the four number schemes, and when Letters or Cyrillic or Greek
+  letters stand in as Numbers on a board too large for them (6x6 and up). On phones the row's buttons take the toolbar's padding so the three fit.
+- **The dialog:** `Latin alphabet`, `Cyrillic alphabet` or `Greek alphabet` (`Lateinisches` / `Kyrillisches` / `Griechisches Alphabet`; `Латинский` / `Кириллический` /
+  `Греческий алфавит`) shows the whole alphabet of the marked scheme in order, on a grid of 7 columns, with `[ OK ]`; Escape or OK closes it and changes nothing. The letters the
+  board uses are outlined in normal type, the rest greyed. A pair scheme uses as many letters as the board has rows (`N` on an NxN board); a single-letter scheme uses
+  min(N x N, the alphabet's length). Greek's 25th letter, U+037E, is in use only on 5x5 with Greek letters.
+- **Keys and focus:** 8 opens it on a computer, with Tutorial moving from 8 to 9; focus goes back to where it was opened, the Hint button for a click and the board for the key. The Controls
+  dialog's key list now reads `Give Up 5 · Hint 8 · Tutorial 9` on line 2, with `Controls 6 · Share 7` as a new line 4.
+- **Screen readers:** the letters are a list read by the names Read board uses, a greyed one adding `, not on this board`.
+- **Analytics:** `screen_alphabet_hint_dialog` (`opened_from` `button` or `shortcut`, `screen`, `labels`, `board_size`) and `dialog_cancelled` with `dialog: alphabet_hint` and `via`.
+
 ### Feature 12 — Share a board (GH-243)
 Web client only.
 - **`[ Share ]`** is the toolbar's fifth button, after Labels; 7 on a computer (ADR-0003). It opens
@@ -655,19 +669,19 @@ Web client only. On a first visit Mordie walks the player through a short game.
   Any other shift is blocked: the board doesn't change (a drag snaps back), Moves stays, and the bubble shows
   `You can do that later. For now shift that row please!` (`column` for a column) until the next shift.
 - **Keys on a computer:** select keys work and shift keys go through the same check. 4 and 6 open Labels and
-  Controls; 1, 2, 3, 5, 7 and 8 do nothing (their buttons are hidden). 0 reads the board.
-- **Replay (GH-289):** `[ Tutorial ]` (`[ Tutorial 8 ]` on a computer) sits in the Give Up row, right of `[ Give Up ]`
-  or `[ Mordie's solution ]` and in the same style, or alone when the row has neither (a won board with no solution to
+  Controls; 1, 2, 3, 5, 7, 8 and 9 do nothing (their buttons are hidden). 0 reads the board.
+- **Replay (GH-289):** `[ Tutorial ]` (`[ Tutorial 9 ]` on a computer, 8 until GH-332 put the Hint before it) sits in the Give Up row, right of `[ Give Up ]`,
+  `[ Mordie's solution ]` and `[ Hint ]` and in the same style, or alone when the row has neither (a won board with no solution to
   show). It shows during play and on a won board; it is gone on Mordie's solution screen, while the tutorial runs
-  (steps 1 to 5) and with the `tutorial` switch off, and it is disabled while a dialog is open. 8 does the same, on a
+  (steps 1 to 5) and with the `tutorial` switch off, and it is disabled while a dialog is open. 9 does the same, on a
   computer, and nothing during the tutorial or on the solution screen.
   - With no unsaved moves the tutorial starts at once on its board, at step 1.
   - With unsaved moves `Save your game first?` opens first: `The tutorial replaces the current game.`, with
     `[ Cancel ] [ Don't save ] [ Save ]`, focus on Cancel. Escape is Cancel.
-    - **Cancel** starts nothing and changes nothing; focus goes back to the button or place 8 was pressed.
+    - **Cancel** starts nothing and changes nothing; focus goes back to the button or place 9 was pressed.
     - **Don't save** starts the tutorial.
     - **Save** opens the Save dialog as the toolbar's does, prefilled with the current save's name. Once the game is saved the
-      tutorial starts; a cancelled Save, a name with spaces or a failed save starts nothing and puts focus back where the replay was started: `[ Tutorial ]`, or where 8 was pressed.
+      tutorial starts; a cancelled Save, a name with spaces or a failed save starts nothing and puts focus back where the replay was started: `[ Tutorial ]`, or where 9 was pressed.
   - The replay is a new game: the current save name is forgotten, and saves are left alone. Focus goes to the board on
     a computer and to the start of the page on touch, as at a first launch.
   - It plays as the first launch does. Skip and the end run the same ways (below), so Skip offers

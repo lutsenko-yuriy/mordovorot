@@ -92,6 +92,7 @@ internal class WebKeyPlay(
             }
             ToolbarButton.CONTROLS -> game.controls.open("shortcut", opener)
             ToolbarButton.SHARE -> game.share.open(opener)
+            ToolbarButton.ALPHABET_HINT -> game.alphabetHint.open("shortcut", opener)
             ToolbarButton.TUTORIAL -> if (game.tutorial.offered) game.tutorial.onReplay("shortcut", opener)
         }
     }
