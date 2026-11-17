@@ -19,6 +19,10 @@ is on [OpenProcessing](https://openprocessing.org/@carykh/580366), and Cary intr
 reimplementation for the browser. It uses the same rules (cyclic row/column
 shifts on a square board), but none of Loopover's code or assets.
 
+## License
+
+Mordovorot is released under the [MIT License](LICENSE). The libraries compiled into the web bundle are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
 ## Running it
 
 **Requires:** JDK 17. Gradle comes with the wrapper, so you don't need to install it.
