@@ -66,9 +66,10 @@ data class WebState(
 
     /** Whether the page keeps the board's element and updates it in place: rebuilt and refocused, it
      *  has VoiceOver say the board over the live region, or keep saying the tile just left (GH-171). A new language
-     *  rebuilds it, so its `Board` name and Read board text are reworded (GH-275). */
+     *  rebuilds it, so its `Board` name and Read board text are reworded (GH-275), and so do other labels, so
+     *  the board's class for Cyrillic pairs follows them (GH-313: a link or a load can change them with no dialog). */
     fun keepsBoardFrom(before: WebState): Boolean =
-        language == before.language && boardFocusable && before.boardFocusable && dialog == null && before.dialog == null &&
+        language == before.language && labels == before.labels && boardFocusable && before.boardFocusable && dialog == null && before.dialog == null &&
             side == before.side && solved == before.solved && (solution == null) == (before.solution == null) &&
             (guidance == null) == (before.guidance == null)
 
