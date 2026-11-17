@@ -11,7 +11,7 @@ https://lutsenko-yuriy.github.io/mordovorot/ (Feature 9). It was a terminal game
 
 ## Voice and wording (GH-274)
 
-Every text the player reads lives in `:shared:texts` under a key, English first (GH-275 adds German and Russian). A text with a
+Every text the player reads lives in `:shared:texts` under a key, English first, then German and Russian (GH-275). A text with a
 number or a name is a function that takes it, so each language can inflect it, and a move count is never preformatted.
 
 **Mordie** is cheerful and chatty: first person, a friendly rival who counts moves aloud and is glad to be beaten. He opens
@@ -24,6 +24,10 @@ A count of the player's moves always carries its unit (`vs your 12 moves`), and 
 - one wording per meaning (`No saves yet.` everywhere, `Your saves`, one sentence for a board that can't be solved);
 - an error says what happened and what to do next, and never blames the player or shows a developer's reason (a damaged save
   reads `'foo' is damaged and can't be loaded. You can delete it in Load.`).
+
+**German** and **Russian** keep Mordie's voice: informal (`du`, `ты`), short and warm, with the same four rules. A count is
+inflected by its own language (`1 Zug, 2 Züge`, `1 ход, 2 хода, 5 ходов`), and quotes are the language's own (`„foo“`, `«foo»`).
+Letters and Letter pairs stay Latin on the tiles, and screen readers keep the NATO words.
 
 The words the glossary lists under "Known aliases to avoid" never appear in a text; a test enforces it. Screen-reader texts
 keep their terse wording while `docs/CONSTRAINTS.md` freezes screen readers.
@@ -651,3 +655,20 @@ Web client only. On a first visit Mordie walks the player through a short game.
 - **Screen readers:** the bubble is plain text, not a live region; shifts that count are announced as always and a blocked one says nothing.
 - **Analytics:** `tutorial_started`, `tutorial_step_completed` (with `input`: `drag`, `click` or `key`, of the shift that finished the step, GH-290), `tutorial_ended`, `opened_from: tutorial` for the panel's
   Controls and Labels, and `tutorial: true` on `board_solved` and `mordie_solution_found` (`docs/ANALYTICS_EVENTS.md`).
+
+### Feature 14 — Languages (GH-275)
+Web client only. The game is in English, German and Russian; every text the player reads follows the language. Out of scope: Cyrillic
+tile labels (GH-313), more languages, right-to-left scripts, translating the docs or analytics.
+- **First visit:** the browser's first language, when it is German or Russian; English for any other. An earlier pick wins over the
+  browser, and is remembered per browser (the `language` preference). Nothing is stored until the player picks: an unpicked player
+  follows the browser on every visit. The language is not in saves or share links.
+- **The picker:** in the page's top right corner. Under 480px wide, or in landscape under 760px, a dropdown showing `EN ▾` that opens
+  the phone's own list (`English`, `Deutsch`, `Русский`); elsewhere three toggles `EN DE RU`, the current one pressed, each titled with
+  its native name. After the game's controls and before the footer in Tab order; out of reach while a dialog is open. No key shortcut.
+- **A switch:** applies at once with no reload. Everything the page words follows: Mordie's line (swapped in place), the toolbar, the
+  hints, the tutorial bubble, the footer, the tab title and `<html lang>`. The status line is cleared. A pick while a dialog, a
+  toolbar action or a drag is under way is ignored.
+- **Stays as it is:** Letters and Letter pairs on the tiles (Latin), the NATO words screen readers speak, and the analytics, which are English.
+- **Layout:** German and Russian words are longer, so the toolbar, Give Up row, dialog buttons and tutorial bubble are worded short and
+  checked at phone widths and at 150% text size.
+- **Analytics:** `language_changed` and `app_launched.language` (`docs/ANALYTICS_EVENTS.md`).

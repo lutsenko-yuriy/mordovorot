@@ -194,7 +194,7 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │                          # interface per area: mordie, tutorial, dialogs, status, page, keys, reader), English
 │                          # first in `texts.en`; a text with a number or a name is a function of it, so
 │                          # each language words plurals and cases itself. `texts()` returns the active
-│                          # language (English until GH-275). GH-275 adds `texts.de` and `texts.ru`, a `Language`
+│                          # language (English until GH-275 switched it on). GH-275 adds `texts.de` and `texts.ru`, a `Language`
 │                          # enum and one global active language that `SessionLanguage` sets (detected from the
 │                          # browser, then the `language` preference; a switch needs no reload); the web client
 │                          # adds `DomLanguagePicker` and `WebLanguageFlows`. `english.txt` snapshots every key's output
@@ -339,6 +339,10 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/jsMain/kotlin/web/DomFooter.kt  # fillFooter: the <footer>'s links in a new tab (GH-111), wide-only parts in
 │                                       # `.wide-only` (GH-147), the Update button (GH-262); Main creates the empty
 │                                       # <footer> and DomRenderer redraws it when WebState.footer changes
+├── src/jsMain/kotlin/web/DomLanguagePicker.kt # GH-275: the language picker in the page's top right corner, outside #app like the
+│                                       # footer and kept across frames: `EN DE RU` toggles (aria-pressed, a native-name title) and a
+│                                       # native <select> over a visible `EN ▾`; Main creates its element before the <footer> (Tab
+│                                       # order), DomRenderer shows the language in it and `setBehindDialog` makes it inert
 ├── src/jsMain/kotlin/web/DomAppUpdates.kt # GH-262: AppUpdates over navigator.serviceWorker: registers offline-worker.js,
 │                                       # ready = a waiting worker beside an active one, apply = skip-waiting message then
 │                                       # reload; every failure (no workers, offline, no worker file) is dropped
@@ -392,6 +396,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # tile labels grow with `--text-scale`, capped (GH-168)
 ├── src/jsMain/resources/dialogs.css    # GH-153: the modal dialogs, the Tile labels picker (GH-139)
 ├── src/jsMain/resources/toggle.css     # GH-267: the Share dialog's `Include my tile labels` switch
+├── src/jsMain/resources/language.css   # GH-275: the picker's corner spot; toggles on wide windows, the dropdown under the phone breakpoint
 ├── src/jsMain/resources/solution.css   # GH-153: `.app.solution` and the step list (GH-126); its
 │                                       # tall `.steps` overrides the base `.steps` by coming later
 ├── src/commonTest/kotlin/web/scenario/ # GH-110 end to end: WebGame over startWebGame's wiring
@@ -400,6 +405,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # with WebHarness's `firstLaunch` (else it seeds `tutorial=seen`);
 │                                       # GH-139 tile labels; GH-166 announcements, as WebHarness.said)
 ├── src/commonTest/kotlin/web/FooterTest.kt # GH-111: the footer's wording and links; GH-262: the notice, and the worker's relative URL
+├── src/jvmTest/kotlin/web/LanguageStylesTest.kt # GH-275: the picker shows the toggles on wide windows and the dropdown on phones
 ├── src/jvmTest/kotlin/web/UpdateNoticeStylesTest.kt # GH-262: the footer's Update looks like a link and keeps a keyboard ring
 ├── src/commonTest/kotlin/web/HostTest.kt # GH-111: hostOf's buckets
 ├── src/commonTest/kotlin/web/LayoutTest.kt, SlidesTest.kt, MessageFeedTest.kt
