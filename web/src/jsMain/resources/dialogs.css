@@ -182,12 +182,15 @@
     background: var(--frame);
 }
 
-/* An open group's schemes sit 4px in from each side of its header. */
+/* An open group's two schemes, a single one and its pair, side by side and 4px in from each side of its header. */
 .dialog .choices.labels {
+    flex-direction: row;
     margin: 0 4px;
 }
 
 .dialog .choices.labels button {
+    flex: 1 1 0;
+    min-width: 0;
     font-weight: 400;
     display: flex;
     flex-wrap: wrap;

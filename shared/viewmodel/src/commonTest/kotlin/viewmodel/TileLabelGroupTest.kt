@@ -13,16 +13,15 @@ class TileLabelGroupTest {
 
     @Test
     fun `of finds a scheme's group`() {
-        assertEquals(TileLabelGroup.NUMBERS, TileLabelGroup.of(TileLabels.PAIRS_FROM_0))
+        assertEquals(TileLabelGroup.NUMBERS_FROM_0, TileLabelGroup.of(TileLabels.PAIRS_FROM_0))
         assertEquals(TileLabelGroup.LATIN, TileLabelGroup.of(TileLabels.LETTER_PAIRS))
         assertEquals(TileLabelGroup.CYRILLIC, TileLabelGroup.of(TileLabels.CYRILLIC_LETTERS))
     }
 
     @Test
-    fun `numbers list the 1-based schemes before the 0-based ones`() {
-        assertEquals(
-            listOf(TileLabels.NUMBERS, TileLabels.PAIRS, TileLabels.NUMBERS_FROM_0, TileLabels.PAIRS_FROM_0),
-            TileLabelGroup.NUMBERS.schemes,
-        )
+    fun `every group holds a single scheme and its paired one`() {
+        assertEquals(listOf(TileLabels.NUMBERS, TileLabels.PAIRS), TileLabelGroup.NUMBERS.schemes)
+        assertEquals(listOf(TileLabels.NUMBERS_FROM_0, TileLabels.PAIRS_FROM_0), TileLabelGroup.NUMBERS_FROM_0.schemes)
+        assertEquals(listOf(2), TileLabelGroup.entries.map { it.schemes.size }.distinct())
     }
 }

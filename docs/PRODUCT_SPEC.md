@@ -517,12 +517,12 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   Only the text changes: a tile's colour (web) and the step list's `Row …`/`Col …` stay as they are.
 - **The dialog:** `Tile labels` (GH-323 grouped it): a preview strip of three tiles showing the marked
   scheme's first three labels (`1 2 3`, `AA AB AC`, `АА АБ АВ`; the same on every board size and hidden from screen readers),
-  then three collapsible groups, **Numbers** (Numbers, Pairs, Numbers from 0, Pairs from 0), **Latin letters** (Letters,
-  Letter pairs) and **Cyrillic letters** (Cyrillic letters, Cyrillic letter pairs); `Zahlen` / `Lateinische Buchstaben` /
-  `Kyrillische Buchstaben` and `Числа` / `Латинские буквы` / `Кириллические буквы` in German and Russian. Only the group
+  then four collapsible groups, **Numbers** (Numbers, Pairs), **Numbers from 0** (Numbers from 0, Pairs from 0), **Latin letters** (Letters,
+  Letter pairs) and **Cyrillic letters** (Cyrillic letters, Cyrillic letter pairs); `Zahlen` / `Zahlen ab 0` / `Lateinische Buchstaben` /
+  `Kyrillische Buchstaben` and `Числа` / `Числа с 0` / `Латинские буквы` / `Кириллические буквы` in German and Russian. Only the group
   in use is open when the dialog opens; pressing another header opens that group (and focus goes to its marked scheme,
   else its first that fits the board) and closes the open one. Pressing the open group's header does nothing. A group
-  lists its schemes one under another by name only, the marked one `●` and the rest `○`; the mark can sit in a closed
+  lists its two schemes, a single one and its pair, side by side by name only, the marked one `●` and the rest `○`; the mark can sit in a closed
   group and survives OK. Opening a group sends no event. In a group the arrow keys move the mark, and Tab visits the three
   headers and the open group's one radio. Picking a row marks it; OK
   relabels the board at once, Cancel changes nothing. On the web the board already shows the

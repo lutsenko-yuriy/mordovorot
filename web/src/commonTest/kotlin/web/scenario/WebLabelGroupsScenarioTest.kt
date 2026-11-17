@@ -29,7 +29,7 @@ class WebLabelGroupsScenarioTest {
 
         page.openDialog()
 
-        assertEquals(listOf("Numbers", "Latin letters", "Cyrillic letters"), TileLabelGroup.entries.map { it.title })
+        assertEquals(listOf("Numbers", "Numbers from 0", "Latin letters", "Cyrillic letters"), TileLabelGroup.entries.map { it.title })
         assertEquals(TileLabelGroup.NUMBERS, page.labels.open)
         assertEquals(Focus.Label(TileLabels.NUMBERS), page.state.focus)
         assertEquals("label-numbers", page.state.focus?.key)
@@ -144,7 +144,7 @@ class WebLabelGroupsScenarioTest {
         page.game.labels.onGroupOpened(TileLabelGroup.CYRILLIC)
         page.game.labels.onSelected(TileLabels.CYRILLIC_LETTERS)
         assertEquals(listOf("А", "Б", "В"), page.labels.preview)
-        page.game.labels.onGroupOpened(TileLabelGroup.NUMBERS)
+        page.game.labels.onGroupOpened(TileLabelGroup.NUMBERS_FROM_0)
         page.game.labels.onSelected(TileLabels.PAIRS_FROM_0)
 
         assertEquals(listOf("00", "01", "02"), page.labels.preview)
@@ -175,7 +175,7 @@ class WebLabelGroupsScenarioTest {
 
     // Layout and names
     @Test
-    fun `each group stacks its schemes in order`() = webTest {
+    fun `each group lists a single scheme and its paired one`() = webTest {
         val page = WebHarness(backgroundScope).startOn()
         page.openDialog()
 
@@ -186,7 +186,8 @@ class WebLabelGroupsScenarioTest {
 
         assertEquals(
             listOf(
-                listOf("Numbers", "Pairs", "Numbers from 0", "Pairs from 0"),
+                listOf("Numbers", "Pairs"),
+                listOf("Numbers from 0", "Pairs from 0"),
                 listOf("Letters", "Letter pairs"),
                 listOf("Cyrillic letters", "Cyrillic letter pairs"),
             ),
@@ -198,12 +199,12 @@ class WebLabelGroupsScenarioTest {
     fun `German and Russian pages name the groups`() = webTest {
         val german = WebHarness(backgroundScope, browserLanguages = listOf("de-DE")).startOn()
         german.openDialog()
-        assertEquals(listOf("Zahlen", "Lateinische Buchstaben", "Kyrillische Buchstaben"), TileLabelGroup.entries.map { it.title })
+        assertEquals(listOf("Zahlen", "Zahlen ab 0", "Lateinische Buchstaben", "Kyrillische Buchstaben"), TileLabelGroup.entries.map { it.title })
         assertEquals("Zahlen", german.labels.openOptions.first().title)
 
         val russian = WebHarness(backgroundScope, browserLanguages = listOf("ru-RU")).startOn()
         russian.openDialog()
-        assertEquals(listOf("Числа", "Латинские буквы", "Кириллические буквы"), TileLabelGroup.entries.map { it.title })
+        assertEquals(listOf("Числа", "Числа с 0", "Латинские буквы", "Кириллические буквы"), TileLabelGroup.entries.map { it.title })
         assertEquals(texts().page.labelNumbers, russian.labels.openOptions.first().title)
     }
 

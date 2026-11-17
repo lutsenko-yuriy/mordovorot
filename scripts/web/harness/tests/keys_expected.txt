@@ -2,7 +2,7 @@ mouse play 1200x800 4x4 | start - -> focus board role grid name "Board" | dialog
 mouse play 1200x800 4x4 | click:Labels - -> focus label-numbers role radio name "Numbers" checked | dialog "Tile labels" | ring none | keyboard no | inert DIV.stage DIV.panel DIV.language-picker FOOTER.footer | said -
 mouse play 1200x800 4x4 | S-Tab page -> focus label-group-numbers role button name "Numbers" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel DIV.language-picker FOOTER.footer | said -
 mouse play 1200x800 4x4 | Tab page -> focus label-numbers role radio name "Numbers" checked | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel DIV.language-picker FOOTER.footer | said -
-mouse play 1200x800 4x4 | Tab page -> focus label-group-latin role button name "Latin letters" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel DIV.language-picker FOOTER.footer | said -
+mouse play 1200x800 4x4 | Tab page -> focus label-group-numbers_from_0 role button name "Numbers from 0" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel DIV.language-picker FOOTER.footer | said -
 mouse play 1200x800 4x4 | Escape page -> focus labels role button name "Labels" shortcut 4 | dialog - | ring solid | keyboard yes | inert - | said -
 mouse play 1200x800 4x4 | start - -> focus board role grid name "Board" | dialog - | ring none | keyboard no | inert - | said "New 4x4 game"
 mouse play 1200x800 4x4 | focus:new - -> focus new role button name "New" shortcut 1 | dialog - | ring none | keyboard no | inert - | said -
@@ -82,16 +82,16 @@ mouse play 1200x800 4x4 | 1 page -> focus size-4 role button name "4x4" | dialog
 mouse play 1200x800 4x4 | Escape page -> focus labels role button name "Labels" shortcut 4 | dialog - | ring solid | keyboard yes | inert - | said -
 mouse play 1200x800 4x4 | start - -> focus board role grid name "Board" | dialog - | ring none | keyboard no | inert - | said "New 4x4 game"
 mouse play 1200x800 4x4 | click:Labels - -> focus label-numbers role radio name "Numbers" checked | dialog "Tile labels" | ring none | keyboard no | inert DIV.stage DIV.panel DIV.language-picker FOOTER.footer | said -
+mouse play 1200x800 4x4 | Tab page -> focus label-group-numbers_from_0 role button name "Numbers from 0" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel DIV.language-picker FOOTER.footer | said -
 mouse play 1200x800 4x4 | Tab page -> focus label-group-latin role button name "Latin letters" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel DIV.language-picker FOOTER.footer | said -
 mouse play 1200x800 4x4 | Tab page -> focus label-group-cyrillic role button name "Cyrillic letters" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel DIV.language-picker FOOTER.footer | said -
 mouse play 1200x800 4x4 | Tab page -> focus dialog-cancel role button name "Cancel" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel DIV.language-picker FOOTER.footer | said -
 mouse play 1200x800 4x4 | Tab page -> focus dialog-ok role button name "OK" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel DIV.language-picker FOOTER.footer | said -
-mouse play 1200x800 4x4 | Tab page -> focus label-group-numbers role button name "Numbers" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel DIV.language-picker FOOTER.footer | said -
 mouse play 1200x800 4x4 | Escape page -> focus labels role button name "Labels" shortcut 4 | dialog - | ring solid | keyboard yes | inert - | said -
 mouse play 1200x800 4x4 | start - -> focus board role grid name "Board" | dialog - | ring none | keyboard no | inert - | said "New 4x4 game"
 mouse play 1200x800 4x4 | click:Labels - -> focus label-numbers role radio name "Numbers" checked | dialog "Tile labels" | ring none | keyboard no | inert DIV.stage DIV.panel DIV.language-picker FOOTER.footer | said -
 mouse play 1200x800 4x4 | ArrowDown page -> focus label-pairs role radio name "Pairs" checked | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel DIV.language-picker FOOTER.footer | said -
-mouse play 1200x800 4x4 | ArrowDown page -> focus label-numbers_from_0 role radio name "Numbers from 0" checked | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel DIV.language-picker FOOTER.footer | said -
+mouse play 1200x800 4x4 | ArrowDown page -> focus label-numbers role radio name "Numbers" checked | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel DIV.language-picker FOOTER.footer | said -
 mouse play 1200x800 4x4 | ArrowUp page -> focus label-pairs role radio name "Pairs" checked | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel DIV.language-picker FOOTER.footer | said -
 mouse play 1200x800 4x4 | focus:label-group-latin - -> focus label-group-latin role button name "Latin letters" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel DIV.language-picker FOOTER.footer | said -
 mouse play 1200x800 4x4 | Enter native -> focus label-letters role radio name "Letters" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel DIV.language-picker FOOTER.footer | said -
