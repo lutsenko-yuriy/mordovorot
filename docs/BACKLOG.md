@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-- GH-322: Greek alphabet as tile labels (WU1/1 in review)
+_(nothing in progress)_
 
 ---
 
