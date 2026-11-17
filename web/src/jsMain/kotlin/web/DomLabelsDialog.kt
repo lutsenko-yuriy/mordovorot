@@ -16,7 +16,13 @@ internal fun labelsBody(dialog: WebDialog.Labels, game: WebGame): List<Element> 
 
 /** The marked scheme's first labels as tiles, seen but not read: the scheme's name says it all. */
 private fun previewStrip(dialog: WebDialog.Labels) = hiddenFromReaders(element("div", "label-preview")).apply {
-    dialog.preview.forEach { append(element("span", "swatch").apply { textContent = it }) }
+    // Row 0, columns 0 to 2 of a 3x3 board: the same hue and shade as the board's first tiles.
+    dialog.preview.forEachIndexed { col, label ->
+        append(element("span", "swatch").apply {
+            textContent = label
+            setAttribute("style", "--row: 0; --col: $col; --side: 3")
+        })
+    }
 }
 
 private fun groupElement(group: TileLabelGroup, dialog: WebDialog.Labels, game: WebGame): Element {

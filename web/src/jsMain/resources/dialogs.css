@@ -129,15 +129,20 @@
     gap: 8px;
 }
 
+/* A tile as the board draws it: the first row of a solved board, its hue and shade from the tile's own row and column. */
 .dialog .label-preview .swatch {
-    min-width: 2.6em;
-    padding: 0.5em 0.4em;
-    text-align: center;
-    font-family: ui-monospace, Menlo, Consolas, monospace;
+    --swatch: 48px;
+    width: var(--swatch);
+    height: var(--swatch);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: calc(var(--swatch) * 0.16);
+    background: hsl(calc(var(--row) * 360deg / var(--side) + 8deg) 68% calc(var(--tile-light) - var(--col) * var(--tile-ramp) / (var(--side) - 1)));
+    color: var(--tile-ink);
+    font-size: calc(var(--swatch) * 0.4);
     font-weight: 700;
-    color: var(--ink);
-    box-shadow: inset 0 0 0 2px var(--button);
-    border-radius: 6px;
+    box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12);
 }
 
 .dialog .label-group {
@@ -175,6 +180,11 @@
 
 .dialog .label-group .group-header:hover {
     background: var(--frame);
+}
+
+/* An open group's schemes sit 4px in from each side of its header. */
+.dialog .choices.labels {
+    margin: 0 4px;
 }
 
 .dialog .choices.labels button {

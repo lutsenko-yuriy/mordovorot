@@ -58,7 +58,6 @@ class ColourContrastStylesTest {
             check(paint("dialogs.css", ".dialog .warning", "color"), "card", 4.5, "dialog warnings"),
             check(paint("dialogs.css", ".dialog .choices.labels .limit", "color"), "card", 4.5, "label limits"),
             check(paint("dialogs.css", ".dialog .choices.labels button:hover .limit", "color"), "frame", 4.5, "a hovered label row's limit"),
-            check(paint("dialogs.css", ".dialog .label-preview .swatch", "color"), "card", 4.5, "the label preview strip"),
         ).flatten()
 
         assertTrue(failures.isEmpty(), failures.joinToString("\n"))
