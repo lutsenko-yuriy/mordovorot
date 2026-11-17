@@ -44,6 +44,11 @@ interface PageTexts {
     val labelCyrillicLetters: String
     val labelCyrillicLetterPairs: String
 
+    /** The Tile labels dialog's group headers (GH-323). */
+    val labelGroupNumbers: String
+    val labelGroupLatin: String
+    val labelGroupCyrillic: String
+
     /** The labels dialog's sample for a scheme that doesn't fit: `up to 5x5`. */
     fun labelLimit(side: Int): String
     val layoutRightHanded: String

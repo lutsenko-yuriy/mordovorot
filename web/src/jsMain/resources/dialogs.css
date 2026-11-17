@@ -122,8 +122,61 @@
     }
 }
 
-/* The Tile labels picker (GH-139): the mark, the name, then the sample row in a fixed-width face. */
-/* A sample too wide to share the row (6x6, GH-160) wraps under the name rather than squeezing it. */
+/* The Tile labels picker (GH-139, GH-323): a strip previewing the marked scheme, then the three groups, one open at a time. */
+.dialog .label-preview {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.dialog .label-preview .swatch {
+    min-width: 2.6em;
+    padding: 0.5em 0.4em;
+    text-align: center;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-weight: 700;
+    color: var(--ink);
+    box-shadow: inset 0 0 0 2px var(--button);
+    border-radius: 6px;
+}
+
+.dialog .label-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* A header is a disclosure button: a triangle, pointing down while its group is open. */
+.dialog .label-group .group-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    background: transparent;
+    color: var(--ink);
+    font-weight: 700;
+    box-shadow: inset 0 0 0 2px var(--frame);
+    hyphens: auto;
+    overflow-wrap: anywhere;
+    text-align: left;
+}
+
+.dialog .label-group .group-header::before {
+    content: "";
+    flex: none;
+    border: 0.35em solid transparent;
+    border-left-color: currentColor;
+}
+
+.dialog .label-group.open .group-header::before {
+    border-left-color: transparent;
+    border-top-color: currentColor;
+    margin-top: 0.35em;
+}
+
+.dialog .label-group .group-header:hover {
+    background: var(--frame);
+}
+
 .dialog .choices.labels button {
     display: flex;
     flex-wrap: wrap;
@@ -151,14 +204,14 @@
 
 .dialog .choices.labels .name {
     flex: 1;
-    white-space: nowrap;
+    hyphens: auto;
+    overflow-wrap: anywhere;
 }
 
-.dialog .choices.labels .sample {
+.dialog .choices.labels .limit {
     margin-left: auto;
-    font-family: ui-monospace, Menlo, Consolas, monospace;
     color: var(--muted);
-    white-space: pre;
+    white-space: nowrap;
 }
 
 /* The Controls dialog's groups (GH-171). */
@@ -198,7 +251,7 @@
 }
 
 /* Grey is too faint on a hovered row's background (GH-165). */
-.dialog .choices.labels button:hover .sample {
+.dialog .choices.labels button:hover .limit {
     color: var(--ink);
 }
 

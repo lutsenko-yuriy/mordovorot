@@ -4,13 +4,14 @@ import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import viewmodel.KeyboardLayout
+import viewmodel.TileLabelGroup
 import viewmodel.TileLabels
 
 /** GH-163: each dialog's control focused on open, and its title, the dialog's accessible name. */
 class DialogFocusTest {
     private val dialogs = texts().dialogs
 
-    private val labels = WebDialog.Labels(listOf(LabelOption(TileLabels.PAIRS, "Pairs", listOf("11"))), TileLabels.PAIRS)
+    private val labels = WebDialog.Labels(listOf(LabelOption(TileLabels.PAIRS, "Pairs")), TileLabels.PAIRS)
     private val saves = listOf(SaveEntry("foo", "foo (4x4)"))
     private val controls = WebDialog.Controls(KeyboardLayout.LEFT_HANDED, emptyList())
 
@@ -53,13 +54,21 @@ class DialogFocusTest {
     }
 
     @Test
+    fun `an open group focuses its first scheme that fits when it holds no mark`() {
+        val options = TileLabels.entries.map { LabelOption(it, it.title, if (it == TileLabels.LETTERS) "up to 5x5" else null) }
+        assertEquals(Focus.Label(TileLabels.LETTER_PAIRS), defaultFocus(WebDialog.Labels(options, TileLabels.NUMBERS, open = TileLabelGroup.LATIN)))
+        assertEquals(Focus.Label(TileLabels.CYRILLIC_LETTERS), defaultFocus(WebDialog.Labels(options, TileLabels.NUMBERS, open = TileLabelGroup.CYRILLIC)))
+        assertEquals(Focus.Label(TileLabels.PAIRS), defaultFocus(WebDialog.Labels(options, TileLabels.PAIRS)))
+    }
+
+    @Test
     fun `focus keys are distinct`() {
         val all = listOf(
             Focus.SizeChoice(3), Focus.SizeChoice(4), Focus.SaveName, Focus.SaveChoice(0), Focus.SaveChoice(1), Focus.DeleteSave(0), Focus.DeleteSave(1), Focus.DeleteCancel, Focus.DialogCancel, Focus.Repair,
             Focus.No, Focus.NewButton, Focus.SaveButton, Focus.LoadButton, Focus.LabelsButton, Focus.GiveUpRow,
             Focus.ReplayNext, Focus.ReplayPrev, Focus.ReplayRestart, Focus.PageStart, Focus.ControlsButton, Focus.Board,
             Focus.UpdateLink, Focus.UpdateCancel,
-        ) + TileLabels.entries.map { Focus.Label(it) } +
+        ) + TileLabels.entries.map { Focus.Label(it) } + TileLabelGroup.entries.map { Focus.LabelGroup(it) } +
             KeyboardLayout.entries.map { Focus.LayoutOption(it) } +
             Arrow.entries.flatMap { arrow -> (0 until 6).map { Focus.ArrowButton(arrow, it) } }
         assertEquals(all.size, all.map { it.key }.toSet().size)

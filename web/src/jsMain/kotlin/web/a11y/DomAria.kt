@@ -28,17 +28,20 @@ internal fun asRadioGroupLabelledBy(group: Element, titleId: String) {
     group.setAttribute("aria-labelledby", titleId)
 }
 
-/** [button] as a radio. With [rovingTabStop] only the [checked] one is a Tab stop. An [unavailable]
- *  one is disabled. */
-internal fun asRadio(button: Element, checked: Boolean, rovingTabStop: Boolean = false, unavailable: Boolean = false) {
+/** [button] as a radio. [tabStop] makes it the group's one Tab stop (`true`) or none (`false`), as the arrows
+ *  move the mark (GH-171); `null` leaves it a Tab stop like any button. An [unavailable] one is disabled. */
+internal fun asRadio(button: Element, checked: Boolean, tabStop: Boolean? = null, unavailable: Boolean = false) {
     button.setAttribute("role", "radio")
     button.setAttribute("aria-checked", checked.toString())
-    if (rovingTabStop) button.setAttribute("tabindex", if (checked) "0" else "-1")
+    if (tabStop != null) button.setAttribute("tabindex", if (tabStop) "0" else "-1")
     if (unavailable) {
         button.setAttribute("disabled", "")
         button.setAttribute("aria-disabled", "true")
     }
 }
+
+/** [header] as the button that opens a group of options (GH-323); its group is [expanded] while open. */
+internal fun asDisclosure(header: Element, expanded: Boolean) = header.setAttribute("aria-expanded", expanded.toString())
 
 /** [button] as a check box, which its text names (GH-267); an [unavailable] one is disabled (GH-272). A button rather than a native check box: the page is rebuilt every
  *  frame, so a native one would lose its focus and state, as radios would (GH-139). */

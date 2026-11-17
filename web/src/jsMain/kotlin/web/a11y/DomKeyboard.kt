@@ -51,7 +51,8 @@ private fun moveMark(key: KeyboardEvent) {
         else -> return
     }
     val radio = document.activeElement as? HTMLElement ?: return
-    val options = radio.closest(".radios")?.querySelectorAll("[role=radio]")?.asList()?.filterIsInstance<HTMLElement>() ?: return
+    val options = radio.closest("[role=radiogroup]")?.querySelectorAll("[role=radio]:not([disabled])")?.asList()?.filterIsInstance<HTMLElement>() ?: return
+    if (radio !in options) return
     key.preventDefault()
     options[(options.indexOf(radio) + step + options.size) % options.size].click()
 }

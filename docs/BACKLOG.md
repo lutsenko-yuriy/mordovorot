@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-_(nothing in progress)_
+- GH-323: Group the tile labels by alphabet in the Tile labels dialog (WU0/2 merged; WU1 in review)
 
 ---
 
