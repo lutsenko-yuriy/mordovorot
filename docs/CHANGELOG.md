@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.53.1] — 2026-11-17 (PR #334 merged)
+
+### Added
+
+- [wip] [app] (PR #334) GH-332: the alphabets of the letter tile labels, which letters a board uses, and the alphabet hint's screen view and texts, not shown yet (WU1 of 2; the Hint button and its dialog follow in WU2).
+
 ## [0.53.0] — 2026-11-17 (PR #330 merged)
 
 ### Added
