@@ -119,11 +119,11 @@
     color: var(--ink);
 }
 
-/* GH-332: the alphabet hint, the whole alphabet on a grid of 7 columns whatever its length. A letter in use has an outline in normal type; the rest are greyed. */
+/* GH-332: the alphabet hint, the whole alphabet on a grid of 7 columns whatever its length, each letter a tile in the app's own colours, not the board's. A letter in use is filled like a button; the rest are quiet tiles with greyed letters. */
 .dialog .alphabet {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
+    gap: 8px;
     margin: 4px 0;
 }
 
@@ -131,13 +131,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 2.2em;
-    border-radius: 6px;
+    aspect-ratio: 1;
+    border-radius: 16%;
+    background: var(--page);
+    font-size: 1.15rem;
     font-weight: 700;
     color: var(--muted);
 }
 
 .dialog .alphabet .letter.used {
-    color: var(--ink);
-    box-shadow: inset 0 0 0 2px var(--button);
+    background: var(--button);
+    color: var(--button-ink);
+    box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12);
 }
