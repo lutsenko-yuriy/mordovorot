@@ -775,7 +775,7 @@ Planned in `/analyze`; the web client uses `NoopAnalyticsService` until an SDK i
 No new events: the dialog changes nothing in the game.
 
 Changes to existing entries:
-- `dialog_cancelled.dialog` takes a new value, `alphabet_hint`, if Escape on the dialog fires the event as it does on the others (to be checked against the code in `/plan`).
+- `dialog_cancelled.dialog` takes a new value, `alphabet_hint`: the dialog's Escape (and OK) sends it with `via`, as Share's close does (decided in `/plan`).
 - Tutorial's key moves from 8 to 9, so `screen_replay_save_dialog.opened_from: shortcut` now means 9. The data is unchanged.
 
-Not tracked: a press on the dimmed button on a number scheme (it does nothing), how the dialog was closed, which letters are greyed or used (both follow from `labels` and `board_size`), time spent open, and which letters the player looked at.
+Not tracked: a press on the dimmed button on a number scheme (it does nothing), which letters are greyed or used (both follow from `labels` and `board_size`), time spent open, and which letters the player looked at.
