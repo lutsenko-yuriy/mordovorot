@@ -49,6 +49,9 @@ interface PageTexts {
     val labelGroupLatin: String
     val labelGroupCyrillic: String
 
+    /** A scheme's row inside a letter group, whose header already names the alphabet (GH-323): `Letters`; its pair is `Pairs`. */
+    val labelRowLetters: String
+
     /** The labels dialog's sample for a scheme that doesn't fit: `up to 5x5`. */
     fun labelLimit(side: Int): String
     val layoutRightHanded: String

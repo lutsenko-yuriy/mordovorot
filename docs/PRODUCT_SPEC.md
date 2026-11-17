@@ -522,7 +522,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   `Kyrillische Buchstaben` and `Числа` / `Числа с 0` / `Латинские буквы` / `Кириллические буквы` in German and Russian. Only the group
   in use is open when the dialog opens; pressing another header opens that group (and focus goes to its marked scheme,
   else its first that fits the board) and closes the open one. Pressing the open group's header does nothing. A group
-  lists its two schemes, a single one and its pair, side by side by name only, the marked one `●` and the rest `○`; the mark can sit in a closed
+  lists its two schemes, a single one and its pair, side by side, named `Numbers` or `Letters` and `Pairs` in every group (`Zahlen` / `Buchstaben` / `Paare`, `Числа` / `Буквы` / `Пары`), since the header names the alphabet; the full names (`Cyrillic letter pairs`, `Numbers from 0`) stay in the share prompt, messages and analytics, the marked one `●` and the rest `○`; the mark can sit in a closed
   group and survives OK. Opening a group sends no event. In a group the arrow keys move the mark, and Tab visits the three
   headers and the open group's one radio. Picking a row marks it; OK
   relabels the board at once, Cancel changes nothing. On the web the board already shows the
@@ -533,9 +533,9 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   the remembered preference; then Numbers. A new game goes back to the preference.
 - **Cyrillic letters (GH-313)** work as Letters do: 28 labels fit up to 5x5, so on 6x6 and larger its row is dimmed, reads `up to 5x5`
   (`bis 5x5`, `до 5x5`), Numbers stand in and the preference is kept. A 6x6 save with Cyrillic letters asks for labels with its own
-  message (28 letters, 36 tiles), the `letters_save` source. **Cyrillic letter pairs** fit every size up to 9x9. The rows are named
+  message (28 letters, 36 tiles), the `letters_save` source. **Cyrillic letter pairs** fit every size up to 9x9. The schemes are named
   `Cyrillic letters` / `Cyrillic letter pairs`, `Kyrillische Buchstaben` / `Kyrillische Buchstabenpaare` and `Кириллические буквы` /
-  `Кириллические пары` and sit after Letter pairs, so the dialog has eight rows. They work like the others in the tutorial, saves
+  `Кириллические пары` and sit after Letter pairs, in their own group, so the dialog has eight schemes. They work like the others in the tutorial, saves
   and share links (an old build opens a Cyrillic save with its own labels and a labelled link as a plain board). Screen readers say
   each letter with a Russian spelling word, `АБ` as `Анна Борис`, in every language. Cyrillic pairs have a smaller font cap at
   larger text sizes, as the widest pair (`ЖЖ`) is wider than any Latin one.

@@ -57,7 +57,7 @@ internal class WebLabelsDialog(
     private fun dialog(selected: TileLabels, message: String?): WebDialog.Labels {
         val side = viewModel.squareSide()
         return WebDialog.Labels(
-            TileLabels.entries.map { LabelOption(it, it.title, if (it.fits(side)) null else it.limitText) },
+            TileLabels.entries.map { LabelOption(it, TileLabelGroup.of(it).rowTitle(it), if (it.fits(side)) null else it.limitText) },
             selected,
             message,
         )

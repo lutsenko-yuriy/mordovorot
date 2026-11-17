@@ -175,7 +175,7 @@ class WebLabelGroupsScenarioTest {
 
     // Layout and names
     @Test
-    fun `each group lists a single scheme and its paired one`() = webTest {
+    fun `every group names its two schemes Numbers or Letters, and Pairs`() = webTest {
         val page = WebHarness(backgroundScope).startOn()
         page.openDialog()
 
@@ -187,9 +187,9 @@ class WebLabelGroupsScenarioTest {
         assertEquals(
             listOf(
                 listOf("Numbers", "Pairs"),
-                listOf("Numbers from 0", "Pairs from 0"),
-                listOf("Letters", "Letter pairs"),
-                listOf("Cyrillic letters", "Cyrillic letter pairs"),
+                listOf("Numbers", "Pairs"),
+                listOf("Letters", "Pairs"),
+                listOf("Letters", "Pairs"),
             ),
             titles,
         )

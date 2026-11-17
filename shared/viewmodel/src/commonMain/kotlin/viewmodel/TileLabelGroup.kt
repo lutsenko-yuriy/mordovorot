@@ -20,6 +20,16 @@ enum class TileLabelGroup(val schemes: List<TileLabels>) {
         }
     }
 
+    /** [scheme]'s row inside this group: the group's header names the alphabet, so a row only says single or paired,
+     *  `Numbers` or `Letters` and `Pairs` in every group. */
+    fun rowTitle(scheme: TileLabels): String = with(texts().page) {
+        when {
+            scheme == schemes.last() -> labelPairs
+            this@TileLabelGroup == NUMBERS || this@TileLabelGroup == NUMBERS_FROM_0 -> labelNumbers
+            else -> labelRowLetters
+        }
+    }
+
     companion object {
         fun of(labels: TileLabels): TileLabelGroup = entries.first { labels in it.schemes }
     }

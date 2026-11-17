@@ -304,6 +304,7 @@ page.labelNumbers = Numbers
 page.labelNumbersFrom0 = Numbers from 0
 page.labelPairs = Pairs
 page.labelPairsFrom0 = Pairs from 0
+page.labelRowLetters = Letters
 page.language = Language
 page.layoutLeftHanded = Left-handed
 page.layoutRightHanded = Right-handed

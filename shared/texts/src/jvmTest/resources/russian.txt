@@ -304,6 +304,7 @@ page.labelNumbers = Числа
 page.labelNumbersFrom0 = Числа с 0
 page.labelPairs = Пары
 page.labelPairsFrom0 = Пары с 0
+page.labelRowLetters = Буквы
 page.language = Язык
 page.layoutLeftHanded = Для левши
 page.layoutRightHanded = Для правши

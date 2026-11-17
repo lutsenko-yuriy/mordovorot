@@ -142,7 +142,7 @@ class WebSixBySixScenarioTest {
 
         page.game.labels.open()
         val dialog = page.state.dialog as WebDialog.Labels
-        assertEquals(LabelOption(TileLabels.LETTERS, pageTexts.labelLetters, pageTexts.labelLimit(5)), dialog.options[4])
+        assertEquals(LabelOption(TileLabels.LETTERS, pageTexts.labelRowLetters, pageTexts.labelLimit(5)), dialog.options[4])
         assertEquals(null, dialog.options[5].limit)
         assertTrue(dialog.options.filter { it.labels != TileLabels.LETTERS && it.labels != TileLabels.CYRILLIC_LETTERS }.all { it.available })
         page.game.labels.onSelected(TileLabels.LETTERS)
