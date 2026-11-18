@@ -279,7 +279,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── Slides.kt        # The eased slide after an arrow shift, a drag release or a replay shift
 │   │                    # (GH-126), drawn by WrapPositions
 │   ├── MessageFeed.kt   # Chat-like timing for Mordie's lines: the old one rises out, then the new rises in
-│   ├── LabelWave.kt     # GH-342: timing of the label wave (600 ms on the board, a 40 ms step in the preview, 150 ms per label) and the group slide (250 ms), and the frame rules that start them (`WebState.labelWaveFrom`, `labelGroupSlideFrom`)
+│   ├── LabelWave.kt     # GH-342: timing of the label wave (600 ms on the board, a 40 ms step in the preview, 150 ms per label) and the group slide (250 ms), and the frame rules that start them (`WebState.labelWaveFrom`: any change of scheme, GH-343, arrive-only while `WebState.opening` or when the side changed; `previewWaveFrom`, `labelGroupSlideFrom`)
 │   ├── Launch.kt        # startWebGame: the page's wiring (PlatformAnalyticsService "web" wrapped
 │   │                    # by InputMethodAnalyticsService "rich_ui"), app_launched {mode, layout,
 │   │                    # app_version, host} (GH-111) and tile_labels (GH-139); webBoard(): the

@@ -249,9 +249,9 @@ private fun sideOf(tiles: IntArray) = generateSequence(1) { it + 1 }.first { it 
 /** [tiles] as the page shows them: 1-based. */
 internal fun shown(tiles: IntArray) = tiles.map { it + 1 }
 
-/** The frame without its one-time focus (GH-163), announcement (GH-166) and slide, for comparing what
+/** The frame without its one-time focus (GH-163), announcement (GH-166) and slide, and the page's opening flag (GH-343), for comparing what
  *  two frames show. */
-internal fun WebState.unfocused() = copy(focus = null, announcement = null, slide = null)
+internal fun WebState.unfocused() = copy(focus = null, announcement = null, slide = null, opening = false)
 
 /** The fast solver's answer of [n] moves, not proven shortest (GH-225: the only kind on 6x6 and up). */
 internal fun fastAnswer(n: Int) = SearchProgress(

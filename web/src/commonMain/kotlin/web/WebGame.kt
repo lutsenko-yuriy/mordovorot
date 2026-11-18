@@ -11,6 +11,7 @@ import viewmodel.GiveUpButton
 import viewmodel.PointerShift
 import viewmodel.SessionKeyboardLayout
 import viewmodel.ShiftSource
+import viewmodel.TileLabels
 import viewmodel.UnsolvableSaveChoice
 import web.a11y.Announcements
 import web.drag.Axis
@@ -52,6 +53,10 @@ class WebGame internal constructor(
     private val requests = WebRequestRouter(this)
     private val dragging = WebDragFlows(this, viewModel)
     internal var status: String? = null
+    /** The page is opening (GH-343): its first board, drawn before anything is restored or opened, is still on screen, up to the first frame that shows another one. */
+    private var opening = true
+    /** The first frame's board: its side, tiles and labels. */
+    private var firstBoard: Triple<Int, List<Int>, TileLabels>? = null
     /** The toolbar action or startup restore under way, if any. */
     private var flow: Job? = null
     /** Where focus goes once [flow] ends: back to the button that started it, unless it moves on. */
@@ -68,10 +73,14 @@ class WebGame internal constructor(
         render()
         scope.launch { for (request in viewModel.uiRequests) requests.handle(request) }
         flow = scope.launch {
-            if (tutorial.shouldStart()) tutorial.begin() else startup()
-            share.openPending()
-            dialogs.sayAskedNewGame()
-            render(focus = onBoard ?: Focus.PageStart)
+            try {
+                if (tutorial.shouldStart()) tutorial.begin() else startup()
+                share.openPending()
+                dialogs.sayAskedNewGame()
+                render(focus = onBoard ?: Focus.PageStart)
+            } finally {
+                opening = false
+            }
         }
     }
 
@@ -253,8 +262,14 @@ class WebGame internal constructor(
     internal fun scrollSteps(lines: Int) = renderer.scrollSteps(lines)
 
     internal fun render(slide: LineOffset? = null, focus: Focus? = null) {
-        renderer.render(frame(slide, focus))
+        val shown = frame(slide, focus)
+        renderer.render(shown)
         saying = null
+        if (opening) {
+            val board = Triple(shown.side, shown.tiles, shown.labels)
+            // The frame that first shows another board still arrives only: the labels have nothing to leave. Later ones wave as at any time.
+            if (firstBoard == null) firstBoard = board else if (board != firstBoard) opening = false
+        }
     }
 
     private fun frame(slide: LineOffset?, focus: Focus?): WebState {
@@ -293,6 +308,7 @@ class WebGame internal constructor(
             guidance = guidance,
             tutorialButton = tutorial.offered,
             alphabetHint = alphabetHint.button(),
+            opening = opening,
         )
     }
 

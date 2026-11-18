@@ -17,8 +17,6 @@ import web.previewWaveFrom
 /** GH-342: the label wave on the board and the preview strip, and the group slide in the Tile labels dialog. Each scenario reads the frames the page drew. */
 class WebLabelWaveScenarioTest {
 
-    private val LINKED_4X4 = intArrayOf(12, 1, 2, 3, 0, 5, 6, 7, 4, 9, 10, 11, 8, 13, 14, 15)
-
     /** The two latest frames, the one before and the one after the last action. */
     private fun WebHarness.lastTwo(): Pair<WebState, WebState> = frames.takeLast(2).let { it[0] to it[1] }
 
@@ -202,24 +200,6 @@ class WebLabelWaveScenarioTest {
     }
 
     // Where it does not play
-    // Legacy (GH-343): this asserts the behaviour GH-343 changes; WU1 retires it.
-    @Test
-    fun labelsChangedOutsideTheDialogDoNotWave() = webTest {
-        val linked = WebHarness(backgroundScope).startWithLink(4, LINKED_4X4, "pairs")
-        linked.game.share.onSharedLabelsAnswered(true)
-        assertTrue(linked.waves().isEmpty())
-
-        val page = WebHarness(backgroundScope).startOn()
-        page.saves.save("p", rotatedRow(4), 4, 0, labels = "pairs")
-        page.game.onLoad()
-        page.game.onLoadChosen("p")
-        assertEquals(TileLabels.PAIRS, page.state.labels)
-        page.game.onNew()
-        page.game.onSizeChosen(5)
-
-        assertTrue(page.waves().isEmpty())
-    }
-
     @Test
     fun theLoadPickerThatOpensTheSameDialogWaves() = webTest {
         val page = WebHarness(backgroundScope).startOn()

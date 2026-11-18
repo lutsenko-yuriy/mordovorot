@@ -60,17 +60,19 @@ internal fun asCell(tile: Element, playing: Boolean, gridCell: String?) = tile.a
     gridCell?.let { id = it }
 }
 
-/** [label] as the two spans of a wave: the new one arriving, the old one leaving (never read). The new one is [read] when it is the tile's text. */
-internal fun waveSpans(label: String, waving: Waving, read: Boolean): List<Element> = listOf(
+/** [label] as the spans of a wave: the new one arriving, and the old one leaving (never read) unless there is none (GH-343). The new one is [read] when it is the tile's text. */
+internal fun waveSpans(label: String, waving: Waving, read: Boolean): List<Element> = listOfNotNull(
     element("span", "label-in wave").apply {
         textContent = label
         setAttribute("style", "animation-delay: ${waving.arriveMs}ms")
         if (!read) setAttribute("aria-hidden", "true")
     },
-    hiddenFromReaders(element("span", "label-out wave").apply {
-        textContent = waving.old
-        setAttribute("style", "animation-delay: ${waving.leaveMs}ms")
-    }),
+    waving.old?.let { old ->
+        hiddenFromReaders(element("span", "label-out wave").apply {
+            textContent = old
+            setAttribute("style", "animation-delay: ${waving.leaveMs}ms")
+        })
+    },
 )
 
 /** Writes [label] on [tile], if it changed: seen, and during play heard as [Announcements.spoken] has

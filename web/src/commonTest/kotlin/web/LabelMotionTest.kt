@@ -82,16 +82,33 @@ class LabelMotionTest {
     }
 
     @Test
-    fun aWaveIsDroppedWhenTheLabelsChangeOutsideTheDialog() {
+    fun labelsChangedOutsideTheDialogStartAWaveFromTheRunningOnesTarget() {
         startedLetters()
         now = 100.0
         val closed = frame(TileLabels.LETTERS, dialog = false)
         motion.start(letters, closed, still = false)
-        assertNotNull(motion.tile(0))
+        val running = assertNotNull(motion.tile(0)).id
 
         motion.start(closed, frame(TileLabels.PAIRS, dialog = false), still = false)
 
-        assertNull(motion.tile(0))
+        val next = assertNotNull(motion.tile(0))
+        assertEquals(closed.tileTexts[0], next.old)
+        assertTrue(next.id != running)
+        assertEquals(0.0, next.leaveMs, 1e-9)
+    }
+
+    @Test
+    fun aPageStillOpeningWavesTheNewLabelsInWithNothingToLeave() {
+        val opening = frame(TileLabels.LETTERS, dialog = false).copy(opening = true)
+        motion.start(null, frame(TileLabels.NUMBERS, dialog = false), still = false)
+
+        motion.start(frame(TileLabels.NUMBERS, dialog = false), opening, still = false)
+
+        for (i in 0 until 4) {
+            val waving = assertNotNull(motion.tile(i), "tile $i")
+            assertNull(waving.old)
+            assertEquals(LabelWave.board(4).arrivesAt(i), waving.arriveMs, 1e-9)
+        }
     }
 
     @Test

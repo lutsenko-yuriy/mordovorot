@@ -2,7 +2,7 @@ package web
 
 import viewmodel.TileLabelGroup
 
-/** GH-342: the timing of the label wave in the Tile labels dialog, and the frame rules that start it and the group slide.
+/** GH-342, GH-343: the timing of the label wave, and the frame rules that start it and the group slide.
  *  A wave runs through the tiles in reading order: tile i's old label leaves over [MOTION_MS] from `i * step`, and its new
  *  label arrives from `(i + 1) * step`, as tile i + 1's old label starts to leave. */
 object LabelWave {
@@ -41,10 +41,15 @@ object LabelWave {
     fun slideOver(elapsedMs: Double): Boolean = elapsedMs >= GROUP_MS
 }
 
-/** The board's old texts when this frame starts a label wave from [before]: the dialog was open and the same tiles now read differently.
- *  A row picked and Cancel or Escape do, OK doesn't (the board already shows the marked scheme), and neither does any frame without the dialog before it. */
-internal fun WebState.labelWaveFrom(before: WebState): List<String>? =
-    before.takeIf { it.dialog is WebDialog.Labels && it.side == side && it.tiles == tiles }?.tileTexts?.takeIf { it != tileTexts }
+/** The board's old texts when this frame starts a label wave from [before]: the scheme of the labels changed, whatever changed it (GH-343).
+ *  A row picked, Cancel or Escape, a share link's prompt opening or No, a new game or a load do; OK and Yes don't (the board already shows the labels).
+ *  Each text is `null` when there is no earlier board to leave, a page still [opening] or a board of another size: the labels only arrive.
+ *  `null` when nothing starts, also for a drag under way. */
+internal fun WebState.labelWaveFrom(before: WebState): List<String?>? {
+    if (before.labels == labels || drag != null) return null
+    val old: List<String?> = if (opening || before.side != side) List(tiles.size) { null } else before.tileTexts
+    return old.takeIf { olds -> olds.indices.any { olds[it] != tileTexts[it] } }
+}
 
 /** The preview strip's old texts when this frame starts its wave: the dialog stays open and the marked scheme's first labels change. */
 internal fun WebState.previewWaveFrom(before: WebState): List<String>? {

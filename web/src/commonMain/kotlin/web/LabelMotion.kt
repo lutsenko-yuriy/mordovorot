@@ -3,13 +3,13 @@ package web
 import viewmodel.TileLabelGroup
 import web.a11y.Waving
 
-/** GH-342: the label wave and the group slide running in the Tile labels dialog, which the page's per-frame rebuild must not restart.
+/** GH-342, GH-343: the label wave on the board and in the Tile labels dialog's preview, and the dialog's group slide, which the page's per-frame rebuild must not restart.
  *  Nothing here animates by itself: each element the page builds while one runs gets a CSS `animation-delay` of its start minus the time
  *  elapsed (negative once under way), so a rebuilt page picks up where the last one was. A new change while one runs replaces it,
  *  and its "from" is the running one's target, which completes the running one at once. [clock] is the time in ms. */
 internal class LabelMotion(private val clock: () -> Double) {
 
-    private class Wave(val to: List<String>, val tiles: List<Int>?, val old: List<String>, val timing: LabelWave.Timing, val startedAt: Double, val id: Int)
+    private class Wave(val to: List<String>, val tiles: List<Int>?, val old: List<String?>, val timing: LabelWave.Timing, val startedAt: Double, val id: Int)
 
     private class Slide(val from: TileLabelGroup, val startedAt: Double)
 
