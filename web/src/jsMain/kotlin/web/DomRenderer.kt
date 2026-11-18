@@ -249,8 +249,8 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         settling = true
         window.setTimeout({
             settling = false
-            // Without the one-time announcement and focus, which were for the frame that started the slide.
-            shown?.let { render(it.copy(announcement = null, focus = null)) }
+            // Only while Labels is open (a closed dialog has no slide left to settle), and without the frame's one-time announcement, focus and shift slide.
+            shown?.takeIf { it.dialog is WebDialog.Labels }?.let { render(it.copy(announcement = null, focus = null, slide = null)) }
         }, ms.toInt() + SETTLE_MARGIN_MS)
     }
 

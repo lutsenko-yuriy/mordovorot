@@ -145,7 +145,7 @@
     box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12);
 }
 
-/* GH-342: the groups slide. The group that was open slides shut as the new one slides open, both over the same time and curve, so together they are one body tall and the dialog's height stays put; the headers between them glide by that height. While they slide the gap under a header moves inside the body (the inner's top padding), so it opens and shuts with it. The base style is the end state, so with animations off (reduced motion, GH-162) the groups change at once. */
+/* GH-342: the groups slide. The group that was open slides shut as the new one slides open, both over the same time and curve, so together they are one body tall and the dialog's height stays put; the headers between them glide by that height. While they slide the gap under a header moves inside the body (the rows' top margin), so it opens and shuts with it. The base style is the end state, so with animations off (reduced motion, GH-162) the groups change at once. */
 .dialog .label-group.sliding {
     gap: 0;
 }

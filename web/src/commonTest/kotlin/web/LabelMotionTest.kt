@@ -186,9 +186,13 @@ class LabelMotionTest {
 
     @Test
     fun closingTheDialogDropsThePreviewAndTheSlide() {
-        motion.start(null, numbers, still = false)
-        motion.start(numbers, frame(TileLabels.NUMBERS, open = TileLabelGroup.LATIN), still = false)
-        motion.start(frame(TileLabels.NUMBERS, open = TileLabelGroup.LATIN), frame(TileLabels.NUMBERS, dialog = false), still = false)
+        startedLetters()
+        val pressed = frame(TileLabels.LETTERS, open = TileLabelGroup.CYRILLIC)
+        motion.start(letters, pressed, still = false)
+        assertNotNull(motion.swatch(0))
+        assertNotNull(motion.leavingGroup())
+
+        motion.start(pressed, frame(TileLabels.LETTERS, dialog = false), still = false)
 
         assertNull(motion.leavingGroup())
         assertNull(motion.swatch(0))
