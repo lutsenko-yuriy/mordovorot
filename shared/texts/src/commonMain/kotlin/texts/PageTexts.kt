@@ -9,6 +9,7 @@ interface PageTexts {
     val language: String
 
     val toolbarNew: String
+    val toolbarRestart: String
     val toolbarSave: String
     val toolbarLoad: String
     val toolbarLabels: String

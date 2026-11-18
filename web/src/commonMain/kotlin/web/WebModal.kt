@@ -34,7 +34,7 @@ internal class WebModal(private val render: (focus: Focus?) -> Unit) {
         val dialog = open ?: return
         val cancel: Any? = when (dialog.shown) {
             is WebDialog.Unsolvable -> return
-            WebDialog.ReplaySave -> ReplaySaveChoice.CANCEL
+            WebDialog.ReplaySave, WebDialog.RestartSave -> ReplaySaveChoice.CANCEL
             WebDialog.GiveUp, is WebDialog.OpenShared, is WebDialog.SharedLabels, is WebDialog.DeleteSave, WebDialog.Update -> false
             is WebDialog.LinkRejected, is WebDialog.Share, is WebDialog.AlphabetHint -> Unit
             is WebDialog.Load -> LoadPick.Cancel

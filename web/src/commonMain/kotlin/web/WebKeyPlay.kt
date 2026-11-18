@@ -37,6 +37,7 @@ internal class WebKeyPlay(
             }
             is PageKey.Solution -> onSolutionKey(key.key)
             PageKey.ReadBoard -> game.readBoard()
+            PageKey.Restart -> game.restart.onRestart("shortcut", openerFor(from))
             null -> return false
         }
         return true
@@ -72,12 +73,15 @@ internal class WebKeyPlay(
         return Announcements.withNow(words, viewModel.tileLabels().label(viewModel.boardState()[at.row * side + at.col], side))
     }
 
+    /** Where focus goes back to after a dialog a key opened: the control keyed [from]. */
+    private fun openerFor(from: String?) = when (from) {
+        null -> Focus.PageStart
+        Focus.Board.key -> Focus.Board
+        else -> Focus.Restore(from)
+    }
+
     private fun onDigit(button: ToolbarButton, from: String?) {
-        val opener = when (from) {
-            null -> Focus.PageStart
-            Focus.Board.key -> Focus.Board
-            else -> Focus.Restore(from)
-        }
+        val opener = openerFor(from)
         // The tutorial's panel has no other buttons.
         if (game.tutorial.running && button != ToolbarButton.LABELS && button != ToolbarButton.CONTROLS) return
         when (button) {

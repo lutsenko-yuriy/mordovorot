@@ -29,6 +29,8 @@ sealed class Focus(override val key: String) : FocusTarget {
     /** The save question's Save and Don't save, before the tutorial replays (GH-289); its Cancel is [DialogCancel]. */
     data object ReplaySaveSave : Focus("replay-save")
     data object ReplayDontSave : Focus("replay-dont-save")
+    /** The toolbar's `[ Restart ]` (GH-349). */
+    data object RestartButton : Focus("restart")
     /** The Give Up row's `[ Hint ]` (GH-332). */
     data object AlphabetHintButton : Focus("alphabet-hint")
     /** The Give Up row's `[ Tutorial ]` (GH-289). */
@@ -104,7 +106,7 @@ fun defaultFocus(dialog: WebDialog): Focus = when (dialog) {
     is WebDialog.SharedLabels -> Focus.SharedLabelsYes
     is WebDialog.Share -> Focus.CopyLink
     WebDialog.Update -> Focus.UpdateCancel
-    WebDialog.ReplaySave -> Focus.DialogCancel
+    WebDialog.ReplaySave, WebDialog.RestartSave -> Focus.DialogCancel
     is WebDialog.AlphabetHint -> Focus.DialogOk
 }
 
@@ -135,7 +137,7 @@ val WebDialog.title: String get() = with(texts().dialogs) {
         is WebDialog.SharedLabels -> sharedLabelsTitle(labels.title)
         is WebDialog.Share -> shareTitle
         WebDialog.Update -> updateTitle
-        WebDialog.ReplaySave -> replaySaveTitle
+        WebDialog.ReplaySave, WebDialog.RestartSave -> replaySaveTitle
         is WebDialog.AlphabetHint -> alphabetTitle
     }
 }

@@ -6,6 +6,7 @@ import kotlinx.dom.clear
 import org.w3c.dom.Element
 import org.w3c.dom.HTMLElement
 import texts.texts
+import viewmodel.RestartButton
 import web.a11y.DomAnnouncer
 import web.a11y.applyFocus
 import web.a11y.focusKey
@@ -155,6 +156,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
             state.guidance?.let { guidancePanel(it, state) { game }.also { panel -> toolbar = panel } } ?: element("div", "toolbar").also { toolbar = it }.apply {
                 append(
                     toolbarButton(texts().page.toolbarNew, ToolbarButton.NEW, Focus.NewButton, state) { game.onNew() },
+                    *listOfNotNull(restartButton(state)).toTypedArray(),
                     toolbarButton(texts().page.toolbarSave, ToolbarButton.SAVE, Focus.SaveButton, state) { game.onSave() },
                     toolbarButton(texts().page.toolbarLoad, ToolbarButton.LOAD, Focus.LoadButton, state) { game.onLoad() },
                     toolbarButton(texts().page.toolbarLabels, ToolbarButton.LABELS, Focus.LabelsButton, state) { game.labels.open() },
@@ -167,6 +169,12 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
             },
             text("status", state.status ?: ""),
         )
+    }
+
+    /** `[ Restart R ]` after `[ New ]` (GH-349), dimmed until a shift and disabled while a dialog is open; none when hidden. */
+    private fun restartButton(state: WebState) = state.restart.takeIf { it != RestartButton.HIDDEN }?.let { shownAs ->
+        button(texts().page.toolbarRestart) { game.restart.onRestart("button") }.focusKey(Focus.RestartButton).withKey(state.restartKey)
+            .also { it.disabled = state.dialog != null || shownAs == RestartButton.DIMMED }
     }
 
     /** The focused control's key before a redraw. While a dialog shows, focus on no keyed control means it

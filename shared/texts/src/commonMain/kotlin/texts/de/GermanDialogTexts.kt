@@ -46,6 +46,7 @@ object GermanDialogTexts : DialogTexts {
     override val updateMessage = "Deine Züge seit dem letzten Speichern gehen verloren."
     override val sharedLabelsMessage = "Nur für dieses Spiel: Das nächste neue Spiel nutzt wieder deine Beschriftungen."
     override val replaySaveMessage = "Das Tutorial ersetzt dein aktuelles Spiel."
+    override val restartSaveMessage = "Der Neustart ersetzt dein aktuelles Spiel."
     override fun overwriteWarning(name: String) = "„$name“ gibt es schon. Speichern überschreibt es."
 
     override fun shareNoteSame(side: Int) = "Wer diesen Link öffnet, startet mit demselben ${side}x$side-Brett."

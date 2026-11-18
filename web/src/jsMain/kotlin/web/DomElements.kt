@@ -36,10 +36,13 @@ internal fun iconButton(label: String, svg: String, onClick: () -> Unit) =
     }
 
 /** Shows [digit], the key that presses this button: heard as the shortcut, not in its name (GH-171). */
-internal fun <E : Element> E.withDigit(digit: Int?): E = apply {
-    if (digit == null) return@apply
-    keyShortcut(this, digit.toString())
-    append(hiddenFromReaders(element("span").apply { textContent = " $digit" }))
+internal fun <E : Element> E.withDigit(digit: Int?): E = withKey(digit?.toString())
+
+/** Shows [key], the key that presses this button, as [withDigit] does (GH-349: Restart's is a letter). */
+internal fun <E : Element> E.withKey(key: String?): E = apply {
+    if (key == null) return@apply
+    keyShortcut(this, key)
+    append(hiddenFromReaders(element("span").apply { textContent = " $key" }))
 }
 
 /** Part of an IME composition: Safari ends it before the key's keydown, which then has only keyCode 229. */

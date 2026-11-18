@@ -253,7 +253,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
     It opens on the marked layout; Tab moves between the group, OK and Cancel, and the arrows move the mark.
     OK applies the layout and puts focus on the board; Cancel or Escape changes nothing and returns focus to the opener.
   - **Toolbar:** every button shows its digit: `[ New 1 ][ Save 2 ][ Load 3 ][ Labels 4 ]`,
-    `[ Share 7 ]`, `[ Give Up 5 ]` or `[ Mordie's solution 5 ]` with `[ Hint 8 ]` (GH-332) and `[ Tutorial 9 ]` (GH-289, which was 8 before GH-332) beside it, `[ Controls 6 ]`. The digits work wherever focus
+    `[ Restart R ]` (GH-349, a letter, no digit), `[ Share 7 ]`, `[ Give Up 5 ]` or `[ Mordie's solution 5 ]` with `[ Hint 8 ]` (GH-332) and `[ Tutorial 9 ]` (GH-289, which was 8 before GH-332) beside it, `[ Controls 6 ]`. The digits work wherever focus
     is, outside dialogs.
   - **Board:** one Tab stop, focused at page load, after a new, loaded or
     saved game and when a dialog opened from it closes. While it has focus, right-handed: W/A/S/D move the selected tile,
@@ -745,3 +745,18 @@ Web client only. The game is in English, German and Russian; every text the play
 - **Layout:** German and Russian words are longer, so on a phone the toolbar wraps to two rows in those languages (the board is about
   15% smaller on the smallest phones). The Give Up row, dialog buttons and tutorial bubble fit; all are checked at phone widths and at 150% text size.
 - **Analytics:** `language_changed` and `app_launched.language` (`docs/ANALYTICS_EVENTS.md`).
+
+### Feature 15 — Restart (GH-349)
+Puts the current game back to its starting arrangement, with the same size and tile labels.
+
+- **The button:** `[ Restart ]` (`[ Restart R ]` on a computer) sits in the toolbar right after `[ New ]`. It is live once something has moved and on a won board; dimmed at the start (and, for a loaded save whose start is unknown, until the first shift); hidden on Mordie's solution screen and during the tutorial; disabled while a dialog is open. Words: Restart / Neustart / Заново.
+- **R:** works wherever focus is outside dialogs, on a computer only, with the board's layout rule for non-Latin layouts; a held R is one press; Ctrl/Cmd+R is the browser's reload; nothing while dimmed or hidden or in the tutorial. On the solution screen with the board focused R is the replay's Restart.
+- **With moves made** it always opens `Save your game first?` (`The restart replaces the current game.`), `[ Cancel ] [ Don't save ] [ Save ]`, focus on Cancel, Escape is Cancel. There is no autosave of its own.
+  - **Cancel** changes nothing; focus goes back to the button, or where R was pressed.
+  - **Don't save** restarts. Unsaved progress is cleared.
+  - **Save** opens the Save dialog prefilled with the current name; the game restarts only once saved. A cancelled Save, a name with spaces or a failed save restarts nothing.
+- **A won board** restarts at once, with no question.
+- **What goes back:** the board to the start arrangement (a new game's, a share link's, the one Mordie started from in a loaded save, else the board as loaded with its loaded move count) and Moves to that count; a label wave's held move is dropped. The save name and tile labels are kept. The shift sources count from the restart.
+- **Mordie** keeps his search and any solution. His line goes back to the game's opening line until his next check (5 shifts), then his found line returns, with no new found event. After a won board his race resumes and `[ Give Up ]` is live again once he has an answer.
+- **Focus** after a restart: the board on a computer, `[ New ]` on touch.
+- **Analytics:** `screen_restart_save_dialog`, `game_restarted`, `dialog_cancelled` (`restart_save`), `screen_save_dialog.opened_from = restart`, `board_solved.restart_count` (`docs/ANALYTICS_EVENTS.md`).

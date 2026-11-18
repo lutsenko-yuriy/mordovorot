@@ -7,6 +7,7 @@ object GermanPageTexts : PageTexts {
     override val language = "Sprache"
 
     override val toolbarNew = "Neu"
+    override val toolbarRestart = "Neustart"
     override val toolbarSave = "Speichern"
     override val toolbarLoad = "Laden"
     override val toolbarLabels = "Beschriftung"

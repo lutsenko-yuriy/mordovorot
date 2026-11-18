@@ -113,6 +113,10 @@ interface GameViewModel {
     /** The toolbar's `[ Restart ]` (GH-349) - see [RestartButton]. */
     fun restartButton(): RestartButton
 
+    /** The moves a restart would discard (GH-349): those made since the game's start, which `game_restarted.move_count` and
+     *  `screen_restart_save_dialog.move_count` report. */
+    fun restartMoves(): Int
+
     /** Puts the game back to its starting arrangement, same size, labels and save name (GH-349), when
      *  [restartButton] is [RestartButton.LIVE]; otherwise does nothing. [openedFrom] is `button` or
      *  `shortcut`, [saveChoice] `not_asked`, `dont_save` or `saved`: the view asks about the save first. */

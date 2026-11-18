@@ -7,6 +7,7 @@ object RussianPageTexts : PageTexts {
     override val language = "Язык"
 
     override val toolbarNew = "Новая"
+    override val toolbarRestart = "Заново"
     override val toolbarSave = "Сохранить"
     override val toolbarLoad = "Загрузить"
     override val toolbarLabels = "Метки"

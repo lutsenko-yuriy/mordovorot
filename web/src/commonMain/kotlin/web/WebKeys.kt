@@ -18,6 +18,8 @@ sealed interface PageKey {
     data class Board(val key: BoardKey) : PageKey
     data class Solution(val key: SolutionKey) : PageKey
     data object ReadBoard : PageKey
+    /** R (GH-349): the toolbar's Restart. */
+    data object Restart : PageKey
 }
 
 internal object WebKeys {
@@ -37,6 +39,7 @@ internal object WebKeys {
         }
         if (press.repeat) return null
         if (press.key == "0" && computer) return PageKey.ReadBoard
+        if (computer && letterOf(press)?.lowercaseChar() == KeyScheme.RESTART_LETTER) return PageKey.Restart
         return ToolbarButton.entries.firstOrNull { it.digit.toString() == press.key && live(it, computer) }?.let { PageKey.Digit(it) }
     }
 
