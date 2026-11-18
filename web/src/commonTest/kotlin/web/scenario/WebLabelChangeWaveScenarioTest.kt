@@ -65,6 +65,33 @@ class WebLabelChangeWaveScenarioTest {
     }
 
     @Test
+    fun noAtStartupWavesBackFromTheSendersLabels() = webTest {
+        val page = WebHarness(backgroundScope).startWithLink(4, LINKED_4X4, "pairs")
+        val shown = page.state.tileTexts
+        val mark = page.frames.size
+
+        page.game.share.onSharedLabelsAnswered(false)
+
+        assertEquals(listOf(shown), page.waves(mark))
+        assertEquals(TileLabels.NUMBERS, page.state.labels)
+    }
+
+    @Test
+    fun aFittingLabelsDialogAtStartupWavesOnAPick() = webTest {
+        val page = WebHarness(backgroundScope)
+        page.saves.save("six", rotatedRow(6), 6, 0, labels = "letters")
+        page.start()
+        page.game.onLoadChosen("six")
+        assertIs<WebDialog.Labels>(page.state.dialog)
+        val shown = page.state.tileTexts
+        val mark = page.frames.size
+
+        page.game.labels.onSelected(TileLabels.CYRILLIC_LETTER_PAIRS)
+
+        assertEquals(listOf(shown), page.waves(mark))
+    }
+
+    @Test
     fun yesStartsNoWave() = webTest {
         val page = WebHarness(backgroundScope).startOn()
         page.changeLink(4, LINKED_4X4, "pairs")
