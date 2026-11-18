@@ -121,7 +121,7 @@ sealed interface WebDialog {
         val selected: TileLabels,
         val message: String? = null,
         val open: TileLabelGroup = TileLabelGroup.of(selected),
-        /** The row that doesn't fit the board and was pressed or reached by an arrow (GH-343): its limit shows in a bubble. Never marked. */
+        /** The row that doesn't fit the board and was pressed or reached by an arrow (GH-343): its limit shows over it. Never marked. */
         val tip: TileLabels? = null,
     ) : WebDialog {
         /** The preview strip: the marked scheme's first labels, the same on every board (GH-323). */

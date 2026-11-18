@@ -11,7 +11,7 @@ import web.labelGroupSlideFrom
 import web.labelWaveFrom
 import web.previewWaveFrom
 
-/** GH-343: a row of the Tile labels dialog that doesn't fit the board shows its limit in a bubble after a press. */
+/** GH-343: a row of the Tile labels dialog that doesn't fit the board shows its limit over the row after a press. */
 class WebLabelLimitScenarioTest {
 
     private val WebHarness.labels get() = state.dialog as WebDialog.Labels

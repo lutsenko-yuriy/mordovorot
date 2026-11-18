@@ -49,7 +49,7 @@ private fun groupElement(group: TileLabelGroup, dialog: WebDialog.Labels, game: 
         val choices = element("div", "choices list labels").apply {
             id = "label-group-options"
             asRadioGroup(this, group.title)
-            dialog.openOptions.forEach { append(labelRow(it, it.labels == dialog.selected, it.labels == stopAt, it.labels == dialog.tip, game)) }
+            dialog.openOptions.forEach { append(labelRow(it, it.labels == dialog.selected, it.labels == stopAt && dialog.tip == null, it.labels == dialog.tip, game)) }
         }
         // The new group's rows slide in while the old one's slide out (GH-342).
         append(if (motion.leavingGroup() != null) enteringBody(choices, motion.slideDelayMs()) else choices)
@@ -100,7 +100,7 @@ internal fun enteringBody(choices: Element, delayMs: Double): Element =
     }
 
 private fun copyOfRow(option: LabelOption, checked: Boolean): Element =
-    element("button", if (checked) "checked" else null).apply {
+    element("button", listOfNotNull("checked".takeIf { checked }, "unavailable".takeIf { !option.available }).joinToString(" ").ifEmpty { null }).apply {
         setAttribute("tabindex", "-1")
         append(
             element("span", "name").apply { textContent = option.title },

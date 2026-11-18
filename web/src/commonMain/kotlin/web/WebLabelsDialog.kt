@@ -19,7 +19,7 @@ internal class WebLabelsDialog(
     }
 
     /** A Labels row pressed: it becomes the marked one, and the board previews it. One that doesn't fit the board stays unmarked and
-     *  shows its limit in a bubble instead (GH-343); either way focus goes to it. */
+     *  shows its limit over its row instead (GH-343); either way focus goes to it. */
     fun onSelected(labels: TileLabels) {
         val shown = modal.shown as? WebDialog.Labels ?: return
         modal.update(if (labels.fits(viewModel.squareSide())) shown.copy(selected = labels, tip = null) else shown.copy(tip = labels))

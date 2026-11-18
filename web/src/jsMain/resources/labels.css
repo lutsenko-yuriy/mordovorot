@@ -90,11 +90,7 @@
     background: var(--frame);
 }
 
-/* A scheme too small for the board (GH-160). Its name is dimmed, not the row, so the limit's bubble (GH-343) isn't. */
-.dialog .choices.labels button.unavailable {
-    cursor: default;
-}
-
+/* A scheme too small for the board (GH-160). Its name is dimmed, not the row, so the limit's cover (GH-343) isn't. */
 .dialog .choices.labels button.unavailable:hover {
     background: transparent;
 }
@@ -126,7 +122,10 @@
     background: var(--ink);
     color: var(--card);
     font-weight: 400;
-    white-space: nowrap;
+    /* At a larger text size the limit wraps inside the row rather than spill over its neighbour. */
+    padding: 0 0.4em;
+    text-align: center;
+    overflow: hidden;
     pointer-events: none;
     opacity: 0;
 }

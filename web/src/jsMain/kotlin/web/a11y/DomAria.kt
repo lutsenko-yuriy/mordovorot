@@ -37,7 +37,7 @@ internal fun asRadio(button: Element, checked: Boolean, tabStop: Boolean? = null
 }
 
 /** [button] as a radio that can't be marked, as its scheme doesn't fit the board (GH-343). Not `disabled`, so it takes focus, and a press or an arrow
- *  shows why: its name carries the limit, which a bubble shows to the eye. [tabStop] while its bubble shows. */
+ *  shows why: its name carries the limit, which a cover over the row shows to the eye. [tabStop] while it shows. */
 internal fun asUnavailableRadio(button: Element, tabStop: Boolean = false) {
     button.setAttribute("role", "radio")
     button.setAttribute("aria-checked", "false")
