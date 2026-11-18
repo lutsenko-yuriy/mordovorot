@@ -4,6 +4,7 @@ import analytics.AnalyticsService
 import board_model.BoardModel
 import mordie.Mordie
 import storage.SaveRepository
+import viewmodel.usecase.AutosaveUseCase
 import viewmodel.usecase.ControlsDialogUseCase
 import viewmodel.usecase.DeleteSaveUseCase
 import viewmodel.usecase.LanguageUseCase
@@ -37,6 +38,7 @@ fun buildGameViewModel(
     val catalog = SaveCatalog(saves)
     val newGame = NewGameUseCase(board, mordieHooks, analytics, currentSaveName, gameShiftSources, unsavedProgress, solution, tileLabels)
     val saveGame = SaveGameUseCase(board, saves, mordieHooks, analytics, ui, currentSaveName, unsavedProgress, tileLabels)
+    val autosave = AutosaveUseCase(board, saves, mordieHooks, analytics, unsavedProgress, tileLabels, solution)
     val resolveUnsolvable = ResolveUnsolvableSaveUseCase(
         board, saves, mordieHooks, analytics, ui, newGame, currentSaveName, gameShiftSources, unsavedProgress, solution, tileLabels,
     )
@@ -50,7 +52,7 @@ fun buildGameViewModel(
         board, catalog, analytics, ui, loadGame, newGame, mordieHooks,
     )
     return GameViewModelImpl(
-        board, analytics, mordieHooks, ui, catalog, newGame, saveGame, loadGame, deleteSave, startupRestore, solution, tileLabelsUseCase,
+        board, analytics, mordieHooks, ui, catalog, newGame, saveGame, autosave, loadGame, deleteSave, startupRestore, solution, tileLabelsUseCase,
         ControlsDialogUseCase(board, analytics, solution), currentSaveName, gameShiftSources, unsavedProgress, tileLabels,
         language, LanguageUseCase(board, language, analytics, solution),
     )

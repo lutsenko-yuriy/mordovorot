@@ -2,6 +2,7 @@ package viewmodel.usecase
 
 import analytics.AnalyticsService
 import board_model.BoardModel
+import viewmodel.AutosaveSlot
 import viewmodel.MordieHooks
 import viewmodel.SaveCatalog
 import viewmodel.UiRequest
@@ -58,8 +59,11 @@ internal class StartupRestoreUseCase(
                 // loadGame can still fail here (a save deleted or corrupted since listSaves()
                 // ran just above) - decision reflects what actually happened, not just what was
                 // picked.
-                fun trackDecision(decision: String) =
-                    analytics.track("startup_restore_decision", mapOf("decision" to decision, "save_file_count" to saveInfos.size))
+                fun trackDecision(decision: String) {
+                    val properties = mapOf("decision" to decision, "save_file_count" to saveInfos.size)
+                    val restoredAutosave = nameToRestore?.let(AutosaveSlot::isAutosave) ?: false
+                    analytics.track("startup_restore_decision", if (decision == "restored") properties + ("restored_autosave" to restoredAutosave) else properties)
+                }
                 val result = nameToRestore?.let { loadGame.loadGame(it, trigger = "startup_prompt") } ?: LoadResult.NOT_LOADED
                 // Nothing was chosen and nothing is left: every save on offer was deleted from the
                 // prompt (GH-251). A listing failure counts as "saves left", never as all_deleted.

@@ -179,7 +179,7 @@ class ViewModelUnsolvableLoadTest {
                     "unsolvable_save_resolved",
                     mapOf("choice" to "repair", "trigger" to "startup_prompt", "board_size" to 3, "repair_saved" to true),
                 ),
-                Event("startup_restore_decision", mapOf("decision" to "restored", "save_file_count" to 1)),
+                Event("startup_restore_decision", mapOf("decision" to "restored", "save_file_count" to 1, "restored_autosave" to false)),
             ),
             analytics.events,
         )

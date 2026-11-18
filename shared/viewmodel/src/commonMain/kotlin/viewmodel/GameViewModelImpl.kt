@@ -5,6 +5,7 @@ import board_model.BoardModel
 import kotlin.math.abs
 import kotlinx.coroutines.channels.ReceiveChannel
 import viewmodel.usecase.ControlsDialogUseCase
+import viewmodel.usecase.AutosaveUseCase
 import viewmodel.usecase.DeleteSaveUseCase
 import texts.Language
 import viewmodel.usecase.LanguageUseCase
@@ -29,6 +30,7 @@ class GameViewModelImpl internal constructor(
     private val catalog: SaveCatalog,
     private val newGameUseCase: NewGameUseCase,
     private val saveGameUseCase: SaveGameUseCase,
+    private val autosaveUseCase: AutosaveUseCase,
     private val loadGameUseCase: LoadGameUseCase,
     private val deleteSaveUseCase: DeleteSaveUseCase,
     private val startupRestoreUseCase: StartupRestoreUseCase,
@@ -94,6 +96,8 @@ class GameViewModelImpl internal constructor(
     }
 
     override suspend fun saveGame(name: String): Boolean = saveGameUseCase.saveGame(name)
+
+    override fun autosave(trigger: String): AutosaveResult = autosaveUseCase.autosave(trigger)
 
     override suspend fun loadGame(name: String): Boolean = loadGameUseCase.loadGame(name) == LoadResult.LOADED
 

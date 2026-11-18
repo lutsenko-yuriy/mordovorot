@@ -142,7 +142,7 @@ class ViewModelSaveLoadTest {
         assertEquals(listOf(statusTexts.loaded("foo")), ui.shownMessages)
         assertEquals(listOf<String?>("foo"), ui.loadedSaves)
         assertEquals(
-            listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "success", "labels_differ_from_preference" to false))),
+            listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "success", "labels_differ_from_preference" to false, "autosave" to false))),
             analytics.events,
         )
     }
@@ -196,7 +196,7 @@ class ViewModelSaveLoadTest {
         assertEquals(listOf(3, 2, 1, 0, 7, 6, 5, 4, 8), board.boardArray.toList())
         assertTrue(ui.shownMessages.any { it.contains(statusTexts.loaded("small")) })
         assertEquals(
-            listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "success", "labels_differ_from_preference" to false))),
+            listOf(RecordingAnalyticsService.Event("load_command_used", mapOf("trigger" to "command", "result" to "success", "labels_differ_from_preference" to false, "autosave" to false))),
             analytics.events,
         )
     }
