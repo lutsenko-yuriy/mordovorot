@@ -1,9 +1,12 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package web.scenario
 
 import board_model.BoardImpl
 import web.webBoard
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -18,6 +21,7 @@ import testing.FakeMordieSearchFactory
 import testing.RecordingAnalyticsService
 import viewmodel.KeyboardLayout
 import web.Focus
+import web.LabelMotion
 import web.Host
 import web.KeyPress
 import web.AppUpdates
@@ -58,6 +62,10 @@ internal class WebHarness(
     private val browserLanguages: List<String> = emptyList(),
     /** The `languages` switch (GH-275): on, so a scenario sees the mechanism the page keeps off until its picker is there. */
     private val languages: Boolean = true,
+    /** The page's real label motion on the test clock (GH-343): a move waits for a running wave. Off unless a scenario asks, so the others shift at once. */
+    private val motion: Boolean = false,
+    /** With [motion], the system asks for less motion: no wave runs. */
+    private val reducedMotion: Boolean = false,
 ) {
     val saves = BrowserSaveRepository(store)
     val preferences = BrowserPreferenceRepository(store)
@@ -67,7 +75,7 @@ internal class WebHarness(
     val pressedWith = PressedWith()
     val clipboard = FakeClipboard()
     val updates = FakeAppUpdates()
-    private val renderer = FakeWebRenderer()
+    private val renderer = FakeWebRenderer(if (motion) LabelMotion { scope.coroutineContext[TestCoroutineScheduler]!!.currentTime.toDouble() } else null, reducedMotion)
     lateinit var game: WebGame
         private set
 
@@ -75,6 +83,9 @@ internal class WebHarness(
 
     /** Every frame drawn so far, the latest last. */
     val frames: List<WebState> get() = renderer.frames
+
+    /** Whether a label wave is running on the board now (GH-343). */
+    val waving: Boolean get() = renderer.waveRemainingMs() != null
 
     /** Every announcement so far (GH-166), one per announcing frame; [startOn] clears it. */
     val said: MutableList<String> get() = renderer.said
@@ -219,7 +230,7 @@ internal class FakeAppUpdates(var readyAtStart: Boolean = false) : AppUpdates {
     private var downloading = false
 }
 
-private class FakeWebRenderer : WebRenderer {
+private class FakeWebRenderer(private val motion: LabelMotion?, private val still: Boolean) : WebRenderer {
     val frames = mutableListOf<WebState>()
     val said = mutableListOf<String>()
     val scrolled = mutableListOf<Int>()
@@ -228,7 +239,10 @@ private class FakeWebRenderer : WebRenderer {
         scrolled += lines
     }
 
+    override fun waveRemainingMs(): Double? = motion?.boardRemainingMs()
+
     override fun render(state: WebState) {
+        motion?.start(frames.lastOrNull(), state, still)
         frames += state
         state.announcement?.let { said += it }
     }

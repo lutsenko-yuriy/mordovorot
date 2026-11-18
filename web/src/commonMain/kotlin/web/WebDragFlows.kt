@@ -30,7 +30,11 @@ internal class WebDragFlows(private val game: WebGame, private val viewModel: Ga
         val drag = drag ?: return
         val before = drag.offset
         drag.move(x, y)
-        if (drag.offset != before) game.render()
+        if (drag.offset != before) {
+            // The drag has really started, so the label wave is over and a held move is dropped (a plain press on a tile keeps it).
+            game.moves.drop()
+            game.render()
+        }
     }
 
     /** The release: the line snaps to the nearest tile, and the whole drag is one shift. */
@@ -38,7 +42,7 @@ internal class WebDragFlows(private val game: WebGame, private val viewModel: Ga
         val released = drag?.release() ?: return onCancel()
         drag = null
         if (game.tutorial.take(released.axis, released.line, released.steps, PointerShift.DRAG)) {
-            game.shift({ Announcements.drag(released.direction, released.line, abs(released.steps), it) }) {
+            game.shifts.shift({ Announcements.drag(released.direction, released.line, abs(released.steps), it) }) {
                 when (released.axis) {
                     Axis.ROW -> viewModel.shiftRow(released.line, released.steps, PointerShift.DRAG)
                     Axis.COLUMN -> viewModel.shiftColumn(released.line, released.steps, PointerShift.DRAG)

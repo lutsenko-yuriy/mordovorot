@@ -53,7 +53,14 @@ internal class WebSolutionFlows(
     /** Steps the replay and renders, sliding the shift [action] made and saying the step it's on,
      *  as a [restart] always does. */
     private fun replay(restart: Boolean = false, action: () -> SolutionStep?) {
-        if (!game.idle || viewModel.solution() == null) return
+        if (!replayable()) return
+        // A step waits for a running label wave (GH-343).
+        game.moves.run(::replayable) { step(restart, action) }
+    }
+
+    private fun replayable() = game.idle && viewModel.solution() != null
+
+    private fun step(restart: Boolean, action: () -> SolutionStep?) {
         game.status = null
         val shifted = action()
         if (shifted != null || restart) game.saying = viewModel.solution()?.let { Announcements.step(it.moves, it.current) }

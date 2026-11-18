@@ -10,11 +10,9 @@ import viewmodel.GameViewModel
 import viewmodel.GiveUpButton
 import viewmodel.PointerShift
 import viewmodel.SessionKeyboardLayout
-import viewmodel.ShiftSource
 import viewmodel.TileLabels
 import viewmodel.UnsolvableSaveChoice
 import web.a11y.Announcements
-import web.drag.Axis
 import web.drag.LineOffset
 
 /** The browser's View (GH-110): takes the page's intents, runs them on [viewModel] and renders a
@@ -49,9 +47,11 @@ class WebGame internal constructor(
     internal val updates = WebUpdateFlows(this, viewModel, analytics, modal, updates, appVersion)
     internal val language = WebLanguageFlows(this, viewModel)
     internal val tutorial = WebTutorial(this, viewModel, analytics, modal, tutorialSeen, scope, computer, tutorialOn)
-    private val keys = WebKeyPlay(this, viewModel, pressedWith, computer)
+    internal val keys = WebKeyPlay(this, viewModel, pressedWith, computer)
     private val requests = WebRequestRouter(this)
     private val dragging = WebDragFlows(this, viewModel)
+    internal val moves = WebMoves(scope, renderer)
+    internal val shifts = WebShifts(this, viewModel, analytics)
     internal var status: String? = null
     /** The page is opening (GH-343): its first board, drawn before anything is restored or opened, is still on screen, up to the first frame that shows another one. */
     private var opening = true
@@ -109,23 +109,11 @@ class WebGame internal constructor(
     fun onArrow(arrow: Arrow, line: Int, byMouse: Boolean = false) {
         if (!playable) return
         keys.onArrowPressed()
-        shiftLine(arrow, line, PointerShift.ARROW, focus = onBoard.takeIf { byMouse })
-    }
-
-    /** One step of the line [arrow] and [line] name, by [source], sliding it into place. */
-    internal fun shiftLine(arrow: Arrow, line: Int, source: ShiftSource, focus: Focus? = null) {
-        val row = arrow == Arrow.LEFT || arrow == Arrow.RIGHT
-        val forward = arrow == Arrow.RIGHT || arrow == Arrow.DOWN
-        if (!tutorial.take(if (row) Axis.ROW else Axis.COLUMN, line, if (forward) 1 else -1, source)) return
-        shift({ Announcements.shift(arrow.direction, line, it) }, Slides.ofArrow(arrow, line), focus) {
-            when (arrow) {
-                Arrow.LEFT -> viewModel.shiftLeft(line, source)
-                Arrow.RIGHT -> viewModel.shiftRight(line, source)
-                Arrow.UP -> viewModel.shiftUp(line, source)
-                Arrow.DOWN -> viewModel.shiftDown(line, source)
-            }
-        }
-        tutorial.afterShift()
+        val focus = onBoard.takeIf { byMouse }
+        // Held for a running label wave (GH-343): focus moves now, the shift comes when the wave ends and leaves focus where the player put it.
+        var held = false
+        held = moves.run({ playable }) { shifts.line(arrow, line, PointerShift.ARROW, focus.takeUnless { held }) }
+        if (held && focus != null) render(focus = focus)
     }
 
     fun onDragStart(row: Int, col: Int, x: Double, y: Double, pitch: Double) = dragging.onStart(row, col, x, y, pitch)
@@ -222,26 +210,11 @@ class WebGame internal constructor(
     internal fun cancelled(dialog: String) =
         analytics.track("dialog_cancelled", mapOf("dialog" to dialog, "via" to modal.closedVia.wire))
 
-    /** Runs a shift on the unsolved board and renders, sliding [slide] and saying it in [words] (given
-     *  the move count when the shift started a move), or the win. */
-    internal fun shift(words: (newMove: Int?) -> String, slide: LineOffset? = null, focus: Focus? = null, action: () -> Unit) {
-        status = null
-        val before = viewModel.moveCount()
-        action()
-        val moves = viewModel.moveCount()
-        // Unsolved before this shift (the callers check), so this is the transition.
-        saying = if (viewModel.isSolved()) {
-            analytics.track("screen_congratulations")
-            updates.check(CheckTrigger.GAME_END)
-            Announcements.solved(moves)
-        } else keys.withTileNow(words(moves.takeIf { it != before }))
-        render(slide, focus.takeUnless { viewModel.isSolved() })
-    }
-
     /** Runs a toolbar action, unless another action or a dialog is under way, then renders with
      *  focus back on its [opener]. */
     internal fun runFlow(opener: Focus, action: suspend () -> Unit) {
         if (!idle) return
+        moves.drop()
         status = null
         closing = opener
         // Undispatched, so the action is under way before this returns and a second click sees it.

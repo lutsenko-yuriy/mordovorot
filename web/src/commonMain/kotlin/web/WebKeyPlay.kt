@@ -110,11 +110,16 @@ internal class WebKeyPlay(
             selection = selection.move(key.direction, viewModel.squareSide())
             game.render()
         }
-        is BoardKey.Shift -> when (key.direction) {
-            Direction.LEFT -> game.shiftLine(Arrow.LEFT, selection.row, KeyShift(key.key))
-            Direction.RIGHT -> game.shiftLine(Arrow.RIGHT, selection.row, KeyShift(key.key))
-            Direction.UP -> game.shiftLine(Arrow.UP, selection.col, KeyShift(key.key))
-            Direction.DOWN -> game.shiftLine(Arrow.DOWN, selection.col, KeyShift(key.key))
+        is BoardKey.Shift -> {
+            // The line is the selection's now; the shift may wait for a label wave (GH-343).
+            val (arrow, line) = when (key.direction) {
+                Direction.LEFT -> Arrow.LEFT to selection.row
+                Direction.RIGHT -> Arrow.RIGHT to selection.row
+                Direction.UP -> Arrow.UP to selection.col
+                Direction.DOWN -> Arrow.DOWN to selection.col
+            }
+            game.moves.run({ game.playable }) { game.shifts.line(arrow, line, KeyShift(key.key)) }
+            Unit
         }
     }
 }
