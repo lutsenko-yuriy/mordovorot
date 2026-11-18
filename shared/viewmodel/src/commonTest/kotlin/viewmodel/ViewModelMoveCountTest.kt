@@ -57,7 +57,7 @@ class ViewModelMoveCountTest {
         viewModel.shiftLeft(0)
 
         assertEquals(
-            listOf(RecordingAnalyticsService.Event("board_solved", mapOf("move_count" to 2, "board_size" to 3, "tile_labels" to "numbers", "tutorial" to false))),
+            listOf(RecordingAnalyticsService.Event("board_solved", mapOf("move_count" to 2, "board_size" to 3, "tile_labels" to "numbers", "tutorial" to false, "restart_count" to 0))),
             analytics.events,
         )
     }

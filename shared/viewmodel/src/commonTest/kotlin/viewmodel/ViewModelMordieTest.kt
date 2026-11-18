@@ -106,7 +106,7 @@ class ViewModelMordieTest {
         assertEquals(5, viewModel.moveCount())
         assertNull(viewModel.mordieLine())
         assertNull(viewModel.mordieEnding())
-        assertEquals(mapOf("move_count" to 5, "board_size" to 3, "tile_labels" to "numbers", "tutorial" to false), event("board_solved"))
+        assertEquals(mapOf("move_count" to 5, "board_size" to 3, "tile_labels" to "numbers", "tutorial" to false, "restart_count" to 0), event("board_solved"))
     }
 
     @Test

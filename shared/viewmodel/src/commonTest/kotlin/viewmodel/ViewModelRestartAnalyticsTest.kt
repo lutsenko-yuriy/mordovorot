@@ -20,7 +20,9 @@ class ViewModelRestartAnalyticsTest {
     @Test
     fun `a restart tracks the board size, the moves it discarded and how it was asked`() {
         viewModel.newGameFrom(original, sender = null)
-        repeat(3) { viewModel.shiftLeft(1) }
+        viewModel.shiftLeft(1)
+        viewModel.shiftUp(2)
+        viewModel.shiftLeft(1)
 
         viewModel.restartGame("shortcut", "dont_save")
 
@@ -56,7 +58,8 @@ class ViewModelRestartAnalyticsTest {
         viewModel.newGameFrom(original, sender = null)
         viewModel.shiftLeft(1)
         viewModel.restartGame("button", "saved")
-        repeat(2) { viewModel.shiftLeft(1) }
+        viewModel.shiftLeft(1)
+        viewModel.shiftUp(2)
 
         viewModel.restartGame("button", "saved")
 
