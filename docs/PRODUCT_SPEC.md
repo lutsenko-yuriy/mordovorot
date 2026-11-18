@@ -361,6 +361,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   - An autosave is an ordinary save: `Load` and `Restore a saved game?` list it as `Autosave_pairs_5x5 (5x5)`, and it loads and deletes like any other. Nothing
     restores it by itself.
   - A Save name typed by hand that equals a slot name overwrites that slot, as the next autosave overwrites it.
+  - Known limit: two tabs on the same scheme and size share one slot, so the later autosave replaces the earlier. A tab whose autosave was replaced and then closed without a new move writes nothing and does not prompt.
 - **Leave-site prompt:** with unsaved progress (at least one shift since the last New game,
   successful save or successful load) that the autosave could not keep (the storage is full or refused it, or the board is solved), closing or reloading the tab shows the browser's own
   "Leave site?" prompt. A successful autosave counts as saved, so there is no prompt. Safari shows it on reload but not when the tab is closed; that is

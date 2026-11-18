@@ -786,7 +786,7 @@ Planned in `/analyze`; the web client uses `NoopAnalyticsService` until an SDK i
 
 ### `autosave_written`
 
-Fired when an autosave was attempted: the page is left (tab hidden, closed or reloaded), or Update, opening a share link or replaying the tutorial tries one first (it saves the game before asking, and asks only if this fails). Needs a game with at least one shift that isn't solved. Not fired for a game with no moves, the solved board or the solution screen. *(GH-338)*
+Fired when an autosave was attempted: the page is left (tab hidden, closed or reloaded), or Update, opening a share link or replaying the tutorial tries one first (it saves the game before asking, and asks only if this fails). Needs a game with at least one shift that isn't solved. Not fired for a game with no moves, the solved board or the solution screen. *(GH-338)* A failed autosave fires `result: error` at each leave event (`beforeunload`, `pagehide`, `visibilitychange` hidden), so one close can send it three times and each tab switch one more: GH-256 should dedupe them.
 
 | Property | Type | Description |
 |---|---|---|

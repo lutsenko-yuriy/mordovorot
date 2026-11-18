@@ -170,6 +170,7 @@ internal class WebShareFlows(
                 val side = link.side
                 val carried = (link.labels as? LinkLabels.Scheme)?.labels
                 // The labels prompt may follow, so the page doesn't blink between the two.
+                // Straight to the viewModel, not WebGame.autosave: a link opened mid-tutorial asks as before.
                 viewModel.autosave("shared_link")
                 if (viewModel.hasUnsavedProgress() && !modal.ask<Boolean>(WebDialog.OpenShared(side), leadsOn = { it && carried != null })) return false
                 val sent = (link.progress as? LinkProgress.Sent)?.progress
