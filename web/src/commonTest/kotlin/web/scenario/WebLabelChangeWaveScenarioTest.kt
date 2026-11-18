@@ -1,134 +1,255 @@
 package web.scenario
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import viewmodel.TileLabels
+import web.WebDialog
+import web.WebState
+import web.labelWaveFrom
+import viewmodel.UnsolvableSaveChoice
 
-/** GH-343: the label wave on every label change outside the Tile labels dialog, and the arriving half alone on a page load or another board size. Stubs: WU1 fills them in. */
+/** GH-343: the label wave on every label change outside the Tile labels dialog, and the arriving half alone on a page load or another board size. Each scenario reads the frames the page drew. */
 class WebLabelChangeWaveScenarioTest {
 
-    @Test
-    fun aSharePromptOpeningWavesFromTheOldLabels() {
-        // TODO: 1. Start on Numbers
-        // TODO: 2. A link with Pairs labels arrives
-        // TODO: 3. The prompt opens
-        // TODO: 4. The frame starts a wave whose old texts are the Numbers
-        // TODO: 5. The board shows Pairs behind the prompt
+    private val LINKED_4X4 = intArrayOf(12, 1, 2, 3, 0, 5, 6, 7, 4, 9, 10, 11, 8, 13, 14, 15)
+
+    /** The frames from index [from] on that start a board wave, each with its old texts. */
+    private fun WebHarness.waveFrames(from: Int = 0): List<Pair<WebState, List<String?>>> =
+        frames.drop(maxOf(from - 1, 0)).zipWithNext { before, now -> now.labelWaveFrom(before)?.let { now to it } }.filterNotNull()
+
+    private fun WebHarness.waves(from: Int = 0) = waveFrames(from).map { it.second }
+
+    private fun WebHarness.choose(labels: TileLabels) {
+        game.labels.open()
+        game.labels.onSelected(labels)
+        game.labels.onAnswered(ok = true)
+    }
+
+    /** Loads a 4x4 save with [labels] into a running game. */
+    private fun WebHarness.load(labels: String?, name: String = "p") {
+        saves.save(name, rotatedRow(4), 4, 0, labels = labels)
+        game.onLoad()
+        game.onLoadChosen(name)
     }
 
     @Test
-    fun noWavesTheBoardBackToThePlayersLabels() {
-        // TODO: 1. Open the prompt as in aSharePromptOpeningWavesFromTheOldLabels
-        // TODO: 2. Press No (and, in another run, Escape)
-        // TODO: 3. The frame starts a wave from the Pairs texts
-        // TODO: 4. The board shows Numbers again
+    fun aSharePromptOpeningWavesFromTheOldLabels() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        val mark = page.frames.size
+
+        page.changeLink(4, LINKED_4X4, "pairs")
+
+        assertEquals(WebDialog.SharedLabels(TileLabels.PAIRS), page.state.dialog)
+        val wave = page.waves(mark).single()
+        assertEquals(16, wave.size)
+        assertTrue(wave.all { it?.toIntOrNull() != null })
+        assertEquals(TileLabels.PAIRS, page.state.labels)
     }
 
     @Test
-    fun yesStartsNoWave() {
-        // TODO: 1. Open the prompt as in aSharePromptOpeningWavesFromTheOldLabels
-        // TODO: 2. Press Yes
-        // TODO: 3. No frame after it starts a wave
-        // TODO: 4. The player's preference is Pairs
+    fun noWavesTheBoardBackToThePlayersLabels() = webTest {
+        for (escape in listOf(false, true)) {
+            val page = WebHarness(backgroundScope).startOn()
+            page.changeLink(4, LINKED_4X4, "pairs")
+            val shown = page.state.tileTexts
+            val mark = page.frames.size
+
+            if (escape) page.game.onEscape() else page.game.share.onSharedLabelsAnswered(false)
+
+            assertEquals(listOf(shown), page.waves(mark), "escape $escape")
+            assertEquals(TileLabels.NUMBERS, page.state.labels)
+        }
     }
 
     @Test
-    fun aLinkWithTheLabelsAlreadyShownStartsNoWave() {
-        // TODO: 1. Start on Pairs
-        // TODO: 2. A link with Pairs labels arrives
-        // TODO: 3. No prompt opens and no frame starts a wave
+    fun yesStartsNoWave() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.changeLink(4, LINKED_4X4, "pairs")
+        val mark = page.frames.size
+
+        page.game.share.onSharedLabelsAnswered(true)
+
+        assertTrue(page.waves(mark).isEmpty())
+        assertEquals(TileLabels.PAIRS, page.state.labels)
+        assertNull(page.preferences.get("tile_labels"))
     }
 
     @Test
-    fun aLinkAtStartupArrivesOnly() {
-        // TODO: 1. Start with a link with Pairs labels
-        // TODO: 2. The startup frame starts a wave
-        // TODO: 3. Every old text in it is empty
+    fun aLinkWithTheLabelsAlreadyShownStartsNoWave() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.choose(TileLabels.PAIRS)
+        val mark = page.frames.size
+
+        page.changeLink(4, LINKED_4X4, "pairs")
+
+        assertNull(page.state.dialog)
+        assertTrue(page.waves(mark).isEmpty())
     }
 
     @Test
-    fun aLinkToAnotherSizeArrivesOnly() {
-        // TODO: 1. Start on 4x4
-        // TODO: 2. A link to a 5x5 board with Pairs labels arrives
-        // TODO: 3. The wave's old texts are all empty
+    fun aLinkAtStartupArrivesOnly() = webTest {
+        val page = WebHarness(backgroundScope).startWithLink(4, LINKED_4X4, "pairs")
+
+        val wave = page.waves().single()
+        assertEquals(16, wave.size)
+        assertTrue(wave.all { it == null })
+        assertEquals(TileLabels.PAIRS, page.state.labels)
     }
 
     @Test
-    fun aNewGameBackToThePreferenceWaves() {
-        // TODO: 1. Start on 4x4 with Numbers as the preference
-        // TODO: 2. Make a Letters board without changing the preference
-        // TODO: 3. Press New game
-        // TODO: 4. The frame starts a wave from the Letters texts
+    fun aLinkToAnotherSizeArrivesOnly() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        val mark = page.frames.size
+
+        page.changeLink(5, rotatedRow(5), "pairs")
+
+        val wave = page.waves(mark).single()
+        assertEquals(25, wave.size)
+        assertTrue(wave.all { it == null })
     }
 
     @Test
-    fun aNewGameInTheSameSchemeDoesNotWave() {
-        // TODO: 1. Start on 4x4 with Numbers
-        // TODO: 2. Press New game
-        // TODO: 3. No frame starts a wave
+    fun aNewGameBackToThePreferenceWaves() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.load("letters")
+        assertEquals(TileLabels.LETTERS, page.state.labels)
+        val letters = page.state.tileTexts
+        val mark = page.frames.size
+
+        page.game.onNew()
+        page.game.onSizeChosen(4)
+
+        assertEquals(listOf(letters), page.waves(mark))
+        assertEquals(TileLabels.NUMBERS, page.state.labels)
     }
 
     @Test
-    fun aNewGameOfAnotherSizeArrivesOnly() {
-        // TODO: 1. Start on a size the preference fits, with a Letters-only preference
-        // TODO: 2. Press New game and choose a size the preference doesn't fit
-        // TODO: 3. Numbers stand in and the wave's old texts are all empty
+    fun aNewGameInTheSameSchemeDoesNotWave() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        val mark = page.frames.size
+
+        page.game.onNew()
+        page.game.onSizeChosen(4)
+
+        assertTrue(page.waves(mark).isEmpty())
     }
 
     @Test
-    fun aToolbarLoadWithOtherLabelsWaves() {
-        // TODO: 1. Save a board with Letters labels
-        // TODO: 2. Start a game with Numbers
-        // TODO: 3. Load the save
-        // TODO: 4. The frame starts a wave from the Numbers texts
+    fun aNewGameOfAnotherSizeArrivesOnly() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.choose(TileLabels.LETTERS)
+        val mark = page.frames.size
+
+        page.game.onNew()
+        page.game.onSizeChosen(6)
+
+        assertEquals(TileLabels.NUMBERS, page.state.labels)
+        val wave = page.waves(mark).single()
+        assertEquals(36, wave.size)
+        assertTrue(wave.all { it == null })
     }
 
     @Test
-    fun aToolbarLoadWithTheSameLabelsDoesNotWave() {
-        // TODO: 1. Save a board with Numbers labels
-        // TODO: 2. Load it into a game with Numbers
-        // TODO: 3. No frame starts a wave
+    fun aToolbarLoadWithOtherLabelsWaves() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        val numbers = page.state.tileTexts
+        val mark = page.frames.size
+
+        page.load("letters")
+
+        assertEquals(listOf(numbers), page.waves(mark))
+        assertEquals(TileLabels.LETTERS, page.state.labels)
     }
 
     @Test
-    fun repairAndLoadWavesLikeALoad() {
-        // TODO: 1. Save a damaged board with Letters labels
-        // TODO: 2. Start a game with Numbers
-        // TODO: 3. Choose Repair & load
-        // TODO: 4. The frame starts a wave from the Numbers texts
+    fun aToolbarLoadWithTheSameLabelsDoesNotWave() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        val mark = page.frames.size
+
+        page.load(null)
+
+        assertTrue(page.waves(mark).isEmpty())
     }
 
     @Test
-    fun aSaveRestoredAtStartupArrivesOnly() {
-        // TODO: 1. Seed an autosave with Letters labels
-        // TODO: 2. Start the page with Numbers as the preference
-        // TODO: 3. The startup frame starts a wave
-        // TODO: 4. Every old text in it is empty
+    fun repairAndLoadWavesLikeALoad() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.saves.save("odd", UNSOLVABLE_3X3, 3, 0, labels = "pairs")
+        val mark = page.frames.size
+
+        page.game.onLoad()
+        page.game.onLoadChosen("odd")
+        page.game.onUnsolvableChoice(UnsolvableSaveChoice.REPAIR)
+
+        assertEquals(TileLabels.PAIRS, page.state.labels)
+        val waves = page.waves(mark)
+        assertEquals(1, waves.size)
+        assertTrue(waves.single().all { it == null })
+        assertEquals(9, waves.single().size)
     }
 
     @Test
-    fun aPlainStartupStartsNoWave() {
-        // TODO: 1. Start the page with nothing saved
-        // TODO: 2. No frame starts a wave
+    fun aSaveRestoredAtStartupArrivesOnly() = webTest {
+        val page = WebHarness(backgroundScope)
+        page.saves.save("p", rotatedRow(4), 4, 0, labels = "letters")
+        page.start()
+        assertIs<WebDialog.Load>(page.state.dialog)
+
+        page.game.onLoadChosen("p")
+
+        val wave = page.waves().single()
+        assertTrue(wave.all { it == null })
+        assertEquals(TileLabels.LETTERS, page.state.labels)
     }
 
     @Test
-    fun theTutorialReplayWavesBackToThePreference() {
-        // TODO: 1. Set Letters as the preference
-        // TODO: 2. Run the tutorial from the toolbar
-        // TODO: 3. Finish it
-        // TODO: 4. The frame that goes back to the preference starts a wave
+    fun aPlainStartupStartsNoWave() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+
+        assertTrue(page.waves().isEmpty())
     }
 
     @Test
-    fun skipThenRestoreWavesBothHalves() {
-        // TODO: 1. Seed an autosave with Letters labels and start the tutorial
-        // TODO: 2. Press Skip
-        // TODO: 3. The restored board's frame starts a wave
-        // TODO: 4. Its old texts are the tutorial board's, not empty
+    fun theTutorialReplayWithTheSameLabelsStartsNoWave() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.choose(TileLabels.LETTERS)
+        val mark = page.frames.size
+
+        page.game.tutorial.onReplay("button")
+
+        assertTrue(page.waves(mark).isEmpty())
     }
 
     @Test
-    fun analyticsSendNothingNew() {
-        // TODO: 1. Answer a share prompt, start a new game and load a save with other labels
-        // TODO: 2. The events sent are the ones sent before this change, and no new event
+    fun skipThenRestoreWavesFromTheBoardItLeaves() = webTest {
+        val page = WebHarness(backgroundScope, firstLaunch = true).start()
+        // Saved in another tab since the page opened.
+        page.saves.save("p", rotatedRow(4), 4, 0, labels = "letters")
+        page.game.tutorial.onSkip()
+        assertIs<WebDialog.Load>(page.state.dialog)
+        val mark = page.frames.size
+
+        page.game.onLoadChosen("p")
+
+        // The page is open, so this is no page load: the labels leave as well as arrive.
+        val (frame, _) = page.waveFrames(mark).single()
+        assertEquals(false, frame.opening)
+        assertEquals(TileLabels.LETTERS, page.state.labels)
+    }
+
+    @Test
+    fun analyticsSendNothingNew() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+
+        page.changeLink(4, LINKED_4X4, "pairs")
+        page.game.share.onSharedLabelsAnswered(false)
+        page.load("letters")
+        page.game.onNew()
+        page.game.onSizeChosen(4)
+
+        assertTrue(page.analytics.events.none { "wave" in it.name || "animat" in it.name })
     }
 }

@@ -50,4 +50,41 @@ class LabelWaveTest {
         assertFalse(LabelWave.slideOver(249.0))
         assertTrue(LabelWave.slideOver(250.0))
     }
+
+    private fun state(labels: viewmodel.TileLabels, side: Int = 2, opening: Boolean = false, drag: web.drag.LineOffset? = null) =
+        WebState(
+            side = side, tiles = List(side * side) { it + 1 }, moves = 0, mordie = null, solved = false, status = null, dialog = null,
+            labels = labels, opening = opening, drag = drag,
+        )
+
+    @Test
+    fun aChangedSchemeWavesFromTheFrameBeforeWhateverChangedIt() {
+        val before = state(viewmodel.TileLabels.NUMBERS)
+        val now = state(viewmodel.TileLabels.LETTERS)
+
+        assertEquals(before.tileTexts, now.labelWaveFrom(before))
+    }
+
+    @Test
+    fun theSameSchemeStartsNoWave() {
+        val frame = state(viewmodel.TileLabels.LETTERS)
+
+        assertEquals(null, frame.labelWaveFrom(frame))
+    }
+
+    @Test
+    fun anotherSizeOrAPageStillOpeningOnlyArrives() {
+        val before = state(viewmodel.TileLabels.NUMBERS)
+
+        assertEquals(List(9) { null }, state(viewmodel.TileLabels.LETTERS, side = 3).labelWaveFrom(before))
+        assertEquals(List(4) { null }, state(viewmodel.TileLabels.LETTERS, opening = true).labelWaveFrom(before))
+    }
+
+    @Test
+    fun aDragUnderWayStartsNoWave() {
+        val before = state(viewmodel.TileLabels.NUMBERS)
+        val dragging = state(viewmodel.TileLabels.LETTERS, drag = web.drag.LineOffset(web.drag.Axis.ROW, 0, 3.0))
+
+        assertEquals(null, dragging.labelWaveFrom(before))
+    }
 }

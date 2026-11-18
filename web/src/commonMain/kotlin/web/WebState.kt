@@ -57,6 +57,8 @@ data class WebState(
     val tutorialButton: Boolean = false,
     /** `[ Hint ]` in the Give Up row (GH-332): hidden on the solution screen and in the tutorial, dimmed for a scheme with no letters to show. */
     val alphabetHint: AlphabetHintButton = AlphabetHintButton.HIDDEN,
+    /** The page is still opening (GH-343): drawn before the startup is over, so a change of labels has no earlier board to leave. */
+    val opening: Boolean = false,
 ) {
     /** The digit [button] shows, `null` when it shows none (GH-171). */
     fun digitOf(button: ToolbarButton): Int? = button.digit.takeIf { WebKeys.live(button, computer) }

@@ -9,7 +9,7 @@ import web.a11y.Waving
  *  and its "from" is the running one's target, which completes the running one at once. [clock] is the time in ms. */
 internal class LabelMotion(private val clock: () -> Double) {
 
-    private class Wave(val to: List<String>, val tiles: List<Int>?, val old: List<String>, val timing: LabelWave.Timing, val startedAt: Double, val id: Int)
+    private class Wave(val to: List<String>, val tiles: List<Int>?, val old: List<String?>, val timing: LabelWave.Timing, val startedAt: Double, val id: Int)
 
     private class Slide(val from: TileLabelGroup, val startedAt: Double)
 
