@@ -52,6 +52,8 @@ class WebGame internal constructor(
     private val requests = WebRequestRouter(this)
     private val dragging = WebDragFlows(this, viewModel)
     internal var status: String? = null
+    /** The page is opening (GH-343): from the first frame until the startup's last one is drawn. */
+    private var opening = true
     /** The toolbar action or startup restore under way, if any. */
     private var flow: Job? = null
     /** Where focus goes once [flow] ends: back to the button that started it, unless it moves on. */
@@ -72,6 +74,7 @@ class WebGame internal constructor(
             share.openPending()
             dialogs.sayAskedNewGame()
             render(focus = onBoard ?: Focus.PageStart)
+            opening = false
         }
     }
 
@@ -293,6 +296,7 @@ class WebGame internal constructor(
             guidance = guidance,
             tutorialButton = tutorial.offered,
             alphabetHint = alphabetHint.button(),
+            opening = opening,
         )
     }
 

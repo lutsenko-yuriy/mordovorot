@@ -549,8 +549,11 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   dialog closes; OK doesn't, as the board already shows the marked scheme. Pressing another group's header slides the
   open group's rows up and out as the new group's rows slide down and in (250 ms), the headers between them gliding; every
   group is as tall as any other, so the dialog's height doesn't change. A new change while one runs completes it at once
-  and starts the new one. Labels changed outside the dialog (a share link, a new game, a save) don't animate. Screen
-  readers, keys, focus and analytics are as before; the outgoing label is never read.
+  and starts the new one. The wave plays whenever the scheme of the labels changes, not only in the dialog (GH-343): a
+  share link's prompt opening, and No or Escape, a new game back to the preference, a load (Repair & load too) and a
+  startup restore. OK and Yes don't wave, as the board already shows the labels. When there is no earlier board to
+  leave, on a page load or a board of another size, only the arriving half plays: every label fades in from above, tile
+  after tile, over the same 600 ms. Screen readers, keys, focus and analytics are as before; the outgoing label is never read.
 - **Which labels a game shows:** a loaded save's own labels (Feature 4), or the sender's labels the player
   said Yes to on opening a share link (Feature 12, GH-267), win for that game; then
   the remembered preference; then Numbers. A new game goes back to the preference.
@@ -633,9 +636,9 @@ Web client only.
   - **Tile labels in a link (GH-267):** when a link carries labels that differ from the ones the
     player would otherwise see, the board starts as above and `Use the sender's labels (Pairs)?` asks,
     with Yes focused, `For this game only: your next new game uses your own labels.` and `[ No ] [ Yes ]`.
-    The sender's labels show behind it. Yes keeps them for this game, as a loaded save's labels are kept
+    The sender's labels show behind it, and the board's labels wave to them as the prompt opens (Feature 11, GH-343). Yes keeps them for this game, as a loaded save's labels are kept
     (Feature 11), and never changes the player's preference; No and Escape put the player's own
-    labels back. With unsaved moves `Open the shared board?` comes first, then this prompt. Labels equal
+    labels back, with the wave. With unsaved moves `Open the shared board?` comes first, then this prompt. Labels equal
     to the player's raise no prompt. Labels the page can't read (an unknown or mis-cased name, Letters on
     6x6 and bigger) are ignored without a word, and a link with none is as before.
   - **The sender's progress in a link (GH-272):** a link can carry how the sender's game stands (ADR-0005, `&p=`).
