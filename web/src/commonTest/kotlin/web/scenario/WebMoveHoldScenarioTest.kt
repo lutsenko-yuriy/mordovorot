@@ -23,9 +23,6 @@ class WebMoveHoldScenarioTest {
     /** [ONE_SHIFT_FROM_SOLVED] with row 1 shifted one tile right. */
     private val rowOneRight = shown(intArrayOf(3, 0, 1, 2, 7, 4, 5, 6) + IntArray(8) { it + 8 })
 
-    /** [ONE_SHIFT_FROM_SOLVED] with row 1 shifted one tile left. */
-    private val rowOneLeft = shown(intArrayOf(3, 0, 1, 2, 5, 6, 7, 4) + IntArray(8) { it + 8 })
-
     private fun TestScope.page() = WebHarness(backgroundScope, motion = true).startOn()
 
     /** Picks Letters in the dialog, then Cancel: the board waves back to the numbers. */
@@ -78,7 +75,8 @@ class WebMoveHoldScenarioTest {
         assertEquals(start, page.state.tiles)
 
         passMs(2)
-        assertEquals(rowOneLeft, page.state.tiles)
+        // The selection starts on row 0: Left puts it in place.
+        assertTrue(page.state.solved)
     }
 
     @Test
