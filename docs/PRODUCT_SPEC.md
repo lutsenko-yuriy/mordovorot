@@ -351,11 +351,21 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   each other (GH-111). They survive reloads and browser restarts.
 - **Startup:** with saves, the page opens with `Restore a saved game?` (Cancel opens the size
   picker); without, it opens the size picker, whose Cancel keeps the board already shown.
+- **Autosave (GH-338):** leaving the page (closing or reloading the tab, or hiding it, as switching to another app on a phone does) saves the game to the slot
+  `Autosave_<label type>_<size>`, like `Autosave_letter_pairs_9x9`: the label type is the tile label scheme's name (`numbers`, `numbers_from_0`, `pairs`,
+  `pairs_from_0`, `letters`, `letter_pairs`, `cyrillic_letters`, `cyrillic_letter_pairs`, `greek_letters`, `greek_letter_pairs`), the same in every language, and the size is the
+  board side as `9x9`. There is one slot per scheme and size, and each autosave replaces its slot silently, with no warning, status message or announcement.
+  It saves what Save saves and leaves the current save name alone. It is always on, with no setting.
+  - It saves only a game with unsaved progress (at least one shift since the last New game, successful save or successful load). A game with no moves, a solved
+    board, the solution screen and the tutorial's game are not autosaved.
+  - An autosave is an ordinary save: `Load` and `Restore a saved game?` list it as `Autosave_pairs_5x5 (5x5)`, and it loads and deletes like any other. Nothing
+    restores it by itself.
+  - A Save name typed by hand that equals a slot name overwrites that slot, as the next autosave overwrites it.
 - **Leave-site prompt:** with unsaved progress (at least one shift since the last New game,
-  successful save or successful load), closing or reloading the tab shows the browser's own
-  "Leave site?" prompt. Safari shows it on reload but not when the tab is closed; that is
+  successful save or successful load) that the autosave could not keep (the storage is full or refused it, or the board is solved), closing or reloading the tab shows the browser's own
+  "Leave site?" prompt. A successful autosave counts as saved, so there is no prompt. Safari shows it on reload but not when the tab is closed; that is
   Safari's choice, and the page can't change it. The solution screen never prompts: entering it
-  discards the player's moves (GH-126).
+  discards the player's moves (GH-126). A failed autosave tries again at each leave event.
 - **Arrows:** `▲` above and `▼` below each column, `◀`/`▶` at both ends of each row. A click
   shifts the line by one tile, sliding it with wrap-around.
   - **Touch screens (GH-111):** where the main input is touch (phones, tablets), the arrows
@@ -452,7 +462,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   (solved, or Give Up -> Yes). When one has been fully downloaded, the footer's notice appears
   (above). An open page never switches version by itself: a new version opens on the visit after
   every tab of the game has been closed, or when you click `Update`.
-  - `Update` with no unsaved progress reloads at once. With unsaved progress (the same test as the
+  - `Update` with no unsaved progress, or with progress the autosave keeps (GH-338), reloads at once. With unsaved progress the autosave could not keep (the same test as the
     leave-site prompt) it opens `Update to the new version?`: `Your moves since the last
     save will be lost.`, with `Cancel` (where focus starts) and `Update`. Escape is Cancel, which
     closes the dialog, puts focus back on `Update` and keeps the game and the notice. The browser's
@@ -607,8 +617,8 @@ Web client only.
   line says `Couldn't copy the link - it's selected, so copy it yourself.`
 - **Opening a link** starts that board at once as a fresh game (Moves 0, its own Mordie race, the
   player's own labels), skipping the restore prompt and size picker; the status line says `Started a
-  shared NxN board.` and the address bar is cleaned. In a tab with unsaved moves, `Open the shared
-  board?` asks first.
+  shared NxN board.` and the address bar is cleaned. In a tab with unsaved moves, the game is autosaved first (GH-338), and `Open the shared
+  board?` asks only if that failed or the board is solved.
   - **Tile labels in a link (GH-267):** when a link carries labels that differ from the ones the
     player would otherwise see, the board starts as above and `Use the sender's labels (Pairs)?` asks,
     with Yes focused, `For this game only: your next new game uses your own labels.` and `[ No ] [ Yes ]`.
@@ -676,7 +686,7 @@ Web client only. On a first visit Mordie walks the player through a short game.
   (steps 1 to 5) and with the `tutorial` switch off, and it is disabled while a dialog is open. 9 does the same, on a
   computer, and nothing during the tutorial or on the solution screen.
   - With no unsaved moves the tutorial starts at once on its board, at step 1.
-  - With unsaved moves `Save your game first?` opens first: `The tutorial replaces the current game.`, with
+  - With unsaved moves the game is autosaved first (GH-338) and the tutorial starts at once; only if that failed or the board is solved `Save your game first?` opens first: `The tutorial replaces the current game.`, with
     `[ Cancel ] [ Don't save ] [ Save ]`, focus on Cancel. Escape is Cancel.
     - **Cancel** starts nothing and changes nothing; focus goes back to the button or place 9 was pressed.
     - **Don't save** starts the tutorial.
