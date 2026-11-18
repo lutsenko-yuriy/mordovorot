@@ -27,6 +27,8 @@ class WebUpdateScenarioTest {
     /** Three shifts of three different rows that don't solve the board: unsaved progress, three moves. */
     private fun WebHarness.makeProgress() {
         for (row in 1..3) game.onArrow(Arrow.RIGHT, row)
+        // The store refuses the autosave (GH-338), so Update asks first.
+        store.setException = IllegalStateException("quota")
     }
 
     /** Mordie has found its solution and five shifts of one column (one move) reveal it to the page, so Give Up is on offer (as in [WebGiveUpScenarioTest]). */
@@ -217,10 +219,10 @@ class WebUpdateScenarioTest {
         val before = page.store.entries.toMap()
 
         page.game.updates.onUpdate()
-        page.game.updates.onUpdateAnswered(true)
 
         assertEquals(1, page.updates.applied)
-        assertEquals(before, page.store.entries.toMap())
+        // Only the autosave slot is new (GH-338).
+        assertEquals(before + mapOf("mordovorot.save.Autosave_numbers_4x4" to page.store.entries.getValue("mordovorot.save.Autosave_numbers_4x4")), page.store.entries.toMap())
     }
 
     @Test

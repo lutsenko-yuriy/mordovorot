@@ -115,7 +115,7 @@ class ViewModelStartupDeleteTest {
 
         ui.drive(viewModel) { viewModel.restoreOnStartup() }
 
-        assertEquals(listOf<Map<String, Any?>>(mapOf("decision" to "restored", "save_file_count" to 2)), decisions(analytics))
+        assertEquals(listOf<Map<String, Any?>>(mapOf("decision" to "restored", "save_file_count" to 2, "restored_autosave" to false)), decisions(analytics))
         assertEquals(emptyList(), ui.chooseBoardSizeCalls)
     }
 }

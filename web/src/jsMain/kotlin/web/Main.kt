@@ -51,16 +51,21 @@ fun main() {
     // A share link pasted into this open tab.
     window.addEventListener("hashchange", { game.share.onLinkChanged() })
     // Coming back to this tab (or to a page restored from the back-forward cache) may find a new version.
-    document.addEventListener("visibilitychange", { if (document.asDynamic().visibilityState == "visible") game.updates.check(CheckTrigger.TAB_RETURN) })
+    // Hiding it autosaves: a phone may never fire the events that follow.
+    document.addEventListener("visibilitychange", {
+        if (document.asDynamic().visibilityState == "visible") game.updates.check(CheckTrigger.TAB_RETURN) else game.onPageLeft()
+    })
     window.addEventListener("pageshow", { event -> if (event.asDynamic().persisted == true) game.updates.check(CheckTrigger.TAB_RETURN) })
-    // The browser's own "Leave site?" prompt, only while some progress isn't in a save.
+    // Leaving autosaves (GH-338), in beforeunload too: the browser decides on its own "Leave site?" prompt before pagehide fires.
+    // The prompt shows only when the autosave failed, and a success makes the later events no-ops.
     window.addEventListener("beforeunload", { event ->
-        if (game.hasUnsavedProgress()) {
+        if (game.onPageLeft()) {
             event.preventDefault()
             // Older browsers show the prompt only when this is set, and not empty, as well.
             event.asDynamic().returnValue = true
         }
     })
+    window.addEventListener("pagehide", { game.onPageLeft() })
 }
 
 /** The browser's languages, the most wanted first; just its own language where the list is empty, and none where the browser has neither. */

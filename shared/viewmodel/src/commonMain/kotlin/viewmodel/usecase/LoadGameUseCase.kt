@@ -7,6 +7,7 @@ import storage.SaveFileFormatException
 import storage.SaveFromNewerVersionException
 import storage.SaveRepository
 import texts.texts
+import viewmodel.AutosaveSlot
 import viewmodel.CurrentSaveName
 import viewmodel.GameShiftSources
 import viewmodel.MordieHooks
@@ -85,7 +86,7 @@ internal class LoadGameUseCase(
             tileLabels.applySave(fromSave, board.squareSide)
             analytics.track(
                 "load_command_used",
-                mapOf("trigger" to trigger, "result" to "success", "labels_differ_from_preference" to labelsDiffer),
+                mapOf("trigger" to trigger, "result" to "success", "labels_differ_from_preference" to labelsDiffer, "autosave" to AutosaveSlot.isAutosave(name)),
             )
             if (saved.mordie?.solutionScreen == true) solution.enterLoaded(trigger, saved.mordie?.playerResult?.let { PlayerResult(it.gaveUp, it.moves) })
             if (fromSave != null && !fromSave.fits(board.squareSide)) chooseFittingLabels(fromSave)

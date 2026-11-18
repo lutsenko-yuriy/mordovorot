@@ -161,7 +161,7 @@ class ViewModelTileLabelsTest {
             events("load_command_used").map { it["labels_differ_from_preference"] },
         )
         assertEquals(
-            mapOf("trigger" to "command", "result" to "success", "labels_differ_from_preference" to true),
+            mapOf("trigger" to "command", "result" to "success", "labels_differ_from_preference" to true, "autosave" to false),
             events("load_command_used")[1],
         )
     }

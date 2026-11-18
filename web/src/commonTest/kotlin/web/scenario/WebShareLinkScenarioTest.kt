@@ -106,7 +106,9 @@ class WebShareLinkScenarioTest {
     @Test
     fun `a link opened over unsaved progress asks first, and Cancel keeps the game`() = webTest {
         val page = WebHarness(backgroundScope).startOn()
-        page.game.onArrow(Arrow.LEFT, 0)
+        page.game.onArrow(Arrow.RIGHT, 1)
+        // The store refuses the autosave (GH-338), so the link asks first.
+        page.store.setException = IllegalStateException("quota")
         val played = page.state.tiles
 
         page.changeLink(4, SHARED_4X4)
@@ -177,7 +179,9 @@ class WebShareLinkScenarioTest {
     @Test
     fun `a second link that arrives while the first is being asked about is asked about next`() = webTest {
         val page = WebHarness(backgroundScope).startOn()
-        page.game.onArrow(Arrow.LEFT, 0)
+        page.game.onArrow(Arrow.RIGHT, 1)
+        // The store refuses the autosave (GH-338), so the link asks first.
+        page.store.setException = IllegalStateException("quota")
         page.game.onSave()
         page.changeLink(5, SHARED_5X5)
         page.game.onSaveAnswered(null)

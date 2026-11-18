@@ -70,10 +70,10 @@ internal class WebTutorial(
         analytics.track("tutorial_started", mapOf("source" to source))
     }
 
-    /** `[ Tutorial ]` or 8, [openedFrom] `button` or `shortcut` (GH-289): with unsaved progress the replay asks first, and on Save goes on
+    /** `[ Tutorial ]` or 8, [openedFrom] `button` or `shortcut` (GH-289): with unsaved progress the autosave could not keep the replay asks first, and on Save goes on
      *  only once the game is saved. A Cancel or a failed save leaves the game as it was, focus back on [opener]. */
     fun onReplay(openedFrom: String, opener: Focus = Focus.TutorialReplay) = game.runFlow(opener) {
-        if (game.hasUnsavedProgress()) {
+        if (game.autosave("tutorial_replay")) {
             analytics.track("screen_replay_save_dialog", mapOf("opened_from" to openedFrom, "move_count" to viewModel.moveCount()))
             when (modal.ask<ReplaySaveChoice>(WebDialog.ReplaySave) { it == ReplaySaveChoice.SAVE }) {
                 ReplaySaveChoice.CANCEL -> {

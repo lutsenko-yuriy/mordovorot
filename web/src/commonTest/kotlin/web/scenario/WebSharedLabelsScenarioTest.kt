@@ -134,7 +134,9 @@ class WebSharedLabelsScenarioTest {
     @Test
     fun `with unsaved moves, Open the shared board comes first`() = webTest {
         val page = WebHarness(backgroundScope).startOn()
-        page.game.onArrow(Arrow.LEFT, 0)
+        page.game.onArrow(Arrow.RIGHT, 1)
+        // The store refuses the autosave (GH-338), so the link asks first.
+        page.store.setException = IllegalStateException("quota")
 
         page.changeLink(4, LINKED_4X4, "pairs")
 

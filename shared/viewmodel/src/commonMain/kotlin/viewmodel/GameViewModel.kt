@@ -46,6 +46,12 @@ interface GameViewModel {
     /** Returns whether the save actually succeeded. `suspend` (GH-42): asks the
      *  View for confirmation/messages instead of returning synchronously. */
     suspend fun saveGame(name: String): Boolean
+
+    /** Writes the game to its [AutosaveSlot] when it has unsaved shifts (GH-338): silent, the current save name
+     *  untouched, and a success clears [hasUnsavedProgress]. [trigger] is `page_left`, `update`, `shared_link`
+     *  or `tutorial_replay`. A solved board, the solution screen and the tutorial are [AutosaveResult.SKIPPED].
+     *  Not `suspend`, so a page can call it from `beforeunload`. */
+    fun autosave(trigger: String): AutosaveResult
     /** Whether a save was restored, a repaired one included (GH-277). */
     suspend fun loadGame(name: String): Boolean
 

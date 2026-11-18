@@ -132,7 +132,9 @@ class WebSharedProgressScenarioTest {
     @Test
     fun `a progress link met in an open tab works like one at load`() = webTest {
         val page = WebHarness(backgroundScope).startOn()
-        page.game.onArrow(Arrow.LEFT, 0)
+        page.game.onArrow(Arrow.RIGHT, 1)
+        // The store refuses the autosave (GH-338), so the link asks first.
+        page.store.setException = IllegalStateException("quota")
 
         page.changeLink(4, ONE_SHIFT_FROM_SOLVED, progress = "s12")
         assertEquals(WebDialog.OpenShared(4), page.state.dialog)

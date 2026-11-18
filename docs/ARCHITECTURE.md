@@ -227,8 +227,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │                    # GH-139's onLabels*, GH-163's onEscape, GH-171's onKey and onTilePressed) ->
 │   │                    # GameViewModel, a WebState to the WebRenderer after every change; drains
 │   │                    # uiRequests; tracks the view-layer analytics (screen views, dialog_cancelled);
-│   │                    # sets each frame's announcement (GH-166); GH-338's onPageLeft autosaves
-│   ├── WebAutosave.kt   # GH-338: the page's autosave guards (not while the tutorial runs or an update is being applied); used by onPageLeft and, asking only when it fails, by Update, the share link and the tutorial replay
+│   │                    # sets each frame's announcement (GH-166); GH-338's onPageLeft and autosave(trigger) try the autosave, not while the tutorial
+│   │                    # runs or an update is being applied; Update, the share link and the tutorial replay ask only if it failed
 │   ├── WebDialogFlows.kt # WebGame's Save, Load, size and can't-be-solved dialogs over its modal (GH-166); Load is a loop that also runs the Delete confirmation (GH-251); the viewModel's size and unsolvable requests (GH-262)
 │   ├── AppUpdates.kt    # GH-262: the seam to the offline worker (start/check/apply; DomAppUpdates in jsMain, FakeAppUpdates in the harness), CheckTrigger and OFFLINE_WORKER, the worker's fixed relative URL
 │   ├── WebUpdateFlows.kt # GH-262: the New version available notice (ready, the footer it implies, update_available), Update and its confirmation (update_applied), the checks' triggers

@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.55.0] — 2026-11-18 (PR #340 merged)
+
+### Added
+
+- [user] (PR #340) GH-338: The page autosaves the game to `Autosave_<label scheme>_<size>` when it is left; Update, a share link and the tutorial replay autosave first and ask only if that fails.
+
 ## [0.54.1] — 2026-11-17 (PR #337 merged)
 
 ### Added

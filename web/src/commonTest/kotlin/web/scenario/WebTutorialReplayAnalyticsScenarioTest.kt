@@ -11,7 +11,11 @@ import web.ReplaySaveChoice
 class WebTutorialReplayAnalyticsScenarioTest {
 
     /** A game with one move made, unsaved. */
-    private fun TestScope.mid() = WebHarness(backgroundScope).startOn().also { it.game.onArrow(Arrow.RIGHT, 1) }
+    private fun TestScope.mid() = WebHarness(backgroundScope).startOn().also {
+        it.game.onArrow(Arrow.RIGHT, 1)
+        // The store refuses the autosave (GH-338), so the question is asked.
+        it.store.setException = IllegalStateException("quota")
+    }
 
     private fun TestScope.asked() = mid().also { it.game.tutorial.onReplay("button") }
 
