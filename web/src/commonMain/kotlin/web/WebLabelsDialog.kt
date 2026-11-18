@@ -18,10 +18,11 @@ internal class WebLabelsDialog(
         choose()?.let(viewModel::changeTileLabels)
     }
 
-    /** A Labels row pressed: it becomes the marked one, and the board previews it. */
+    /** A Labels row pressed: it becomes the marked one, and the board previews it. One that doesn't fit the board stays unmarked and
+     *  shows its limit in a bubble instead (GH-343); either way focus goes to it. */
     fun onSelected(labels: TileLabels) {
         val shown = modal.shown as? WebDialog.Labels ?: return
-        modal.update(select(shown, labels) ?: return)
+        modal.update(if (labels.fits(viewModel.squareSide())) shown.copy(selected = labels, tip = null) else shown.copy(tip = labels))
         game.render(focus = Focus.Label(labels))
     }
 
@@ -30,7 +31,7 @@ internal class WebLabelsDialog(
     fun onGroupOpened(group: TileLabelGroup) {
         val shown = modal.shown as? WebDialog.Labels ?: return
         if (group == shown.open) return
-        val opened = shown.copy(open = group)
+        val opened = shown.copy(open = group, tip = null)
         modal.update(opened)
         game.render(focus = defaultFocus(opened))
     }
@@ -43,10 +44,6 @@ internal class WebLabelsDialog(
 
     /** A loaded save's labels don't fit its board (GH-160): the picker with [message] above it. */
     suspend fun chooseFitting(message: String): TileLabels? = choose(message)
-
-    /** [open] with [labels] marked, or `null` when [labels] doesn't fit the board. */
-    private fun select(open: WebDialog.Labels, labels: TileLabels): WebDialog.Labels? =
-        if (labels.fits(viewModel.squareSide())) open.copy(selected = labels) else null
 
     private suspend fun choose(message: String? = null): TileLabels? {
         // OK skips the frame without the dialog: it would show the old labels for an instant, which the label wave (GH-342) reads as a Cancel.

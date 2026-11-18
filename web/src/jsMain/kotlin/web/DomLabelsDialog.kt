@@ -5,6 +5,7 @@ import viewmodel.TileLabelGroup
 import web.a11y.asDisclosure
 import web.a11y.asRadio
 import web.a11y.asRadioGroup
+import web.a11y.asUnavailableRadio
 import web.a11y.focusKey
 import web.a11y.hiddenFromReaders
 import web.a11y.named
@@ -48,7 +49,7 @@ private fun groupElement(group: TileLabelGroup, dialog: WebDialog.Labels, game: 
         val choices = element("div", "choices list labels").apply {
             id = "label-group-options"
             asRadioGroup(this, group.title)
-            dialog.openOptions.forEach { append(labelRow(it, it.labels == dialog.selected, it.labels == stopAt, game)) }
+            dialog.openOptions.forEach { append(labelRow(it, it.labels == dialog.selected, it.labels == stopAt, it.labels == dialog.tip, game)) }
         }
         // The new group's rows slide in while the old one's slide out (GH-342).
         append(if (motion.leavingGroup() != null) enteringBody(choices, motion.slideDelayMs()) else choices)
@@ -56,9 +57,11 @@ private fun groupElement(group: TileLabelGroup, dialog: WebDialog.Labels, game: 
 }
 
 /** A radio-role button, since the page is rebuilt every frame and a native radio would lose its state. */
-private fun labelRow(option: LabelOption, checked: Boolean, tabStop: Boolean, game: WebGame) =
-    button("", if (checked) "checked" else null) { game.labels.onSelected(option.labels) }.focusKey(Focus.Label(option.labels)).apply {
-        asRadio(this, checked, tabStop = tabStop && option.available, unavailable = !option.available)
+private fun labelRow(option: LabelOption, checked: Boolean, tabStop: Boolean, tip: Boolean, game: WebGame) =
+    button("", listOfNotNull("checked".takeIf { checked }, "unavailable".takeIf { !option.available }, "tip".takeIf { tip }).joinToString(" ").ifEmpty { null }) {
+        game.labels.onSelected(option.labels)
+    }.focusKey(Focus.Label(option.labels)).apply {
+        if (option.available) asRadio(this, checked, tabStop = tabStop) else asUnavailableRadio(this)
         append(
             element("span", "name").apply { textContent = option.title },
             *listOfNotNull(option.limit?.let { element("span", "limit").apply { textContent = it } }).toTypedArray(),

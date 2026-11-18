@@ -56,8 +56,8 @@ class ColourContrastStylesTest {
             check(paint("solution.css", ".step.current", "color"), "button", 4.5, "the current solution step"),
             check(paint("dialogs.css", ".dialog .message", "color"), "card", 4.5, "dialog message"),
             check(paint("dialogs.css", ".dialog .warning", "color"), "card", 4.5, "dialog warnings"),
-            check(paint("labels.css", ".dialog .choices.labels .limit", "color"), "card", 4.5, "label limits"),
-            check(paint("labels.css", ".dialog .choices.labels button:hover .limit", "color"), "frame", 4.5, "a hovered label row's limit"),
+            // GH-343: the limit is a bubble in the ink colour, with the card colour as its text.
+            check(paint("labels.css", ".dialog .choices.labels .limit", "color"), "ink", 4.5, "a label limit's bubble"),
             // GH-332: the alphabet hint's letters, the greyed ones included.
             check(paint("labels.css", ".dialog .alphabet .letter", "color"), "page", 4.5, "a greyed alphabet letter"),
             check(paint("labels.css", ".dialog .alphabet .letter.used", "color"), "button", 4.5, "an alphabet letter in use"),
