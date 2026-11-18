@@ -3,6 +3,7 @@ package web
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /** GH-342: the label wave's timing. */
@@ -69,15 +70,15 @@ class LabelWaveTest {
     fun theSameSchemeStartsNoWave() {
         val frame = state(viewmodel.TileLabels.LETTERS)
 
-        assertEquals(null, frame.labelWaveFrom(frame))
+        assertNull(frame.labelWaveFrom(frame))
     }
 
     @Test
     fun anotherSizeOrAPageStillOpeningOnlyArrives() {
         val before = state(viewmodel.TileLabels.NUMBERS)
 
-        assertEquals(List(9) { null }, state(viewmodel.TileLabels.LETTERS, side = 3).labelWaveFrom(before))
-        assertEquals(List(4) { null }, state(viewmodel.TileLabels.LETTERS, opening = true).labelWaveFrom(before))
+        assertEquals<List<String?>?>(List(9) { null }, state(viewmodel.TileLabels.LETTERS, side = 3).labelWaveFrom(before))
+        assertEquals<List<String?>?>(List(4) { null }, state(viewmodel.TileLabels.LETTERS, opening = true).labelWaveFrom(before))
     }
 
     @Test
@@ -85,6 +86,6 @@ class LabelWaveTest {
         val before = state(viewmodel.TileLabels.NUMBERS)
         val dragging = state(viewmodel.TileLabels.LETTERS, drag = web.drag.LineOffset(web.drag.Axis.ROW, 0, 3.0))
 
-        assertEquals(null, dragging.labelWaveFrom(before))
+        assertNull(dragging.labelWaveFrom(before))
     }
 }
