@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.56.0] — 2026-11-18 (PR #344 merged)
+
+### Added
+
+- [user] (PR #344) GH-342: Changing the tile labels in the Tile labels dialog now ripples through the tiles on the board and in the preview, and switching between label groups slides smoothly; with reduced motion on, everything changes at once.
+- [non-user] (PR #344) GH-342: debrief; review decisions are asked as pop-up questions, and motion changes get a recorded clip when the user is away.
+
 ## [0.55.0] — 2026-11-18 (PR #340 merged)
 
 ### Added
