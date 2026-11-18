@@ -202,6 +202,7 @@ class WebLabelWaveScenarioTest {
     }
 
     // Where it does not play
+    // Legacy (GH-343): this asserts the behaviour GH-343 changes; WU1 retires it.
     @Test
     fun labelsChangedOutsideTheDialogDoNotWave() = webTest {
         val linked = WebHarness(backgroundScope).startWithLink(4, LINKED_4X4, "pairs")
