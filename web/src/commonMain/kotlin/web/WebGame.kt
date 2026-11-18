@@ -110,8 +110,10 @@ class WebGame internal constructor(
         if (!playable) return
         keys.onArrowPressed()
         val focus = onBoard.takeIf { byMouse }
-        // Held for a running label wave (GH-343): focus moves now, the shift comes when the wave ends.
-        if (moves.run({ playable }) { shifts.line(arrow, line, PointerShift.ARROW, focus) } && focus != null) render(focus = focus)
+        // Held for a running label wave (GH-343): focus moves now, the shift comes when the wave ends and leaves focus where the player put it.
+        var held = false
+        held = moves.run({ playable }) { shifts.line(arrow, line, PointerShift.ARROW, focus.takeUnless { held }) }
+        if (held && focus != null) render(focus = focus)
     }
 
     fun onDragStart(row: Int, col: Int, x: Double, y: Double, pitch: Double) = dragging.onStart(row, col, x, y, pitch)

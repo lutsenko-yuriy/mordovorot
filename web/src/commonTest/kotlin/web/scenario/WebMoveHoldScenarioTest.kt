@@ -91,6 +91,33 @@ class WebMoveHoldScenarioTest {
     }
 
     @Test
+    fun theHeldShiftLeavesFocusWhereThePlayerPutIt() = webTest {
+        val page = page()
+        page.startWave()
+        page.game.onArrow(Arrow.LEFT, 0, byMouse = true)
+        page.game.render(focus = Focus.NewButton)
+
+        passMs(601)
+
+        assertTrue(page.state.solved)
+        assertEquals(null, page.state.focus)
+    }
+
+    @Test
+    fun aPlainPressOnATileKeepsTheHeldShift() = webTest {
+        val page = page()
+        page.startWave()
+        page.game.onArrow(Arrow.LEFT, 0)
+
+        page.game.onTilePressed(2, 0)
+        page.game.onDragStart(2, 0, 100.0, 100.0, 40.0)
+        page.game.onDragEnd()
+        passMs(601)
+
+        assertTrue(page.state.solved)
+    }
+
+    @Test
     fun aReplayStepIsHeld() = webTest {
         val page = WebHarness(backgroundScope, motion = true).startOn(REPLAY_START)
         page.mordieSearches.latest.progress = SearchProgress(2, found = true, elapsedMs = 0, solution = REPLAY_PATH)

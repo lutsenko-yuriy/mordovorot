@@ -23,7 +23,6 @@ internal class WebDragFlows(private val game: WebGame, private val viewModel: Ga
     /** A press on the tile at [row], [col], at ([x], [y]) on a board with tiles [pitch] apart, in pixels. */
     fun onStart(row: Int, col: Int, x: Double, y: Double, pitch: Double) {
         if (!game.playable) return
-        game.moves.drop()
         drag = LineDrag(row, col, x, y, pitch, viewModel.squareSide())
     }
 
@@ -31,7 +30,11 @@ internal class WebDragFlows(private val game: WebGame, private val viewModel: Ga
         val drag = drag ?: return
         val before = drag.offset
         drag.move(x, y)
-        if (drag.offset != before) game.render()
+        if (drag.offset != before) {
+            // The drag has really started, so the label wave is over and a held move is dropped (a plain press on a tile keeps it).
+            game.moves.drop()
+            game.render()
+        }
     }
 
     /** The release: the line snaps to the nearest tile, and the whole drag is one shift. */
