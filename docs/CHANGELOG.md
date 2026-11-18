@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.56.1] — 2026-11-18 (PR #346 merged)
+
+### Added
+
+- [wip] [app] (PR #346) GH-343: the label wave plays whenever the labels change, not only in the Tile labels dialog: a share link's prompt (and No), a new game, a load and a startup restore; on a page load or another board size the labels only fade in (WU1 of 3; moves waiting for the wave and the limit bubble follow in WU2 and WU3).
+
 ## [0.56.0] — 2026-11-18 (PR #344 merged)
 
 ### Added
