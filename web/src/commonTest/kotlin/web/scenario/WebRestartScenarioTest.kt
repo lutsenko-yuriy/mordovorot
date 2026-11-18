@@ -1,181 +1,341 @@
 package web.scenario
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertIs
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
+import storage.SavedMordie
+import viewmodel.RestartButton
+import viewmodel.TileLabels
+import web.Arrow
+import web.Focus
+import web.ReplaySaveChoice
+import web.WebDialog
 
-/** GH-349: the Restart button and its save question. Stubs: WU2 fills them in. */
+/** GH-349: the Restart button and its save question. */
+@OptIn(ExperimentalCoroutinesApi::class)
 class WebRestartScenarioTest {
+
+    private fun TestScope.fresh() = WebHarness(backgroundScope).startOn()
+
+    /** A game with three moves made. */
+    private fun TestScope.mid() = fresh().also { it.threeMoves() }
+
+    /** [mid], with the save question open. */
+    private fun TestScope.asked() = mid().also { it.game.restart.onRestart("button") }
+
+    /** Loads the save "foo": [ONE_SHIFT_FROM_SOLVED] after a move, 7 moves in, with Mordie's data when [known]. */
+    private fun TestScope.loaded(known: Boolean): WebHarness {
+        val page = fresh().seed("foo", RESTART_MOVED, moves = 7, mordie = SavedMordie(ONE_SHIFT_FROM_SOLVED, 2, found = false).takeIf { known })
+        page.game.onLoad()
+        page.game.onLoadChosen("foo")
+        return page
+    }
+
+    // The button
     @Test
-    fun restartIsDimmedAtTheStart() {
-        // TODO: 1. Start a new 4x4 game
-        // TODO: 2. Restart is dimmed
+    fun restartIsDimmedAtTheStart() = webTest {
+        assertEquals(RestartButton.DIMMED, fresh().state.restart)
     }
 
     @Test
-    fun restartIsLiveAfterAShift() {
-        // TODO: 1. Start a game
-        // TODO: 2. Make one shift
-        // TODO: 3. Restart is live
+    fun restartIsLiveAfterAShift() = webTest {
+        val page = fresh()
+        page.game.onArrow(Arrow.RIGHT, 1)
+
+        assertEquals(RestartButton.LIVE, page.state.restart)
     }
 
     @Test
-    fun aLoadedGameWithItsStartKnownRestartsLive() {
-        // TODO: 1. Load a save with Mordie data and 7 moves
-        // TODO: 2. Restart is live
+    fun aLoadedGameWithItsStartKnownRestartsLive() = webTest {
+        assertEquals(RestartButton.LIVE, loaded(known = true).state.restart)
     }
 
     @Test
-    fun aLoadedGameWithoutItsStartIsDimmedUntilTheFirstShift() {
-        // TODO: 1. Load a save with no Mordie data
-        // TODO: 2. Restart is dimmed
-        // TODO: 3. Make one shift
-        // TODO: 4. Restart is live
+    fun aLoadedGameWithoutItsStartIsDimmedUntilTheFirstShift() = webTest {
+        val page = loaded(known = false)
+        assertEquals(RestartButton.DIMMED, page.state.restart)
+
+        page.game.onArrow(Arrow.RIGHT, 2)
+
+        assertEquals(RestartButton.LIVE, page.state.restart)
     }
 
     @Test
-    fun restartIsHiddenOnTheSolutionScreen() {
-        // TODO: 1. Give up and open Mordie's solution
-        // TODO: 2. The toolbar has no Restart
+    fun restartIsHiddenOnTheSolutionScreen() = webTest {
+        val page = onTwoMoves()
+        page.mordieFinds()
+        page.fiveShifts()
+        page.game.solution.onGiveUp()
+        page.game.solution.onGiveUpAnswered(true)
+
+        assertTrue(page.state.solution != null)
+        assertEquals(RestartButton.HIDDEN, page.state.restart)
     }
 
     @Test
-    fun restartIsHiddenDuringTheTutorial() {
-        // TODO: 1. Start the tutorial
-        // TODO: 2. The toolbar has no Restart
+    fun restartIsHiddenDuringTheTutorial() = webTest {
+        val page = tutorialPage(backgroundScope)
+
+        assertTrue(page.state.guidance != null)
+        assertEquals(RestartButton.HIDDEN, page.state.restart)
     }
 
     @Test
-    fun restartIsDisabledWhileADialogIsOpen() {
-        // TODO: 1. Make a shift
-        // TODO: 2. Open the Save dialog
-        // TODO: 3. Restart is disabled
+    fun restartIsDisabledWhileADialogIsOpen() = webTest {
+        val page = mid()
+        page.game.onSave()
+        val before = page.state.unfocused()
+
+        // The button is disabled in the page; the game ignores it as well.
+        page.game.restart.onRestart("button")
+
+        assertEquals(before, page.state.unfocused())
+        assertIs<WebDialog.Save>(page.state.dialog)
     }
 
     @Test
-    fun withMovesRestartAsksToSaveFirst() {
-        // TODO: 1. Make three shifts
-        // TODO: 2. Press Restart
-        // TODO: 3. `Save your game first?` opens
-        // TODO: 4. Focus is on Cancel
-        // TODO: 5. The board has not changed
+    fun withMovesRestartAsksToSaveFirst() = webTest {
+        val page = mid()
+        val before = page.state.unfocused()
+
+        page.game.restart.onRestart("button")
+
+        assertEquals(WebDialog.RestartSave, page.state.dialog)
+        assertEquals(Focus.DialogCancel, page.state.focus)
+        assertEquals(before, page.state.copy(dialog = null).unfocused())
     }
 
     @Test
-    fun cancelChangesNothing() {
-        // TODO: 1. Press Restart with moves
-        // TODO: 2. Press Cancel
-        // TODO: 3. The board and Moves are unchanged
-        // TODO: 4. Focus is back on Restart
+    fun cancelChangesNothing() = webTest {
+        val page = mid()
+        val before = page.state.unfocused()
+        page.game.restart.onRestart("button")
+
+        page.game.restart.onAnswered(ReplaySaveChoice.CANCEL)
+
+        assertEquals(before, page.state.unfocused())
+        assertEquals(3, page.state.moves)
+        assertEquals(Focus.RestartButton, page.state.focus)
     }
 
     @Test
-    fun escapeIsCancel() {
-        // TODO: 1. Press Restart with moves
-        // TODO: 2. Press Escape
-        // TODO: 3. The dialog is gone and nothing changed
+    fun escapeIsCancel() = webTest {
+        val page = mid()
+        val before = page.state.unfocused()
+        page.game.restart.onRestart("button")
+
+        page.game.onEscape()
+
+        assertNull(page.state.dialog)
+        assertEquals(before, page.state.unfocused())
+        assertEquals(Focus.RestartButton, page.state.focus)
     }
 
     @Test
-    fun dontSaveRestartsTheGame() {
-        // TODO: 1. Make three shifts
-        // TODO: 2. Press Restart, then Don't save
-        // TODO: 3. The board is the start arrangement
-        // TODO: 4. Moves is 0
-        // TODO: 5. Size and labels are as before
+    fun dontSaveRestartsTheGame() = webTest {
+        val page = mid()
+        val before = page.state
+
+        page.restartDiscarding()
+
+        assertNull(page.state.dialog)
+        assertEquals(RESTART_START, page.state.tiles)
+        assertEquals(0, page.state.moves)
+        assertEquals(before.side, page.state.side)
+        assertEquals(before.labels, page.state.labels)
+        assertEquals(RestartButton.DIMMED, page.state.restart)
     }
 
     @Test
-    fun dontSaveKeepsTheSaveName() {
-        // TODO: 1. Load the save "foo", shift, press Restart, then Don't save
-        // TODO: 2. The next Save dialog shows "foo"
+    fun dontSaveKeepsTheSaveName() = webTest {
+        val page = fresh().seed("foo", ONE_SHIFT_FROM_SOLVED)
+        page.game.onLoad()
+        page.game.onLoadChosen("foo")
+        page.game.onArrow(Arrow.RIGHT, 1)
+        page.restartDiscarding()
+
+        page.game.onSave()
+
+        assertEquals("foo", (page.state.dialog as WebDialog.Save).name)
     }
 
     @Test
-    fun dontSaveClearsUnsavedProgress() {
-        // TODO: 1. Make a shift, press Restart, then Don't save
-        // TODO: 2. The game counts as having no unsaved moves
+    fun dontSaveClearsUnsavedProgress() = webTest {
+        val page = mid()
+        assertTrue(page.game.hasUnsavedProgress())
+
+        page.restartDiscarding()
+
+        assertFalse(page.game.hasUnsavedProgress())
     }
 
     @Test
-    fun saveOpensTheSaveDialogWithTheCurrentName() {
-        // TODO: 1. Load "foo", shift, press Restart, then Save
-        // TODO: 2. The Save dialog opens with "foo"
+    fun saveOpensTheSaveDialogWithTheCurrentName() = webTest {
+        val page = fresh().seed("foo", ONE_SHIFT_FROM_SOLVED)
+        page.game.onLoad()
+        page.game.onLoadChosen("foo")
+        page.game.onArrow(Arrow.RIGHT, 1)
+
+        page.restartWith(ReplaySaveChoice.SAVE)
+
+        assertEquals("foo", (page.state.dialog as WebDialog.Save).name)
     }
 
     @Test
-    fun aSuccessfulSaveRestartsTheGame() {
-        // TODO: 1. Press Restart, then Save, then confirm
-        // TODO: 2. The save holds the moves made
-        // TODO: 3. The game is back at the start
+    fun aSuccessfulSaveRestartsTheGame() = webTest {
+        val page = mid()
+        val played = page.state.tiles
+        page.restartWith(ReplaySaveChoice.SAVE)
+
+        page.game.onSaveAnswered("mine")
+
+        val saved = page.saves.load("mine")!!
+        assertEquals(shown(saved.state), played)
+        assertEquals(3, saved.moveCount)
+        assertEquals(RESTART_START, page.state.tiles)
+        assertEquals(0, page.state.moves)
+        assertNull(page.state.dialog)
     }
 
     @Test
-    fun aCancelledSaveRestartsNothing() {
-        // TODO: 1. Press Restart, then Save, then Cancel
-        // TODO: 2. The board and Moves are unchanged
+    fun aCancelledSaveRestartsNothing() = webTest {
+        val page = mid()
+        val before = page.state.unfocused()
+        page.restartWith(ReplaySaveChoice.SAVE)
+
+        page.game.onSaveAnswered(null)
+
+        assertEquals(before, page.state.unfocused())
+        assertEquals(Focus.RestartButton, page.state.focus)
     }
 
     @Test
-    fun aNameWithSpacesRestartsNothing() {
-        // TODO: 1. Press Restart, then Save with a name that has spaces
-        // TODO: 2. The board and Moves are unchanged
+    fun aNameWithSpacesRestartsNothing() = webTest {
+        val page = mid()
+        val played = page.state.tiles
+        page.restartWith(ReplaySaveChoice.SAVE)
+
+        page.game.onSaveAnswered("two words")
+
+        assertEquals(played, page.state.tiles)
+        assertEquals(3, page.state.moves)
+        assertNull(page.state.dialog)
+        assertTrue(page.saves.listSaves().isEmpty())
     }
 
     @Test
-    fun aFailedSaveRestartsNothing() {
-        // TODO: 1. Make saving fail
-        // TODO: 2. Press Restart, then Save
-        // TODO: 3. The board and Moves are unchanged
+    fun aFailedSaveRestartsNothing() = webTest {
+        val page = mid()
+        val played = page.state.tiles
+        page.store.setException = IllegalStateException("quota")
+        page.restartWith(ReplaySaveChoice.SAVE)
+
+        page.game.onSaveAnswered("mine")
+
+        assertEquals(played, page.state.tiles)
+        assertEquals(3, page.state.moves)
     }
 
     @Test
-    fun aWonBoardRestartsAtOnce() {
-        // TODO: 1. Solve the board
-        // TODO: 2. Press Restart
-        // TODO: 3. No dialog opens
-        // TODO: 4. The board is the start arrangement at Moves 0
+    fun aWonBoardRestartsAtOnce() = webTest {
+        val page = fresh()
+        page.game.onArrow(Arrow.LEFT, 0)
+        assertTrue(page.state.solved)
+
+        page.game.restart.onRestart("button")
+
+        assertNull(page.state.dialog)
+        assertFalse(page.state.solved)
+        assertEquals(RESTART_START, page.state.tiles)
+        assertEquals(0, page.state.moves)
     }
 
     @Test
-    fun aLoadedGameGoesBackToMordiesOriginal() {
-        // TODO: 1. Load a save with Mordie data, shift, press Restart, then Don't save
-        // TODO: 2. The board is Mordie's original at Moves 0
+    fun aLoadedGameGoesBackToMordiesOriginal() = webTest {
+        val page = loaded(known = true)
+        page.game.onArrow(Arrow.RIGHT, 2)
+
+        page.restartDiscarding()
+
+        assertEquals(RESTART_START, page.state.tiles)
+        assertEquals(0, page.state.moves)
     }
 
     @Test
-    fun aLoadedGameWithoutAStartGoesBackToTheBoardAsLoaded() {
-        // TODO: 1. Load a save with no Mordie data and 7 moves
-        // TODO: 2. Shift, press Restart, then Don't save
-        // TODO: 3. The board is as loaded
-        // TODO: 4. Moves is 7
+    fun aLoadedGameWithoutAStartGoesBackToTheBoardAsLoaded() = webTest {
+        val page = loaded(known = false)
+        assertEquals(7, page.state.moves)
+        page.game.onArrow(Arrow.RIGHT, 2)
+
+        page.restartDiscarding()
+
+        assertEquals(shown(RESTART_MOVED), page.state.tiles)
+        assertEquals(7, page.state.moves)
     }
 
     @Test
-    fun aSharedBoardRestartsToTheSharedArrangement() {
-        // TODO: 1. Open a share link with labels
-        // TODO: 2. Shift, press Restart, then Don't save
-        // TODO: 3. The board is the shared arrangement
-        // TODO: 4. The sender's labels stay
+    fun aSharedBoardRestartsToTheSharedArrangement() = webTest {
+        val page = WebHarness(backgroundScope).startWithLink(4, RESTART_LINKED, "pairs")
+        page.game.share.onSharedLabelsAnswered(true)
+        page.game.onArrow(Arrow.RIGHT, 1)
+
+        page.restartDiscarding()
+
+        assertEquals(shown(RESTART_LINKED), page.state.tiles)
+        assertEquals(0, page.state.moves)
+        assertEquals(TileLabels.PAIRS, page.state.labels)
     }
 
     @Test
-    fun restartKeepsTheTileLabels() {
-        // TODO: 1. Choose Letters
-        // TODO: 2. Shift, press Restart, then Don't save
-        // TODO: 3. The labels are still Letters
+    fun restartKeepsTheTileLabels() = webTest {
+        val page = fresh()
+        page.game.labels.open()
+        page.game.labels.onSelected(TileLabels.LETTERS)
+        page.game.labels.onAnswered(ok = true)
+        page.game.onArrow(Arrow.RIGHT, 1)
+
+        page.restartDiscarding()
+
+        assertEquals(TileLabels.LETTERS, page.state.labels)
+        assertEquals(RESTART_START, page.state.tiles)
     }
 
     @Test
-    fun aSecondRestartReturnsToTheSameStart() {
-        // TODO: 1. Restart once
-        // TODO: 2. Shift again and restart
-        // TODO: 3. The board is the same start arrangement
+    fun aSecondRestartReturnsToTheSameStart() = webTest {
+        val page = mid()
+        page.restartDiscarding()
+        page.game.onArrow(Arrow.DOWN, 2)
+        page.game.onArrow(Arrow.RIGHT, 3)
+
+        page.restartDiscarding()
+
+        assertEquals(RESTART_START, page.state.tiles)
+        assertEquals(0, page.state.moves)
     }
 
     @Test
-    fun aHeldMoveIsDroppedByRestart() {
-        // TODO: 1. Change the labels so a wave runs
-        // TODO: 2. Press an arrow, which is held
-        // TODO: 3. Press Restart
-        // TODO: 4. The held move is not made
+    fun aHeldMoveIsDroppedByRestart() = webTest {
+        val page = WebHarness(backgroundScope, motion = true).startOn()
+        page.game.onArrow(Arrow.RIGHT, 1)
+        page.game.labels.open()
+        page.game.labels.onSelected(TileLabels.LETTERS)
+        page.game.labels.onAnswered(ok = false)
+        assertTrue(page.waving)
+        page.game.onArrow(Arrow.LEFT, 0)
+
+        page.restartDiscarding()
+        advanceTimeBy(2_000)
+        runCurrent()
+
+        assertEquals(RESTART_START, page.state.tiles)
+        assertFalse(page.state.solved)
+        assertEquals(0, page.state.moves)
     }
 }

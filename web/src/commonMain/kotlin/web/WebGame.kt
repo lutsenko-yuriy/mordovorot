@@ -9,6 +9,7 @@ import texts.texts
 import viewmodel.GameViewModel
 import viewmodel.GiveUpButton
 import viewmodel.PointerShift
+import viewmodel.RestartButton
 import viewmodel.SessionKeyboardLayout
 import viewmodel.TileLabels
 import viewmodel.UnsolvableSaveChoice
@@ -46,6 +47,7 @@ class WebGame internal constructor(
     internal val share = WebShareFlows(this, viewModel, analytics, modal, address, clipboard, shareLabels, shareProgress)
     internal val updates = WebUpdateFlows(this, viewModel, analytics, modal, updates, appVersion)
     internal val language = WebLanguageFlows(this, viewModel)
+    internal val restart = WebRestartFlows(this, viewModel, analytics, modal)
     internal val tutorial = WebTutorial(this, viewModel, analytics, modal, tutorialSeen, scope, computer, tutorialOn)
     internal val keys = WebKeyPlay(this, viewModel, pressedWith, computer)
     private val requests = WebRequestRouter(this)
@@ -263,6 +265,7 @@ class WebGame internal constructor(
             dialog = modal.shown,
             drag = dragging.offset,
             giveUp = if (guidance == null) viewModel.giveUpButton() else GiveUpButton.HIDDEN,
+            restart = if (guidance == null) viewModel.restartButton() else RestartButton.HIDDEN,
             solution = viewModel.solution(),
             slide = slide,
             // The Labels dialog's marked scheme, or a share link's labels, previewed until OK or Yes keeps them or Cancel or No drops them.

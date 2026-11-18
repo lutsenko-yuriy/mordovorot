@@ -22,7 +22,7 @@ object GermanKeyTexts : KeyTexts {
     override val toolbarLine1 = "Neu 1 · Speichern 2 · Laden 3 · Beschriftung 4"
     override val toolbarLine2 = "Aufgeben 5 · Hinweis 8 · Tutorial 9"
     override val toolbarLine3 = "0 Brett vorlesen (Screenreader)"
-    override val toolbarLine4 = "Steuerung 6 · Teilen 7"
+    override val toolbarLine4 = "Steuerung 6 · Teilen 7 · Neustart R"
     override val solutionLine1 = "Lösung: ← → A D H L zurück/weiter ·"
     override val solutionLine2 = "  Leertaste/Enter weiter · R Neustart ·"
     override val solutionLine3 = "  ↑ ↓ W S K J scrollen"

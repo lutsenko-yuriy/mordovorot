@@ -4,6 +4,7 @@ import texts.Language
 import texts.texts
 import viewmodel.GiveUpButton
 import viewmodel.KeyboardLayout
+import viewmodel.RestartButton
 import viewmodel.SharedProgress
 import viewmodel.SolutionState
 import viewmodel.TileLabelGroup
@@ -57,11 +58,16 @@ data class WebState(
     val tutorialButton: Boolean = false,
     /** `[ Hint ]` in the Give Up row (GH-332): hidden on the solution screen and in the tutorial, dimmed for a scheme with no letters to show. */
     val alphabetHint: AlphabetHintButton = AlphabetHintButton.HIDDEN,
+    /** `[ Restart ]` in the toolbar after `[ New ]` (GH-349): hidden on the solution screen and in the tutorial, dimmed until a shift. */
+    val restart: RestartButton = RestartButton.HIDDEN,
     /** The page is still opening (GH-343): drawn before the startup is over, so a change of labels has no earlier board to leave. */
     val opening: Boolean = false,
 ) {
     /** The digit [button] shows, `null` when it shows none (GH-171). */
     fun digitOf(button: ToolbarButton): Int? = button.digit.takeIf { WebKeys.live(button, computer) }
+
+    /** The key `[ Restart ]` shows, `null` on touch (GH-349). */
+    val restartKey: String? get() = RESTART_KEY.takeIf { computer }
 
     /** A computer's board is a Tab stop, during play and on the solution screen (GH-171). */
     val boardFocusable: Boolean get() = selection != null || boardName != null
@@ -90,6 +96,9 @@ data class WebState(
     val arrowsEnabled: Boolean get() = !solved && solution == null
     val movesShown: Boolean get() = solution == null
 }
+
+/** The key that presses `[ Restart ]`, as the button shows it (GH-349). */
+const val RESTART_KEY = "R"
 
 /** The modal dialog open over the board. */
 sealed interface WebDialog {
@@ -189,6 +198,11 @@ sealed interface WebDialog {
     /** The question before the tutorial replaces a game with unsaved progress (GH-289): Save, Don't save or Cancel, where focus starts. */
     data object ReplaySave : WebDialog {
         val message: String get() = texts().dialogs.replaySaveMessage
+    }
+
+    /** The question before a restart replaces a game with moves (GH-349): the same Cancel, Don't save and Save as [ReplaySave], worded for the restart. */
+    data object RestartSave : WebDialog {
+        val message: String get() = texts().dialogs.restartSaveMessage
     }
 
     /** The confirmation before updating with unsaved progress (GH-262): Cancel, where focus starts, or Update. */

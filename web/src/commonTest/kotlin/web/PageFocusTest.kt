@@ -97,6 +97,7 @@ class PageFocusTest {
         WebDialog.OpenShared(side = 3),
         WebDialog.Update,
         WebDialog.ReplaySave,
+        WebDialog.RestartSave,
         WebDialog.AlphabetHint(viewmodel.AlphabetHint.of(viewmodel.TileLabels.LETTERS, 4)!!),
     )
 
@@ -113,6 +114,12 @@ class PageFocusTest {
     fun `the rules for a game with no dialog are unchanged`() {
         assertEquals(Focus.PageStart, fallbackFocus(Focus.DialogOk.key, playing))
         assertEquals(Focus.PageStart, fallbackFocus(Focus.DialogCancel.key, playing))
+    }
+
+    @Test
+    fun `a Restart that is dimmed or gone passes focus to the board on a computer and to New on touch (GH-349)`() {
+        assertEquals(Focus.Board, fallbackFocus(Focus.RestartButton.key, playing.copy(selection = TileSelection.INITIAL)))
+        assertEquals(Focus.NewButton, fallbackFocus(Focus.RestartButton.key, playing))
     }
 
     // GH-288

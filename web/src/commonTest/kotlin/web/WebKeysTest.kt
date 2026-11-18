@@ -43,6 +43,21 @@ class WebKeysTest {
         assertEquals(emptyList(), shown(false))
     }
 
+    @Test
+    fun `R restarts on a computer, whichever the case or layout, and is nothing on touch or modified or held (GH-349)`() {
+        assertEquals(PageKey.Restart, key(KeyPress("r")))
+        assertEquals(PageKey.Restart, key(KeyPress("R")))
+        assertEquals(PageKey.Restart, key(KeyPress("к", code = "KeyR")))
+        assertNull(key(KeyPress("r"), computer = false))
+        assertNull(key(KeyPress("r", modified = true)))
+        assertNull(key(KeyPress("r", repeat = true)))
+    }
+
+    @Test
+    fun `on the solution screen's board R is the replay's restart (GH-349)`() {
+        assertEquals(PageKey.Solution(SolutionKey.RESTART), WebKeys.pageKey(KeyPress("r"), true, onSolution = true))
+    }
+
     private fun boardKey(key: String, layout: KeyboardLayout = KeyboardLayout.RIGHT_HANDED, repeat: Boolean = false, modified: Boolean = false) =
         (WebKeys.pageKey(KeyPress(key, modified, repeat), true, layout, onBoard = true) as? PageKey.Board)?.key
 
@@ -110,7 +125,8 @@ class WebKeysTest {
 
     @Test
     fun `solution keys need the board and a computer`() {
-        assertNull(WebKeys.pageKey(KeyPress("r"), true))
+        // Off the solution screen's board R is the toolbar's Restart (GH-349), not the replay's.
+        assertEquals(PageKey.Restart, WebKeys.pageKey(KeyPress("r"), true))
         assertNull(WebKeys.pageKey(KeyPress("r"), false, onSolution = true))
     }
 

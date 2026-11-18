@@ -162,6 +162,14 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, motion: LabelMotion
                     button(texts().dialogs.save) { game.tutorial.onReplayAnswered(ReplaySaveChoice.SAVE) }.focusKey(Focus.ReplaySaveSave),
                 ),
             )
+            WebDialog.RestartSave -> append(
+                text("message", WebDialog.RestartSave.message),
+                actions(
+                    button(texts().dialogs.cancel, "secondary") { game.restart.onAnswered(ReplaySaveChoice.CANCEL) }.focusKey(Focus.DialogCancel),
+                    button(texts().dialogs.dontSave, "secondary") { game.restart.onAnswered(ReplaySaveChoice.DONT_SAVE) }.focusKey(Focus.ReplayDontSave),
+                    button(texts().dialogs.save) { game.restart.onAnswered(ReplaySaveChoice.SAVE) }.focusKey(Focus.ReplaySaveSave),
+                ),
+            )
             WebDialog.GiveUp -> append(
                 actions(
                     button(texts().dialogs.no, "secondary") { game.solution.onGiveUpAnswered(false) }.focusKey(Focus.No),

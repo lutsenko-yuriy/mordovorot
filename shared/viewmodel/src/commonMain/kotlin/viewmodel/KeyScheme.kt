@@ -23,6 +23,9 @@ object KeyScheme {
     private val WASD = mapOf('w' to Direction.UP, 's' to Direction.DOWN, 'a' to Direction.LEFT, 'd' to Direction.RIGHT)
     private val HJKL = mapOf('h' to Direction.LEFT, 'j' to Direction.DOWN, 'k' to Direction.UP, 'l' to Direction.RIGHT)
 
+    /** The key that restarts the game, on the page outside dialogs (GH-349); on the solution screen's board it restarts the replay instead. */
+    const val RESTART_LETTER = 'r'
+
     fun boardKey(letter: Char?, arrow: Direction?, layout: KeyboardLayout): BoardKey? {
         val lower = letter?.lowercaseChar()
         return when (layout) {
@@ -43,7 +46,7 @@ object KeyScheme {
             direction == Direction.RIGHT || lower == ' ' || enter -> SolutionKey.NEXT
             direction == Direction.UP -> SolutionKey.SCROLL_UP
             direction == Direction.DOWN -> SolutionKey.SCROLL_DOWN
-            lower == 'r' -> SolutionKey.RESTART
+            lower == RESTART_LETTER -> SolutionKey.RESTART
             else -> null
         }
     }

@@ -28,6 +28,8 @@ fun fallbackFocus(key: String, state: WebState): Focus {
         key in ROW_BUTTONS && state.selection != null -> Focus.Board
         // A redraw under an open dialog (GH-289): a control that is gone or disabled passes focus to the dialog's own default, never to the page behind it.
         state.dialog != null -> defaultFocus(state.dialog)
+        // Restart is dimmed or gone (GH-349): on to the board where the keys work, or on touch to New.
+        key == Focus.RestartButton.key -> if (state.selection != null) Focus.Board else Focus.NewButton
         else -> Focus.PageStart
     }
 }

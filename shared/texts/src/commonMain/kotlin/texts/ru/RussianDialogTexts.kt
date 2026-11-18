@@ -46,6 +46,7 @@ object RussianDialogTexts : DialogTexts {
     override val updateMessage = "Твои ходы после последнего сохранения пропадут."
     override val sharedLabelsMessage = "Только для этой игры: в следующей новой игре будут твои метки."
     override val replaySaveMessage = "Обучение заменит текущую игру."
+    override val restartSaveMessage = "Перезапуск заменит текущую игру."
     override fun overwriteWarning(name: String) = "«$name» уже есть. Сохранение перезапишет его."
 
     override fun shareNoteSame(side: Int) = "Каждый, кто откроет эту ссылку, начнёт с той же доски ${side}x$side."

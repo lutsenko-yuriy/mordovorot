@@ -136,6 +136,8 @@ class GameViewModelImpl internal constructor(
 
     override fun restartButton(): RestartButton = restartGameUseCase.button()
 
+    override fun restartMoves(): Int = restartGameUseCase.discardable()
+
     override fun restartGame(openedFrom: String, saveChoice: String) = restartGameUseCase.restart(openedFrom, saveChoice)
 
     override fun giveUp() = solutionUseCase.giveUp()

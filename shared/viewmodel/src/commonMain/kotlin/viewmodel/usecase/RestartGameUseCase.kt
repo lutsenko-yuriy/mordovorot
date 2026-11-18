@@ -29,11 +29,14 @@ internal class RestartGameUseCase(
         }
     }
 
+    /** The moves a restart would discard: those made since the start. */
+    fun discardable(): Int = board.moveCount - gameStart.moves
+
     /** [saveChoice] is `not_asked`, `dont_save` or `saved`; does nothing unless the button is live. */
     fun restart(openedFrom: String, saveChoice: String) {
         if (button() != RestartButton.LIVE) return
         val wasSolved = board.isCorrect()
-        val discarded = board.moveCount - gameStart.moves
+        val discarded = discardable()
         board.restoreState(gameStart.arrangement()!!, gameStart.moves)
         mordieHooks.onRestart()
         gameShiftSources.reset()

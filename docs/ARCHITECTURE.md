@@ -243,6 +243,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── WebControlsDialog.kt # The Controls dialog's flow over WebGame's modal and the session's mode (GH-171)
 │   ├── WebAlphabetHint.kt # GH-332: the alphabet hint's flow (`[ Hint 8 ]`, `WebDialog.AlphabetHint`), shaped like WebControlsDialog; its spoken letters
 │   ├── ShareTogglePreference.kt # GH-267, GH-272: a Share dialog toggle (`Include my tile labels` under `share_labels`, `Include my progress` under `share_progress`), on or off, read once per session
+│   ├── WebRestartFlows.kt # GH-349: `[ Restart ]` and R: a won board restarts at once, else the `RestartSave` question (Cancel / Don't save / Save through `saveFlow("restart")`), then `viewModel.restartGame`
 │   ├── WebTutorial.kt   # GH-288: the first-launch tutorial's flow: starts it (switch on, not seen, no saves), checks every shift against the step's (WebShifts.line, WebDragFlows.onEnd), blocks others, the 3 s pause at step 5, Skip, step 6; `guidance()` is the frame's panel (Guidance.kt); GH-289: `offered`, `onReplay` (the `ReplaySave` question, then `begin("replay")`) and `onReplayAnswered` replay it from the Give Up row's `[ Tutorial 9 ]`
 │   ├── Guidance.kt      # GH-288: the panel's step, text, Controls and the asked line (Guidance, TutorialHighlight)
 │   ├── TutorialPreference.kt # GH-288: whether the first-launch tutorial was seen (`tutorial` = `seen`); a failed read counts as seen

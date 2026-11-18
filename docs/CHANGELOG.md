@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.58.0] — 2026-11-18 (PR #353 merged)
+
+### Added
+
+- [user] (PR #353) GH-349: A `[ Restart ]` button after `[ New ]` (R on a computer) puts the game back to its starting arrangement, with the same size and tile labels. With moves made it asks `Save your game first?` (Cancel, Don't save, Save); a won board restarts at once. Mordie keeps his search and goes back to his opening line until his next check.
+- [non-user] (PR #353) GH-349: the save question is a second dialog beside the tutorial's, sharing its title and buttons; ADR-0003 gains the R key.
+
 ## [0.57.1] — 2026-11-18 (PR #352 merged)
 
 ### Added

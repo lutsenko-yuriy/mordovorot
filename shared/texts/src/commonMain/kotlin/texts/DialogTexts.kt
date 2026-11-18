@@ -47,6 +47,8 @@ interface DialogTexts {
     val updateMessage: String
     val sharedLabelsMessage: String
     val replaySaveMessage: String
+    /** The same question before a restart (GH-349); its title is [replaySaveTitle]. */
+    val restartSaveMessage: String
     fun overwriteWarning(name: String): String
 
     /** The Share dialog's note, the link starting from the same board or from the board as it is now. */

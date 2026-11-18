@@ -46,6 +46,7 @@ object EnglishDialogTexts : DialogTexts {
     override val updateMessage = "Your moves since the last save will be lost."
     override val sharedLabelsMessage = "For this game only: your next new game uses your own labels."
     override val replaySaveMessage = "The tutorial replaces the current game."
+    override val restartSaveMessage = "The restart replaces the current game."
     override fun overwriteWarning(name: String) = "'$name' already exists. Saving will overwrite it."
 
     override fun shareNoteSame(side: Int) = "Anyone who opens this link starts from the same ${side}x$side board."
