@@ -177,6 +177,18 @@ class ViewModelGiveUpTest {
     }
 
     @Test
+    fun `giving up after a restart leaves out the since-found counts (GH-349)`() {
+        viewModel.newGameFrom(original, sender = null)
+        reveal()
+        viewModel.restartGame("button", "dont_save")
+        viewModel.shiftLeft(1)
+
+        viewModel.giveUp()
+
+        assertEquals(mapOf("board_size" to 3, "move_count" to 1, "solution_length" to 2, "solution_proven_shortest" to true), event("game_given_up"))
+    }
+
+    @Test
     fun `Mordie's solution after a win opens the screen with no game_given_up`() {
         searchFinds()
         solveDirectly()
