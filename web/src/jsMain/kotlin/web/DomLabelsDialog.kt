@@ -8,6 +8,7 @@ import web.a11y.asRadioGroup
 import web.a11y.focusKey
 import web.a11y.hiddenFromReaders
 import web.a11y.named
+import web.a11y.waveSpans
 
 /** The Tile labels dialog's body (GH-323): the message, the preview strip and the five groups, only the open one listing
  *  its schemes. */
