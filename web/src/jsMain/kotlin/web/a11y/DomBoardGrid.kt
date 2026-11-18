@@ -60,15 +60,31 @@ internal fun asCell(tile: Element, playing: Boolean, gridCell: String?) = tile.a
     gridCell?.let { id = it }
 }
 
+/** [label] as the two spans of a wave: the new one arriving, the old one leaving (never read). The new one is [read] when it is the tile's text. */
+internal fun waveSpans(label: String, waving: Waving, read: Boolean): List<Element> = listOf(
+    element("span", "label-in wave").apply {
+        textContent = label
+        setAttribute("style", "animation-delay: ${waving.arriveMs}ms")
+        if (!read) setAttribute("aria-hidden", "true")
+    },
+    hiddenFromReaders(element("span", "label-out wave").apply {
+        textContent = waving.old
+        setAttribute("style", "animation-delay: ${waving.leaveMs}ms")
+    }),
+)
+
 /** Writes [label] on [tile], if it changed: seen, and during play heard as [Announcements.spoken] has
- *  it, with `in place` when [home]. */
-internal fun labelCell(tile: Element, label: String, playing: Boolean, home: Boolean) {
+ *  it, with `in place` when [home]. A [waving] label comes as the spans of a wave (GH-342). */
+internal fun labelCell(tile: Element, label: String, playing: Boolean, home: Boolean, waving: Waving? = null) {
     val heard = if (playing) Announcements.spoken(label) + if (home) ", ${Announcements.IN_PLACE}" else "" else label
-    if (tile.getAttribute("data-heard") == heard) return
+    val wave = waving?.id?.toString().orEmpty()
+    if (tile.getAttribute("data-heard") == heard && tile.getAttribute("data-wave").orEmpty() == wave) return
     tile.setAttribute("data-heard", heard)
-    tile.textContent = if (playing) "" else label
+    if (waving == null) tile.removeAttribute("data-wave") else tile.setAttribute("data-wave", wave)
+    tile.textContent = if (playing || waving != null) "" else label
+    if (waving != null) tile.append(*waveSpans(label, waving, read = !playing).toTypedArray())
     if (playing) tile.append(
-        hiddenFromReaders(element("span").apply { textContent = label }),
+        *(if (waving == null) arrayOf<Element>(hiddenFromReaders(element("span").apply { textContent = label })) else arrayOf<Element>()),
         element("span", "visually-hidden").apply { textContent = heard },
     )
 }

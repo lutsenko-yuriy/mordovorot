@@ -279,6 +279,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── Slides.kt        # The eased slide after an arrow shift, a drag release or a replay shift
 │   │                    # (GH-126), drawn by WrapPositions
 │   ├── MessageFeed.kt   # Chat-like timing for Mordie's lines: the old one rises out, then the new rises in
+│   ├── LabelWave.kt     # GH-342: timing of the label wave (600 ms on the board, a 40 ms step in the preview, 150 ms per label) and the group slide (250 ms), and the frame rules that start them (`WebState.labelWaveFrom`, `labelGroupSlideFrom`)
 │   ├── Launch.kt        # startWebGame: the page's wiring (PlatformAnalyticsService "web" wrapped
 │   │                    # by InputMethodAnalyticsService "rich_ui"), app_launched {mode, layout,
 │   │                    # app_version, host} (GH-111) and tile_labels (GH-139); webBoard(): the
@@ -368,6 +369,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/jsMain/kotlin/web/DomQr.kt      # GH-243: the Share dialog's QR code as an inline SVG from QrSvg, hidden from readers
 ├── src/jsMain/kotlin/web/DomDialogs.kt  # The modal dialogs, and Escape -> WebGame.onEscape (GH-163, listenForEscape);
 │                                       # DomElements.kt: element/text/button helpers, and KeyboardEvent.composing
+├── src/commonMain/kotlin/web/LabelMotion.kt # GH-342: the running label wave and group slide on a clock; hands DomBoard and the labels dialog each cell's old text and CSS `animation-delay` (negative once under way, so the per-frame rebuild resumes it); no animation frames, the browser plays the keyframes
 ├── src/jsMain/kotlin/web/DomLabelsDialog.kt # GH-323: the Tile labels dialog's DOM: the preview strip, the group headers (`aria-expanded`) and the open group's two radio options side by side
 ├── src/jsMain/kotlin/web/a11y/DomKeyboard.kt # GH-163: Tab wraps inside the open dialog, the page
 │                                       # behind it `inert`, applyFocus puts a FocusTarget on the page;
@@ -430,7 +432,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/jvmTest/kotlin/web/LanguageStylesTest.kt # GH-275: the picker shows the toggles on wide windows and the dropdown on phones
 ├── src/jvmTest/kotlin/web/UpdateNoticeStylesTest.kt # GH-262: the footer's Update looks like a link and keeps a keyboard ring
 ├── src/commonTest/kotlin/web/HostTest.kt # GH-111: hostOf's buckets
-├── src/commonTest/kotlin/web/LayoutTest.kt, SlidesTest.kt, MessageFeedTest.kt
+├── src/commonTest/kotlin/web/LayoutTest.kt, SlidesTest.kt, MessageFeedTest.kt, LabelWaveTest.kt, LabelMotionTest.kt (GH-342)
 ├── src/commonTest/kotlin/web/a11y/      # AnnouncementsTest (GH-179); DialogFocusTest, PageFocusTest are in web/ (GH-201)
 ├── src/commonTest/kotlin/web/TextScaleTest.kt # GH-168: textScaleOf's ratios, floor and bad readings;
 │                                       # when rootFontPx leaves the default alone

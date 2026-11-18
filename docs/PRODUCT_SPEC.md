@@ -403,7 +403,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   players some rows look alike, so the tile labels carry it.
 - **Reduced motion (GH-162):** when the system asks for reduced motion, nothing animates: shifts
   and Mordie's lines appear at once, and dialogs, buttons and the win show without fading or
-  glowing. A change of the setting applies with the tab open.
+  glowing; the Tile labels' label wave and group slide (GH-342) change at once too. A change of the setting applies with the tab open.
 - **Layout:**
   - **Wider than tall:** the board with its arrows on the left; on the right, top to bottom,
     `Moves: N`, Mordie's text, the toolbar and the status line.
@@ -541,6 +541,16 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   relabels the board at once, Cancel changes nothing. On the web the board already shows the
   marked scheme while the dialog is open, and Cancel puts the old labels back. It opens from `[ Labels ]` (or 4 on a computer, Feature 9), during play,
   after a win and on the solution screen. Escape cancels it (since GH-163).
+- **Label wave and group slide (GH-342):** changing the marked scheme in the Tile labels dialog animates. Each tile's
+  label fades out while shifting slightly down, and as the next tile's label starts to leave, this tile's new label
+  fades in from slightly above, tile after tile in reading order (150 ms per label). On the board the whole wave takes
+  600 ms on every size, the gap between tiles shrinking as the board grows; the preview strip's three tiles are 40 ms
+  apart. A tile whose text doesn't change stays still. Cancel and Escape wave the board back to the old labels as the
+  dialog closes; OK doesn't, as the board already shows the marked scheme. Pressing another group's header slides the
+  open group's rows up and out as the new group's rows slide down and in (250 ms), the headers between them gliding; every
+  group is as tall as any other, so the dialog's height doesn't change. A new change while one runs completes it at once
+  and starts the new one. Labels changed outside the dialog (a share link, a new game, a save) don't animate. Screen
+  readers, keys, focus and analytics are as before; the outgoing label is never read.
 - **Which labels a game shows:** a loaded save's own labels (Feature 4), or the sender's labels the player
   said Yes to on opening a share link (Feature 12, GH-267), win for that game; then
   the remembered preference; then Numbers. A new game goes back to the preference.

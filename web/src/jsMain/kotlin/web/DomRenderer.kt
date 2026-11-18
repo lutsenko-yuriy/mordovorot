@@ -24,7 +24,10 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
     /** The open Save dialog's warning line, updated in place while the player types. */
     private var saveWarning: Element? = null
 
-    private val board = DomBoard(root) { game }
+    /** The label wave and group slide running in the Tile labels dialog (GH-342), played by CSS animations. */
+    private val motion = LabelMotion { window.performance.now() }
+
+    private val board = DomBoard(root, motion) { game }
 
     private var shown: WebState? = null
 
@@ -35,6 +38,8 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
     private var slide: Slide? = null
     /** An animation frame is queued, so another slide or Mordie line doesn't queue a second. */
     private var framePending = false
+    /** A redraw after a group slide is queued (GH-342). */
+    private var settling = false
 
     private class Slide(val start: LineOffset, val startedAt: Double)
 
@@ -68,6 +73,8 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         if (state.footer != before?.footer) drawFooter(state.footer)
         shown = state
         startSlide(before, state)
+        motion.start(before, state, reducedMotion())
+        motion.slideRemainingMs()?.let(::settleAfter)
         val now = window.performance.now()
         // At once while the system asks for less motion, which can change with the tab open.
         val still = reducedMotion()
@@ -117,7 +124,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         // Only a dialog that has just opened fades in, not one redrawn as the player picks in it or one that
         // takes another's place (Load -> Delete 'foo'?, GH-251).
         val reopened = dialog != null && before?.dialog != null
-        dialog?.let { root.append(element("div", if (reopened) "overlay shown" else "overlay").apply { append(dialogElement(it, game) { warning -> saveWarning = warning }) }) }
+        dialog?.let { root.append(element("div", if (reopened) "overlay shown" else "overlay").apply { append(dialogElement(it, game, motion) { warning -> saveWarning = warning }) }) }
         drawMordie(now)
         setBehindDialog(root, dialog != null)
         applyFocus(root, state.focus, focused) { fallbackFocus(it, state) }
@@ -236,6 +243,17 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         if (next != null) schedule()
     }
 
+    /** Draws [shown] once more when a group slide is over (GH-342), so the groups rest laid out as before the slide, not in its clipping wrapper. */
+    private fun settleAfter(ms: Double) {
+        if (settling) return
+        settling = true
+        window.setTimeout({
+            settling = false
+            // Only while Labels is open (a closed dialog has no slide left to settle), and without the frame's one-time announcement, focus and shift slide.
+            shown?.takeIf { it.dialog is WebDialog.Labels }?.let { render(it.copy(announcement = null, focus = null, slide = null)) }
+        }, ms.toInt() + SETTLE_MARGIN_MS)
+    }
+
     private fun reducedMotion() = window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
     private fun schedule() {
@@ -262,6 +280,8 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
 
     private companion object {
         const val SLIDE_MS = 160.0
+        /** Past the slide's end, so that the redraw finds it over. */
+        const val SETTLE_MARGIN_MS = 30
         const val MORDIE_OUT_MS = 220.0
         const val MORDIE_IN_MS = 340.0
     }

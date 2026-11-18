@@ -49,7 +49,8 @@ internal class WebLabelsDialog(
         if (labels.fits(viewModel.squareSide())) open.copy(selected = labels) else null
 
     private suspend fun choose(message: String? = null): TileLabels? {
-        val chosen = modal.ask<TileLabels?>(dialog(viewModel.tileLabels(), message))
+        // OK skips the frame without the dialog: it would show the old labels for an instant, which the label wave (GH-342) reads as a Cancel.
+        val chosen = modal.ask<TileLabels?>(dialog(viewModel.tileLabels(), message), leadsOn = { it != null })
         if (chosen == null) game.cancelled("labels")
         return chosen
     }
