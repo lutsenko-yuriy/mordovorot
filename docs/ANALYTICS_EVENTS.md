@@ -779,3 +779,31 @@ Changes to existing entries:
 - Tutorial's key moves from 8 to 9, so `screen_replay_save_dialog.opened_from: shortcut` now means 9. The data is unchanged.
 
 Not tracked: a press on the dimmed button on a number scheme (it does nothing), which letters are greyed or used (both follow from `labels` and `board_size`), time spent open, and which letters the player looked at.
+
+## GH-338 (autosave when leaving the page)
+
+Planned in `/analyze`; the web client uses `NoopAnalyticsService` until an SDK is wired up (GH-256). No screen views: autosave has no UI.
+
+### `autosave_written`
+
+Fired when an autosave was attempted: the page is left (tab hidden, closed or reloaded), or Update, opening a share link or replaying the tutorial tries one first (it saves the game before asking, and asks only if this fails). Needs a game with at least one shift that isn't solved. Not fired for a game with no moves, the solved board or the solution screen. *(GH-338)*
+
+| Property | Type | Description |
+|---|---|---|
+| `result` | `string` | `success` or `error` (storage full or refused: the case that keeps the browser's "Leave site?" prompt). |
+| `board_size` | `number` | The board side (3-9). |
+| `tile_labels` | `string` | The scheme's wire name, the same values as everywhere else. |
+| `moves` | `number` | The game's move count. |
+| `trigger` | `string` | `page_left`, `update`, `shared_link` or `tutorial_replay`: what asked for the autosave. |
+
+Changes to existing entries:
+- `load_command_used` gains `autosave` (`boolean`, only on `success`): whether the loaded save was an autosave slot.
+- `screen_update_dialog` and `screen_replay_save_dialog` fire only when the autosave before them failed (or the game is solved), since a saved game no longer needs the question.
+- `update_applied.had_unsaved_progress` is `false` after a successful autosave: the moves are saved.
+- `startup_restore_decision` gains `restored_autosave` (`boolean`, only on `restored`): whether the save picked was an autosave slot.
+
+Not tracked: a skipped autosave (not an action), a separate "page left" event (`autosave_written` covers it, and a hidden tab can't be told from a close), deleting an autosave (the delete event covers it; save names stay out of events), and how the player answered the "Leave site?" prompt (the browser gives no signal).
+
+PII: no save name is sent, only size, scheme, move count and result; `autosave` and `restored_autosave` are booleans derived from the slot name.
+
+Open for GH-256: a real SDK must send this event from a closing page (for example with `sendBeacon`).

@@ -4,6 +4,7 @@ Core game: the board, its moves, Mordie and saves — what every client shares. 
 
 | Term | Definition | Code symbol |
 |---|---|---|
+| Autosave | A save the page writes by itself when it is left (GH-338), to the slot `Autosave_<label type>_<size>` (label type = the tile label scheme's wire name, size as `5x5`), replacing that slot silently. An ordinary save in every other way: listed, loadable and deletable like one | — |
 | Board | The square side × square side grid of tiles holding the puzzle state | `BoardModel`, `BoardImpl` |
 | Board size | The valid range of square sides a game can use: 3–9, default 4 (6x6 since GH-160; 7–9 since GH-207, see Very large). Chosen via the startup size prompt or `[ New ]` (the terminal's `--size=N` went with GH-228) | `BoardSize` |
 | Current save name | The name of the save the current game was most recently loaded from or saved to; prefills the Save dialog. Cleared by a new game, not kept across launches (GH-99) | `CurrentSaveName`, `GameViewModel.currentSaveName()` |
