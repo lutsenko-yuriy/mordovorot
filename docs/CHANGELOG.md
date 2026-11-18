@@ -13,6 +13,15 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.57.0] — 2026-11-18 (PR #348 merged)
+
+### Added
+
+- [user] (PR #348) GH-343: The tile labels ripple whenever they change, not only in the Tile labels dialog: after a share link's prompt, a new game, a load or a restore; with reduced motion on, they change at once.
+- [user] (PR #348) GH-343: A move pressed while the label ripple plays waits for it and is made when it ends (the latest press only).
+- [user] (PR #348) GH-343: A label that doesn't fit the board no longer shows "up to 5x5" in its row; pressing it, or reaching it with the arrow keys or Tab, shows the limit over the row without picking it.
+- [non-user] (PR #348) GH-343: debrief.
+
 ## [0.56.2] — 2026-11-18 (PR #347 merged)
 
 ### Added
