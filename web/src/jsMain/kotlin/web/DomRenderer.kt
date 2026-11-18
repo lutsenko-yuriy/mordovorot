@@ -67,6 +67,8 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         if (hadFocus) (footer.querySelector("[data-focus=\"${Focus.UpdateLink.key}\"]") as? HTMLElement)?.focus()
     }
 
+    override fun waveRemainingMs(): Double? = motion.boardRemainingMs()
+
     override fun render(state: WebState) {
         state.announcement?.let { announcer?.say(it) }
         val before = shown

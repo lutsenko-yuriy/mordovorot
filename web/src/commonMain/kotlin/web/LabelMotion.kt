@@ -50,6 +50,9 @@ internal class LabelMotion(private val clock: () -> Double) {
     /** The group that is sliding shut. */
     fun leavingGroup(): TileLabelGroup? = slide?.from
 
+    /** How long until the board's running wave is over, `null` when none runs. */
+    fun boardRemainingMs(): Double? = board?.let { it.timing.endMs - (clock() - it.startedAt) }?.takeIf { it > 0 }
+
     /** How long until the running group slide is over, `null` when none runs. */
     fun slideRemainingMs(): Double? = slide?.let { LabelWave.GROUP_MS - (clock() - it.startedAt) }?.takeIf { it > 0 }
 

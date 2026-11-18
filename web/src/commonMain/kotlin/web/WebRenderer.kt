@@ -6,4 +6,7 @@ fun interface WebRenderer {
 
     /** Scrolls the solution's steps by [lines], up when negative (GH-171). */
     fun scrollSteps(lines: Int) {}
+
+    /** How long until the board's label wave is over, `null` when none runs (GH-343): a move waits for it. */
+    fun waveRemainingMs(): Double? = null
 }

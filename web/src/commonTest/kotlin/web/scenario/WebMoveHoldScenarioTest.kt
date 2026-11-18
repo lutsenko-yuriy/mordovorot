@@ -1,79 +1,187 @@
 package web.scenario
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
+import mordie.SearchProgress
+import mordie.SolutionMove
+import viewmodel.TileLabels
+import web.Arrow
+import web.Focus
 
-/** GH-343: a move pressed during a label wave waits for it, one at most. Runs with the harness's real LabelMotion on the test clock. Stubs: WU2 fills them in. */
+/** GH-343: a move pressed during a label wave waits for it, one at most. Runs with the harness's real LabelMotion on the test clock. */
+@OptIn(ExperimentalCoroutinesApi::class)
 class WebMoveHoldScenarioTest {
 
-    @Test
-    fun anArrowPressedDuringTheWaveIsMadeWhenItEnds() {
-        // TODO: 1. Pick Letters in the dialog, then press Cancel to start a wave
-        // TODO: 2. Click an arrow
-        // TODO: 3. The board hasn't shifted at 599 ms
-        // TODO: 4. It has shifted at 600 ms
+    private val start = shown(ONE_SHIFT_FROM_SOLVED)
+
+    /** [ONE_SHIFT_FROM_SOLVED] with row 1 shifted one tile right. */
+    private val rowOneRight = shown(intArrayOf(3, 0, 1, 2, 7, 4, 5, 6) + IntArray(8) { it + 8 })
+
+    /** [ONE_SHIFT_FROM_SOLVED] with row 1 shifted one tile left. */
+    private val rowOneLeft = shown(intArrayOf(3, 0, 1, 2, 5, 6, 7, 4) + IntArray(8) { it + 8 })
+
+    private fun TestScope.page() = WebHarness(backgroundScope, motion = true).startOn()
+
+    /** Picks Letters in the dialog, then Cancel: the board waves back to the numbers. */
+    private fun WebHarness.startWave() {
+        game.labels.open()
+        game.labels.onSelected(TileLabels.LETTERS)
+        game.labels.onAnswered(ok = false)
+        assertTrue(waving)
+    }
+
+    private fun TestScope.passMs(ms: Long) {
+        advanceTimeBy(ms)
+        runCurrent()
     }
 
     @Test
-    fun theLatestPressWins() {
-        // TODO: 1. Start a wave as in anArrowPressedDuringTheWaveIsMadeWhenItEnds
-        // TODO: 2. Click one arrow, then another
-        // TODO: 3. At 600 ms exactly one shift is made
-        // TODO: 4. It is the second arrow's
+    fun anArrowPressedDuringTheWaveIsMadeWhenItEnds() = webTest {
+        val page = page()
+        page.startWave()
+
+        page.game.onArrow(Arrow.LEFT, 0)
+        passMs(599)
+        assertEquals(start, page.state.tiles)
+        assertFalse(page.state.solved)
+
+        passMs(2)
+        assertTrue(page.state.solved)
     }
 
     @Test
-    fun aShiftKeyIsHeldToo() {
-        // TODO: 1. Start a wave
-        // TODO: 2. Press a board shift key
-        // TODO: 3. The shift is made when the wave ends
+    fun theLatestPressWins() = webTest {
+        val page = page()
+        page.startWave()
+
+        page.game.onArrow(Arrow.LEFT, 0)
+        page.game.onArrow(Arrow.RIGHT, 1)
+        passMs(601)
+
+        assertEquals(rowOneRight, page.state.tiles)
+        assertEquals(1, page.state.moves)
     }
 
     @Test
-    fun aClickedArrowMovesFocusToTheBoardAtOnce() {
-        // TODO: 1. Start a wave and click an arrow
-        // TODO: 2. Focus is on the board immediately, before the wave ends
+    fun aShiftKeyIsHeldToo() = webTest {
+        val page = page()
+        page.startWave()
+
+        page.press("ArrowLeft", from = Focus.Board)
+        passMs(599)
+        assertEquals(start, page.state.tiles)
+
+        passMs(2)
+        assertEquals(rowOneLeft, page.state.tiles)
     }
 
     @Test
-    fun aReplayStepIsHeld() {
-        // TODO: 1. Open the solution screen and start a wave with the Labels dialog's Cancel
-        // TODO: 2. Press Next
-        // TODO: 3. The step is made when the wave ends
+    fun aClickedArrowMovesFocusToTheBoardAtOnce() = webTest {
+        val page = page()
+        page.startWave()
+
+        page.game.onArrow(Arrow.LEFT, 0, byMouse = true)
+
+        assertEquals(Focus.Board, page.state.focus)
+        assertEquals(start, page.state.tiles)
     }
 
     @Test
-    fun aToolbarActionDropsTheHeldMove() {
-        // TODO: 1. Start a wave and click an arrow
-        // TODO: 2. Press a toolbar button
-        // TODO: 3. When the wave would have ended, no shift is made
+    fun aReplayStepIsHeld() = webTest {
+        val page = WebHarness(backgroundScope, motion = true).startOn(REPLAY_START)
+        page.mordieSearches.latest.progress = SearchProgress(2, found = true, elapsedMs = 0, solution = REPLAY_PATH)
+        repeat(5) { page.game.onArrow(Arrow.UP, 3) }
+        page.game.solution.onGiveUp()
+        page.game.solution.onGiveUpAnswered(true)
+        val at = page.state.solution!!.current
+        page.startWave()
+
+        page.game.solution.onReplayNext()
+        passMs(599)
+        assertEquals(at, page.state.solution!!.current)
+
+        passMs(2)
+        assertTrue(page.state.solution!!.current != at)
     }
 
     @Test
-    fun aDragStartFinishesTheWaveAndDropsAHeldMove() {
-        // TODO: 1. Start a wave and click an arrow
-        // TODO: 2. Start a drag
-        // TODO: 3. The wave is over
-        // TODO: 4. The held shift is dropped
+    fun aToolbarActionDropsTheHeldMove() = webTest {
+        val page = page()
+        page.startWave()
+
+        page.game.onArrow(Arrow.LEFT, 0)
+        page.game.onSave()
+        page.game.onSaveAnswered(null)
+        passMs(700)
+
+        assertEquals(start, page.state.tiles)
     }
 
     @Test
-    fun withoutMotionNothingWaits() {
-        // TODO: 1. Run with reduced motion and change the labels
-        // TODO: 2. Click an arrow
-        // TODO: 3. The shift is made at once
+    fun aDragStartFinishesTheWaveAndDropsAHeldMove() = webTest {
+        val page = page()
+        page.startWave()
+
+        page.game.onArrow(Arrow.LEFT, 0)
+        page.game.onDragStart(2, 0, 100.0, 100.0, 40.0)
+        page.game.onDragMove(110.0, 100.0)
+        assertFalse(page.waving)
+
+        page.game.onDragCancel()
+        passMs(700)
+        assertEquals(start, page.state.tiles)
     }
 
     @Test
-    fun theTutorialJudgesAHeldShiftWhenItIsMade() {
-        // TODO: 1. Start the tutorial's shift step with a wave running
-        // TODO: 2. Press the shift
-        // TODO: 3. The tutorial advances when the shift is made, not at the press
+    fun withoutMotionNothingWaits() = webTest {
+        val page = WebHarness(backgroundScope, motion = true, reducedMotion = true).startOn()
+        page.game.labels.open()
+        page.game.labels.onSelected(TileLabels.LETTERS)
+        page.game.labels.onAnswered(ok = false)
+        assertFalse(page.waving)
+
+        page.game.onArrow(Arrow.LEFT, 0)
+
+        assertTrue(page.state.solved)
     }
 
     @Test
-    fun theShiftsAnalyticsComeOnceAtTheShift() {
-        // TODO: 1. Start a wave and click an arrow
-        // TODO: 2. No shift event is sent at the click
-        // TODO: 3. One shift event and one announcement come when the shift is made
+    fun theTutorialJudgesAHeldShiftWhenItIsMade() = webTest {
+        val page = WebHarness(backgroundScope, motion = true, firstLaunch = true).start()
+        page.startWave()
+
+        page.stepByArrow(1)
+        assertTrue(page.analytics.events.none { it.name == "tutorial_step_completed" })
+        passMs(601)
+
+        assertEquals(1, page.props("tutorial_step_completed").size)
+    }
+
+    @Test
+    fun theShiftsAnalyticsComeOnceAtTheShift() = webTest {
+        val page = page()
+        page.startWave()
+
+        val said = page.said.size
+
+        page.game.onArrow(Arrow.LEFT, 0)
+        assertTrue(page.props("board_solved").isEmpty())
+        assertEquals(said, page.said.size)
+
+        passMs(601)
+        assertEquals(1, page.props("board_solved").size)
+        assertEquals(said + 1, page.said.size)
+    }
+
+    private companion object {
+        /** 4x4 two moves from solved: row 0 right once, then column 1 down twice. */
+        val REPLAY_START = intArrayOf(9, 2, 3, 0, 4, 13, 6, 7, 8, 1, 10, 11, 12, 5, 14, 15)
+        val REPLAY_PATH = listOf(SolutionMove(isRow = true, index = 0, amount = 1), SolutionMove(isRow = false, index = 1, amount = 2))
     }
 }
