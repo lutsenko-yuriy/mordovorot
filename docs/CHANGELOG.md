@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.57.1] — 2026-11-18 (PR #352 merged)
+
+### Added
+
+- [wip] [app] (PR #352) GH-349: Restart in the viewmodel and Mordie: `restartButton()` and `restartGame()`, the game's start recorded by new game, share link and load, Mordie keeping his search and going back to the game's opening line, `game_restarted` and `board_solved.restart_count`; `Mordie.kt` lost its snapshot helper to `MordieSnapshot.kt` (WU1 of 3; the page follows in WU2).
+
 ## [0.57.0] — 2026-11-18 (PR #348 merged)
 
 ### Added

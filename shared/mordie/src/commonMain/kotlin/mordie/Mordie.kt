@@ -35,6 +35,9 @@ class Mordie(private val factory: MordieSearchFactory) {
     /** The last N Mordie told the player - its opening's, or its last progress line's. */
     private var toldMoves = 0
 
+    /** Whether the game was put back to its start (GH-349): the line is its opening until the next check. */
+    private var restarted = false
+
     /** Whether this progress window has news; set at its first check. */
     private var progressWindowShown = false
     private var outcome: MordieOutcome? = null
@@ -124,6 +127,30 @@ class Mordie(private val factory: MordieSearchFactory) {
         outcome = MordieOutcome(moves, found, this.provenShortest)
     }
 
+    /** The player put the game back to its start (GH-349): the shift count starts again and the line is the
+     *  game's opening until the next check, but the search and any solution are kept. From a won board his
+     *  race resumes: a found answer shows again, an unproven one is searched on, no answer is searched for.
+     *  Does nothing when Mordie sits the game out. */
+    fun restart() {
+        val original = original ?: return
+        shifts = 0
+        progressWindowShown = false
+        shiftsAtReveal = null
+        playerMovesAtReveal = null
+        restarted = true
+        val won = outcome ?: return
+        outcome = null
+        if (won.found) {
+            if (revealedMoves != won.moves) announced = if (won.provenShortest) MordieLine.Found(won.moves) else MordieLine.FoundUnproven(won.moves)
+            revealedMoves = won.moves
+            if (!provenShortest) search = factory.start(original, ruledOut, solution)
+        } else {
+            checkedMoves = won.moves
+            toldMoves = won.moves
+            search = factory.start(original, won.moves)
+        }
+    }
+
     /** A game Mordie sits out, e.g. a solved save with no Mordie data. */
     fun clear() {
         bind(null)
@@ -164,7 +191,7 @@ class Mordie(private val factory: MordieSearchFactory) {
 
     fun line(): MordieLine? {
         if (original == null || outcome != null) return null
-        if (revealedMoves != null) return announced
+        if (revealedMoves != null) return if (restarted && shifts < CHECK_EVERY) opening else announced
         return when {
             shifts < CHECK_EVERY -> opening
             shifts % PROGRESS_EVERY < CHECK_EVERY && progressWindowShown ->
@@ -204,18 +231,11 @@ class Mordie(private val factory: MordieSearchFactory) {
     /** What a save should store; `null` when Mordie sits this game out. */
     fun snapshot(): MordieSnapshot? {
         val original = original ?: return null
-        outcome?.let { return snapshotOf(original, it, solution, ruledOut) }
+        outcome?.let { return snapshotFor(original, it, solution, ruledOut) }
         val progress = liveProgress()
         val state = live(progress)
         val best = progress?.takeIf { it.found }?.solution ?: solution
-        return snapshotOf(original, state, best, maxOf(ruledOut, progress?.ruledOut ?: 0))
-    }
-
-    private fun snapshotOf(original: IntArray, state: MordieOutcome, solution: List<SolutionMove>?, ruledOut: Int): MordieSnapshot {
-        // One move is always the shortest, and the save format has no R below 0 for it (GH-224).
-        val unproven = state.found && !state.provenShortest && state.moves >= 2
-        val kept = if (unproven) ruledOut.coerceIn(0, state.moves - 2) else 0
-        return MordieSnapshot(original.copyOf(), state.moves, state.found, solution, provenShortest = !unproven, ruledOut = kept)
+        return snapshotFor(original, state, best, maxOf(ruledOut, progress?.ruledOut ?: 0))
     }
 
     /** Cancels the search; everything else is kept. */
@@ -234,6 +254,7 @@ class Mordie(private val factory: MordieSearchFactory) {
         announced = null
         toldMoves = 0
         progressWindowShown = false
+        restarted = false
         provenShortest = false
         ruledOut = 0
         outcome = null

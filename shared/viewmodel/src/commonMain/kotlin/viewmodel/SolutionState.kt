@@ -14,3 +14,7 @@ data class SolutionState(
 /** The row above the toolbar (GH-126): `[ Give Up ]` dimmed or live, `[ Mordie's solution ]`
  *  after a win, or nothing. */
 enum class GiveUpButton { DIMMED, GIVE_UP, MORDIES_SOLUTION, HIDDEN }
+
+/** The toolbar's `[ Restart ]` (GH-349): absent on the solution screen, dimmed while nothing has moved
+ *  since the game's start, else live. */
+enum class RestartButton { HIDDEN, DIMMED, LIVE }
