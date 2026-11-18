@@ -807,3 +807,38 @@ Not tracked: a skipped autosave (not an action), a separate "page left" event (`
 PII: no save name is sent, only size, scheme, move count and result; `autosave` and `restored_autosave` are booleans derived from the slot name.
 
 Open for GH-256: a real SDK must send this event from a closing page (for example with `sendBeacon`).
+
+## GH-349 (Restart)
+
+Planned in `/analyze`; the web client uses `NoopAnalyticsService` until an SDK is wired up (GH-256). `[ Restart ]` (or R) puts the current game back to the arrangement it started from.
+
+### `screen_restart_save_dialog`
+
+Fired when `Save your game first?` opens for a restart: the game has unsaved moves. A won board restarts at once and opens nothing. *(GH-349)*
+
+| Property | Type | Description |
+|---|---|---|
+| `opened_from` | `string` | `button` (`[ Restart ]`) or `shortcut` (R). |
+| `move_count` | `number` | Moves made in the game the restart would discard. |
+
+### `game_restarted`
+
+Fired when the game really goes back to its start: at once on a won board, after Don't save, or after a successful Save. A Cancel, a cancelled or failed Save, or a Restart pressed while dimmed fires none. *(GH-349)*
+
+| Property | Type | Description |
+|---|---|---|
+| `board_size` | `number` | The board side. |
+| `move_count` | `number` | The moves the restart discarded. |
+| `was_solved` | `boolean` | Whether it was restarted from a won board. |
+| `save_choice` | `string` | `not_asked` (a won board), `dont_save` or `saved`. |
+| `opened_from` | `string` | `button` or `shortcut`, as `screen_restart_save_dialog.opened_from`. |
+| `input_method` | `string` | `keyboard` or `rich_ui` - the press that fired the event. |
+
+Changes to existing entries:
+- `dialog_cancelled.dialog` takes a new value, `restart_save`.
+- `screen_save_dialog.opened_from` takes a new value, `restart`: opened from the restart question's Save.
+- `board_solved` gains `restart_count` (`number`): how many times the game was restarted before it was solved; `0` for a game never restarted. A new game or a load starts the count again.
+
+Not tracked: a Restart pressed while dimmed (nothing happens), Save and Don't save as an event of their own (`game_restarted.save_choice` covers them), and Mordie's line or search going back to the start.
+
+PII: none; only counts and fixed words are sent.
