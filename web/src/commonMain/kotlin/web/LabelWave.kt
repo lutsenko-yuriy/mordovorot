@@ -2,7 +2,7 @@ package web
 
 import viewmodel.TileLabelGroup
 
-/** GH-342: the timing of the label wave in the Tile labels dialog, and the frame rules that start it and the group slide.
+/** GH-342, GH-343: the timing of the label wave, and the frame rules that start it and the group slide.
  *  A wave runs through the tiles in reading order: tile i's old label leaves over [MOTION_MS] from `i * step`, and its new
  *  label arrives from `(i + 1) * step`, as tile i + 1's old label starts to leave. */
 object LabelWave {
