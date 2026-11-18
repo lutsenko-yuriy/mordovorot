@@ -43,7 +43,7 @@ private fun wrapTab(dialog: Element, key: KeyboardEvent) {
     target.focus()
 }
 
-/** Inside a group of radios the arrows press the next or previous one, wrapping (GH-171). */
+/** Inside a group of radios the arrows press the next or previous one, wrapping (GH-171). One that doesn't fit the board is no longer disabled, so the arrows land on it and show its limit, and the mark stays (GH-343). */
 private fun moveMark(key: KeyboardEvent) {
     val step = when (key.key) {
         "ArrowDown", "ArrowRight" -> 1

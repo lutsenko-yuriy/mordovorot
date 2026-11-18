@@ -73,6 +73,7 @@
 }
 
 .dialog .choices.labels button {
+    position: relative;
     flex: 1 1 0;
     min-width: 0;
     font-weight: 400;
@@ -89,11 +90,13 @@
     background: var(--frame);
 }
 
-/* A scheme too small for the board (GH-160). */
-.dialog .choices.labels button:disabled {
-    opacity: 0.45;
-    cursor: default;
+/* A scheme too small for the board (GH-160). Its name is dimmed, not the row, so the limit's cover (GH-343) isn't. */
+.dialog .choices.labels button.unavailable:hover {
     background: transparent;
+}
+
+.dialog .choices.labels button.unavailable .name {
+    opacity: 0.45;
 }
 
 /* The marked row: a thicker ring and a heavier name, so it isn't told apart by colour alone. */
@@ -108,15 +111,35 @@
     overflow-wrap: anywhere;
 }
 
+/* GH-343: the limit covers its row, in place of the name, so the row stays one line and nothing sits outside the dialog's scroll box. It shows on hover, keyboard focus or after a press (the tip). */
 .dialog .choices.labels .limit {
-    margin-left: auto;
-    color: var(--muted);
-    white-space: nowrap;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: inherit;
+    background: var(--ink);
+    color: var(--card);
+    font-weight: 400;
+    /* At a larger text size the limit wraps inside the row rather than spill over its neighbour. */
+    padding: 0 0.4em;
+    text-align: center;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0;
 }
 
-/* Grey is too faint on a hovered row's background (GH-165). */
-.dialog .choices.labels button:hover .limit {
-    color: var(--ink);
+.dialog .choices.labels button:focus-visible .limit,
+.dialog .choices.labels button.tip .limit {
+    opacity: 1;
+}
+
+/* Hover only where there is a pointer that hovers: on a touch screen a first tap would count as the hover and send no press. */
+@media (hover: hover) {
+    .dialog .choices.labels button:hover .limit {
+        opacity: 1;
+    }
 }
 
 /* GH-332: the alphabet hint, the whole alphabet on a grid of 7 columns whatever its length, each letter a tile in the app's own colours, not the board's. A letter in use is filled like a button; the rest are quiet tiles with greyed letters. */

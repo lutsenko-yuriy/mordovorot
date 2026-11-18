@@ -1,56 +1,115 @@
 package web.scenario
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import viewmodel.TileLabelGroup
+import viewmodel.TileLabels
+import web.Focus
+import web.WebDialog
+import web.labelGroupSlideFrom
+import web.labelWaveFrom
+import web.previewWaveFrom
 
-/** GH-343: a row of the Tile labels dialog that doesn't fit the board shows its limit in a bubble after a press. Stubs: WU3 fills them in. */
+/** GH-343: a row of the Tile labels dialog that doesn't fit the board shows its limit over the row after a press. */
 class WebLabelLimitScenarioTest {
 
-    @Test
-    fun pressingARowThatDoesNotFitSetsTheTip() {
-        // TODO: 1. Start on 6x6 and open the Labels dialog
-        // TODO: 2. Press Letters
-        // TODO: 3. The dialog's tip is Letters
+    private val WebHarness.labels get() = state.dialog as WebDialog.Labels
+
+    /** A 6x6 board with the Tile labels dialog open on the group of Letters, which stops at 5x5. */
+    private fun WebHarness.onSixBySix(): WebHarness {
+        game.onNew()
+        game.onSizeChosen(6)
+        game.labels.open()
+        game.labels.onGroupOpened(TileLabelGroup.of(TileLabels.LETTERS))
+        return this
     }
 
     @Test
-    fun pressingItPicksNothing() {
-        // TODO: 1. Press Letters on 6x6
-        // TODO: 2. The marked label is unchanged
-        // TODO: 3. The board's labels and the preference are unchanged
-        // TODO: 4. No analytics event is sent
+    fun pressingARowThatDoesNotFitSetsTheTip() = webTest {
+        val page = WebHarness(backgroundScope).startOn().onSixBySix()
+        assertNull(page.labels.tip)
+
+        page.game.labels.onSelected(TileLabels.LETTERS)
+
+        assertEquals(TileLabels.LETTERS, page.labels.tip)
     }
 
     @Test
-    fun focusGoesToThatRow() {
-        // TODO: 1. Press Letters on 6x6
-        // TODO: 2. Focus is on the Letters row
+    fun pressingItPicksNothing() = webTest {
+        val page = WebHarness(backgroundScope).startOn().onSixBySix()
+        val marked = page.labels.selected
+        val boardLabels = page.state.labels
+        val events = page.analytics.events.size
+
+        page.game.labels.onSelected(TileLabels.LETTERS)
+
+        assertEquals(marked, page.labels.selected)
+        assertEquals(boardLabels, page.state.labels)
+        assertEquals(events, page.analytics.events.size)
+        page.game.labels.onAnswered(ok = true)
+        assertEquals(boardLabels, page.state.labels)
+        assertNull(page.preferences.get("tile_labels"))
+        assertEquals(0, page.props("tile_labels_changed").size)
     }
 
     @Test
-    fun pressingARowThatFitsClearsTheTip() {
-        // TODO: 1. Press Letters on 6x6
-        // TODO: 2. Press a row that fits
-        // TODO: 3. The tip is empty
+    fun focusGoesToThatRow() = webTest {
+        val page = WebHarness(backgroundScope).startOn().onSixBySix()
+
+        page.game.labels.onSelected(TileLabels.LETTERS)
+
+        assertEquals(Focus.Label(TileLabels.LETTERS), page.state.focus)
     }
 
     @Test
-    fun openingAnotherGroupClearsTheTip() {
-        // TODO: 1. Press Letters on 6x6
-        // TODO: 2. Press another group's header
-        // TODO: 3. The tip is empty
+    fun pressingARowThatFitsClearsTheTip() = webTest {
+        val page = WebHarness(backgroundScope).startOn().onSixBySix()
+        val fitting = TileLabelGroup.of(TileLabels.LETTERS).schemes.first { it.fits(6) }
+        page.game.labels.onSelected(TileLabels.LETTERS)
+
+        page.game.labels.onSelected(fitting)
+
+        assertNull(page.labels.tip)
+        assertEquals(fitting, page.labels.selected)
     }
 
     @Test
-    fun closingTheDialogDropsTheTip() {
-        // TODO: 1. Press Letters on 6x6
-        // TODO: 2. Press Cancel, then reopen the dialog
-        // TODO: 3. The tip is empty
-        // TODO: 4. Do the same with OK
+    fun openingAnotherGroupClearsTheTip() = webTest {
+        val page = WebHarness(backgroundScope).startOn().onSixBySix()
+        page.game.labels.onSelected(TileLabels.LETTERS)
+
+        page.game.labels.onGroupOpened(TileLabelGroup.NUMBERS)
+
+        assertNull(page.labels.tip)
     }
 
     @Test
-    fun theTipStartsNoWaveOrSlide() {
-        // TODO: 1. Press Letters on 6x6
-        // TODO: 2. No frame starts a board wave, a preview wave or a group slide
+    fun closingTheDialogDropsTheTip() = webTest {
+        val page = WebHarness(backgroundScope).startOn().onSixBySix()
+        page.game.labels.onSelected(TileLabels.LETTERS)
+        page.game.labels.onAnswered(ok = false)
+        page.game.labels.open()
+        assertNull(page.labels.tip)
+
+        page.game.labels.onGroupOpened(TileLabelGroup.of(TileLabels.LETTERS))
+        page.game.labels.onSelected(TileLabels.LETTERS)
+        page.game.labels.onAnswered(ok = true)
+        page.game.labels.open()
+
+        assertNull(page.labels.tip)
+    }
+
+    @Test
+    fun theTipStartsNoWaveOrSlide() = webTest {
+        val page = WebHarness(backgroundScope).startOn().onSixBySix()
+        val before = page.state
+
+        page.game.labels.onSelected(TileLabels.LETTERS)
+
+        val now = page.state
+        assertNull(now.labelWaveFrom(before), "no board wave")
+        assertNull(now.previewWaveFrom(before), "no preview wave")
+        assertNull(now.labelGroupSlideFrom(before), "no group slide")
     }
 }
