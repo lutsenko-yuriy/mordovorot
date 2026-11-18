@@ -61,7 +61,7 @@ private fun labelRow(option: LabelOption, checked: Boolean, tabStop: Boolean, ti
     button("", listOfNotNull("checked".takeIf { checked }, "unavailable".takeIf { !option.available }, "tip".takeIf { tip }).joinToString(" ").ifEmpty { null }) {
         game.labels.onSelected(option.labels)
     }.focusKey(Focus.Label(option.labels)).apply {
-        if (option.available) asRadio(this, checked, tabStop = tabStop) else asUnavailableRadio(this)
+        if (option.available) asRadio(this, checked, tabStop = tabStop) else asUnavailableRadio(this, tabStop = tip)
         append(
             element("span", "name").apply { textContent = option.title },
             *listOfNotNull(option.limit?.let { element("span", "limit").apply { textContent = it } }).toTypedArray(),

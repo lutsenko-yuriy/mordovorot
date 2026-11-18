@@ -37,12 +37,13 @@ internal fun asRadio(button: Element, checked: Boolean, tabStop: Boolean? = null
 }
 
 /** [button] as a radio that can't be marked, as its scheme doesn't fit the board (GH-343). Not `disabled`, so it takes focus, and a press or an arrow
- *  shows why: its name carries the limit, which a bubble shows to the eye. */
-internal fun asUnavailableRadio(button: Element) {
+ *  shows why: its name carries the limit, which a bubble shows to the eye. [tabStop] while its bubble shows. */
+internal fun asUnavailableRadio(button: Element, tabStop: Boolean = false) {
     button.setAttribute("role", "radio")
     button.setAttribute("aria-checked", "false")
     button.setAttribute("aria-disabled", "true")
-    button.setAttribute("tabindex", "-1")
+    // The row that shows its limit is a Tab stop while it does, so Tab and Shift+Tab leave it for its neighbours, not for the dialog's ends.
+    button.setAttribute("tabindex", if (tabStop) "0" else "-1")
 }
 
 /** [header] as the button that opens a group of options (GH-323); its group is [expanded] while open, and the element with id [controls] when given. */
