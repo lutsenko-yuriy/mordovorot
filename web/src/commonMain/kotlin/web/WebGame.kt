@@ -87,6 +87,16 @@ class WebGame internal constructor(
     /** Backs the page's leave-site prompt. */
     fun hasUnsavedProgress(): Boolean = !updates.applying && !tutorial.running && viewModel.hasUnsavedProgress()
 
+    /** Leaving the page (GH-338): tries the autosave, and answers whether progress is still unsaved, so the browser's prompt shows only then. */
+    fun onPageLeft(): Boolean = autosave("page_left")
+
+    /** Tries an autosave for [trigger] (`page_left`, `update`, `shared_link` or `tutorial_replay`) and answers whether progress is still unsaved.
+     *  Not while the tutorial runs or an update is being applied: their game is not the player's, and the prompt has been answered. */
+    internal fun autosave(trigger: String): Boolean {
+        if (!updates.applying && !tutorial.running) viewModel.autosave(trigger)
+        return hasUnsavedProgress()
+    }
+
     /** A click on an arrow; on a computer a mouse's puts focus on the board, so its keys work next (GH-287). */
     fun onArrow(arrow: Arrow, line: Int, byMouse: Boolean = false) {
         if (!playable) return

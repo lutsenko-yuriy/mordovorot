@@ -42,10 +42,10 @@ internal class WebUpdateFlows(
         updates.check()
     }
 
-    /** `Update` in the footer: reloads at once, or after a confirmation when the game has unsaved progress. */
+    /** `Update` in the footer: reloads at once, or after a confirmation when the game has unsaved progress the autosave could not keep. */
     fun onUpdate() = game.runFlow(Focus.UpdateLink) {
         if (!ready) return@runFlow
-        if (!game.hasUnsavedProgress()) return@runFlow apply(unsaved = false, confirmed = false)
+        if (!game.autosave("update")) return@runFlow apply(unsaved = false, confirmed = false)
         analytics.track("screen_update_dialog", mapOf("board_size" to viewModel.squareSide(), "move_count" to viewModel.moveCount()))
         if (modal.ask<Boolean>(WebDialog.Update)) apply(unsaved = true, confirmed = true) else game.cancelled("update")
     }

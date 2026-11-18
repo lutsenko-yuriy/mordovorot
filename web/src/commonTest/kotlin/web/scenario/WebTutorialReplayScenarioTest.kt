@@ -31,7 +31,11 @@ class WebTutorialReplayScenarioTest {
     private fun TestScope.fresh() = WebHarness(backgroundScope).startOn()
 
     /** A game with one move made: unsaved progress. */
-    private fun TestScope.mid() = fresh().also { it.game.onArrow(Arrow.RIGHT, 1) }
+    private fun TestScope.mid() = fresh().also {
+        it.game.onArrow(Arrow.RIGHT, 1)
+        // The store refuses the autosave (GH-338), so the question is asked; a test that saves clears it.
+        it.store.setException = IllegalStateException("quota")
+    }
 
     /** [mid], with the save question open. */
     private fun TestScope.asked() = mid().also { it.game.tutorial.onReplay("button") }
@@ -259,6 +263,7 @@ class WebTutorialReplayScenarioTest {
         page.game.onLoad()
         page.game.onLoadChosen("foo")
         page.game.onArrow(Arrow.RIGHT, 1)
+        page.store.setException = IllegalStateException("quota")
         page.game.tutorial.onReplay("button")
 
         page.game.tutorial.onReplayAnswered(ReplaySaveChoice.SAVE)
@@ -270,6 +275,7 @@ class WebTutorialReplayScenarioTest {
     fun `a successful save starts the replay`() = webTest {
         val page = asked()
         page.game.tutorial.onReplayAnswered(ReplaySaveChoice.SAVE)
+        page.store.setException = null
 
         page.game.onSaveAnswered("mine")
 
