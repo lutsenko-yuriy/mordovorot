@@ -553,7 +553,10 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   share link's prompt opening, and No or Escape, a new game back to the preference, a load (Repair & load too) and a
   startup restore. OK and Yes don't wave, as the board already shows the labels. When there is no earlier board to
   leave, on a page load or a board of another size, only the arriving half plays: every label fades in from above, tile
-  after tile, over the same 600 ms. Screen readers, keys, focus and analytics are as before; the outgoing label is never read.
+  after tile, over the same 600 ms. A move pressed while the wave plays waits for it (GH-343): an arrow click, a board shift key or a solution step is made when the wave ends, a
+  clicked arrow still moves focus to the board at once, and only the latest press is kept. A toolbar action or a drag drops it, and a drag
+  finishes the wave at once. With reduced motion nothing waits. Screen readers, keys, focus and analytics are as before (a held shift is
+  announced and tracked when it is made); the outgoing label is never read.
 - **Which labels a game shows:** a loaded save's own labels (Feature 4), or the sender's labels the player
   said Yes to on opening a share link (Feature 12, GH-267), win for that game; then
   the remembered preference; then Numbers. A new game goes back to the preference.

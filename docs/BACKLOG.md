@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-- GH-343: Animate label changes outside the Tile labels dialog; show a label's board limit in a bubble (WU1/3 merged; WU2 and WU3 pending)
+- GH-343: Animate label changes outside the Tile labels dialog; show a label's board limit in a bubble (WU2/3 merged; WU3 pending)
 
 ---
 

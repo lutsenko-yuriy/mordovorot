@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.56.2] — 2026-11-18 (PR #347 merged)
+
+### Added
+
+- [wip] [app] (PR #347) GH-343: a move pressed while the label wave plays waits for it and is made when it ends (the latest press only; a toolbar action or a drag drops it, reduced motion waits for nothing); the shift code moved out of `WebGame` into `WebShifts` (WU2 of 3; the limit bubble follows in WU3).
+
 ## [0.56.1] — 2026-11-18 (PR #346 merged)
 
 ### Added
