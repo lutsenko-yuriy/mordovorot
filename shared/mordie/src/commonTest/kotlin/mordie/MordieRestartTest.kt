@@ -117,6 +117,7 @@ class MordieRestartTest {
         assertEquals(2, factory.latest.ruledOut)
         assertEquals(path, factory.latest.best)
         assertFalse(mordie.provenShortest)
+        factory.latest.progress = found(moves = 4, proven = false, ruledOut = 2)
         shifts(5)
         assertEquals(MordieLine.FoundUnproven(4), mordie.line())
     }
