@@ -578,9 +578,9 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   `griechisches Fragezeichen` or `греческий вопросительный знак`.
 - **Letters on 7x7 to 9x9 (GH-207)** is dimmed and shown as Numbers just as on 6x6, below.
 - **Letters on 6x6 (GH-160):** Letters has 26 labels, too few for 36 tiles. On a 6x6 board its row
-  in the dialog is dimmed, and can't be picked. Its limit, `up to 5x5`, shows in a small bubble over its group's header on hover,
+  in the dialog is dimmed, and can't be picked. Its limit, `up to 5x5`, shows over the row, in place of its name, on hover,
   keyboard focus or after a press or tap (GH-343), so the row stays one line. The row takes focus, and the arrow keys land on it too,
-  but the mark stays where it was; its accessible name still carries the limit. Another row or group, or closing the dialog, hides the bubble.
+  but the mark stays where it was; its accessible name still carries the limit. Another row or group, or closing the dialog, hides it.
   A Letters preference shows Numbers on 6x6 and stays Letters, so smaller boards keep letters; OK
   on those Numbers changes nothing. Loading a 6x6 save with Letters (only possible by hand-editing)
   opens the dialog by itself, with `Letters don't fit a 6x6 board (26 letters, 36 tiles). Please pick

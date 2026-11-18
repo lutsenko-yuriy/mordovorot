@@ -115,21 +115,20 @@
     overflow-wrap: anywhere;
 }
 
-/* GH-343: the limit is a bubble over the row's group header, so the row stays one line. It shows on hover, keyboard focus or after a press (the tip). */
+/* GH-343: the limit covers its row, in place of the name, so the row stays one line and nothing sits outside the dialog's scroll box. It shows on hover, keyboard focus or after a press (the tip). */
 .dialog .choices.labels .limit {
     position: absolute;
-    bottom: calc(100% + 2px);
-    left: 0;
-    width: max-content;
-    max-width: 100%;
-    padding: 0.25em 0.6em;
-    border-radius: 6px;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: inherit;
     background: var(--ink);
     color: var(--card);
     font-weight: 400;
+    white-space: nowrap;
     pointer-events: none;
     opacity: 0;
-    z-index: 1;
 }
 
 .dialog .choices.labels button:focus-visible .limit,

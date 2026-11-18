@@ -372,7 +372,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/jsMain/kotlin/web/DomDialogs.kt  # The modal dialogs, and Escape -> WebGame.onEscape (GH-163, listenForEscape);
 │                                       # DomElements.kt: element/text/button helpers, and KeyboardEvent.composing
 ├── src/commonMain/kotlin/web/LabelMotion.kt # GH-342: the running label wave and group slide on a clock; hands DomBoard and the labels dialog each cell's old text and CSS `animation-delay` (negative once under way, so the per-frame rebuild resumes it); no animation frames, the browser plays the keyframes
-├── src/jsMain/kotlin/web/DomLabelsDialog.kt # GH-323: the Tile labels dialog's DOM: the preview strip, the group headers (`aria-expanded`) and the open group's two radio options side by side; a row that doesn't fit the board is focusable, and its limit is a bubble (GH-343)
+├── src/jsMain/kotlin/web/DomLabelsDialog.kt # GH-323: the Tile labels dialog's DOM: the preview strip, the group headers (`aria-expanded`) and the open group's two radio options side by side; a row that doesn't fit the board is focusable, and its limit covers it (GH-343)
 ├── src/jsMain/kotlin/web/a11y/DomKeyboard.kt # GH-163: Tab wraps inside the open dialog, the page
 │                                       # behind it `inert`, applyFocus puts a FocusTarget on the page;
 │                                       # keeps the focused control across redraws, else the fallback
