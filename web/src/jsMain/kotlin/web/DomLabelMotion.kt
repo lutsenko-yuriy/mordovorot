@@ -4,6 +4,7 @@ import kotlinx.browser.window
 import org.w3c.dom.Element
 import viewmodel.TileLabelGroup
 import web.a11y.Waving
+import web.a11y.hiddenFromReaders
 
 /** GH-342: the label wave and the group slide running in the Tile labels dialog, which the page's per-frame rebuild must not restart.
  *  Nothing here animates by itself: each element built while one runs gets a CSS `animation-delay` of its start minus the time
@@ -63,9 +64,8 @@ internal class LabelMotion {
 
 /** The leaving group's rows as a copy that only looks like them: nothing in it can be focused, pressed or read. */
 internal fun leavingBody(group: TileLabelGroup, dialog: WebDialog.Labels, delayMs: Double): Element =
-    element("div", "group-body leaving").apply {
+    hiddenFromReaders(element("div", "group-body leaving")).apply {
         setAttribute("inert", "")
-        setAttribute("aria-hidden", "true")
         setAttribute("style", "animation-delay: ${delayMs}ms")
         append(
             element("div", "group-inner").apply {
