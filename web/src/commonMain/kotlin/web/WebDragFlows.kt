@@ -23,6 +23,7 @@ internal class WebDragFlows(private val game: WebGame, private val viewModel: Ga
     /** A press on the tile at [row], [col], at ([x], [y]) on a board with tiles [pitch] apart, in pixels. */
     fun onStart(row: Int, col: Int, x: Double, y: Double, pitch: Double) {
         if (!game.playable) return
+        game.moves.drop()
         drag = LineDrag(row, col, x, y, pitch, viewModel.squareSide())
     }
 
@@ -38,7 +39,7 @@ internal class WebDragFlows(private val game: WebGame, private val viewModel: Ga
         val released = drag?.release() ?: return onCancel()
         drag = null
         if (game.tutorial.take(released.axis, released.line, released.steps, PointerShift.DRAG)) {
-            game.shift({ Announcements.drag(released.direction, released.line, abs(released.steps), it) }) {
+            game.shifts.shift({ Announcements.drag(released.direction, released.line, abs(released.steps), it) }) {
                 when (released.axis) {
                     Axis.ROW -> viewModel.shiftRow(released.line, released.steps, PointerShift.DRAG)
                     Axis.COLUMN -> viewModel.shiftColumn(released.line, released.steps, PointerShift.DRAG)
