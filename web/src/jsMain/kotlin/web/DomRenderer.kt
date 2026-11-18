@@ -25,7 +25,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
     private var saveWarning: Element? = null
 
     /** The label wave and group slide running in the Tile labels dialog (GH-342), played by CSS animations. */
-    private val motion = LabelMotion()
+    private val motion = LabelMotion { window.performance.now() }
 
     private val board = DomBoard(root, motion) { game }
 

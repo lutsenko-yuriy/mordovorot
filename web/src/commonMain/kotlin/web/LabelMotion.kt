@@ -1,16 +1,13 @@
 package web
 
-import kotlinx.browser.window
-import org.w3c.dom.Element
 import viewmodel.TileLabelGroup
 import web.a11y.Waving
-import web.a11y.hiddenFromReaders
 
 /** GH-342: the label wave and the group slide running in the Tile labels dialog, which the page's per-frame rebuild must not restart.
- *  Nothing here animates by itself: each element built while one runs gets a CSS `animation-delay` of its start minus the time
+ *  Nothing here animates by itself: each element the page builds while one runs gets a CSS `animation-delay` of its start minus the time
  *  elapsed (negative once under way), so a rebuilt page picks up where the last one was. A new change while one runs replaces it,
- *  and its "from" is the running one's target, which completes the running one at once. */
-internal class LabelMotion {
+ *  and its "from" is the running one's target, which completes the running one at once. [clock] is the time in ms. */
+internal class LabelMotion(private val clock: () -> Double) {
 
     private class Wave(val to: List<String>, val tiles: List<Int>?, val old: List<String>, val timing: LabelWave.Timing, val startedAt: Double, val id: Int)
 
@@ -23,7 +20,7 @@ internal class LabelMotion {
 
     /** Starts or stops the motions for [state], drawn after [before]. [still] (reduced motion) starts none, so everything changes at once. */
     fun start(before: WebState?, state: WebState, still: Boolean) {
-        val now = window.performance.now()
+        val now = clock()
         if (still) {
             board = null
             preview = null
@@ -50,57 +47,18 @@ internal class LabelMotion {
     /** The same for the preview strip's swatch at [index]. */
     fun swatch(index: Int): Waving? = preview?.cell(index)
 
-    /** The group that is sliding shut, and the delay in ms that puts its CSS animation where it is by now. */
+    /** The group that is sliding shut. */
     fun leavingGroup(): TileLabelGroup? = slide?.from
 
     /** How long until the running group slide is over, `null` when none runs. */
-    fun slideRemainingMs(): Double? = slide?.let { LabelWave.GROUP_MS - (window.performance.now() - it.startedAt) }?.takeIf { it > 0 }
+    fun slideRemainingMs(): Double? = slide?.let { LabelWave.GROUP_MS - (clock() - it.startedAt) }?.takeIf { it > 0 }
 
-    fun slideDelayMs(): Double = -(window.performance.now() - (slide?.startedAt ?: return 0.0))
+    /** The delay in ms that puts a slide's CSS animation where it is by now. */
+    fun slideDelayMs(): Double = -(clock() - (slide?.startedAt ?: return 0.0))
 
     private fun Wave.cell(index: Int): Waving? {
         if (index !in old.indices || old[index] == to[index]) return null
-        val elapsed = window.performance.now() - startedAt
+        val elapsed = clock() - startedAt
         return Waving(old[index], timing.leavesAt(index) - elapsed, timing.arrivesAt(index) - elapsed, id)
     }
 }
-
-/** The leaving group's rows as a copy that only looks like them: nothing in it can be focused, pressed or read. */
-internal fun leavingBody(group: TileLabelGroup, dialog: WebDialog.Labels, delayMs: Double): Element =
-    hiddenFromReaders(element("div", "group-body leaving")).apply {
-        setAttribute("inert", "")
-        setAttribute("style", "animation-delay: ${delayMs}ms")
-        append(
-            element("div", "group-inner").apply {
-                setAttribute("style", "animation-delay: ${delayMs}ms")
-                append(
-                    element("div", "choices list labels").apply {
-                        group.schemes.mapNotNull { scheme -> dialog.options.firstOrNull { it.labels == scheme } }.forEach { option ->
-                            append(copyOfRow(option, option.labels == dialog.selected))
-                        }
-                    },
-                )
-            },
-        )
-    }
-
-/** The open group's rows with the entering slide on them. */
-internal fun enteringBody(choices: Element, delayMs: Double): Element =
-    element("div", "group-body entering").apply {
-        setAttribute("style", "animation-delay: ${delayMs}ms")
-        append(
-            element("div", "group-inner").apply {
-                setAttribute("style", "animation-delay: ${delayMs}ms")
-                append(choices)
-            },
-        )
-    }
-
-private fun copyOfRow(option: LabelOption, checked: Boolean): Element =
-    element("button", if (checked) "checked" else null).apply {
-        setAttribute("tabindex", "-1")
-        append(
-            element("span", "name").apply { textContent = option.title },
-            *listOfNotNull(option.limit?.let { element("span", "limit").apply { textContent = it } }).toTypedArray(),
-        )
-    }

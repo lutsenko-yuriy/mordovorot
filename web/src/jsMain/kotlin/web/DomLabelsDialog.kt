@@ -64,3 +64,43 @@ private fun labelRow(option: LabelOption, checked: Boolean, tabStop: Boolean, ga
             *listOfNotNull(option.limit?.let { element("span", "limit").apply { textContent = it } }).toTypedArray(),
         )
     }
+
+/** The leaving group's rows as a copy that only looks like them: nothing in it can be focused, pressed or read. */
+internal fun leavingBody(group: TileLabelGroup, dialog: WebDialog.Labels, delayMs: Double): Element =
+    hiddenFromReaders(element("div", "group-body leaving")).apply {
+        setAttribute("inert", "")
+        setAttribute("style", "animation-delay: ${delayMs}ms")
+        append(
+            element("div", "group-inner").apply {
+                setAttribute("style", "animation-delay: ${delayMs}ms")
+                append(
+                    element("div", "choices list labels").apply {
+                        group.schemes.mapNotNull { scheme -> dialog.options.firstOrNull { it.labels == scheme } }.forEach { option ->
+                            append(copyOfRow(option, option.labels == dialog.selected))
+                        }
+                    },
+                )
+            },
+        )
+    }
+
+/** The open group's rows with the entering slide on them. */
+internal fun enteringBody(choices: Element, delayMs: Double): Element =
+    element("div", "group-body entering").apply {
+        setAttribute("style", "animation-delay: ${delayMs}ms")
+        append(
+            element("div", "group-inner").apply {
+                setAttribute("style", "animation-delay: ${delayMs}ms")
+                append(choices)
+            },
+        )
+    }
+
+private fun copyOfRow(option: LabelOption, checked: Boolean): Element =
+    element("button", if (checked) "checked" else null).apply {
+        setAttribute("tabindex", "-1")
+        append(
+            element("span", "name").apply { textContent = option.title },
+            *listOfNotNull(option.limit?.let { element("span", "limit").apply { textContent = it } }).toTypedArray(),
+        )
+    }
