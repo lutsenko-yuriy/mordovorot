@@ -3,6 +3,7 @@ package viewmodel.usecase
 import analytics.AnalyticsService
 import board_model.BoardModel
 import viewmodel.AutosaveSlot
+import viewmodel.GameStart
 import viewmodel.MordieHooks
 import viewmodel.SaveCatalog
 import viewmodel.UiRequest
@@ -18,6 +19,7 @@ internal class StartupRestoreUseCase(
     private val loadGame: LoadGameUseCase,
     private val newGame: NewGameUseCase,
     private val mordieHooks: MordieHooks,
+    private val gameStart: GameStart,
 ) {
 
     /** Guards [restoreOnStartup] against running twice. */
@@ -30,6 +32,7 @@ internal class StartupRestoreUseCase(
     suspend fun restoreOnStartup() {
         restoreOrPickSize()
         mordieHooks.onStartup()
+        gameStart.recordIfNone(board, mordieHooks.original())
     }
 
     /** Lets [restoreOnStartup] run again (GH-289): the tutorial's game stands in for the startup, and its Skip runs the startup it replaced. */

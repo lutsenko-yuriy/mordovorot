@@ -10,6 +10,7 @@ import texts.texts
 import viewmodel.AutosaveSlot
 import viewmodel.CurrentSaveName
 import viewmodel.GameShiftSources
+import viewmodel.GameStart
 import viewmodel.MordieHooks
 import viewmodel.PlayerResult
 import viewmodel.SaveCatalog
@@ -36,6 +37,7 @@ internal class LoadGameUseCase(
     private val solution: SolutionUseCase,
     private val tileLabels: SessionTileLabels,
     private val tileLabelsUseCase: TileLabelsUseCase,
+    private val gameStart: GameStart,
 ) {
 
     /** [trigger] is `"command"` for a mid-game load (toolbar Load / 3), or `"startup_prompt"`
@@ -77,6 +79,7 @@ internal class LoadGameUseCase(
             board.restoreState(saved.state, saved.moveCount)
             solution.leave()
             mordieHooks.onLoaded(saved.mordie)
+            gameStart.record(board, mordieHooks.original())
             currentSaveName.name = name
             gameShiftSources.reset()
             unsavedProgress.unsaved = false

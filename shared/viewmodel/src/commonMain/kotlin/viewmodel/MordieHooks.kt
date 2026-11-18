@@ -55,6 +55,9 @@ internal class MordieHooks(
 
     fun onRepaired() = startOnLoadedBoard()
 
+    /** The game goes back to its start (GH-349): Mordie keeps his search; his line is the game's opening again until his next check. */
+    fun onRestart() = mordie.restart()
+
     /** Starts Mordie unless it is already bound. */
     fun onStartup() = mordie.ensureStarted(board.boardArray)
 

@@ -12,6 +12,7 @@ import viewmodel.usecase.LanguageUseCase
 import viewmodel.usecase.LoadGameUseCase
 import viewmodel.usecase.LoadResult
 import viewmodel.usecase.NewGameUseCase
+import viewmodel.usecase.RestartGameUseCase
 import viewmodel.usecase.SaveGameUseCase
 import viewmodel.usecase.SolutionUseCase
 import viewmodel.usecase.StartupRestoreUseCase
@@ -35,6 +36,8 @@ class GameViewModelImpl internal constructor(
     private val deleteSaveUseCase: DeleteSaveUseCase,
     private val startupRestoreUseCase: StartupRestoreUseCase,
     private val solutionUseCase: SolutionUseCase,
+    private val restartGameUseCase: RestartGameUseCase,
+    private val gameStart: GameStart,
     private val tileLabelsUseCase: TileLabelsUseCase,
     private val controlsDialogUseCase: ControlsDialogUseCase,
     private val currentSaveName: CurrentSaveName,
@@ -81,7 +84,7 @@ class GameViewModelImpl internal constructor(
             val mordieProps = mordieHooks.onSolved()
             analytics.track(
                 "board_solved",
-                mapOf("move_count" to board.moveCount, "board_size" to board.squareSide, "tile_labels" to tileLabels.current.wireName, "tutorial" to mordieHooks.tutorialGame) +
+                mapOf("move_count" to board.moveCount, "board_size" to board.squareSide, "tile_labels" to tileLabels.current.wireName, "tutorial" to mordieHooks.tutorialGame, "restart_count" to gameStart.restarts) +
                     mordieProps +
                     gameShiftSources.propertiesFor(source),
             )
@@ -130,6 +133,10 @@ class GameViewModelImpl internal constructor(
     override fun mordieEnding(): String? = if (solutionUseCase.onScreen) null else mordieHooks.ending()
 
     override fun giveUpButton(): GiveUpButton = solutionUseCase.button()
+
+    override fun restartButton(): RestartButton = restartGameUseCase.button()
+
+    override fun restartGame(openedFrom: String, saveChoice: String) = restartGameUseCase.restart(openedFrom, saveChoice)
 
     override fun giveUp() = solutionUseCase.giveUp()
 

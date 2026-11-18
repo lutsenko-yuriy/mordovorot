@@ -89,7 +89,8 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                              # (start: arrangement + saved N + kept solution; progress, with the solution)
 │       ├── Mordie.kt                # Opponent state: shift count, 5-shift checks, opening/resume
 │       │                              # kind, found reveal, a shorter solution announced at a check
-│       │                              # (MordieCheck, GH-223), frozen outcome, save snapshot;
+│       │                              # (MordieCheck, GH-223), frozen outcome, save snapshot (MordieSnapshot.kt);
+│       │                              # restart() puts the game back to its start, keeping his search (GH-349);
 │       │                              # plays every board size, 3x3 to 9x9 (GH-225)
 │       └── MordieLine.kt            # MordieLine (sealed, incl. FoundUnproven / Shorter) /
 │                                      # MordieCheck / MordieOutcome / MordieResult (incl.
@@ -185,7 +186,8 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                             # game's board, moves and Mordie never see it (GH-126)
 │       ├── SolutionSteps.kt       # SolutionStep (one step, the shortest way round its line) and
 │       │                             # the step list's text, `03. Col 3 ↑ ×1` (GH-126)
-│       ├── SolutionState.kt       # What a view draws on the solution screen, plus GiveUpButton
+│       ├── GameStart.kt           # Where the current game began: arrangement, moves, restarts (GH-349)
+│       ├── SolutionState.kt       # What a view draws on the solution screen, plus RestartButton (GH-349) and GiveUpButton
 │       │                             # (DIMMED/GIVE_UP/MORDIES_SOLUTION/HIDDEN) (GH-126); its moves,
 │       │                             # the steps unformatted (GH-166)
 │       └── usecase/               # One class per viewmodel flow, delegated to by GameViewModelImpl
@@ -201,7 +203,9 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │                                     # StartupRestoreUseCase (restore or
 │                                     # size prompt, then Mordie; runs once per session), SolutionUseCase (the Give Up row,
 │                                     # entering the solution screen, the replay and its
-│                                     # analytics, GH-126), TileLabelsUseCase (the labels dialog's
+│                                     # analytics, GH-126), RestartGameUseCase (Restart: the button's
+│                                     # state, the board back to GameStart, Mordie.restart, game_restarted,
+│                                     # GH-349), TileLabelsUseCase (the labels dialog's
 │                                     # screen view and OK, GH-139), ControlsDialogUseCase (the
 │                                     # Controls dialog's screen view, GH-170); both take `screen`
 │                                     # from ScreenName.kt's one rule

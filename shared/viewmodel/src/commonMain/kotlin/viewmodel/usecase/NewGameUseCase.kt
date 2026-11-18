@@ -5,6 +5,7 @@ import board_model.BoardModel
 import board_model.Solvability
 import viewmodel.CurrentSaveName
 import viewmodel.GameShiftSources
+import viewmodel.GameStart
 import viewmodel.MordieHooks
 import viewmodel.SessionTileLabels
 import viewmodel.SharedProgress
@@ -20,6 +21,7 @@ internal class NewGameUseCase(
     private val unsavedProgress: UnsavedProgress,
     private val solution: SolutionUseCase,
     private val tileLabels: SessionTileLabels,
+    private val gameStart: GameStart,
 ) {
 
     fun newGame(size: Int, trigger: String) {
@@ -39,6 +41,7 @@ internal class NewGameUseCase(
     private fun begin(sender: SharedProgress? = null, tutorial: Boolean = false) {
         solution.leave()
         mordieHooks.onNewGame(sender, tutorial)
+        gameStart.record(board, mordieHooks.original())
         currentSaveName.name = null
         tileLabels.resetToPreference(board.squareSide)
         gameShiftSources.reset()

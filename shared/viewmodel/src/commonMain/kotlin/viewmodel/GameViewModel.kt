@@ -110,6 +110,14 @@ interface GameViewModel {
     /** The row above the toolbar (GH-126) - see [GiveUpButton]. */
     fun giveUpButton(): GiveUpButton
 
+    /** The toolbar's `[ Restart ]` (GH-349) - see [RestartButton]. */
+    fun restartButton(): RestartButton
+
+    /** Puts the game back to its starting arrangement, same size, labels and save name (GH-349), when
+     *  [restartButton] is [RestartButton.LIVE]; otherwise does nothing. [openedFrom] is `button` or
+     *  `shortcut`, [saveChoice] `not_asked`, `dont_save` or `saved`: the view asks about the save first. */
+    fun restartGame(openedFrom: String, saveChoice: String)
+
     /** Gives up for Mordie's solution once the player has confirmed, when [giveUpButton] is
      *  [GiveUpButton.GIVE_UP]: tracks `game_given_up` and opens the solution screen on the
      *  original arrangement, discarding the player's moves. Otherwise does nothing. */
