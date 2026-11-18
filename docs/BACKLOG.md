@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-_(nothing in progress)_
+- GH-349: Restart button: put the current game back to its start (WU0/3 in review; WU1 and WU2 pending)
 
 ---
 
