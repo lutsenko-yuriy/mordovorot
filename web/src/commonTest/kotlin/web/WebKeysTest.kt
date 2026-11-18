@@ -125,7 +125,8 @@ class WebKeysTest {
 
     @Test
     fun `solution keys need the board and a computer`() {
-        assertNull(WebKeys.pageKey(KeyPress("r"), true))
+        // Off the solution screen's board R is the toolbar's Restart (GH-349), not the replay's.
+        assertEquals(PageKey.Restart, WebKeys.pageKey(KeyPress("r"), true))
         assertNull(WebKeys.pageKey(KeyPress("r"), false, onSolution = true))
     }
 
