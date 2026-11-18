@@ -42,7 +42,7 @@ class Mordie(private val factory: MordieSearchFactory) {
     private var progressWindowShown = false
     private var outcome: MordieOutcome? = null
 
-    /** Shifts since the game started or was loaded. */
+    /** Shifts since the game started, was loaded or was restarted. */
     var shifts = 0
         private set
 

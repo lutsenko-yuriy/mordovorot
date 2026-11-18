@@ -33,7 +33,7 @@ internal class RestartGameUseCase(
     fun restart(openedFrom: String, saveChoice: String) {
         if (button() != RestartButton.LIVE) return
         val wasSolved = board.isCorrect()
-        val discarded = board.moveCount
+        val discarded = board.moveCount - gameStart.moves
         board.restoreState(gameStart.arrangement()!!, gameStart.moves)
         mordieHooks.onRestart()
         gameShiftSources.reset()

@@ -5,6 +5,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import mordie.Mordie
 import testing.FakeMordieSearchFactory
+import storage.SavedBoard
+import testing.FakeSaveRepository
+import testing.FakeViewModelUi
 import testing.RecordingAnalyticsService
 import testing.testViewModel
 
@@ -42,6 +45,19 @@ class ViewModelRestartAnalyticsTest {
 
         assertEquals(listOf(true to "not_asked"), restarted().map { it["was_solved"] to it["save_choice"] })
         assertEquals(2, restarted().single()["move_count"])
+    }
+
+    @Test
+    fun `a game that began on a loaded count reports only the moves made since`() = kotlinx.coroutines.test.runTest {
+        val loaded = intArrayOf(3, 1, 2, 6, 4, 5, 0, 7, 8)
+        val board = BoardImpl(3)
+        val loadedModel = testViewModel(board, FakeSaveRepository(mutableMapOf("old" to SavedBoard(3, loaded, 7))), analytics, mordie = Mordie(FakeMordieSearchFactory()))
+        FakeViewModelUi().drive(loadedModel) { loadedModel.loadGame("old") }
+        loadedModel.shiftLeft(1)
+
+        loadedModel.restartGame("button", "dont_save")
+
+        assertEquals(1, restarted().single()["move_count"])
     }
 
     @Test
