@@ -132,8 +132,12 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                           # shift_keys / shift_input. Reset on new game/load/repair; one
 │       │                           # per session (GH-101, GH-110)
 │       ├── UnsavedProgress.kt    # Whether the game has shifts no save holds: set by a shift,
-│       │                           # cleared by new game/save/load/repair. Backs the web's
-│       │                           # leave-site prompt; one per session (GH-110)
+│       │                           # cleared by new game/save/load/repair and by a successful
+│       │                           # autosave (GH-338). Backs the web's leave-site prompt; one per
+│       │                           # session (GH-110)
+│       ├── AutosaveSlot.kt       # GH-338: the autosave slot's name, `Autosave_<TileLabels.wireName>_NxN`
+│       │                           # (nameFor, isAutosave), and AutosaveResult (SKIPPED, SAVED,
+│       │                           # FAILED); the `Autosave_` prefix is the same in every language
 │       ├── SaveCatalog.kt        # Read-only SaveInfo views of the saves: infos (throws) /
 │       │                           # listSaves / saveExists (swallow) / availableSavesMessage (GH-78)
 │       ├── CatchingNonCancellation.kt # catchingNonCancellation — the use cases' catch-all: rethrows
@@ -189,6 +193,11 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │                                     # ResolveUnsolvableSaveUseCase (repair / new game, GH-74;
 │                                     # both return LoadResult, GH-41), DeleteSaveUseCase (deletes a save and
 │                                     # tracks save_deleted; not suspend, raises no request, GH-251),
+│                                     # AutosaveUseCase (GH-338: not suspend, no request or status; skips
+│                                     # with no unsaved moves, on a solved board or the solution
+│                                     # screen; else writes what Save writes into the slot, clears
+│                                     # UnsavedProgress, keeps the current save name, tracks
+│                                     # autosave_written),
 │                                     # StartupRestoreUseCase (restore or
 │                                     # size prompt, then Mordie; runs once per session), SolutionUseCase (the Give Up row,
 │                                     # entering the solution screen, the replay and its
@@ -218,7 +227,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │                    # GH-139's onLabels*, GH-163's onEscape, GH-171's onKey and onTilePressed) ->
 │   │                    # GameViewModel, a WebState to the WebRenderer after every change; drains
 │   │                    # uiRequests; tracks the view-layer analytics (screen views, dialog_cancelled);
-│   │                    # sets each frame's announcement (GH-166)
+│   │                    # sets each frame's announcement (GH-166); GH-338's onPageLeft autosaves
+│   ├── WebAutosave.kt   # GH-338: the page's autosave guards (not while the tutorial runs or an update is being applied); used by onPageLeft and, asking only when it fails, by Update, the share link and the tutorial replay
 │   ├── WebDialogFlows.kt # WebGame's Save, Load, size and can't-be-solved dialogs over its modal (GH-166); Load is a loop that also runs the Delete confirmation (GH-251); the viewModel's size and unsolvable requests (GH-262)
 │   ├── AppUpdates.kt    # GH-262: the seam to the offline worker (start/check/apply; DomAppUpdates in jsMain, FakeAppUpdates in the harness), CheckTrigger and OFFLINE_WORKER, the worker's fixed relative URL
 │   ├── WebUpdateFlows.kt # GH-262: the New version available notice (ready, the footer it implies, update_available), Update and its confirmation (update_applied), the checks' triggers
@@ -323,7 +333,9 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/commonTest/kotlin/web/WorkerMordieSearchTest.kt # GH-218: with a fake port
 ├── src/jsMain/kotlin/web/Main.kt       # The page's composition root: BoardImpl, saves and
 │                                       # preferences in localStorage, Mordie with the worker search,
-│                                       # MainScope, the window's Layout, the beforeunload prompt;
+│                                       # MainScope, the window's Layout; beforeunload, pagehide and
+│                                       # visibilitychange (hidden) call WebGame.onPageLeft (GH-338), and
+│                                       # the beforeunload prompt shows only if that autosave failed;
 │                                       # the footer, once, outside #app (GH-111); stopPinchZoom;
 │                                       # applySystemTextSize first (GH-168)
 ├── src/jsMain/kotlin/web/DomGestures.kt # stopPinchZoom: on touch screens, cancels WebKit's pinch
