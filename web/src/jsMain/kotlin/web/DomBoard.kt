@@ -22,7 +22,7 @@ import web.drag.WrapPositions
 
 /** The board in the page (GH-110): its tiles and arrows, and on a computer its selection, turning clicks and drags into [game] intents.
  *  Split from [DomRenderer] (GH-171). */
-internal class DomBoard(private val root: HTMLElement, private val game: () -> WebGame) {
+internal class DomBoard(private val root: HTMLElement, private val motion: LabelMotion, private val game: () -> WebGame) {
 
     /** The pointer dragging a line, if any. [root] holds its capture, as the tiles are rebuilt. */
     private var dragPointer: Int? = null
@@ -137,7 +137,7 @@ internal class DomBoard(private val root: HTMLElement, private val game: () -> W
             val x = if (offset?.axis == Axis.ROW && offset.line == row) wrapped!![col] else col.toDouble()
             val y = if (offset?.axis == Axis.COLUMN && offset.line == col) wrapped!![row] else row.toDouble()
             place(cells[i], value, side, x, y)
-            labelCell(cells[i], label, playing, playing && home[i])
+            labelCell(cells[i], label, playing, playing && home[i], motion.tile(i))
             if (x > side - 1) copies += copy(rows[row], value, label, side, x - side, y)
             if (y > side - 1) copies += copy(rows[row], value, label, side, x, y - side)
         }

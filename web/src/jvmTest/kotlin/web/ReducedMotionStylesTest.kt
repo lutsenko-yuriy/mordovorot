@@ -27,4 +27,21 @@ class ReducedMotionStylesTest {
             assertTrue(!important.containsMatchIn(outside), "$name: ${important.find(outside)?.value}")
         }
     }
+
+    // GH-342: the label wave and the group slide rest in their end state, so the catch-all above makes them change at once.
+    @Test
+    fun `a label that waves rests in its end state`() {
+        val css = sheets["board.css"].orEmpty()
+
+        assertTrue(Regex("""\.label-out \{[^}]*opacity: 0;""").containsMatchIn(css), "the old label is clear at rest")
+        assertTrue(Regex("""\.label-in\.wave \{\s*animation-name: label-in;""").containsMatchIn(css), "the animation comes only with .wave")
+    }
+
+    @Test
+    fun `a group that slides shut rests collapsed and the one that slides open rests open`() {
+        val css = sheets["labels.css"].orEmpty()
+
+        assertTrue(Regex("""\.group-body\.leaving \{[^}]*grid-template-rows: 0fr;[^}]*visibility: hidden;""").containsMatchIn(css))
+        assertTrue(Regex("""\.group-body \{[^}]*grid-template-rows: 1fr;""").containsMatchIn(css))
+    }
 }

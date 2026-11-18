@@ -18,7 +18,7 @@ import web.a11y.named
 
 /** The modal dialog for [dialog], its answers going to [game] (GH-110). [onSaveWarning] gets the
  *  Save dialog's warning line, which [DomRenderer] updates in place while the player types. */
-internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Element) -> Unit): Element =
+internal fun dialogElement(dialog: WebDialog, game: WebGame, motion: LabelMotion, onSaveWarning: (Element) -> Unit): Element =
     element("div", "dialog").apply {
         val title = text("title", dialog.title)
         asDialog(this, title)
@@ -86,7 +86,7 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, onSaveWarning: (Ele
                 ),
             )
             is WebDialog.Labels -> append(
-                *labelsBody(dialog, game).toTypedArray(),
+                *labelsBody(dialog, game, motion).toTypedArray(),
                 actions(
                     button(texts().dialogs.cancel, "secondary") { game.labels.onAnswered(ok = false) }.focusKey(Focus.DialogCancel),
                     button(texts().dialogs.ok) { game.labels.onAnswered(ok = true) }.focusKey(Focus.DialogOk),

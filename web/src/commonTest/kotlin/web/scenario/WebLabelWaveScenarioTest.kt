@@ -1,133 +1,268 @@
 package web.scenario
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import viewmodel.TileLabelGroup
+import viewmodel.TileLabels
+import web.Focus
+import web.LabelWave
+import web.WebDialog
+import web.WebState
+import web.labelGroupSlideFrom
+import web.labelWaveFrom
+import web.previewWaveFrom
 
-/**
- * GH-342: the label wave on the board and the preview strip, and the group slide in the Tile labels dialog.
- * Stubs: `implement` replaces each TODO with driver code over `WebHarness.frames`.
- */
+/** GH-342: the label wave on the board and the preview strip, and the group slide in the Tile labels dialog. Each scenario reads the frames the page drew. */
 class WebLabelWaveScenarioTest {
+
+    private val LINKED_4X4 = intArrayOf(12, 1, 2, 3, 0, 5, 6, 7, 4, 9, 10, 11, 8, 13, 14, 15)
+
+    /** The two latest frames, the one before and the one after the last action. */
+    private fun WebHarness.lastTwo(): Pair<WebState, WebState> = frames.takeLast(2).let { it[0] to it[1] }
+
+    /** Every board wave the frames from index [from] on start, each as the old texts. */
+    private fun WebHarness.waves(from: Int = 0) =
+        frames.drop(maxOf(from - 1, 0)).zipWithNext { before, now -> now.labelWaveFrom(before) }.filterNotNull()
+
+    private fun WebHarness.slides(from: Int = 0) =
+        frames.drop(maxOf(from - 1, 0)).zipWithNext { before, now -> now.labelGroupSlideFrom(before) }.filterNotNull()
+
+    private fun WebHarness.openLabels() = game.labels.open()
+
+    private fun WebHarness.pick(labels: TileLabels) = game.labels.onSelected(labels)
+
+    private fun letters(state: WebState) = state.tiles.map { ('A' + it - 1).toString() }
 
     // The board wave
     @Test
     fun pickingARowStartsABoardWaveFromTheOldLabels() = webTest {
-        // TODO: 1. Pick Letters in the Tile labels dialog
-        // TODO: 2. A board wave starts
-        // TODO: 3. Its old texts are 1 … 16
-        // TODO: 4. The board's new texts are A … P
+        val page = WebHarness(backgroundScope).startOn()
+        page.openLabels()
+
+        page.pick(TileLabels.LETTERS)
+
+        val (before, now) = page.lastTwo()
+        assertEquals(before.tileTexts, now.labelWaveFrom(before))
+        assertEquals(before.tiles.map { it.toString() }, now.labelWaveFrom(before))
+        assertEquals(letters(now), now.tileTexts)
     }
 
     @Test
     fun pickingARowStartsAPreviewWave() = webTest {
-        // TODO: 1. Pick Letters
-        // TODO: 2. A preview wave starts, from 1 2 3 to A B C
-        // TODO: 3. The preview wave ends before the board wave ends
+        val page = WebHarness(backgroundScope).startOn()
+        page.openLabels()
+
+        page.pick(TileLabels.LETTERS)
+
+        val (before, now) = page.lastTwo()
+        assertEquals(listOf("1", "2", "3"), now.previewWaveFrom(before))
+        assertEquals(listOf("A", "B", "C"), (now.dialog as WebDialog.Labels).preview)
+        assertTrue(LabelWave.preview(3).endMs < LabelWave.board(now.tiles.size).endMs)
     }
 
     @Test
     fun unchangedLabelsDoNotWave() = webTest {
-        // TODO: 1. Mark Numbers, which is already marked
-        // TODO: 2. No board wave starts
-        // TODO: 3. No preview wave starts
+        val page = WebHarness(backgroundScope).startOn()
+        page.openLabels()
+        val mark = page.frames.size
+
+        page.pick(TileLabels.NUMBERS)
+
+        assertTrue(page.waves(mark).isEmpty())
+        val (before, now) = page.lastTwo()
+        assertNull(now.previewWaveFrom(before))
     }
 
     @Test
     fun rapidPicksEachWaveFromThePreviousTarget() = webTest {
-        // TODO: 1. Press ArrowDown three times
-        // TODO: 2. Three board waves start
-        // TODO: 3. Each one starts from the previous wave's target texts
-        // TODO: 4. The last frame's board texts are the last marked scheme's
+        val page = WebHarness(backgroundScope).startOn()
+        page.openLabels()
+
+        for (labels in listOf(TileLabels.LETTERS, TileLabels.LETTER_PAIRS, TileLabels.CYRILLIC_LETTERS)) {
+            val before = page.state
+            page.pick(labels)
+            assertEquals(before.tileTexts, page.state.labelWaveFrom(before), labels.name)
+        }
+
+        assertEquals(TileLabels.CYRILLIC_LETTERS, page.state.labels)
+        assertEquals(page.state.tiles.map { "АБВГДЕЖЗИКЛМНОПР"[it - 1].toString() }, page.state.tileTexts)
     }
 
     @Test
     fun theBoardWaveTakesTheSameTimeOnEverySize() = webTest {
-        // TODO: 1. Pick Letters on a 3x3 board, then on a 9x9 board
-        // TODO: 2. The wave is over after 600 ms on both
-        // TODO: 3. The gap between tiles is smaller on 9x9
+        for (side in listOf(3, 6)) {
+            val page = WebHarness(backgroundScope).startOn()
+            page.game.onNew()
+            page.game.onSizeChosen(side)
+            page.openLabels()
+
+            page.pick(TileLabels.PAIRS)
+
+            val (before, now) = page.lastTwo()
+            assertEquals(side * side, now.labelWaveFrom(before)?.size, "side $side")
+            assertEquals(LabelWave.TOTAL_MS, LabelWave.board(side * side).endMs, 1e-9, "side $side")
+        }
     }
 
     // Cancel and OK
     @Test
     fun cancelWavesTheBoardBack() = webTest {
-        // TODO: 1. Pick Letters
-        // TODO: 2. Press Cancel
-        // TODO: 3. The closing frame starts a wave back to 1 … 16
+        val page = WebHarness(backgroundScope).startOn()
+        val numbers = page.state.tileTexts
+        page.openLabels()
+        page.pick(TileLabels.LETTERS)
+        val mark = page.frames.size
+
+        page.game.labels.onAnswered(ok = false)
+
+        assertEquals(listOf(letters(page.state)), page.waves(mark))
+        assertEquals(numbers, page.state.tileTexts)
+        assertNull(page.state.dialog)
     }
 
     @Test
     fun escapeWavesTheBoardBack() = webTest {
-        // TODO: 1. Pick Letters
-        // TODO: 2. Press Escape
-        // TODO: 3. The closing frame starts a wave back to 1 … 16
+        val page = WebHarness(backgroundScope).startOn()
+        val numbers = page.state.tileTexts
+        page.openLabels()
+        page.pick(TileLabels.LETTERS)
+        val mark = page.frames.size
+
+        page.game.onEscape()
+
+        assertEquals(listOf(letters(page.state)), page.waves(mark))
+        assertEquals(numbers, page.state.tileTexts)
     }
 
     @Test
     fun okStartsNoWaveAndNeverShowsTheOldLabels() = webTest {
-        // TODO: 1. Pick Letters
-        // TODO: 2. Press OK
-        // TODO: 3. No frame after the pick starts a wave
-        // TODO: 4. No frame after the pick shows 1 … 16
+        val page = WebHarness(backgroundScope).startOn()
+        page.openLabels()
+        page.pick(TileLabels.LETTERS)
+        val mark = page.frames.size
+
+        page.game.labels.onAnswered(ok = true)
+
+        assertTrue(page.waves(mark).isEmpty())
+        assertNull(page.state.dialog)
+        assertTrue(page.frames.drop(mark - 1).all { it.labels == TileLabels.LETTERS })
     }
 
     // The groups
     @Test
     fun openingAnotherGroupStartsASlideFromTheOpenOne() = webTest {
-        // TODO: 1. Press the Latin letters header while Numbers is open
-        // TODO: 2. A slide starts from Numbers
-        // TODO: 3. The labels start no wave
+        val page = WebHarness(backgroundScope).startOn()
+        page.openLabels()
+        val mark = page.frames.size
+
+        page.game.labels.onGroupOpened(TileLabelGroup.LATIN)
+
+        assertEquals(listOf(TileLabelGroup.NUMBERS), page.slides(mark))
+        assertTrue(page.waves(mark).isEmpty())
     }
 
     @Test
     fun pressingTheOpenGroupStartsNoSlide() = webTest {
-        // TODO: 1. Press the open group's header
-        // TODO: 2. No slide starts
+        val page = WebHarness(backgroundScope).startOn()
+        page.openLabels()
+        val frames = page.frames.size
+
+        page.game.labels.onGroupOpened(TileLabelGroup.NUMBERS)
+
+        assertEquals(frames, page.frames.size)
+        assertTrue(page.slides(frames).isEmpty())
     }
 
     @Test
     fun openingTheDialogAnimatesNothing() = webTest {
-        // TODO: 1. Open the Tile labels dialog
-        // TODO: 2. No wave starts
-        // TODO: 3. No slide starts
+        val page = WebHarness(backgroundScope).startOn()
+        val mark = page.frames.size
+
+        page.openLabels()
+
+        assertTrue(page.waves(mark).isEmpty())
+        assertTrue(page.slides(mark).isEmpty())
+        val (before, now) = page.lastTwo()
+        assertNull(now.previewWaveFrom(before))
     }
 
     // Interruption
     @Test
     fun aGroupPressDuringAWaveLeavesTheWaveTargetsInPlace() = webTest {
-        // TODO: 1. Pick Letters to start a wave
-        // TODO: 2. Press the Latin letters header at once
-        // TODO: 3. The slide starts from the group that was open
-        // TODO: 4. The board still shows A … P
+        val page = WebHarness(backgroundScope).startOn()
+        page.openLabels()
+        page.pick(TileLabels.LETTERS)
+        val mark = page.frames.size
+
+        page.game.labels.onGroupOpened(TileLabelGroup.LATIN)
+
+        assertEquals(listOf(TileLabelGroup.NUMBERS), page.slides(mark))
+        assertTrue(page.waves(mark).isEmpty())
+        assertEquals(letters(page.state), page.state.tileTexts)
     }
 
     // Where it does not play
     @Test
     fun labelsChangedOutsideTheDialogDoNotWave() = webTest {
-        // TODO: 1. Accept a share link's labels
-        // TODO: 2. No wave starts
-        // TODO: 3. Start a new game, then load a save with its own labels
-        // TODO: 4. No wave starts
+        val linked = WebHarness(backgroundScope).startWithLink(4, LINKED_4X4, "pairs")
+        linked.game.share.onSharedLabelsAnswered(true)
+        assertTrue(linked.waves().isEmpty())
+
+        val page = WebHarness(backgroundScope).startOn()
+        page.saves.save("p", rotatedRow(4), 4, 0, labels = "pairs")
+        page.game.onLoad()
+        page.game.onLoadChosen("p")
+        assertEquals(TileLabels.PAIRS, page.state.labels)
+        page.game.onNew()
+        page.game.onSizeChosen(5)
+
+        assertTrue(page.waves().isEmpty())
     }
 
     @Test
     fun theLoadPickerThatOpensTheSameDialogWaves() = webTest {
-        // TODO: 1. Load a 6x6 save with Letters labels
-        // TODO: 2. The picker opens
-        // TODO: 3. Pick Cyrillic letter pairs
-        // TODO: 4. A board wave starts
+        val page = WebHarness(backgroundScope).startOn()
+        page.saves.save("six", rotatedRow(6), 6, 0, labels = "letters")
+        page.game.onLoad()
+        page.game.onLoadChosen("six")
+        assertNotNull(page.state.dialog as? WebDialog.Labels)
+
+        page.pick(TileLabels.CYRILLIC_LETTER_PAIRS)
+
+        val (before, now) = page.lastTwo()
+        assertEquals(before.tileTexts, now.labelWaveFrom(before))
     }
 
     // What does not change
     @Test
     fun analyticsSendsNothingNew() = webTest {
-        // TODO: 1. Pick three rows
-        // TODO: 2. Open two groups
-        // TODO: 3. Press Cancel
-        // TODO: 4. Only screen_labels_dialog and dialog_cancelled are sent
+        val page = WebHarness(backgroundScope).startOn()
+
+        page.openLabels()
+        page.pick(TileLabels.LETTERS)
+        page.pick(TileLabels.LETTER_PAIRS)
+        page.pick(TileLabels.CYRILLIC_LETTERS)
+        page.game.labels.onGroupOpened(TileLabelGroup.GREEK)
+        page.game.labels.onGroupOpened(TileLabelGroup.LATIN)
+        page.game.labels.onAnswered(ok = false)
+
+        assertEquals(listOf("screen_labels_dialog", "dialog_cancelled"), page.analytics.events.map { it.name })
     }
 
     @Test
     fun focusAndKeysAreUnchanged() = webTest {
-        // TODO: 1. Open the dialog, pick a row, open a group and press Cancel
-        // TODO: 2. Each frame's focus matches what WebLabelGroupsScenarioTest already expects
+        val page = WebHarness(backgroundScope).startOn()
+        page.openLabels()
+
+        page.pick(TileLabels.LETTERS)
+        assertEquals(Focus.Label(TileLabels.LETTERS).key, page.state.focus?.key)
+        page.game.labels.onGroupOpened(TileLabelGroup.GREEK)
+        assertEquals(Focus.Label(TileLabels.GREEK_LETTERS).key, page.state.focus?.key)
+        page.game.labels.onAnswered(ok = false)
+
+        assertEquals(Focus.LabelsButton.key, page.state.focus?.key)
     }
 }

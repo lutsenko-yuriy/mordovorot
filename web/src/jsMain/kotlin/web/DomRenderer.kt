@@ -24,7 +24,10 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
     /** The open Save dialog's warning line, updated in place while the player types. */
     private var saveWarning: Element? = null
 
-    private val board = DomBoard(root) { game }
+    /** The label wave and group slide running in the Tile labels dialog (GH-342), played by CSS animations. */
+    private val motion = LabelMotion()
+
+    private val board = DomBoard(root, motion) { game }
 
     private var shown: WebState? = null
 
@@ -68,6 +71,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         if (state.footer != before?.footer) drawFooter(state.footer)
         shown = state
         startSlide(before, state)
+        motion.start(before, state, reducedMotion())
         val now = window.performance.now()
         // At once while the system asks for less motion, which can change with the tab open.
         val still = reducedMotion()
@@ -117,7 +121,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         // Only a dialog that has just opened fades in, not one redrawn as the player picks in it or one that
         // takes another's place (Load -> Delete 'foo'?, GH-251).
         val reopened = dialog != null && before?.dialog != null
-        dialog?.let { root.append(element("div", if (reopened) "overlay shown" else "overlay").apply { append(dialogElement(it, game) { warning -> saveWarning = warning }) }) }
+        dialog?.let { root.append(element("div", if (reopened) "overlay shown" else "overlay").apply { append(dialogElement(it, game, motion) { warning -> saveWarning = warning }) }) }
         drawMordie(now)
         setBehindDialog(root, dialog != null)
         applyFocus(root, state.focus, focused) { fallbackFocus(it, state) }

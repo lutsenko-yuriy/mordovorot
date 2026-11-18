@@ -144,3 +144,63 @@
     color: var(--button-ink);
     box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.12);
 }
+
+/* GH-342: the groups slide. The group that was open slides shut as the new one slides open, both over the same time and curve, so together they are one body tall and the dialog's height stays put; the headers between them glide by that height. While they slide the gap under a header moves inside the body (the inner's top padding), so it opens and shuts with it. The base style is the end state, so with animations off (reduced motion, GH-162) the groups change at once. */
+.dialog .label-group.sliding {
+    gap: 0;
+}
+
+.dialog .group-body {
+    display: grid;
+    grid-template-rows: 1fr;
+}
+
+.dialog .group-body > .group-inner {
+    min-height: 0;
+    overflow: hidden;
+    overflow: clip;
+    padding-top: 8px;
+}
+
+.dialog .group-body.entering {
+    animation: group-open 250ms ease both;
+}
+
+.dialog .group-body.entering > .group-inner {
+    animation: group-open-inner 250ms ease both;
+}
+
+.dialog .group-body.leaving {
+    grid-template-rows: 0fr;
+    visibility: hidden;
+    animation: group-shut 250ms ease both;
+}
+
+.dialog .group-body.leaving > .group-inner {
+    animation: group-shut-inner 250ms ease both;
+}
+
+@keyframes group-open {
+    from { grid-template-rows: 0fr; opacity: 0; }
+    to { grid-template-rows: 1fr; opacity: 1; }
+}
+
+@keyframes group-open-inner {
+    from { transform: translateY(-0.6em); }
+    to { transform: translateY(0); }
+}
+
+@keyframes group-shut {
+    from { grid-template-rows: 1fr; opacity: 1; visibility: visible; }
+    to { grid-template-rows: 0fr; opacity: 0; visibility: hidden; }
+}
+
+@keyframes group-shut-inner {
+    from { transform: translateY(0); }
+    to { transform: translateY(-0.6em); }
+}
+
+/* GH-342: a swatch holds its old label over the new one while it leaves. */
+.dialog .label-preview .swatch {
+    position: relative;
+}

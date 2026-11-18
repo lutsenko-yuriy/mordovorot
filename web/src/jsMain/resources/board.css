@@ -137,3 +137,39 @@
 .app.dragging, .app.dragging * {
     cursor: grabbing;
 }
+
+/* GH-342: the label wave, on the board's tiles and the Tile labels dialog's preview. A tile's label is two spans while it changes: the new one fades in from just above, the old one, laid over it, fades out and down. Their base style is the end state (the new one in place, the old one clear), so with animations off (reduced motion, GH-162) a label changes at once. The delays are set per span, from where the wave is by now. */
+.label-in,
+.label-out {
+    animation-duration: 150ms;
+    animation-timing-function: ease;
+    animation-fill-mode: both;
+}
+
+.label-out {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.label-in.wave {
+    animation-name: label-in;
+}
+
+.label-out.wave {
+    animation-name: label-out;
+}
+
+@keyframes label-in {
+    from { opacity: 0; transform: translateY(-0.3em); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes label-out {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(0.3em); }
+}
