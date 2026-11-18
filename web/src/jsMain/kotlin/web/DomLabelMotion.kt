@@ -53,6 +53,9 @@ internal class LabelMotion {
     /** The group that is sliding shut, and the delay in ms that puts its CSS animation where it is by now. */
     fun leavingGroup(): TileLabelGroup? = slide?.from
 
+    /** How long until the running group slide is over, `null` when none runs. */
+    fun slideRemainingMs(): Double? = slide?.let { LabelWave.GROUP_MS - (window.performance.now() - it.startedAt) }?.takeIf { it > 0 }
+
     fun slideDelayMs(): Double = -(window.performance.now() - (slide?.startedAt ?: return 0.0))
 
     private fun Wave.cell(index: Int): Waving? {

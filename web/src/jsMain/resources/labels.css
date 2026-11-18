@@ -159,7 +159,11 @@
     min-height: 0;
     overflow: hidden;
     overflow: clip;
-    padding-top: 8px;
+}
+
+/* The gap under the header sits inside the body, as the rows' top margin: a padding on the inner would keep a shut body 8px tall. */
+.dialog .group-body .choices.labels {
+    margin-top: 8px;
 }
 
 .dialog .group-body.entering {

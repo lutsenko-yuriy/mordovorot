@@ -38,6 +38,8 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
     private var slide: Slide? = null
     /** An animation frame is queued, so another slide or Mordie line doesn't queue a second. */
     private var framePending = false
+    /** A redraw after a group slide is queued (GH-342). */
+    private var settling = false
 
     private class Slide(val start: LineOffset, val startedAt: Double)
 
@@ -72,6 +74,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         shown = state
         startSlide(before, state)
         motion.start(before, state, reducedMotion())
+        motion.slideRemainingMs()?.let(::settleAfter)
         val now = window.performance.now()
         // At once while the system asks for less motion, which can change with the tab open.
         val still = reducedMotion()
@@ -240,6 +243,17 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
         if (next != null) schedule()
     }
 
+    /** Draws [shown] once more when a group slide is over (GH-342), so the groups rest laid out as before the slide, not in its clipping wrapper. */
+    private fun settleAfter(ms: Double) {
+        if (settling) return
+        settling = true
+        window.setTimeout({
+            settling = false
+            // Without the one-time announcement and focus, which were for the frame that started the slide.
+            shown?.let { render(it.copy(announcement = null, focus = null)) }
+        }, ms.toInt() + SETTLE_MARGIN_MS)
+    }
+
     private fun reducedMotion() = window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
     private fun schedule() {
@@ -266,6 +280,8 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
 
     private companion object {
         const val SLIDE_MS = 160.0
+        /** Past the slide's end, so that the redraw finds it over. */
+        const val SETTLE_MARGIN_MS = 30
         const val MORDIE_OUT_MS = 220.0
         const val MORDIE_IN_MS = 340.0
     }

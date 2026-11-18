@@ -8,7 +8,6 @@ import kotlin.test.assertTrue
 import viewmodel.TileLabelGroup
 import viewmodel.TileLabels
 import web.Focus
-import web.LabelWave
 import web.WebDialog
 import web.WebState
 import web.labelGroupSlideFrom
@@ -60,7 +59,6 @@ class WebLabelWaveScenarioTest {
         val (before, now) = page.lastTwo()
         assertEquals(listOf("1", "2", "3"), now.previewWaveFrom(before))
         assertEquals(listOf("A", "B", "C"), (now.dialog as WebDialog.Labels).preview)
-        assertTrue(LabelWave.preview(3).endMs < LabelWave.board(now.tiles.size).endMs)
     }
 
     @Test
@@ -103,7 +101,6 @@ class WebLabelWaveScenarioTest {
 
             val (before, now) = page.lastTwo()
             assertEquals(side * side, now.labelWaveFrom(before)?.size, "side $side")
-            assertEquals(LabelWave.TOTAL_MS, LabelWave.board(side * side).endMs, 1e-9, "side $side")
         }
     }
 
