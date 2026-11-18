@@ -1,88 +1,164 @@
 package web.scenario
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlinx.coroutines.test.TestScope
+import web.Arrow
+import web.ReplaySaveChoice
 
-/** GH-349: the analytics of a restart (docs/ANALYTICS_EVENTS.md). Stubs: WU2 fills them in. */
+/** GH-349: the analytics of a restart (docs/ANALYTICS_EVENTS.md). */
 class WebRestartAnalyticsScenarioTest {
-    @Test
-    fun theSaveQuestionSendsItsScreenView() {
-        // TODO: 1. Make 3 shifts
-        // TODO: 2. Click Restart
-        // TODO: 3. The `screen_restart_save_dialog` event is sent
+
+    private fun TestScope.mid() = WebHarness(backgroundScope).startOn().also { it.threeMoves() }
+
+    private fun WebHarness.drag(row: Int, col: Int, x: Double, y: Double) {
+        game.onDragStart(row, col, 100.0, 100.0, 40.0)
+        game.onDragMove(x, y)
+        game.onDragEnd()
     }
 
     @Test
-    fun pressingRSaysShortcut() {
-        // TODO: 1. Press R
-        // TODO: 2. The screen view says `shortcut`
+    fun theSaveQuestionSendsItsScreenView() = webTest {
+        val page = mid()
+
+        page.game.restart.onRestart("button")
+
+        assertEquals(listOf(mapOf("opened_from" to "button", "move_count" to 3)), page.ownProps("screen_restart_save_dialog"))
     }
 
     @Test
-    fun dontSaveSendsGameRestarted() {
-        // TODO: 1. Choose Don't save
-        // TODO: 2. The `game_restarted` event is sent
+    fun pressingRSaysShortcut() = webTest {
+        val page = mid()
+
+        page.press("r", web.Focus.Board)
+
+        assertEquals(listOf(mapOf("opened_from" to "shortcut", "move_count" to 3)), page.ownProps("screen_restart_save_dialog"))
     }
 
     @Test
-    fun aSavedRestartSendsGameRestarted() {
-        // TODO: 1. Choose Save and confirm
-        // TODO: 2. `game_restarted` says `saved`
+    fun dontSaveSendsGameRestarted() = webTest {
+        val page = mid()
+
+        page.restartDiscarding()
+
+        assertEquals(
+            listOf(mapOf("board_size" to 4, "move_count" to 3, "was_solved" to false, "save_choice" to "dont_save", "opened_from" to "button")),
+            page.ownProps("game_restarted"),
+        )
     }
 
     @Test
-    fun aWonBoardSendsNotAsked() {
-        // TODO: 1. Solve, then Restart
-        // TODO: 2. `game_restarted` says `not_asked` and `was_solved`
+    fun aSavedRestartSendsGameRestarted() = webTest {
+        val page = mid()
+        page.restartWith(ReplaySaveChoice.SAVE)
+
+        page.game.onSaveAnswered("mine")
+
+        assertEquals(listOf("saved"), page.props("game_restarted").map { it["save_choice"] })
     }
 
     @Test
-    fun cancelSendsDialogCancelled() {
-        // TODO: 1. Press Cancel
-        // TODO: 2. `dialog_cancelled` says `restart_save` and `button`
+    fun aWonBoardSendsNotAsked() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.game.onArrow(Arrow.LEFT, 0)
+
+        page.game.restart.onRestart("button")
+
+        assertEquals(
+            listOf(mapOf("board_size" to 4, "move_count" to 1, "was_solved" to true, "save_choice" to "not_asked", "opened_from" to "button")),
+            page.ownProps("game_restarted"),
+        )
+        assertTrue(page.props("screen_restart_save_dialog").isEmpty())
     }
 
     @Test
-    fun escapeSendsDialogCancelled() {
-        // TODO: 1. Press Escape
-        // TODO: 2. `dialog_cancelled` says `restart_save` and `escape`
+    fun cancelSendsDialogCancelled() = webTest {
+        val page = mid()
+        page.game.restart.onRestart("button")
+
+        page.game.restart.onAnswered(ReplaySaveChoice.CANCEL)
+
+        assertEquals(listOf(mapOf("dialog" to "restart_save", "via" to "button")), page.ownProps("dialog_cancelled"))
+        assertTrue(page.props("game_restarted").isEmpty())
     }
 
     @Test
-    fun theSaveDialogSaysItWasOpenedFromRestart() {
-        // TODO: 1. Choose Save
-        // TODO: 2. `screen_save_dialog` says `restart`
+    fun escapeSendsDialogCancelled() = webTest {
+        val page = mid()
+        page.game.restart.onRestart("button")
+
+        page.game.onEscape()
+
+        assertEquals(listOf(mapOf("dialog" to "restart_save", "via" to "escape")), page.ownProps("dialog_cancelled"))
     }
 
     @Test
-    fun aDimmedRestartSendsNothing() {
-        // TODO: 1. Press R at the start
-        // TODO: 2. No event is sent
+    fun theSaveDialogSaysItWasOpenedFromRestart() = webTest {
+        val page = mid()
+
+        page.restartWith(ReplaySaveChoice.SAVE)
+
+        assertEquals(listOf("restart"), page.props("screen_save_dialog").map { it["opened_from"] })
     }
 
     @Test
-    fun boardSolvedCarriesTheRestartCount() {
-        // TODO: 1. Solve without restarting: the count is 0
-        // TODO: 2. Restart once, then solve: the count is 1
+    fun aDimmedRestartSendsNothing() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+
+        page.press("r", web.Focus.Board)
+        page.game.restart.onRestart("button")
+
+        assertTrue(page.props("screen_restart_save_dialog").isEmpty())
+        assertTrue(page.props("game_restarted").isEmpty())
     }
 
     @Test
-    fun aNewGameStartsTheCountAgain() {
-        // TODO: 1. Restart, then start a new game
-        // TODO: 2. Solve
-        // TODO: 3. `restart_count` is 0
+    fun boardSolvedCarriesTheRestartCount() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.game.onArrow(Arrow.LEFT, 0)
+        page.game.restart.onRestart("button")
+        page.game.onArrow(Arrow.LEFT, 0)
+
+        assertEquals(listOf(0, 1), page.props("board_solved").map { it["restart_count"] })
     }
 
     @Test
-    fun aLoadStartsTheCountAgain() {
-        // TODO: 1. Restart, then load a save
-        // TODO: 2. Solve
-        // TODO: 3. `restart_count` is 0
+    fun aNewGameStartsTheCountAgain() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.game.onArrow(Arrow.RIGHT, 1)
+        page.restartDiscarding()
+        page.game.onNew()
+        page.game.onSizeChosen(4)
+        // The new game's board is random: put the near-solved one in its place, as a game begun from it.
+        page.board.restoreState(ONE_SHIFT_FROM_SOLVED, 0)
+
+        page.game.onArrow(Arrow.LEFT, 0)
+
+        assertEquals(listOf(0), page.props("board_solved").map { it["restart_count"] })
     }
 
     @Test
-    fun shiftSourcesCountOnlySinceTheRestart() {
-        // TODO: 1. Shift by drag, restart, then shift by arrow
-        // TODO: 2. Solve
-        // TODO: 3. `board_solved` counts only the arrow
+    fun aLoadStartsTheCountAgain() = webTest {
+        val page = WebHarness(backgroundScope).startOn().seed("near", ONE_SHIFT_FROM_SOLVED)
+        page.game.onArrow(Arrow.RIGHT, 1)
+        page.restartDiscarding()
+        page.game.onLoad()
+        page.game.onLoadChosen("near")
+
+        page.game.onArrow(Arrow.LEFT, 0)
+
+        assertEquals(listOf(0), page.props("board_solved").map { it["restart_count"] })
+    }
+
+    @Test
+    fun shiftSourcesCountOnlySinceTheRestart() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.drag(1, 0, 140.0, 100.0)
+        page.restartDiscarding()
+
+        page.game.onArrow(Arrow.LEFT, 0)
+
+        assertEquals(listOf("arrows"), page.props("board_solved").map { it["shift_input"] })
     }
 }

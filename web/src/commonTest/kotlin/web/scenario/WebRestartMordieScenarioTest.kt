@@ -1,59 +1,120 @@
 package web.scenario
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
+import storage.SavedMordie
+import texts.texts
+import viewmodel.GiveUpButton
+import web.Arrow
 
-/** GH-349: what Mordie does after a restart. Stubs: WU2 fills them in. */
+/** GH-349: what Mordie does after a restart. */
 class WebRestartMordieScenarioTest {
+    private val mordieTexts = texts().mordie
+
     @Test
-    fun mordiesLineGoesBackToTheOpeningLine() {
-        // TODO: 1. Play past 5 shifts so his line moves on
-        // TODO: 2. Restart
-        // TODO: 3. His line is the opening line
+    fun mordiesLineGoesBackToTheOpeningLine() = webTest {
+        val page = onTwoMoves()
+        page.searchFinds()
+        page.fiveShifts()
+        assertEquals(mordieTexts.found(2), page.state.mordie)
+
+        page.restartDiscarding()
+
+        assertEquals(mordieTexts.opening, page.state.mordie)
     }
 
     @Test
-    fun aSharedGameShowsTheFriendLineAgain() {
-        // TODO: 1. Restart a shared game
-        // TODO: 2. His line is the friend line
+    fun aSharedGameShowsTheFriendLineAgain() = webTest {
+        val page = WebHarness(backgroundScope).startWithLink(4, ONE_SHIFT_FROM_SOLVED, progress = "n12")
+        repeat(5) { page.game.onArrow(Arrow.UP, 3) }
+
+        page.restartDiscarding()
+
+        assertEquals(mordieTexts.friendSolving(12), page.state.mordie)
     }
 
     @Test
-    fun aLoadedGameShowsItsResumedLineAgain() {
-        // TODO: 1. Restart a loaded game
-        // TODO: 2. His line is the "we stopped at N moves" line
+    fun aLoadedGameShowsItsResumedLineAgain() = webTest {
+        val page = WebHarness(backgroundScope).startOn().seed("foo", RESTART_MOVED, moves = 7, mordie = SavedMordie(ONE_SHIFT_FROM_SOLVED, 7, found = false))
+        page.game.onLoad()
+        page.game.onLoadChosen("foo")
+        repeat(5) { page.game.onArrow(Arrow.UP, 3) }
+
+        page.restartDiscarding()
+
+        assertEquals(mordieTexts.resumed(7), page.state.mordie)
     }
 
     @Test
-    fun aFoundSolutionStaysAndGiveUpStaysLive() {
-        // TODO: 1. Let him find a solution
-        // TODO: 2. Restart
-        // TODO: 3. `[ Give Up ]` is live
+    fun aFoundSolutionStaysAndGiveUpStaysLive() = webTest {
+        val page = onTwoMoves()
+        page.searchFinds()
+        page.fiveShifts()
+        assertEquals(GiveUpButton.GIVE_UP, page.state.giveUp)
+
+        page.restartDiscarding()
+
+        assertEquals(GiveUpButton.GIVE_UP, page.state.giveUp)
     }
 
     @Test
-    fun hisFoundLineReturnsAtTheNextCheck() {
-        // TODO: 1. Let him find a solution, then restart
-        // TODO: 2. Make 5 shifts
-        // TODO: 3. His found line returns
-        // TODO: 4. No new `mordie_solution_found` event is sent
+    fun hisFoundLineReturnsAtTheNextCheck() = webTest {
+        val page = onTwoMoves()
+        page.searchFinds()
+        page.fiveShifts()
+        page.restartDiscarding()
+        assertEquals(mordieTexts.opening, page.state.mordie)
+        page.analytics.events.clear()
+
+        page.fiveShifts()
+
+        assertEquals(mordieTexts.found(2), page.state.mordie)
+        assertTrue(page.props("mordie_solution_found").isEmpty())
     }
 
     @Test
-    fun fromAWonBoardHisRaceGoesOn() {
-        // TODO: 1. Solve the board and restart
-        // TODO: 2. The Give Up row shows a live `[ Give Up ]`
+    fun fromAWonBoardHisRaceGoesOn() = webTest {
+        val page = onTwoMoves()
+        page.searchFinds()
+        page.solveTwoMoves()
+        assertEquals(GiveUpButton.MORDIES_SOLUTION, page.state.giveUp)
+
+        page.game.restart.onRestart("button")
+
+        assertFalse(page.state.solved)
+        assertEquals(GiveUpButton.GIVE_UP, page.state.giveUp)
     }
 
     @Test
-    fun aSecondSolveShowsAFreshEnding() {
-        // TODO: 1. Solve, restart, solve again
-        // TODO: 2. A new ending shows
+    fun aSecondSolveShowsAFreshEnding() = webTest {
+        val page = onTwoMoves()
+        page.solveTwoMoves()
+        val first = page.state.mordie
+        page.game.restart.onRestart("button")
+        assertNotEquals(first, page.state.mordie)
+
+        page.solveTwoMoves()
+
+        assertTrue(page.state.solved)
+        assertEquals(first, page.state.mordie)
+        assertEquals(2, page.props("board_solved").size)
     }
 
     @Test
-    fun giveUpAfterARestartLeavesOutTheSinceFoundFields() {
-        // TODO: 1. Restart after he found a solution
-        // TODO: 2. Give up
-        // TODO: 3. `game_given_up` has no `moves_since_solution_found`
+    fun giveUpAfterARestartLeavesOutTheSinceFoundFields() = webTest {
+        val page = onTwoMoves()
+        page.searchFinds()
+        page.fiveShifts()
+        page.restartDiscarding()
+
+        page.game.solution.onGiveUp()
+        page.game.solution.onGiveUpAnswered(true)
+
+        val gaveUp = page.props("game_given_up").single()
+        assertFalse("moves_since_solution_found" in gaveUp)
+        assertFalse("shifts_since_solution_found" in gaveUp)
     }
 }
