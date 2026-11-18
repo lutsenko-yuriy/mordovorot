@@ -70,7 +70,7 @@ class WebRestartScenarioTest {
     @Test
     fun restartIsHiddenOnTheSolutionScreen() = webTest {
         val page = onTwoMoves()
-        page.searchFinds()
+        page.mordieFinds()
         page.fiveShifts()
         page.game.solution.onGiveUp()
         page.game.solution.onGiveUpAnswered(true)

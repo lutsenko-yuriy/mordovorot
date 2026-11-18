@@ -102,7 +102,7 @@ class WebRestartKeysScenarioTest {
     @Test
     fun onTheSolutionScreenWithTheBoardFocusedRIsTheReplaysRestart() = webTest {
         val page = onTwoMoves()
-        page.searchFinds()
+        page.mordieFinds()
         page.fiveShifts()
         page.game.solution.onGiveUp()
         page.game.solution.onGiveUpAnswered(true)

@@ -17,7 +17,7 @@ class WebRestartMordieScenarioTest {
     @Test
     fun mordiesLineGoesBackToTheOpeningLine() = webTest {
         val page = onTwoMoves()
-        page.searchFinds()
+        page.mordieFinds()
         page.fiveShifts()
         assertEquals(mordieTexts.found(2), page.state.mordie)
 
@@ -51,7 +51,7 @@ class WebRestartMordieScenarioTest {
     @Test
     fun aFoundSolutionStaysAndGiveUpStaysLive() = webTest {
         val page = onTwoMoves()
-        page.searchFinds()
+        page.mordieFinds()
         page.fiveShifts()
         assertEquals(GiveUpButton.GIVE_UP, page.state.giveUp)
 
@@ -63,7 +63,7 @@ class WebRestartMordieScenarioTest {
     @Test
     fun hisFoundLineReturnsAtTheNextCheck() = webTest {
         val page = onTwoMoves()
-        page.searchFinds()
+        page.mordieFinds()
         page.fiveShifts()
         page.restartDiscarding()
         assertEquals(mordieTexts.opening, page.state.mordie)
@@ -78,7 +78,7 @@ class WebRestartMordieScenarioTest {
     @Test
     fun fromAWonBoardHisRaceGoesOn() = webTest {
         val page = onTwoMoves()
-        page.searchFinds()
+        page.mordieFinds()
         page.solveTwoMoves()
         assertEquals(GiveUpButton.MORDIES_SOLUTION, page.state.giveUp)
 
@@ -106,7 +106,7 @@ class WebRestartMordieScenarioTest {
     @Test
     fun giveUpAfterARestartLeavesOutTheSinceFoundFields() = webTest {
         val page = onTwoMoves()
-        page.searchFinds()
+        page.mordieFinds()
         page.fiveShifts()
         page.restartDiscarding()
 

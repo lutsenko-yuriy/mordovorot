@@ -40,7 +40,7 @@ internal fun WebHarness.restartWith(choice: ReplaySaveChoice) {
 internal fun WebHarness.restartDiscarding() = restartWith(ReplaySaveChoice.DONT_SAVE)
 
 /** Mordie finds [RESTART_PATH] on [RESTART_TWO_MOVES]. */
-internal fun WebHarness.searchFinds() {
+internal fun WebHarness.mordieFinds() {
     mordieSearches.latest.progress = SearchProgress(RESTART_PATH.size, found = true, elapsedMs = 0, solution = RESTART_PATH)
 }
 
