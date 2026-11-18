@@ -23,6 +23,10 @@ and footer may wrap: `OK` then means nothing is past a side or the page's top (a
 sideways, every tile label fits its tile (`labels out N` counts those that don't) and tiles are at
 least 16px.
 
+## Driving page events (GH-338)
+
+`--dump-dom` cannot click or dispatch events. To check a flow like leaving the page (shift, `beforeunload` and `pagehide`, reload), copy the distribution into a scratch directory next to a page that loads `index.html` in a same-origin iframe, drives it from script (click, `dispatchEvent`, `location.reload()`, read `localStorage`) and writes the results into the DOM. Serve the directory, then dump that page with `--virtual-time-budget` and a throwaway profile. Seed `mordovorot.pref.tutorial=seen` first, or a cold load opens on the tutorial.
+
 ## Larger text (GH-168)
 
 ```
