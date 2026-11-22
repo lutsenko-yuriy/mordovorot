@@ -111,7 +111,7 @@ class WebGreekLabelsScenarioTest {
         page.game.labels.open()
 
         assertEquals(
-            listOf("Numbers", "Numbers from 0", "Latin letters", "Cyrillic letters", "Greek letters"),
+            listOf("Numbers", "Numbers from 0", "Latin letters", "Cyrillic letters", "Greek letters", "Pre-reform Russian"),
             TileLabelGroup.entries.map { it.title },
         )
         page.game.labels.onGroupOpened(TileLabelGroup.GREEK)

@@ -191,6 +191,7 @@ class WebLabelGroupsScenarioTest {
                 listOf("Letters", "Pairs"),
                 listOf("Letters", "Pairs"),
                 listOf("Letters", "Pairs"),
+                listOf("Letters", "Pairs"),
             ),
             titles,
         )
