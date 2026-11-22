@@ -112,7 +112,7 @@ class WebPrereformReadingScenarioTest {
 
         page.game.language.onLanguage(Language.DE, PickerControl.TOGGLES)
         page.game.alphabetHint.open()
-        assertEquals("Vorreformalphabet", page.hint.alphabetTitle)
+        assertEquals("Russisches Alphabet vor 1918", page.hint.alphabetTitle)
         page.game.alphabetHint.onClosed()
 
         page.game.language.onLanguage(Language.RU, PickerControl.TOGGLES)

@@ -15,7 +15,7 @@ object GermanDialogTexts : DialogTexts {
     override val alphabetLatin = "Lateinisches Alphabet"
     override val alphabetCyrillic = "Kyrillisches Alphabet"
     override val alphabetGreek = "Griechisches Alphabet"
-    override val alphabetPrereform = "Vorreformalphabet"
+    override val alphabetPrereform = "Russisches Alphabet vor 1918"
     override val linkRejectedTitle = "Dieses Brett lässt sich nicht öffnen"
     override val openSharedTitle = "Brett aus dem Link öffnen?"
     override fun sharedLabelsTitle(labels: String) = "Beschriftungen des Absenders verwenden ($labels)?"
