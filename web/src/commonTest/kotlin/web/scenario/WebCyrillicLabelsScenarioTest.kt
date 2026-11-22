@@ -53,7 +53,7 @@ class WebCyrillicLabelsScenarioTest {
         page.game.labels.open()
 
         val dialog = page.state.dialog as WebDialog.Labels
-        assertEquals(10, dialog.options.size)
+        assertEquals(12, dialog.options.size)
         assertEquals(listOf(TileLabels.CYRILLIC_LETTERS, TileLabels.CYRILLIC_LETTER_PAIRS), dialog.options.subList(6, 8).map { it.labels })
         assertEquals(TileLabels.LETTER_PAIRS, dialog.options[5].labels)
         assertEquals(LabelOption(TileLabels.CYRILLIC_LETTERS, "Letters"), dialog.options[6])
@@ -71,7 +71,7 @@ class WebCyrillicLabelsScenarioTest {
         page.game.labels.open()
         val row = (page.state.dialog as WebDialog.Labels).options.single { it.labels == TileLabels.CYRILLIC_LETTERS }
         assertEquals(LabelOption(TileLabels.CYRILLIC_LETTERS, pageTexts.labelRowLetters, "up to 5x5"), row)
-        assertTrue((page.state.dialog as WebDialog.Labels).options.filter { it.labels.maxSide != 5 }.all { it.available })
+        assertTrue((page.state.dialog as WebDialog.Labels).options.filter { it.labels.fits(6) }.all { it.available })
     }
 
     @Test

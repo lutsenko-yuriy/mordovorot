@@ -149,7 +149,7 @@ class WebVeryLargeScenarioTest {
         page.game.labels.open()
         val dialog = page.state.dialog as WebDialog.Labels
         assertEquals(LabelOption(TileLabels.LETTERS, pageTexts.labelRowLetters, pageTexts.labelLimit(5)), dialog.options[4])
-        assertTrue(dialog.options.filter { it.labels.maxSide != 5 }.all { it.available })
+        assertTrue(dialog.options.filter { it.labels.fits(7) }.all { it.available })
         page.game.labels.onAnswered(ok = true)
         assertEquals("letters", page.preferences.get("tile_labels"))
 

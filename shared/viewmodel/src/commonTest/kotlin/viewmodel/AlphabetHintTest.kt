@@ -57,4 +57,19 @@ class AlphabetHintTest {
         assertNull(AlphabetHint.of(TileLabels.CYRILLIC_LETTER_PAIRS, 10))
         assertNull(AlphabetHint.of(TileLabels.GREEK_LETTER_PAIRS, 10))
     }
+
+    // GH-354
+    @Test
+    fun `the pre-reform hint lists 36 letters, 16 in use on 4x4 and all on 6x6`() {
+        assertEquals(36, AlphabetHint.of(TileLabels.PREREFORM_LETTERS, 4)!!.letters.size)
+        assertEquals(16, AlphabetHint.of(TileLabels.PREREFORM_LETTERS, 4)!!.used)
+        assertEquals(36, AlphabetHint.of(TileLabels.PREREFORM_LETTERS, 6)!!.used)
+        assertEquals(9, AlphabetHint.of(TileLabels.PREREFORM_LETTER_PAIRS, 9)!!.used)
+    }
+
+    @Test
+    fun `the pre-reform letters have no hint on 7x7`() {
+        assertNull(AlphabetHint.of(TileLabels.PREREFORM_LETTERS, 7))
+        assertNull(AlphabetHint.of(TileLabels.PREREFORM_LETTER_PAIRS, 10))
+    }
 }

@@ -1,9 +1,11 @@
 package web.a11y
 
+import texts.Language
 import texts.texts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import viewmodel.Direction
+import viewmodel.TileLabels
 import viewmodel.SolutionStep
 
 class AnnouncementsTest {
@@ -117,6 +119,37 @@ class AnnouncementsTest {
         assertEquals("gamma alpha", Announcements.spoken("ΓΑ"))
         assertEquals("omega xi", Announcements.spoken("ΩΞ"))
         assertEquals("Greek question mark", Announcements.spoken("\u037E"))
+    }
+
+    @Test
+    fun `the pre-reform letters the Cyrillic scheme lacks are said by their names (GH-354)`() {
+        assertEquals("Иван краткий", Announcements.spoken("Й"))
+        assertEquals("и десятеричное", Announcements.spoken("\u0406"))
+        assertEquals("твёрдый знак", Announcements.spoken("Ъ"))
+        assertEquals("еры", Announcements.spoken("Ы"))
+        assertEquals("мягкий знак", Announcements.spoken("Ь"))
+        assertEquals("ять", Announcements.spoken("Ѣ"))
+        assertEquals("фита", Announcements.spoken("Ѳ"))
+        assertEquals("ижица", Announcements.spoken("Ѵ"))
+    }
+
+    @Test
+    fun `a pre-reform pair of shared letters is said as a Cyrillic one`() {
+        assertEquals("Анна Борис", Announcements.spoken("АБ"))
+    }
+
+    @Test
+    fun `the 28 shared letters are said alike by both Cyrillic word lists, in every language (GH-354)`() {
+        for (language in Language.entries) {
+            val reader = language.texts.reader
+            for (letter in TileLabels.CYRILLIC_ALPHABET) {
+                assertEquals(
+                    reader.cyrillicPhonetic[TileLabels.CYRILLIC_ALPHABET.indexOf(letter)],
+                    reader.prereformPhonetic[TileLabels.PREREFORM_ALPHABET.indexOf(letter)],
+                    "$letter ${language.code}",
+                )
+            }
+        }
     }
 
     @Test
