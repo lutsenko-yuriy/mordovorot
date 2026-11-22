@@ -605,9 +605,9 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
 - **The button:** `[ Hint ]` (`[ Hint 8 ]` on a computer) sits in the Give Up row, between `[ Give Up ]` (or `[ Mordie's solution ]`) and `[ Tutorial ]`; the row reads
   `[ Give Up 5 ] [ Hint 8 ] [ Tutorial 9 ]`. German `Hinweis`, Russian `Подсказка`. It shows in play and on a won board, and is gone on Mordie's solution screen and during the
   tutorial; it is disabled while a dialog is open and does not depend on the `tutorial` switch. It is **dimmed** and inert for the four number schemes, and when Letters or Cyrillic or Greek
-  letters stand in as Numbers on a board too large for them (6x6 and up). On phones the row's buttons take the toolbar's padding so the three fit.
+  letters stand in as Numbers on a board too large for them (6x6 and up), or Pre-reform Russian letters (GH-354, 7x7 and up). On phones the row's buttons take the toolbar's padding so the three fit.
 - **The dialog:** `Latin alphabet`, `Cyrillic alphabet`, `Greek alphabet` or `Pre-reform Russian alphabet` (`Lateinisches` / `Kyrillisches` / `Griechisches Alphabet` / `Vorreformalphabet`; `Латинский` / `Кириллический` /
-  `Греческий алфавит`) shows the whole alphabet of the marked scheme in order, on a grid of 7 columns, with `[ OK ]`; Escape or OK closes it and changes nothing. The letters the
+  `Греческий` / `Дореформенный алфавит`) shows the whole alphabet of the marked scheme in order, on a grid of 7 columns, with `[ OK ]`; Escape or OK closes it and changes nothing. The letters the
   board uses are outlined in normal type, the rest greyed. A pair scheme uses as many letters as the board has rows (`N` on an NxN board); a single-letter scheme uses
   min(N x N, the alphabet's length). Greek's 25th letter, U+037E, is in use only on 5x5 with Greek letters.
 - **Keys and focus:** 8 opens it on a computer, with Tutorial moving from 8 to 9; focus goes back to where it was opened, the Hint button for a click and the board for the key. The Controls
