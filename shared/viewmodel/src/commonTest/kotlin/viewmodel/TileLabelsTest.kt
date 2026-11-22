@@ -18,7 +18,8 @@ class TileLabelsTest {
     fun `the Latin schemes have a code in the packed format, the Cyrillic and Greek ones fall into its escape`() {
         val board = intArrayOf(1, 0, 2, 3)
         val plain = SaveFileCodec.encode(2, board, 0, null).length
-        val escaped = setOf(TileLabels.CYRILLIC_LETTERS, TileLabels.CYRILLIC_LETTER_PAIRS, TileLabels.GREEK_LETTERS, TileLabels.GREEK_LETTER_PAIRS)
+        val escaped = setOf(TileLabels.CYRILLIC_LETTERS, TileLabels.CYRILLIC_LETTER_PAIRS, TileLabels.GREEK_LETTERS, TileLabels.GREEK_LETTER_PAIRS,
+            TileLabels.PREREFORM_LETTERS, TileLabels.PREREFORM_LETTER_PAIRS)
 
         for (scheme in TileLabels.entries) {
             val text = SaveFileCodec.encode(2, board, 0, null, scheme.wireName)
@@ -29,29 +30,29 @@ class TileLabelsTest {
 
     @Test
     fun `tile 6 on 4x4 reads 7, 6, 23, 12, G and BC`() {
-        assertEquals(listOf("7", "6", "23", "12", "G", "BC", "Ж", "БВ", "Η", "ΒΓ"), labels(6, 4))
+        assertEquals(listOf("7", "6", "23", "12", "G", "BC", "Ж", "БВ", "Η", "ΒΓ", "Ж", "БВ"), labels(6, 4))
     }
 
     @Test
     fun `the first tile on each size`() {
-        for (side in 3..5) assertEquals(listOf("1", "0", "11", "00", "A", "AA", "А", "АА", "Α", "ΑΑ"), labels(0, side))
+        for (side in 3..5) assertEquals(listOf("1", "0", "11", "00", "A", "AA", "А", "АА", "Α", "ΑΑ", "А", "АА"), labels(0, side))
     }
 
     @Test
     fun `the middle and last tiles on 3x3`() {
-        assertEquals(listOf("5", "4", "22", "11", "E", "BB", "Д", "ББ", "Ε", "ΒΒ"), labels(4, 3))
-        assertEquals(listOf("9", "8", "33", "22", "I", "CC", "И", "ВВ", "Ι", "ΓΓ"), labels(8, 3))
+        assertEquals(listOf("5", "4", "22", "11", "E", "BB", "Д", "ББ", "Ε", "ΒΒ", "Д", "ББ"), labels(4, 3))
+        assertEquals(listOf("9", "8", "33", "22", "I", "CC", "И", "ВВ", "Ι", "ΓΓ", "И", "ВВ"), labels(8, 3))
     }
 
     @Test
     fun `the middle and last tiles on 5x5`() {
-        assertEquals(listOf("13", "12", "33", "22", "M", "CC", "Н", "ВВ", "Ν", "ΓΓ"), labels(12, 5))
-        assertEquals(listOf("25", "24", "55", "44", "Y", "EE", "Щ", "ДД", "\u037E", "ΕΕ"), labels(24, 5))
+        assertEquals(listOf("13", "12", "33", "22", "M", "CC", "Н", "ВВ", "Ν", "ΓΓ", "Л", "ВВ"), labels(12, 5))
+        assertEquals(listOf("25", "24", "55", "44", "Y", "EE", "Щ", "ДД", "\u037E", "ΕΕ", "Ч", "ДД"), labels(24, 5))
     }
 
     @Test
     fun `the last tile on 4x4`() {
-        assertEquals(listOf("16", "15", "44", "33", "P", "DD", "Р", "ГГ", "Π", "ΔΔ"), labels(15, 4))
+        assertEquals(listOf("16", "15", "44", "33", "P", "DD", "Р", "ГГ", "Π", "ΔΔ", "О", "ГГ"), labels(15, 4))
     }
 
     @Test
@@ -65,7 +66,7 @@ class TileLabelsTest {
     fun `wire names round-trip, and an unknown or missing one gives null`() {
         for (labels in TileLabels.entries) assertEquals(labels, TileLabels.fromWireName(labels.wireName))
         assertEquals(
-            listOf("numbers", "numbers_from_0", "pairs", "pairs_from_0", "letters", "letter_pairs", "cyrillic_letters", "cyrillic_letter_pairs", "greek_letters", "greek_letter_pairs"),
+            listOf("numbers", "numbers_from_0", "pairs", "pairs_from_0", "letters", "letter_pairs", "cyrillic_letters", "cyrillic_letter_pairs", "greek_letters", "greek_letter_pairs", "prereform_letters", "prereform_letter_pairs"),
             TileLabels.entries.map { it.wireName },
         )
         assertNull(TileLabels.fromWireName("emoji"))
@@ -171,7 +172,7 @@ class TileLabelsTest {
 
     @Test
     fun `a pair scheme uses as many letters as the board's side`() {
-        for (scheme in listOf(TileLabels.LETTER_PAIRS, TileLabels.CYRILLIC_LETTER_PAIRS, TileLabels.GREEK_LETTER_PAIRS)) {
+        for (scheme in listOf(TileLabels.LETTER_PAIRS, TileLabels.CYRILLIC_LETTER_PAIRS, TileLabels.GREEK_LETTER_PAIRS, TileLabels.PREREFORM_LETTER_PAIRS)) {
             for (side in 3..9) assertEquals(side, scheme.lettersUsed(side), "${scheme.wireName} $side")
         }
     }
@@ -189,5 +190,37 @@ class TileLabelsTest {
         assertTrue(TileLabels.GREEK_LETTERS.lettersUsed(5)!! >= last)
         assertTrue(TileLabels.GREEK_LETTERS.lettersUsed(4)!! < last)
         assertTrue((3..9).all { TileLabels.GREEK_LETTER_PAIRS.lettersUsed(it)!! < last })
+    }
+
+    // GH-354
+    @Test
+    fun `the pre-reform alphabet has 36 labels, the Cyrillic ones in their order, Й after И and the Cyrillic І after Й, and no Ё`() {
+        val alphabet = TileLabels.PREREFORM_ALPHABET
+        assertEquals(36, alphabet.length)
+        assertEquals(alphabet.length, alphabet.toSet().size)
+        assertEquals(TileLabels.CYRILLIC_ALPHABET, alphabet.filter { it in TileLabels.CYRILLIC_ALPHABET })
+        assertEquals('Й', alphabet[alphabet.indexOf('И') + 1])
+        assertEquals(0x0406, alphabet[alphabet.indexOf('Й') + 1].code)
+        assertTrue('Ё' !in alphabet)
+        assertEquals(listOf(0x0462, 0x0472, 0x0474), listOf('Ѣ', 'Ѳ', 'Ѵ').map { alphabet[alphabet.indexOf(it)].code })
+    }
+
+    @Test
+    fun `the pre-reform letters label up to 6x6 and the pairs up to 9x9`() {
+        assertTrue(TileLabels.PREREFORM_LETTERS.fits(6))
+        assertTrue(!TileLabels.PREREFORM_LETTERS.fits(7))
+        assertTrue(TileLabels.PREREFORM_LETTER_PAIRS.fits(9))
+        assertEquals("Ѣ", TileLabels.PREREFORM_LETTERS.label(30, 6))
+        assertEquals("Ѳ", TileLabels.PREREFORM_LETTERS.label(34, 6))
+        assertEquals("Ѵ", TileLabels.PREREFORM_LETTERS.label(35, 6))
+        assertEquals("ИИ", TileLabels.PREREFORM_LETTER_PAIRS.label(80, 9))
+        assertEquals(listOf("А", "Б", "В", "Г"), TileLabels.PREREFORM_LETTERS.sampleRow(4))
+        assertEquals(listOf("АА", "АБ", "АВ", "АГ"), TileLabels.PREREFORM_LETTER_PAIRS.sampleRow(4))
+    }
+
+    @Test
+    fun `the pre-reform letters use 16 labels on 4x4 and all 36 on 6x6`() {
+        assertEquals(16, TileLabels.PREREFORM_LETTERS.lettersUsed(4))
+        assertEquals(36, TileLabels.PREREFORM_LETTERS.lettersUsed(6))
     }
 }

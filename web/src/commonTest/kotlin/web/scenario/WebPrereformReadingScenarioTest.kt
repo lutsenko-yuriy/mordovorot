@@ -1,105 +1,226 @@
 package web.scenario
 
+import kotlin.test.AfterTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertTrue
+import texts.Language
+import texts.texts
+import texts.useLanguage
+import viewmodel.TileLabelGroup
+import viewmodel.TileLabels
+import web.AlphabetHintButton
+import web.Focus
+import web.PickerControl
+import web.WebDialog
+import web.tutorial.TutorialText
 
-/** GH-354: reading the pre-reform labels aloud, their alphabet hint, the tutorial and the events. Stubs: WU1 fills them in. */
+/** GH-354: reading the pre-reform labels aloud, their alphabet hint, the tutorial and the events. */
 class WebPrereformReadingScenarioTest {
+
+    @AfterTest
+    fun backToEnglish() = useLanguage(Language.EN)
+
+    private val WebHarness.hint get() = assertIs<WebDialog.AlphabetHint>(state.dialog)
+    private val WebHarness.labels get() = state.dialog as WebDialog.Labels
+
+    private fun WebHarness.choose(labels: TileLabels) {
+        game.labels.open()
+        game.labels.onSelected(labels)
+        game.labels.onAnswered(ok = true)
+    }
+
+    private fun WebHarness.newGame(side: Int) {
+        game.onNew()
+        game.onSizeChosen(side)
+    }
+
+    private fun WebHarness.inUse() = (0 until hint.hint.letters.size).count { hint.inUse(it) }
+
+    /** Row 3 of the harness board is solved, and holds the 9th to 12th labels. */
+    private val rowThree = "Иван, Иван краткий, и десятеричное, Константин"
+
+    // Reading aloud
     @Test
-    fun `read board spells the new letters on 4x4`() {
-        // TODO: 1. Choose the letters on 4x4
-        // TODO: 2. Read board
-        // TODO: 3. Row 3 says `Иван, Иван краткий, и десятеричное, Константин`
+    fun `read board spells the new letters on 4x4`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.choose(TileLabels.PREREFORM_LETTERS)
+
+        page.game.readBoard()
+
+        assertTrue(rowThree in page.said.last(), page.said.last())
     }
 
     @Test
-    fun `read board spells Ѣ Ѳ Ѵ on 6x6`() {
-        // TODO: 1. Choose the letters on 6x6
-        // TODO: 2. Read board
-        // TODO: 3. `ять`, `фита` and `ижица` are said
+    fun `read board spells Ѣ Ѳ Ѵ on 6x6`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.newGame(6)
+        page.choose(TileLabels.PREREFORM_LETTERS)
+
+        page.game.readBoard()
+
+        val said = page.said.last()
+        for (word in listOf("ять", "фита", "ижица")) assertTrue(word in said, said)
     }
 
     @Test
-    fun `a german page says the new letters the same`() {
-        // TODO: 1. Switch to German and choose the letters
-        // TODO: 2. Read board says the same words
+    fun `a german page says the new letters the same`() = webTest {
+        val page = WebHarness(backgroundScope, browserLanguages = listOf("de-DE")).startOn()
+        page.choose(TileLabels.PREREFORM_LETTERS)
+
+        page.game.readBoard()
+
+        assertTrue(rowThree in page.said.last(), page.said.last())
     }
 
     @Test
-    fun `a russian page says the new letters the same`() {
-        // TODO: 1. Switch to Russian and choose the letters
-        // TODO: 2. Read board says the same words
+    fun `a russian page says the new letters the same`() = webTest {
+        val page = WebHarness(backgroundScope, browserLanguages = listOf("ru-RU")).startOn()
+        page.choose(TileLabels.PREREFORM_LETTERS)
+
+        page.game.readBoard()
+
+        assertTrue(rowThree in page.said.last(), page.said.last())
     }
 
     @Test
-    fun `read board spells a pair`() {
-        // TODO: 1. Choose Pairs
-        // TODO: 2. Read board says `АБ` as `Анна Борис`
+    fun `read board spells a pair`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.choose(TileLabels.PREREFORM_LETTER_PAIRS)
+
+        page.game.readBoard()
+
+        assertTrue("Анна Борис" in page.said.last(), page.said.last())
+    }
+
+    // The hint
+    @Test
+    fun `the hint is titled for the prereform alphabet`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.choose(TileLabels.PREREFORM_LETTERS)
+
+        page.game.alphabetHint.open()
+
+        assertEquals("Pre-reform Russian alphabet", page.hint.alphabetTitle)
     }
 
     @Test
-    fun `the hint is titled for the prereform alphabet`() {
-        // TODO: 1. Choose the letters and press Hint
-        // TODO: 2. The title reads `Pre-reform Russian alphabet`
+    fun `the hint is titled in German and Russian`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.choose(TileLabels.PREREFORM_LETTERS)
+
+        page.game.language.onLanguage(Language.DE, PickerControl.TOGGLES)
+        page.game.alphabetHint.open()
+        assertEquals("Russisches Alphabet vor 1918", page.hint.alphabetTitle)
+        page.game.alphabetHint.onClosed()
+
+        page.game.language.onLanguage(Language.RU, PickerControl.TOGGLES)
+        page.game.alphabetHint.open()
+        assertEquals("Дореформенный алфавит", page.hint.alphabetTitle)
     }
 
     @Test
-    fun `the hint is titled in German and Russian`() {
-        // TODO: 1. On a German page the title reads `Vorreformalphabet`
-        // TODO: 2. On a Russian page it reads `Дореформенный алфавит`
+    fun `the hint shows 36 letters, 16 in use on 4x4`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.choose(TileLabels.PREREFORM_LETTERS)
+
+        page.game.alphabetHint.open()
+
+        assertEquals(36, page.hint.hint.letters.size)
+        assertEquals(16, page.inUse())
     }
 
     @Test
-    fun `the hint shows 36 letters, 16 in use on 4x4`() {
-        // TODO: 1. Open the hint on 4x4
-        // TODO: 2. It lists 36 letters
-        // TODO: 3. 16 of them are outlined
+    fun `on 6x6 all 36 letters are in use`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.newGame(6)
+        page.choose(TileLabels.PREREFORM_LETTERS)
+
+        page.game.alphabetHint.open()
+
+        assertEquals(36, page.inUse())
     }
 
     @Test
-    fun `on 6x6 all 36 letters are in use`() {
-        // TODO: 1. Open the hint on 6x6
-        // TODO: 2. All 36 letters are outlined
+    fun `for pairs on 9x9 nine letters are in use`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.newGame(9)
+        page.choose(TileLabels.PREREFORM_LETTER_PAIRS)
+
+        page.game.alphabetHint.open()
+
+        assertEquals(9, page.inUse())
     }
 
     @Test
-    fun `for pairs on 9x9 nine letters are in use`() {
-        // TODO: 1. Choose Pairs on 9x9 and open the hint
-        // TODO: 2. Nine letters are outlined
+    fun `the hint is dimmed on 7x7 with prereform letters`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.choose(TileLabels.PREREFORM_LETTERS)
+
+        page.newGame(7)
+
+        assertEquals(AlphabetHintButton.DIMMED, page.state.alphabetHint)
     }
 
     @Test
-    fun `the hint is dimmed on 7x7 with prereform letters`() {
-        // TODO: 1. Start a 7x7 game with the letters preference
-        // TODO: 2. Hint is dimmed
+    fun `a greyed Ѳ is said not on this board`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.choose(TileLabels.PREREFORM_LETTERS)
+
+        page.game.alphabetHint.open()
+
+        val index = TileLabels.PREREFORM_ALPHABET.indexOf('Ѳ')
+        assertEquals(false, page.hint.inUse(index))
+        assertEquals(texts().reader.notOnBoard("фита"), page.hint.letterName(index))
+    }
+
+    // The tutorial
+    @Test
+    fun `tutorial step 2 names its tile М`() = webTest {
+        val first = WebHarness(backgroundScope, firstLaunch = true)
+        first.preferences.set("tile_labels", "prereform_letters")
+        val page = first.start()
+        page.stepByArrow(1)
+
+        assertEquals(2, page.state.guidance?.step)
+        assertEquals(TutorialText.step(2, computer = true, labels = TileLabels.PREREFORM_LETTERS), page.state.guidance?.text)
+        assertTrue("М" in page.state.guidance!!.text, page.state.guidance!!.text)
     }
 
     @Test
-    fun `a greyed Ѳ is said not on this board`() {
-        // TODO: 1. Open the hint on 4x4
-        // TODO: 2. Reading the `Ѳ` says `фита, not on this board`
+    fun `the tutorial's labels step opens the prereform group`() = webTest {
+        val first = WebHarness(backgroundScope, firstLaunch = true)
+        first.preferences.set("tile_labels", "prereform_letters")
+        val page = first.start()
+
+        page.game.tutorial.onLabels()
+        assertEquals(TileLabelGroup.PREREFORM, page.labels.open)
+        page.game.labels.onAnswered(ok = false)
+
+        assertEquals(Focus.TutorialLabels, page.state.focus)
+    }
+
+    // Events
+    @Test
+    fun `choosing prereform letters sends tile_labels_changed`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+
+        page.choose(TileLabels.PREREFORM_LETTERS)
+
+        assertEquals("prereform_letters", page.props("tile_labels_changed").single()["to"])
     }
 
     @Test
-    fun `tutorial step 2 names its tile М`() {
-        // TODO: 1. Choose the letters and replay the tutorial
-        // TODO: 2. Step 2 names its tile `М`
-    }
+    fun `the 7x7 fallback is reported as letters_unavailable`() = webTest {
+        val page = WebHarness(backgroundScope).startOn()
+        page.saves.save("seven", rotatedRow(7), 7, 0, labels = "prereform_letters")
+        page.game.onLoad()
+        page.game.onLoadChosen("seven")
 
-    @Test
-    fun `the tutorial's labels step opens the prereform group`() {
-        // TODO: 1. In the tutorial press Labels
-        // TODO: 2. The dialog opens with the prereform group open
-    }
+        page.game.labels.onSelected(TileLabels.PAIRS)
+        page.game.labels.onAnswered(ok = true)
 
-    @Test
-    fun `choosing prereform letters sends tile_labels_changed`() {
-        // TODO: 1. Choose the letters and press OK
-        // TODO: 2. The `tile_labels_changed` event is sent with `to` set to `prereform_letters`
-    }
-
-    @Test
-    fun `the 7x7 fallback is reported as letters_unavailable`() {
-        // TODO: 1. Start a 7x7 game with the letters preference
-        // TODO: 2. The `letters_unavailable` event is sent
+        assertEquals("letters_unavailable", page.props("tile_labels_changed").last()["from_source"])
     }
 }

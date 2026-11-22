@@ -45,4 +45,7 @@ interface ReaderTexts {
 
     /** The 25 Greek labels as said, in the order of `TileLabels.GREEK_ALPHABET`: the 24 letters' names, then the question mark (GH-322). */
     val greekPhonetic: List<String>
+
+    /** The 36 pre-reform Russian labels as said, in the order of `TileLabels.PREREFORM_ALPHABET` (GH-354): the same in every language. */
+    val prereformPhonetic: List<String>
 }

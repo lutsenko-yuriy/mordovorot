@@ -49,12 +49,15 @@ interface PageTexts {
     val labelCyrillicLetterPairs: String
     val labelGreekLetters: String
     val labelGreekLetterPairs: String
+    val labelPrereformLetters: String
+    val labelPrereformLetterPairs: String
 
     /** The Tile labels dialog's group headers (GH-323). */
     val labelGroupNumbers: String
     val labelGroupLatin: String
     val labelGroupCyrillic: String
     val labelGroupGreek: String
+    val labelGroupPrereform: String
 
     /** A scheme's row inside a letter group, whose header already names the alphabet (GH-323): `Letters`; its pair is `Pairs`. */
     val labelRowLetters: String

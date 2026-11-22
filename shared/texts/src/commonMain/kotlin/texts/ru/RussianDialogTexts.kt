@@ -15,6 +15,7 @@ object RussianDialogTexts : DialogTexts {
     override val alphabetLatin = "Латинский алфавит"
     override val alphabetCyrillic = "Кириллический алфавит"
     override val alphabetGreek = "Греческий алфавит"
+    override val alphabetPrereform = "Дореформенный алфавит"
     override val linkRejectedTitle = "Не удаётся открыть эту доску"
     override val openSharedTitle = "Открыть доску по ссылке?"
     override fun sharedLabelsTitle(labels: String) = "Использовать метки отправителя ($labels)?"

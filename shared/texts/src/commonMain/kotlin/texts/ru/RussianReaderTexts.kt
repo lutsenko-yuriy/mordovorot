@@ -3,6 +3,7 @@ package texts.ru
 import texts.ReaderTexts
 import texts.GREEK_WORDS_RU
 import texts.NATO_WORDS
+import texts.PREREFORM_SPELLING_WORDS
 import texts.RUSSIAN_SPELLING_WORDS
 
 object RussianReaderTexts : ReaderTexts {
@@ -35,4 +36,5 @@ object RussianReaderTexts : ReaderTexts {
     override val phonetic = NATO_WORDS
     override val cyrillicPhonetic = RUSSIAN_SPELLING_WORDS
     override val greekPhonetic = GREEK_WORDS_RU
+    override val prereformPhonetic = PREREFORM_SPELLING_WORDS
 }

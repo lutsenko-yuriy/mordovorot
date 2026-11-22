@@ -134,10 +134,10 @@ class ShareLinkTest {
     }
 
     @Test
-    fun `the longest link, a 9x9 board with Cyrillic pairs and progress, still fits a QR code (GH-313)`() {
-        val link = ShareLink.of(base, 9, IntArray(81) { 80 - it }, TileLabels.CYRILLIC_LETTER_PAIRS, SharedProgress.Solving(9999999))
+    fun `the longest link, a 9x9 board with pre-reform pairs and progress, still fits a QR code (GH-313, GH-354)`() {
+        val link = ShareLink.of(base, 9, IntArray(81) { 80 - it }, TileLabels.PREREFORM_LETTER_PAIRS, SharedProgress.Solving(9999999))
 
-        assertTrue(link.contains("&l=cyrillic_letter_pairs"), link)
+        assertTrue(link.contains("&l=prereform_letter_pairs"), link)
         web.qr.QrCode.encode(link)
     }
 

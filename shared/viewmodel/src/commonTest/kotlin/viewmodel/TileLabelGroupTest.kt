@@ -17,6 +17,8 @@ class TileLabelGroupTest {
         assertEquals(TileLabelGroup.LATIN, TileLabelGroup.of(TileLabels.LETTER_PAIRS))
         assertEquals(TileLabelGroup.CYRILLIC, TileLabelGroup.of(TileLabels.CYRILLIC_LETTERS))
         assertEquals(TileLabelGroup.GREEK, TileLabelGroup.of(TileLabels.GREEK_LETTER_PAIRS))
+        assertEquals(TileLabelGroup.PREREFORM, TileLabelGroup.of(TileLabels.PREREFORM_LETTERS))
+        assertEquals(TileLabelGroup.PREREFORM, TileLabelGroup.of(TileLabels.PREREFORM_LETTER_PAIRS))
     }
 
     @Test
@@ -35,5 +37,6 @@ class TileLabelGroupTest {
         assertEquals(TileLabels.LATIN_ALPHABET, TileLabelGroup.LATIN.alphabet)
         assertEquals(TileLabels.CYRILLIC_ALPHABET, TileLabelGroup.CYRILLIC.alphabet)
         assertEquals(TileLabels.GREEK_ALPHABET, TileLabelGroup.GREEK.alphabet)
+        assertEquals(TileLabels.PREREFORM_ALPHABET, TileLabelGroup.PREREFORM.alphabet)
     }
 }

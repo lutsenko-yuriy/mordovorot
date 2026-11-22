@@ -743,6 +743,17 @@ Changes to existing entries:
 
 Not tracked: the browser's raw language list and unsupported languages it asked for, opening the dropdown without choosing (too granular), and a language per save or share link (neither carries one).
 
+## GH-354 (Pre-reform Russian tile labels)
+
+No new events or screen views: the two new schemes only add values to every property that carries a scheme, as GH-322's did.
+
+Changes to existing entries:
+- Scheme values take two new names, `TileLabels.wireName`: `prereform_letters` and `prereform_letter_pairs`. They stay English in every game language.
+- `tile_labels_changed.from_source: letters_unavailable` also covers pre-reform letters on 7x7 and larger (they label up to 6x6).
+- `screen_labels_dialog.opened_from: letters_save` also covers a 7x7 save with pre-reform letters.
+
+Not tracked: the words a screen reader says.
+
 ## GH-322 (Greek tile labels)
 
 No new events or screen views: the two new schemes only add values to every property that carries a scheme, as GH-313's did.

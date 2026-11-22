@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.59.0] — 2026-11-22 (PR #356 merged)
+
+### Added
+
+- [user] (PR #356) GH-354: Tiles can be labelled with the letters of the Russian alphabet from before the 1918 reform, in a group of their own: 36 letters (the 35 old letters plus Й) up to 6x6, or as pairs up to 9x9, with the alphabet hint, spoken names for the old letters (ять, фита, ижица, и десятеричное) and the limit overlay.
+- [non-user] (PR #356) GH-354: ADR-0004 and ADR-0005 amendments, debrief.
+
 ## [0.58.0] — 2026-11-18 (PR #353 merged)
 
 ### Added

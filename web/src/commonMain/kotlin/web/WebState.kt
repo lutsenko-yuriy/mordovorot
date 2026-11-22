@@ -215,6 +215,7 @@ sealed interface WebDialog {
             when (hint.group) {
                 TileLabelGroup.CYRILLIC -> alphabetCyrillic
                 TileLabelGroup.GREEK -> alphabetGreek
+                TileLabelGroup.PREREFORM -> alphabetPrereform
                 else -> alphabetLatin
             }
         }

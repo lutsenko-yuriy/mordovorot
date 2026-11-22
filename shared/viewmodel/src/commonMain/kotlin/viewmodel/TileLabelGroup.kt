@@ -11,6 +11,7 @@ enum class TileLabelGroup(val schemes: List<TileLabels>, val alphabet: String? =
     LATIN(listOf(TileLabels.LETTERS, TileLabels.LETTER_PAIRS), TileLabels.LATIN_ALPHABET),
     CYRILLIC(listOf(TileLabels.CYRILLIC_LETTERS, TileLabels.CYRILLIC_LETTER_PAIRS), TileLabels.CYRILLIC_ALPHABET),
     GREEK(listOf(TileLabels.GREEK_LETTERS, TileLabels.GREEK_LETTER_PAIRS), TileLabels.GREEK_ALPHABET),
+    PREREFORM(listOf(TileLabels.PREREFORM_LETTERS, TileLabels.PREREFORM_LETTER_PAIRS), TileLabels.PREREFORM_ALPHABET),
     ;
 
     val title: String get() = with(texts().page) {
@@ -20,6 +21,7 @@ enum class TileLabelGroup(val schemes: List<TileLabels>, val alphabet: String? =
             LATIN -> labelGroupLatin
             CYRILLIC -> labelGroupCyrillic
             GREEK -> labelGroupGreek
+            PREREFORM -> labelGroupPrereform
         }
     }
 

@@ -17,6 +17,8 @@ object EnglishStatusTexts : StatusTexts {
     override fun availableSaves(list: String) = "Your saves: $list"
     override fun lettersDontFit(side: Int) = "Letters don't fit a ${side}x$side board (26 letters, ${side * side} tiles). Please pick other labels."
     override fun greekLettersDontFit(side: Int) = "Greek letters don't fit a ${side}x$side board (25 labels, ${side * side} tiles). Please pick other labels."
+    override fun prereformLettersDontFit(side: Int) =
+        "Pre-reform Russian letters don't fit a ${side}x$side board (36 labels, ${side * side} tiles). Please pick other labels."
     override fun cyrillicLettersDontFit(side: Int) = "Cyrillic letters don't fit a ${side}x$side board (28 letters, ${side * side} tiles). Please pick other labels."
     override fun cantBeSolved(save: String) = "No sequence of shifts can solve '$save'."
     override fun repaired(name: String) = "Repaired '$name' (two tiles swapped) and loaded it."

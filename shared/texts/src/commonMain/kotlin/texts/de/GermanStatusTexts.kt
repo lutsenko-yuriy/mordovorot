@@ -20,6 +20,8 @@ object GermanStatusTexts : StatusTexts {
         "Die Buchstaben passen nicht auf ein ${side}x$side-Brett (26 Buchstaben, ${germanTiles(side * side)}). Wähle andere Beschriftungen."
     override fun greekLettersDontFit(side: Int) =
         "Die griechischen Buchstaben passen nicht auf ein ${side}x$side-Brett (25 Beschriftungen, ${germanTiles(side * side)}). Wähle andere Beschriftungen."
+    override fun prereformLettersDontFit(side: Int) =
+        "Die russischen Buchstaben vor 1918 passen nicht auf ein ${side}x$side-Brett (36 Beschriftungen, ${germanTiles(side * side)}). Wähle andere Beschriftungen."
     override fun cyrillicLettersDontFit(side: Int) =
         "Die kyrillischen Buchstaben passen nicht auf ein ${side}x$side-Brett (28 Buchstaben, ${germanTiles(side * side)}). Wähle andere Beschriftungen."
     override fun cantBeSolved(save: String) = "Keine Folge von Verschiebungen löst „$save“."

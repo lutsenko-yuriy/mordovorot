@@ -2,6 +2,7 @@ package texts.de
 
 import texts.GREEK_WORDS_DE
 import texts.NATO_WORDS
+import texts.PREREFORM_SPELLING_WORDS
 import texts.RUSSIAN_SPELLING_WORDS
 import texts.ReaderTexts
 
@@ -36,4 +37,5 @@ object GermanReaderTexts : ReaderTexts {
     override val phonetic = NATO_WORDS
     override val cyrillicPhonetic = RUSSIAN_SPELLING_WORDS
     override val greekPhonetic = GREEK_WORDS_DE
+    override val prereformPhonetic = PREREFORM_SPELLING_WORDS
 }

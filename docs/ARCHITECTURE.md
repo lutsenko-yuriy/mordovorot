@@ -152,10 +152,10 @@ shared/                  # GH-41: the platform-independent game as Kotlin Multip
 │       │                             # and the PlayerResult it was reached with. One per session (GH-126, GH-273)
 │       ├── PlayerResult.kt        # How the player's game ended (gave up or solved) and its moves (GH-273)
 │       ├── SharedProgress.kt      # What a share link says about the sender's game: Solving, Solved or GaveUp (GH-272)
-│       ├── TileLabels.kt          # The ten label schemes (GH-313 adds the Cyrillic two, CYRILLIC_ALPHABET; GH-322 the Greek two and GREEK_ALPHABET, 25 labels, the last one U+037E, written as an escape since every normalisation turns it into a semicolon): wireName (analytics, saves, the
+│       ├── TileLabels.kt          # The twelve label schemes (GH-354 adds the pre-reform Russian two, PREREFORM_ALPHABET, 36 labels, up to 6x6, the І written as an escape; GH-313 adds the Cyrillic two, CYRILLIC_ALPHABET; GH-322 the Greek two and GREEK_ALPHABET, 25 labels, the last one U+037E, written as an escape since every normalisation turns it into a semicolon): wireName (analytics, saves, the
 │       │                             # preference), title, maxSide, fits(side), label(tile, side), sampleRow.
 │       │                             # NUMBERS is the default (GH-139)
-│       ├── TileLabelGroup.kt      # GH-323: the alphabet groups of the Tile labels dialog (Numbers, Numbers from 0, Latin letters, Cyrillic letters, Greek letters (GH-322)),
+│       ├── TileLabelGroup.kt      # GH-323: the alphabet groups of the Tile labels dialog (Numbers, Numbers from 0, Latin letters, Cyrillic letters, Greek letters (GH-322), Pre-reform Russian (GH-354)),
 │       │                             # each an ordered list of its schemes; a test pins that every TileLabels is in exactly one group
 │       │                             # GH-332: `alphabet` (LATIN_ALPHABET, CYRILLIC_ALPHABET, GREEK_ALPHABET) and `TileLabels.lettersUsed(side)`
 │       ├── AlphabetHint.kt        # GH-332: what the alphabet hint shows for a scheme and a board side: the alphabet in order and how many of its letters the board uses (null for number schemes)
@@ -302,7 +302,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │   │                # game's ARIA moving in is GH-201's next step; a Gradle module is future work
 │   │   ├── Announcements.kt # GH-166 (words in :shared:texts, GH-274): what a screen reader hears - shifts, the win, new game, load,
 │   │   │                # solution steps - and the arrows' accessible names; Read board's
-│   │   │                # row-by-row words, letters in the phonetic alphabet (GH-167), Cyrillic labels in the Russian spelling words (GH-313), Greek labels by the letters' names in the game's language, `alpha` to `omega`, and the question mark (GH-322)
+│   │   │                # row-by-row words, letters in the phonetic alphabet (GH-167), Cyrillic labels in the Russian spelling words (GH-313), Greek labels by the letters' names in the game's language, `alpha` to `omega`, and the question mark (GH-322), the pre-reform letters the Cyrillic scheme lacks by their traditional names (GH-354)
 │   │   └── FocusTarget.kt # GH-201: a control's data-focus key, and whether focus falls back from it
 │   ├── drag/            # LineDrag: one drag in pixels - axis lock past a threshold, live offset,
 │   │                    # snap to whole tiles mod the side; WrapPositions: a part-shifted line's tiles

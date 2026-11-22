@@ -13,6 +13,7 @@ class AutosaveSlotTest {
         assertEquals("Autosave_numbers_4x4", AutosaveSlot.nameFor(TileLabels.NUMBERS, 4))
         assertEquals("Autosave_letter_pairs_9x9", AutosaveSlot.nameFor(TileLabels.LETTER_PAIRS, 9))
         assertEquals("Autosave_cyrillic_letter_pairs_9x9", AutosaveSlot.nameFor(TileLabels.CYRILLIC_LETTER_PAIRS, 9))
+        assertEquals("Autosave_prereform_letters_6x6", AutosaveSlot.nameFor(TileLabels.PREREFORM_LETTERS, 6))
     }
 
     @Test
