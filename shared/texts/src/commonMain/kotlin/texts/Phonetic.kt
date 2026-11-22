@@ -6,6 +6,15 @@ internal val RUSSIAN_SPELLING_WORDS = listOf(
     "Павел", "Роман", "Семён", "Тамара", "Ульяна", "Фёдор", "Харитон", "Цапля", "Человек", "Шура", "Щука", "Эхо", "Юрий", "Яков",
 )
 
+/** The 36 pre-reform Russian labels as said, in the order of `TileLabels.PREREFORM_ALPHABET`, in every game language (GH-354). The 28 letters of
+ *  the Cyrillic scheme keep its words; Й, Ъ, Ы and Ь have spelling words of their own, and the letters the reform dropped are said by their
+ *  traditional names: І `и десятеричное`, Ѣ `ять`, Ѳ `фита`, Ѵ `ижица`. */
+internal val PREREFORM_SPELLING_WORDS = listOf(
+    "Анна", "Борис", "Василий", "Григорий", "Дмитрий", "Елена", "Женя", "Зинаида", "Иван", "Иван краткий", "и десятеричное", "Константин", "Леонид",
+    "Мария", "Николай", "Ольга", "Павел", "Роман", "Семён", "Тамара", "Ульяна", "Фёдор", "Харитон", "Цапля", "Человек", "Шура", "Щука",
+    "твёрдый знак", "еры", "мягкий знак", "ять", "Эхо", "Юрий", "Яков", "фита", "ижица",
+)
+
 /** The 25 Greek labels as said in English, in the order of `TileLabels.GREEK_ALPHABET` (GH-322). */
 internal val GREEK_WORDS_EN = listOf(
     "alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa", "lambda", "mu", "nu", "xi", "omicron",

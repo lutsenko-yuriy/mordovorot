@@ -67,11 +67,12 @@ internal object Announcements {
     }
 
     /** A tile [label] as said: letters in the phonetic alphabet (`BC` -> `bravo charlie`), so `B`
-     *  and `D` don't sound alike; Cyrillic letters by the Russian spelling words (`АБ` -> `Анна Борис`, GH-313); Greek letters by their names (`ΓΑ` -> `gamma alpha`, GH-322); numbers as they are. */
+     *  and `D` don't sound alike; Cyrillic letters by the Russian spelling words (`АБ` -> `Анна Борис`, GH-313); Greek letters by their names (`ΓΑ` -> `gamma alpha`, GH-322); the pre-reform letters the Cyrillic ones lack by their traditional names (`Ѣ` -> `ять`, GH-354); numbers as they are. */
     fun spoken(label: String): String = when {
         label.all { it in 'A'..'Z' } -> label.map { texts().reader.phonetic[it - 'A'] }.joinToString(" ")
         label.all { it in TileLabels.CYRILLIC_ALPHABET } -> label.map { texts().reader.cyrillicPhonetic[TileLabels.CYRILLIC_ALPHABET.indexOf(it)] }.joinToString(" ")
         label.all { it in TileLabels.GREEK_ALPHABET } -> label.map { texts().reader.greekPhonetic[TileLabels.GREEK_ALPHABET.indexOf(it)] }.joinToString(" ")
+        label.all { it in TileLabels.PREREFORM_ALPHABET } -> label.map { texts().reader.prereformPhonetic[TileLabels.PREREFORM_ALPHABET.indexOf(it)] }.joinToString(" ")
         else -> label
     }
 

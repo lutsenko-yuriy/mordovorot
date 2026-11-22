@@ -98,7 +98,7 @@ internal class LoadGameUseCase(
         }
     }
 
-    /** Only a hand-edited save has Letters, Cyrillic or Greek letters on a board too big for them (GH-160, GH-313, GH-322); numbers show until the player picks.
+    /** Only a hand-edited save has Letters, Cyrillic, Greek or pre-reform Russian letters on a board too big for them (GH-160, GH-313, GH-322, GH-354); numbers show until the player picks.
      *  The message names the scheme that didn't fit: the two letter schemes are the only ones that can. */
     private suspend fun chooseFittingLabels(scheme: TileLabels) {
         val side = board.squareSide
@@ -107,6 +107,7 @@ internal class LoadGameUseCase(
             when (scheme) {
                 TileLabels.CYRILLIC_LETTERS -> cyrillicLettersDontFit(side)
                 TileLabels.GREEK_LETTERS -> greekLettersDontFit(side)
+                TileLabels.PREREFORM_LETTERS -> prereformLettersDontFit(side)
                 else -> lettersDontFit(side)
             }
         }

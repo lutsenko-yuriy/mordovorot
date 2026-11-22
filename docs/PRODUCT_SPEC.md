@@ -526,13 +526,15 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   | Cyrillic letter pairs (GH-313) | solved row and column as those letters | `АА АБ АВ АГ` |
   | Greek letters (GH-322) | the 24 capitals `Α Β Γ Δ Ε Ζ Η Θ Ι Κ Λ Μ Ν Ξ Ο Π Ρ Σ Τ Υ Φ Χ Ψ Ω`, then the Greek question mark (U+037E, which looks like `;`) as the 25th | `Α Β Γ Δ` |
   | Greek letter pairs (GH-322) | solved row and column as those letters | `ΑΑ ΑΒ ΑΓ ΑΔ` |
+  | Pre-reform Russian letters (GH-354) | the 36 labels `А Б В Г Д Е Ж З И Й І К Л М Н О П Р С Т У Ф Х Ц Ч Ш Щ Ъ Ы Ь Ѣ Э Ю Я Ѳ Ѵ`: the 35 letters of the alphabet before the 1918 reform plus Й after И (no Ё); the І is the Cyrillic one, U+0406 | `А Б В Г` |
+  | Pre-reform Russian letter pairs (GH-354) | solved row and column as those letters | `АА АБ АВ АГ` |
 
   Only the text changes: a tile's colour (web) and the step list's `Row …`/`Col …` stay as they are.
 - **The dialog:** `Tile labels` (GH-323 grouped it): a preview strip of three tiles showing the marked
   scheme's first three labels (`1 2 3`, `AA AB AC`, `АА АБ АВ`, `ΑΑ ΑΒ ΑΓ`; the same on every board size and hidden from screen readers),
-  then five collapsible groups, **Numbers** (Numbers, Pairs), **Numbers from 0** (Numbers from 0, Pairs from 0), **Latin letters** (Letters,
-  Letter pairs) **Cyrillic letters** (Cyrillic letters, Cyrillic letter pairs) and **Greek letters** (Greek letters, Greek letter pairs, GH-322); `Zahlen` / `Zahlen ab 0` / `Lateinische Buchstaben` /
-  `Kyrillische Buchstaben` / `Griechische Buchstaben` and `Числа` / `Числа с 0` / `Латинские буквы` / `Кириллические буквы` / `Греческие буквы` in German and Russian. Only the group
+  then six collapsible groups, **Numbers** (Numbers, Pairs), **Numbers from 0** (Numbers from 0, Pairs from 0), **Latin letters** (Letters,
+  Letter pairs) **Cyrillic letters** (Cyrillic letters, Cyrillic letter pairs) and **Greek letters** (Greek letters, Greek letter pairs, GH-322) and **Pre-reform Russian** (Pre-reform Russian letters, Pre-reform Russian letter pairs, GH-354); `Zahlen` / `Zahlen ab 0` / `Lateinische Buchstaben` /
+  `Kyrillische Buchstaben` / `Griechische Buchstaben` / `Russisch vor 1918` and `Числа` / `Числа с 0` / `Латинские буквы` / `Кириллические буквы` / `Греческие буквы` / `Дореформенный алфавит` in German and Russian. Only the group
   in use is open when the dialog opens; pressing another header opens that group (and focus goes to its marked scheme,
   else its first that fits the board) and closes the open one. Pressing the open group's header does nothing. A group
   lists its two schemes, a single one and its pair, side by side, named `Numbers` or `Letters` and `Pairs` in every group (`Zahlen` / `Buchstaben` / `Paare`, `Числа` / `Буквы` / `Пары`), since the header names the alphabet; the full names (`Cyrillic letter pairs`, `Numbers from 0`) stay in the share prompt, messages and analytics, the marked one `●` and the rest `○`; the mark can sit in a closed
@@ -576,6 +578,13 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   Greek question mark U+037E, a character of its own that only a 5x5 board shows; it is never written as a semicolon. Screen readers say each letter by its
   name in the game's language, `ΓΑ` as `gamma alpha`, `Gamma Alpha` or `гамма альфа`, and the question mark as `Greek question mark`,
   `griechisches Fragezeichen` or `греческий вопросительный знак`.
+- **Pre-reform Russian letters (GH-354)** work as Greek letters do, with 36 labels that fit up to 6x6: on 7x7 and larger the row is dimmed, reads `up to 6x6` (`bis 6x6`, `до 6x6`),
+  Numbers stand in and the preference is kept; a 7x7 save with them asks for labels with its own message (`Pre-reform Russian letters don't fit a 7x7 board (36 labels, 49 tiles). Please pick other labels.`, the
+  `letters_save` source). **Pre-reform Russian letter pairs** fit every size up to 9x9; a board only uses the first nine letters, `А` to `И`, so its tiles equal the Cyrillic pairs'. The group, in its own place after the Greek
+  one, is named `Pre-reform Russian` / `Russisch vor 1918` / `Дореформенный алфавит`, its rows `Letters` and `Pairs`; the schemes `Pre-reform Russian letters` / `Pre-reform Russian letter pairs`, `Russische Buchstaben vor 1918` /
+  `Russische Buchstabenpaare vor 1918` and `Дореформенные буквы` / `Дореформенные пары`. They work like the others in the tutorial, saves and share links (an old build opens a save with its own labels and a labelled link as a plain
+  board; a 7x7 link opens as a plain board). Screen readers say the letters shared with the Cyrillic scheme by its Russian spelling words and the others by their names, in every language: `Й` `Иван краткий`, `І` `и десятеричное`, `Ъ` `твёрдый знак`,
+  `Ы` `еры`, `Ь` `мягкий знак`, `Ѣ` `ять`, `Ѳ` `фита`, `Ѵ` `ижица`. The pairs take the Cyrillic pairs' smaller font cap at larger text sizes.
 - **Letters on 7x7 to 9x9 (GH-207)** is dimmed and shown as Numbers just as on 6x6, below.
 - **Letters on 6x6 (GH-160):** Letters has 26 labels, too few for 36 tiles. On a 6x6 board its row
   in the dialog is dimmed, and can't be picked. Its limit, `up to 5x5`, shows over the row, in place of its name, on hover,
@@ -597,7 +606,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   `[ Give Up 5 ] [ Hint 8 ] [ Tutorial 9 ]`. German `Hinweis`, Russian `Подсказка`. It shows in play and on a won board, and is gone on Mordie's solution screen and during the
   tutorial; it is disabled while a dialog is open and does not depend on the `tutorial` switch. It is **dimmed** and inert for the four number schemes, and when Letters or Cyrillic or Greek
   letters stand in as Numbers on a board too large for them (6x6 and up). On phones the row's buttons take the toolbar's padding so the three fit.
-- **The dialog:** `Latin alphabet`, `Cyrillic alphabet` or `Greek alphabet` (`Lateinisches` / `Kyrillisches` / `Griechisches Alphabet`; `Латинский` / `Кириллический` /
+- **The dialog:** `Latin alphabet`, `Cyrillic alphabet`, `Greek alphabet` or `Pre-reform Russian alphabet` (`Lateinisches` / `Kyrillisches` / `Griechisches Alphabet` / `Vorreformalphabet`; `Латинский` / `Кириллический` /
   `Греческий алфавит`) shows the whole alphabet of the marked scheme in order, on a grid of 7 columns, with `[ OK ]`; Escape or OK closes it and changes nothing. The letters the
   board uses are outlined in normal type, the rest greyed. A pair scheme uses as many letters as the board has rows (`N` on an NxN board); a single-letter scheme uses
   min(N x N, the alphabet's length). Greek's 25th letter, U+037E, is in use only on 5x5 with Greek letters.

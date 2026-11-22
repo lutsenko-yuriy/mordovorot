@@ -29,6 +29,9 @@ The codec reads several versions of the packed format in parallel, told apart by
 ## Amendment (GH-322)
 The two Greek schemes, `greek_letters` and `greek_letter_pairs`, also take the escape (code 7 + UTF-8 name, ASCII), so no save holds a Greek character and the U+037E question mark never reaches the format. Version 1 is unchanged.
 
+## Amendment (GH-354)
+The two pre-reform Russian schemes, `prereform_letters` and `prereform_letter_pairs`, take the escape too (code 7 + the ASCII name), about 20 bytes more per save; no save holds a Cyrillic character. Version 1 is unchanged, and an older build opens such a save with its own labels.
+
 ## Related ticket
 GH-220
 

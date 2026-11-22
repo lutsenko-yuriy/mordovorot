@@ -72,7 +72,7 @@ internal class DomBoard(private val root: HTMLElement, private val motion: Label
 
         val asked = state.guidance?.highlight
         val classes = listOfNotNull("board", "solved".takeIf { state.solved }, "just-solved".takeIf { justSolved }, "guided".takeIf { state.guidance != null },
-            "cyrillic-pairs".takeIf { state.labels == TileLabels.CYRILLIC_LETTER_PAIRS })
+            "cyrillic-pairs".takeIf { state.labels == TileLabels.CYRILLIC_LETTER_PAIRS || state.labels == TileLabels.PREREFORM_LETTER_PAIRS })
         return element("div", classes.joinToString(" ")).apply {
             append(
                 element("span"), arrows(Arrow.UP, "▲", "row"), element("span"),

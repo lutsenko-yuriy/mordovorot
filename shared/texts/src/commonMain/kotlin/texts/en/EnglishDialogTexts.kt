@@ -15,6 +15,7 @@ object EnglishDialogTexts : DialogTexts {
     override val alphabetLatin = "Latin alphabet"
     override val alphabetCyrillic = "Cyrillic alphabet"
     override val alphabetGreek = "Greek alphabet"
+    override val alphabetPrereform = "Pre-reform Russian alphabet"
     override val linkRejectedTitle = "Can't open this board"
     override val openSharedTitle = "Open the shared board?"
     override fun sharedLabelsTitle(labels: String) = "Use the sender's labels ($labels)?"

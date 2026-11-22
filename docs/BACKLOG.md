@@ -8,7 +8,7 @@ The `## In Progress` section at the top is the one exception — it is maintaine
 
 ## In Progress
 
-_(nothing in progress)_
+- GH-354: Tile labels: pre-reform Russian letters and letter pairs, in a group of their own (WU0 merged; WU1 in review)
 
 ---
 

@@ -16,6 +16,7 @@ interface DialogTexts {
     val alphabetLatin: String
     val alphabetCyrillic: String
     val alphabetGreek: String
+    val alphabetPrereform: String
     val linkRejectedTitle: String
     val openSharedTitle: String
     fun sharedLabelsTitle(labels: String): String
