@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.60.0] — 2026-11-27 (PR #358 merged)
+
+### Added
+
+- [user] (PR #358) GH-357: The game can be installed from the browser to your home screen, dock or app list, with its own icon, and opens in its own window.
+- [non-user] (PR #358) GH-357: the app icons are rendered by `scripts/web/icons/render_icons.js`; the web manifest gains a build check (`checkWebManifest`).
+
 ## [0.59.0] — 2026-11-22 (PR #356 merged)
 
 ### Added
