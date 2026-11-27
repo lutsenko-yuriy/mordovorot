@@ -34,6 +34,15 @@ class OfflineCacheTest {
         assertEquals("mordie-worker.js", key("${scope}mordie-worker.js"))
     }
 
+    /** GH-357: the manifest and the icons are listed files like any other, so an installed copy finds them offline. */
+    @Test
+    fun `the manifest and the icons are served from the cache`() {
+        val installable = files + setOf("manifest.webmanifest", "icons/icon-192.png")
+
+        assertEquals("manifest.webmanifest", OfflineCache.cacheKeyOf("${scope}manifest.webmanifest", scope, installable))
+        assertEquals("icons/icon-192.png", OfflineCache.cacheKeyOf("${scope}icons/icon-192.png?x=1", scope, installable))
+    }
+
     @Test
     fun `the source map and other unlisted paths go to the network`() {
         assertNull(key("${scope}web.js.map"))
