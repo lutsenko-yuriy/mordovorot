@@ -21,6 +21,10 @@ object RussianDialogTexts : DialogTexts {
     override fun sharedLabelsTitle(labels: String) = "Использовать метки отправителя ($labels)?"
     override val shareTitle = "Поделиться доской"
     override val updateTitle = "Обновиться до новой версии?"
+    override val installTitle = "Установить игру"
+    override val installStepsPhone = "В Safari нажми «Поделиться» (в меню ⋯, если кнопки не видно), затем «На экран „Домой“»."
+    override val installStepsMac = "В строке меню Safari выбери «Файл», затем «Добавить в Dock»."
+    override val installSaves = "Установленная игра начнётся без сохранений. Чтобы перенести игру, отправь себе ссылку через «Поделиться» в игре."
     override val replaySaveTitle = "Сначала сохранить игру?"
 
     override val veryLargeTitle = "Очень большая"
