@@ -853,3 +853,51 @@ Changes to existing entries:
 Not tracked: a Restart pressed while dimmed (nothing happens), Save and Don't save as an event of their own (`game_restarted.save_choice` covers them), and Mordie's line or search going back to the start.
 
 PII: none; only counts and fixed words are sent.
+
+## GH-360 (Install entry in the footer)
+
+Planned in `/analyze`; the web client uses `NoopAnalyticsService` until an SDK is wired up (GH-256).
+
+### `install_entry_shown`
+
+Fired when the footer's `Install the game` entry appears, at most once per page load: the update notice taking its place and the entry coming back don't fire it again. *(GH-360)*
+
+| Property | Type | Description |
+|---|---|---|
+| `method` | `string` | `browser_prompt` (Chrome, Edge, Android: a click opens the browser's own prompt) or `safari_steps` (a click opens our steps dialog). |
+
+### `install_entry_clicked`
+
+Fired when the entry is clicked, or Enter is pressed on it. *(GH-360)*
+
+| Property | Type | Description |
+|---|---|---|
+| `method` | `string` | As `install_entry_shown.method`. |
+| `input_method` | `string` | `keyboard` or `rich_ui` - the press that fired the event. |
+
+### `install_prompt_result`
+
+Fired when the browser's own install prompt is answered, from the `userChoice` of the `beforeinstallprompt` event. Not fired for `safari_steps`. *(GH-360)*
+
+| Property | Type | Description |
+|---|---|---|
+| `outcome` | `string` | `accepted` or `dismissed`. |
+
+### `app_installed`
+
+Fired on the browser's `appinstalled` event. It also fires for installs made from the browser menu, not only through the entry. Safari doesn't send it. *(GH-360)*
+
+| Property | Type | Description |
+|---|---|---|
+| `via_entry` | `boolean` | `true` if the entry's prompt was accepted in this page load. |
+
+| Screen name | When tracked |
+|---|---|
+| `screen_install_dialog` | The Safari steps dialog opens. Property `device`: `phone_or_tablet` or `mac`, which wording is shown. *(GH-360)* |
+
+Changes to existing entries:
+- `app_launched` gains `display_mode` (`string`, always sent): `browser` or `standalone` (the page runs in the installed app's own window). It shows how many launches come from the installed app.
+
+Not tracked: Close and Escape in the Safari dialog (nothing is cancelled; `screen_install_dialog` covers the opening), the steps being followed in Safari (the page can't see them; `app_launched.display_mode` shows it later), browsers with no entry, and repeat sightings of the entry across visits.
+
+PII: none; only fixed words and one boolean are sent. `method` and `device` are buckets set in our code, so the user agent string never goes out.
