@@ -38,3 +38,4 @@ Write one when a ticket's research or implementation concludes in a decision tha
 | ADR-0005 | a share link is the page's address plus a `#b=` fragment holding the starting board | `accepted` | 2026-11-02 | GH-243 |
 | ADR-0006 | play offline from a cache-first service worker that waits, and let only Update switch versions | `accepted` | 2026-11-08 | GH-262 |
 | ADR-0007 | install the game from a manifest whose identity is fixed for good, with icons rendered once from the palette and committed | `accepted` | 2026-11-27 | GH-357 |
+| ADR-0008 | stay an installable PWA and list the game in no app store for now | `accepted` | 2026-11-27 | GH-359 |

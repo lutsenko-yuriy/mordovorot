@@ -13,6 +13,12 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.61.1] — 2026-11-27 (PR #364 merged)
+
+### Added
+
+- [meta] (PR #364) GH-359: research on listing the game in Google Play and the Apple App Store; decision recorded as ADR-0008: no store listing for now, the game stays an installable PWA.
+
 ## [0.61.0] — 2026-11-27 (PR #362 merged)
 
 ### Added
