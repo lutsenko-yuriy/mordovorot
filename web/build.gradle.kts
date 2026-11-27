@@ -112,6 +112,29 @@ val checkOfflineManifest = tasks.register("checkOfflineManifest") {
 }
 tasks.named("jsBrowserDistribution") { finalizedBy(checkOfflineManifest) }
 
+// GH-357: the game is installable only if its manifest is valid JSON and every icon it, or the
+// page, names ships and is in the offline list (so an installed copy has them offline).
+val checkWebManifest = tasks.register("checkWebManifest") {
+    val dist = layout.buildDirectory.dir("dist/js/productionExecutable")
+    val offlineList = provider { project(":web:offline").layout.buildDirectory.file("generated/offlineManifest/manifest.tsv").get().asFile }
+    mustRunAfter(checkOfflineManifest)
+    doLast {
+        val root = dist.get().asFile
+        val manifest = File(root, "manifest.webmanifest")
+        check(manifest.exists()) { "manifest.webmanifest is missing from the distribution" }
+        val json = groovy.json.JsonSlurper().parse(manifest) as Map<*, *>
+        val icons = (json["icons"] as List<*>).map { (it as Map<*, *>)["src"] as String }
+        val page = File(root, "index.html").readText()
+        val linked = Regex("""<link rel="(?:manifest|icon|apple-touch-icon)" href="([^"]*)"""").findAll(page).map { it.groupValues[1] }.toList()
+        check("manifest.webmanifest" in linked) { "index.html does not link manifest.webmanifest" }
+        val listed = offlineList.get().readLines().map { it.split('\t')[0] }.toSet()
+        val needed = (icons + linked + "manifest.webmanifest").toSet()
+        check(needed.all { File(root, it).isFile }) { "named but not shipped: ${needed.filter { !File(root, it).isFile }}" }
+        check((needed - listed).isEmpty()) { "not in the offline list: ${needed - listed}" }
+    }
+}
+tasks.named("jsBrowserDistribution") { finalizedBy(checkWebManifest) }
+
 tasks.register("serve") {
     group = "application"
     description = "Serves the browser game on http://localhost:8080 and rebuilds on change; run with -t."
