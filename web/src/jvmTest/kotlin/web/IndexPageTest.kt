@@ -62,7 +62,6 @@ class IndexPageTest {
     }
 
     private val head = page.substringBefore("</head>")
-    private val palette = File("src/jsMain/resources/palette.css").readText()
 
     /** GH-357: the manifest, its icons and the page colours make the game installable. */
     @Test
@@ -82,10 +81,11 @@ class IndexPageTest {
     /** The bar and title colours follow the page's own, in each theme. */
     @Test
     fun `theme colour is the page colour in light and in dark`() {
-        fun page(block: String) = Regex("""--page:\s*([^;]+);""").find(block)!!.groupValues[1].trim()
+        val light = Palette.light.getValue("page")
+        val dark = Palette.dark.getValue("page")
 
-        assertTrue("""<meta name="theme-color" content="${page(palette.substringBefore("@media"))}" media="(prefers-color-scheme: light)">""" in head)
-        assertTrue("""<meta name="theme-color" content="${page(palette.substringAfter("@media"))}" media="(prefers-color-scheme: dark)">""" in head)
+        assertTrue("""<meta name="theme-color" content="$light" media="(prefers-color-scheme: light)">""" in head)
+        assertTrue("""<meta name="theme-color" content="$dark" media="(prefers-color-scheme: dark)">""" in head)
     }
 
     /** Safari's own web-app tags: the title under the icon, and a status bar that keeps the page below it. */

@@ -11,7 +11,6 @@ import kotlin.test.assertTrue
 class WebManifestTest {
     private val resources = File("src/jsMain/resources")
     private val manifest = File(resources, "manifest.webmanifest").readText()
-    private val palette = File(resources, "palette.css").readText().substringBefore("@media")
 
     private fun string(member: String) = Regex(""""$member"\s*:\s*"([^"]*)"""").find(manifest)?.groupValues?.get(1)
 
@@ -43,8 +42,7 @@ class WebManifestTest {
     }
 
     @Test
-    fun `identity, start page and scope are the page's own folder, and relative`() {
-        assertEquals("./", string("id"))
+    fun `start page and scope are the page's own folder, and relative`() {
         assertEquals("./", string("start_url"))
         assertEquals("./", string("scope"))
     }
@@ -59,10 +57,17 @@ class WebManifestTest {
 
     @Test
     fun `colours are the light page colour`() {
-        val page = Regex("""--page:\s*([^;]+);""").find(palette)!!.groupValues[1].trim()
+        val page = Palette.light.getValue("page")
 
         assertEquals(page, string("theme_color"))
         assertEquals(page, string("background_color"))
+    }
+
+    /** An id is parsed against the origin of start_url, not the manifest's URL: `./` would be the whole github.io user
+     *  origin, shared with every other app there. It names the game, is relative and never changes (ADR-0007). */
+    @Test
+    fun `identity names the game and not the origin`() {
+        assertEquals("mordovorot", string("id"))
     }
 
     @Test

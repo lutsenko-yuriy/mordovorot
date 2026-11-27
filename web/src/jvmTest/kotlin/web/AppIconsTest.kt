@@ -24,11 +24,9 @@ class AppIconsTest {
         Icon("icon-maskable-512.png", 512, 0.56, opaque = true, maskable = true),
     )
 
-    private val palette = File("src/jsMain/resources/palette.css").readText().substringBefore("@media")
-    private fun token(name: String) = Regex("""--$name:\s*([^;]+);""").find(palette)!!.groupValues[1].trim()
-    private val frame = Wcag.hex(token("frame"))
-    private val tileLight = token("tile-light").removeSuffix("%").toDouble()
-    private val tileRamp = token("tile-ramp").removeSuffix("%").toDouble()
+    private val frame = Wcag.hex(Palette.light.getValue("frame"))
+    private val tileLight = Palette.light.getValue("tile-light").removeSuffix("%").toDouble()
+    private val tileRamp = Palette.light.getValue("tile-ramp").removeSuffix("%").toDouble()
 
     private fun read(icon: Icon): BufferedImage = ImageIO.read(File("src/jsMain/resources/icons/${icon.file}"))
     private fun hint(icon: Icon) = "${icon.file} is stale: run `node scripts/web/icons/render_icons.js`"
@@ -40,6 +38,18 @@ class AppIconsTest {
     private fun assertColour(expected: Wcag.Rgb, img: BufferedImage, x: Int, y: Int, what: String, hint: String) {
         val actual = channels(img.getRGB(x, y))
         assertTrue(close(actual, channels(expected)), "$what at ($x, $y) is $actual, wanted ${channels(expected)}. $hint")
+    }
+
+    /** The sizes and fractions above are repeated in the script's VARIANTS: a drift would pass every pixel check below. */
+    @Test
+    fun `the sizes and fractions are the ones the render script uses`() {
+        val script = File("../scripts/web/icons/render_icons.js").readText()
+
+        assertEquals(icons.size, Regex("""file: '""").findAll(script).count(), "render_icons.js renders other icons than this test knows")
+        icons.forEach { icon ->
+            val variant = Regex("""file: '${Regex.escape(icon.file)}', size: ${icon.size}, grid: ${icon.grid},""")
+            assertTrue(variant.containsMatchIn(script), "render_icons.js has no `${icon.file}` with size ${icon.size} and grid ${icon.grid}")
+        }
     }
 
     @Test
