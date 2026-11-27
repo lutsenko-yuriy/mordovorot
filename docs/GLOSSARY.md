@@ -28,3 +28,4 @@ When two files fit, the more specific domain wins (a web-only screen-reader term
 | available saves | your saves |
 | corrupted | damaged |
 | puzzle | board |
+| PWA (in player-facing text), home screen app | installed app |

@@ -70,6 +70,8 @@ tasks.named("jvmTest") {
     inputs.dir("src").withPropertyName("sources").withPathSensitivity(PathSensitivity.RELATIVE)
     // GH-262: SkipWaitingMessageTest reads the offline worker's message from its module.
     inputs.dir("offline/src").withPropertyName("offlineSources").withPathSensitivity(PathSensitivity.RELATIVE)
+    // GH-357: AppIconsTest checks its sizes against the icon renderer's.
+    inputs.file("../scripts/web/icons/render_icons.js").withPropertyName("iconRenderer").withPathSensitivity(PathSensitivity.NONE)
 }
 
 // GH-218: with no runtime fallback, a distribution without the worker would play without Mordie.
@@ -111,6 +113,26 @@ val checkOfflineManifest = tasks.register("checkOfflineManifest") {
     }
 }
 tasks.named("jsBrowserDistribution") { finalizedBy(checkOfflineManifest) }
+
+// GH-357: the game is installable only if its manifest is valid JSON and every file it, or the
+// page, names ships. checkOfflineManifest already fails a shipped file that isn't in the offline
+// list, so shipping is enough for an installed copy to have them offline.
+val checkWebManifest = tasks.register("checkWebManifest") {
+    val dist = layout.buildDirectory.dir("dist/js/productionExecutable")
+    doLast {
+        val root = dist.get().asFile
+        val manifest = File(root, "manifest.webmanifest")
+        check(manifest.exists()) { "manifest.webmanifest is missing from the distribution" }
+        val json = groovy.json.JsonSlurper().parse(manifest) as Map<*, *>
+        val icons = (json["icons"] as List<*>).map { (it as Map<*, *>)["src"] as String }
+        val page = File(root, "index.html").readText()
+        val linked = Regex("""<link rel="(?:manifest|icon|apple-touch-icon)" href="([^"]*)"""").findAll(page).map { it.groupValues[1] }.toList()
+        check("manifest.webmanifest" in linked) { "index.html does not link manifest.webmanifest" }
+        val missing = (icons + linked + "manifest.webmanifest").toSet().filter { !File(root, it).isFile }
+        check(missing.isEmpty()) { "named but not shipped: $missing" }
+    }
+}
+tasks.named("jsBrowserDistribution") { finalizedBy(checkWebManifest) }
 
 tasks.register("serve") {
     group = "application"

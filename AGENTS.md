@@ -64,6 +64,7 @@ Details and directory layout: @docs/ARCHITECTURE.md. Languages and tooling: docs
 - **Lint:** none configured
 - **Build:** `./gradlew build`
 - **Run the game:** `./gradlew :web:serve -t`, then open `http://localhost:8080`. It rebuilds on change, and `./gradlew check`/`build` can run alongside it (its outputs go to `build-serve/`, which `clean` leaves alone). If `check` then fails with `neither a KLIB file nor a KLIB directory`, stop `serve` and delete that module's `build/classes` (GH-338)
+- **Re-render the app icons:** `node scripts/web/icons/render_icons.js` (needs Playwright; CI does not run it, `AppIconsTest` fails when they are stale, GH-357)
 - **Install dependencies:** none to install manually — Gradle resolves everything (`kotlin("test")` on the JUnit 5 platform) on first run
 
 ## Code style

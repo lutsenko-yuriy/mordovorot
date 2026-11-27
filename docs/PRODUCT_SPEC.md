@@ -474,6 +474,18 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
     notice (they are frozen, `docs/CONSTRAINTS.md`); the button's own name is `Update`.
   - With two tabs open, `Update` in one leaves the notice up in the other, where it only reloads.
     Until it does, that tab runs the old page against the new files (ADR-0006).
+- **Installing the game (GH-357):** the game can be installed from the browser's own offer
+  (Install in Chrome and Edge or on Android, Add to Dock or Add to Home Screen in Safari): it gets
+  its own icon, named `Mordovorot` in every language, and opens in its own window without the
+  browser's bars, in either orientation, with the bar coloured like the page in light and dark.
+  The icon is the board in miniature: a 3x3 board in the tile colours with the middle row shifted
+  half a tile. The page has no install button or notice of its own. An installed game is an
+  ordinary page load: the same offline copy, footer and update notice (the new version opens once
+  every tab and the installed window are closed, or on `Update`).
+  - Saves are shared with the browser on Chrome, Edge and Android. An installed copy on iPhone or
+    iPad (Add to Home Screen) and on a Mac (Add to Dock) keeps its own storage: it starts with no
+    saves and shows the tutorial, and needs one online launch before it plays offline. A game
+    moves across with a share link.
 - **Analytics:** every event carries `platform: web` and `input_method`, following the actual input
   in either mode: `keyboard` for key presses, `rich_ui` for mouse and touch; see `docs/ANALYTICS_EVENTS.md`.
 
