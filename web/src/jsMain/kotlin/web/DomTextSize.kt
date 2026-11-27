@@ -28,7 +28,7 @@ private fun appleBodyPx(document: Document, window: Window): Double? {
     return pxOf(window.getComputedStyle(probe).fontSize).also { probe.remove() }
 }
 
-private fun isAppleTouch(navigator: Navigator): Boolean =
+internal fun isAppleTouch(navigator: Navigator): Boolean =
     (navigator.asDynamic().maxTouchPoints as? Int ?: 0) > 0 && js("CSS.supports('-webkit-touch-callout', 'none')") == true
 
 private fun pxOf(size: String): Double? = size.removeSuffix("px").toDoubleOrNull()

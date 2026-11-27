@@ -1,179 +1,366 @@
 package web.scenario
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlinx.coroutines.test.TestScope
+import texts.texts
+import web.Focus
+import web.FooterPart
+import web.InstallDevice
+import web.Layout
+import web.WebDialog
+import web.fallbackFocus
 
 /**
- * GH-360 scenarios: the Install entry in the footer, through [WebHarness].
- *
- * Stubs (WU0): each test holds only its steps as TODO comments; WU1 adds `FakeAppInstall`, the
- * harness's install options and the driver code, and makes them green. Texts and analytics
+ * GH-360 scenarios: the Install entry in the footer, through [WebHarness] and a scripted [FakeAppInstall]. Texts and analytics
  * properties come from the plan (issue #360) and `docs/ANALYTICS_EVENTS.md`.
  */
 class WebInstallScenarioTest {
 
+    /** Chrome, with the install prompt already offered. */
+    private fun chrome(offered: Boolean = true, standalone: Boolean = false) = FakeAppInstall(CHROME_DESKTOP, standalone, offered)
+
+    /** A started page with no startup dialog in the way, and the events of the start kept. */
+    private fun TestScope.ready(install: FakeAppInstall, layout: Layout = Layout.WIDE, installOn: Boolean = true): WebHarness =
+        WebHarness(backgroundScope, layout = layout, install = install, installOn = installOn).start().also {
+            if (it.state.dialog is WebDialog.Size) it.game.onSizeChosen(null)
+        }
+
+    private fun WebHarness.hasEntry() = state.footer.any { it is FooterPart.InstallLink }
+
+    private fun WebHarness.footerText() = state.footer.joinToString("") { it.text }
+
+    private fun WebHarness.installEvents() = analytics.events.filter { it.name.startsWith("install_") || it.name == "app_installed" || it.name == "screen_install_dialog" }
+
+    // When it shows
     @Test
     fun `no entry while the first-launch tutorial runs`() = webTest {
-        // TODO: 1. Start with a browser that can install, no saves, tutorial on
-        // TODO: 2. The footer has no install entry
-        // TODO: 3. The `install_entry_shown` event is not sent
+        val page = WebHarness(backgroundScope, firstLaunch = true, install = chrome()).start()
+
+        assertTrue(page.game.tutorial.running)
+        assertFalse(page.hasEntry())
+        assertTrue(page.props("install_entry_shown").isEmpty())
     }
 
     @Test
     fun `Skip shows the entry`() = webTest {
-        // TODO: 1. Start as above
-        // TODO: 2. Skip the tutorial
-        // TODO: 3. The entry is in the footer
-        // TODO: 4. The `install_entry_shown` event is sent once, with `method: browser_prompt`
+        val page = WebHarness(backgroundScope, firstLaunch = true, install = chrome()).start()
+
+        page.game.tutorial.onSkip()
+
+        assertTrue(page.hasEntry())
+        assertEquals(listOf(mapOf("method" to "browser_prompt")), page.ownProps("install_entry_shown"))
     }
 
     @Test
     fun `finishing the tutorial shows the entry`() = webTest {
-        // TODO: 1. Play the tutorial through its last step
-        // TODO: 2. The entry is in the footer
-        // TODO: 3. The `install_entry_shown` event is sent once
+        val page = WebHarness(backgroundScope, firstLaunch = true, install = chrome()).start()
+        page.playSteps(4)
+        assertFalse(page.hasEntry(), "the last step is still to come")
+
+        waitPause()
+
+        assertTrue(page.hasEntry())
+        assertEquals(1, page.props("install_entry_shown").size)
     }
 
     @Test
     fun `a player with saves sees the entry at once`() = webTest {
-        // TODO: 1. Seed a save and start
-        // TODO: 2. The entry is in the footer
-        // TODO: 3. The `install_entry_shown` event is sent
+        val page = WebHarness(backgroundScope, firstLaunch = true, install = chrome()).seed("foo", solved(4)).start()
+
+        assertFalse(page.game.tutorial.running)
+        assertTrue(page.hasEntry())
+        assertEquals(1, page.props("install_entry_shown").size)
     }
 
     @Test
     fun `a tutorial replay hides the entry and it comes back`() = webTest {
-        // TODO: 1. Start with the entry showing
-        // TODO: 2. Start a replay of the tutorial
-        // TODO: 3. The entry is gone
-        // TODO: 4. End the replay
-        // TODO: 5. The entry is back
-        // TODO: 6. The `install_entry_shown` event was sent only once
+        val page = ready(chrome())
+        assertTrue(page.hasEntry())
+
+        page.game.tutorial.onReplay("button")
+        assertTrue(page.game.tutorial.running)
+        assertFalse(page.hasEntry())
+
+        page.game.tutorial.onSkip()
+        assertTrue(page.hasEntry())
+        assertEquals(1, page.props("install_entry_shown").size)
     }
 
     @Test
     fun `no entry in a browser that can't install`() = webTest {
-        // TODO: 1. Start with no install signals
-        // TODO: 2. The footer has no install entry
-        // TODO: 3. No `install_*` event is sent
+        val page = ready(FakeAppInstall())
+
+        assertFalse(page.hasEntry())
+        assertEquals(emptyList(), page.installEvents())
     }
 
     @Test
     fun `no entry in the installed app's own window`() = webTest {
-        // TODO: 1. Start in standalone mode
-        // TODO: 2. The footer has no install entry
-        // TODO: 3. The `app_launched` event has `display_mode: standalone`
+        val page = ready(chrome(standalone = true))
+
+        assertFalse(page.hasEntry())
+        assertEquals("standalone", page.ownProps("app_launched").single()["display_mode"])
     }
 
     @Test
     fun `a browser launch reports display_mode browser`() = webTest {
-        // TODO: 1. Start in a normal browser tab
-        // TODO: 2. The `app_launched` event has `display_mode: browser`
+        val page = ready(chrome())
+
+        assertEquals("browser", page.ownProps("app_launched").single()["display_mode"])
     }
 
     @Test
     fun `the kill switch removes the entry`() = webTest {
-        // TODO: 1. Start with the `install` switch off
-        // TODO: 2. The footer has no install entry
-        // TODO: 3. The page did not call `preventDefault()` on the browser's offer
+        val install = chrome()
+        val page = ready(install, installOn = false)
+
+        assertFalse(page.hasEntry())
+        // Not listening, so the page never takes the browser's offer over with preventDefault().
+        assertFalse(install.listening)
+        assertEquals(emptyList(), page.installEvents())
+
+        assertFalse(ready(FakeAppInstall(SAFARI_IPHONE), installOn = false).hasEntry(), "Safari's steps too")
     }
 
     @Test
     fun `the update notice takes the entry's place`() = webTest {
-        // TODO: 1. Start with the entry showing
-        // TODO: 2. A new version becomes ready
-        // TODO: 3. The footer shows the update notice
-        // TODO: 4. The entry is gone
+        val page = ready(chrome())
+        assertTrue(page.hasEntry())
+
+        page.updates.ready()
+
+        val notice = texts().page.footerUpdateNotice("9.9.9") + texts().page.footerUpdate
+        assertEquals(notice, page.footerText())
+        assertFalse(page.hasEntry())
+        assertEquals(1, page.props("install_entry_shown").size)
     }
 
     @Test
     fun `the entry replaces the credit on a phone`() = webTest {
-        // TODO: 1. Start on a phone layout
-        // TODO: 2. The footer is the version plus the entry
-        // TODO: 3. The credit links are not there
+        val page = ready(FakeAppInstall(SAFARI_IPHONE), layout = Layout.TALL)
+
+        val page0 = texts().page
+        assertEquals("${page0.footerVersion("9.9.9")}${page0.footerInstall}", page.state.footer.filterNot { it.wideOnly }.joinToString("") { it.text })
+        assertTrue(page.state.footer.filter { it is FooterPart.Link }.all { it.wideOnly })
+        assertEquals(
+            "v9.9.9 · ${page0.footerCreditLead}Cary Huang (carykh) · ${page0.footerOriginal} · loopover.xyz · ${page0.footerInstall}",
+            page.footerText(),
+        )
     }
 
+    // The browser's prompt
     @Test
     fun `a click opens the browser's install prompt`() = webTest {
-        // TODO: 1. Click the entry
-        // TODO: 2. The browser's prompt is shown
-        // TODO: 3. No dialog of ours opens
-        // TODO: 4. The `install_entry_clicked` event is sent
+        val install = chrome()
+        val page = ready(install)
+
+        page.game.install.onInstall(byPointer = true)
+
+        assertTrue(install.promptOpen)
+        assertEquals(1, install.prompts)
+        assertNull(page.state.dialog)
+        assertEquals(listOf(mapOf("method" to "browser_prompt")), page.ownProps("install_entry_clicked"))
+        assertEquals("rich_ui", page.props("install_entry_clicked").single()["input_method"])
+        assertTrue(page.props("install_prompt_result").isEmpty(), "not until the prompt is answered")
     }
 
     @Test
     fun `an accepted prompt installs and hides the entry`() = webTest {
-        // TODO: 1. Click the entry
-        // TODO: 2. The browser reports accepted
-        // TODO: 3. The `install_prompt_result` event is sent with `outcome: accepted`
-        // TODO: 4. The `app_installed` event is sent with `via_entry: true`
-        // TODO: 5. The entry is gone
+        val install = chrome()
+        val page = ready(install)
+        page.game.install.onInstall(byPointer = false)
+
+        install.answer(true)
+        install.installedByBrowser()
+
+        assertEquals(listOf(mapOf("outcome" to "accepted")), page.ownProps("install_prompt_result"))
+        assertEquals(listOf(mapOf("via_entry" to true)), page.ownProps("app_installed"))
+        assertFalse(page.hasEntry())
+    }
+
+    @Test
+    fun `appinstalled before the prompt's answer still counts as through the entry`() = webTest {
+        val install = chrome()
+        val page = ready(install)
+        page.game.install.onInstall(byPointer = false)
+
+        install.installedByBrowser()
+        install.answer(true)
+
+        assertEquals(listOf(mapOf("via_entry" to true)), page.ownProps("app_installed"))
+        assertFalse(page.hasEntry())
     }
 
     @Test
     fun `a dismissed prompt hides the entry until the browser offers again`() = webTest {
-        // TODO: 1. Click the entry
-        // TODO: 2. The browser reports dismissed
-        // TODO: 3. The `install_prompt_result` event is sent with `outcome: dismissed`
-        // TODO: 4. The entry is gone
-        // TODO: 5. The browser offers the install again
-        // TODO: 6. The entry returns
+        val install = chrome()
+        val page = ready(install)
+        page.game.install.onInstall(byPointer = false)
+
+        install.answer(false)
+
+        assertEquals(listOf(mapOf("outcome" to "dismissed")), page.ownProps("install_prompt_result"))
+        assertTrue(page.props("app_installed").isEmpty())
+        assertFalse(page.hasEntry())
+
+        install.offer()
+
+        assertTrue(page.hasEntry())
+        assertEquals(1, page.props("install_entry_shown").size)
+    }
+
+    @Test
+    fun `a prompt that couldn't show reports nothing and is spent`() = webTest {
+        val install = chrome()
+        val page = ready(install)
+        page.game.install.onInstall(byPointer = false)
+
+        install.answer(null)
+
+        assertTrue(page.props("install_prompt_result").isEmpty())
+        assertFalse(page.hasEntry())
+        assertTrue(page.game.idle)
     }
 
     @Test
     fun `an install from the browser menu hides the entry`() = webTest {
-        // TODO: 1. Start with the entry showing
-        // TODO: 2. The `appinstalled` event arrives with no click
-        // TODO: 3. The entry is gone
-        // TODO: 4. The `app_installed` event is sent with `via_entry: false`
+        val install = chrome()
+        val page = ready(install)
+        assertTrue(page.hasEntry())
+
+        install.installedByBrowser()
+
+        assertFalse(page.hasEntry())
+        assertEquals(listOf(mapOf("via_entry" to false)), page.ownProps("app_installed"))
     }
 
     @Test
+    fun `the browser's offer that came before the page was up shows the entry at once`() = webTest {
+        val install = chrome(offered = false)
+        install.offer()
+
+        val page = ready(install)
+
+        assertTrue(page.hasEntry())
+    }
+
+    // Safari
+    @Test
     fun `Safari on a phone or tablet opens the steps`() = webTest {
-        // TODO: 1. Start as Safari on an iPhone
-        // TODO: 2. The entry shows, with `method: safari_steps`
-        // TODO: 3. Click the entry
-        // TODO: 4. The dialog shows the Share and Add to Home Screen steps and the saves line
-        // TODO: 5. The `screen_install_dialog` view is sent with `device: phone_or_tablet`
+        val page = ready(FakeAppInstall(SAFARI_IPHONE))
+        assertEquals(listOf(mapOf("method" to "safari_steps")), page.ownProps("install_entry_shown"))
+
+        page.game.install.onInstall(byPointer = false)
+
+        assertEquals(WebDialog.Install(InstallDevice.PHONE_OR_TABLET), page.state.dialog)
+        assertEquals(listOf(mapOf("device" to "phone_or_tablet")), page.ownProps("screen_install_dialog"))
+        assertEquals(listOf(mapOf("method" to "safari_steps")), page.ownProps("install_entry_clicked"))
+        assertTrue(page.props("install_prompt_result").isEmpty())
     }
 
     @Test
     fun `Safari on a Mac opens the Mac steps`() = webTest {
-        // TODO: 1. Start as Safari on a Mac
-        // TODO: 2. Click the entry
-        // TODO: 3. The dialog shows the File and Add to Dock steps
-        // TODO: 4. The `screen_install_dialog` view is sent with `device: mac`
+        val page = ready(FakeAppInstall(SAFARI_MAC))
+
+        page.game.install.onInstall(byPointer = false)
+
+        assertEquals(WebDialog.Install(InstallDevice.MAC), page.state.dialog)
+        assertEquals(listOf(mapOf("device" to "mac")), page.ownProps("screen_install_dialog"))
     }
 
     @Test
     fun `other iOS browsers show no entry`() = webTest {
-        // TODO: 1. Start as Firefox on an iPhone
-        // TODO: 2. The footer has no install entry
-        // TODO: 3. Start as Chrome on an iPhone
-        // TODO: 4. The footer has no install entry
+        for (signals in listOf(FIREFOX_IPHONE, CHROME_IPHONE)) {
+            val page = ready(FakeAppInstall(signals))
+
+            assertFalse(page.hasEntry(), signals.userAgent)
+            assertEquals(emptyList(), page.installEvents())
+        }
     }
 
     @Test
     fun `Escape closes the steps and focus returns to the entry`() = webTest {
-        // TODO: 1. Focus the entry and press Enter
-        // TODO: 2. The dialog opens
-        // TODO: 3. Press Escape
-        // TODO: 4. The dialog closes
-        // TODO: 5. Focus is on the entry
+        val page = ready(FakeAppInstall(SAFARI_MAC))
+        val cancelledBefore = page.props("dialog_cancelled").size
+        page.game.install.onInstall(byPointer = false)
+
+        page.game.onEscape()
+
+        assertNull(page.state.dialog)
+        assertEquals(Focus.InstallLink, page.state.focus)
+        assertEquals(cancelledBefore, page.props("dialog_cancelled").size, "nothing is cancelled")
+    }
+
+    @Test
+    fun `Escape after a mouse click returns to the entry too`() = webTest {
+        val page = ready(FakeAppInstall(SAFARI_MAC))
+        page.game.install.onInstall(byPointer = true)
+
+        page.game.onEscape()
+
+        assertEquals(Focus.InstallLink, page.state.focus)
+    }
+
+    @Test
+    fun `Close by a key keeps focus on the entry`() = webTest {
+        val page = ready(FakeAppInstall(SAFARI_MAC))
+        page.game.install.onInstall(byPointer = false)
+
+        page.game.install.onClosed()
+
+        assertNull(page.state.dialog)
+        assertEquals(Focus.InstallLink, page.state.focus)
     }
 
     @Test
     fun `Close after a mouse click puts focus on the board`() = webTest {
-        // TODO: 1. Click the entry with the mouse
-        // TODO: 2. Click Close in the dialog
-        // TODO: 3. Focus is on the board
-        // TODO: 4. A board key works
+        val page = ready(FakeAppInstall(SAFARI_MAC))
+        page.game.install.onInstall(byPointer = true)
+
+        page.game.install.onClosed()
+
+        assertNull(page.state.dialog)
+        assertEquals(Focus.Board, page.state.focus)
+        assertTrue(page.state.boardFocusable)
+    }
+
+    @Test
+    fun `on touch a tap on the entry keeps focus on it`() = webTest {
+        val page = WebHarness(backgroundScope, touch = true, install = FakeAppInstall(SAFARI_IPHONE)).start().also { it.game.onSizeChosen(null) }
+        page.game.install.onInstall(byPointer = true)
+
+        page.game.install.onClosed()
+
+        assertEquals(Focus.InstallLink, page.state.focus)
     }
 
     @Test
     fun `the update notice appearing under the open dialog doesn't lose focus`() = webTest {
-        // TODO: 1. Open the Safari dialog
-        // TODO: 2. A new version becomes ready
-        // TODO: 3. Close the dialog
-        // TODO: 4. Focus is on Update, not the page body
+        val page = ready(FakeAppInstall(SAFARI_MAC))
+        page.game.install.onInstall(byPointer = false)
+
+        page.updates.ready()
+        page.game.install.onClosed()
+
+        assertFalse(page.hasEntry())
+        val focus = checkNotNull(page.state.focus)
+        assertEquals(Focus.InstallLink, focus)
+        assertEquals(Focus.UpdateLink, fallbackFocus(focus.key, page.state))
+    }
+
+    @Test
+    fun `a click while a dialog is open does nothing`() = webTest {
+        val page = ready(FakeAppInstall(SAFARI_MAC))
+        page.game.onNew()
+        assertTrue(page.state.dialog is WebDialog.Size)
+
+        page.game.install.onInstall(byPointer = true)
+
+        assertTrue(page.state.dialog is WebDialog.Size)
+        assertTrue(page.props("install_entry_clicked").isEmpty())
     }
 }

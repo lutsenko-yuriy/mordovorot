@@ -208,6 +208,9 @@ sealed interface WebDialog {
     /** The confirmation before updating with unsaved progress (GH-262): Cancel, where focus starts, or Update. */
     data object Update : WebDialog
 
+    /** The Safari steps for installing the game (GH-360), worded for [device]; Close. */
+    data class Install(val device: InstallDevice) : WebDialog
+
     /** The alphabet hint (GH-332): [hint]'s whole alphabet, the letters in use outlined and the rest greyed; OK. */
     data class AlphabetHint(val hint: viewmodel.AlphabetHint) : WebDialog {
         /** The alphabet's name, which titles the dialog. */

@@ -98,6 +98,7 @@ class PageFocusTest {
         WebDialog.Update,
         WebDialog.ReplaySave,
         WebDialog.RestartSave,
+        WebDialog.Install(InstallDevice.MAC),
         WebDialog.AlphabetHint(viewmodel.AlphabetHint.of(viewmodel.TileLabels.LETTERS, 4)!!),
     )
 
@@ -120,6 +121,17 @@ class PageFocusTest {
     fun `a Restart that is dimmed or gone passes focus to the board on a computer and to New on touch (GH-349)`() {
         assertEquals(Focus.Board, fallbackFocus(Focus.RestartButton.key, playing.copy(selection = TileSelection.INITIAL)))
         assertEquals(Focus.NewButton, fallbackFocus(Focus.RestartButton.key, playing))
+    }
+
+    @Test
+    fun `an Install entry that is gone passes focus to Update, else the board on a computer, else New, never the page start (GH-360)`() {
+        val key = Focus.InstallLink.key
+        val notice = playing.copy(footer = footer("1.0.0", updateReady = true))
+        assertEquals(Focus.UpdateLink, fallbackFocus(key, notice))
+        assertEquals(Focus.UpdateLink, fallbackFocus(key, notice.copy(selection = TileSelection.INITIAL)))
+        assertEquals(Focus.Board, fallbackFocus(key, playing.copy(selection = TileSelection.INITIAL)))
+        assertEquals(Focus.NewButton, fallbackFocus(key, playing))
+        assertEquals(true, Focus.InstallLink.fallsBack)
     }
 
     // GH-288

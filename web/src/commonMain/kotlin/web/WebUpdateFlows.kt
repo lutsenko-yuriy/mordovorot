@@ -29,8 +29,6 @@ internal class WebUpdateFlows(
      *  ready: later checks, a tab switch during the download, say, don't relabel it. */
     private var foundBy = CheckTrigger.LOAD
 
-    val footer: List<FooterPart> get() = footer(appVersion, ready)
-
     /** Registers the worker and makes the first check. */
     fun start() {
         updates.start({ foundBy = trigger }, ::onReady)

@@ -65,8 +65,10 @@ button:focus-visible {
     outline-offset: 2px;
 }
 
-/* GH-262: the footer's Update looks like a link and stays a button; the footer is outside .app, so it has its own keyboard ring. */
-.footer .update {
+/* GH-262: the footer's Update looks like a link and stays a button; the footer is outside .app, so it has its own keyboard ring.
+   GH-360: so does the Install entry. */
+.footer .update,
+.footer .install {
     padding: 0;
     border: 0;
     background: none;
@@ -77,7 +79,8 @@ button:focus-visible {
     cursor: pointer;
 }
 
-.footer .update:focus-visible {
+.footer .update:focus-visible,
+.footer .install:focus-visible {
     outline: 3px solid var(--warning);
     outline-offset: 2px;
 }

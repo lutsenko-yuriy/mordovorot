@@ -78,6 +78,10 @@ sealed class Focus(override val key: String) : FocusTarget {
     }
     /** The footer's Update button (GH-262), outside `#app`. */
     data object UpdateLink : Focus("update")
+    /** The footer's Install entry (GH-360), outside `#app`: it falls back where [fallbackFocus] says when it is gone. */
+    data object InstallLink : Focus("install") {
+        override val fallsBack get() = true
+    }
     /** The update confirmation's Cancel, where it opens (GH-262). */
     data object UpdateCancel : Focus("update-cancel")
     /** The footer's link at [index], outside `#app`. */
@@ -108,6 +112,7 @@ fun defaultFocus(dialog: WebDialog): Focus = when (dialog) {
     WebDialog.Update -> Focus.UpdateCancel
     WebDialog.ReplaySave, WebDialog.RestartSave -> Focus.DialogCancel
     is WebDialog.AlphabetHint -> Focus.DialogOk
+    is WebDialog.Install -> Focus.DialogCancel
 }
 
 /** The marked scheme when the open group holds it, else the open group's first scheme that fits the board (GH-323). */
@@ -139,5 +144,6 @@ val WebDialog.title: String get() = with(texts().dialogs) {
         WebDialog.Update -> updateTitle
         WebDialog.ReplaySave, WebDialog.RestartSave -> replaySaveTitle
         is WebDialog.AlphabetHint -> alphabetTitle
+        is WebDialog.Install -> installTitle
     }
 }
