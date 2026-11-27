@@ -235,7 +235,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   │                    # runs or an update is being applied; Update, the share link and the tutorial replay ask only if it failed
 │   ├── WebDialogFlows.kt # WebGame's Save, Load, size and can't-be-solved dialogs over its modal (GH-166); Load is a loop that also runs the Delete confirmation (GH-251); the viewModel's size and unsolvable requests (GH-262)
 │   ├── AppUpdates.kt    # GH-262: the seam to the offline worker (start/check/apply; DomAppUpdates in jsMain, FakeAppUpdates in the harness), CheckTrigger and OFFLINE_WORKER, the worker's fixed relative URL
-│   ├── WebUpdateFlows.kt # GH-262: the New version available notice (ready, the footer it implies, update_available), Update and its confirmation (update_applied), the checks' triggers
+│   ├── WebUpdateFlows.kt # GH-262: the New version available notice (ready, update_available), Update and its confirmation (update_applied), the checks' triggers
 │   ├── AppInstall.kt    # GH-360: the seam to the browser's install offer (DomAppInstall in jsMain, FakeAppInstall in the harness) and two pure functions: `safariDevice` (Safari on iPhone, iPad, Mac vs other browsers) and `installEntry` (the footer entry's show rule)
 │   ├── WebInstallFlows.kt # GH-360: the Install entry (footer part, click -> the browser's prompt or WebDialog.Install, install_* analytics, app_launched.display_mode); the update notice wins the footer
 │   ├── WebSolutionFlows.kt # WebGame's Give Up and the solution screen's replay (GH-126, split out in GH-171)
@@ -446,7 +446,11 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # save/load, unsaved progress, drag, analytics; GH-126 give up; GH-288 the tutorial,
 │                                       # with WebHarness's `firstLaunch` (else it seeds `tutorial=seen`);
 │                                       # GH-139 tile labels; GH-166 announcements, as WebHarness.said)
-├── src/commonTest/kotlin/web/FooterTest.kt # GH-111: the footer's wording and links; GH-262: the notice, and the worker's relative URL
+├── src/commonTest/kotlin/web/FooterTest.kt # GH-111: the footer's wording and links; GH-262: the notice, and the worker's relative URL; GH-360: the install entry, narrow and wide, and the credit flags
+├── src/commonTest/kotlin/web/InstallDetectionTest.kt # GH-360: safariDevice over real user agents (Safari on iPhone, iPad, Mac vs other iOS browsers, Chrome, Firefox, in-app views)
+├── src/commonTest/kotlin/web/InstallEntryTest.kt # GH-360: installEntry's show rule as a table
+├── src/commonTest/kotlin/web/scenario/FakeAppInstall.kt # GH-360: the browser's install support, scripted (offer, answer, appinstalled), and the user agents the scenarios use
+├── src/commonTest/kotlin/web/scenario/WebInstallScenarioTest.kt # GH-360: when the entry shows, the prompt, the Safari steps, focus
 ├── src/jvmTest/kotlin/web/LanguageStylesTest.kt # GH-275: the picker shows the toggles on wide windows and the dropdown on phones
 ├── src/jvmTest/kotlin/web/UpdateNoticeStylesTest.kt # GH-262: the footer's Update looks like a link and keeps a keyboard ring
 ├── src/commonTest/kotlin/web/HostTest.kt # GH-111: hostOf's buckets
