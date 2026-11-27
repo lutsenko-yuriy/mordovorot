@@ -318,8 +318,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                        # checkWorkerShipped fails a distribution without it
 ├── offline/                             # :web:offline (GH-262): Kotlin/JS service worker, stdlib only. Built
 │   │                                    # into offline-worker.js, a name that never changes: an installed
-│   │                                    # worker only re-checks its own URL. Not registered by the page
-│   │                                    # yet (WU2)
+│   │                                    # worker only re-checks its own URL
 │   ├── src/commonMain/kotlin/offline/OfflineCache.kt # DOM-free: cacheKeyOf (the root, index.html or a
 │   │                                    # listed file is answered from the cache; anything else, the source
 │   │                                    # map included, goes to the network), staleCaches (older
@@ -403,7 +402,15 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # sheets below in this order (the cascade relies on it), loads web.js;
 │                                       # #announcer, the polite live region, next to #app so no redraw
 │                                       # or `inert` touches it (GH-166); the `text-scale` meta, for
-│                                       # Chrome for Android's text size (GH-168)
+│                                       # Chrome for Android's text size (GH-168); GH-357: links the manifest,
+│                                       # the favicons and the apple-touch icon, the two `theme-color`
+│                                       # metas (--page, light and dark) and the iOS/Android web-app metas
+├── src/jsMain/resources/manifest.webmanifest # GH-357: the installable app's manifest (id, start_url and scope
+│                                       # `./`, `standalone`, the light --page colour, three icons); its name
+│                                       # and `./` are fixed for good (ADR-0007)
+├── src/jsMain/resources/icons/         # GH-357: icon-192/512, icon-maskable-512, apple-touch-icon (180) and
+│                                       # favicon-32, committed PNGs; the offline worker lists them with the
+│                                       # rest of jsProcessResources. Rendered by scripts/web/icons/render_icons.js
 ├── src/jsMain/resources/palette.css    # GH-165: the colour tokens, light and dark (one set of tile
 │                                       # colours for both); linked first
 ├── src/jsMain/resources/styles.css     # The look: layout tokens, wide/tall by `orientation` (as layoutOf
@@ -447,7 +454,9 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 ├── src/commonTest/kotlin/web/tutorial/ # TutorialScriptTest, TutorialProgressTest, TutorialTextTest (GH-288), TutorialWaysTest (GH-290); TutorialPreferenceTest is in web/
 ├── src/commonTest/kotlin/web/storage/  # BrowserSaveRepositoryTest, BrowserPreferenceRepositoryTest
 │                                       # over InMemoryKeyValueStore
-├── src/jvmTest/kotlin/web/IndexPageTest.kt # Pins the title rule (the title appears only in the tab)
+├── src/jvmTest/kotlin/web/WebManifestTest.kt # GH-357: the manifest's members, relative URLs, colours and icon files
+├── src/jvmTest/kotlin/web/AppIconsTest.kt # GH-357: the icon PNGs' sizes, opacity, tile colours (from palette.css) and maskable safe zone
+├── src/jvmTest/kotlin/web/IndexPageTest.kt # Pins the title rule (the title appears only in the tab); GH-357: the manifest, icon and theme-colour links
 │                                       # and relative asset URLs (GH-111: the public site's sub-path);
 │                                       # every sheet linked, in order (GH-153); #announcer (GH-166);
 │                                       # the `text-scale` meta (GH-168)
@@ -785,6 +794,12 @@ the preferences.
   its hash, the list names a source map, or the worker is missing or was built for other files.
   The dev server has no worker. The cache name carries the files' hash, so the worker's bytes
   change exactly when a shipped file does, which is how the browser notices a new version.
+  **Installable (GH-357):** `checkWebManifest`, a second finalizer, parses the dist's
+  `manifest.webmanifest` as JSON (Gradle's bundled `groovy.json.JsonSlurper`) and fails the build
+  when the manifest, an icon it names or a manifest/icon link of `index.html` isn't shipped and in
+  the offline list. `WebManifestTest` and `AppIconsTest` (jvmTest) pin the manifest's members and
+  the icons' sizes, opacity, safe zone and palette colours; `scripts/web/icons/render_icons.js`
+  re-renders the icons (ADR-0007).
 - **Test framework:** `kotlin("test")` on the JUnit 5 platform (`useJUnitPlatform()`).
   No mocking library — hand-written fakes; doubles of
   shared types are in the `:shared:testing` module.

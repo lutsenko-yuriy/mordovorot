@@ -31,6 +31,7 @@ Mordovorot is released under the [MIT License](LICENSE). The libraries compiled 
 
 Play it at **https://lutsenko-yuriy.github.io/mordovorot/**. Every green merge to `master` publishes the latest version
 there (GitHub may serve the previous one for up to ~10 minutes). Once opened, it also plays with no connection, and tells you in the footer when a new version is ready.
+It can be installed from the browser to a home screen, dock or app list (Install in Chrome, Edge or on Android; Add to Dock or Add to Home Screen in Safari). On iPhone, iPad and Mac an installed copy keeps its own saves, so it starts empty; send a game across with a share link.
 
 To run it locally while working on it:
 
