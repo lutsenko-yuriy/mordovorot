@@ -473,6 +473,7 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   - There is no toolbar button, key or key hint for it, and screen readers are not told of the
     notice (they are frozen, `docs/CONSTRAINTS.md`); the button's own name is `Update`.
   - With two tabs open, `Update` in one leaves the notice up in the other, where it only reloads.
+    Until it does, that tab runs the old page against the new files (ADR-0006).
 - **Installing the game (GH-357):** the game can be installed from the browser's own offer
   (Install in Chrome and Edge or on Android, Add to Dock or Add to Home Screen in Safari): it gets
   its own icon, named `Mordovorot` in every language, and opens in its own window without the
@@ -485,7 +486,6 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
     iPad (Add to Home Screen) and on a Mac (Add to Dock) keeps its own storage: it starts with no
     saves and shows the tutorial, and needs one online launch before it plays offline. A game
     moves across with a share link.
-    Until it does, that tab runs the old page against the new files (ADR-0006).
 - **Analytics:** every event carries `platform: web` and `input_method`, following the actual input
   in either mode: `keyboard` for key presses, `rich_ui` for mouse and touch; see `docs/ANALYTICS_EVENTS.md`.
 

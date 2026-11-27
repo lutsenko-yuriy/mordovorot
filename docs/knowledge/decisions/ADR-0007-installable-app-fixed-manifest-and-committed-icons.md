@@ -28,3 +28,6 @@ GH-262 made the game play offline; GH-357 lets players install it (a home screen
 
 ## Related ticket
 GH-357
+
+## Date
+2026-11-27
