@@ -2,7 +2,8 @@
 <!-- GH-147: loads the web game at phone sizes and reports whether it fits the window, or (report=styles,
      GH-156) every element's computed styles, or (report=keys, GH-174, keys.js) focus and the like after each
      of a list of keys, or (mode=offline, GH-262) whether the game opens and plays with no connection once the
-     offline worker has cached it; update=ready (GH-262) first has the page find a new version. Served by serve.py and driven by measure.sh or styles_diff.sh; query options are in
+     offline worker has cached it; update=ready (GH-262) first has the page find a new version; install=prompt|installed
+     (GH-360) has the browser offer the install prompt, and then say it was installed. Served by serve.py and driven by measure.sh or styles_diff.sh; query options are in
      README.md. Results go to POST /result. -->
 <meta charset="utf-8">
 <style>iframe { border: 0; display: block; margin: 0 0 10px; }</style>
@@ -32,6 +33,9 @@ const uncontrolled = q.get("update") === "uncontrolled";
 const update = q.get("update") === "ready" || uncontrolled;
 // GH-262: only this variant ships offline-worker.js (lib.sh).
 const variant = mode === "offline" || update ? "with-worker" : q.get("v") || "mouse";
+// GH-360: install=prompt has the browser offer its install prompt (offerInstall, modes.js), so the footer shows
+// `Install the game`; install=installed sends the appinstalled event after it, so the entry is gone again.
+const install = q.get("install"); // prompt | installed
 const shorter = Number(q.get("shorter") || 0);
 const toolbarRows = Number(q.get("rows") || 1);
 // GH-168: `scroll` lets larger text make the page taller than the window; see measure().
@@ -241,6 +245,12 @@ async function runCase(size, board) {
     }
     await wait(400);
     await setUpMode(win, mode, Number(q.get("step") || 1));
+    if (install) {
+        offerInstall(win);
+        await wait(100);
+        if (install === "installed") win.dispatchEvent(new win.Event("appinstalled"));
+        await wait(100);
+    }
     if (update) {
         for (let i = 0; i < 100 && !win.document.querySelector(".footer .update"); i++) await wait(200);
         await wait(100);

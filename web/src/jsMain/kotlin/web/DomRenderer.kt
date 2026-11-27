@@ -64,7 +64,7 @@ class DomRenderer(private val root: HTMLElement, private val announcer: DomAnnou
     override fun render(state: WebState) {
         state.announcement?.let { announcer?.say(it) }
         val before = shown
-        if (state.footer != before?.footer) drawFooter(state.footer, state, game)
+        if (state.footer != before?.footer) drawFooter(state.footer, state, { game.updates.onUpdate() }) { byPointer -> game.install.onInstall(byPointer) }
         shown = state
         startSlide(before, state)
         motion.start(before, state, reducedMotion())

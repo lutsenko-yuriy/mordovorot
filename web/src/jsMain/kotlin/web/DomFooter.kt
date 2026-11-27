@@ -37,12 +37,12 @@ internal fun fillFooter(footer: Element, parts: List<FooterPart>, onUpdate: () -
     }
 }
 
-/** Redraws the page's `<footer>` outside [root], which [DomRenderer] keeps rather than rebuilds: `inert` stays on the same node.
+/** Redraws the page's `<footer>` outside the game's root, which [DomRenderer] keeps rather than rebuilds: `inert` stays on the same node. The callbacks are looked up when pressed: the first frame comes before the game is handed over.
  *  A keyboard user on a control the new line no longer has lands on Update, or where [fallbackFocus] says for [state], not back at the page's start. */
-internal fun drawFooter(parts: List<FooterPart>, state: WebState, game: WebGame) {
+internal fun drawFooter(parts: List<FooterPart>, state: WebState, onUpdate: () -> Unit, onInstall: (byPointer: Boolean) -> Unit) {
     val footer = document.querySelector("footer") ?: return
     val focused = (document.activeElement as? HTMLElement)?.takeIf { footer.contains(it) }?.getAttribute("data-focus")
-    fillFooter(footer, parts, { game.updates.onUpdate() }) { byPointer -> game.install.onInstall(byPointer) }
+    fillFooter(footer, parts, onUpdate, onInstall)
     if (focused == null) return
     val target = listOf(focused, Focus.UpdateLink.key).firstOrNull { footer.querySelector("[data-focus=\"$it\"]") != null }
         ?: fallbackFocus(Focus.InstallLink.key, state).key

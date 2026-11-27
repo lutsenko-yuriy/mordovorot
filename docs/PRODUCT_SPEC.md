@@ -479,13 +479,27 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
   its own icon, named `Mordovorot` in every language, and opens in its own window without the
   browser's bars, in either orientation, with the bar coloured like the page in light and dark.
   The icon is the board in miniature: a 3x3 board in the tile colours with the middle row shifted
-  half a tile. The page has no install button or notice of its own. An installed game is an
+  half a tile. An installed game is an
   ordinary page load: the same offline copy, footer and update notice (the new version opens once
   every tab and the installed window are closed, or on `Update`).
   - Saves are shared with the browser on Chrome, Edge and Android. An installed copy on iPhone or
     iPad (Add to Home Screen) and on a Mac (Add to Dock) keeps its own storage: it starts with no
     saves and shows the tutorial, and needs one online launch before it plays offline. A game
     moves across with a share link.
+  - **Install entry (GH-360):** once the tutorial is done or skipped (or the player has saves),
+    the footer offers `Install the game` / `Spiel installieren` / `Установить игру`, bold and
+    underlined, after the credit links on wide windows and in the credit's place on phones. It is
+    hidden while the tutorial runs (a replay too), while the update notice shows, once the game
+    is installed (also from the browser's menu) and in the installed app's own window. In Chrome,
+    Edge and on Android (browsers that offer their install prompt) a click opens that prompt; a
+    dismissed prompt hides the entry until the browser offers again. In Safari on iPhone, iPad
+    and Mac it opens a dialog with the steps (Share, Add to Home Screen; or File, Add to Dock),
+    the note that the installed game starts with no saves, and Close. Firefox on a computer and
+    other browsers on iOS get no entry. A mouse click on a computer returns focus to the board
+    once the prompt is answered or Close is clicked; a key press or Escape returns it to the
+    entry, or on to Update, the board or `[ New ]` when the entry is gone. Limits: an iPhone or
+    iPad Safari tab can't tell the game is already on the Home Screen, so the entry still shows
+    there; Safari 17 on macOS before Sonoma has no Add to Dock and can't be told apart.
 - **Analytics:** every event carries `platform: web` and `input_method`, following the actual input
   in either mode: `keyboard` for key presses, `rich_ui` for mouse and touch; see `docs/ANALYTICS_EVENTS.md`.
 

@@ -236,8 +236,8 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── WebDialogFlows.kt # WebGame's Save, Load, size and can't-be-solved dialogs over its modal (GH-166); Load is a loop that also runs the Delete confirmation (GH-251); the viewModel's size and unsolvable requests (GH-262)
 │   ├── AppUpdates.kt    # GH-262: the seam to the offline worker (start/check/apply; DomAppUpdates in jsMain, FakeAppUpdates in the harness), CheckTrigger and OFFLINE_WORKER, the worker's fixed relative URL
 │   ├── WebUpdateFlows.kt # GH-262: the New version available notice (ready, the footer it implies, update_available), Update and its confirmation (update_applied), the checks' triggers
-│   ├── AppInstall.kt    # GH-360 (planned): the seam to the browser's install offer (DomAppInstall in jsMain, FakeAppInstall in the harness) and two pure functions: `safariDevice` (Safari on iPhone, iPad, Mac vs other browsers) and `installEntry` (the footer entry's show rule)
-│   ├── WebInstallFlows.kt # GH-360 (planned): the Install entry (footer part, click -> the browser's prompt or WebDialog.Install, install_* analytics, app_launched.display_mode); the update notice wins the footer
+│   ├── AppInstall.kt    # GH-360: the seam to the browser's install offer (DomAppInstall in jsMain, FakeAppInstall in the harness) and two pure functions: `safariDevice` (Safari on iPhone, iPad, Mac vs other browsers) and `installEntry` (the footer entry's show rule)
+│   ├── WebInstallFlows.kt # GH-360: the Install entry (footer part, click -> the browser's prompt or WebDialog.Install, install_* analytics, app_launched.display_mode); the update notice wins the footer
 │   ├── WebSolutionFlows.kt # WebGame's Give Up and the solution screen's replay (GH-126, split out in GH-171)
 │   ├── WebMoves.kt      # GH-343: holds the latest move (arrow, shift key, replay step) while `WebRenderer.waveRemainingMs()` says a label wave runs, makes it when it ends if still allowed; dropped by a toolbar action or a drag
 │   ├── WebShifts.kt     # WebGame's shifts: `line` (one step by arrow or key, checked by the tutorial) and `shift` (renders and says any shift; GH-343 split out of WebGame)
@@ -297,7 +297,7 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │   ├── TextScale.kt     # GH-168: textScaleOf(root, appleBody): the system text size as a scale, never below 1;
 │   │                    # rootFontPx: the root's size for it, null when the default already is
 │   ├── Host.kt          # hostOf(hostname): PUBLIC_SITE, LOCALHOST or OTHER - only the bucket is sent (GH-111)
-│   ├── Footer.kt        # footer(version, updateReady): the footer line as Text/Link parts, worded as the README's Credits (GH-111); with a new version, the notice and its UpdateLink part (GH-262)
+│   ├── Footer.kt        # footer(version, updateReady, install): the footer line as Text/Link parts, worded as the README's Credits (GH-111); with a new version, the notice and its UpdateLink part (GH-262); with an install entry, the credit flagged and the InstallLink part (GH-360)
 │   ├── a11y/            # GH-179: web.a11y, screen readers and focus (also in jsMain below). web
 │   │   │                # depends on it, not it on web: it imports only the standard library, the DOM
 │   │   │                # and a few :shared:viewmodel and :shared:texts types, pinned by A11yBoundaryTest (GH-201). The
@@ -365,14 +365,14 @@ web/                     # :web - the browser client (GH-110): `jvm()` + `js { b
 │                                       # Dynamic Type from a removed `-apple-system-body` probe; sets
 │                                       # `--text-scale`, and the root font size where the default isn't it
 ├── src/jsMain/kotlin/web/DomFooter.kt  # fillFooter: the <footer>'s links in a new tab (GH-111), wide-only parts in
-│                                       # `.wide-only` (GH-147), the Update button (GH-262); Main creates the empty
+│                                       # `.wide-only` (GH-147), the Update button (GH-262), the Install entry and a `.credit` span around the credit (GH-360);
+│                                       # drawFooter hands focus on when the control it holds goes away (GH-360); Main creates the empty
 │                                       # <footer> and DomRenderer redraws it when WebState.footer changes
 ├── src/jsMain/kotlin/web/DomLanguagePicker.kt # GH-275: the language picker in the page's top right corner, outside #app like the
 │                                       # footer and kept across frames: `EN DE RU` toggles (aria-pressed, a native-name title) and a
 │                                       # native <select> over a visible `EN ▾`; Main creates its element before the <footer> (Tab
 │                                       # order), DomRenderer shows the language in it and `setBehindDialog` makes it inert
-├── src/jsMain/kotlin/web/DomAppInstall.kt # GH-360 (planned): AppInstall over beforeinstallprompt (kept, preventDefault), appinstalled and display-mode: standalone; created first in Main.kt so an early event isn't missed
-├── src/jsMain/kotlin/web/DomFooter.kt   # GH-360 (planned): drawFooter, moved out of DomRenderer (298 lines); hands focus on when the control it holds goes away
+├── src/jsMain/kotlin/web/DomAppInstall.kt # GH-360: AppInstall over beforeinstallprompt (kept, preventDefault), appinstalled and display-mode: standalone; created first in Main.kt so an early event isn't missed
 ├── src/jsMain/kotlin/web/DomAppUpdates.kt # GH-262: AppUpdates over navigator.serviceWorker: registers offline-worker.js,
 │                                       # ready = a waiting worker beside an active one, apply = skip-waiting message then
 │                                       # reload; every failure (no workers, offline, no worker file) is dropped

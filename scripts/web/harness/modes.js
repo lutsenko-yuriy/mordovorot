@@ -48,3 +48,13 @@ async function setUpMode(win, mode, step) {
         await wait(300);
     }
 }
+
+/** GH-360: the browser's install offer, as Chrome sends it once the game is installable: a `beforeinstallprompt` whose
+ *  `prompt()` is stubbed (it counts in `installPrompts`) and whose `userChoice` is dismissed. The page's footer then shows `Install the game`. */
+function offerInstall(win) {
+    const offer = new win.Event("beforeinstallprompt", { cancelable: true });
+    win.installPrompts = 0;
+    offer.prompt = () => { win.installPrompts++; return Promise.resolve(); };
+    offer.userChoice = Promise.resolve({ outcome: "dismissed" });
+    win.dispatchEvent(offer);
+}

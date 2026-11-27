@@ -356,3 +356,21 @@ mouse play 390x844 4x4 | start - -> focus board role grid name "Board" | dialog 
 mouse play 390x844 4x4 | focus:language-select - -> focus language-select role - name "Language" | dialog - | ring auto | keyboard no | inert - | said -
 mouse play 390x844 4x4 | S-Tab native -> focus controls role button name "Controls" shortcut 6 | dialog - | ring solid | keyboard yes | inert - | said -
 mouse play 390x844 4x4 | Tab native -> focus - | dialog - | ring - | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | start - -> focus board role grid name "Board" | dialog - | ring none | keyboard no | inert - | said "New 4x4 game"
+mouse play 1200x800 4x4 | focus:footer-1 - -> focus footer-1 role link name "loopover.xyz" | dialog - | ring auto | keyboard no | inert - | said -
+mouse play 1200x800 4x4 | Tab native -> focus install role button name "Install the game" | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | Enter native -> focus board role grid name "Board" | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | start - -> focus board role grid name "Board" | dialog - | ring none | keyboard no | inert - | said "New 4x4 game"
+mouse play 1200x800 4x4 | focus:install - -> focus install role button name "Install the game" | dialog - | ring solid | keyboard no | inert - | said -
+mouse play 1200x800 4x4 | fire:appinstalled - -> focus board role grid name "Board" | dialog - | ring none | keyboard no | inert - | said -
+mouse play 1200x800 4x4 | start - -> focus board role grid name "Board" | dialog - | ring none | keyboard no | inert - | said "New NxN game" | grid grid "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 0,0 outlined 0,0 new | read-board enabled
+mouse play 1200x800 4x4 | click:Install the game - -> focus board role grid name "Board" | dialog - | ring none | keyboard no | inert - | said - | grid grid "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 0,0 outlined 0,0 kept | read-board enabled
+mouse play 1200x800 4x4 | s page -> focus board role grid name "Board" | dialog - | ring solid | keyboard yes | inert - | said - | grid grid "Board" rows 4 cells 16 unread-copies 0 in-place N row1 "N / N / N / N" active 1,0 outlined 1,0 kept | read-board enabled
+mouse play 1200x800 4x4 | start - -> focus board role grid name "Board" | dialog - | ring none | keyboard no | inert - | said "New 4x4 game"
+mouse play 1200x800 4x4 | click:Labels - -> focus label-numbers role radio name "Numbers" checked | dialog "Tile labels" | ring none | keyboard no | inert DIV.stage DIV.panel DIV.language-picker FOOTER.footer.install | said -
+mouse play 1200x800 4x4 | Tab page -> focus label-group-numbers_from_0 role button name "Numbers from 0" | dialog "Tile labels" | ring solid | keyboard yes | inert DIV.stage DIV.panel DIV.language-picker FOOTER.footer.install | said -
+mouse play 1200x800 4x4 | Escape page -> focus labels role button name "Labels" shortcut 4 | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | start - -> focus board role grid name "Board" | dialog - | ring none | keyboard no | inert - | said "New 4x4 game"
+mouse play 1200x800 4x4 | focus:install - -> focus install role button name "Install the game" | dialog - | ring solid | keyboard no | inert - | said -
+mouse play 1200x800 4x4 | Enter native -> focus board role grid name "Board" | dialog - | ring solid | keyboard yes | inert - | said -
+mouse play 1200x800 4x4 | Tab native -> focus arrow-right-0 role button name "Row 1 right" | dialog - | ring solid | keyboard yes | inert - | said -
