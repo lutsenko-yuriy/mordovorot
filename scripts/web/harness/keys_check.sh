@@ -108,6 +108,15 @@ queries=(
   "report=keys&lang=de&keys=focus:labels,Enter,Escape"
   # GH-275: on a phone the dropdown is the one Tab stop (the toggles are hidden).
   "report=keys&sizes=390x844&keys=focus:language-select,S-Tab,Tab"
+  # GH-360: the Install entry is a Tab stop after the credit links (the footer's last control); Enter opens the browser's prompt, which is then spent, so focus falls to the board, not the page body.
+  "report=keys&install=prompt&keys=focus:footer-1,Tab,Enter"
+  # GH-360: an appinstalled event with focus on the entry (the install made from the browser's menu) leaves focus on the board, not the body; a click on the entry gives the board focus too.
+  "report=keys&install=prompt&keys=focus:install,fire:appinstalled"
+  "report=keys&install=prompt&grid=1&keys=click:Install the game,s"
+  # GH-360: the footer under a dialog is inert, the entry included; Escape returns to the control that opened it.
+  "report=keys&install=prompt&keys=click:Labels,Tab,Escape"
+  # GH-360: Enter on the entry fires the prompt; focus is on the board after, and Tab goes on from there.
+  "report=keys&install=prompt&keys=focus:install,Enter,Tab"
 )
 
 log="$(cd "$project" && ./gradlew -q :web:jsBrowserDistribution 2>&1)" || {

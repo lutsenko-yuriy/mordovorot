@@ -28,8 +28,11 @@ object EnglishPageTexts : PageTexts {
     override val mordieName = "Mordie:"
     override val solved = "Congratulations ✓"
 
-    override fun footerBasedOn(version: String) = "v$version · Based on Loopover by "
+    override fun footerVersion(version: String) = "v$version · "
+    override val footerCreditLead = "Based on Loopover by "
+    override fun footerBasedOn(version: String) = footerVersion(version) + footerCreditLead
     override val footerOriginal = "original"
+    override val footerInstall = "Install the game"
     override fun footerUpdateNotice(version: String) = "v$version · New version available. "
     override val footerUpdate = "Update"
 

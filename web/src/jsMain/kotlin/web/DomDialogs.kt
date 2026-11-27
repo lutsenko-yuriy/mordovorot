@@ -147,6 +147,11 @@ internal fun dialogElement(dialog: WebDialog, game: WebGame, motion: LabelMotion
                     button(texts().dialogs.yes) { game.share.onSharedLabelsAnswered(true) }.focusKey(Focus.SharedLabelsYes),
                 ),
             )
+            is WebDialog.Install -> append(
+                text("message", with(texts().dialogs) { if (dialog.device == InstallDevice.MAC) installStepsMac else installStepsPhone }),
+                text("message", texts().dialogs.installSaves),
+                actions(button(texts().dialogs.close, "secondary") { game.install.onClosed() }.focusKey(Focus.DialogCancel)),
+            )
             WebDialog.Update -> append(
                 text("message", texts().dialogs.updateMessage),
                 actions(

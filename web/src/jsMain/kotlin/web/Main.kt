@@ -14,6 +14,9 @@ import web.storage.LocalStorageStore
 
 /** The page's composition root (GH-110). */
 fun main() {
+    // Before anything else: the browser may offer the install prompt at any moment, and this keeps it (GH-360).
+    val installOn = true
+    val install = DomAppInstall(window, installOn)
     // First, while the root's font size is still the browser's default.
     applySystemTextSize(document, window)
     val root = document.getElementById("app") as? HTMLElement ?: return
@@ -40,6 +43,8 @@ fun main() {
         DomPageAddress,
         DomClipboard,
         DomAppUpdates(window),
+        install,
+        installOn,
         tutorial = true,
         browserLanguages = browserLanguages(),
         languages = true,

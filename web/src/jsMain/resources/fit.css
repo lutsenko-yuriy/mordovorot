@@ -60,6 +60,26 @@
     }
 }
 
+/* GH-360: with the Install entry the footer is one flex line, where only the credit is cut off with "…" when the window is short, so the
+   entry stays whole. The gap stands for the spaces a flex item's edges lose. */
+@media (orientation: landscape) {
+    .footer.install {
+        display: flex;
+        justify-content: center;
+        column-gap: 0.3em;
+    }
+
+    .footer.install .credit {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .footer.install .install {
+        flex: none;
+    }
+}
+
 /* Wide phones (GH-148). Short: tighter spacing. */
 @media (orientation: landscape) and (max-height: 500px) {
     .app {

@@ -31,6 +31,8 @@ class WebGame internal constructor(
     address: PageAddress,
     clipboard: Clipboard,
     updates: AppUpdates,
+    install: AppInstall,
+    installOn: Boolean,
     appVersion: String,
     shareLabels: ShareTogglePreference,
     shareProgress: ShareTogglePreference,
@@ -46,6 +48,7 @@ class WebGame internal constructor(
     internal val alphabetHint = WebAlphabetHint(this, viewModel, modal)
     internal val share = WebShareFlows(this, viewModel, analytics, modal, address, clipboard, shareLabels, shareProgress)
     internal val updates = WebUpdateFlows(this, viewModel, analytics, modal, updates, appVersion)
+    internal val install = WebInstallFlows(this, analytics, modal, install, appVersion, installOn, { tutorial.done }, { tutorial.running }, { this.updates.ready })
     internal val language = WebLanguageFlows(this, viewModel)
     internal val restart = WebRestartFlows(this, viewModel, analytics, modal)
     internal val tutorial = WebTutorial(this, viewModel, analytics, modal, tutorialSeen, scope, computer, tutorialOn)
@@ -72,6 +75,7 @@ class WebGame internal constructor(
     /** Answers the viewModel's requests, then starts the tutorial on a first launch, else runs the startup restore. */
     internal fun start() {
         updates.start()
+        install.start()
         render()
         scope.launch { for (request in viewModel.uiRequests) requests.handle(request) }
         flow = scope.launch {
@@ -239,6 +243,7 @@ class WebGame internal constructor(
     internal fun render(slide: LineOffset? = null, focus: Focus? = null) {
         val shown = frame(slide, focus)
         renderer.render(shown)
+        install.noteShown()
         saying = null
         if (opening) {
             val board = Triple(shown.side, shown.tiles, shown.labels)
@@ -280,7 +285,7 @@ class WebGame internal constructor(
                 viewModel.solution() != null -> KeyHints.SOLUTION
                 else -> KeyHints.board(controls.layout)
             },
-            footer = updates.footer,
+            footer = install.footer,
             guidance = guidance,
             tutorialButton = tutorial.offered,
             alphabetHint = alphabetHint.button(),

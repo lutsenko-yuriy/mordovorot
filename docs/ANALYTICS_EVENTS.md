@@ -898,6 +898,8 @@ Fired on the browser's `appinstalled` event. It also fires for installs made fro
 Changes to existing entries:
 - `app_launched` gains `display_mode` (`string`, always sent): `browser` or `standalone` (the page runs in the installed app's own window). It shows how many launches come from the installed app.
 
+Every event above but `app_launched` also carries `input_method` and `platform`, added by the wiring as for the other events.
+
 Not tracked: Close and Escape in the Safari dialog (nothing is cancelled; `screen_install_dialog` covers the opening), the steps being followed in Safari (the page can't see them; `app_launched.display_mode` shows it later), browsers with no entry, and repeat sightings of the entry across visits.
 
 PII: none; only fixed words and one boolean are sent. `method` and `device` are buckets set in our code, so the user agent string never goes out.

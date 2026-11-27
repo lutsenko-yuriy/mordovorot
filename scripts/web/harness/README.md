@@ -63,6 +63,7 @@ Query options (harness.html):
 | `corrupt` | | comma-separated names of entries no save decodes, listed by name alone (GH-251) |
 | `restore` | | `1` with `saves` or `corrupt` leaves the startup restore dialog open, for the keys to start in (GH-251) |
 | `update` | | `ready` (GH-262) loads the `with-worker` variant, has the page register its worker, then has the server serve the next version of it and reloads, so the case starts with the footer's New version available notice up |
+| `install` | | `prompt` (GH-360) has the browser offer its install prompt once the case is up (a synthetic `beforeinstallprompt` with a stubbed `prompt()` that counts in `installPrompts`), so the footer shows `Install the game`; `installed` then fires `appinstalled` too, so it is gone again. Headless Chrome can't be Safari, so the steps dialog is not reachable here |
 | `grid` | | with `report=keys`, `1` adds the board as a screen reader's table or grid to each line (below, GH-167, GH-171) |
 
 To compare against master, build master's bundle into another directory and pass it with
@@ -158,7 +159,7 @@ mouse play 1200x800 4x4 | S-Tab page -> focus label-group-numbers role button na
 
 A step is `click:<button text>` (a mouse click), `focus:<data-focus key>`, `wait:<ms>` (waits that long, so a timer such as the tutorial's 3 s pause can fire between steps, GH-289), or a key: `Tab`,
 `S-Tab` (Shift+Tab), `Escape`, `Enter`, `Space`, `ArrowUp` and the like, sent as a `keydown` to
-the focused control; `R-` before a key is its auto-repeat while held (`R-Enter`, GH-164), and `@` after one names its position (`ц@KeyW`, GH-200). A synthetic key gets no default action, so when the page doesn't take it
+the focused control; `fire:appinstalled` (GH-360) sends the page the browser's `appinstalled` event, `R-` before a key is its auto-repeat while held (`R-Enter`, GH-164), and `@` after one names its position (`ц@KeyW`, GH-200). A synthetic key gets no default action, so when the page doesn't take it
 (`preventDefault`), the harness does what the browser would: Tab moves to the next control in
 DOM order (the page sets no positive `tabindex`) that isn't disabled, hidden or `inert`, and
 leaves the page past either end; Enter and Space click a button. The step's mark says which:

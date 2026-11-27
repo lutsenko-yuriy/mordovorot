@@ -53,6 +53,11 @@ internal class WebTutorial(
 
     val running get() = progress != null
 
+    /** The tutorial is behind the player (GH-360): it is off, was seen, or there are saves, so it won't start on its own; true from the end of a run too
+     *  ([end]), a failed write of the seen flag included. Read once, the saves list being a storage read. */
+    var done = !shouldStart()
+        private set
+
     /** Step 5: the board is solved and Mordie's ending waits for the pause to end. */
     val holdsEnding get() = progress?.step == TutorialScript.SOLVED_STEP
 
@@ -163,6 +168,7 @@ internal class WebTutorial(
 
     private fun end(result: String, lastStep: Int, progress: TutorialProgress) {
         this.progress = null
+        done = true
         blockedAxis = null
         preference.markSeen()
         analytics.track("tutorial_ended", mapOf("source" to source, "result" to result, "last_step" to lastStep, "blocked_shifts" to progress.totalBlocked))

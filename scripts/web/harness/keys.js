@@ -27,6 +27,11 @@ function play(win, step) {
         return "-";
     }
     if (step.startsWith("wait:")) return "-"; // runKeys waits
+    // GH-360: fire:appinstalled is the browser saying the game was installed, whoever did it.
+    if (step === "fire:appinstalled") {
+        win.dispatchEvent(new win.Event("appinstalled"));
+        return "-";
+    }
     if (step.startsWith("focus:")) {
         doc.querySelector(`[data-focus="${step.slice(6)}"]`)?.focus();
         return "-";

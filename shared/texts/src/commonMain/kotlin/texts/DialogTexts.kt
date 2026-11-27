@@ -22,6 +22,14 @@ interface DialogTexts {
     fun sharedLabelsTitle(labels: String): String
     val shareTitle: String
     val updateTitle: String
+    /** The Install dialog (GH-360): its title is [PageTexts.footerInstall]'s wording. */
+    val installTitle: String
+    /** Add to the Home Screen, on an iPhone or iPad. */
+    val installStepsPhone: String
+    /** Add to the Dock, on a Mac. */
+    val installStepsMac: String
+    /** The installed game starts with no saves, and how to take one across. */
+    val installSaves: String
     val replaySaveTitle: String
 
     val veryLargeTitle: String

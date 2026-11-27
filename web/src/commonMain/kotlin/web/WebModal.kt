@@ -36,7 +36,7 @@ internal class WebModal(private val render: (focus: Focus?) -> Unit) {
             is WebDialog.Unsolvable -> return
             WebDialog.ReplaySave, WebDialog.RestartSave -> ReplaySaveChoice.CANCEL
             WebDialog.GiveUp, is WebDialog.OpenShared, is WebDialog.SharedLabels, is WebDialog.DeleteSave, WebDialog.Update -> false
-            is WebDialog.LinkRejected, is WebDialog.Share, is WebDialog.AlphabetHint -> Unit
+            is WebDialog.LinkRejected, is WebDialog.Share, is WebDialog.AlphabetHint, is WebDialog.Install -> Unit
             is WebDialog.Load -> LoadPick.Cancel
             is WebDialog.Size, is WebDialog.Save, is WebDialog.Labels, is WebDialog.Controls -> null
         }

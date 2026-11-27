@@ -38,7 +38,7 @@ class WebAnalyticsScenarioTest {
 
         fun expected(layout: String) = mapOf<String, Any?>(
             "layout" to layout, "platform" to "web", "app_version" to "9.9.9", "host" to "localhost",
-            "tile_labels" to "numbers", "language" to "en",
+            "tile_labels" to "numbers", "language" to "en", "display_mode" to "browser",
         )
         assertEquals(expected("wide"), launched(1200, 800))
         assertEquals(expected("tall"), launched(800, 800))

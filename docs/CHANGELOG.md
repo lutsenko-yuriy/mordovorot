@@ -13,6 +13,13 @@ A record of all versioned releases. For planned work and known issues, see @docs
 - ...
 -->
 
+## [0.61.0] — 2026-11-27 (PR #362 merged)
+
+### Added
+
+- [user] (PR #362) GH-360: Once the tutorial is done, the footer offers "Install the game": in Chrome, Edge and on Android it opens the browser's install prompt, and in Safari on iPhone, iPad and Mac it shows how to add the game.
+- [non-user] (PR #362) GH-360: the install entry's detection (`safariDevice`, `installEntry`), the `install` kill switch, `app_launched.display_mode`, the harness `install=` option and the debrief.
+
 ## [0.60.0] — 2026-11-27 (PR #358 merged)
 
 ### Added

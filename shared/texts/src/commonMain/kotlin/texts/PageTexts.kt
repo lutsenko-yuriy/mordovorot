@@ -33,9 +33,15 @@ interface PageTexts {
     val mordieName: String
     val solved: String
 
+    /** The footer's version, as its lines start: `v<version> · `. */
+    fun footerVersion(version: String): String
+    /** The footer's credit up to the author's name, `Based on Loopover by `. */
+    val footerCreditLead: String
     /** The footer's credit and update notice, led by `v<version> · `. */
     fun footerBasedOn(version: String): String
     val footerOriginal: String
+    /** The footer's Install entry (GH-360), also the Install dialog's title. */
+    val footerInstall: String
     fun footerUpdateNotice(version: String): String
     val footerUpdate: String
 

@@ -66,6 +66,10 @@ internal class WebHarness(
     private val motion: Boolean = false,
     /** With [motion], the system asks for less motion: no wave runs. */
     private val reducedMotion: Boolean = false,
+    /** The browser's install support (GH-360): one that can't install, unless a scenario scripts it. */
+    val install: FakeAppInstall = FakeAppInstall(),
+    /** The `install` switch (GH-360): on. */
+    private val installOn: Boolean = true,
 ) {
     val saves = BrowserSaveRepository(store)
     val preferences = BrowserPreferenceRepository(store)
@@ -95,7 +99,7 @@ internal class WebHarness(
 
     fun start(): WebHarness {
         if (!firstLaunch) preferences.set("tutorial", "seen")
-        game = startWebGame(board, saves, preferences, analytics, mordie, renderer, scope, layout, appVersion, host, touch, pressedWith, address, clipboard, updates, tutorial = tutorialOn, browserLanguages = browserLanguages, languages = languages)
+        game = startWebGame(board, saves, preferences, analytics, mordie, renderer, scope, layout, appVersion, host, touch, pressedWith, address, clipboard, updates, install, installOn, tutorial = tutorialOn, browserLanguages = browserLanguages, languages = languages)
         return this
     }
 

@@ -34,6 +34,7 @@ class DialogFocusTest {
         assertEquals(Focus.DialogCancel, defaultFocus(WebDialog.RestartSave))
         assertEquals(Focus.DialogOk, defaultFocus(WebDialog.AlphabetHint(AlphabetHint.of(TileLabels.GREEK_LETTERS, 4)!!)))
         assertEquals(Focus.SharedLabelsYes, defaultFocus(WebDialog.SharedLabels(TileLabels.PAIRS)))
+        assertEquals(Focus.DialogCancel, defaultFocus(WebDialog.Install(InstallDevice.MAC)))
     }
 
     @Test
@@ -48,6 +49,8 @@ class DialogFocusTest {
         assertEquals(dialogs.giveUpTitle, WebDialog.GiveUp.title)
         assertEquals(dialogs.controlsTitle, controls.title)
         assertEquals(dialogs.updateTitle, WebDialog.Update.title)
+        assertEquals(dialogs.installTitle, WebDialog.Install(InstallDevice.PHONE_OR_TABLET).title)
+        assertEquals(texts().page.footerInstall, WebDialog.Install(InstallDevice.MAC).title)
         assertEquals(dialogs.replaySaveTitle, WebDialog.RestartSave.title)
         assertEquals(dialogs.alphabetLatin, WebDialog.AlphabetHint(AlphabetHint.of(TileLabels.LETTERS, 4)!!).title)
         assertEquals(dialogs.alphabetCyrillic, WebDialog.AlphabetHint(AlphabetHint.of(TileLabels.CYRILLIC_LETTER_PAIRS, 4)!!).title)

@@ -29,3 +29,4 @@ When two files fit, the more specific domain wins (a web-only screen-reader term
 | corrupted | damaged |
 | puzzle | board |
 | PWA (in player-facing text), home screen app | installed app |
+| install button, install link, install banner | install entry (only the browser's own `install prompt` is called a prompt) |

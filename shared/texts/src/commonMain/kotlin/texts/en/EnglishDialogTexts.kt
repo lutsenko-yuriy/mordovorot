@@ -21,6 +21,10 @@ object EnglishDialogTexts : DialogTexts {
     override fun sharedLabelsTitle(labels: String) = "Use the sender's labels ($labels)?"
     override val shareTitle = "Share this board"
     override val updateTitle = "Update to the new version?"
+    override val installTitle = "Install the game"
+    override val installStepsPhone = "In Safari, tap Share (in the ⋯ menu if you don't see it), then Add to Home Screen."
+    override val installStepsMac = "In Safari's menu bar, choose File, then Add to Dock."
+    override val installSaves = "The installed game starts with no saves. To take a game across, send its link to yourself with the game's Share."
     override val replaySaveTitle = "Save your game first?"
 
     override val veryLargeTitle = "Very large"

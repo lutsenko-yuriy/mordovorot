@@ -120,6 +120,7 @@ Generated from `bookmarks:` frontmatter in `docs/knowledge/notes/*.md`. Run `pyt
 - [GH-349: Restart button: put the current game back to its start](GH-349.md)
 - [GH-354: Tile labels: pre-reform Russian letters and letter pairs, in a group of their own](GH-354.md)
 - [GH-357: Installable web app: manifest and icons (PWA)](GH-357.md)
+- [GH-360: Install entry in the footer](GH-360.md)
 - [GH-41: Kotlin Multiplatform shared modules: Core, Analytics, Mordie, Storage, ViewModel](GH-41.md)
 - [GH-6: Save and load game state to/from local files](GH-6.md)
 - [GH-62: Move counter](GH-62.md)
