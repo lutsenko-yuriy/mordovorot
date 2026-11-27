@@ -499,7 +499,9 @@ Retired — GH-228. The terminal client was dropped; the browser (Feature 9) is 
     once the prompt is answered or Close is clicked; a key press or Escape returns it to the
     entry, or on to Update, the board or `[ New ]` when the entry is gone. Limits: an iPhone or
     iPad Safari tab can't tell the game is already on the Home Screen, so the entry still shows
-    there; Safari 17 on macOS before Sonoma has no Add to Dock and can't be told apart.
+    there; Safari 17 on macOS before Sonoma has no Add to Dock and can't be told apart; and an in-app
+    Safari view (Reddit, many mail and chat apps) sends Safari's user agent but its share sheet
+    has no Add to Home Screen, so the steps don't apply there.
 - **Analytics:** every event carries `platform: web` and `input_method`, following the actual input
   in either mode: `keyboard` for key presses, `rich_ui` for mouse and touch; see `docs/ANALYTICS_EVENTS.md`.
 

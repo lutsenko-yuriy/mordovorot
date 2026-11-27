@@ -51,7 +51,8 @@ internal class DomAppInstall(private val window: Window, enabled: Boolean) : App
         if (event == null) return done(null)
         try {
             val shown = event.prompt()
-            if (shown != null && shown != undefined) shown.then({ _: dynamic -> }, { _: dynamic -> })
+            // A rejected prompt() (no user activation left, a stale event) never settles userChoice: done(null) frees the game.
+            if (shown != null && shown != undefined) shown.then({ _: dynamic -> }, { _: dynamic -> done(null) })
             event.userChoice.then({ choice: dynamic -> done(choice.outcome == "accepted") }, { _: dynamic -> done(null) })
         } catch (e: Throwable) {
             done(null)
